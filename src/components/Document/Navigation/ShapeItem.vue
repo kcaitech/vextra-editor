@@ -255,7 +255,7 @@ function _updateAbbrView() {
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
 function updater(...args: any[]) {
-    if (args.includes('shape-frame') || args.includes('points')) {
+    if (args.includes('frame') || args.includes('points')) {
         update_abbr_view();
         return;
     }

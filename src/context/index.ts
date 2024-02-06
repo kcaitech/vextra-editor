@@ -1,13 +1,10 @@
 import {
     CoopRepository,
     TaskMgr,
-    Task,
     WatchableObject,
-    TaskPriority,
     TableShape,
     TableEditor,
     Text,
-    SymbolShape,
     PageView,
     ShapeView,
     adapt2Shape,
@@ -39,6 +36,7 @@ import { TableSelection } from "./tableselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { ColorCtx } from "./color";
+import { startLoadTask } from "./loadtask";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -73,13 +71,13 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
-    onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
-        return this.m_repo.onCommit(...args)
-    }
+    // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
+    //     return this.m_repo.onCommit(...args)
+    // }
 
-    onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
-        return this.m_repo.onUndoRedo(...args)
-    }
+    // onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
+    //     return this.m_repo.onUndoRedo(...args)
+    // }
 }
 
 export class Context extends WatchableObject {
@@ -115,6 +113,7 @@ export class Context extends WatchableObject {
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
+        repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
         this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
@@ -131,57 +130,7 @@ export class Context extends WatchableObject {
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
         this.m_color = new ColorCtx();
-        const pagelist = data.pagesList.slice(0);
-        const checkSymLoaded: (() => boolean)[] = [];
-        const pageloadTask = new class implements Task { // page auto loader
-            isValid(): boolean {
-                return !this.isDone();
-            }
-
-            isDone(): boolean {
-                return pagelist.length <= 0;
-            }
-
-            async run(): Promise<void> {
-                let id;
-                while (pagelist.length > 0) {
-                    const i = pagelist[0];
-                    if (data.pagesMgr.getSync(i.id)) {
-                        pagelist.splice(0, 1);
-                    } else {
-                        id = i.id;
-                        break;
-                    }
-                }
-                if (id) {
-                    await data.pagesMgr.get(id);
-                    pagelist.splice(0, 1);
-                    for (let i = 0; i < checkSymLoaded.length;) {
-                        if (checkSymLoaded[i]()) {
-                            checkSymLoaded.splice(i, 1);
-                        } else {
-                            ++i;
-                        }
-                    }
-                }
-            }
-        }
-
-        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
-        this.m_taskMgr.startLoop();
-
-        // symbol loader
-        data.symbolsMgr.setLoader(async (id: string): Promise<SymbolShape> => {
-            return new Promise((resolve, reject) => {
-                checkSymLoaded.push(() => {
-                    const sym = data.symbolsMgr.getSync(id);
-                    if (sym) resolve(sym);
-                    else if (pageloadTask.isDone()) reject();
-                    else return false;
-                    return true;
-                })
-            })
-        })
+        startLoadTask(data, this.m_taskMgr);
     }
 
     get editor(): Editor {

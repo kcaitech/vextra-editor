@@ -1,7 +1,8 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
+    TableCellType, TableShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -180,7 +181,7 @@ export class Clipboard {
 
             const points = points_map.get(shape.id);
             if (points) {
-                (shape as PathShape).points = points.map(i => new CurvePoint(v4(), i.x, i.y, i.mode)) as any;
+                (shape as PathShape).points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
             }
         }
 
@@ -1166,12 +1167,11 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
         }
     }
 
-    const new_source = transform_data(context.data, pre_shapes);
-
     const page = context.selection.selectedPage;
     if (!page) {
         return [];
     }
+    const new_source = transform_data(context.data, page.data, pre_shapes);
 
     let result: Shape[] = [];
 

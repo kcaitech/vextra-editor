@@ -6,7 +6,7 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -82,7 +82,7 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, fillType, color, contextSettings } = fill;
-        const new_fill = new Fill(v4(), isEnabled, fillType, color);
+        const new_fill = new Fill(new BasicArray(), v4(), isEnabled, fillType, color);
         new_fill.contextSettings = contextSettings;
         actions.push({ target: adapt2Shape(shapes[i]), value: new_fill });
     }
@@ -125,7 +125,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
         for (let i = 0; i < fills.length; i++) {
             const fill = fills[i];
             const { isEnabled, fillType, color, contextSettings } = fill;
-            const new_fill = new Fill(v4(), isEnabled, fillType, color);
+            const new_fill = new Fill(new BasicArray(), v4(), isEnabled, fillType, color);
             if (fill.gradient) {
                 const _g = cloneGradient(fill.gradient);
                 new_fill.gradient = _g;
@@ -164,6 +164,7 @@ export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
 
 // borders
 export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mixed' {
+    if (shapes.length === 0) return [];
     const borders: BorderItem[] = [];
     const shape = shapes[0];
     const styleborders = shape.getBorders() || [];
@@ -230,7 +231,7 @@ export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
-        const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
+        const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
         actions.push({ target: adapt2Shape(shapes[i]), value: new_border });
     }
     return actions;
@@ -257,7 +258,7 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
             const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
-            const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
+            const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
             if (border.gradient) {
                 const _g = cloneGradient(border.gradient);
                 new_border.gradient = _g;
@@ -376,7 +377,7 @@ export function get_actions_shadow_unify(shapes: ShapeView[]) {
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];
             const { isEnabled, blurRadius, color, position, spread, offsetX, offsetY } = shadow;
-            const new_shadow = new Shadow(v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
+            const new_shadow = new Shadow(new BasicArray(), v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
             new_shadows.push(new_shadow);
         }
         actions.push({ target: adapt2Shape(shapes[i]), value: new_shadows });
@@ -389,7 +390,7 @@ export function get_actions_add_shadow(shapes: ShapeView[], shadow: Shadow) {
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, blurRadius, color, position, spread, offsetX, offsetY } = shadow;
-        const new_shadow = new Shadow(v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
+        const new_shadow = new Shadow(new BasicArray(), v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
         actions.push({ target: adapt2Shape(shapes[i]), value: new_shadow });
     }
     return actions;
@@ -517,7 +518,7 @@ export function get_actions_export_format_unify(shapes: ShapeView[], formats: Ex
             for (let i = 0; i < options.exportFormats.length; i++) {
                 const format = options.exportFormats[i];
                 const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
-                const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+                const new_format = new ExportFormat(new BasicArray(), v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
                 new_formats.push(new_format);
             }
             actions.push({ target: adapt2Shape(shapes[i]), value: new_formats });
@@ -528,7 +529,7 @@ export function get_actions_export_format_unify(shapes: ShapeView[], formats: Ex
             for (let i = 0; i < formats.length; i++) {
                 const format = formats[i];
                 const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
-                const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+                const new_format = new ExportFormat(new BasicArray(), v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
                 new_formats.push(new_format);
             }
             actions.push({ target: adapt2Shape(shapes[i]), value: new_formats });
@@ -545,7 +546,7 @@ export function get_actions_add_export_format(shapes: ShapeView[], formats: Expo
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
-            const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+            const new_format = new ExportFormat(new BasicArray(), v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
             new_formats.push(new_format);
         }
         actions.push({ target: adapt2Shape(shapes[i]), value: new_formats });

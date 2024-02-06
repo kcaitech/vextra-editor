@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, Color, GradientType, GroupShapeView, Matrix, ShapeFrame, ShapeType, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, ShapeFrame, ShapeType, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -231,7 +231,7 @@ const add_stop = (e: MouseEvent) => {
     const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const stop = new Stop(posi, _stop.color, v4());
+    const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
     const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
     editor.addShapesGradientStop(actions);
     nextTick(() => {

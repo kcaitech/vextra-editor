@@ -15,6 +15,10 @@ import {
     TextShape,
     TextShapeView,
     WatchableObject,
+    SelectionState,
+    ArrayOpSelection,
+    isDiffStringArr,
+    SNumber,
     TableCellType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
@@ -31,6 +35,7 @@ import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
 import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
+import { v4 } from "uuid";
 import { router } from "@/router";
 
 interface Saved {
@@ -457,12 +462,146 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return this.textSelection;
     }
 
-    save() {
-        throw new Error("Method not implemented.");
+    save(): SelectionState {
+        // throw new Error("Method not implemented.");
+        const state: SelectionState = {
+            shapes: []
+        }
+        if (this.selectedShapes.length > 0) {
+            state.shapes = this.selectedShapes.map(s => s.id);
+        }
+        // table
+        const table = this.tableshape;
+        if (table) {
+            const rowStart = this.tableSelection.tableRowStart;
+            const rowEnd = this.tableSelection.tableRowEnd;
+            const colStart = this.tableSelection.tableColStart;
+            const colEnd = this.tableSelection.tableColEnd;
+            if (!(rowStart < 0 && rowEnd < 0 && colStart < 0 && colEnd < 0)) {
+                state.table = { isRowOrCol: false, rows: [], cols: [] }
+                const rowCount = table.rowHeights.length;
+                const colCount = table.colWidths.length;
+                if (rowStart === 0 && rowEnd === rowCount - 1) {
+                    // 选中列
+                    state.table.isRowOrCol = true;
+                    if (colStart < 0 || colEnd >= colCount) throw new Error();
+                    for (let i = colStart; i <= colEnd; ++i) {
+                        state.table.cols.push(table.colWidths[i].id);
+                    }
+                } else if (colStart === 0 && colEnd === colCount - 1) {
+                    // 选中行
+                    state.table.isRowOrCol = true;
+                    if (rowStart < 0 || rowEnd >= rowCount) throw new Error();
+                    for (let i = rowStart; i <= rowEnd; ++i) {
+                        state.table.rows.push(table.rowHeights[i].id);
+                    }
+                } else {
+                    if (colStart < 0 || colEnd >= colCount) throw new Error();
+                    if (rowStart < 0 || rowEnd >= rowCount) throw new Error();
+                    for (let i = colStart; i <= colEnd; ++i) {
+                        state.table.cols.push(table.colWidths[i].id);
+                    }
+                    for (let i = rowStart; i <= rowEnd; ++i) {
+                        state.table.rows.push(table.rowHeights[i].id);
+                    }
+                }
+            }
+        }
+        // text
+        const textShape = this.textSelection.shape;
+        if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
+            state.text = new ArrayOpSelection(v4(), textShape.text.getCrdtPath(),
+                SNumber.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
+                this.textSelection.cursorEnd - this.textSelection.cursorStart)
+        }
+        return state;
     }
 
-    restore(saved: any): void {
-        throw new Error("Method not implemented.");
+    saveText(path: string[]): ArrayOpSelection | undefined {
+        const shape = this.focusTextShape;
+        if (!shape) return;
+        const text = shape.text;
+        if (!text) return;
+        const curPath = text.getCrdtPath();
+        if (path.length !== curPath.length) return;
+        if (isDiffStringArr(path, curPath)) return;
+        if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0) {
+            return new ArrayOpSelection(v4(), path,
+                SNumber.MAX_SAFE_INTEGER, this.textSelection.cursorStart,
+                this.textSelection.cursorEnd - this.textSelection.cursorStart)
+        }
+    }
+
+    restoreText(op: ArrayOpSelection): void {
+        const path = op.path;
+        const shape = this.focusTextShape;
+        if (!shape) return;
+        const text = shape.text;
+        if (!text) return;
+        const curPath = text.getCrdtPath();
+        if (path.length !== curPath.length) return;
+        if (isDiffStringArr(path, curPath)) return;
+        if ((this.textSelection.cursorStart !== op.start || this.textSelection.cursorEnd !== (op.start + op.length))) {
+            if (op.length === 0) this.textSelection.setCursor(op.start, false);
+            else this.textSelection.selectText(op.start, op.start + op.length);
+        }
+    }
+
+    restore(state: SelectionState): void {
+        if (!this.selectedPage) return;
+        // throw new Error("Method not implemented.");
+        // text
+        // shape
+        const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView);
+        if (shapes.findIndex((s) => s === undefined) >= 0) {
+            this.m_context.nextTick(this.selectedPage, () => {
+                const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView).filter(s => s !== undefined);
+                this.rangeSelectShape(shapes);
+            })
+        } else if (isDiffStringArr(state.shapes, this.selectedShapes.map(s => s.id))) {
+            this.rangeSelectShape(shapes);
+        }
+        // table
+        let table: TableShape | undefined;
+        if (state.table && (table = this.tableshape)) {
+            const colCount = table.colWidths.length;
+            const rowCount = table.rowHeights.length;
+            let colsIdxs, rowsIdxs;
+            if (!state.table.isRowOrCol) {
+                colsIdxs = state.table.cols.map((id) => table!.colWidths.findIndex((v) => v.id === id)).filter((v) => v >= 0);
+                rowsIdxs = state.table.rows.map((id) => table!.rowHeights.findIndex((v) => v.id === id)).filter((v) => v >= 0);
+            } else if (state.table.cols.length === 0) {
+                if (state.table.rows.length === 0) throw new Error();
+                // 选中行
+                rowsIdxs = state.table.rows.map((id) => table!.rowHeights.findIndex((v) => v.id === id)).filter((v) => v >= 0);
+                colsIdxs = [0, colCount - 1];
+            } else {
+                if (state.table.rows.length !== 0) throw new Error();
+                if (state.table.cols.length === 0) throw new Error();
+                // 选中列
+                colsIdxs = state.table.cols.map((id) => table!.colWidths.findIndex((v) => v.id === id)).filter((v) => v >= 0);
+                rowsIdxs = [0, rowCount - 1];
+            }
+            const _colStart = colsIdxs.length === 0 ? -1 : colsIdxs.reduce((m, c) => (c < m) ? c : m, colCount - 1);
+            const _colEnd = colsIdxs.length === 0 ? -1 : colsIdxs.reduce((m, c) => (c < m) ? m : c, 0);
+            const _rowStart = rowsIdxs.length === 0 ? -1 : rowsIdxs.reduce((m, c) => (c < m) ? c : m, rowCount - 1);
+            const _rowEnd = rowsIdxs.length === 0 ? -1 : rowsIdxs.reduce((m, c) => (c < m) ? m : c, 0);
+
+            // check
+            if (_colStart < 0 || _colEnd < 0 || _rowStart < 0 || _rowEnd < 0) {
+                const rowStart = this.tableSelection.tableRowStart;
+                const rowEnd = this.tableSelection.tableRowEnd;
+                const colStart = this.tableSelection.tableColStart;
+                const colEnd = this.tableSelection.tableColEnd;
+                if (rowStart !== -1 || rowEnd !== -1 || colStart !== -1 || colEnd !== -1) this.tableSelection.resetSelection();
+            } else {
+                this.tableSelection.selectTableCellRange(_rowStart, _rowEnd, _colStart, _colEnd);
+            }
+        }
+        if (state.text && (this.textSelection.cursorStart !== state.text.start || this.textSelection.cursorEnd !== (state.text.start + state.text.length))) {
+            if (state.text.length === 0) this.textSelection.setCursor(state.text.start, false);
+            else this.textSelection.selectText(state.text.start, state.text.start + state.text.length);
+        }
     }
 
     get selectedSymOrRefMenber() {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView, TableShape, Stop, GradientType, adapt2Shape } from "@kcdesign/data";
+import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView, TableShape, Stop, GradientType, adapt2Shape, BasicArray } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -128,12 +128,12 @@ function updateData() {
 }
 
 function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+    if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
 }
 
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
-    const fill = new Fill(v4(), true, FillType.SolidColor, color);
+    const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -457,7 +457,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const stop = new Stop(position, color, id);
+    const stop = new Stop(new BasicArray(), id, position, color);
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'fills');
     editor.addShapesGradientStop(actions);
 }
@@ -629,7 +629,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: idx, type: 'fills' }" @change="c => getColorFromPicker(idx, c)"
+                        :locat="{ index: fills.length - idx - 1, type: 'fills' }" @change="c => getColorFromPicker(idx, c)"
                         @gradient-reverse="() => gradient_reverse(idx)" :gradient="f.fill.gradient"
                         :fillType="f.fill.fillType" @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"

@@ -10,9 +10,11 @@ export const newFile = () => {
     // @ts-ignore
     const nd = createDocument(i18n.global.t('system.new_file'), repo);
     const coopRepo = new CoopRepository(nd, repo)
+    coopRepo.setInitingDocument(true);
     const editor = new DocEditor(nd, coopRepo);
     const page = editor.create(i18n.global.t('system.page1'));
     editor.insert(0, page);
+    coopRepo.setInitingDocument(false);
     window.document.title = nd.name;
     (window as any).skrepo = coopRepo;
     (window as any).sketchDocument = nd;

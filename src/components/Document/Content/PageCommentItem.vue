@@ -249,6 +249,7 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 const getDocumentComment = async () => {
     try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
+        if (!data) return;
         const list = data.map((item: any) => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
             return item

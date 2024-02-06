@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -88,10 +88,9 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variable'))) {
-        updateData();
-        apex_view.value++;
-    }
+    if ((args.includes('style') || args.includes('variable'))) [
+        updateData()
+    ]
 }
 
 function updateData() {
@@ -142,7 +141,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -464,7 +463,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const stop = new Stop(position, color, id);
+    const stop = new Stop(new BasicArray(), id, position, color);
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'borders');
     editor.addShapesGradientStop(actions);
 }
@@ -644,7 +643,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: idx, type: 'borders' }" @change="(c: Color) => getColorFromPicker(c, idx)"
+                        :locat="{ index: borders.length - idx - 1, type: 'borders' }" @change="(c: Color) => getColorFromPicker(c, idx)"
                         @gradient-reverse="() => gradient_reverse(idx)" :gradient="b.border.gradient"
                         :fillType="b.border.fillType" @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"

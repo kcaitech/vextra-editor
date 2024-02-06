@@ -33,7 +33,7 @@ const inputWidth = ref(5)
 const hover = ref(false)
 let isDragging: boolean = false;
 const reflush = ref<number>(0);
-const watcher = (t: any) => { if (t !== 'shape-frame') reflush.value++; };
+const watcher = (t: any) => { if (t !== 'frame') reflush.value++; };
 const onRename = () => {
     if (!permIsEdit(props.context) || props.context.tool.isLable) {
         return;
