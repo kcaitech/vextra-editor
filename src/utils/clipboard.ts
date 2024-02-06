@@ -1,14 +1,14 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape, Matrix
 } from '@kcdesign/data';
 import { Context } from '@/context';
-import { PageXY } from '@/context/selection';
+import { PageXY, XY } from '@/context/selection';
 import { Media, getName, upload_image } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
-import { is_box_outer_view2 } from './common';
+import { XYsBounding, is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
@@ -847,52 +847,63 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             if (r) context.selection.selectShape(page.shapes.get(r.id));
         })
     } else if (is_shape) {
+        // 1. 解析剪切板中的图层
         const data = JSON.parse(text_html.split(identity)[1]);
 
         const source = data?.shapes;
-
         if (!source) {
             throw new Error('invalid source');
         }
-
-        if (xy) {
-            modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
-        } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-            modify_frame_by_xy(context.workspace.center_on_page, source);
-        }
-
-        const medias = data?.media;
-
-        const shapes = import_shape_from_clipboard(context.data, source, medias);
-
-        if (!shapes.length) {
-            throw new Error('invalid source: !shapes.length');
-        }
-
-        after_import(context, medias);
 
         const page = context.selection.selectedPage;
         if (!page) {
             return;
         }
 
-        const editor = context.editor4Page(page);
+        // 2. 计算插入环境和位置（在有选中容器的情况下，需要根据指定的插入环境多次计算位置）
+        let insert_env: Shape = page.data;
+        if (xy) {
+            modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
+            insert_env = get_env_by_xy(context, xy);
+        } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+            const box = get_source_box(source);
+            const wpc = context.workspace.center_on_page;
+            box.x = wpc.x - box.width / 2;
+            box.y = wpc.y - box.height / 2;
+            modify_frame_by_xy(box, source);
+            insert_env = get_env_by_box(context, box);
+        }
 
-        const r = editor.pasteShapes1(page.data, shapes);
-        if (!r) {
+        // 3. 将图层导入文档（还未插入文档）
+        const medias = data?.media;
+        const shapes = import_shape_from_clipboard(context.data, source, medias);
+        if (!shapes.length) {
+            throw new Error('invalid source: !shapes.length');
+        }
+
+        let insert_result: { shapes: Shape[] } | false = false;
+
+        // 4. 插入文档
+        const editor = context.editor4Page(page);
+        insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
+        if (!insert_result) {
             return;
         }
 
+        // 5. 根据插入结果构建新的选区
         context.nextTick(page, () => {
-            if (r) {
+            if (insert_result) {
                 const selects: ShapeView[] = [];
-                r.shapes.forEach((s) => {
+                insert_result.shapes.forEach((s) => {
                     const v = page.shapes.get(s.id);
                     if (v) selects.push(v);
                 })
                 context.selection.rangeSelectShape(selects);
             }
         })
+
+        // 6. 上传图层内嵌的静态资源到服务端
+        after_import(context, medias);
     } else {
         message('info', context.workspace.t('clipboard.invalid_data'));
     }
@@ -1283,4 +1294,99 @@ function get_plain(items: DataTransferItemList) {
     }
 
     return;
+}
+
+function get_source_box(source: Shape[]) {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+
+    for (let i = 0; i < source.length; i++) {
+        const shape = source[i];
+        let f: { x: number, y: number, height: number, width: number } = { ...shape.frame };
+        if (is_transform(shape)) {
+            const m = get_matrix(shape);
+            const rt = m.computeCoord2(f.width, 0);
+            const rb = m.computeCoord2(f.width, f.height);
+            const lb = m.computeCoord2(0, f.height);
+
+            const box = XYsBounding([f, rt, rb, lb]);
+            f.x = box.left;
+            f.y = box.top;
+            f.width = box.right - f.x;
+            f.height = box.bottom - f.y;
+        }
+
+        if (left > f.x) {
+            left = f.x;
+        }
+        if (top > f.y) {
+            top = f.y;
+        }
+        if (right < f.x + f.width) {
+            right = f.x + f.width;
+        }
+        if (bottom < f.y + f.height) {
+            bottom = f.y + f.height;
+        }
+    }
+
+    return { x: left, y: top, width: right - left, height: bottom - top };
+
+    function is_transform(shape: Shape) {
+        return shape.rotation || shape.isFlippedHorizontal || shape.isFlippedVertical;
+    }
+
+    function get_matrix(shape: Shape) {
+        const f = shape.frame;
+        const m = new Matrix();
+        m.trans(-f.x, -f.y);
+        if (shape.isFlippedHorizontal) {
+            m.flipHoriz();
+        }
+        if (shape.isFlippedVertical) {
+            m.flipVert();
+        }
+        if (shape.rotation) {
+            m.rotate(-(shape.rotation / 180 * Math.PI));
+        }
+
+        return new Matrix(m.inverse);
+    }
+}
+
+function get_env_by_box(context: Context, box: { x: number, y: number, width: number, height: number }) {
+    const layers_on_xy = context.selection.getLayers(box);
+    for (let i = 0; i < layers_on_xy.length; i++) {
+        const s = layers_on_xy[i];
+        if (s.type !== ShapeType.Artboard) { // 暂时只支持容器
+            continue;
+        }
+        if (s.frame.width < box.width || s.frame.height < box.height) {
+            continue;
+        }
+
+        return s.data;
+    }
+    return context.selection.selectedPage!.data;
+}
+function get_env_by_xy(context: Context, xy: XY) {
+    const layers_on_xy = context.selection.getLayers(xy);
+    for (let i = 0; i < layers_on_xy.length; i++) {
+        const s = layers_on_xy[i];
+        if (s.type !== ShapeType.Artboard) { // 暂时只支持容器
+            continue;
+        }
+
+        return s.data;
+    }
+    return context.selection.selectedPage!.data;
+}
+
+function get_envs_from_selection(context: Context) {
+    const shapes = context.selection.selectedShapes;
+    for (let i = 0; i < shapes.length; i++) {
+        
+    }
 }
