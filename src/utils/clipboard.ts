@@ -1,7 +1,8 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
+    TableCellType, TableShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -12,136 +13,638 @@ import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
-import { pa } from 'element-plus/es/locale';
 import { AsyncTransfer } from "@kcdesign/data";
+import { ElMessage } from 'element-plus';
 
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
     content: Media | string
 }
-
+type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'cn.protodesign';
 export const paras = 'cn.protodesign/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
+    private cache: { type: CacheType, data: any } | undefined;
 
     constructor(context: Context) {
         this.context = context;
     }
 
-    /**
-     * @description 往剪切板写入图层/文本段落数据，考虑兼容性，该方法内部应支持多种剪切板实现方案
-     * @param { Text } 是否文本段落
-     */
-    async write_html(text?: Text): Promise<boolean> {
-        if (text) { // 写入文字段落
-            const _text = export_text(text);
-            if (!_text) {
-                return false;
+    get text() {
+        const textshape = this.context.selection.textshape;
+        if (textshape) {
+            const selection = this.context.textSelection;
+            const start = selection.cursorStart;
+            const end = selection.cursorEnd;
+
+            if (start === end) {
+                return;
             }
 
-            if (navigator.clipboard && ClipboardItem) { // 支持异步接口
-                const plain_text = text.getText(0, text.length);
-                const h = encode_html(paras, _text, plain_text);
-                const blob = new Blob([h || ''], { type: 'text/html' });
-                const blob_plain = new Blob([plain_text], { type: 'text/plain' });
+            const s = Math.min(start, end);
+            const len = Math.abs(start - end)
+            return textshape.text.getTextWithFormat(s, len);
+        }
 
-                const content = [new ClipboardItem({ "text/plain": blob_plain, 'text/html': blob })];
+        const table = this.context.selection.tableshape;
+        if (!table) {
+            return;
+        }
 
-                await navigator.clipboard.write(content);
+        const ts = this.context.tableSelection;
 
-                return true;
-            } else { // 不支持异步接口
-                // todo plan2
-                return false;
+        if (ts.tableColStart < 0 && ts.tableRowStart < 0) {
+            return;
+        }
+
+        let _text = '';
+
+        const cells = ts.getSelectedCells(true);
+        let first_text: Text | undefined = undefined;
+        cells.forEach(i => {
+            if (i.cell?.cellType !== TableCellType.Text) {
+                return;
             }
-        } else { // 写入图层数据
-            let shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
-
-            if (!shapes.length) {
-                return false;
+            if (!first_text && i.cell.text) {
+                first_text = import_text(this.context.data, i.cell.text) as Text;
             }
-
-            // 记录每个图形相对root位置
-            const position_map: Map<string, PageXY> = new Map();
-            const points_map: Map<string, CurvePoint[]> = new Map();
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shapes[i];
-                position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
-                if (shape instanceof ContactShape) {
-                    points_map.set(shape.id, shape.getPoints());
-                }
+            const t = i.cell.text?.getText(0, i.cell.text?.length || 0) || '';
+            if (!t.length) {
+                return;
             }
+            _text += t;
+        })
 
-            // 先导出将要写入的数据
-            const _shapes = export_shape(shapes.map((s => adapt2Shape(s))));
-            if (!_shapes) {
-                return false;
-            }
+        if (!first_text || !_text) {
+            console.log('!first_text || !_text');
+            return;
+        }
 
-            // 修改写入数据的frame，使之在多选的情况下每个图形之间的相对位置不变
-            for (let i = 0, len = _shapes.length; i < len; i++) {
-                const shape = _shapes[i];
-                const root_frame = position_map.get(shape.id);
-                if (root_frame) {
-                    shape.frame.x = root_frame.x;
-                    shape.frame.y = root_frame.y;
-                }
+        const t = first_text as Text;
+        t.deleteText(0, t.length);
+        t.insertText(_text, 0);
 
-                const points = points_map.get(shape.id);
-                if (points) {
-                    (shape as PathShape).points = points.map((i, idx) => new CurvePoint(([idx] as BasicArray<number>), v4(), i.x, i.y, i.mode)) as any;
-                }
-            }
+        return t;
+    }
 
-            // 转义修改好的数据并写入
-            if (navigator.clipboard && ClipboardItem) {
-                const media = sort_media(this.context.data, _shapes);
-                // 支持异步接口
-                const data = {
-                    shapes: _shapes,
-                    media
-                }
+    modify_cache(type: CacheType, data: any) {
+        this.cache = { type, data };
+    }
 
-                const h = encode_html(identity, data);
-                const blob = new Blob([h || ''], { type: 'text/html' });
-                const item: any = { 'text/html': blob };
-
-                if (_shapes.length === 1 && _shapes[0].type === ShapeType.Text) {
-                    // todo 直接复制图层里面的文本
-                }
-
-                await navigator.clipboard.write([new ClipboardItem(item)]);
-
-                return true;
+    write(event?: ClipboardEvent): boolean {
+        try {
+            const text = this.text;
+            if (text) {
+                return this.write_text(text, event);
             } else {
-                // 不支持异步接口
-                // todo plan2
-                return false;
+                return this.write_shapes(event);
             }
+        } catch (error) {
+            console.log('write error:', error);
+            return false;
+        }
+
+    }
+
+    write_text(text: Text, event?: ClipboardEvent): boolean {
+        const _text = export_text(text);
+
+        const plain_text = text.getText(0, text.length);
+
+        const h = encode_html(paras, _text, plain_text);
+
+        let is_async_plan_enable = false;
+        // 异步方案
+        // @ts-ignore
+        if (navigator.clipboard && navigator.clipboard.read) {
+            const text_html = new Blob([h || ''], { type: 'text/html' });
+            const text_plain = new Blob([plain_text], { type: 'text/plain' });
+
+            const content = [new ClipboardItem({ "text/plain": text_plain, 'text/html': text_html })];
+
+            navigator.clipboard.write(content);
+
+            is_async_plan_enable = true;
+        }
+
+        if (!event) {
+            return is_async_plan_enable;
+        }
+
+        if (!event.clipboardData) {
+            return false;
+        }
+
+        event.clipboardData.setData('text/plain', plain_text);
+        event.clipboardData.setData('text/html', h);
+        event.preventDefault();
+
+        this.modify_cache('double', { 'text/plain': plain_text, 'text/html': h });
+
+        return true;
+    }
+
+    write_shapes(event?: ClipboardEvent) {
+        let shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
+
+        if (!shapes.length) {
+            return false;
+        }
+
+        // 记录每个图形相对root位置
+        const position_map: Map<string, PageXY> = new Map();
+        const points_map: Map<string, CurvePoint[]> = new Map();
+        for (let i = 0, len = shapes.length; i < len; i++) {
+            const shape = shapes[i];
+            position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
+            if (shape instanceof ContactShape) {
+                points_map.set(shape.id, shape.getPoints());
+            }
+        }
+
+        // 先导出将要写入的数据
+        const _shapes = export_shape(shapes.map((s => adapt2Shape(s))));
+        if (!_shapes) {
+            return false;
+        }
+
+        // 修改写入数据的frame，使之在多选的情况下每个图形之间的相对位置不变
+        for (let i = 0, len = _shapes.length; i < len; i++) {
+            const shape = _shapes[i];
+            const root_frame = position_map.get(shape.id);
+            if (root_frame) {
+                shape.frame.x = root_frame.x;
+                shape.frame.y = root_frame.y;
+            }
+
+            const points = points_map.get(shape.id);
+            if (points) {
+                (shape as PathShape).points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
+            }
+        }
+
+        const media = sort_media(this.context.data, _shapes);
+        const data = {
+            shapes: _shapes,
+            media
+        }
+
+        const h = encode_html(identity, data);
+
+        let is_async_plan_enable = false;
+        // 转义修改好的数据并写入
+        // @ts-ignore
+        if (navigator.clipboard && navigator.clipboard.write) { // 支持异步接口
+            const blob = new Blob([h || ''], { type: 'text/html' });
+            const item: any = { 'text/html': blob };
+
+            navigator.clipboard.write([new ClipboardItem(item)]); // 异步的复制让它自己慢慢复制去
+
+            is_async_plan_enable = true;
+        }
+
+        if (!event?.clipboardData) {
+            return is_async_plan_enable;
+        }
+
+        event.clipboardData.clearData();
+        event.clipboardData.setData('text/html', h);
+        event.preventDefault();
+
+        this.modify_cache('inner-html', h);
+
+        return true;
+    }
+
+    cut(event: ClipboardEvent) {
+        try {
+            const res = this.write(event);
+            if (!res) {
+                return;
+            }
+
+            const textshape = this.context.selection.textshape;
+            const text = this.text;
+
+            if (text && textshape) {
+                const selection = this.context.textSelection;
+                const start = selection.cursorStart;
+                const end = selection.cursorEnd;
+                if (start === end) {
+                    return;
+                }
+
+                const editor = this.context.editor4TextShape(textshape);
+
+                if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+                    selection.setCursor(Math.min(start, end), false);
+                }
+                return;
+            }
+
+            const table = this.context.selection.tableshape;
+            if (text && table) {
+                const editor = this.context.editor4Table(table as TableShape);
+                const ts = this.context.tableSelection;
+                editor.resetTextCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                ts.resetSelection();
+                return;
+            }
+
+            const page = this.context.selection.selectedPage;
+            if (!page) {
+                return;
+            }
+
+            const editor = this.context.editor4Page(page);
+            const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
+
+            if (delete_res) {
+                this.context.selection.resetSelectShapes();
+            }
+        } catch (error) {
+            return;
         }
     }
 
-    async cut() {
-        const res = await this.write_html();
-        if (!res) {
+    async paste(t: Function, event?: ClipboardEvent, xy?: PageXY) {
+        try {
+            if (!event) { // 粘贴由鼠标事件触发，只能去读取 '异步剪切板'
+                return this.paste_async(t, xy);
+            }
+
+            // paste 监听事件触发，优先读取 '同步剪切板' 内容里面的内容
+            const items = event.clipboardData && event.clipboardData.items;
+            if (items?.length) {
+                return this.paste_datatransfer_item_list(items, t, xy);
+            }
+
+            // 如果上述操作未能读取到有效内容，则尝试读取缓存
+            this.paste_cache(t, xy);
+        } catch (error) {
+            console.log('paste error:', error);
+        }
+    }
+
+    async paste_async(t: Function, xy?: PageXY) {
+        try {
+            if (!navigator.clipboard?.read) {
+                throw new Error('Not support.');
+            }
+            const data = await navigator.clipboard.read();
+            if (!data) {
+                throw new Error('No valid data on clipboard.');
+            }
+
+            this.paste_clipboard_items(data, t, xy);
+        } catch (error) {
+            console.log('paste_async error:', error);
+            this.paste_cache(t, xy);
+        }
+    }
+
+    paste_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
+        if (is_html(data)) {
+            const html = get_html(data);
+            if (!html) {
+                return;
+            }
+            html.getAsString(val => {
+                const html = decode_html(val);
+                this.modify_cache('inner-html', val);
+                handle_text_html_string(this.context, html);
+            });
+            return;
+        }
+
+        if (is_plain(data)) {
+            const plain = get_plain(data);
+            if (!plain) {
+                return;
+            }
+            plain.getAsString(text => {
+                this.modify_cache('plain-text', text);
+                clipboard_text_plain2(this.context, text, xy);
+            });
+            return;
+        }
+
+        const image = get_image(data);
+        if (image) {
+            const file = image.getAsFile();
+            const type = image.type;
+            this.modify_cache('image', { file, type });
+            image_reader(this.context, file, type, t, xy);
+        }
+    }
+
+    paste_clipboard_items(data: ClipboardItems, t: Function, xy?: PageXY) {
+        if (!data) {
+            message('info', t('clipboard.invalid_data'));
+            return;
+        }
+
+        const d = data[0]; // 剪切板内的数据
+
+        const type = (function () {
+            const types = d.types; // 剪切板内的数据类型
+            for (let i = 0; i < types.length; i++) {
+                const type = types[i];
+                if (/image/.test(type)) {
+                    return 'image';
+                } else if (type === 'text/plain') {
+                    return type;
+                } else if (type === 'text/html') {
+                    return type;
+                }
+            }
+        })();
+
+        if (type === 'image') {
+            clipboard_image(this.context, d, t, xy);
+        } else if (type === 'text/plain') {
+            clipboard_text_plain(this.context, d, xy);
+        } else if (type === 'text/html') {
+            clipboard_text_html(this.context, d, xy);
+        }
+    }
+
+    paste_cache(t: Function, xy?: PageXY) {
+        if (!this.cache) {
+            return;
+        }
+
+        const { type, data } = this.cache;
+
+        if (type === 'inner-html') {
+            handle_text_html_string(this.context, decode_html(data), xy);
+        } else if (type === 'plain-text') {
+            clipboard_text_plain2(this.context, data, xy);
+        } else if (type === 'image') {
+            image_reader(this.context, data.file, data.type, t, xy)
+        } else if (type === 'double') {
+            const text = data['text/plain'];
+            clipboard_text_plain2(this.context, text, xy);
+        }
+    }
+
+    paste_cache_for_text() {
+        if (!this.cache) {
+            return;
+        }
+
+        const { data, type } = this.cache;
+
+        let html;
+        if (type === 'inner-html') {
+            html = decode_html(data);
+        } else if (type === 'double') {
+            html = decode_html(data['text/html']);
+        }
+
+        if (html
+            && html.slice(0, 70).indexOf(paras) > -1
+            && this.insert_paras(html)
+        ) {
+            return;
+        }
+
+        let plain;
+        if (type === 'plain-text') {
+            plain = data;
+        } else if (type === 'double') {
+            plain = decode_html(data['text/plain']);
+        }
+
+        if (!plain) {
+            return;
+        }
+
+        this.paste_for_no_format_text(plain);
+    }
+
+    paste_text(event?: ClipboardEvent) {
+        try {
+            if (!event) {
+                return this.paste_text_async();
+            }
+
+            const items = event.clipboardData && event.clipboardData.items;
+            if (items?.length) {
+                return this.paste_text_sync(items);
+            }
+
+            this.paste_cache_for_text();
+        } catch (error) {
+            console.log('paste_text error:', error);
+        }
+    }
+
+    async paste_text_async() {
+        if (navigator.clipboard && navigator.clipboard.read) {
+            const data = await navigator.clipboard.read();
+            const _d = data[0];
+            const types = _d.types;
+
+            const text_shape = this.context.selection.textshape;
+
+            if (!text_shape) {
+                return;
+            }
+
+            const editor = this.context.editor4TextShape(text_shape);
+
+            if (types.length === 1) {
+                const type = types[0];
+                if (type === 'text/plain') {
+                    const val = await _d.getType('text/plain');
+                    const text = await val.text();
+
+                    if (!(text && typeof text === 'string')) {
+                        throw new Error('invalid text');
+                    }
+
+                    const selection = this.context.textSelection;
+                    const start = selection.cursorStart;
+                    const end = selection.cursorEnd;
+                    const s = Math.min(start, end);
+
+                    if (start !== end) {
+                        editor.deleteText(Math.min(start, end), Math.abs(start - end))
+                    }
+
+                    editor.insertText(text, s);
+
+                    selection.setCursor(s + text.length, false);
+                } else if (type === 'text/html') {
+                    paster_html_or_plain_inner_shape(_d, this.context, editor, false);
+                }
+            }
+            else if (types.length === 2) {
+                if (types.includes('text/html') && types.includes('text/plain')) {
+                    paster_html_or_plain_inner_shape(_d, this.context, editor, false);
+                }
+            }
+        } else {
+            this.paste_cache_for_text();
+        }
+    }
+
+    paste_text_sync(items: DataTransferItemList) {
+        const html = get_html(items);
+        if (html) {
+            this.paste_text_sync_for_html(items, html);
+            return;
+        }
+
+        const plain = get_plain(items);
+        if (plain) {
+            this.paste_text_sync_for_plain(plain);
+        }
+    }
+
+    paste_text_sync_for_plain(plain: DataTransferItem) {
+        plain.getAsString(text => {
+            this.paste_for_no_format_text(text);
+        });
+    }
+
+    paste_text_sync_for_html(items: DataTransferItemList, html: DataTransferItem) {
+        html.getAsString(val => {
+            const html = decode_html(val);
+            const is_paras = html.slice(0, 70).indexOf(paras) > -1; // 文本段落
+            if (is_paras) {
+                this.insert_paras(html);
+                return;
+            }
+
+            const plain = get_plain(items);
+            if (!plain) {
+                return;
+            }
+            this.paste_text_sync_for_plain(plain)
+        })
+    }
+
+    async paste_for_no_format_text(t?: string) {
+        const text = t || (await this.get_plain_text_for_paster_text());
+        const l = text.length;
+        if (!l) {
+            return;
+        }
+
+        const text_shape = this.context.selection.textshape;
+        if (!text_shape) {
+            return;
+        }
+
+        const editor = this.context.editor4TextShape(text_shape);
+
+        const selection = this.context.textSelection;
+
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+
+        const s = Math.min(start, end);
+
+        if (start !== end) {
+            editor.deleteText(s, Math.abs(start - end));
+        }
+
+        editor.insertText(text, s);
+
+        selection.setCursor(s + l, false);
+    }
+
+    async get_plain_text_for_paster_text() {
+        if (navigator.clipboard?.read) {
+            const data = await navigator.clipboard.read();
+
+            if (!data?.length) {
+                return ''
+            }
+
+            const _d = data[0];
+
+            return (await _d.getType('text/plain')).text() || '';
+        }
+
+        if (!this.cache) {
+            return '';
+        }
+
+        const { data, type } = this.cache;
+
+        if (type === 'plain-text') {
+            return data as string;
+        } else if (type === 'double') {
+            return data['text/plain'] as string
+        } else {
+            return '';
+        }
+    }
+
+    insert_paras(html: string) {
+        const text_shape = this.context.selection.textshape;
+        if (!text_shape) {
             return false;
         }
 
-        const page = this.context.selection.selectedPage;
-        if (!page) {
+        const editor = this.context.editor4TextShape(text_shape);
+
+        const selection = this.context.textSelection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        const s = Math.min(start, end);
+        const source = JSON.parse(html.split(`${paras}`)[1]);
+        const text = import_text(this.context.data, source, false) as Text;
+        const res = editor.insertFormatText(text, s, Math.abs(start - end));
+        selection.setCursor(s + text.length, false);
+
+        return res;
+    }
+
+    async replace() {
+        try {
+            const src = this.context.selection.selectedShapes;
+            if (!src.length) {
+                throw new Error('null data');
+            }
+
+            if (!navigator.clipboard.read) {
+                return this.replace_sync(src);
+            }
+            const data = await navigator.clipboard.read();
+            if (!(data && data.length)) {
+                throw new Error('invalid data');
+            }
+            const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
+            if (!is_inner_shape) {
+                throw new Error('external data');
+            }
+            clipboard_text_html_replace(this.context, data[0], src);
+            return true;
+        } catch (error) {
+            console.log('replace error:', error);
+            message('info', "替换失败");
             return false;
         }
+    }
 
-        const editor = this.context.editor4Page(page);
-        const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
-
-        if (delete_res) {
-            this.context.selection.resetSelectShapes();
+    replace_sync(src: ShapeView[]) {
+        if (!this.cache) {
+            throw new Error('no cache');
         }
 
-        return delete_res;
+        const { type, data } = this.cache;
+
+        if (type !== 'inner-html') {
+            throw new Error('wrong cache');
+        }
+
+        replace_action(this.context, data, src)
     }
 }
 
@@ -164,58 +667,6 @@ function sort_media(document: Document, shapes: Shape[]) {
         media[(shape as any).imageRef] = res;
     }
     return media;
-}
-
-/**
- * 文本编辑状态下的粘贴
- * @param only_text 只粘贴文本
- */
-export async function paster_inner_shape(context: Context, editor: TextShapeEditor, only_text?: boolean) {
-    try {
-        if (!navigator.clipboard) {
-            throw new Error('not supported');
-        }
-
-        const data = await navigator.clipboard.read();
-        if (!(data && data.length)) {
-            throw new Error('invalid data');
-        }
-
-        const _d = data[0];
-        const types = _d.types;
-        if (types.length === 1) {
-            const type = types[0];
-            if (type === 'text/plain') {
-                const val = await _d.getType('text/plain');
-                const text = await val.text();
-
-                if (!(text && typeof text === 'string')) {
-                    throw new Error('invalid text');
-                }
-
-                const selection = context.textSelection;
-                const start = selection.cursorStart;
-                const end = selection.cursorEnd;
-                const s = Math.min(start, end);
-
-                if (start !== end) {
-                    editor.deleteText(Math.min(start, end), Math.abs(start - end))
-                }
-
-                editor.insertText(text, s);
-
-                selection.setCursor(s + text.length, false);
-            } else if (type === 'text/html') {
-                paster_html_or_plain_inner_shape(_d, context, editor, only_text);
-            }
-        } else if (types.length === 2) {
-            if (types.includes('text/html') && types.includes('text/plain')) {
-                paster_html_or_plain_inner_shape(_d, context, editor, only_text);
-            }
-        }
-    } catch (error) {
-        console.log(error);
-    }
 }
 
 async function paster_html_or_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
@@ -266,89 +717,6 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
 }
 
 /**
- * @description 粘贴
- * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
- */
-export async function paster(context: Context, t: Function, xy?: PageXY) {
-    try {
-        // 不支持异步接口
-        if (!navigator.clipboard || !navigator.clipboard.read) {
-            // todo plan2 兼容方案二
-            return;
-        }
-
-        // 读取剪切板数据
-        const data = await navigator.clipboard.read();
-
-        if (!data) {
-            message('info', t('clipboard.invalid_data'));
-            return;
-        }
-
-        // 分析剪切板数据内容
-        const d = data[0]; // 剪切板内的数据
-        const types = d.types; // 剪切板内的数据类型
-
-        if (types.length === 1) {
-            const type = types[0];
-
-            if (type === 'text/html') { // 内容为Shape[]
-                clipboard_text_html(context, d, xy);
-            } else if (type === 'text/plain') { // 内容为白板文本
-                clipboard_text_plain(context, d, xy);
-            } else if (/image/.test(type)) { // 内容为图片资源
-                clipboard_image(context, d, t, xy);
-            }
-
-            return;
-        }
-
-        if (types.length === 2) {
-            // 如果剪切板内存在多个类型的数据，优先读取纯文本
-            if (types.includes('text/plain')) {
-                clipboard_text_plain(context, d, xy);
-            }
-        }
-    } catch (error) {
-        console.log(error);
-        message('info', t('clipboard.invalid_data'));
-    }
-}
-
-/**
- * 从剪切板拿出数据替换掉src的内容，以src中每个图形的左上角为锚点
- * @returns
- */
-export async function replace(context: Context, src: ShapeView[]) {
-    try {
-        if (!navigator.clipboard) {
-            throw new Error('not supported');
-        }
-        if (!src.length) {
-            throw new Error('null data');
-        }
-        // context.workspace.setFreezeStatus(true);
-        const data = await navigator.clipboard.read();
-        if (!(data && data.length)) {
-            throw new Error('invalid data');
-        }
-        const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-        if (!is_inner_shape) {
-            throw new Error('external data');
-        }
-        clipboard_text_html_replace(context, data[0], src);
-        // context.workspace.setFreezeStatus(false);
-        return true;
-    } catch (error) {
-        console.log(error);
-        // context.workspace.setFreezeStatus(false);
-        const t = context.workspace.t;
-        message('info', t('system.replace_failed'));
-        return false;
-    }
-}
-
-/**
  * @description 封装html数据
  * @param { string } identity 封装类型，分为段落、图层
  * @param { text } 如果为段落，会另存一份纯文本
@@ -363,27 +731,12 @@ function encode_html(identity: string, data: any, text?: string): string {
     return html;
 }
 
-function encode_html_beta(identity: string, data: any, text?: string): string {
-    const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
-    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
-    const t = document.createElement("input");
-    t.style.position = "fixed", t.style.top = "-1000px";
-    // t.value = html;
-    t.value = '哈哈哈哈';
-    document.body.appendChild(t);
-    t.select();
-    console.log(t.value);
-    document.execCommand("copy");
-    t.parentNode?.removeChild(t);
-    return html;
-}
-
 /**
  * @description 读取html内部数据
  * @param html
  * @returns
  */
-function decode_html(html: string): string {
+export function decode_html(html: string): string {
     let result: any = '';
     const d = document.createElement('div');
     document.body.appendChild(d);
@@ -456,90 +809,93 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             throw new Error('read failure');
         }
 
-        // 分析解析结果类型
-        const is_paras = text_html.slice(0, 70).indexOf(paras) > -1; // 文本段落
-        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1; // 图形
-
-        if (is_paras) {
-            // 文字段落
-            const source = JSON.parse(text_html.split(paras)[1]);
-            const t_s = import_text(context.data, source, true);
-
-            if (!t_s) {
-                throw new Error('invalid paras');
-            }
-
-            const page = context.selection.selectedPage;
-            if (!page) {
-                throw new Error('outside page');
-            }
-
-            const shape: TextShape = (t_s as TextShape);
-            const layout = shape.getLayout();
-            shape.frame.width = layout.contentWidth;
-            shape.frame.height = layout.contentHeight;
-            const _f = shape.frame;
-            const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-            shape.frame.x = xy?.x || _xy.x;
-            shape.frame.y = xy?.y || _xy.y;
-            const editor = context.editor4Page(page);
-            const r = editor.insert(page.data, page.childs.length, shape);
-
-            context.nextTick(page, () => {
-                if (r) context.selection.selectShape(page.shapes.get(r.id));
-            })
-        } else if (is_shape) {
-            const data = JSON.parse(text_html.split(identity)[1]);
-
-            const source = data?.shapes;
-
-            if (!source) {
-                throw new Error('invalid source');
-            }
-
-            if (xy) {
-                modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
-            } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                modify_frame_by_xy(context.workspace.center_on_page, source);
-            }
-
-            const medias = data?.media;
-
-            const shapes = import_shape_from_clipboard(context.data, source, medias);
-
-            if (!shapes.length) {
-                throw new Error('invalid source: !shapes.length');
-            }
-
-            after_import(context, medias);
-
-            const page = context.selection.selectedPage;
-            if (!page) {
-                return;
-            }
-
-            const editor = context.editor4Page(page);
-
-            const r = editor.pasteShapes1(page.data, shapes);
-            if (!r) {
-                return;
-            }
-
-            context.nextTick(page, () => {
-                if (r) {
-                    const selects: ShapeView[] = [];
-                    r.shapes.forEach((s) => {
-                        const v = page.shapes.get(s.id);
-                        if (v) selects.push(v);
-                    })
-                    context.selection.rangeSelectShape(selects);
-                }
-            })
-        } else {
-            message('info', context.workspace.t('clipboard.invalid_data'));
-        }
+        handle_text_html_string(context, text_html, xy);
     } catch (error) {
         console.log(error);
+        message('info', context.workspace.t('clipboard.invalid_data'));
+    }
+}
+
+function handle_text_html_string(context: Context, text_html: string, xy?: PageXY) {
+    const is_paras = text_html.slice(0, 70).indexOf(paras) > -1; // 文本段落
+    const is_shape = text_html.slice(0, 60).indexOf(identity) > -1; // 图形
+
+    if (is_paras) {
+        // 文字段落
+        const source = JSON.parse(text_html.split(paras)[1]);
+        const t_s = import_text(context.data, source, true);
+
+        if (!t_s) {
+            throw new Error('invalid paras');
+        }
+
+        const page = context.selection.selectedPage;
+        if (!page) {
+            throw new Error('outside page');
+        }
+
+        const shape: TextShape = (t_s as TextShape);
+        const layout = shape.getLayout();
+        shape.frame.width = layout.contentWidth;
+        shape.frame.height = layout.contentHeight;
+        const _f = shape.frame;
+        const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
+        shape.frame.x = xy?.x || _xy.x;
+        shape.frame.y = xy?.y || _xy.y;
+        const editor = context.editor4Page(page);
+        const r = editor.insert(page.data, page.childs.length, shape);
+
+        context.nextTick(page, () => {
+            if (r) context.selection.selectShape(page.shapes.get(r.id));
+        })
+    } else if (is_shape) {
+        const data = JSON.parse(text_html.split(identity)[1]);
+
+        const source = data?.shapes;
+
+        if (!source) {
+            throw new Error('invalid source');
+        }
+
+        if (xy) {
+            modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
+        } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+            modify_frame_by_xy(context.workspace.center_on_page, source);
+        }
+
+        const medias = data?.media;
+
+        const shapes = import_shape_from_clipboard(context.data, source, medias);
+
+        if (!shapes.length) {
+            throw new Error('invalid source: !shapes.length');
+        }
+
+        after_import(context, medias);
+
+        const page = context.selection.selectedPage;
+        if (!page) {
+            return;
+        }
+
+        const editor = context.editor4Page(page);
+
+        const r = editor.pasteShapes1(page.data, shapes);
+        if (!r) {
+            return;
+        }
+
+        context.nextTick(page, () => {
+            if (r) {
+                const selects: ShapeView[] = [];
+                r.shapes.forEach((s) => {
+                    const v = page.shapes.get(s.id);
+                    if (v) selects.push(v);
+                })
+                context.selection.rangeSelectShape(selects);
+            }
+        })
+    } else {
         message('info', context.workspace.t('clipboard.invalid_data'));
     }
 }
@@ -556,6 +912,58 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
 }
+async function get_html_from_datatransferitem(data: any) {
+    const val = await data.getType('text/html');
+    if (!val) {
+        throw new Error('invalid value');
+    }
+
+    return await val.text();
+}
+function replace_action(context: Context, text_html: any, src: ShapeView[]) {
+    text_html = decode_html(text_html);
+
+    if (!(text_html && typeof text_html === 'string')) {
+        throw new Error('read failure');
+    }
+
+    const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
+    if (!is_shape) {
+        throw new Error('no shapes');
+    }
+
+    const source = JSON.parse(text_html.split(identity)[1]);
+
+    const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
+    if (!shapes.length) {
+        throw new Error('invalid source');
+    }
+
+    after_import(context, source.media);
+
+    const page = context.selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
+    if (!r) {
+        return;
+    }
+
+    context.nextTick(page, () => {
+        if (r) {
+            const selects: ShapeView[] = [];
+            r.forEach((s) => {
+                const v = page.shapes.get(s.id);
+                if (v) selects.push(v);
+            })
+            context.selection.rangeSelectShape(selects);
+        }
+    })
+}
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
  * @param data 剪切板拿出的数据
@@ -563,55 +971,8 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
  */
 async function clipboard_text_html_replace(context: Context, data: any, src: ShapeView[]) {
     try {
-        const val = await data.getType('text/html');
-        if (!val) {
-            throw new Error('invalid value');
-        }
-
-        let text_html = await val.text();
-
-        text_html = decode_html(text_html);
-
-        if (!(text_html && typeof text_html === 'string')) {
-            throw new Error('read failure');
-        }
-
-        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-        if (!is_shape) {
-            throw new Error('no shapes');
-        }
-
-        const source = JSON.parse(text_html.split(identity)[1]);
-
-        const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
-        if (!shapes.length) {
-            throw new Error('invalid source');
-        }
-
-        after_import(context, source.media);
-
-        const page = context.selection.selectedPage;
-
-        if (!page) {
-            return;
-        }
-
-        const editor = context.editor4Page(page);
-        const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
-        if (!r) {
-            return;
-        }
-
-        context.nextTick(page, () => {
-            if (r) {
-                const selects: ShapeView[] = [];
-                r.forEach((s) => {
-                    const v = page.shapes.get(s.id);
-                    if (v) selects.push(v);
-                })
-                context.selection.rangeSelectShape(selects);
-            }
-        })
+        const text_html = await get_html_from_datatransferitem(data);
+        replace_action(context, text_html, src);
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('system.replace_failed'));
@@ -624,9 +985,20 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
  * @param _xy 插入位置
  */
 async function clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
-    item.contentType = data.types[0];
-    const val = await data.getType(item.contentType);
+    // @ts-ignore
+    if (navigator.clipboard && navigator.clipboard.read) {
+        const type = data.types[0];
+        const val = await data.getType(type);
+        image_reader(context, val, type, t, _xy);
+    } else {
+        const type = data[0].type;
+        const val = data[0].getAsFile();
+        image_reader(context, val, type, t, _xy);
+    }
+}
+
+function image_reader(context: Context, val: any, contentType: string, t: Function, _xy?: PageXY) {
+    const item: SystemClipboardItem = { type: ShapeType.Image, contentType, content: '' };
     const frame: { width: number, height: number } = { width: 100, height: 100 };
     const img = new Image();
     img.onload = function () {
@@ -661,12 +1033,13 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
  */
 async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
     try {
-        const frame: { width: number, height: number } = { width: 400, height: 100 };
         const val = await data.getType('text/plain');
         if (!val) throw new Error('invalid value');
         const text = await val.text();
         const is_plain = text && typeof text === 'string';
         if (!is_plain) throw new Error('read failure');
+
+        const frame: { width: number, height: number } = { width: 400, height: 100 };
         const __xy = adjust_content_xy(context, frame);
         const xy: PageXY = _xy || __xy;
         paster_text(context, xy, text);
@@ -674,6 +1047,13 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         console.log(error);
         message('info', context.workspace.t('clipboard.invalid_data'));
     }
+}
+
+function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
+    const frame: { width: number, height: number } = { width: 400, height: 100 };
+    const __xy = adjust_content_xy(context, frame);
+    const xy: PageXY = _xy || __xy;
+    paster_text(context, xy, data);
 }
 
 /**
@@ -757,28 +1137,41 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 
 // 不经过剪切板，直接复制(Shape[])
 export async function paster_short(context: Context, shapes: ShapeView[], editor: AsyncTransfer): Promise<ShapeView[]> {
-    const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
+    const pre_shapes: Shape[] = [];
+    const actions: { parent: GroupShape, index: number }[] = [];
+
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const s = shapes[i], p = s.parent;
+        const s = shapes[i];
+        let _s = s;
+        let p = s.parent;
         if (!p) {
             continue;
         }
 
-        const childs = (p).childs;
+        if (p.type === ShapeType.SymbolUnion) {
+            _s = p;
+            p = p.parent;
+        }
+
+        if (!p) {
+            continue;
+        }
+
+        const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (s.id === childs[j].id) {
+            if (_s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;
             }
         }
     }
+
     const page = context.selection.selectedPage;
     if (!page) {
         return [];
     }
-    const new_source = transform_data(context.data, page.data,  pre_shapes);
-
+    const new_source = transform_data(context.data, page.data, pre_shapes);
 
     let result: Shape[] = [];
 
@@ -811,4 +1204,84 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
             resolve(selects);
         })
     })
+}
+
+/***
+ * 
+ * 复制页面链接
+*/
+//复制分享链接
+export const copyLink = async (url: string, t: Function) => {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(url).then(() => {
+            ElMessage({
+                message: `${t('share.copy_success')}`,
+                type: 'success',
+            })
+        }, () => {
+            ElMessage({
+                message: `${t('share.copy_failure')}`,
+                type: 'success',
+            })
+        })
+    } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        ElMessage({
+            message: `${t('share.copy_success')}`,
+            type: 'success',
+        })
+        textArea.remove()
+    }
+}
+function is_html(items: DataTransferItemList) {
+    return items.length === 1 && items[0].type === 'text/html';
+}
+
+function is_plain(items: DataTransferItemList) {
+    if (items.length === 1 && items[0].type === 'text/plain') {
+        return true;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type === 'text/plain') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function get_image(items: DataTransferItemList) {
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            return items[i];
+        }
+    }
+
+    return;
+}
+
+function get_html(items: DataTransferItemList) {
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type === 'text/html') {
+            return items[i];
+        }
+    }
+
+    return;
+}
+
+function get_plain(items: DataTransferItemList) {
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type === 'text/plain') {
+            return items[i];
+        }
+    }
+
+    return;
 }

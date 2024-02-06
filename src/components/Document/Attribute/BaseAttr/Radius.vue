@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { onMounted } from 'vue';
 import { onUnmounted } from 'vue';
-import { ArtboradView, PathShapeView, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ImageShape, ImageShapeView, PathShapeView, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { reactive } from 'vue';
 import { get_indexes2, is_rect } from '@/utils/attri_setting';
 
@@ -25,26 +25,23 @@ function get_value_from_input(val: any) {
     value = Number(value.toFixed(0));
     return value;
 }
-function change(val: any, type: string) {
+function change(val: any, shapes: ShapeView[], type: string) {
     val = get_value_from_input(val);
+    
     if (rect.value) {
-        setting_for_extend(val, type);
+        setting_for_extend(val, type, shapes);
         return;
     }
     const page = props.context.selection.selectedPage!;
-    const selected = props.context.selection.selectedShapes;
     const editor = props.context.editor4Page(page);
-
-    editor.shapesModifyFixedRadius(selected.map(s => adapt2Shape(s)), val);
+    editor.shapesModifyFixedRadius(shapes.map(s => adapt2Shape(s)), val);
 }
-function setting_for_extend(val: number, type: string) {
+function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
     const indexes = get_indexes2(type as 'rt' | 'lt' | 'rb' | 'lb');
-
     const page = props.context.selection.selectedPage!;
-    const selected = props.context.selection.selectedShapes;
 
     const editor = props.context.editor4Page(page);
-    editor.shapesModifyPointRadius(selected.map(s => adapt2Shape(s)), indexes, val);
+    editor.shapesModifyPointRadius(shapes.map(s => adapt2Shape(s)), indexes, val);
 }
 function rectToggle() {
     rect.value = !rect.value;
@@ -72,16 +69,18 @@ function modify_can_be_rect() {
 
     for (let i = 0, l = selected.length; i < l; i++) {
         const s = selected[i];
-        if (!is_rect(s)) {
+        
+        if (!is_rect(s) && s.type !== ShapeType.Image) {
             return
         }
     }
-
     if (need_reset) {
         rect.value = true;
     }
 
     can_be_rect.value = true;
+
+    
 }
 
 function reset_radius_value() {
@@ -94,20 +93,20 @@ function get_radius_for_shape(shape: ShapeView) {
     if (shape instanceof ArtboradView) {
         return shape.fixedRadius || 0;
     }
-
-    if (!(shape instanceof PathShapeView)) {
+    
+    if (!(shape instanceof PathShapeView) && shape.type !== ShapeType.Image) {
         return 0;
     }
-
-    const points = shape.points;
+    const s = shape.type === ShapeType.Image ? shape.data as ImageShape : shape as PathShapeView;
+    const points = s.points;
+    
     if (!points.length) {
         return 0;
     }
-
-    let _r = points[0].radius || shape.fixedRadius || 0;
+    let _r = points[0].radius || s.fixedRadius || 0;
 
     for (let i = 1, l = points.length; i < l; i++) {
-        if ((points[i].radius || shape.fixedRadius || 0) !== _r) {
+        if ((points[i].radius || s.fixedRadius || 0) !== _r) {
             return mixed;
         }
     }
@@ -119,7 +118,7 @@ function get_all_values(shapes: ShapeView[]) {
     if (!first_shape) {
         return;
     }
-    const f_r = get_rect_shape_all_value(first_shape as PathShapeView);
+    const f_r = get_rect_shape_all_value(first_shape);
     radius.lt = f_r.lt;
     radius.rt = f_r.rt;
     radius.rb = f_r.rb;
@@ -127,7 +126,7 @@ function get_all_values(shapes: ShapeView[]) {
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
-        const rs = get_rect_shape_all_value(shape as PathShapeView);
+        const rs = get_rect_shape_all_value(shape);
         if (rs.lt !== radius.lt) {
             radius.lt = mixed;
         }
@@ -142,12 +141,13 @@ function get_all_values(shapes: ShapeView[]) {
         }
     }
 }
-function get_rect_shape_all_value(shape: PathShapeView) {
+function get_rect_shape_all_value(shape: ShapeView) {
     const rs = { lt: 0, rt: 0, rb: 0, lb: 0 };
-    rs.lt = shape.points[0]?.radius || shape.fixedRadius || 0;
-    rs.rt = shape.points[1]?.radius || shape.fixedRadius || 0;
-    rs.rb = shape.points[2]?.radius || shape.fixedRadius || 0;
-    rs.lb = shape.points[3]?.radius || shape.fixedRadius || 0;
+    const s = shape.type === ShapeType.Image ? shape.data as ImageShape : shape as PathShapeView;
+        rs.lt = s.points[0]?.radius || s.fixedRadius || 0;
+        rs.rt = s.points[1]?.radius || s.fixedRadius || 0;
+        rs.rb = s.points[2]?.radius || s.fixedRadius || 0;
+        rs.lb = s.points[3]?.radius || s.fixedRadius || 0;
     return rs;
 }
 function modify_radius_value() {
@@ -157,14 +157,14 @@ function modify_radius_value() {
     if (!selected.length) {
         return;
     }
-
+    
     if (rect.value) {
         get_all_values(selected);
         return;
     }
-
+    
     let init = get_radius_for_shape(selected[0]);
-
+    
     if (typeof init === 'string') {
         radius.lt = init;
         return;
@@ -207,19 +207,19 @@ onUnmounted(() => {
 <template>
     <div class="tr">
         <IconText class="frame" svgicon="radius" :multipleValues="is_multi_values" :text="radius.lt"
-            :frame="{ width: 12, height: 12 }" @onchange="e => change(e, 'lt')" :disabled="disabled" :context="context" />
+            :frame="{ width: 12, height: 12 }" @onchange="(value, shapes) => change(value, shapes, 'lt')" :disabled="disabled" :context="context" />
         <div class="frame" v-if="!rect"></div>
-        <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt"
-            :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => change(e, 'rt')" :context="context" />
+        <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt" :disabled="disabled"
+            :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="(value, shapes) => change(value, shapes, 'rt')" :context="context" />
         <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
-            <svg-icon :icon-class="rect ? 'more-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
+            <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
         </div>
     </div>
     <div class="tr" v-if="rect">
-        <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }"
-            @onchange="e => change(e, 'lb')" :context="context" />
-        <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }"
-            @onchange="e => change(e, 'rb')" :context="context" />
+        <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }" :disabled="disabled"
+        @onchange="(value, shapes) => change(value, shapes, 'lb')" :context="context" />
+        <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }" :disabled="disabled"
+        @onchange="(value, shapes) => change(value, shapes, 'rb')" :context="context" />
         <div style="width: 32px;height: 32px;"></div>
     </div>
 </template>

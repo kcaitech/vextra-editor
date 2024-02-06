@@ -93,7 +93,7 @@ const onInputName = (e: Event) => {
 const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value;
     if (esc.value) return;
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return;
+    if (value.length === 0 || value.trim().length === 0) return;
     emit('rename', value, props.shape)
 }
 
@@ -128,21 +128,23 @@ function down(e: MouseEvent) {
     if (context.workspace.isPageDragging) return;
     e.stopPropagation();
     if (isInput.value) return;
-    if (!permIsEdit(context)) return; // 检查是否有权限编辑文档， 没有则return；
+    if (!permIsEdit(context)) return; // 检查是否有权限编辑文档或者为标注模式， 没有则return；
     if (!check_status(context)) return; // 检查当前文档状态是否可以编辑；
     if (e.button === 0) { // 只允许左键进行拖动
         context.selection.selectShape(props.shape); // 先将图形设为选中状态，只有被选中才可以被拖动
         let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标按下的点相对wrap的相对位移
-        if (forbidden_to_modify_frame(props.shape)) return;
+        if (forbidden_to_modify_frame(props.shape) || context.tool.isLable) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
+        context.cursor.reset();
+        context.cursor.cursor_freeze(true);
     } else if (e.button === 2) { // 右键是打开菜单
         props.context.workspace.downArboardTitle(e);
     }
 }
 // 按下后移动
-function move(e: MouseEvent) {
+async function move(e: MouseEvent) {
     if (e.buttons !== 1) {
         return; // 注意，这里是buttons而不是button，通过mdn了解一下两者的区别
     }
@@ -171,25 +173,19 @@ function move(e: MouseEvent) {
         const selection = props.context.selection; // selection, 是位于context中用于组件通信的一个模块，主要负责选区状态的通信；
         shapes = selection.selectedShapes;
 
+        isDragging = true;
 
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
 
         if (e.altKey) {
-            paster_short(props.context, shapes, asyncTransfer).then((v) => {
-                shapes = v;
-                pre_translate(props.context, shapes);
-                const map_anchor = matrix_inverse.computeCoord3(startPosition);
-                offset_map = shapes[0] && gen_offset_map(shapes[0], map_anchor);
-            }); // 图形分身
-        } else {
-            pre_translate(props.context, shapes);
-            const map_anchor = matrix_inverse.computeCoord3(startPosition);
-            offset_map = shapes[0] && gen_offset_map(shapes[0], map_anchor);
+            shapes = await paster_short(props.context, shapes, asyncTransfer);
         }
 
-        isDragging = true;
+        pre_translate(props.context, shapes);
+        const map_anchor = matrix_inverse.computeCoord3(startPosition);
+        offset_map = shapes[0] && gen_offset_map(shapes[0], map_anchor);
     }
 }
 // 移动后抬起：不用细致关注干了什么，但是需要知道每次拖动一个图形都要用如下方法进行收尾
@@ -204,6 +200,7 @@ function up(e: MouseEvent) {
         asyncTransfer = asyncTransfer.close();
     }
     if (wheel) wheel = wheel.remove(); // 卸载滚轮
+    props.context.cursor.cursor_freeze(true);
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
@@ -227,17 +224,6 @@ function transform_f(start: ClientXY, end: ClientXY, assist = true) {
     update_type = trans(asyncTransfer, ps, pe);
     migrate(props.context, asyncTransfer, shapes, shapes[0]);
     return update_type;
-}
-function update_assist_by_workspace_change(event: MouseEvent) {
-    const workspace = props.context.workspace;
-
-    matrix_inverse = new Matrix(workspace.matrix.inverse);
-
-    props.context.assist.set_trans_target(shapes);
-
-    const xy = matrix_inverse.computeCoord2(event.clientX, event.clientY);
-
-    offset_map = gen_offset_map(shapes[0], xy);
 }
 let pre_target_x: number, pre_target_y: number;
 let stickedX: boolean = false;
@@ -347,7 +333,7 @@ onUnmounted(() => {
 
 <template>
     <div :reflush="reflush" class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
-        @mousemove="move2" data-area="controller">
+        @mousemove="move2" data-area="controller" data-title="symbol-title">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                 width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolView).isSymbolUnionShape">

@@ -20,6 +20,10 @@ const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
+const width = ref<number>(100);
+const height = ref<number>(100);
+const viewbox = ref<string>('0 0 100 100');
+const WIDE = 1.10;
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -33,11 +37,29 @@ function pageViewRegister(mount: boolean) {
 function _collect(t?: any) {
     if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
-const collect = debounce(_collect, 100);
+const collect = debounce(_collect, 240);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
+
+    width.value = props.data.frame.width;
+    height.value = props.data.frame.height;
+
+    modifySize();
+
     reflush.value++;
+}
+function modifySize() {
+    width.value = Math.ceil(Math.max(100, width.value));
+    if (width.value % 2) {
+        width.value++;
+    }
+    height.value = Math.ceil(Math.max(100, height.value));
+    if (height.value % 2) {
+        height.value++;
+    }
+
+    viewbox.value = `0 0 ${width.value} ${height.value}`;
 }
 
 const stopWatchPage = watch(() => props.data, (value, old) => {
@@ -113,8 +135,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId"
-        :reflush="reflush"></svg>
+    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
+        :width="width" :height="height" :viewBox="viewbox"></svg>
     <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>

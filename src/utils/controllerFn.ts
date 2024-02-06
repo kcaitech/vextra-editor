@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { AsyncTransfer, GroupShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { AsyncTransfer, GroupShape, Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
@@ -302,4 +302,19 @@ export class DirectionCalc {
 
         return { x, y };
     }
+}
+
+export function is_symbol_class(shape: ShapeView) {
+    return shape.isVirtualShape
+        || [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type)
+        || (function (shape: ShapeView) {
+            let p: ShapeView | undefined = shape;
+            while (p) {
+                if (ShapeType.Symbol === p.type) {
+                    return true;
+                }
+                p = p.parent;
+            }
+            return false;
+        }(shape));
 }

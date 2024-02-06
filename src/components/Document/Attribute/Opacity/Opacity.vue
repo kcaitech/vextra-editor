@@ -1,21 +1,27 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {AsyncOpacityEditor, ShapeView, adapt2Shape} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
-import {nextTick, onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
-import {Selection} from '@/context/selection'
+import { AsyncOpacityEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Context } from '@/context';
+import { throttle } from 'lodash';
+import { modifyOpacity } from '@/utils/common';
+import { hidden_selection } from '@/utils/content';
 
 interface Props {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    selectionChange: number;
+    trigger: any[]
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const selectedOption = ref('');
+const shapes = ref<ShapeView[]>([]);
+const opacityValue = ref(0);
+const opacityInput = ref<HTMLInputElement>();
+const executed = ref(true);
 let opacity_editor: AsyncOpacityEditor | undefined = undefined;
 
 function showMenu(e: MouseEvent) {
@@ -39,11 +45,6 @@ function onMenuBlur(e: MouseEvent) {
     }
 }
 
-function selectOption(event: MouseEvent) {
-    selectedOption.value = (event.target as HTMLSpanElement).innerText;
-    popoverVisible.value = false;
-}
-
 function limitValue(value: number): number {
     if (value < 0) {
         return 0;
@@ -55,13 +56,6 @@ function limitValue(value: number): number {
 }
 
 const opacity = ref<number | string>(1);
-const range = () => {
-    if (typeof opacity.value === 'number') {
-        return (opacity.value * 100).toFixed(0);
-    } else {
-        return 100;
-    }
-}
 const ipt = () => {
     if (typeof opacity.value === 'number') {
         return (opacity.value * 100).toFixed(0);
@@ -70,15 +64,10 @@ const ipt = () => {
     }
 }
 
-function opacityChange(value: number) {
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const selected = props.context.selection.selectedShapes;
-    editor.modifyShapesContextSettingOpacity(selected.map(s => adapt2Shape(s)), value);
-}
-
 function change(e: Event) {
-    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    if (!executed.value) return;
+    executed.value = false;
+    const value = opacityValue.value;
     if (isNaN(value) || value === 1 || value === 0) {
         (e.target as HTMLInputElement).value =
             typeof opacity.value === 'string'
@@ -87,15 +76,15 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
-    opacity.value = value;
-    opacityChange(opacity.value);
+
+    modifyOpacity(props.context, value);
 }
 
-function down(e: MouseEvent) {
+function down(v: number) {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!selected.length || !page) return;
-    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    const value = limitValue(v);
     if (isNaN(value)) return;
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
@@ -104,10 +93,55 @@ function down(e: MouseEvent) {
     opacity_editor.execute(value);
 }
 
-function mouseup(e: MouseEvent) {
+function mouseup() {
     if (opacity_editor) {
         opacity_editor.close();
         opacity_editor = undefined;
+    }
+}
+const progressBar = ref<HTMLDivElement>()
+const progress = ref<HTMLDivElement>()
+const progressBtn = ref<HTMLDivElement>()
+let isDragging = false
+const onMouseDown = (e: MouseEvent) => {
+    isDragging = true;
+    updateProgress(e.clientX);
+    down(opacity.value as number);
+    nextTick(() => {
+        if (progressBtn.value) {
+            document.addEventListener('mousemove', onMouseMove)
+            document.addEventListener('mouseup', onMouseUP)
+        }
+    })
+    hidden_selection(props.context);
+}
+const onMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+        updateProgress(e.clientX);
+        if (opacity_editor && typeof opacity.value === 'number') {
+            opacity_editor.execute(opacity.value);
+        }
+    }
+    hidden_selection(props.context);
+}
+const onMouseUP = () => {
+    isDragging = false;
+    if (progressBtn.value) {
+        mouseup()
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUP)
+    }
+}
+function updateProgress(x: number) {
+    if (progressBar.value) {
+        const progressBarRect = progressBar.value.getBoundingClientRect();
+        const progressWidth = Math.min(Math.max(x - progressBarRect.left, 0), progressBarRect.width);
+        const progressPercentage = progressWidth / progressBarRect.width * 100;
+        if (progress.value) {
+            progress.value.style.width = progressPercentage + '%';
+            progressBtn.value!.style.left = progressPercentage - 4 + '%';
+            opacity.value = Number(progressPercentage.toFixed(0)) / 100;
+        }
     }
 }
 
@@ -116,33 +150,42 @@ function input(e: Event) {
     if (isNaN(value) || !opacity_editor) return;
     opacity.value = limitValue(Number(value));
     opacity_editor.execute(value);
+    hidden_selection(props.context);
 }
 
-function change2(e: Event) {
-    if (opacity_editor) {
-        opacity_editor = opacity_editor.close();
-    } else {
-        change(e);
+const handleOPacity = (e: Event) => {
+    executed.value = true;
+    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    opacityValue.value = value;
+}
+
+const focus = (e: Event) => {
+    if (opacityInput.value) {
+        executed.value = true;
+        shapes.value = [...props.context.selection.selectedShapes];
+        const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+        opacityValue.value = value;
+        opacityInput.value.select();
+    }
+}
+const text_keyboard = (e: KeyboardEvent) => {
+    if (e.code === "Enter" || e.code === "NumpadEnter") {
+        opacityInput.value?.blur();
     }
 }
 
-const focus = (event: Event) => {
-    if (event.target instanceof HTMLInputElement) {
-        event.target.select();
-    }
-}
-
-// 你还需要做的是todo，选区监听已经处理好了
-function update() {
-    // 更新组件状态
+function _update() {
     const shapes = props.context.selection.selectedShapes
-    if (!shapes.length) return;
+    if (!shapes.length) {
+        return;
+    }
     let firstOpacity = shapes[0].contextSettings?.opacity;
     firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].contextSettings?.opacity;
+            const o = shapes[i].contextSettings;
+            const randomOpacity = o?.opacity === undefined ? 1 : o?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
@@ -152,125 +195,32 @@ function update() {
     } else {
         opacity.value = firstOpacity;
     }
-}
-
-function range_keyboard(e: KeyboardEvent) {
-    if (e.repeat) return;
-    if (['ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight'].includes(e.code)) {
-        if (opacity_editor) {
-            opacity_editor = opacity_editor.close();
-        }
-        (e.target as HTMLInputElement).blur();
+    if (progressBar.value && progress.value) {
+        progress.value.style.width = (firstOpacity * 100) + '%';
+        progressBtn.value!.style.left = (firstOpacity * 100) - 4 + '%';
     }
 }
 
-/**
- * @description 调整监听对象
- * eg: 第一次选中了A、B,这个时候组件监听了A、B。
- *     第二次从A、B到C、D，这个时候所选图形发生了变化，监听对象从A、B调整为C、D。
- *     在调整过程中对C、D挂载(watch)监听的同时，还对A、B的监听进行了卸载(unwatch);
- */
-const watchedShapes = new Map();
+const update = throttle(_update, 320, { leading: true });
 
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.selectedShapes.length) {
-        for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
-            const v = selection.selectedShapes[i];
-            needWatchShapes.set(v.id, v)
-        }
+const stop = watch(() => props.trigger, (v) => {
+    if (v.includes('context-settings')) {
+        update();
     }
-    watchedShapes.forEach((v, k) => {
-        if (!needWatchShapes.has(k)) {
-            v.unwatch(update);
-            watchedShapes.delete(k);
-        }
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (!watchedShapes.has(k)) {
-            v.watch(update);
-            watchedShapes.set(k, v);
-        }
-    })
-}
+});
+const stop2 = watch(() => props.selectionChange, () => {
+    update()
+});
 
-/**
- * @description
- * @param type 选区的变化类型
- *              Selection.CHANGE_PAGE 切换页面
- *              Selection.CHANGE_SHAPE 切换所选图形，即更新context.selection.selectedShapes (这里要用的是这个)
- *              ...
- */
-function selection_watcher(type: number) {
-    if (type === Selection.CHANGE_SHAPE) { // 切换了所选图形
-        update(); // 更新组件状态
-        watchShapes(); // 调整监听对象。
-    }
-}
-
-onMounted(() => {
-    // 给选区挂载 监听函数 --selection_watcher
-    props.context.selection.watch(selection_watcher); // selection.watch 类似于 document.addEventListener
-    watchShapes(); // 组件产生，立马需要一次调整监听对象(第一次调整监听对象是从无 到 任意图形)
-    update();
-})
+onMounted(update);
 onUnmounted(() => {
-    // selection.unwatch 类似于 document.removeEventListener，大部分场景下，在挂载监听的时候都需要考虑移除监听的时机和处理
-    props.context.selection.unwatch(selection_watcher);
-    if (opacity_editor) opacity_editor.close();
+    if (opacity_editor) {
+        opacity_editor.close();
+    }
+
+    stop();
+    stop2();
 })
-// function updateBackgroundSize(event: MouseEvent) {
-//     const range = event.target as HTMLInputElement | null;
-//     if (range) {
-//         range.style.backgroundSize = `${range.value}% 100%`;
-//     }
-// }
-// interface RangeSliderConfig {
-//     min?: number;
-//     max?: number;
-//     step?: number;
-//     callback?: (input: HTMLInputElement) => void;
-// }
-//
-// class RangeSlider {
-//     private input: HTMLInputElement;
-//
-//     constructor(element: HTMLInputElement, config: RangeSliderConfig) {
-//         this.input = element;
-//         this.init(config);
-//     }
-//
-//     private init(config: RangeSliderConfig): void {
-//         const {min = 0, max = 100, step = 1, callback} = config;
-//
-//         this.input.setAttribute('min', min.toString());
-//         this.input.setAttribute('max', max.toString());
-//         this.input.setAttribute('step', step.toString());
-//
-//         this.input.addEventListener('input', (e) => {
-//             this.input.setAttribute('value', (e.target as HTMLInputElement).value);
-//             this.input.style.backgroundSize = (e.target as HTMLInputElement).value + '% 100%';
-//             if (callback) {
-//                 callback(this.input);
-//             }
-//         });
-//     }
-// }
-//
-// window.onload = function rangeSlider() {
-//     const myRangeInput = document.getElementById('Range2') as HTMLInputElement;
-//     if (myRangeInput) {
-//         const rangeSlider = new RangeSlider(myRangeInput, {
-//             min: 0,
-//             max: 100,
-//             step: 1,
-//             callback: (input) => {
-//                 console.log('Current value:', input.value);
-//             },
-//         });
-//     }
-// };
 </script>
 <template>
     <div class="opacity-panel">
@@ -327,14 +277,15 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="opacity-container">
-            <div class="slider">
-                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup" @mouseleave="mouseup" @input="input"
-                       @change="change2"
-                       @keydown="range_keyboard" min="0" max="100" step="1"/>
-                                <div class="track"></div>
-        </div>
-            <input type="text" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
-                   @click="focus" @change="change"/>
+            <div class="slider" @mousedown="onMouseDown">
+                <div ref="progressBar" class="progress-bar">
+                    <div ref="progress" class="progress"></div>
+                    <div ref="progressBtn" class="progress-button" @mousedown.stop="onMouseDown"></div>
+                </div>
+            </div>
+            <input type="text" ref="opacityInput" class="input-text"
+                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
+                @input="handleOPacity" @keydown="text_keyboard" />
         </div>
     </div>
 </template>
@@ -362,7 +313,7 @@ onUnmounted(() => {
         color: #000000;
         transition: 0.3s;
 
-        > input {
+        >input {
             width: 55px;
             height: 15px;
             margin-left: -79px;
@@ -372,7 +323,7 @@ onUnmounted(() => {
             font-size: 12px;
         }
 
-        > svg {
+        >svg {
             width: 80%;
             height: 60%;
             margin-left: -2px;
@@ -412,7 +363,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        > span {
+        >span {
             position: relative;
             width: 100%;
             height: 28px;
@@ -431,7 +382,7 @@ onUnmounted(() => {
     .opacity-container {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         margin-top: -14px;
         margin-bottom: 3px;
 
@@ -507,4 +458,42 @@ onUnmounted(() => {
     margin-left: 12px;
 }
 
+.slider {
+    margin-top: 10px;
+    margin-left: 5px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-bar {
+    width: 150px;
+    height: 4px;
+    background-color: var(--grey-dark);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background-color: var(--active-color);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.progress-button {
+    position: absolute;
+    left: 0%;
+    top: -4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: #fff;
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 1;
+    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.2);
+}
 </style>

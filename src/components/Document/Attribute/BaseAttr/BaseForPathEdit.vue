@@ -234,14 +234,14 @@ onUnmounted(() => {
         <div class="tr">
             <IconText class="td position" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(2) : x" @onchange="onChangeX"
                 :disabled="model_state.x" :context="context" />
-            <div class="space"></div>
             <IconText class="td position" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(2) : y" @onchange="onChangeY"
                 :disabled="model_state.y" :context="context" />
-            <div class="space"></div>
+            <div style="width: 32px;height: 32px;"></div>
         </div>
         <div class="tr">
-            <IconText class="td position" ticon="R" :text="typeof (r) === 'number' ? r.toFixed(2) : r" @onchange="onChangeR"
-                :disabled="model_state.r" :context="context" />
+            <IconText class="td position" svgicon="radius" :frame="{ width: 12, height: 12 }"
+                :text="typeof (r) === 'number' ? r.toFixed(2) : r" @onchange="onChangeR" :disabled="model_state.r"
+                :context="context" />
         </div>
         <div class="tr">
             <div :class="{ tool: true, tool_disabled: model_state.tool }">
@@ -286,7 +286,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 2px 10px 12px 10px;
+    padding: 12px 8px;
     box-sizing: border-box;
     visibility: visible;
     border-bottom: 1px solid #F0F0F0;
@@ -294,16 +294,16 @@ onUnmounted(() => {
     .tr {
         position: relative;
         width: 100%;
-        height: 30px;
+        height: 32px;
         align-items: center;
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin: 4px 0;
+        margin-bottom: 8px;
 
         .position {
-            width: 95px;
-            height: 30px;
+            width: 88px;
+            height: 32px;
             border-radius: var(--default-radius);
         }
 
@@ -323,7 +323,6 @@ onUnmounted(() => {
         }
 
         .tool {
-            width: 64%;
             height: 100%;
             border-radius: var(--default-radius);
             background-color: var(--input-background);
@@ -333,23 +332,25 @@ onUnmounted(() => {
             box-sizing: border-box;
             position: relative;
             transition: 0.3s;
+            padding: 2px;
+
 
             .item {
-                height: calc(100% - 4px);
-                margin: 2px;
-                border-radius: var(--default-radius);
+                height: 100%;
+                width: 28px;
+                border-radius: 4px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
 
                 >svg {
-                    height: 80%;
-                    width: 80%;
+                    height: 16px;
+                    width: 16px;
                 }
             }
 
             .active {
-                background-color: var(--active-color);
+                background-color: #ffffff;
             }
         }
 
@@ -362,30 +363,33 @@ onUnmounted(() => {
     .btns {
         position: relative;
         width: 100%;
-        height: 30px;
-        display: grid;
-        grid-template-columns: repeat(2, calc(50% - 8px));
-        grid-gap: 16px;
-        margin: 4px 0;
+        height: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
 
         .path-status {
+            width: 108px;
             height: 100%;
-            border-radius: 4px;
-            background-color: var(--input-background);
+            background-color: #ffffff;
             color: var(--theme-color);
             text-align: center;
-            line-height: 30px;
+            line-height: 32px;
             cursor: pointer;
+            border: 1px solid #f0f0f0;
+            border-radius: var(--default-radius);
         }
 
         .exit {
+            width: 108px;
             height: 100%;
-            border-radius: 4px;
             background-color: var(--active-color);
             color: var(--theme-color-anti);
             text-align: center;
-            line-height: 30px;
+            line-height: 32px;
             cursor: pointer;
+            border-radius: var(--default-radius);
+
         }
     }
 }

@@ -6,6 +6,8 @@ import { ExportFormatNameingScheme, ShapeType, ShapeView } from '@kcdesign/data'
 import { Menu } from '@/context/menu';
 import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';
+import { get_actions_export_format_name, get_actions_export_format_scale } from '@/utils/shape_style';
+import { compareArrays } from '@/utils/cutout'
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -19,10 +21,8 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<{
-    (e: 'changeSize', value: string, argsi: number): void;
     (e: 'changePerfix', index: number, argsi: number): void;
     (e: 'changeFormat', index: number, argsi: number): void;
-    (e: 'changeName', value: string, index: number): void;
     (e: 'delete', index: number): void;
 }>();
 const showCutoutSize = ref(false);
@@ -59,7 +59,8 @@ const showCutoutFormatMenu = () => {
 };
 const selectSize = (i: number) => {
     sizeValue.value = props.sizeItems[i];
-    emits('changeSize', props.sizeItems[i], props.index);
+    const sleecteds = props.context.selection.selectedShapes;
+    changeSize(props.sizeItems[i], props.index, sleecteds);
 }
 const selectPerfix = (i: number) => {
     perfixValue.value = props.perfixItems[i];
@@ -70,32 +71,111 @@ const selectFormat = (i: number) => {
     emits('changeFormat', i, props.index);
 }
 const nameInput = ref<HTMLInputElement>();
+const nameValue = ref('');
 const changeName = () => {
-    const value = nameInput.value!.value;
-    name.value = value;
-    emits('changeName', value, props.index);
+    const sleecteds = props.context.selection.selectedShapes;
+    const is_same = compareArrays(sleecteds, shapes.value as ShapeView[]);
+    const value = nameValue.value;
+    changeExportName(value, props.index, shapes.value as ShapeView[]);
+    if(nameInput.value && is_same) {
+        sizeValue.value = props.argus.format.name;
+        nameInput.value.value = sizeValue.value;
+    }
+}
+
+const changeExportName = (value: string, idx: number, shapes: ShapeView[]) => {
+    const _idx = props.length - idx - 1;
+    const len = shapes.length;
+    if (len === 1) {
+        const shape = shapes[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatName(_idx, value);
+    } else if (len > 1) {
+        const actions = get_actions_export_format_name(shapes, _idx, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatName(actions);
+        }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatName(_idx, value);
+        }
+    }
 }
 const scaleInput = ref<HTMLInputElement>();
+const scaleValue = ref('');
+const shapes = ref<ShapeView[]>([])
 const changeScale = () => {
+    const sleecteds = props.context.selection.selectedShapes;
+    const is_same = compareArrays(sleecteds, shapes.value as ShapeView[]);
     const regex = /^(\d+|(\d+)x)$/;
-    const value = scaleInput.value!.value;
+    const value = scaleValue.value;
     if (regex.test(value)) {
-        sizeValue.value = value;
-        emits('changeSize', value, props.index);
-    } else {
-        sizeValue.value = props.argus.format.scale + 'x';
-        scaleInput.value!.value = sizeValue.value;
+        changeSize(value, props.index, shapes.value as ShapeView[]);
     }
+    if(scaleInput.value && (is_same || !regex.test(value))) {
+        sizeValue.value = props.argus.format.scale + 'x';
+        scaleInput.value.value = sizeValue.value;
+    }
+}
+const handleScaleInput = () => {
+    const value = scaleInput.value!.value;
+    scaleValue.value = value;
+}
+const changeSize = (value: string, idx: number, shapes: ShapeView[]) => {
+    const _idx = props.length - idx - 1;
+    const len = shapes.length;
+    if (len === 1) {
+        const shape = shapes[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatScale(_idx, parseFloat(value));
+    } else if (len > 1) {
+        const actions = get_actions_export_format_scale(shapes, _idx, parseFloat(value));
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatScale(actions);
+        }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatScale(_idx, parseFloat(value));
+        }
+    }
+}
+const scaleInputBlur = (e: KeyboardEvent) => {
+    if(e.key === 'Enter') {
+        if (scaleInput.value) {
+            scaleInput.value.blur();
+        }
+    }
+}
+const nameInputBlur = (e: KeyboardEvent) => {
+    if(e.key === 'Enter') {
+        if (nameInput.value) {
+            nameInput.value.blur();
+        }
+    }
+}
+const handleNameInput = () => {
+    const value = nameInput.value!.value;
+    nameValue.value = value;
 }
 
 const selectScale = () => {
     if (scaleInput.value) {
+        shapes.value = [...props.context.selection.selectedShapes];
         scaleInput.value.select();
     }
 }
 
 const selectName = () => {
     if (nameInput.value) {
+        shapes.value = [...props.context.selection.selectedShapes];
         nameInput.value.select();
     }
 }
@@ -114,7 +194,7 @@ watchEffect(() => {
     if (props.argus.format.fileFormat) {
         formatValue.value = props.argus.format.fileFormat.toUpperCase();
     }
-    if (props.argus.format.name) {
+    if (props.argus.format.name || props.argus.format.name === '') {
         name.value = props.argus.format.name;
     }
 })
@@ -124,7 +204,7 @@ watchEffect(() => {
     <div class="args_container">
         <div class="format">
             <div class="cutout_size_input cutout_export_input" ref="cutout_size_input">
-                <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale">
+                <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale" @input="handleScaleInput" @keyup="scaleInputBlur">
                 <div class="export_down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
@@ -134,7 +214,7 @@ watchEffect(() => {
             </div>
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
                 <input class="presuffix_input" :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name"
-                    @change="changeName">
+                    @change="changeName" @input="handleNameInput" @keyup="nameInputBlur">
                 <div class="export_down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>

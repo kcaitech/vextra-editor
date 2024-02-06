@@ -220,6 +220,7 @@ function closePersonalCenter() {
         }
 
         svg {
+            fill: #000000;
             width: 100%;
             height: 100%;
         }

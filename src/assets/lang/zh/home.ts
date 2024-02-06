@@ -63,7 +63,9 @@ export const system = {
     'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
     'btn_login': '登录',
     'artboart_title_visible': '显示容器标题',
-    sensitive_reminder: '含有敏感信息，请重新输入。'
+    sensitive_reminder: '含有敏感信息，请重新输入。',
+    sensitive_reminder2: '含有敏感信息，无法分享。',
+    sensitive_reminder3: '含有敏感信息，无法访问。'
 }
 
 export const home = {
@@ -326,7 +328,9 @@ export const comment = {
     show_comments: '显示评论'
 }
 export const clipboard = {
-    'invalid_data': '该内容无法解析'
+    'invalid_data': '该内容无法解析',
+    'not_supported1': '当前浏览器不支持，请使用Ctrl C复制',
+    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切'
 }
 export const opacity = {
     normal: '正常',

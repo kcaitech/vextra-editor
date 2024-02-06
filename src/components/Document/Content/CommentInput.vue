@@ -8,7 +8,6 @@ import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { WorkSpace } from '@/context/workspace';
-import e from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -39,7 +38,7 @@ interface Comment {
 }
 const matrix = new Matrix();
 const route = useRoute()
-const docID = (route.query.id as string)
+const docID = (props.context.comment.isDocumentInfo?.document.id || route.query.id as string)
 const textarea = ref('')
 const comment = ref<HTMLDivElement>()
 const surplusX = ref<number>(0)
@@ -71,7 +70,7 @@ function handleClickOutside(event: MouseEvent) {
     const mins = textarea.value.trim().length < 1;
 
     if (mins) {
-        emit('close', event);
+        emit('completed', true, event);
     } else {
         addComment(true, event);
     }
@@ -80,10 +79,10 @@ function handleClickOutside(event: MouseEvent) {
 const inputPosition = () => {
     offside.value = props.rootWidth! - props.posi.x < commentWidth
     surplusX.value = -(commentWidth - 12)
-    input.value?.focus()
+    input.value?.focus();
 }
 const sendBright = computed(() => textarea.value.trim().length > 0)
-
+const lastEscPress = ref(0);
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
     const { code, ctrlKey, metaKey } = event;
@@ -97,7 +96,13 @@ const carriageReturn = (event: KeyboardEvent) => {
     } else if (code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
     } else if (code === 'Escape' && textarea.value.trim().length >= 4) {
-        startShake()
+        const now = Date.now();
+        if (now - lastEscPress.value < 500) { // 如果两次按下esc键的时间间隔小于500毫秒
+            emit('close')
+        } else {
+            startShake()
+            lastEscPress.value = now; // 更新最近一次按下esc键的时间戳
+        }
     }
 }
 

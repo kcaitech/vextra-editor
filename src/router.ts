@@ -86,14 +86,13 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: 'homecontent' },
+        redirect: { name: 'login' },
         children: [
             {
                 path: "introduction",
                 name: "homecontent",
                 component: HomeContent,
-                alias: '/'
-
+                // alias: '/'
             },
             {
                 path: "privacypolicy",

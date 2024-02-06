@@ -6,10 +6,10 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
+import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
-import { KeyboardKeys, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
@@ -28,7 +28,6 @@ import {
     init_insert_table,
     root_scale, root_trans
 } from '@/utils/content';
-import { paster } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
@@ -41,6 +40,8 @@ import * as comment_api from '@/request/comment';
 import Creator from './Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
+import { menu_locate } from '@/utils/common';
+import Overview from './Content/Overview.vue';
 
 interface Props {
     context: Context
@@ -70,9 +71,8 @@ const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中�
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
-let contextMenuItems: string[] = [];
+const contextMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
-const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
@@ -88,6 +88,7 @@ const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
+const overview = ref<boolean>(false);
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
@@ -114,19 +115,16 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
 }
 
-function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件    
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const { ctrlKey, metaKey, deltaX, deltaY } = e;
+    const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
-            matrix.trans(-deltaX, -deltaY);
-        } else {
-            root_trans(props.context, e, wheel_step);
-        }
+        root_trans(props.context, e);
     }
+
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
 }
@@ -134,8 +132,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
     if (e.repeat) return;
-    if (e.code === KeyboardKeys.Space) {
+    if (e.code === 'Space') {
         if (workspace.value.select || spacePressed.value) return;
+        overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -144,8 +143,8 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 
 function onKeyUp(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) return;
-    if (spacePressed.value && e.code === KeyboardKeys.Space) {
-        // overview.value = false;
+    if (spacePressed.value && e.code === 'Space') {
+        overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
@@ -157,7 +156,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    props.context.cursor.setType('grab-0');
+    props.context.cursor.setType('grab', 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
@@ -213,17 +212,18 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType('grabbing-0');
+    props.context.cursor.setType('grabbing', 0);
 }
 
 function pageViewDragEnd() {
     state = STATE_NONE;
-    props.context.cursor.setType('grab-0')
+    props.context.cursor.setType('grab', 0)
 }
 
 /**
  * @description 打开右键菜单
  */
+const menu_over_left = ref(0);
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
@@ -234,43 +234,34 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
-    contextMenuItems = [];
+    contextMenuItems.value = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
-    contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
+    contextMenuItems.value = get_menu_items(props.context, area, e); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems.push('layers');
+        contextMenuItems.value.push('layers');
     }
     const _shapes = selection.selectedShapes
     if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.push('edit');
+        contextMenuItems.value.push('edit');
     }
     if (area === 'table_cell') {
         const table = props.context.tableSelection;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-            contextMenuItems.push('split_cell');
-            contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');
+            contextMenuItems.value.push('split_cell');
+            contextMenuItems.value = contextMenuItems.value.filter(item => item !== 'merge_cell');
         }
     }
     contextMenu.value = true; // 数据准备就绪之后打开菜单
     menu.menuMount('content');
     // 打开菜单之后调整菜单位置
     nextTick(() => {
-        if (!contextMenuEl.value) return;
+        if (!contextMenuEl.value) {
+            return;
+        }
         const el = contextMenuEl.value.menu;
-        surplusY.value = document.documentElement.clientHeight - site.y;
-        const root_height = props.context.workspace.root.height;
-        if (!el) return;
-        let height = el.offsetHeight;
-        if (height > root_height * 0.98) {
-            height = root_height * 0.98;
-            el.style.height = height + 'px';
-        }
-        if (surplusY.value - 4 < height) {
-            surplusY.value = document.documentElement.clientHeight - site.y - 4;
-            el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
-        }
+        menu_over_left.value = menu_locate(props.context, contextMenuPosition, el) || 0;
         props.context.esctask.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
@@ -290,6 +281,7 @@ function select(e: MouseEvent) {
     } else if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) {
         selector_mount.value = true;
         props.context.workspace.selecting(true);
+        props.context.cursor.cursor_freeze(true);
     }
 }
 
@@ -407,13 +399,25 @@ function onMouseUp(e: MouseEvent) {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = props.context.comment.commentShape
+    const shapesId = props.context.comment.commentShape;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const shapes: ShapeView[] = []
+    shapesId.forEach((id: string) => {
+        const shape = page.getShape(id);
+        if (shape) {
+            shapes.push(shape);
+        }
+    })
     const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: any) => {
+    sleectShapes.forEach((item: ShapeView) => {
         commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
+                const { x, y } = item.frame2Root()
+                const x1 = comment.shape_frame.x2 + x;
+                const y1 = comment.shape_frame.y2 + y;
+                editShapeComment(i, x1, y1);
             }
         })
     })
@@ -431,6 +435,7 @@ function selectEnd() {
         return;
     }
     props.context.workspace.selecting(false);
+    props.context.cursor.cursor_freeze(false);
     selectorFrame.top = 0;
     selectorFrame.left = 0;
     selectorFrame.width = 0;
@@ -499,12 +504,8 @@ function tool_watcher(type: number) {
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
-    } else if (type === WorkSpace.PASTE) {
-        paster(props.context, t);
     } else if (type === WorkSpace.PASTE_RIGHT) {
-        paster(props.context, t, mousedownOnPageXY);
-    } else if (type === WorkSpace.COPY) {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.paste(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
@@ -517,13 +518,36 @@ function frame_watcher() {
     _updateRoot(props.context, root.value);
 }
 
-function cursor_watcher(t?: number, type?: string) {
-    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) cursor.value = type;
+function cursor_watcher(t: number, type: string) {
+    if (t === Cursor.CHANGE_CURSOR && type) {
+        cursor.value = type;
+    }
 }
 
 function matrix_watcher(nm: Matrix) {
     matrix_inverse = new Matrix(nm.inverse);
     collect_once(props.context, nm);
+}
+
+function copy_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.write(event);
+}
+
+function cut_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.cut(event);
+}
+
+function paster_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    return props.context.workspace.clipboard.paste(t, event);
 }
 
 // hooks
@@ -565,6 +589,9 @@ onMounted(() => {
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    document.addEventListener('copy', copy_watcher);
+    document.addEventListener('cut', cut_watcher);
+    document.addEventListener('paste', paster_watcher);
     window.addEventListener('blur', windowBlur);
 
     nextTick(() => {
@@ -590,6 +617,9 @@ onUnmounted(() => {
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
+    document.removeEventListener('copy', copy_watcher);
+    document.removeEventListener('cut', cut_watcher);
+    document.removeEventListener('paste', paster_watcher);
     window.removeEventListener('blur', windowBlur);
     stopWatch();
 })
@@ -603,19 +633,20 @@ onUnmounted(() => {
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
-            :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
+        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
+        </Placement>
+        <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount" :site="site"
+            ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site">
+                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
-        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
-        </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
+        <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
     </div>
 </template>

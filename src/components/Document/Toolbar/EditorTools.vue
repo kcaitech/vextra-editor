@@ -147,11 +147,11 @@ function applyForEdit() {
                 </div>
             </ToolButton>
         </el-tooltip>
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
+        <Comment @select="select" :active="selected === Action.AddComment" :context="props.context"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
-        <span style="color: #ffffff;" v-if="!isLable">{{ t('apply.read_only') }}</span>
+        <span style="color: #ffffff;" v-if="!isLable">{{ isread ? t('apply.read_only') : t('share.reviewable') }}</span>
         <div class="button" v-if="!isLable">
             <button class="el" style="background-color: #1878F5;margin-right: 4px" @click.stop="applyForEdit">
                 {{ t('apply.apply_for_edit') }}
@@ -159,10 +159,11 @@ function applyForEdit() {
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
             :is_lable="isLable" :edit="isEdit"></Cursor>
-<!--        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">-->
-<!--            <div class="vertical-line" v-if="!isread" />-->
-<!--        </div>-->
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
+        <!--        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">-->
+        <!--            <div class="vertical-line" v-if="!isread" />-->
+        <!--        </div>-->
+        <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
+        </Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
         :selected="selected"></PathEditTool>

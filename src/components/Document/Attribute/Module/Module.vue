@@ -7,10 +7,8 @@ import ComponentState from './ComponentState.vue';
 import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
 import ComponentInstance from './ComponentInstance.vue';
-import {ShapeView, ShapeType, SymbolRefShape, SymbolShape, SymbolView, SymbolRefView} from '@kcdesign/data';
-import {is_shapes_if_symbolref, is_state_selection} from "@/utils/symbol";
-import { Shape } from '@kcdesign/data';
-import { get_var_for_ref } from "@/utils/symbol";
+import { ShapeView, ShapeType, SymbolView, SymbolRefView } from '@kcdesign/data';
+import { is_state_selection } from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -19,7 +17,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
 
 const p_symble = computed(() => {
     let isSymble = false;
@@ -41,21 +38,61 @@ const p_symble = computed(() => {
     return isSymble
 })
 
+const is_module_attr = () => {
+    return p_symble.value || props.shapeType === ShapeType.Symbol || props.shapeType === ShapeType.SymbolUnion;
+}
+
 function is_state() {
     return is_state_selection(props.shapes);
 }
+
+function layer() {
+    const selected = props.context.selection.selectedShapes;
+
+    if (selected.length === 1) {
+        const f = selected[0];
+        return f.type !== ShapeType.Symbol && f.type !== ShapeType.SymbolUnion && !f.isVirtualShape;
+    } else {
+        return false;
+    }
+}
+
+function text() {
+    const selected = props.context.selection.selectedShapes;
+
+    if (selected.length === 1) {
+        const f = selected[0];
+        return f.type === ShapeType.Text && !f.isVirtualShape;
+    } else {
+        return false;
+    }
+}
+
+function symbolref() {
+    const selected = props.context.selection.selectedShapes;
+
+    if (selected.length === 1) {
+        const f = selected[0];
+        return f.type === ShapeType.SymbolRef && !f.isVirtualShape;
+    } else {
+        return false;
+    }
+}
+
+
+
 </script>
 
 <template>
-    <div class="module-panel">
+    <div class="module-panel" v-if="is_module_attr()">
         <ComponentAttr :context="context"
-            v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion)"
+            v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
             :shape="(shapes[0] as SymbolView)">
         </ComponentAttr>
-        <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolView[]"></ComponentState>
-        <LayerShow :context="context" v-if="p_symble && shapeType !== ShapeType.Symbol"></LayerShow>
-        <TextContent :context="context" v-if="p_symble && shapeType === ShapeType.Text"></TextContent>
-        <ComponentInstance :context="context" :shapes="shapes as SymbolRefView[]" v-if="p_symble && shapeType === ShapeType.SymbolRef">
+        <ComponentState v-if="is_state()" :context="context" :shapes="props.shapes as SymbolView[]"></ComponentState>
+        <LayerShow v-if="layer()" :context="context"></LayerShow>
+        <TextContent v-if="text()" :context="context"></TextContent>
+        <ComponentInstance v-if="symbolref()" :context="context" :shapes="shapes as SymbolRefView[]">
         </ComponentInstance>
     </div>
 </template>

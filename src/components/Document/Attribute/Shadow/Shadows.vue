@@ -8,6 +8,7 @@ import ShadowDetail from './ShadowDetail.vue'
 import { v4 } from 'uuid';
 import ShadowPositionItem from './ShadowPosition.vue';
 import { get_actions_add_shadow, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_unify, get_shadows } from '@/utils/shape_style';
+import { hidden_selection } from '@/utils/content';
 
 interface ShadowItem {
   id: number,
@@ -107,6 +108,7 @@ function addShadow(): void {
       }
     }
   }
+  hidden_selection(props.context);
 }
 function first() {
   if (shadows.length === 0 && !mixed.value) addShadow();
@@ -125,6 +127,7 @@ function deleteFill(idx: number) {
       editor.shapesDeleteShasow(actions);
     }
   }
+  hidden_selection(props.context);
 }
 function toggleVisible(idx: number) {
   const _idx = shadows.length - idx - 1;
@@ -142,6 +145,7 @@ function toggleVisible(idx: number) {
       editor.setShapesShadowEnabled(actions);
     }
   }
+  hidden_selection(props.context);
 }
 
 function update_by_shapes() {

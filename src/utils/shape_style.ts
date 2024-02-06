@@ -74,9 +74,14 @@ export function get_actions_fill_color(shapes: ShapeView[], index: number, color
 }
 export function get_actions_fill_unify(shapes: ShapeView[]) {
     const actions: FillsReplaceAction[] = [];
-    const fills = shapes[0]?.getFills();
-    for (let i = 1; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
+    let fills: Fill[] = [];
+    let s = 0;
+    while (fills.length < 1 && s < shapes.length) {
+        fills = shapes[s]?.getFills();
+        s++;
+    }
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
         const new_fills: Fill[] = [];
         for (let i = 0; i < fills.length; i++) {
             const fill = fills[i];
@@ -175,9 +180,14 @@ export function get_actions_border_color(shapes: ShapeView[], index: number, col
 }
 export function get_actions_border_unify(shapes: ShapeView[]) {
     const actions: BordersReplaceAction[] = [];
-    const borders = shapes[0]?.getBorders();
-    for (let i = 1; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
+    let borders: Border[] = [];
+    let s = 0;
+    while (borders.length < 1 && s < shapes.length) {
+        borders = shapes[s]?.getBorders();
+        s++;
+    }
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
         const new_borders: Border[] = [];
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
@@ -285,9 +295,14 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
 
 export function get_actions_shadow_unify(shapes: ShapeView[]) {
     const actions: ShadowReplaceAction[] = [];
-    const shadows = shapes[0]?.getShadows();
-    for (let i = 1; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Cutout) continue;
+    let shadows: Shadow[] = [];
+    let s = 0;
+    while (shadows.length < 1 && s < shapes.length) {
+        shadows = shapes[s]?.getShadows();
+        s++;
+    }
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout || i === s - 1) continue;
         const new_shadows: Shadow[] = [];
         for (let i = 0; i < shadows.length; i++) {
             const shadow = shadows[i];

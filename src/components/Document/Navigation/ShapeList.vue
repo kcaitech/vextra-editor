@@ -4,7 +4,7 @@ import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page, PageView, Shape, adapt2Shape, proxyView } from "@kcdesign/data";
+import { PageView, Shape, adapt2Shape } from "@kcdesign/data";
 import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data';
@@ -19,6 +19,8 @@ import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import { DragDetail, hover, modify_after_drag, modify_shape_lock_status, modify_shape_visible_status, multi_select_shape, range_select_shape, scroll_to_view } from "@/utils/listview";
 import { v4 } from "uuid";
+import { menu_locate2 } from "@/utils/common";
+import { one_of_is_symbolref } from "@/utils/symbol";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -78,8 +80,7 @@ const itemHieght = 32;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
-const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
-let chartMenuItems: string[] = [];
+const chartMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
 const shapeH = ref(0);
@@ -230,41 +231,39 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
-        chartMenuItems = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container'];
+        chartMenuItems.value = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container', 'component'];
         if (selected.length === 1) {
-            chartMenuItems.push('forward', 'back', 'top', 'bottom');
+            chartMenuItems.value.push('forward', 'back', 'top', 'bottom');
+            if (selected[0].type === ShapeType.SymbolRef) {
+                chartMenuItems.value.push('edit');
+            }
+            if (selected[0].type === ShapeType.Symbol || selected[0].type === ShapeType.SymbolUnion) {
+                const index = chartMenuItems.value.findIndex((item) => item === 'component');
+                if (index > -1) chartMenuItems.value.splice(index, 1);
+            }
         }
         const types = selection_types(selected);
-        if (types & 1) chartMenuItems.push('un_group');
-        if (types & 2) chartMenuItems.push('dissolution');
+        if (types & 1) chartMenuItems.value.push('un_group');
+        if (types & 2) chartMenuItems.value.push('dissolution');
+        if ((types & 4) && one_of_is_symbolref(selected)) chartMenuItems.value.push('instance');
+        if (types & 8) {
+            const index = chartMenuItems.value.findIndex((item) => item === 'component');
+            if (index > -1) chartMenuItems.value.splice(index, 1);
+        }
         if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
-            chartMenuItems = ['all', 'copy'];
+            chartMenuItems.value = ['all', 'copy'];
         }
         chartMenuMount(e);
     }
 }
 
 const chartMenuMount = (e: MouseEvent) => {
-    e.stopPropagation()
-    chartMenuPosition.value.x = e.clientX
-    chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
+    e.stopPropagation();
     chartMenu.value = true;
     props.context.menu.menuMount('shapelist');
     nextTick(() => {
-        if (contextMenuEl.value) {
-            const el = contextMenuEl.value.menu;
-            let sy = document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
-            if (el) {
-                const height = el.offsetHeight //菜单高度
-                if (sy < height) {
-                    let top = height - sy
-                    el.style.top = chartMenuPosition.value.y - top + 'px'
-                }
-                el.style.borderRadius = 4 + 'px'
-                el.style.width = 200 + 'px'
-            }
-            props.context.esctask.save(v4(), close);
-        }
+        menu_locate2(e, contextMenuEl.value?.menu, shapeList.value);
+        props.context.esctask.save(v4(), close);
     })
 }
 
@@ -518,8 +517,7 @@ onUnmounted(() => {
                 @set-visible="modify_visible_status" @set-lock="modify_lock_status" @item-mousedown="list_mousedown"
                 orientation="vertical" @drag-start="start_to_drag" @after-drag-2="after_drag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
-                :context="props.context" ref="contextMenuEl" @click.stop>
+            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop>
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
                 </PageViewContextMenuItems>
             </ContextMenu>

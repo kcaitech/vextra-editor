@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { BasicArray, Color, Fill, FillType, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
+import { GroupShapeView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -19,6 +20,7 @@ import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
 
 interface FillItem {
     id: number,
@@ -36,10 +38,11 @@ const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
-const alphaFill = ref<any>();
-const colorFill = ref<any>();
+const alphaFill = ref<HTMLInputElement[]>();
+const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
+const shapes = ref<ShapeView[]>([]);
 let table: TableView;
 
 function toHex(r: number, g: number, b: number) {
@@ -78,12 +81,12 @@ function watchShapes() {
     })
 }
 
-function updateData() {    
+function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
     const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length === 1 && selecteds[0].type !== ShapeType.Group) {
+    if (selecteds.length === 1 && (selecteds[0].type !== ShapeType.Group || (selecteds[0] as GroupShapeView).data.isBoolOpShape)) {
         const shape = selecteds[0];
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
@@ -126,7 +129,7 @@ function updateData() {
         } else {
             fills.push(..._fs.reverse());
         }
-    } else if (selecteds.length === 1 && selecteds[0].type === ShapeType.Group) {
+    } else if (selecteds.length === 1 && selecteds[0].type === ShapeType.Group && !(selecteds[0] as GroupShapeView).data.isBoolOpShape) {
         const childs = (selecteds[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _fs = get_fills(shapes);
@@ -146,7 +149,7 @@ function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
     const s = props.context.selection.selectedShapes[0];
-    if (len.value === 1 && s.type !== ShapeType.Group) {
+    if (len.value === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         const e = props.context.editor4Shape(s);
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
@@ -196,7 +199,7 @@ function addFill(): void {
                 editor.shapesAddFill(actions);
             }
         }
-    } else if (len.value === 1 && s.type === ShapeType.Group) {
+    } else if (len.value === 1 && s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         if (mixed.value) {
@@ -215,6 +218,7 @@ function addFill(): void {
             }
         }
     }
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -224,7 +228,7 @@ function first() {
 function deleteFill(idx: number) {
     const _idx = fills.length - idx - 1;
     const s = props.context.selection.selectedShapes[0];
-    if (len.value === 1 && s.type !== ShapeType.Group) {
+    if (len.value === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableView);
@@ -260,7 +264,7 @@ function deleteFill(idx: number) {
             const editor = props.context.editor4Page(page);
             editor.shapesDeleteFill(actions);
         }
-    } else if (len.value === 1 && s.type === ShapeType.Group) {
+    } else if (len.value === 1 && s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_delete(shapes, _idx);
@@ -270,12 +274,13 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
     const s = props.context.selection.selectedShapes[0];
-    if (len.value === 1 && s.type !== ShapeType.Group) {
+    if (len.value === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableView);
@@ -306,18 +311,18 @@ function toggleVisible(idx: number) {
         }
     } else if (len.value > 1) {
         const fills = props.shapes[0].getFills();
-        const value = !fills[idx].isEnabled;
+        const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(props.shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesFillEnabled(actions);
         }
-    } else if (len.value === 1 && s.type === ShapeType.Group) {
+    } else if (len.value === 1 && s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const fills = shapes[0].getFills();
-        const value = !fills[idx].isEnabled;
+        const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -325,9 +330,18 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
+    hidden_selection(props.context);
 }
-
-function setColor(idx: number, clr: string, alpha: number) {
+const colorValue = ref('');
+const alphaValue = ref('');
+const tableSelect = ref({
+    editingCell: props.context.tableSelection.editingCell,
+    tableRowStart: props.context.tableSelection.tableRowStart,
+    tableRowEnd: props.context.tableSelection.tableRowEnd,
+    tableColStart: props.context.tableSelection.tableColStart,
+    tableColEnd: props.context.tableSelection.tableColEnd
+});
+function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));
@@ -336,14 +350,14 @@ function setColor(idx: number, clr: string, alpha: number) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
+    const s = shapes.value[0] as ShapeView;
     const _idx = fills.length - idx - 1;
-    const s = props.context.selection.selectedShapes[0];
-    if (len.value === 1 && s.type !== ShapeType.Group) {
+    const editor = props.context.editor4Shape(s)
+    if (shapes.value.length === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         if (s.type === ShapeType.Table) {
-            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableView);
-            const is_edting = table.editingCell;
-            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+            const is_edting = tableSelect.value.editingCell;
+            if (tableSelect.value.tableRowStart > -1 || tableSelect.value.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
                     range = {
@@ -354,27 +368,33 @@ function setColor(idx: number, clr: string, alpha: number) {
                     };
                 } else {
                     range = {
-                        rowStart: table.tableRowStart,
-                        rowEnd: table.tableRowEnd,
-                        colStart: table.tableColStart,
-                        colEnd: table.tableColEnd
+                        rowStart: tableSelect.value.tableRowStart,
+                        rowEnd: tableSelect.value.tableRowEnd,
+                        colStart: tableSelect.value.tableColStart,
+                        colEnd: tableSelect.value.tableColEnd
                     };
                 }
-                e.setFillColor(_idx, new Color(alpha, r, g, b), range)
+                const tablecells = (s as TableView).getVisibleCells(tableSelect.value.tableRowStart,
+                    tableSelect.value.tableRowEnd,
+                    tableSelect.value.tableColStart,
+                    tableSelect.value.tableColEnd);
+                if (tablecells.length > 0 && tablecells[0].cell) {
+                    e.setFillColor(_idx, new Color(alpha, r, g, b), range)
+                }
             } else {
-                editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
+                editor.setFillColor(_idx, new Color(alpha, r, g, b));
             }
         } else {
-            editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
+            editor.setFillColor(_idx, new Color(alpha, r, g, b));
         }
-    } else if (len.value > 1) {
-        const actions = get_actions_fill_color(props.shapes, _idx, new Color(alpha, r, g, b));
+    } else if (shapes.value.length > 1) {
+        const actions = get_actions_fill_color(shapes.value as ShapeView[], _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesFillColor(actions);
         }
-    } else if (len.value === 1 && s.type === ShapeType.Group) {
+    } else if (shapes.value.length === 1 && s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
@@ -384,10 +404,11 @@ function setColor(idx: number, clr: string, alpha: number) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function onColorChange(idx: number, e: Event) {
-    let value = (e.target as HTMLInputElement)?.value;
+    let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
     }
@@ -395,15 +416,16 @@ function onColorChange(idx: number, e: Event) {
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (Reg_HEX.test(value)) {
         const alpha = fills[idx].fill.color.alpha;
-        setColor(idx, value, alpha);
+        setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
+        if (!colorFill.value) return;
+        return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
 
 function onAlphaChange(idx: number, e: Event) {
-    let value = (e.currentTarget as any)['value'];
+    let value: any = alphaValue.value;
     if (alphaFill.value) {
         if (value?.slice(-1) === '%') {
             value = Number(value?.slice(0, -1))
@@ -417,11 +439,11 @@ function onAlphaChange(idx: number, e: Event) {
                 if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
                 }
-                setColor(idx, clr, value);
+                setColor(idx, clr, value, false);
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else if (!isNaN(Number(value))) {
             if (value >= 0) {
@@ -434,15 +456,15 @@ function onAlphaChange(idx: number, e: Event) {
                 if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
                 }
-                setColor(idx, clr, value);
+                setColor(idx, clr, value, false);
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+            return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
         }
     }
 }
@@ -450,7 +472,7 @@ function onAlphaChange(idx: number, e: Event) {
 function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
     const s = props.context.selection.selectedShapes[0];
-    if (len.value === 1 && s.type !== ShapeType.Group) {
+    if (len.value === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableView);
@@ -486,7 +508,7 @@ function getColorFromPicker(idx: number, color: Color) {
             const editor = props.context.editor4Page(page);
             editor.setShapesFillColor(actions);
         }
-    } else if (len.value === 1 && s.type === ShapeType.Group) {
+    } else if (len.value === 1 && s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_color(shapes, _idx, color);
@@ -496,16 +518,47 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (id: number) => {
     if (colorFill.value) {
+        shapes.value = [...props.context.selection.selectedShapes];
+        const table = props.context.tableSelection;
+        tableSelect.value = {
+            editingCell: table.editingCell,
+            tableRowStart: table.tableRowStart,
+            tableRowEnd: table.tableRowEnd,
+            tableColStart: table.tableColStart,
+            tableColEnd: table.tableColEnd
+        }
         colorFill.value[id].select()
+    }
+}
+const colorInput = (i: number) => {
+    if (colorFill.value) {
+        const value = colorFill.value[i].value;
+        colorValue.value = value;
     }
 }
 const selectAlpha = (id: number) => {
     if (alphaFill.value) {
+        shapes.value = [...props.context.selection.selectedShapes];
+        const table = props.context.tableSelection;
+        tableSelect.value = {
+            editingCell: table.editingCell,
+            tableRowStart: table.tableRowStart,
+            tableRowEnd: table.tableRowEnd,
+            tableColStart: table.tableColStart,
+            tableColEnd: table.tableColEnd
+        }
         alphaFill.value[id].select()
+    }
+}
+const alphaInput = (i: number) => {
+    if (alphaFill.value) {
+        const value = alphaFill.value[i].value;
+        alphaValue.value = value;
     }
 }
 const filterAlpha = (a: number) => {
@@ -625,10 +678,10 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"
+                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"
+                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
                 <div style="width: 4px;"></div>

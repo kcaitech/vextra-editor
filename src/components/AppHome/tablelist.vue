@@ -15,10 +15,10 @@
                         </p>
                     </div>
                     <div v-else-if="props.addproject! >= 0 && !loading && !noNetwork" class="datanull">
-                        <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
+                        <p>{{ props.nulldata ? t('projectlist.datanull2') : t('projectlist.datanull') }}</p>
                     </div>
                     <div v-else-if="!noNetwork && empty" class="datanull">
-                        <p>{{ props.nulldata ? t('search.search_results') : t('home.table_empty_tips') }}</p>
+                        <p>{{ props.nulldata ? t('Createteam.projectfilesearchtips') : t('home.table_empty_tips') }}</p>
                     </div>
                     <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-full">
                         <NetworkError @refreshDoc="refreshDoc"></NetworkError>
@@ -239,7 +239,6 @@ const columns: Column<any>[] = [
     },
     {
         key: 'operations',
-        // title: `${t('home.operation')}`,
         title: '',
         dataKey: 'document',
         width: 120,
@@ -382,9 +381,9 @@ watchEffect(() => {
             width: 400,
             minWidth: 100,
             align: 'left',
-            cellRenderer: ({ rowData: { user: { nickname } } }) => {
+            cellRenderer: ({ rowData: { user: { nickname }, user_team_nickname } }) => {
                 return (
-                    <span>{nickname}</span>
+                    <span>{user_team_nickname ? user_team_nickname : nickname}</span>
                 );
             },
         },)
@@ -396,9 +395,9 @@ watchEffect(() => {
             title: t('home.deleter'),
             width: 400,
             minWidth: 100,
-            cellRenderer: ({ rowData: { delete_user: { nickname } } }) => {
+            cellRenderer: ({ rowData: { delete_user: { nickname }, user_team_nickname } }) => {
                 return (
-                    <span>{nickname}</span>
+                    <span>{user_team_nickname ? user_team_nickname : nickname}</span>
                 );
             },
         },)
@@ -430,11 +429,10 @@ watchEffect(() => {
                 minWidth: 100,
                 dataKey: 'creator',
                 align: 'left',
-                cellRenderer: ({ rowData: { creator: { nickname } } }) => <span>{nickname}</span>
+                cellRenderer: ({ rowData: { creator: { nickname }, creator_team_nickname } }) => <span>{creator_team_nickname ? creator_team_nickname : nickname}</span>
             },
             {
                 key: 'name',
-                // title: t('home.operation'),
                 title: '',
                 width: 120,
                 minWidth: 120,
@@ -494,7 +492,7 @@ watchEffect(() => {
                                 </el-tooltip>
                             </el-icon>
                         )}
-                        {rowData.self_perm_type !== 5 && (
+                        {rowData.self_perm_type !== 5 && rowData.is_invited && (
                             <el-icon
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
@@ -560,10 +558,6 @@ watchEffect(() => {
 :deep(.el-table-v2__header-cell) {
     font-weight: 500 !important;
 }
-
-// :deep(.test) {
-//     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
-// }
 
 :deep(.el-table-v2__row) {
     display: flex;

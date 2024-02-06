@@ -347,15 +347,15 @@ onUnmounted(() => {
         <g v-if="previous_from">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_from.x"
                 :y2="previous_apex_location_from.y" class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point" @mousedown="(e) => { down(e, 'pre-from') }"
-                :transform="`translate(${previous_apex_location_from.x}, ${previous_apex_location_from.y}) rotate(${__radius_pre_from}) translate(-4, -4)`">
+            <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'pre-from') }"
+                :transform="`translate(${previous_apex_location_from.x}, ${previous_apex_location_from.y}) rotate(${__radius_pre_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="previous_to">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_to.x"
                 :y2="previous_apex_location_to.y" class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point"
-                :transform="`translate(${previous_apex_location_to.x}, ${previous_apex_location_to.y}) rotate(${__radius_pre_to}) translate(-4, -4)`"
+            <rect x="0" y="0" width="6" height="6" class="point"
+                :transform="`translate(${previous_apex_location_to.x}, ${previous_apex_location_to.y}) rotate(${__radius_pre_to}) translate(-3, -3)`"
                 @mousedown="(e) => { down(e, 'pre-to') }"></rect>
         </g>
     </g>
@@ -363,14 +363,14 @@ onUnmounted(() => {
     <g v-if="current">
         <g v-if="current_from">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_from.x" :y2="apex_location_from.y" class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point" @mousedown="(e) => { down(e, 'current-from') }"
-                :transform="`translate(${apex_location_from.x}, ${apex_location_from.y}) rotate(${__radius_current_from}) translate(-4, -4)`">
+            <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'current-from') }"
+                :transform="`translate(${apex_location_from.x}, ${apex_location_from.y}) rotate(${__radius_current_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="current_to">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_to.x" :y2="apex_location_to.y" class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point" @mousedown="(e) => { down(e, 'current-to') }"
-                :transform="`translate(${apex_location_to.x}, ${apex_location_to.y}) rotate(${__radius_current_to}) translate(-4, -4)`">
+            <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'current-to') }"
+                :transform="`translate(${apex_location_to.x}, ${apex_location_to.y}) rotate(${__radius_current_to}) translate(-3, -3)`">
             </rect>
         </g>
     </g>
@@ -379,15 +379,15 @@ onUnmounted(() => {
         <g v-if="next_from">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_from.x" :y2="next_apex_location_from.y"
                 class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point" @mousedown="(e) => { down(e, 'next-from') }"
-                :transform="`translate(${next_apex_location_from.x}, ${next_apex_location_from.y}) rotate(${__radius_next_from}) translate(-4, -4)`">
+            <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'next-from') }"
+                :transform="`translate(${next_apex_location_from.x}, ${next_apex_location_from.y}) rotate(${__radius_next_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="next_to">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_to.x" :y2="next_apex_location_to.y"
                 class="line"></line>
-            <rect x="0" y="0" width="8" height="8" class="point" @mousedown="(e) => { down(e, 'next-to') }"
-                :transform="`translate(${next_apex_location_to.x}, ${next_apex_location_to.y}) rotate(${__radius_next_to}) translate(-4, -4)`">
+            <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'next-to') }"
+                :transform="`translate(${next_apex_location_to.x}, ${next_apex_location_to.y}) rotate(${__radius_next_to}) translate(-3, -3)`">
             </rect>
         </g>
     </g>
@@ -395,13 +395,11 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .line {
     stroke: #ccc;
-    stroke-width: 2px;
     fill: none;
 }
 
 .point {
     fill: #fff;
-    stroke: var(--theme-color);
-    stroke-width: 1px;
+    stroke: var(--active-color);
 }
 </style>

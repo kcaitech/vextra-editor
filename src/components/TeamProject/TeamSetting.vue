@@ -30,8 +30,8 @@
                 <div v-if="isDisabled" class="right">
                     <label class="modify" for="image_uploads">{{
                         t('teamsetting.edit_avatar') }}</label>
-                    <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
-                        @change="midAvatarRequest($event)" />
+                    <input type="file" id="image_uploads" name="image_uploads" accept=".jpg, .jpeg, .png"
+                        style="display: none;" @change="midAvatarRequest($event)" />
                 </div>
             </div>
             <div v-if="teamSelfPermType === 3" class="dissolve-container">
@@ -132,9 +132,8 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? false : true
+    return (teamSelfPermType.value < 2 && teamSelfPermType.value !== 255) ? false : true
 })
-
 
 
 //获取元素，设置焦点并全选内容
@@ -200,7 +199,7 @@ const midAvatarRequest = async (e: any) => {
         const file = e.target.files[0]
         const fileName = file.name
         const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+        const maxSizeInBytes = 5 * 1024 * 1024; // 2MB
         if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
             formData.append('avatar', file)
             try {

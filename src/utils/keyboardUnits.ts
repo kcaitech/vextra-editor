@@ -5,23 +5,26 @@ import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
-import { replace } from "./clipboard";
 import { enter_path_edit_mode } from "./pathedit";
+import { untie_instance } from "./symbol";
+import { modifyOpacity } from "./common";
 
 // todo 键盘事件的权限处理
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
-    if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
         return;
     }
+
     if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) { // 非编辑状态下允许的动作
         const { code, ctrlKey, metaKey, shiftKey } = event;
-        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey)) {
+        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0' || code === 'Escape' || ctrlKey || metaKey || shiftKey)) {
             return;
         }
     }
+
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
@@ -61,7 +64,7 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
-    const { metaKey, ctrlKey } = event;
+    const { metaKey, ctrlKey, altKey } = event;
     if (event.repeat) {
         return;
     }
@@ -69,15 +72,19 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
         event.preventDefault();
         context.workspace.notify(WorkSpace.BOLD); // 文本加粗
     }
+    if ((metaKey || ctrlKey) && altKey) {
+        untie_instance(context); // 创建组件
+        return;
+    }
 }
 
 keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const { metaKey, ctrlKey, shiftKey } = event;
     if ((ctrlKey || metaKey) && !shiftKey) {
-        context.workspace.notify(WorkSpace.COPY); // 拷贝
+        // context.workspace.notify(WorkSpace.COPY); // 拷贝
         return
     }
+    event.preventDefault();
     if (shiftKey) {
         context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
@@ -216,7 +223,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        replace(context, context.selection.selectedShapes); // 替换图形
+        context.workspace.clipboard.replace() // 替换图形 // 替换图形
         return;
     }
     context.tool.setAction(Action.AddRect); // 矩形工具
@@ -244,11 +251,11 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     if (event.ctrlKey || event.metaKey) {
-        context.workspace.notify(WorkSpace.PASTE); // 复制图层（文本的复制不在这里处理）
         return;
     }
+
+    event.preventDefault();
     if (event.altKey && event.shiftKey) {
         context.arrange.notify(Arrange.SPACE_AROUND_VER); // 图层垂直方向等距分布
         return;
@@ -267,22 +274,23 @@ keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
+
     if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
         return;
     }
 
     if (is_ctrl) {
-        context.workspace.clipboard
-            .cut()
-            .then((res) => {
-                if (!res) {
-                    return;
-                }
-                context.selection.resetSelectShapes(); // 剪切图形
-            });
+        // context.workspace.clipboard
+        //     .cut()
+        //     .then((res) => {
+        //         if (!res) {
+        //             return;
+        //         }
+        //         context.selection.resetSelectShapes(); // 剪切图形
+        //     });
         return;
     }
     context.tool.setAction(Action.AddContact); // 连接线功能
@@ -305,6 +313,27 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
     }
 }
 
+let last_opacity = -1;
+let last_opacity_keeper: any = null;
+
+function get_opacity(val: number) {
+    let need_keep = !last_opacity_keeper;
+
+    if (need_keep) {
+        last_opacity = val;
+        last_opacity_keeper = setTimeout(() => {
+            last_opacity = -1;
+            clearTimeout(last_opacity_keeper);
+            last_opacity_keeper = null;
+        }, 1000);
+        return (val ? val * 10 : 100) / 100;
+    } else {
+        clearTimeout(last_opacity_keeper);
+        last_opacity_keeper = null;
+        return Number(last_opacity.toString() + val.toString()) / 100;
+    }
+}
+
 keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
 
@@ -313,6 +342,24 @@ keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
         scale_0(context);
         return;
     }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(0));
+}
+
+keydownHandler['Numpad0'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+
+    if (is_ctrl) {
+        event.preventDefault();
+        scale_0(context);
+        return;
+    }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(0));
 }
 
 keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
@@ -322,6 +369,135 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
         adapt_page(context);
         return;
     }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(1));
+}
+
+keydownHandler['Numpad1'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl) {
+        event.preventDefault();
+        adapt_page(context);
+        return;
+    }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(1));
+}
+
+keydownHandler['Digit2'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(2));
+}
+
+keydownHandler['Numpad2'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(2));
+}
+
+keydownHandler['Digit3'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(3));
+}
+
+keydownHandler['Numpad3'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(3));
+}
+
+keydownHandler['Digit4'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(4));
+}
+
+keydownHandler['Numpad4'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(4));
+}
+
+keydownHandler['Digit5'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(5));
+}
+
+keydownHandler['Numpad5'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(5));
+}
+
+keydownHandler['Digit6'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(6));
+}
+
+keydownHandler['Numpad6'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(6));
+}
+
+keydownHandler['Digit7'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(7));
+}
+
+keydownHandler['Numpad7'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(7));
+}
+
+keydownHandler['Digit8'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(8));
+}
+
+keydownHandler['Numpad8'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(8));
+}
+
+keydownHandler['Digit9'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(9));
+}
+
+keydownHandler['Numpad9'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(9));
 }
 
 keydownHandler['Enter'] = function (event: KeyboardEvent, context: Context) {
@@ -384,4 +560,9 @@ keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     lower_layer(context, 1);
+}
+
+keydownHandler['Tab'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    // TODO 选区切换
 }

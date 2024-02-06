@@ -1,10 +1,10 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
+import { Matrix, Shape, TableCell, TableCellType, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
 import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
 import { useController } from './controller4table';
@@ -21,7 +21,8 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix, // root->屏幕 变换矩阵
-    shape: TableView
+    shape: TableView,
+    theme: SelectionTheme
 }>();
 useController(props.context);
 const matrix = new Matrix();
@@ -159,9 +160,9 @@ function move(e: MouseEvent) {
         if (props.shape.isFlippedHorizontal) deg = 180 - deg;
         if (props.shape.isFlippedVertical) deg = 360 - deg;
         if (x_checked) {
-            props.context.cursor.setType(`scale-${deg}`);
+            props.context.cursor.setType('scale', deg);
         } else if (y_checked) {
-            props.context.cursor.setType(`scale-${90 + deg}`);
+            props.context.cursor.setType('scale', 90 + deg);
         }
     }
 }
@@ -252,6 +253,21 @@ function get_y_by_row(row: number) {
 function leave() {
     props.context.cursor.reset();
 }
+function page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.watch(update);
+    }
+}
+
+function remove_page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.unwatch(update);
+    }
+}
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -263,11 +279,13 @@ onMounted(() => {
     props.context.tableSelection.watch(table_selection_watcher);
     props.shape.watch(update);
     init();
+    page_watcher();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
+    remove_page_watcher();
 })
 const width = computed(() => {
     const w = bounds.right - bounds.left;
@@ -281,17 +299,15 @@ const height = computed(() => {
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="width" :height="height"
-        :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
-        @mouseleave="leave">
+        :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
+        @mousemove="move" @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi"
-            :cell="editingCellView" :table="props.shape" :matrix="submatrixArray">
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCellView"
+            :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
-            :selection="props.context.selection.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
+            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -312,9 +328,8 @@ const height = computed(() => {
         </g>
     </svg>
     <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
-        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
-        :selection="props.context.selection.textSelection"></TextInput>
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
+        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>

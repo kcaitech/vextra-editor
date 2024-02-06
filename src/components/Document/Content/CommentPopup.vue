@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
 import { Context } from '@/context';
-import { Close, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
 import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
@@ -22,6 +21,7 @@ const props = defineProps<{
     documentCommentList: any[]
     length: number
     reply: boolean
+    docList: any[]
 }>()
 const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
@@ -63,6 +63,8 @@ const commentShowList = ref<any[]>([])
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const reply = ref<boolean>(props.context.selection.commentStatus)
 const iscommentTop = ref(false);
+const lastHover = ref(false);
+const nextHover = ref(false);
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
@@ -123,7 +125,6 @@ const commentPosition = () => {
             iscommentTop.value = true;
             const _height = text.clientHeight + parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
             height.value = height.value ? Math.min(_height + 18, 214) : Math.min(_height, 214);
-            inputPopup.value && inputPopup.value.focus();
             const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
             offside.value = props.rootWidth! - p.x < 360;
             let t = 0;
@@ -140,6 +141,7 @@ const commentPosition = () => {
                     }
                 }
                 scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+                inputPopup.value && inputPopup.value.focus();
             })
         }
     })
@@ -150,16 +152,16 @@ const handleInput = () => {
     if (!scrollbarRef.value) return;
     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     nextTick(() => {
-        if (textareaEl.value) {
-            const text = inputPopup.value.$refs.textarea
-            if (text) {
-                text.style.height = "auto"; // 重置高度，避免高度叠加
-                text.style.height = text.scrollHeight + "px";
-                const lineHeight = parseInt(getComputedStyle(text).lineHeight)
-                const textareaHeight = text.clientHeight
-                const numberOfLines = Math.ceil(textareaHeight / lineHeight)
-                scrollVisible.value = numberOfLines > 10 ? true : false
-            }
+    if (textareaEl.value) {
+    const text = inputPopup.value.$refs.textarea
+    if (text) {
+    text.style.height = "auto"; // 重置高度，避免高度叠加
+    text.style.height = text.scrollHeight + "px";
+    const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+    const textareaHeight = text.clientHeight
+    const numberOfLines = Math.ceil(textareaHeight / lineHeight)
+    scrollVisible.value = numberOfLines > 10 ? true : false
+    }
         }
         scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     })
@@ -295,13 +297,12 @@ const previousArticle = () => {
         emit('previousArticle', index)
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
-        if (index === 0) return
+        if (index === 0 || index === -1) return
         const { x1, y1 } = commentShowList.value[index - 1].shape_frame
         const id = commentShowList.value[index - 1].id
         emit('previousArticle', index, { x: x1, y: y1 }, id)
     }
 }
-
 const nextArticle = () => {
     if (reply.value) {
         const index = props.index
@@ -310,7 +311,7 @@ const nextArticle = () => {
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
         const length = commentShowList.value.length
-        if (index === length - 1) return
+        if (index === length - 1 || index === -1) return
         const { x1, y1 } = commentShowList.value[index + 1].shape_frame
         const id = commentShowList.value[index + 1].id
         emit('nextArticle', index, { x: x1, y: y1 }, id)
@@ -318,7 +319,7 @@ const nextArticle = () => {
 }
 
 const commentShow = () => {
-    const commentList = props.context.comment.pageCommentList
+    const commentList = props.docList;
     commentList.forEach(item => {
         if (item.status === 0) {
             commentShowList.value && commentShowList.value.push(item)
@@ -479,47 +480,40 @@ onUnmounted(() => {
         :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard" @mousedown="moveCommentPopup">
             <div class="button-shift">
-                <!--                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"-->
-                <!--                    @click="previousArticle">{{ t('comment.last') }}</el-button>-->
-                <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="previousArticle">
+                <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }"
+                    :class="{ 'comment-last-hover': lastHover && !disablePrevent }" @click="previousArticle"
+                    @mouseenter="lastHover = true" @mouseleave="lastHover = false">
                     <svg-icon icon-class="comment-last"></svg-icon>
                 </div>
                 <div class="button-icon"></div>
-                <!--                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"-->
-                <!--                    @click="nextArticle">{{ t('comment.next') }}</el-button>-->
-                <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }" @click="nextArticle">
+                <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }"
+                    :class="{ 'comment-last-hover': nextHover && !disableNext }" @click="nextArticle"
+                    @mouseenter="nextHover = true" @mouseleave="nextHover = false">
                     <svg-icon icon-class="comment-next"></svg-icon>
                 </div>
             </div>
             <div class="comment-commands">
-                <el-button-group class="ml-4">
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
-                        <div class="onDelete" @click="onDelete" v-if="isControls">
-                            <svg-icon icon-class="comment-delete"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
-                        <div class="onResolve" @click="onResolve" v-if="isControls">
-                            <svg-icon icon-class="comment-solve"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
-                        <!--                            v-if="isControls" />-->
-                        <div class="onResolved" @click="onResolve" v-if="isControls">
-                            <svg-icon icon-class="comment-solved"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <!--                    <el-button plain :icon="Close" @click="close" />-->
-                    <div class="close" @click="close">
-                        <svg-icon icon-class="comment-close"></svg-icon>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                    <div class="onDelete" @click="onDelete" v-if="isControls">
+                        <svg-icon icon-class="comment-delete"></svg-icon>
                     </div>
-                </el-button-group>
+                </el-tooltip>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
+                    <div class="onResolve" @click="onResolve" v-if="isControls">
+                        <svg-icon icon-class="comment-solve"></svg-icon>
+                    </div>
+                </el-tooltip>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
+                    <div class="onResolved" @click="onResolve" v-if="isControls">
+                        <svg-icon icon-class="comment-solved"></svg-icon>
+                    </div>
+                </el-tooltip>
+                <div class="close" @click="close">
+                    <svg-icon icon-class="comment-close"></svg-icon>
+                </div>
             </div>
         </div>
         <el-scrollbar ref="scrollbarRef" :height="scrollHeight + 'px'" @wheel.stop @mousedown.stop>
@@ -607,10 +601,6 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-last:hover {
-                background-color: #EBEBED;
-            }
-
             .comment-next {
                 width: 36px;
                 height: 24px;
@@ -625,7 +615,7 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-next:hover {
+            .comment-last-hover {
                 background-color: #EBEBED;
             }
         }
@@ -633,6 +623,7 @@ onUnmounted(() => {
         .comment-commands {
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             width: 90px;
             height: 30px;
 
@@ -650,8 +641,6 @@ onUnmounted(() => {
             .onDelete {
                 width: 24px;
                 height: 24px;
-                margin-top: 4px;
-                margin-left: -50px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -671,8 +660,6 @@ onUnmounted(() => {
             .onResolve {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: -23px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -692,8 +679,6 @@ onUnmounted(() => {
             .onResolved {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: -23px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -709,8 +694,6 @@ onUnmounted(() => {
             .close {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: 3px;
                 display: flex;
                 align-items: center;
                 justify-content: center;

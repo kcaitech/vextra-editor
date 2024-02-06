@@ -1,6 +1,5 @@
 import {
     adapt2Shape,
-    exportExForm,
     ISave4Restore, PageView, PathShape,
     PathShapeView,
     ShapeType,
@@ -9,7 +8,6 @@ import {
     SymbolRefView,
     SymbolShape,
     SymbolView,
-    TableCell,
     TableCellView,
     SymbolUnionShape,
     TableShape,
@@ -20,23 +18,25 @@ import {
     SelectionState,
     ArrayOpSelection,
     isDiffStringArr,
-    SNumber
+    SNumber,
+    TableCellType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape, Text } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import {
     finder_layers,
     finder_contact,
-    selected_sym_ref_menber, finder_container
+    finder_container, finder2, finder_env_for_migrate,
 } from "@/utils/scout";
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
-import { finder, scout, Scout } from "@/utils/scout";
+import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
+import { router } from "@/router";
 
 interface Saved {
     page: Page | undefined,
@@ -79,6 +79,11 @@ type TextShapeLike = TextShapeView | TableCellView;
 export type ActionType = 'translate' | 'scale' | 'rotate';
 export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 
+export const enum SelectionTheme {
+    Normol = '#1878F5',
+    Symbol = '#7F58F9'
+}
+
 export class Selection extends WatchableObject implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -96,6 +101,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
+    static SELECTION_HIDDEN = 16;
+
     // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
@@ -117,6 +124,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_selected_sym_ref_bros: ShapeView[] = [];
     private m_context: Context;
     private m_is_new_shape_selection: boolean = false;
+    private m_shapes_set: Set<string> = new Set();
 
     constructor(document: Document, context: Context) {
         super();
@@ -225,6 +233,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
         this.notify(Selection.CHANGE_PAGE);
+        if (p) {
+            router.replace({
+                path: '/document',
+                query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
+            });
+        }
     }
 
     async deletePage(id: string, index: number) {
@@ -290,7 +304,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
         if (this.scout) {
             const page = this.m_selectPage!;
             const childs: ShapeView[] = scope || page.childs;
-            shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
+            // shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
+            shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
         }
         // this.m_count++;
         // this.m_total += Date.now() - s;
@@ -312,6 +327,16 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return shapes;
     }
 
+    get shapesSet() {
+        return this.m_shapes_set;
+    }
+
+    setShapesSet(shapes: ShapeView[]) {
+        for (let i = 0, l = shapes.length; i < l; i++) {
+            this.m_shapes_set.add(adapt2Shape(shapes[i]).id);
+        }
+    }
+
     /**
      * @description 获取点上最近的可插入图形
      * @param position
@@ -323,6 +348,11 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return finder_container(this.scout!, range, position, except) || this.selectedPage!;
     }
 
+    getEnvForMigrate(position: PageXY, scope?: ShapeView[]): ShapeView {
+        const range: ShapeView[] = scope || this.selectedPage?.childs || [];
+        return finder_env_for_migrate(this.scout!, range, position, this.m_shapes_set) || this.selectedPage!;
+    }
+
     selectShape(shape?: ShapeView) {
         if (!shape) {
             this.resetSelectShapes();
@@ -332,14 +362,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
     }
 
     unSelectShape(shape: ShapeView) {
         const index = this.m_selectShapes.findIndex((s: ShapeView) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
-            selected_sym_ref_menber(this.m_context, this.m_selectShapes);
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
@@ -347,7 +375,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
     rangeSelectShape(shapes: ShapeView[]) {
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(...shapes);
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
@@ -358,7 +385,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
             return;
         }
         this.m_selectShapes.push(shape);
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -366,7 +392,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_textselection.reset();
         this.m_tableselection.resetSelection();
         this.m_selectShapes.length = 0;
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -616,9 +641,35 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_is_new_shape_selection = v;
     }
 
+    private m_env_shapes: ShapeView[] = [];
+    setEnvShapes(shapes: ShapeView[]) {
+        this.m_env_shapes = shapes;
+    }
+    get envShapes() {
+        return this.m_env_shapes;
+    }
+
     // #region 特殊类型shape的读取
     get textshape() {
-        return (this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShapeView) ? adapt2Shape(this.selectedShapes[0]) as TextShape : undefined;
+        if (this.selectedShapes.length !== 1) {
+            return;
+        }
+        const _textshape = this.selectedShapes[0] instanceof TextShapeView ? adapt2Shape(this.selectedShapes[0]) as TextShape : undefined;
+
+        if (_textshape) {
+            return _textshape;
+        }
+        const _tabletext = (() => {
+            if (!(this.selectedShapes[0] instanceof TableView)) {
+                return
+            }
+            const tableSelection = this.m_context.tableSelection;
+            if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
+                return tableSelection.editingCell.cell as any;
+            }
+        })();
+
+        return _tabletext as TextShape;
     }
 
     get pathshape() {

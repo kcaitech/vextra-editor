@@ -37,13 +37,7 @@ const onShare = () => {
 const closeShare = () => {
   showFileShare.value = false
 }
-const onSwitch = (state: boolean) => {
-  shareSwitch.value = state
-}
 
-const onSelectType = (type: number) => {
-  selectValue.value = type
-}
 async function documentInfo(id: any) {
   try {
     if (id) {
@@ -111,9 +105,7 @@ onUnmounted(() => {
   </div>
   <Teleport to="body">
     <div v-if="showFileShare" class="overlay">
-      <FileShare @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" :docInfo="docInfo"
-        :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight"
-        :context="props.context" :userInfo="userInfo"></FileShare>
+      <FileShare @close="closeShare" :docId="docID" :projectPerm="projectPerm"></FileShare>
     </div>
   </Teleport>
 </template>
@@ -122,18 +114,16 @@ onUnmounted(() => {
 .overlay {
   position: absolute;
   display: flex;
-  align-items: center;
-  justify-content: center;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 999;
-  background-color:transparent;
+  background-color: transparent;
 }
 
 .container {
-    margin: auto 0 auto 8px;
+  margin: auto 0 auto 8px;
 
   .share {
     cursor: pointer;

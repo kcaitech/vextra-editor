@@ -64,7 +64,7 @@ function default_value(v: number) {
 }
 function save_layer_show(type: VariableType, name: string) {
     const symbol = props.context.selection.symbolview;
-    if (!symbol || !layerIds.value) return;
+    if (!symbol || !layerIds.value?.length) return;
     modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditLayerShow.value = false;
 }
@@ -77,12 +77,12 @@ function _delete() {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
-                    <div style="width: 14px;margin-left: 8px" class="svg">
+                    <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="eye-open"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 30%;">{{ props.variable.name }}</span>
-                        <span style="width: 70%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
+                        <span style="width: 35%;">{{ props.variable.name }}</span>
+                        <span style="width: 65%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
                     </div>
                 </div>
             </div>
@@ -118,8 +118,7 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -169,8 +168,7 @@ function _delete() {
             .name {
                 flex: 1;
                 display: flex;
-                max-width: 100%;
-                margin-left: 8px;
+                max-width: calc(100% - 30px);
 
                 >span {
                     display: block;

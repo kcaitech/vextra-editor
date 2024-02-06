@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
-import {Selection} from '@/context/selection';
+import {Selection, SelectionTheme} from '@/context/selection';
 import {Matrix, ShapeView, TextShapeView} from '@kcdesign/data';
 import {TextShape} from '@kcdesign/data';
 import {Shape} from "@kcdesign/data";
@@ -19,6 +19,7 @@ interface Props {
     rotate: number
     matrix: Matrix
     shape: TextShapeView
+    theme: SelectionTheme
 }
 
 const props = defineProps<Props>();
@@ -89,7 +90,7 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan-0');
+    props.context.cursor.setType('scan', 0);
     if (index !== undefined) {
         downIndex = {index, before: true};
         selection.setCursor(index, true);
@@ -106,7 +107,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan-0');
+            props.context.cursor.setType('scan', 0);
         }
         if (!editing.value) return;
         const selection = props.context.textSelection;
@@ -166,7 +167,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan-0');
+    if (editing.value) props.context.cursor.setType('scan', 0);
 }
 
 function mouseleave() {

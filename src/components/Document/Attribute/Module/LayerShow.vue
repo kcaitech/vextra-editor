@@ -66,7 +66,7 @@ function dlt_change(v: number) {
     dlt_value.value = !v;
 }
 
-function save_layer_show(type: VariableType, name: string) {
+function save_layer_show(type: VariableType, name: string) {    
     if (is_bind.value) {
         if (!sym_layer.value) return;
         modify_variable(props.context, sym_layer.value, is_bind.value, name, dlt_value.value, selectId.value)

@@ -60,7 +60,7 @@ function text_dlt_change(v: string) {
 
 const save_text = (type: VariableType, name: string) => {
     const symbol = props.context.selection.symbolview;
-    if (!symbol || !layerIds.value) return;
+    if (!symbol || !layerIds.value?.length) return;
     modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditText.value = false;
 }
@@ -79,11 +79,11 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text"></svg-icon>
+                        <svg-icon icon-class="layer-text"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 30%;">{{ props.variable.name }}</span>
-                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 35%;">{{ props.variable.name }}</span>
+                        <span style="width: 65%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
@@ -118,8 +118,7 @@ const getValue = (value: Text | string | undefined) => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -173,7 +172,7 @@ const getValue = (value: Text | string | undefined) => {
             .name {
                 flex: 1;
                 display: flex;
-                max-width: 100%;
+                max-width: calc(100% - 30px);
 
                 >span {
                     display: block;

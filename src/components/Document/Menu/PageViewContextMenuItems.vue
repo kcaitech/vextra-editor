@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onUnmounted, reactive, ref, watch } from 'vue';
+import { nextTick, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
@@ -15,21 +15,21 @@ import {
     Text,
     ShapeView,
     TextShapeView,
-    adapt2Shape
+    adapt2Shape,
+    GroupShapeView,
+    SymbolRefView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
-import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
+import { adapt_page, get_shape_within_document, select_all, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
-import { compare_layer_3 } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { string_by_sys } from '@/utils/common';
 
 const { t } = useI18n();
 
@@ -37,24 +37,33 @@ interface Props {
     context: Context,
     layers?: ShapeView[],
     items: string[],
-    site?: { x: number, y: number }
+    site?: { x: number, y: number },
+    menu_over_left?: number
 }
-
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
-const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
+const contextMenuEl = ref<ContextMenuEl>();
 
-function showLayerSubMenu(e: MouseEvent) {
-    layerSubMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
-    layerSubMenuPosition.y = -10;
+function showLayerSubMenu(e: MouseEvent, type: string) {
     layerSubMenuVisiable.value = true;
+    hoverItem.value = type;
+    nextTick(() => {
+        if (!contextMenuEl.value) return;
+        const el = contextMenuEl.value.menu;
+        if (el) {
+            const target = (e.target as HTMLElement);
+            el.style.top = -target.offsetTop + 'px';
+            el.style.left = props.menu_over_left && props.menu_over_left > -174 ? -target.offsetWidth + 'px' : target.offsetWidth + 'px';
+        }
+    })
 }
 
 function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
@@ -73,31 +82,42 @@ function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined 
 }
 
 function copy() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported1')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
-        const len = Math.abs(start - end);
-        if (s === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(s, len);
-        props.context.workspace.clipboard.write_html(t);
+        if (s === end) {
+            return emit('close');
+        }
+        props.context.workspace.clipboard.write();
     } else {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.write();
     }
     emit('close');
 }
 
-async function cut() {
+function cut() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported2')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
-        if (start === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-        const copy_result = await props.context.workspace.clipboard.write_html(t);
+        if (start === end) {
+            return emit('close');
+        }
+
+        const copy_result = props.context.workspace.clipboard.write();
+
         if (copy_result) {
             const editor = props.context.editor4TextShape(textlike as TextShape);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
@@ -109,13 +129,14 @@ async function cut() {
 }
 
 function paste() {
-    if (invalid_items.value.includes('paste')) return;
+    if (invalid_items.value.includes('paste')) {
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor);
+        props.context.workspace.clipboard.paste_text();
     } else {
-        paster(props.context, t);
+        props.context.workspace.clipboard.paste(t);
     }
     emit('close');
 }
@@ -124,25 +145,22 @@ function paste_text() {
     if (invalid_items.value.includes('paste-text')) return;
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor, true);
+        props.context.workspace.clipboard.paste_for_no_format_text();
     }
     emit('close');
 }
 
 function paste_here() {
-    if (invalid_items.value.includes('paste-here')) return;
+    if (invalid_items.value.includes('paste-here')) {
+        return;
+    }
     props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
     emit('close');
 }
 
 function _replace() {
     if (invalid_items.value.includes('replace')) return;
-    const selection = props.context.selection;
-    const selected = selection.selectedShapes;
-    if (selected.length) {
-        replace(props.context, selected);
-    }
+    props.context.workspace.clipboard.replace();
     emit('close');
 }
 
@@ -153,7 +171,7 @@ function selectAll() {
         const end = text.length;
         props.context.textSelection.selectText(0, end);
     } else {
-        props.context.workspace.keydown_a(true, true);
+        select_all(props.context);
     }
     emit('close');
 }
@@ -414,11 +432,14 @@ function instance() {
 function reset() {
 }
 
-function edit() {
+function editComps() {
     const refShape = props.context.selection.selectedShapes[0];
-    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined;
+    const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
     if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
+    if (shape) {
+        shape_track(props.context, shape)
+    }
     if (shape) {
         shape_track(props.context, shape)
         emit('close');
@@ -450,12 +471,17 @@ function lock() {
     props.context.selection.resetSelectShapes();
     emit('close');
 }
+const hoverItem = ref('');
+const mouseenter = (type: string) => {
+    hoverItem.value = type;
+}
 
 /**
  * 关闭图层菜单
  */
 function closeLayerSubMenu() {
     layerSubMenuVisiable.value = false;
+    hoverItem.value = '';
 }
 
 function show_placement(val: boolean) {
@@ -480,13 +506,11 @@ onUnmounted(() => {
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
-            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-<!--            <div class="triangle"></div>-->
-            <svg-icon icon-class="down" style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y"
-                         :width="174"
-                         :site="site" :context="props.context">
+            <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
+                style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
+            <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
         </div>
@@ -558,15 +582,15 @@ onUnmounted(() => {
         </div>
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
-        <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
-<!--            <div class="choose" v-show="isCursor"></div>-->
-            <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
-            <span :style="{ marginLeft: isCursor ? '8px' : '20px'}">{{ t('system.show_many_cursor') }}</span>
+        <div class="item" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'" v-show="isCursor"></svg-icon>
+            <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
-        <div class="item" v-if="props.items.includes('comment')" @click="comment">
-<!--            <div class="choose" v-show="isComment"></div>-->
-            <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
-            <span :style="{ marginLeft: isComment ? '8px' : '20px'}">{{ t('system.show_comment') }}</span>
+        <div class="item" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'" v-show="isComment"></svg-icon>
+            <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
@@ -644,13 +668,15 @@ onUnmounted(() => {
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">
             <span>{{ t('system.unbind_instance') }}</span>
-            <span></span>
+            <span class="shortkey">
+                <Key code="Alt Ctrl B"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('reset')" @click="reset">
             <span>{{ t('system.reset_instance_roperties') }}</span>
             <span></span>
         </div>
-        <div class="item" v-if="props.items.includes('edit')" @click="edit">
+        <div class="item" v-if="props.items.includes('edit')" @click="editComps">
             <span>{{ t('system.edit_component') }}</span>
             <span></span>
         </div>
@@ -668,10 +694,10 @@ onUnmounted(() => {
                 <Key code="Shift Ctrl L"></Key>
             </span>
         </div>
-        <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
-<!--            <div class="choose" v-show="isTitle"></div>-->
-            <svg-icon icon-class="choose" v-show="isTitle"></svg-icon>
-            <span :style="{ marginLeft: isTitle ? '8px' : '20px'}">{{ t('system.artboart_title_visible') }}</span>
+        <div class="item" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
+            <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
         </div>
         <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
     </div>

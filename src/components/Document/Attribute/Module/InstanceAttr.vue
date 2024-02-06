@@ -19,6 +19,7 @@ import Visible from "./InstanceAttrCard/IACVisible.vue"
 import { Selection } from '@/context/selection';
 import { v4 } from "uuid";
 import { Menu } from '@/context/menu';
+import Key from '@/components/common/Key.vue';
 
 interface Props {
     context: Context
@@ -204,7 +205,7 @@ onUnmounted(() => {
                         <div class="reset_menu" v-if="resetMenu">
                             <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
-                                <span>快捷键</span>
+                                <span><Key code="Alt Ctrl B"></Key></span>
                             </div>
                             <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                         </div>
@@ -250,7 +251,7 @@ onUnmounted(() => {
             justify-content: center;
             border-radius: 6px;
             box-sizing: border-box;
-
+            
             >svg {
                 width: 16px;
                 height: 16px;

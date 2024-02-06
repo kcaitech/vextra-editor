@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {ref, onMounted, onUnmounted, watch} from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {OverrideType, SymbolShape, Variable, VariableType, Text, SymbolView} from '@kcdesign/data';
+import { OverrideType, Variable, VariableType, Text, SymbolView } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,
@@ -12,15 +12,15 @@ import {
     is_bind_x_vari,
     modify_variable
 } from '@/utils/symbol';
-import {Selection} from '@/context/selection';
-import {message} from '@/utils/message';
+import { Selection } from '@/context/selection';
+import { message } from '@/utils/message';
 
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const isTextShow = ref(false);
 const closeLayerShowPopup = () => {
     isTextShow.value = false
@@ -38,7 +38,7 @@ const textDialog = () => {
 }
 
 const atrrdialog = ref<HTMLDivElement>();
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
     if (div) {
         const el = div.getBoundingClientRect();
@@ -216,15 +216,12 @@ const getValue = (value: Text | string | undefined) => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"
-                       :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')"
-                       :dialog_posi="dialog_posi"
-                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
-                       @save-layer-show="save_layer_show"
-                       :symbol="sym_layer">
+            :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"
+            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
+            :symbol="sym_layer">
             <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
-                                  :context="props.context"
-                                  :placeholder="t('compos.place_select_layer')" :selectId="selectId"></SelectLayerInput>
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text" :context="props.context"
+                    :placeholder="t('compos.place_select_layer')" :selectId="selectId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -244,7 +241,7 @@ const getValue = (value: Text | string | undefined) => {
         justify-content: center;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -326,7 +323,7 @@ const getValue = (value: Text | string | undefined) => {
         align-items: center;
         width: 84px;
 
-        > svg {
+        >svg {
             width: 14px;
             height: 14px;
         }
@@ -349,7 +346,7 @@ const getValue = (value: Text | string | undefined) => {
             align-items: center;
             justify-content: center;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
                 color: #595959;
@@ -362,7 +359,7 @@ const getValue = (value: Text | string | undefined) => {
             display: flex;
             max-width: 100%;
 
-            > span {
+            >span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -393,7 +390,7 @@ const getValue = (value: Text | string | undefined) => {
     height: 28px;
     border-radius: var(--default-radius);
 
-    > svg {
+    >svg {
         width: 16px;
         height: 16px;
     }

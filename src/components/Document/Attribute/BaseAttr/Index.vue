@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, reactive } from 'vue'
+import { onMounted, ref, reactive, onUnmounted } from 'vue'
 import { ShapeType, RectShape, PathShape, ImageShape, Artboard, adapt2Shape, ShapeView } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { hasRadiusShape } from '@/utils/content'
 import Radius from './Radius.vue';
@@ -21,8 +20,12 @@ import {
     get_constrainer_proportions,
     get_shapes_rotation
 } from '@/utils/attri_setting';
+import { watch } from 'vue';
+import { format_value as format } from '@/utils/common';
 interface Props {
     context: Context
+    selectionChange: number
+    triggle: any[]
 }
 interface LayoutOptions {
     s_adapt: boolean
@@ -51,19 +54,16 @@ const isLock = ref<boolean>(false);
 const fix = 2;
 const multiRadius = ref(false)
 const mixed = t('attr.mixed');
-const watchedShapes = new Map();
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
 const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
 
-function calc_attri() {
+function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
-
     if (!selected.length) {
         return;
     }
-
     const xy = get_xy(selected, mixed);
     x.value = xy.x;
     y.value = xy.y;
@@ -72,6 +72,8 @@ function calc_attri() {
     isLock.value = get_constrainer_proportions(selected);
     rotate.value = get_shapes_rotation(selected, mixed);
 }
+
+const calc_attri = throttle(_calc_attri, 96, { trailing: true });
 
 const parentSymbolRef = () => {
     const len = props.context.selection.selectedShapes.length;
@@ -113,10 +115,9 @@ function _update_view() {
         check_model_state();
     }
 }
-
 const update_view = debounce(_update_view, 200, { leading: true });
 
-function onChangeX(value: string) {
+function onChangeX(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -126,16 +127,17 @@ function onChangeX(value: string) {
         return;
     }
 
-    const actions = get_actions_frame_x(props.context.selection.selectedShapes, _x);
+    const actions = get_actions_frame_x(shapes, _x);
+
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesX(actions);
 }
-function onChangeY(value: string) {
+function onChangeY(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -145,16 +147,16 @@ function onChangeY(value: string) {
         return;
     }
 
-    const actions = get_actions_frame_y(props.context.selection.selectedShapes, _y);
+    const actions = get_actions_frame_y(shapes, _y);
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesY(actions);
 }
-function onChangeW(value: string) {
+function onChangeW(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -168,11 +170,9 @@ function onChangeW(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    const selected = props.context.selection.selectedShapes;
-
-    editor.modifyShapesWidth(selected.map(s => adapt2Shape(s)), _w);
+    editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
 }
-function onChangeH(value: string) {
+function onChangeH(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -186,9 +186,7 @@ function onChangeH(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    const selected = props.context.selection.selectedShapes;
-
-    editor.modifyShapesHeight(selected.map(s => adapt2Shape(s)), _h);
+    editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
 }
 function lockToggle() {
     if (s_length) {
@@ -239,7 +237,7 @@ function flipv() {
         }
     }
 }
-function onChangeRotate(value: string) {
+function onChangeRotate(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -250,8 +248,7 @@ function onChangeRotate(value: string) {
         return;
     }
 
-    const selected = props.context.selection.selectedShapes;
-    if (!selected.length) {
+    if (!shapes.length) {
         return;
     }
 
@@ -262,15 +259,12 @@ function onChangeRotate(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.setShapesRotate(selected.map(s => adapt2Shape(s)), newRotate);
+    editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
 }
 function adapt() {
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) {
-        props.context
-            .editor4Shape(adapt2Shape(selected[0]))
-            .adapt();
-    }
+    props.context
+        .editor4Shape(adapt2Shape(props.context.selection.selectedShapes[0]))
+        .adapt();
 }
 function modify_multi_radius(shape: ShapeView) {
     multiRadius.value = false;
@@ -289,8 +283,7 @@ function modify_multi_radius(shape: ShapeView) {
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
     ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
-    ShapeType.Text
+    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
 ];
 function layout() {
     reset_layout();
@@ -358,55 +351,41 @@ function all_disable() {
     model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
 }
-
-function watch_shapes() {
-    watchedShapes.forEach((v, k) => {
-        v.unwatch(calc_attri);
-        watchedShapes.delete(k);
-    })
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        selectedShapes.forEach((v) => { v.watch(calc_attri); });
-    }
-}
-
-function selection_wather(t: number) {
-    if (t !== Selection.CHANGE_SHAPE) {
-        return;
-    }
-    watch_shapes();
+function selection_change() {
     update_view();
     calc_attri();
 }
-// hooks
-onMounted(() => {
-    watch_shapes();
-    update_view();
-    calc_attri();
-    props.context.selection.watch(selection_wather);
-})
+const stop1 = watch(() => props.selectionChange, selection_change);
+const stop3 = watch(() => props.triggle, v => {
+    if (v.includes('layout')) {
+        calc_attri();
+    }
+});
+
+onMounted(selection_change);
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    stop1();
+    stop3();
 })
 </script>
 
 <template>
     <div class="table">
-        <div class="tr">
-            <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                @onchange="onChangeX" :disabled="model_disable_state.x" :context="context" />
-            <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                @onchange="onChangeY" :disabled="model_disable_state.y" :context="context" />
+        <div class="tr" :reflush="reflush">
+            <IconText class="td positon" ticon="X" :text="format(x)" @onchange="onChangeX" :disabled="model_disable_state.x"
+                :context="context" />
+            <IconText class="td positon" ticon="Y" :text="format(y)" @onchange="onChangeY" :disabled="model_disable_state.y"
+                :context="context" />
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
+            <IconText class="td frame" ticon="W" :text="format(w)" @onchange="onChangeW"
                 :disabled="model_disable_state.width" :context="context" />
 
-            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+            <IconText class="td frame" ticon="H" :text="format(h)" @onchange="onChangeH"
                 :disabled="model_disable_state.height" :context="context" />
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>

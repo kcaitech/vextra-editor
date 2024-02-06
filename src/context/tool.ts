@@ -1,7 +1,6 @@
-import { Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { v4 } from "uuid";
 
 export enum Action {
     Auto = 'auto',
@@ -20,33 +19,6 @@ export enum Action {
     AddCutout = 'add-cutout',
     Curve = 'curve',
     PathClip = 'path-clip'
-}
-
-export enum KeyboardKeys { // 键盘按键类型
-    Space = 'Space',
-    A = 'KeyA',
-    R = 'KeyR',
-    V = 'KeyV',
-    L = 'KeyL',
-    Z = 'KeyZ',
-    S = 'KeyS',
-    Up = 'ArrowUp',
-    Down = 'ArrowDown',
-    Left = 'ArrowLeft',
-    Right = 'ArrowRight',
-    K = 'KeyK',
-    O = 'KeyO',
-    F = 'KeyF',
-    Digit0 = 'Digit0',
-    G = 'KeyG',
-    T = 'KeyT',
-    C = 'KeyC',
-    B = 'KeyB',
-    I = 'KeyI',
-    X = 'KeyX',
-    U = 'KeyU',
-    Digit1 = 'Digit1',
-    Backspace = 'Backspace',
 }
 
 const A2R = new Map([
@@ -128,10 +100,10 @@ export class Tool extends WatchableObject {
         } else if (code === 'KeyX') {
             e.preventDefault();
             this.keydown_x(ctrlKey, shiftKey, metaKey);
-        }else if (code === 'KeyS') {
+        } else if (code === 'KeyS') {
             e.preventDefault();
             this.keydown_s(ctrlKey, shiftKey, metaKey);
-        } else if (code === KeyboardKeys.I) {
+        } else if (code === 'KeyI') {
             e.preventDefault();
             this.keydown_i(ctrlKey, metaKey, shiftKey);
         }
@@ -141,17 +113,25 @@ export class Tool extends WatchableObject {
         this.m_current_action = action;
         if (action.startsWith('add')) {
             this.m_context.menu.menuMount();
+
             this.m_context.esctask.save('tool-action', this.reset.bind(this));
+
             if (action === Action.AddComment) {
-                if (this.m_context.workspace.documentPerm === 1) return;
+                if (this.m_context.workspace.documentPerm === 1) {
+                    return;
+                }
+
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                this.m_context.cursor.setType('comment-0');
+                this.m_context.cursor.setType('comment', 0);
             } else {
-                this.m_context.cursor.setType('cross-0');
+                this.m_context.cursor.setType('cross', 0);
             }
 
-        } else this.m_context.cursor.reset();
+        } else {
+            this.m_context.cursor.reset();
+        }
+
         this.notify(Tool.CHANGE_ACTION);
     }
 

@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShape, ShapeView } from '@kcdesign/data';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShapeView, ShapeView } from '@kcdesign/data';
 import { getShadowMax, getShapeBorderMax, getGroupChildBounds } from '@/utils/cutout';
 import JSZip from 'jszip';
 export function get_frame(file: any) {
@@ -90,7 +90,6 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   const context = canvas.getContext('2d');
   const pcloneSvg = svg.cloneNode(true) as SVGSVGElement;
   document.body.appendChild(pcloneSvg);
-  const { width, height } = pcloneSvg.getBoundingClientRect();
   if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
     const el = pcloneSvg.children[0] as SVGSVGElement;
     let rotate = shape.rotation || 0;
@@ -99,17 +98,15 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       const { left, top, right, bottom } = getShadowMax(shape);
       let g_x = 0;
       let g_y = 0;
-      if (shape.type === ShapeType.Group) {
-        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
-        g_x = Math.abs(x);
-        g_y = Math.abs(y);
-      }
       const max_border = getShapeBorderMax(shape);
+      if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+        const { x, y, width, height } = getGroupChildBounds(shape);
+        g_x = shape.frame.x - x;
+        g_y = shape.frame.y - y;
+      }
       const x = left + max_border + g_x;
       const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
-      el.setAttribute("x", '0px');
-      el.setAttribute("y", '0px');
       let rotateY = 0;
       let rotateX = 0;
       shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
@@ -129,8 +126,9 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
     canvas.width = width;
     canvas.height = height;
   } else {
-    canvas.width = svg.clientWidth;
-    canvas.height = svg.clientHeight;
+    const { width, height } = pcloneSvg.viewBox.baseVal
+    canvas.width = width * format.scale;
+    canvas.height = height * format.scale;
   }
   const svgString = new XMLSerializer().serializeToString(pcloneSvg);
   const img = new Image();
@@ -140,7 +138,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
     context && context.drawImage(img, 0, 0);
     const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
     imageUrl = dataURL;
-    if (trim && context) {
+    if (context && trim) {
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
@@ -155,9 +153,8 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
           }
         }
       }
-
-      const width = right - left;
-      const height = bottom - top;
+      const width = (right - left) + 2;
+      const height = (bottom - top) + 2;
       // 创建一个新Canvas元素，用于存储裁剪后的图像
       const newCanvas = document.createElement("canvas");
       const outputCtx = newCanvas.getContext("2d");
@@ -178,7 +175,6 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   const ctx = canvas.getContext('2d');
   const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
   document.body.appendChild(cloneSvg);
-  const { width, height } = cloneSvg.getBoundingClientRect();
   if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
     const el = cloneSvg.children[0] as SVGSVGElement;
     let rotate = shape.rotation || 0;
@@ -187,12 +183,12 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       const { left, top, right, bottom } = getShadowMax(shape);
       let g_x = 0;
       let g_y = 0;
-      if (shape.type === ShapeType.Group) {
-        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
-        g_x = Math.abs(x);
-        g_y = Math.abs(y);
-      }
       const max_border = getShapeBorderMax(shape);
+      if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+        const { x, y, width, height } = getGroupChildBounds(shape);
+        g_x = shape.frame.x - x;
+        g_y = shape.frame.y - y;
+      }
       const x = left + max_border + g_x;
       const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
@@ -220,8 +216,9 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       ctx.translate(-width / 2, -height / 2);
     }
   } else {
-    canvas.width = svg.clientWidth;
-    canvas.height = svg.clientHeight;
+    const { width, height } = cloneSvg.viewBox.baseVal
+    canvas.width = width;
+    canvas.height = height;
   }
   let imageUrl = '';
   const img = new Image();
@@ -230,7 +227,7 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   imageUrl = imgUrl;
   img.src = imgUrl;
   img.onload = () => {
-    if (trim && ctx) {
+    if (ctx && trim) {
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
@@ -247,8 +244,8 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
         }
       }
       const { x, y } = cloneSvg.viewBox.baseVal
-      const w = right - left;
-      const h = bottom - top;
+      const w = (right - left) + 2;
+      const h = (bottom - top) + 2;
       cloneSvg.setAttribute("width", `${w}`);
       cloneSvg.setAttribute("height", `${h}`);
       cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);

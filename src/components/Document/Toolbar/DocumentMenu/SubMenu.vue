@@ -98,18 +98,16 @@ function comment() {
     </div>
     <div class="line" v-if="items.includes('cursor')"></div>
     <div class="item" v-if="items.includes('cursor')" @click="cursor">
-<!--      <div class="choose" v-show="isCursor"></div>-->
-        <div class="choose">
-            <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
-        </div>
-      <span :style="{ marginLeft: isCursor ? '8px' : '20px'}">{{ t('system.show_many_cursor') }}</span>
+      <div class="choose">
+        <svg-icon icon-class="white-select" v-show="isCursor"></svg-icon>
+      </div>
+      <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
     </div>
     <div class="item" v-if="items.includes('comment')" @click="comment">
-<!--      <div class="choose" v-show="isComment"></div>-->
-        <div class="choose">
-            <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
-        </div>
-      <span :style="{ marginLeft: isComment ? '8px' : '20px'}">{{ t('system.show_comment') }}</span>
+      <div class="choose">
+        <svg-icon icon-class="white-select" v-show="isComment"></svg-icon>
+      </div>
+      <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
     </div>
   </div>
   <div class="bottom"></div>
@@ -148,9 +146,9 @@ function comment() {
     align-items: center;
     box-sizing: border-box;
 
-      >span {
-          margin-left: 20px;
-      }
+    >span {
+      margin-left: 20px;
+    }
 
     //.choose {
     //  position: absolute;
@@ -163,20 +161,20 @@ function comment() {
     //  border-color: var(--theme-color-anti);
     //  transform: rotate(-45deg) translateY(-4%);
     //}
-      .choose {
-          width: 12px;
-          height: 12px;
-          display: contents;
+    .choose {
+      width: 12px;
+      height: 12px;
+      display: contents;
 
-          svg {
-              width: 12px;
-              height: 12px;
-          }
+      svg {
+        width: 12px;
+        height: 12px;
       }
+    }
   }
 
   .item:hover {
-    background-color:  #434343;
+    background-color: #434343;
   }
 }
 </style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, ExportFormat, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, GroupShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
+import { login } from '@/assets/lang/en';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -53,9 +54,9 @@ const ImageUrls: Map<string, string> = new Map();
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
-    _getCanvasShape();
+    getCanvasShape();
 }
-const _getCanvasShape = () => {
+const _getCanvasShape = () => {    
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
     if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {
@@ -139,19 +140,16 @@ const getPosition = (shape: ShapeView) => {
         xy.value.y = p.y;
     }
     if (shape.type !== ShapeType.Cutout) {
-        if (shape.type === ShapeType.Group) {
+        if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
             const { left, top, right, bottom } = getShadowMax(shape);
-            const max_border = getShapeBorderMax(shape);
             const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
-            xy.value.x = shape.frame.x + x - (left + max_border);
-            xy.value.y = shape.frame.y + y - (top + max_border);
-            width.value = _w + (left + max_border) + (right + max_border);
-            height.value = _h + (top + max_border) + (bottom + max_border);
+            xy.value.x = x - left;
+            xy.value.y = y - top;
+            width.value = _w + left + right;
+            height.value = _h + top + bottom;
         } else {
             const { left, top, right, bottom } = getShadowMax(shape);
             const max_border = getShapeBorderMax(shape);
-            console.log(max_border);
-            
             xy.value.x = (shape.frame.x - left - max_border);
             xy.value.y = (shape.frame.y - top - max_border);
             width.value = (shape.frame.width + (left + max_border) + (right + max_border));
@@ -172,6 +170,7 @@ function page_color() {
     background_color.value = DEFAULT_COLOR();
     const selected = props.context.selection.selectedShapes;
     if (!selected.length) {
+        background_color.value = 'transparent';
         return;
     }
     if (selected[0].type !== ShapeType.Cutout) {
@@ -196,7 +195,7 @@ const select_watcher = (t: number) => {
             isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
-        _getCanvasShape();
+        getCanvasShape();
         if (shapes.length === 1) {
             shape.value = shapes[0];
         } else if (shapes.length === 0) {
@@ -204,7 +203,7 @@ const select_watcher = (t: number) => {
         }
     }
     if (t === Selection.CHANGE_PAGE) {
-        _getCanvasShape();
+        getCanvasShape();
     }
 }
 
@@ -260,6 +259,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
         )
         renderSvgs.value = renderItems;
     }
+    getCanvasShape();
 }
 
 defineExpose({ getShapesSvg, renderSvgs })

@@ -101,8 +101,8 @@ function _delete() {
                     <svg-icon icon-class="comp-state"></svg-icon>
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
-                    <span style="width:48px;">{{ props.variable.name }}</span>
-                    <span style="width: 94px;">{{ props.item.values.toString() }}</span>
+                    <span style="width:35%;">{{ props.variable.name }}</span>
+                    <span style="width: 65%;">{{ props.item.values.toString() }}</span>
                 </div>
             </div>
             <div class="delete" @click="_delete">
@@ -125,8 +125,7 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -139,12 +138,12 @@ function _delete() {
         height: 32px;
 
         .module_name {
+            width: 30px;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 14px;
             color: #595959;
-            margin-left: 8px;
 
             >svg {
                 width: 14px;
@@ -162,8 +161,7 @@ function _delete() {
         >.name_i {
             flex: 1;
             display: flex;
-            max-width: 100%;
-            margin-left: 8px;
+            max-width: calc(100% - 30px);
 
             >span {
                 display: block;

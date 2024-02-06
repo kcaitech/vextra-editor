@@ -1,4 +1,4 @@
-import { debounce } from "lodash";
+import { debounce, throttle } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import {
@@ -18,20 +18,19 @@ import {
     SymbolRefShape,
     SymbolRefView,
     SymbolShape,
-    TableShape,
     TableView,
     TextShape,
     adapt2Shape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
-import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
-import { Groups } from "aws-sdk/clients/budgets";
+import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 
 export interface Media {
@@ -148,7 +147,7 @@ export function isInner(context: Context, shape: ShapeView) {
 export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
-    
+
     const action = context.tool.action;
     const type = ResultByAction(action);
 
@@ -172,7 +171,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
             new_shape = asyncCreator.init(page.data, (adapt2Shape(parent) as GroupShape), type, name, frame);
         }
     }
-    
+
     if (asyncCreator && new_shape) {
         page && context.nextTick(page, () => {
             const s = new_shape && page.shapes.get(new_shape.id);
@@ -571,11 +570,11 @@ export const list2Tree = (list: any, rootValue: string) => {
     return arr
 }
 
-export function flattenShapes(shapes: any) {
-    return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray((item as GroupShape).childs)) {
+export function flattenShapes(shapes: ShapeView[]) {
+    return shapes.reduce((result: ShapeView[], item: ShapeView) => {
+        if (Array.isArray((item as GroupShapeView).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes((item as GroupShape).childs));
+            result = result.concat(flattenShapes((item as GroupShapeView).childs));
         }
         return result.concat(item);
     }, []);
@@ -672,105 +671,111 @@ export function get_selected_types(context: Context): number {
  * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
  * @returns
  */
-const BASE_ITEM = ['all', 'copy'];
 
-export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
+export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance", e: MouseEvent): string[] {
+    const BASE_ITEM = ['all', 'copy'];
+
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
-        const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
+
+        let types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
         if (types & 1) { // 存在容器
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('dissolution');
             }
         }
         if (types & 2) { // 存在编组
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('un_group');
             }
         }
         if (types & 4) { // 存在实例
             const shapes = context.selection.selectedShapes;
-            if (permIsEdit(context) && one_of_is_symbolref(shapes)) {
+            if (permIsEdit(context) && one_of_is_symbolref(shapes) && !context.tool.isLable) {
                 contextMenuItems.push('instance');
             }
         }
         if (types & 8) { // 存在组件
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 const index = contextMenuItems.findIndex((item) => item === 'component');
-                contextMenuItems.splice(index, 1);
+                if (index > -1) contextMenuItems.splice(index, 1);
             }
         }
-        if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-            if (permIsEdit(context)) {
+        const shapes = context.selection.selectedShapes;
+        if (shapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('forward', 'back', 'top', 'bottom');
+            }
+            if ((e.target as Element).closest('[data-title="symbol-title"]') || shapes[0].type === ShapeType.Symbol || shapes[0].type === ShapeType.SymbolUnion) { // 点在了组件上
+                const index = contextMenuItems.findIndex((item) => item === 'component');
+                if (index > -1) contextMenuItems.splice(index, 1);
             }
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-        if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        if (permIsEdit(context) && !context.tool.isLable) {
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'text-selection') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
-
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table_cell') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['insert_column', 'delete_column', 'merge_cell'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
         } else {
             contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
@@ -846,7 +851,9 @@ export function map_from_shapes(shapes: ShapeView[], init?: Map<string, ShapeVie
         map.set(shape.id, shape);
         if (shape.type === ShapeType.Table) continue;
         const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : (shape).childs;
-        if (!children?.length) continue;
+        if (!children?.length) {
+            continue;
+        }
         map_from_shapes(children, map);
     }
     return map;
@@ -857,10 +864,10 @@ export function is_shape_out(context: Context, shape: ShapeView, matrix: Matrix)
     const { width, height } = shape.frame;
     let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
     for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
-    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
+    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
-        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
+        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom;
 }
 
 export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是准确的方法，但是综合效果最好
@@ -875,7 +882,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param context
  * @param shape
  */
-export function shape_track(context: Context, shape: ShapeView | Shape) {
+export function shape_track(context: Context, shape: ShapeView) {
     const page = shape.getPage() as PageView;
     if (!page) return;
     const target = page.getShape(shape.id);
@@ -946,16 +953,18 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         }
     }
 }
-
-let scale_delta = 1.06;
-let scale_delta_ = 1 / scale_delta;
-
+const MAX = 25600;
+const MIN = 2;
 export function root_scale(context: Context, e: WheelEvent) {
-    if (Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+    let scale_delta = 1.2;
+    let scale_delta_ = 1 / scale_delta;
+    const scale = Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0));
+    if (scale <= MIN) {
         scale_delta_ = 1
-    } else {
-        scale_delta_ = 1 / scale_delta;
+    } else if (scale >= MAX) {
+        scale_delta = MAX / scale;
     }
+
     const matrix = context.workspace.matrix;
     const root = context.workspace.root;
     const offsetX = e.x - root.x;
@@ -964,8 +973,21 @@ export function root_scale(context: Context, e: WheelEvent) {
     matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
     matrix.trans(offsetX, offsetY);
 }
+export function root_trans(context: Context, e: WheelEvent) {
+    const MAX_STEP = 120;
 
-export function root_trans(context: Context, e: WheelEvent, step: number) {
+    let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+    let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+
+    if (e.shiftKey && !is_mac() && e.deltaX < 1) {
+        stepx = stepy;
+        stepy = 0;
+    }
+
+    context.workspace.matrix.trans(-stepx, -stepy);
+}
+
+export function root_trans_direction(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {
         const _d = is_mac() ? e.deltaX : e.deltaY; // window的deltaX竟然有问题
         const delta = _d > 0 ? -step : step;
@@ -976,11 +998,39 @@ export function root_trans(context: Context, e: WheelEvent, step: number) {
     }
 }
 
-export function top_side(shape: ShapeView, matrix: Matrix) {
+export function pre_modify_anchor(shape: ShapeView) {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    if (shape.isFlippedVertical) {
+        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    }
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    return rotate;
+}
+
+/**
+ * 
+ * 容器标题的最大视图宽度
+*/
+export function shape_title_width(shape: ShapeView, matrix: Matrix) {
+    const rotate = pre_modify_anchor(shape);
     const f = shape.frame;
+    let width = 0;
     const lt = matrix.computeCoord2(0, 0);
-    const rt = matrix.computeCoord2(f.width, f.height);
-    return Math.hypot(rt.x - lt.x, rt.y - lt.y)
+    const rt = matrix.computeCoord2(f.width, 0);
+    const lb = matrix.computeCoord2(0, f.height);
+    if (rotate >= 0 && rotate < 45) {
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    } else if (rotate >= 45 && rotate < 135) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y)
+    } else if (rotate >= 135 && rotate < 225) {
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    } else if (rotate >= 225 && rotate < 315) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y)
+    } else if (rotate >= 315 && rotate <= 360) {
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    }
+    return width;
 }
 
 /**
@@ -1133,36 +1183,48 @@ export function scale_0(context: Context) {
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-export function undo(context: Context) {
-    const repo = context.repo;
-    repo.canUndo() && repo.undo();
+function modify_selection(context: Context) {
     const selection = context.selection;
     const shapes = context.selection.selectedShapes;
     const page = context.selection.selectedPage!;
-    const flat = page.shapes;
+    const new_selected: ShapeView[] = [];
+    context.nextTick(
+        page,
+        () => {
+            if (!shapes.length) {
+                return;
+            }
+            let changed = false;
 
-    if (shapes.length) {
-        for (let i = 0; i < shapes.length; i++) {
-            const item = shapes[i];
-            if (!flat.get(item.id)) {
-                selection.unSelectShape(item);
+            for (let i = 0; i < shapes.length; i++) {
+                const item = shapes[i];
+                if (!page.shapes.get(item.id)) {
+                    changed = true;
+                    continue;
+                }
+                new_selected.push(item);
+            }
+
+            if (changed) {
+                selection.rangeSelectShape(new_selected);
+                context.workspace.notify(WorkSpace.CLAC_ATTRI);
             }
         }
-    }
+    )
+}
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+export function undo(context: Context) {
+    const repo = context.repo;
+    repo.canUndo() && repo.undo();
+
+    modify_selection(context);
 }
 
 export function redo(context: Context) {
     const repo = context.repo;
-
     repo.canRedo() && repo.redo();
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+    modify_selection(context);
 }
 
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
@@ -1173,4 +1235,30 @@ export async function upload_image(context: Context, ref: string, buff: ArrayBuf
         console.log('upload_image:', error);
         return false;
     }
+}
+
+export function detectZoom() {
+    let ratio = 0,
+        screen = window.screen as any,
+        ua = navigator.userAgent.toLowerCase();
+
+    if (window.devicePixelRatio !== undefined) {
+        ratio = window.devicePixelRatio;
+    }
+    else if (~ua.indexOf('msie')) {
+        if (screen.deviceXDPI && screen.logicalXDPI) {
+            ratio = screen.deviceXDPI / screen.logicalXDPI;
+        }
+    }
+    else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
+        ratio = window.outerWidth / window.innerWidth;
+    }
+
+    if (ratio) {
+        ratio = Math.round(ratio * 100);
+    }
+}
+
+export function hidden_selection(context: Context) {
+    context.selection.notify(Selection.SELECTION_HIDDEN);
 }

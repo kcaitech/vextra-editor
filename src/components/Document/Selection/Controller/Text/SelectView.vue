@@ -7,7 +7,7 @@ import { Selection } from '@/context/selection';
 import { genRectPath } from '../../common';
 import { WorkSpace } from '@/context/workspace';
 import { throttle } from '../../common';
-import {TextSelectionLite} from "@/context/textselectionlite";
+import { TextSelectionLite } from "@/context/textselectionlite";
 type SelectionLike = TextSelectionLite;
 interface Props {
     shape: TextShapeView | TableCellView

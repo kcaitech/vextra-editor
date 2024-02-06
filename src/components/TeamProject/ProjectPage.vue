@@ -109,7 +109,7 @@ import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
 import Tooltip from '../common/Tooltip.vue'
-import { debounce } from 'lodash'
+import { ceil, debounce } from 'lodash'
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -267,7 +267,7 @@ const projectMenu = (project: any, e: MouseEvent) => {
         menuItem.push('rename', 'del');
     }
     if (project.self_perm_type === 4) {
-        menuItem.push('rename', 'del', 'exit');
+        menuItem.push('rename', 'exit');
     }
     if (project.is_invited || project.self_perm_type === 5) {
         menuItem.push('perm');
@@ -277,7 +277,7 @@ const projectMenu = (project: any, e: MouseEvent) => {
     } else {
         menuItem.push('fixed');
     }
-    if (!project.is_in_team) {
+    if ((!project.is_in_team || project.is_invited) && project.self_perm_type < 5) {
         menuItem.push('exit');
     }
     nextTick(() => {
@@ -537,18 +537,37 @@ watch(() => route.params.id, () => {
 })
 
 watch(currentProject, () => {
-    window.document.title = currentProject.value[0].project.name + ' - ' + t('product.name')
+    if (currentProject.value.length !== 0) {
+        window.document.title = currentProject.value[0].project.name + ' - ' + t('product.name')
+    } else {
+        return
+    }
 })
 
+let timer1: any
+let unwatch: any
 onMounted(() => {
     const x = sessionStorage.getItem('activateitem')
     if (x) itemid.value = parseInt(x)
     if (!currentProject.value.length) GetprojectLists()
-
+    timer1 = setTimeout(() => {
+        unwatch = watch(projectList, () => {
+            currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+            if (currentProject.value.length === 0) {
+                if (route.name === "ProjectPage") {
+                    router.push({ path: '/files/recently' })
+                    ElMessage.closeAll()
+                    ElMessage.error({ duration: 3000, message: '项目不存在或被移出项目' })
+                }
+            }
+        })
+    }, 10000);
 })
 
 onUnmounted(() => {
     sessionStorage.setItem('activateitem', '0')
+    clearTimeout(timer1)
+    if (unwatch) unwatch()
 })
 
 </script>

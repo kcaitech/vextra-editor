@@ -200,12 +200,12 @@ function icon_class() {
     const shape = props.data.shape;
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union';
+            return 'layer-symbol-union';
         } else {
-            return 'pattern-component';
+            return 'layer-component';
         }
     } else {
-        return `pattern-${shape.type}`;
+        return `layer-${shape.type}`;
     }
 }
 
@@ -312,7 +312,8 @@ onUnmounted(() => {
     <div class="contain" :class="{ component: is_component() }" @click="selectShape" @mousemove="hoverShape"
         @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="item-warp">
-            <div class="container-svg" @dblclick="toggleContainer" :class="{ color: !is_component() }">
+            <div class="container-svg" @dblclick="toggleContainer"
+                :class="{ color: !is_component(), stroke: data.shape.type === ShapeType.Oval && is_component(), no_stroke: !is_component() && data.shape.type === ShapeType.Oval }">
                 <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
             </div>
             <div class="text" :class="{ container: true, selected: false }"
@@ -498,7 +499,15 @@ onUnmounted(() => {
 }
 
 .color {
-    color: #595959;
+    fill: #595959;
+}
+
+.stroke {
+    stroke: #7F58F9;
+}
+
+.no_stroke {
+    stroke: #595959;
 }
 
 .tips-wrap:hover {
@@ -541,4 +550,5 @@ onUnmounted(() => {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}</style>
+}
+</style>

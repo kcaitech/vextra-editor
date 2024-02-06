@@ -41,7 +41,7 @@ export interface SymbolListItem {
     title: string
     isFolder: boolean
     extend: boolean
-    symbols: SymbolShape[]
+    symbols: (SymbolShape | SymbolUnionShape)[]
     childs: SymbolListItem[]
     parent: SymbolListItem | undefined
 }
@@ -68,13 +68,12 @@ export function classification_level_page(pages: { page: Page, desc: string }[])
 }
 
 function get_symbol_level_under(group: GroupShape) {
-    const symbols: SymbolShape[] = [];
+    const symbols: (SymbolShape | SymbolUnionShape)[] = [];
     const childs = group.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
-            const children = (item as SymbolUnionShape).childs;
-            children.length && symbols.push(children[0] as SymbolShape);
+            symbols.push(item as SymbolUnionShape);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -134,14 +133,13 @@ export function classification_level_artboard(page: Page) {
     return result;
 }
 
-function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[]) {
-    const symbols: SymbolShape[] = init || [];
+function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape | SymbolUnionShape)[]) {
+    const symbols: (SymbolShape | SymbolUnionShape)[] = init || [];
     const childs = artboard.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
-            const children = (item as SymbolUnionShape).childs;
-            children.length && symbols.push(children[0] as SymbolShape);
+            symbols.push(item as SymbolUnionShape);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -182,18 +180,18 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     return result;
 }
 
-export function search_symbol_by_keywords(context: Context, keywords: string, symbols: SymbolShape[]) {
+export function search_symbol_by_keywords(context: Context, keywords: string, symbols: (SymbolShape | SymbolUnionShape)[]) {
     const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
-    const result: SymbolShape[] = [];
+    const result: (SymbolShape | SymbolUnionShape)[] = [];
     for (let i = 0, len = symbols.length; i < len; i++) {
         const item = symbols[i];
-        if (item.name.search(reg) > -1) result.push(item as SymbolShape);
+        if (item.name.search(reg) > -1) result.push(item as (SymbolShape | SymbolUnionShape));
     }
     return result;
 }
 
 export function get_search_symbol_list(pages: Page[]) {
-    const result: SymbolShape[] = [];
+    const result: (SymbolShape | SymbolUnionShape)[] = [];
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
         if (page.__symbolshapes.size) {
@@ -237,7 +235,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
         return result;
     }
 
-    function is_target_set(id: string, symbols: SymbolShape[]) {
+    function is_target_set(id: string, symbols: (SymbolShape | SymbolUnionShape)[]) {
         for (let i = 0, len = symbols.length; i < len; i++) {
             if (id === symbols[i].id) return true;
         }
@@ -393,6 +391,9 @@ export function make_symbol(context: Context, t: Function) {
     if (!page || !selected.length) return false;
     if (is_exist_symbol_layer(selected)) {
         message('info', t('compos.error_1'));
+        return false;
+    }
+    if (selected.length === 1 && is_symbol_or_union(selected[0])) {
         return false;
     }
     if (is_exist_symbolref_layer(selected)) {
@@ -690,6 +691,9 @@ function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableT
         let slow_index = 0;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
+            if (item.isVirtualShape) {
+                continue;
+            }
             const canbe = !is_bind_x_type_var(symbol, item, OverrideType.Visible, vari, container);
             if ((item).childs && (item).childs.length && item.type !== ShapeType.Table) {
                 if (canbe) shapes.push(item);
@@ -703,6 +707,9 @@ function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableT
         if (de_check(group)) return shapes;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
+            if (item.isVirtualShape) {
+                continue;
+            }
             if (item.type === get_target_type_by_vt(type)) {
                 if (!is_bind_x_type_var(symbol, item, get_ot_by_vt(type)!, vari, container)) {
                     shapes.push(item);
@@ -1288,4 +1295,26 @@ export function get_symbolref_by_layer(shape: ShapeView) {
 
 export function is_symbol_or_union(shape: ShapeView) {
     return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
+}
+
+export function untie_instance(context: Context) {
+    const selection = context.selection;
+    const page = selection.selectedPage;
+    const ref_shapes = selection.selectedShapes;
+    if (page) {
+        const editor = context.editor4Page(page);
+        const shapes = editor.extractSymbol(ref_shapes.map(s => adapt2Shape(s)) as SymbolRefShape[]);
+        if (shapes) {
+            context.nextTick(page, () => {
+                const select = shapes.reduce((pre, cur) => {
+                    const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
+                    if (s) {
+                        pre.push(s);
+                    }
+                    return pre;
+                }, [] as ShapeView[])
+                context.selection.rangeSelectShape(select);
+            })
+        }
+    }
 }

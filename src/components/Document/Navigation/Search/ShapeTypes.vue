@@ -18,6 +18,7 @@ const emit = defineEmits<Emits>();
 const { t } = useI18n();
 const props = defineProps<Props>();
 const all_types = ref<SelectedItem[]>([]);
+const hoverIndex = ref(-1);
 const template: SelectedItem[] = [
   {
     selected: false,
@@ -70,10 +71,10 @@ onMounted(() => {
 </script>
 <template>
   <div class="types-wrap">
-    <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="(e) => check(index, e)">
+    <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="(e) => check(index, e)" @mouseover="hoverIndex = index" @mouseleave="hoverIndex = -1">
       <div class="content"> {{ t(`shape.${item.shapetype}`) }}</div>
       <div class="de-check">
-        <svg-icon v-if="item.selected" icon-class="page-select"></svg-icon>
+        <svg-icon v-if="item.selected" :icon-class="hoverIndex === index ? 'white-select': 'page-select'"></svg-icon>
       </div>
     </div>
   </div>

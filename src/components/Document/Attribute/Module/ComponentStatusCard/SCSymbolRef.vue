@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {SymbolRefShape, SymbolRefView, Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, modify_variable } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { SymbolRefShape, SymbolRefView, Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 
@@ -60,6 +60,9 @@ function save_instance(type: VariableType, name: string) {
         if (!s) continue;
         sym_ids.push((s as SymbolRefView).refId);
     }
+    if (!sym_ids.length) {
+        return;
+    }
     modify_variable(props.context, symbol, props.variable, name, sym_ids[0], sym_ids);
     iseditToggle.value = false;
 }
@@ -79,12 +82,11 @@ function _delete() {
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="pattern-rectangle"
-                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                        <svg-icon icon-class="gray-symbol-ref"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 30%;">{{ props.variable.name }}</span>
-                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 35%;">{{ props.variable.name }}</span>
+                        <span style="width: 65%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
@@ -116,8 +118,7 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -137,7 +138,7 @@ function _delete() {
             color: #595959;
             margin-left: 8px;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
@@ -170,7 +171,7 @@ function _delete() {
             .name {
                 flex: 1;
                 display: flex;
-                max-width: 100%;
+                max-width: calc(100% - 30px);
 
                 >span {
                     display: block;
@@ -233,9 +234,10 @@ function _delete() {
         background-color: #F5F5F5;
     }
 }
+
 .module_item_left:hover {
-        background-color: #EBEBEB;
-    }
+    background-color: #EBEBEB;
+}
 
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;

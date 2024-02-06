@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
+    version="1.1" width="13" height="13" viewBox="0 0 13 13">
+    <defs>
+        <clipPath id="master_svg0_912_00852">
+            <rect x="0" y="0" width="13" height="13" rx="0" />
+        </clipPath>
+    </defs>
+    <g clip-path="url(#master_svg0_912_00852)">
+        <g>
+            <ellipse cx="6.5" cy="6.5" rx="5.484375" ry="5.484375" fill-opacity="0"
+                stroke-opacity="1" stroke="inherit" fill="none" stroke-width="1.2000000476837158"
+                stroke-linejoin="round" />
+        </g>
+    </g>
+</svg>

@@ -1,4 +1,4 @@
-import { Shape, ShapeType, TableShape, TableGridItem, TableCellType, TextShape, TableCell, TableView, ShapeView } from '@kcdesign/data';
+import { ShapeType, TableGridItem, TableCellType, TableCell, TableView, ShapeView } from '@kcdesign/data';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
