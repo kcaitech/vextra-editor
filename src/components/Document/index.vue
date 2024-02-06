@@ -448,7 +448,6 @@ async function upload(projectId: string) {
         path: '/document',
         query: { id: doc_id },
     });
-    for (const stop of repoStopHandlerList) stop();
     if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         // todo 文档操作通道开启失败处理
     }
@@ -487,7 +486,6 @@ function init_keyboard_uints() {
 
 type FuncType = (...args: any[]) => any;
 const repoPendingCmdListBeforeStart: Cmd[] = []; // 保存在start前repo产生的cmd
-const repoStopHandlerList: FuncType[] = [];
 function init_doc() {
     if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
@@ -496,13 +494,6 @@ function init_doc() {
         }, 30000);
     } else if ((window as any).sketchDocument) {
         context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
-        repoStopHandlerList.push(
-            context.repo.onCommit((cmd, isRemote) => {
-                if (isRemote) return;
-                repoPendingCmdListBeforeStart.push(cmd);
-            }).stop,
-            context.repo.onUndoRedo(() => undefined).stop, // start前禁止undo
-        );
         null_context.value = false;
         getUserInfo();
         init_watcher();
