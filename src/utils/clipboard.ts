@@ -865,12 +865,14 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         if (xy) {
             modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
             insert_env = get_env_by_xy(context, xy);
-        } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+        } else {
             const box = get_source_box(source);
-            const wpc = context.workspace.center_on_page;
-            box.x = wpc.x - box.width / 2;
-            box.y = wpc.y - box.height / 2;
-            modify_frame_by_xy(box, source);
+            if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                const wpc = context.workspace.center_on_page;
+                box.x = wpc.x - box.width / 2;
+                box.y = wpc.y - box.height / 2;
+                modify_frame_by_xy(box, source);
+            }
             insert_env = get_env_by_box(context, box);
         }
 
@@ -1360,10 +1362,10 @@ function get_env_by_box(context: Context, box: { x: number, y: number, width: nu
     const layers_on_xy = context.selection.getLayers(box);
     for (let i = 0; i < layers_on_xy.length; i++) {
         const s = layers_on_xy[i];
-        if (s.type !== ShapeType.Artboard) { // 暂时只支持容器
+        if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             continue;
         }
-        if (s.frame.width < box.width || s.frame.height < box.height) {
+        if (s.frame.width <= box.width || s.frame.height <= box.height) {
             continue;
         }
 
@@ -1371,11 +1373,12 @@ function get_env_by_box(context: Context, box: { x: number, y: number, width: nu
     }
     return context.selection.selectedPage!.data;
 }
+
 function get_env_by_xy(context: Context, xy: XY) {
     const layers_on_xy = context.selection.getLayers(xy);
     for (let i = 0; i < layers_on_xy.length; i++) {
         const s = layers_on_xy[i];
-        if (s.type !== ShapeType.Artboard) { // 暂时只支持容器
+        if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             continue;
         }
 
@@ -1387,6 +1390,6 @@ function get_env_by_xy(context: Context, xy: XY) {
 function get_envs_from_selection(context: Context) {
     const shapes = context.selection.selectedShapes;
     for (let i = 0; i < shapes.length; i++) {
-        
+
     }
 }
