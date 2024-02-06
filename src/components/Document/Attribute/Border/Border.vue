@@ -48,9 +48,7 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const editor = computed(() => props.context.editor4Shape(adapt2Shape(props.shapes[0])));
 const watchedShapes = new Map();
-const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>([]);
 const apex_view = ref<number>(0);
@@ -293,7 +291,6 @@ function onAlphaChange(b: Border, idx: number) {
             alpha_message(idx, b);
         }
     }
-    alphaBorder.value[idx].blur();
     hidden_selection(props.context);
 }
 
@@ -387,7 +384,7 @@ const colorInput = (i: number) => {
         colorValue.value = value;
     }
 }
-const selectAlpha = (i: number) => {
+const selectAlpha = (e: Event) => {
     if (alphaBorder.value) {
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
@@ -398,12 +395,12 @@ const selectAlpha = (i: number) => {
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
         }
-        alphaBorder.value[i].select();
     }
+    (e.target as HTMLInputElement).select();
 }
-const alphaInput = (i: number) => {
+const alphaInput = (e: Event) => {
     if (alphaBorder.value) {
-        const value = alphaBorder.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         alphaValue.value = value;
     }
 }
@@ -659,7 +656,7 @@ onUnmounted(() => {
                             t(`color.${b.border.gradient.gradientType}`) }}</span>
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
                         :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
-                        @focus="selectAlpha(idx)" @input="alphaInput(idx)"
+                        @focus="selectAlpha" @input="alphaInput"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                 </div>
                 <!--                <div class="extra-action">-->

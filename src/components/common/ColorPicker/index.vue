@@ -952,6 +952,11 @@ function color_watch(t: number) {
 function window_blur() {
     isDrag = false;
 }
+const is_gradient_selected = () => {
+    const shapes = props.context.selection.selectedShapes;
+    if(shapes.length !== 1) return true;
+   return shapes[0].type === ShapeType.Contact ? false : true;
+}
 const observer = new ResizeObserver(locate);
 onMounted(() => {
     if (document.body) observer.observe(document.body);
@@ -989,7 +994,7 @@ onUnmounted(() => {
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-            <div class="color_type_container" v-if="fillType">
+            <div class="color_type_container" v-if="fillType && is_gradient_selected()">
                 <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular">
                 </ColorType>
             </div>

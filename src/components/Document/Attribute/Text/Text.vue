@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, Fill, FillType, GradientType, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -44,6 +44,7 @@ const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
 const highlight = ref<Color>()
+const fillType = ref<FillType>(FillType.SolidColor);
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
@@ -293,8 +294,10 @@ const _textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color
         highlight.value = format.highlight
+        fillType.value = format.fillType || FillType.SolidColor
         isBold.value = format.bold || false
         isTilt.value = format.italic || false
+
         if (format.italicIsMulti) isTilt.value = false
         if (format.boldIsMulti) isBold.value = false
         if (colorIsMulti.value) mixed.value = true;
@@ -303,6 +306,7 @@ const _textFormat = () => {
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.underlineIsMulti) isUnderline.value = false
         if (format.strikethroughIsMulti) isDeleteline.value = false
+        if(format.fillTypeIsMulti) mixed.value = true;
         props.context.workspace.focusText()
     } else {
         let formats: any[] = [];
@@ -346,14 +350,16 @@ const _textFormat = () => {
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
+        textColor.value = format.color;
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
+        fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
         if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
-        if (format.color === 'unlikeness') colorIsMulti.value = true;
+        if (format.color === 'unlikeness' || format.colorIsMulti === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.bold === 'unlikeness') isBold.value = false;
         if (format.italic === 'unlikeness') isTilt.value = false;
@@ -608,6 +614,23 @@ const addTextColor = () => {
         editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 6, 6, 6))
     }
 }
+
+const togger_gradient_type = (type: GradientType | 'solid') => {
+    const editor = props.context.editor4TextShape(props.shape);
+    const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextFillType(fillType, 0, Infinity)
+        } else {
+            editor.setTextFillType(fillType, textIndex, selectLength)
+            textFormat()
+        }
+    } else {
+        editor.setTextFillTypeMulti(props.textShapes.map(s => adapt2Shape(s)), fillType);
+    }
+}
+
 const sizeColorInput = () => {
     if (sizeColor.value && alphaFill.value) {
         const value = sizeColor.value.value;
@@ -815,8 +838,9 @@ onUnmounted(() => {
                 }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
-                        @change="c => getColorFromPicker(c, 'color')">
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :fill-type="fillType"
+                        @change="c => getColorFromPicker(c, 'color')"
+                        @gradient-type="(type) => togger_gradient_type(type)">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"

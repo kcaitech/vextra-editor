@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView, TableShape, Stop, GradientType, adapt2Shape, BasicArray } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
@@ -316,7 +316,6 @@ function onAlphaChange(idx: number, fill: Fill) {
     } else {
         alpha_message(idx, fill);
     }
-    alphaFill.value[idx].blur();
 }
 const alpha_message = (idx: number, fill: Fill) => {
     if (!alphaFill.value) return;
@@ -382,8 +381,9 @@ const colorInput = (i: number) => {
         colorValue.value = value;
     }
 }
-const selectAlpha = (id: number) => {
+const selectAlpha = (e: Event) => {
     if (alphaFill.value) {
+        (e.target as HTMLInputElement).select();
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
         tableSelect.value = {
@@ -393,12 +393,11 @@ const selectAlpha = (id: number) => {
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
         }
-        alphaFill.value[id].select()
     }
 }
-const alphaInput = (i: number) => {
+const alphaInput = (e: Event) => {
     if (alphaFill.value) {
-        const value = alphaFill.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         alphaValue.value = value;
     }
 }
@@ -645,7 +644,7 @@ onUnmounted(() => {
                         v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
                             t(`color.${f.fill.gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
-                        @change="(e) => onAlphaChange(idx, f.fill)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
+                        @change="(e) => onAlphaChange(idx, f.fill)" @focus="(e) => selectAlpha(e)" @input="alphaInput"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
                 <div class="temporary"></div>
@@ -772,6 +771,7 @@ onUnmounted(() => {
                     color: rgba(0, 0, 0, 0.3);
                 }
             }
+
             .temporary {
                 flex: 0 0 28px;
                 width: 28px;
