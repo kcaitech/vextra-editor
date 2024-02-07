@@ -384,10 +384,16 @@ export class Selection extends WatchableObject implements ISave4Restore {
     }
 
     resetSelectShapes() {
-        this.m_textselection.reset();
-        this.m_tableselection.resetSelection();
-        this.m_selectShapes.length = 0;
-        this.notify(Selection.CHANGE_SHAPE);
+        if (this.m_textselection.cursorStart > -1) {
+            this.m_textselection.reset();
+        }
+        if (this.m_tableselection.editingCell || this.m_tableselection.tableColStart > -1) {
+            this.m_tableselection.resetSelection();
+        }
+        if (this.m_selectShapes.length > 0) {
+            this.m_selectShapes.length = 0;
+            this.notify(Selection.CHANGE_SHAPE);
+        }
     }
 
     isSelectedShape(shape: ShapeView | Shape | string) {
