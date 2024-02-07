@@ -18,7 +18,7 @@ import {
 import { v4 } from 'uuid';
 import { flattenShapes } from '@/utils/cutout';
 import { hidden_selection } from '@/utils/content';
-import { getShapesForStyle } from './fill';
+import { getShapesForStyle } from '@/utils/style';
 
 interface FillItem {
     id: number,
