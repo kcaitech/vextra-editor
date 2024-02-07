@@ -237,7 +237,7 @@ onUnmounted(() => {
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((textShapes[0]) as TextShapeView)"
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
                     :trigger="reflush_trigger"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
