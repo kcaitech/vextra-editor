@@ -31,6 +31,7 @@ export const paras = 'cn.protodesign/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
     private cache: { type: CacheType, data: any } | undefined;
+    private m_envs: Set<string> = new Set();
 
     constructor(context: Context) {
         this.context = context;
@@ -158,13 +159,32 @@ export class Clipboard {
         }
 
         // 记录每个图形相对root位置
+        const origin_xy_list: XY[] = [];
+        const first_env_id: string = shapes[0]?.parent?.id || '';
+        let no_more_push = false;
         const position_map: Map<string, PageXY> = new Map();
         const points_map: Map<string, CurvePoint[]> = new Map();
+        this.m_envs.clear();
+
         for (let i = 0, len = shapes.length; i < len; i++) {
             const shape = shapes[i];
+
+            const f = shape.frame;
+            if (!no_more_push) {
+                origin_xy_list.push({ x: f.x, y: f.y });
+            }
+            if (shape.parent?.id !== first_env_id) {
+                origin_xy_list.length = 0;
+                no_more_push = true;
+            }
+
             position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
             if (shape instanceof ContactShape) {
                 points_map.set(shape.id, shape.getPoints());
+            }
+
+            if ([ShapeType.Artboard, ShapeType.Group].includes(shape.type)) {
+                this.m_envs.add(shape.id);
             }
         }
 
@@ -192,7 +212,8 @@ export class Clipboard {
         const media = sort_media(this.context.data, ctx);
         const data = {
             shapes: _shapes,
-            media
+            media,
+            origin_xy_list
         }
 
         const h = encode_html(identity, data);
@@ -650,6 +671,10 @@ export class Clipboard {
 
         replace_action(this.context, data, src)
     }
+
+    get envs() {
+        return this.m_envs;
+    }
 }
 
 /**
@@ -860,20 +885,29 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             return;
         }
 
-        // 2. 计算插入环境和位置（在有选中容器的情况下，需要根据指定的插入环境多次计算位置）
-        let insert_env: Shape = page.data;
-        if (xy) {
-            modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
-            insert_env = get_env_by_xy(context, xy);
+        let insert_result: { shapes: Shape[] } | false = false;
+        let insert_env: Shape = adapt2Shape(page);
+
+        // 2. 计算插入环境和位置（存在选区环境并满足插入其中的条件的情况下，需要在后续根据指定的插入环境多次计算位置）
+        const selection_envs = get_envs_from_selection(context);
+        const is_exist_selection_envs = selection_envs.length && (data?.origin_xy_list?.length === source.length);
+        let __xys: XY[] = [];
+        if (is_exist_selection_envs) { // 送入选区内环境
+            __xys = get_xys_for_selection_envs(selection_envs, data.origin_xy_list, source)
         } else {
-            const box = get_source_box(source);
-            if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                const wpc = context.workspace.center_on_page;
-                box.x = wpc.x - box.width / 2;
-                box.y = wpc.y - box.height / 2;
-                modify_frame_by_xy(box, source);
+            if (xy) {
+                modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
+                insert_env = get_env_by_xy(context, xy);
+            } else {
+                const box = get_source_box(source);
+                if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                    const wpc = context.workspace.center_on_page;
+                    box.x = wpc.x - box.width / 2;
+                    box.y = wpc.y - box.height / 2;
+                    modify_frame_by_xy(box, source);
+                }
+                insert_env = get_env_by_box(context, box);
             }
-            insert_env = get_env_by_box(context, box);
         }
 
         // 3. 将图层导入文档（还未插入文档）
@@ -883,13 +917,26 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             throw new Error('invalid source: !shapes.length');
         }
 
-        let insert_result: { shapes: Shape[] } | false = false;
-
         // 4. 插入文档
         const editor = context.editor4Page(page);
-        insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
-        if (!insert_result) {
-            return;
+        if (is_exist_selection_envs) {
+            let actions: { env: GroupShape, shapes: Shape[] }[] = [];
+            for (let i = 0; i < selection_envs.length; i++) {
+                const env = selection_envs[i];
+                const xy = __xys[i];
+                modify_frame_by_xy(xy, source);
+                const shapes = import_shape_from_clipboard(context.data, source);
+                actions.push({ env, shapes });
+            }
+            const __res = editor.pasteShapes3(actions);
+            if (__res) {
+                insert_result = { shapes: __res };
+            }
+        } else {
+            insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
+            if (!insert_result) {
+                return;
+            }
         }
 
         // 5. 根据插入结果构建新的选区
@@ -1362,6 +1409,9 @@ function get_env_by_box(context: Context, box: { x: number, y: number, width: nu
     const layers_on_xy = context.selection.getLayers(box);
     for (let i = 0; i < layers_on_xy.length; i++) {
         const s = layers_on_xy[i];
+        if (s.isVirtualShape) {
+            continue;
+        }
         if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             continue;
         }
@@ -1369,27 +1419,90 @@ function get_env_by_box(context: Context, box: { x: number, y: number, width: nu
             continue;
         }
 
-        return s.data;
+        return adapt2Shape(s);
     }
-    return context.selection.selectedPage!.data;
+    return adapt2Shape(context.selection.selectedPage!);
 }
 
 function get_env_by_xy(context: Context, xy: XY) {
     const layers_on_xy = context.selection.getLayers(xy);
     for (let i = 0; i < layers_on_xy.length; i++) {
         const s = layers_on_xy[i];
+        if (s.isVirtualShape) {
+            continue;
+        }
         if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             continue;
         }
 
-        return s.data;
+        return adapt2Shape(s);
     }
-    return context.selection.selectedPage!.data;
+    return adapt2Shape(context.selection.selectedPage!);
 }
 
 function get_envs_from_selection(context: Context) {
     const shapes = context.selection.selectedShapes;
+    const envs: GroupShape[] = [];
     for (let i = 0; i < shapes.length; i++) {
-
+        const s = shapes[i];
+        if (s.isVirtualShape) {
+            continue;
+        }
+        if (context.workspace.clipboard.envs.has(s.id)) {
+            continue;
+        }
+        if ([ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
+            envs.push(adapt2Shape(s) as GroupShape);
+        }
     }
+    return envs;
+}
+
+function get_xys_for_selection_envs(envs: GroupShape[], xys: XY[], source: Shape[]) { // todo 处理一下逃出区域后的居中效果
+    const ltxy = { x: Infinity, y: Infinity };
+    xys.forEach((i, index) => {
+        const s = source[index];
+        if (!s) {
+            return;
+        }
+
+        const m = new Matrix();
+        const frame = s.frame;
+        if (!s.rotation && !s.isFlippedHorizontal && !s.isFlippedVertical) {
+            m.trans(i.x, i.y);
+        } else {
+            const cx = frame.width / 2;
+            const cy = frame.height / 2;
+            m.trans(-cx, -cy);
+            if (s.rotation) m.rotate(s.rotation / 180 * Math.PI);
+            if (s.isFlippedHorizontal) m.flipHoriz();
+            if (s.isFlippedVertical) m.flipVert();
+            m.trans(cx, cy);
+            m.trans(i.x, i.y);
+        }
+
+        const __i = m.computeCoord2(0, 0);
+        if (__i.x < ltxy.x) {
+            ltxy.x = __i.x;
+        }
+        if (__i.y < ltxy.y) {
+            ltxy.y = __i.y;
+        }
+    });
+
+    const box = get_source_box(source);
+
+    const __xys: XY[] = [];
+    for (let index = 0; index < envs.length; index++) {
+        const e = envs[index];
+        const f = e.frame;
+        const matrix = e.matrix2Root();
+        if (ltxy.x > f.width || ltxy.y > f.height) { // 居中处理
+            const ec = matrix.computeCoord2(f.width / 2, f.height / 2);
+            __xys.push({ x: ec.x - box.width / 2, y: ec.y - box.height / 2 });
+        } else {
+            __xys.push(matrix.computeCoord(ltxy));
+        }
+    }
+    return __xys;
 }
