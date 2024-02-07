@@ -939,6 +939,9 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             }
         }
 
+        console.log('inserted:', insert_result);
+
+
         // 5. 根据插入结果构建新的选区
         context.nextTick(page, () => {
             if (insert_result) {
