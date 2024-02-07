@@ -587,6 +587,7 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.assist.init();
+    props.context.user.updateUserConfig();
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);

@@ -28,8 +28,6 @@ function onmessage(e: any) {
 async function getlogin(code: string, invite_code: string = '', id: string = '') {
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
         if (linfo) {
-            const user = new User(linfo.data);
-            (window as any).skuser = user
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
