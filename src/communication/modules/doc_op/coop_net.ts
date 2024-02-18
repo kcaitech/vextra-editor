@@ -9,6 +9,7 @@ export class CoopNet implements ICoopNet {
     private isConnected = false
     private pullCmdsPromiseList: Record<string, {
         resolve: (value: Cmd[]) => void,
+        reject: (reason: any) => void
     }[]> = {}
     private radixRevert: RadixConvert = new RadixConvert(62)
 
@@ -36,11 +37,11 @@ export class CoopNet implements ICoopNet {
             from: from,
             to: to,
         })
-        return new Promise<Cmd[]>(resolve => {
+        return new Promise<Cmd[]>((resolve, reject) => {
             const key = `${from}-${to}`
             const promiseList = this.pullCmdsPromiseList[key]
             if (!promiseList) this.pullCmdsPromiseList[key] = [];
-            promiseList.push({ resolve: resolve })
+            promiseList.push({ resolve: resolve, reject: reject })
         })
     }
 
@@ -71,25 +72,51 @@ export class CoopNet implements ICoopNet {
                 return item.cmd
             })))
         }
-        if (data.type === "commitResult") { // 本地上传到服务器的返回结果
-            if (data.status !== "success") {
+        // pullCmdsResult update errorInvalidParams errorNoPermission errorInsertFailed errorPullCmdsFailed
+        if (data.type === "pullCmdsResult" || data.type === "errorPullCmdsFailed") {
+            if (data.type === "errorPullCmdsFailed") console.log("拉取数据失败");
 
-            }
-        } else if (data.type === "update") { // 服务器推送的cmd
-            if (!Array.isArray(cmds)) {
+            if (typeof data.from !== "string" || typeof data.to !== "string") {
                 console.log("服务器数据格式错误")
+                return
+            }
+
+            const key = `${data.from}-${data.to}`
+            if (!this.pullCmdsPromiseList[key]) return;
+
+            if (data.type === "pullCmdsResult") {
+                if (!Array.isArray(cmds)) {
+                    console.log("返回数据格式错误")
+                    for (const item of this.pullCmdsPromiseList[key]) item.reject(new Error("返回数据格式错误"));
+                } else {
+                    for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
+                }
+                if (typeof data.previous_id !== "string") {
+                    console.log("服务器数据格式错误，缺少previous_id")
+                }
+            } else {
+                for (const item of this.pullCmdsPromiseList[key]) item.reject(new Error("拉取数据失败"));
+            }
+
+            delete this.pullCmdsPromiseList[key]
+        } else if (data.type === "update") {
+            if (!Array.isArray(cmds)) {
+                console.log("返回数据格式错误")
                 return
             }
             for (const watcher of this.watcherList) watcher(cmds);
-        } else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
-            if (!Array.isArray(cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
+        } else if (data.type === "errorInvalidParams") {
+            console.log("参数错误")
+        } else if (data.type === "errorNoPermission") {
+            console.log("无权限")
+        } else if (data.type === "errorInsertFailed") {
+            console.log("数据插入失败", data.cmd_id_list)
+            if (typeof data.cmd_id_list !== "string") {
                 console.log("服务器数据格式错误")
                 return
             }
-            const key = `${data.from}-${data.to}`
-            if (!this.pullCmdsPromiseList[key]) return;
-            for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
-            delete this.pullCmdsPromiseList[key]
+        } else {
+            console.log("未知的数据类型", data.type)
         }
     }
 }
