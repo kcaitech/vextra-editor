@@ -146,8 +146,4 @@ watchEffect(updateControllerView);
 .hidden {
     opacity: 0;
 }
-
-.editing {
-    background-color: rgba($color: #1878f5, $alpha: 0.15);
-}
 </style>

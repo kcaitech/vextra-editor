@@ -26,6 +26,7 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface BorderItem {
     id: number
@@ -95,7 +96,7 @@ function updateData() {
     borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = props.context.selection.selectedShapes;
+    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
     const shape = selecteds[0];
     if (selecteds.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         const table = props.context.tableSelection;
@@ -195,14 +196,16 @@ function addBorder() {
         }
     } else if (len.value > 1) {
         if (mixed.value) {
-            const actions = get_actions_border_unify(props.shapes);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_border_unify(shapes);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesBordersUnify(actions);
             }
         } else {
-            const actions = get_actions_add_boder(props.shapes, border);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_add_boder(shapes, border);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -269,7 +272,8 @@ function deleteBorder(idx: number) {
             editor.value.deleteBorder(_idx);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_delete(props.shapes, _idx);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_delete(shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -324,7 +328,8 @@ function toggleVisible(idx: number) {
             editor.value.setBorderEnable(_idx, isEnabled);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_enabled(props.shapes, _idx, isEnabled);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -605,7 +610,8 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.value.setBorderColor(_idx, color);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_color(props.shapes, _idx, color);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);

@@ -82,7 +82,6 @@ function watchShapes() { // 监听选区相关shape的变化
         }
     })
 }
-
 function shapesWatcher() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         update_by_shapes();
@@ -188,7 +187,7 @@ function createShapeTracing() {
 /**
  * @description 创建控件
  */
-function createController() {
+function createController() {    
     // const s = Date.now();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
     if (!selection.length) {
@@ -438,9 +437,8 @@ onUnmounted(() => {
         </path>
     </svg>
     <!-- 控制 -->
-    <component v-if="controller"
-        :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)" :context="props.context"
-        :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
         :shape="context.selection.selectedShapes[0]" :theme="theme">
     </component>
     <!-- 辅助 -->

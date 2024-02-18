@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView } from "@kcdesign/data"
+import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -88,11 +88,14 @@ const editAttr = ref<boolean>(false);
 const constraintShow = ref<boolean>(true);
 
 const reflush_by_selection = ref<number>(0);
+const reflush_by_table_selection = ref<number>(0);
 const reflush_by_shapes = ref<number>(0);
 const reflush = ref<number>(0);
 const reflush_trigger = ref<any[]>([]);
+const reflush_cells_trigger = ref<any[]>([]);
 
-function selection_change() {
+// 图层选区变化
+function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     symbol_attribute.value = false;
@@ -102,11 +105,6 @@ function selection_change() {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
-        if (shape.type === ShapeType.Table) {
-            const table = props.context.tableSelection;
-            const is_editing = props.context.tableSelection.editingCell;
-            baseAttr.value = table.tableColStart === -1 && !is_editing;
-        }
     }
 
     shapes.value = [];
@@ -128,17 +126,22 @@ function selection_change() {
         }
     }
 
-    console.log('shapes.length:', shapes.value.length);
-
-
     reflush_by_selection.value++;
     reflush.value++;
 }
+
+const selection_change = debounce(_selection_change, 160, { leading: true });
 
 function is_constrainted(shape: ShapeView) {
     return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
 }
 
+// 表格选区变化
+function table_selection_change() {
+    reflush_by_table_selection.value++;
+}
+
+// 选区图层变化
 function update_by_shapes(...args: any[]) {
     modify_constraint_show();
     reflush_trigger.value = [...(args?.length ? args : [])];
@@ -154,8 +157,15 @@ function _modify_constraint_show() {
 
 const modify_constraint_show = throttle(_modify_constraint_show, 160, { leading: true });
 
-function tool_watcher(t: number) {
-    // if (t === Tool.CHANGE_ACTION) updateShapeType();
+// 表格选区单元格变化
+function update_by_cells(...args: any[]) {
+    reflush_cells_trigger.value = [...(args?.length ? args : [])];
+    reflush.value++;
+}
+
+function table_selection_watcher() {
+    table_selection_change();
+    watch_cells();
 }
 
 function selection_watcher(t: number) {
@@ -164,10 +174,6 @@ function selection_watcher(t: number) {
     }
     selection_change();
     watch_shapes();
-}
-
-function table_selection_watcher() {
-    selection_change();
 }
 
 function workspace_watcher(t: number) {
@@ -204,7 +210,7 @@ const need_instance_attr_show = () => {
     return v;
 }
 
-const watchedShapes = new Map<string, ShapeView>();
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
         v.unwatch(update_by_shapes);
@@ -218,23 +224,50 @@ function watch_shapes() {
     });
 }
 
+const watchCells = new Map<string, TableCell>(); // 表格单元格监听
+function watch_cells() {
+    watchCells.forEach((v, k) => {
+        v.unwatch(update_by_cells);
+        watchedShapes.delete(k);
+    })
+
+    const tableSelection = props.context.tableSelection;
+
+    const selectedCells = tableSelection.getSelectedCells();
+    const editedCell = tableSelection.editingCell;
+    const list = [...selectedCells, editedCell];
+
+    if (list.length) {
+        baseAttr.value = false;
+    }
+
+    list.forEach(v => {
+        if (v?.cell) {
+            v.cell.watch(update_by_cells);
+            watchCells.set(v.cell.id, v.cell);
+        }
+    })
+}
+
 onMounted(() => {
-    watch_shapes();
-    props.context.tableSelection.watch(table_selection_watcher);
-    props.context.selection.watch(selection_watcher);
-    props.context.tool.watch(tool_watcher);
     props.context.workspace.watch(workspace_watcher);
-    selection_change();
+    props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
+    _selection_change();
+    table_selection_change();
     watch_shapes();
+    watch_cells();
 })
 onUnmounted(() => {
-    props.context.tableSelection.unwatch(table_selection_watcher);
-    props.context.selection.unwatch(selection_watcher);
-    props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     watchedShapes.forEach(v => {
         v.unwatch(update_by_shapes);
     });
+    watchCells.forEach(v => {
+        v.unwatch(update_by_cells);
+    })
 })
 </script>
 <template>
@@ -259,7 +292,9 @@ onUnmounted(() => {
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
-                <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
+                <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
+                    :selection-change="reflush_by_selection" :triggle="reflush_trigger"
+                    :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"

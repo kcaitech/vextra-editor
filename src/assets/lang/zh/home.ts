@@ -65,7 +65,8 @@ export const system = {
     'artboart_title_visible': '显示容器标题',
     sensitive_reminder: '含有敏感信息，请重新输入。',
     sensitive_reminder2: '含有敏感信息，无法分享。',
-    sensitive_reminder3: '含有敏感信息，无法访问。'
+    sensitive_reminder3: '含有敏感信息，无法访问。',
+    pixel: '对齐像素'
 }
 
 export const home = {
