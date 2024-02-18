@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { get_add_gradient_color, get_gradient, to_rgba } from './gradient_utils';
+import { getTextIndexAndLen, get_add_gradient_color, get_gradient, to_rgba } from './gradient_utils';
 import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
@@ -25,7 +25,7 @@ interface Dot {
     x: number, y: number, type: DotType
 }
 interface Stops {
-    x: number, y: number, color: Color, id?: string , r?: number
+    x: number, y: number, color: Color, id?: string, r?: number
 }
 
 const dot1 = ref<Dot>({ x: 0, y: 0, type: 'from' });
@@ -111,7 +111,7 @@ const dot_mousedown = (e: MouseEvent, type: DotType) => {
 }
 
 const dot_mousemove = (e: MouseEvent) => {
-    if(!is_dot_down.value) return;
+    if (!is_dot_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -139,7 +139,12 @@ const dot_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+            if (locat.type !== 'text') {
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+            } else {
+                const length = shapes.value.filter((s) => s.type === ShapeType.Text).length === 1;
+                const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+            }
         }
     }
 }
@@ -180,23 +185,25 @@ const add_stop = (e: MouseEvent) => {
     const shape = shapes.value[0] as ShapeView;
     startPosition = props.context.workspace.getContentXY(e);
     if (!locat) return;
-    const gradient_type = shape.style[locat.type];
-    const gradient = get_gradient(props.context, shape);
-    if (!gradient) return;
-    const _stop = get_add_gradient_color(gradient.stops, posi);
-    if (!_stop) return;
-    const idx = gradient_type.length - locat.index - 1;
-    const selected = props.context.selection.selectedShapes;
-    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
-    const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
-    editor.addShapesGradientStop(actions);
-    nextTick(() => {
-        down_stop(e, stop.id);
-        temporary.value = false;
-    })
+    if (locat.type !== 'text') {
+        const gradient_type = shape.style[locat.type];
+        const gradient = get_gradient(props.context, shape);
+        if (!gradient) return;
+        const _stop = get_add_gradient_color(gradient.stops, posi);
+        if (!_stop) return;
+        const idx = gradient_type.length - locat.index - 1;
+        const selected = props.context.selection.selectedShapes;
+        const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const page = props.context.selection.selectedPage!;
+        const editor = props.context.editor4Page(page);
+        const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
+        const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
+        editor.addShapesGradientStop(actions);
+        nextTick(() => {
+            down_stop(e, stop.id);
+            temporary.value = false;
+        })
+    }
 }
 
 /**
@@ -234,7 +241,7 @@ const down_stop = (e: MouseEvent, id: string) => {
 }
 
 const stop_mousemove = (e: MouseEvent) => {
-    if(!is_stop_down.value) return;
+    if (!is_stop_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -254,7 +261,12 @@ const stop_mousemove = (e: MouseEvent) => {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+            if (locat.type !== 'text') {
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+            } else {
+                const length = shapes.value.filter((s) => s.type === ShapeType.Text).length === 1;
+                const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+            }
         }
     }
 }

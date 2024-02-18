@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, Fill, FillType, Gradient, GradientType, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, Fill, FillType, Gradient, GradientType, ShapeType, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -228,7 +228,7 @@ const setFont = (font: string) => {
 }
 
 function getTextSelection() {
-    return props.context.selection.getTextSelection(props.shape);
+    return props.context.selection.textSelection;
 }
 
 //获取选中字体的长度和开始下标
@@ -308,7 +308,7 @@ const _textFormat = () => {
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.underlineIsMulti) isUnderline.value = false
         if (format.strikethroughIsMulti) isDeleteline.value = false
-        if(format.fillTypeIsMulti) mixed.value = true;
+        if (format.fillTypeIsMulti) mixed.value = true;
         props.context.workspace.focusText()
     } else {
         let formats: any[] = [];
@@ -417,7 +417,7 @@ function onAlphaChange(e: Event, type: string) {
             } else {
                 color = highlightColorValue.value
             }
-            setColor(0, color, value, type);
+            setColor(color, value, type);
             return
         } else {
             message('danger', t('system.illegal_input'));
@@ -441,7 +441,7 @@ function onAlphaChange(e: Event, type: string) {
             } else {
                 color = highlightColorValue.value
             }
-            setColor(0, color, value, type);
+            setColor(color, value, type);
             return
         } else {
             message('danger', t('system.illegal_input'));
@@ -471,7 +471,7 @@ function onColorChange(e: Event, type: string) {
         if (Reg_HEX.test(value)) {
             let alpha = Number(texAlphaValue.value.slice(0, -1));
             alpha = Number(alpha.toFixed(2)) / 100
-            setColor(0, value, alpha, type);
+            setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
@@ -481,7 +481,7 @@ function onColorChange(e: Event, type: string) {
         if (Reg_HEX.test(value)) {
             let alpha = Number(highlightAlphaValue.value.slice(0, -1));
             alpha = Number(alpha.toFixed(2)) / 100
-            setColor(0, value, alpha, type);
+            setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
@@ -525,7 +525,7 @@ function getColorFromPicker(color: Color, type: string) {
     }
 }
 
-function setColor(idx: number, clr: string, alpha: number, type: string) {
+function setColor(clr: string, alpha: number, type: string) {
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));
@@ -624,23 +624,47 @@ const togger_gradient_type = (type: GradientType | 'solid') => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            if(type === 'solid') {
-                editor.setTextFillType(fillType, 0, Infinity)
-            }else {
+            editor.setTextFillType(fillType, 0, Infinity)
+            if (type !== 'solid') {
                 const g = getGradient(gradient.value, type, textColor.value!);
-                editor.setTextGradientType(g, 0, Infinity);
+                editor.setTextGradient(g, 0, Infinity);
             }
         } else {
-            if(type === 'solid') {
-                editor.setTextFillType(fillType, textIndex, selectLength)
-            }else {
-                const g = getGradient(gradient.value, type, textColor.value!)
-                editor.setTextGradientType(g, textIndex, selectLength);
+            editor.setTextFillType(fillType, textIndex, selectLength)
+            if (type !== 'solid') {
+                const g = getGradient(gradient.value, type, textColor.value!);
+                editor.setTextGradient(g, textIndex, selectLength);
             }
             textFormat()
         }
     } else {
         editor.setTextFillTypeMulti(props.textShapes.map(s => adapt2Shape(s)), fillType);
+        if (type !== 'solid') {
+            const g = getGradient(gradient.value, type, textColor.value!);
+            editor.setTextGradientMulti(props.textShapes.map(s => adapt2Shape(s)), g);
+        }
+    }
+}
+function gradient_stop_color_change(color: Color, index: number) {
+    if (!gradient.value) return;
+    const editor = props.context.editor4TextShape(props.shape);
+    let g: Gradient | undefined;
+    g = cloneGradient(gradient.value);
+    if (g) {
+        g.stops[index].color = color;
+    }
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            if (index === 0) editor.setTextColor(0, Infinity, color);
+            editor.setTextGradient(g, 0, Infinity);
+        } else {
+            if (index === 0) editor.setTextColor(textIndex, selectLength, color);
+            editor.setTextGradient(g, textIndex, selectLength);
+        }
+    } else {
+        if (index === 0) editor.setTextColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), color);
+        editor.setTextGradientMulti(props.textShapes.map(s => adapt2Shape(s)), g);
     }
 }
 
@@ -851,9 +875,10 @@ onUnmounted(() => {
                 }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :fill-type="fillType"
-                        @change="c => getColorFromPicker(c, 'color')"
-                        @gradient-type="(type) => togger_gradient_type(type)">
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="{ index: 0, type: 'text' }"
+                        :fill-type="fillType" :gradient="gradient" @change="c => getColorFromPicker(c, 'color')"
+                        @gradient-type="(type) => togger_gradient_type(type)"
+                        @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"

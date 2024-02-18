@@ -19,10 +19,9 @@ import {
     get_fills
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
-import { TableSelection } from '@/context/tableselection';
-import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface FillItem {
     id: number,
@@ -30,57 +29,28 @@ interface FillItem {
 }
 
 interface Props {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    shapes: ShapeView[];
+    selectionChange: number;
+    triggle: any[];
+    tableSelectionChange: number;
+    cellsTrigger: any[];
 }
 
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
-const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
 const alphaFill = ref<HTMLInputElement[]>();
 const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>([]);
-let table: TableView;
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
-}
-
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        for (let i = 0, l = selectedShapes.length; i < l; i++) {
-            const v = selectedShapes[i];
-            if (v.isVirtualShape) {
-                let p = v.parent;
-                while (p) {
-                    if (p.type === ShapeType.SymbolRef) {
-                        needWatchShapes.set(p.id, p);
-                        break;
-                    }
-                    p = p.parent;
-                }
-            }
-            needWatchShapes.set(v.id, v);
-        }
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
 }
 
 function updateData() {
@@ -148,7 +118,7 @@ function addFill(): void {
             editor.addFill(fill, range);
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selected);
         if (mixed.value) {
             const actions = get_actions_fill_unify(shapes);
             const editor = props.context.editor4Page(page);
@@ -177,7 +147,7 @@ function deleteFill(idx: number) {
         const range = get_table_range(table);
         e.deleteFill(_idx, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selected);
         const actions = get_actions_fill_delete(shapes, _idx);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -198,7 +168,7 @@ function toggleVisible(idx: number) {
         e.setFillEnable(_idx, !fills[idx].fill.isEnabled, range)
 
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selected);
         const fills = shapes[0].getFills();
         const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(shapes, _idx, value);
@@ -244,7 +214,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             e.setFillColor(_idx, new Color(alpha, r, g, b), range)
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selected);
         const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -254,7 +224,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
     hidden_selection(props.context);
 }
 
-function onColorChange(idx: number, e: Event) {
+function onColorChange(idx: number) {
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
@@ -351,7 +321,7 @@ function getColorFromPicker(idx: number, color: Color) {
         e.setFillColor(_idx, color, range)
     } else {
         const selected = props.context.selection.selectedShapes;
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selected);
         const actions = get_actions_fill_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -526,84 +496,24 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
-function update_by_shapes() {
-    watchShapes();
-    updateData();
-}
-
-function shapes_watcher(v: ShapeView[]) {
-    update_by_shapes();
-    watchCells.forEach((v) => v.unwatch(updateData));
-    watchCells.clear();
-    if (v.length === 1 && v[0].type === ShapeType.Table) {
-        table?.unwatch(table_watcher);
-        v[0].watch(table_watcher);
-    } else {
-        table?.unwatch(table_watcher);
-    }
-}
-
-function table_watcher() {
-    cells_watcher();
-}
-
-let watchCells: Map<string, TableCell> = new Map();
-
-function cells_watcher() {
-    const table_selection = props.context.tableSelection;
-    const is_edting = table_selection.editingCell;
-    if (table_selection.tableRowStart > -1 || is_edting) {
-        let cells: any[] = [];
-        if (is_edting) {
-            cells.push(is_edting);
-        } else {
-            cells = table_selection.getSelectedCells(true);
-        }
-        const needWatch: Map<string, TableCell> = new Map();
-        for (let i = 0, len = cells.length; i < len; i++) {
-            let c = cells[i];
-            if (c.cell) {
-                needWatch.set(c.cell.id, c.cell);
-                c.cell.watch(updateData);
-            }
-        }
-        watchCells.forEach((v, k) => {
-            if (!needWatch.get(k)) v.unwatch(updateData);
-        })
-        watchCells = needWatch;
-    }
-}
-
-function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
-}
-
 // hooks
-const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
-
-function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) {
-        updateData();
-        cells_watcher();
-    } else if (t === TableSelection.CHANGE_EDITING_CELL) {
-        updateData();
-        cells_watcher();
-    }
-}
-
-onMounted(() => {
-    update_by_shapes();
-    props.context.tableSelection.watch(table_selection_watcher);
-    props.context.selection.watch(selection_watcher);
+const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
+const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
+});
+const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
+const stop5 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
+    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
 })
+
+onMounted(updateData);
 
 onUnmounted(() => {
-    stop();
-    props.context.tableSelection.unwatch(table_selection_watcher);
-    props.context.selection.unwatch(selection_watcher);
-    watchedShapes.forEach(v => v.unwatch(watcher));
+    stop2();
+    stop3();
+    stop4();
+    stop5();
 })
-
 </script>
 
 <template>
@@ -638,7 +548,7 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" @input="colorInput(idx)"
+                        @change="(e) => onColorChange(idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{

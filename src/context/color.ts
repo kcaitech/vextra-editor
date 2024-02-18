@@ -1,3 +1,4 @@
+import { GradientFrom } from "@/components/Document/Selection/Controller/ColorEdit/gradient_utils";
 import { WatchableObject, Gradient, GradientType } from "@kcdesign/data";
 
 export class ColorCtx extends WatchableObject {
@@ -9,7 +10,7 @@ export class ColorCtx extends WatchableObject {
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;
     private m_gradient_type: GradientType | undefined = undefined;
-    private m_locat: { index: number, type: 'fills' | 'borders' } | undefined;
+    private m_locat: { index: number, type: GradientFrom } | undefined;
     constructor() {
         super();
     }
@@ -38,7 +39,7 @@ export class ColorCtx extends WatchableObject {
     get gradient() {
         return this.m_gradient
     }
-    gradinet_locat(locat: { index: number, type: 'fills' | 'borders' } | undefined) {
+    gradinet_locat(locat: { index: number, type: GradientFrom } | undefined) {
         this.m_locat = locat;
     }
     get locat() {

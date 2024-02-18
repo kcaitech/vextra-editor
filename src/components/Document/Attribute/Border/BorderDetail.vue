@@ -10,9 +10,9 @@ import { Border, BorderPosition, BorderStyle, GroupShapeView, ShapeType, ShapeVi
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
-import { WorkSpace } from '@/context/workspace';
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface Props {
     context: Context
@@ -96,7 +96,7 @@ function positionSelect(selected: SelectItem) {
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
-    const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = getShapesForStyle(selecteds);
     const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
@@ -118,7 +118,7 @@ function setThickness(e: Event) {
         const range = get_table_range(table);
         e.setBorderThickness(props.index, thickness, range)
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(selecteds);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
@@ -143,7 +143,7 @@ const augment = (e: Event) => {
             e.setBorderThickness(props.index, thickness, range)
 
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            const shapes = getShapesForStyle(selecteds);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
                 const editor = props.context.editor4Page(page);
@@ -170,7 +170,7 @@ const decrease = (e: Event) => {
             e.setBorderThickness(props.index, thickness, range)
 
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            const shapes = getShapesForStyle(selecteds);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
                 const editor = props.context.editor4Page(page);

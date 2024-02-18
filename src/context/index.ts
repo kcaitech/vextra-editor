@@ -11,6 +11,9 @@ import {
     TableView,
     TextShapeView,
     TableCellView,
+    Task,
+    TaskPriority,
+    SymbolShape,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -31,6 +34,9 @@ import { TeamWork } from "./teamwork";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
+import { PdMedia } from "./medias";
+import { User } from './user';
+
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { TableSelection } from "./tableselection";
 import { Component } from "./component";
@@ -101,6 +107,8 @@ export class Context extends WatchableObject {
     private m_component: Component;
     private m_path: Path;
     private m_color: ColorCtx;
+    private m_medias: PdMedia;
+    private m_user: User;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -131,6 +139,59 @@ export class Context extends WatchableObject {
         this.m_arrange = new Arrange();
         this.m_color = new ColorCtx();
         startLoadTask(data, this.m_taskMgr);
+        this.m_medias = new PdMedia(this);
+        this.m_user = new User();
+        const pagelist = data.pagesList.slice(0);
+        const checkSymLoaded: (() => boolean)[] = [];
+        const pageloadTask = new class implements Task { // page auto loader
+            isValid(): boolean {
+                return !this.isDone();
+            }
+
+            isDone(): boolean {
+                return pagelist.length <= 0;
+            }
+
+            async run(): Promise<void> {
+                let id;
+                while (pagelist.length > 0) {
+                    const i = pagelist[0];
+                    if (data.pagesMgr.getSync(i.id)) {
+                        pagelist.splice(0, 1);
+                    } else {
+                        id = i.id;
+                        break;
+                    }
+                }
+                if (id) {
+                    await data.pagesMgr.get(id);
+                    pagelist.splice(0, 1);
+                    for (let i = 0; i < checkSymLoaded.length;) {
+                        if (checkSymLoaded[i]()) {
+                            checkSymLoaded.splice(i, 1);
+                        } else {
+                            ++i;
+                        }
+                    }
+                }
+            }
+        }
+
+        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
+        this.m_taskMgr.startLoop();
+
+        // symbol loader
+        data.symbolsMgr.setLoader(async (id: string): Promise<SymbolShape> => {
+            return new Promise((resolve, reject) => {
+                checkSymLoaded.push(() => {
+                    const sym = data.symbolsMgr.getSync(id);
+                    if (sym) resolve(sym);
+                    else if (pageloadTask.isDone()) reject();
+                    else return false;
+                    return true;
+                })
+            })
+        })
     }
 
     get editor(): Editor {
@@ -244,6 +305,14 @@ export class Context extends WatchableObject {
         return this.m_path;
     }
 
+    get medias() {
+        return this.m_medias;
+    }
+
+    get user() {
+        return this.m_user;
+    }
+
     private createVDom(page: Page) {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
@@ -258,7 +327,7 @@ export class Context extends WatchableObject {
     getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
-        page = page instanceof PageView? page.data : page;
+        page = page instanceof PageView ? page.data : page;
         return this.createVDom(page);
     }
 
@@ -270,7 +339,7 @@ export class Context extends WatchableObject {
         const ctx = this.getPageDom(page.data).ctx;
         ctx.once('nextTick', cb);
     }
-        
+
     get color() {
         return this.m_color;
     }

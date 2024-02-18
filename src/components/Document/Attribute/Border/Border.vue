@@ -29,6 +29,7 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface BorderItem {
     id: number
@@ -95,8 +96,7 @@ function updateData() {
     borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1) return;
+    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -154,7 +154,7 @@ function addBorder() {
             e.addBorder(border, range)
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(props.shapes);
         if (mixed.value) {
             const actions = get_actions_border_unify(shapes);
             const editor = props.context.editor4Page(page);
@@ -185,7 +185,7 @@ function deleteBorder(idx: number) {
         const range = get_table_range(table);
         e.deleteBorder(_idx, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_delete(shapes, _idx);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -210,7 +210,7 @@ function toggleVisible(idx: number) {
         const range = get_table_range(table);
         e.setBorderEnable(_idx, isEnabled, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -336,7 +336,7 @@ const alpha_message = (idx: number, border: Border) => {
 const set_gradient_opacity = (idx: number, opacity: number) => {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = getShapesForStyle(props.shapes);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'borders');
@@ -354,7 +354,7 @@ function getColorFromPicker(color: Color, idx: number) {
         const range = get_table_range(table);
         e.setBorderColor(_idx, color, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);

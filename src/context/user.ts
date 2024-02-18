@@ -4,21 +4,43 @@ interface UserInfo {
     nickname: string
     avatar: string
 }
+interface UserConfig {
+    pixelAlignment: boolean;
+}
 export class User extends WatchableObject {
     private m_username: string = ''
-    private m_userinfo: UserInfo;
-    constructor(info: UserInfo) {
+    private m_pixel_alignment: boolean = true;
+    constructor() {
         super();
-        this.m_userinfo = info;
-    }
-    setUserName(name: string) {
-        this.m_userinfo.nickname = name;
     }
     get userName() {
         return this.m_username;
     }
-    get userInfo(){
-        return this.m_userinfo;
+    get isPixelAlignMent() {
+        return this.m_pixel_alignment;
+    }
+    modifyUserConfig(key: string, v: boolean) {
+        let conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as any;
+        conf[key] = v;
+        localStorage.setItem('userConfig', JSON.stringify(conf));
+    }
+    modifyPixelAlignment(v: boolean) {
+        let conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.pixelAlignment = v;
+        this.m_pixel_alignment = v;
+        localStorage.setItem('userConfig', JSON.stringify(conf));
+    }
+    get initConfig(): string {
+        const conf: UserConfig = {
+            pixelAlignment: false
+        };
+        return JSON.stringify(conf);
+    }
+    updateUserConfig() {
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        this.m_pixel_alignment = conf.pixelAlignment;
+
+        localStorage.setItem('userConfig', JSON.stringify(conf));
     }
 }
 interface Document {
@@ -50,7 +72,7 @@ interface Project {
 }
 interface DocInfo {
     document: Document
-    user:DocUser
+    user: DocUser
     document_favorites: Favorites
     document_permission: Permission
     shares_count: number
@@ -88,4 +110,4 @@ export class DocumentInfo extends WatchableObject {
         return this.m_application_count
     }
 }
-export {DocInfo, UserInfo}
+export { DocInfo, UserInfo }

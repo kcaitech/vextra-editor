@@ -36,6 +36,8 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 let page_xy_1: PageXY = { x: 0, y: 0 };
+let page_xy_2: PageXY = { x: 0, y: 0 };
+
 let client_xy_1: ClientXY = { x: 0, y: 0 };
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
@@ -88,6 +90,8 @@ function move(e: MouseEvent) {
         if (newShape) {
             modify_new_shape_frame(e);
         } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+            const __xy2 = props.context.workspace.getContentXY(e);
+            page_xy_2 = matrix1.computeCoord(__xy2);
             gen_new_shape(e);
             isDrag = true;
         }
@@ -319,7 +323,11 @@ function correct_page_xy(x: number, y: number) {
  * @description 等比设置frame
  */
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
-    if (newShape && newShape.type === ShapeType.Line) {
+    if (!newShape) {
+        asyncCreator.setFrame({ x, y });
+        return;
+    }
+    if (newShape.type === ShapeType.Line) {
         const p2 = { x, y };
         const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
@@ -353,8 +361,9 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
         }
         asyncCreator.setFrame({ x: p2.x, y: p2.y });
     } else {
-        const del = x - page_xy_1.x;
-        y = page_xy_1.y + del;
+        const del = x - page_xy_2.x;
+        y = page_xy_2.y + del;
+        console.log('delta xy:', x - page_xy_1.x, y - page_xy_1.y);
         asyncCreator.setFrame({ x, y });
     }
 }
@@ -367,7 +376,7 @@ function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
-    const shapeFrame = new ShapeFrame(x, y, 1, 1);
+    const shapeFrame = new ShapeFrame(x, y, 4, 4);
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {

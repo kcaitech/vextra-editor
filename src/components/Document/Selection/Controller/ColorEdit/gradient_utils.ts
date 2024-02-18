@@ -4,6 +4,8 @@ import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientTy
 import { importGradient } from "@kcdesign/data/dist/data/baseimport";
 import { v4 } from "uuid";
 
+export type GradientFrom = 'fills' | 'borders' | 'text';
+
 export function to_rgba(options: {
     red: number,
     green: number,
@@ -34,13 +36,17 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
-    let gradient_type = shape.style[locat.type];
-    if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-        const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-        gradient_type = shapes[0].style[locat.type];
+    if (locat.type !== 'text') {
+        let gradient_type = shape.style[locat.type];
+        if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            gradient_type = shapes[0].style[locat.type];
+        }
+        const gradient = gradient_type[locat.index].gradient;
+        return gradient;
+    } else {
+        return context.color.gradient;
     }
-    const gradient = gradient_type[locat.index].gradient;
-    return gradient;
 }
 
 export const get_temporary_stop = (position: number, dot1: { x: number, y: number }, dot2: { x: number, y: number }, shape: ShapeView, context: Context) => {
@@ -102,4 +108,20 @@ export function getGradient(gradient: Gradient | undefined, grad_type: GradientT
         new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, elipseLength);
     }
     return new_gradient;
+}
+
+export const getTextIndexAndLen = (context: Context) => {
+    const selection = context.selection.textSelection;
+    const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
+    const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
+    return { textIndex, selectLength }
+}
+
+export const isSelectText = (context: Context) => {
+    const selection = context.selection.textSelection;
+    if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+        return false
+    } else {
+        return true
+    }
 }

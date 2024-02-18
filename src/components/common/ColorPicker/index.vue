@@ -33,7 +33,7 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-import { get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import { GradientFrom, getTextIndexAndLen, get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 
@@ -41,7 +41,7 @@ import angular from '@/assets/angular-gradient.png'
 interface Props {
     context: Context
     color: Color
-    locat?: { index: number, type: 'fills' | 'borders' }
+    locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
     late?: number
@@ -841,7 +841,13 @@ function move_stop_position(e: MouseEvent) {
             const selected = props.context.selection.selectedShapes;
             const page = props.context.selection.selectedPage;
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-            gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, props.locat.index, props.locat.type);
+            const locat = props.locat;
+            if(locat.type !== 'text') {
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+            }else {
+                const length = shapes.filter((s) => s.type === ShapeType.Text).length === 1;
+                const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+            }
         }
     }
 }

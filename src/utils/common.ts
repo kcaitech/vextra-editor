@@ -173,10 +173,15 @@ export function is_box_outer_view(box: { top: number, bottom: number, left: numb
     return (box.right > right - x) || (box.left < 0) || (box.top < 0) || (box.bottom > bottom - y);
 }
 export function is_box_outer_view2(shapes: Shape[], context: Context) {
-    const wm = context.workspace.matrix, { x, right, y, bottom } = context.workspace.root;
+    const wm = context.workspace.matrix
+    const { x, right, y, bottom } = context.workspace.root;
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const f = shapes[i].frame, p = wm.computeCoord3(f);
-        if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) return true;
+        const f = shapes[i].frame;
+        const p = wm.computeCoord3(f);
+        
+        if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) {
+            return true;
+        }
     }
     return false;
 }
