@@ -62,7 +62,7 @@ export class CoopNet implements ICoopNet {
     }
 
     onMessage(data: any): void {
-        const cmdsData = JSON.parse(data.cmds_data) as any[]
+        const cmdsData = JSON.parse(data.cmds_data ?? "") as any[]
         let cmds: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
             cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
