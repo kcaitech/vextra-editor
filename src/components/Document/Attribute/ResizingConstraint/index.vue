@@ -68,14 +68,15 @@ function handleHorizontalPositionSelect(item: SelectItem) {
             break;
     }
 }
-function handleCheckboxChangeForWidth() {
-    if (fixedWidth.value === 'mixed') {
-        return;
-    }
 
+function handleCheckboxChangeForWidth() {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    if (fixedWidth.value === 'mixed') {
+        e.fixedToWidth(selected)
+        return
 
+    }
     if (fixedWidth.value) {
         e.flexWidth(selected);
     } else {
@@ -107,11 +108,12 @@ function handleVerticalPositionSelect(item: SelectItem) {
     }
 }
 function handleCheckboxChangeForHeight() {
-    if (fixedHeight.value === 'mixed') {
-        return;
-    }
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    if (fixedHeight.value === 'mixed') {
+        e.fixedToHeight(selected);
+        return;
+    }
     if (fixedHeight.value) {
         e.flexHeight(selected);
     } else {
@@ -270,7 +272,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrap">
-        <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="!disabled">
+        <TypeHeader :title="t('attr.groupings')" class="mt-24" :active="!disabled">
         </TypeHeader>
         <div class="content" :class="{ 'disabled': disabled }">
             <div class="main">
@@ -280,7 +282,7 @@ onUnmounted(() => {
                         @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
                     <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
                         @click="handleCheckboxChangeForWidth">
-                        <div class="checkbox">
+                        <div class="checkbox" :style="{ border: fixedWidth ? 'none' : '' }">
                             <div v-if="fixedWidth === 'mixed'" class="mixed-status">
                                 <div class="mixed"></div>
                             </div>
@@ -297,7 +299,7 @@ onUnmounted(() => {
                         @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
                     <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
                         @click="handleCheckboxChangeForHeight">
-                        <div class="checkbox">
+                        <div class="checkbox" :style="{ border: fixedHeight ? 'none' : '' }">
                             <div v-if="fixedHeight === 'mixed'" class="mixed-status">
                                 <div class="mixed"></div>
                             </div>
@@ -314,6 +316,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+
 .disabled {
     opacity: 0.4;
     z-index: -1;
@@ -364,12 +367,12 @@ onUnmounted(() => {
 
                     >.checkbox {
                         box-sizing: border-box;
-                        border-radius: 4px;
+                        border-radius: 3px;
                         background-color: transparent;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        border: 1px solid #efefef;
+                        border: 1px solid #808080;
                         overflow: hidden;
                         flex: 0 0 14px;
                         height: 14px;

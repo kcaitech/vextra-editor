@@ -642,7 +642,7 @@ onUnmounted(() => {
             width: 100%;
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            // justify-content: space-between;
             align-items: center;
             margin-top: 4px;
 
@@ -657,6 +657,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
                 border-radius: 4px;
+                margin-right: 5px;
 
                 >svg {
                     width: 60%;
@@ -679,7 +680,7 @@ onUnmounted(() => {
                 height: 32px;
                 width: 172px;
                 padding: 9px 8px;
-                margin-left: 5px;
+                // margin-left: 5px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
