@@ -100,10 +100,10 @@ function updateData() {
                     else cells.push(c.cell);
                 }
             } else if (is_edting) {
-                cells.push(is_edting.cell);
+                cells.push(is_edting);
             }
             if (cells.length > 0) {
-                const _fs = get_fills(cells as Shape[]);
+                const _fs = get_fills(cells);
                 if (_fs === 'mixed') {
                     mixed_cell.value = true;
                 } else {

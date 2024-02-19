@@ -189,11 +189,7 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
 }
 
 const rename = (value: string, id: string) => {
-    props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
-        if (!p) return
-        const editor = props.context.editor4Page(p);
-        editor.setName(value);
-    })
+    props.context.editor4Doc().setPageName(value, id);
 }
 
 const mousedown = (id: string, e: MouseEvent) => {

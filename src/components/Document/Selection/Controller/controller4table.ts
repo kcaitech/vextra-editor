@@ -1,4 +1,4 @@
-import { ShapeType, TableGridItem, TableCellType, TableCell, TableView, ShapeView } from '@kcdesign/data';
+import { ShapeType, TableGridItem, TableCellType, TableCell, TableView, ShapeView, TableCellView } from '@kcdesign/data';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -26,7 +26,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let area: TableArea = 'invalid';
     let move: any, up: any;
     let matrix4table = new Matrix();
-    let down_item: (TableGridItem & { cell: TableCell | undefined }) | undefined;
+    let down_item: (TableGridItem & { cell: TableCellView | undefined }) | undefined;
     let table: TableView = context.selection.selectedShapes[0] as TableView;
     let table_selection: TableSelection;
     let text_selection: TextSelection;
@@ -112,7 +112,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             const editingCell = table_selection.editingCell;
             const m_item = check_cell_on_point(e);
             if (!m_item) return;
-            if (editingCell && editingCell.cell && editingCell.cell.cellType === TableCellType.Text) {
+            if (editingCell && editingCell.cellType === TableCellType.Text) {
                 const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
                 if (rows !== rowe || cols !== cole) {
                     table_selection.setEditingCell();
@@ -120,14 +120,14 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const f = m_item.frame;
                     const point_on_table = matrix4table.computeCoord2(mousePosition.x, mousePosition.y);
                     const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
-                    const text = editingCell.cell.text;
+                    const text = editingCell.text;
                     if (!text) return;
-                    const m_index = editingCell.cell.locateText(xy.x, xy.y);
+                    const m_index = editingCell.locateText(xy.x, xy.y);
                     text_selection.selectText(down_index.index, m_index.index);
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
-                    table_selection.setEditingCell(down_item);
+                    table_selection.setEditingCell(down_item.cell);
                 } else {
                     const coord = check_coord_on_point2(e);
                     if (!coord) return;
@@ -159,7 +159,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const f = down_item.frame;
                     const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
                     // console.log('点到textcell', xy);
-                    table_selection.setEditingCell(down_item);
+                    table_selection.setEditingCell(down_item.cell);
                     const text = down_item.cell.text;
                     if (!text) return;
                     down_index = down_item.cell.locateText(xy.x, xy.y);
@@ -172,18 +172,22 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
-                    text_selection = context.textSelection;
-                    text_selection.setCursor(0, false);
-                    table_selection.setEditingCell(down_item);
+                    context.nextTick(context.selection.selectedPage!, () => {
+                        text_selection = context.textSelection;
+                        text_selection.setCursor(0, false);
+                        const cellView = down_item ? table.getCellAt(down_item.index.row, down_item.index.col) : undefined;
+                        table_selection.setEditingCell(cellView);
+                    })
                 }
             } else {
                 // console.log('init cell');
                 init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
-                table_selection.setEditingCell(down_item);
-                down_index = down_item?.cell?.locateText(0, 0) || { index: -1, before: false };
-                text_selection = context.textSelection;
                 context.nextTick(context.selection.selectedPage!, () => {
+                    const cellView = down_item ? table.getCellAt(down_item.index.row, down_item.index.col) : undefined;
+                    table_selection.setEditingCell(cellView);
+                    down_index = cellView?.locateText(0, 0) || { index: -1, before: false };
+                    text_selection = context.textSelection;
                     text_selection.setCursor(down_index.index, down_index.before);
                 })
             }
