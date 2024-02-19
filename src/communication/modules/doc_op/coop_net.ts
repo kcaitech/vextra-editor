@@ -47,6 +47,7 @@ export class CoopNet implements ICoopNet {
 
     async postCmds(cmds: Cmd[]): Promise<boolean> {
         if (!this.isConnected) return false;
+        console.log("postCmds", cmds)
         return this.send?.({
             type: "commit",
             cmds: serialCmds(cmds),
@@ -100,6 +101,7 @@ export class CoopNet implements ICoopNet {
                 console.log("返回数据格式错误")
                 return
             }
+            console.log("update", cmds)
             for (const watcher of this.watcherList) watcher(cmds);
         } else if (data.type === "errorInvalidParams") {
             console.log("参数错误")
