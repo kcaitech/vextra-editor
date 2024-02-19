@@ -57,12 +57,8 @@ export class CoopNet implements ICoopNet {
         this.watcherList.push(watcher)
     }
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[] {
-        return this.watcherList
-    }
-
     onMessage(data: any): void {
-        const cmdsData = JSON.parse(data.cmds_data ?? "") as any[]
+        const cmdsData = JSON.parse(data.cmds_data ?? '""') as any[]
         let cmds: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
             cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
@@ -111,7 +107,7 @@ export class CoopNet implements ICoopNet {
             console.log("无权限")
         } else if (data.type === "errorInsertFailed") {
             console.log("数据插入失败", data.cmd_id_list)
-            if (typeof data.cmd_id_list !== "string") {
+            if (!Array.isArray(data.cmd_id_list)) {
                 console.log("服务器数据格式错误")
                 return
             }
