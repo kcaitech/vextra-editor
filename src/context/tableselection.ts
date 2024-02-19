@@ -57,7 +57,7 @@ export class TableSelection extends WatchableObject {
         colIdx: number;
     }[] {
         const shape = this.m_context.selection.selectedShapes[0];
-        if (shape && shape.type === ShapeType.Table) {
+        if (shape && shape.type === ShapeType.Table && this.m_tableRowStart > -1) {
             const _shape = shape as TableView;
             if (visible) return _shape.getVisibleCells(this.m_tableRowStart,
                 this.m_tableRowEnd,

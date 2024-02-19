@@ -31,24 +31,24 @@ function watchShapes() {
     needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
   }
 
-const selectedShapes = props.context.selection.selectedShapes;
-if (selectedShapes.length > 0) {
+  const selectedShapes = props.context.selection.selectedShapes;
+  if (selectedShapes.length > 0) {
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
-        const v = selectedShapes[i];
-        if (v.isVirtualShape) {
-            let p = v.parent;
-            while (p) {
-                if (p.type === ShapeType.SymbolRef) {
-                    needWatchShapes.set(p.id, p);
-                    break;
-                }
-                p = p.parent;
-            }
+      const v = selectedShapes[i];
+      if (v.isVirtualShape) {
+        let p = v.parent;
+        while (p) {
+          if (p.type === ShapeType.SymbolRef) {
+            needWatchShapes.set(p.id, p);
+            break;
+          }
+          p = p.parent;
         }
-        needWatchShapes.set(v.id, v);
+      }
+      needWatchShapes.set(v.id, v);
     }
-}
-  
+  }
+
   watchedShapes.forEach((v, k) => {
     if (needWatchShapes.has(k)) return;
     v.unwatch(watcher);
@@ -155,7 +155,11 @@ function update_by_shapes() {
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(update_by_shapes);
-onUnmounted(stop);
+onUnmounted(() => {
+  stop();
+  watchedShapes.forEach(i => i.unwatch(watcher));
+  watchedShapes.clear();
+});
 </script>
 
 <template>
@@ -217,9 +221,10 @@ onUnmounted(stop);
 
     transition: .2s;
   }
-    .add:hover {
-        background-color: #F5F5F5;
-    }
+
+  .add:hover {
+    background-color: #F5F5F5;
+  }
 
   //.add:hover {
   //  transform: scale(1.25);
@@ -299,7 +304,7 @@ onUnmounted(stop);
       }
 
       .delete:hover {
-          background-color: #F5F5F5;
+        background-color: #F5F5F5;
       }
     }
   }
@@ -309,11 +314,11 @@ onUnmounted(stop);
 
     .mixed-tips {
       display: block;
-        width: 218px;
-        height: 14px;
+      width: 218px;
+      height: 14px;
       text-align: center;
       font-size: var(--font-default-fontsize);
-        color: #737373;
+      color: #737373;
     }
   }
 

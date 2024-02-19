@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
+import { h, nextTick, onMounted, onUnmounted, ref, toRaw } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape, GroupShapeView, SymbolShape, SymbolUnionShape} from "@kcdesign/data";
-import {renderSymbolPreview as r} from "@kcdesign/data";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
-import {debounce} from "lodash";
+import { GroupShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
+import { renderSymbolPreview as r } from "@kcdesign/data";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
+import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
+import { debounce } from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
@@ -21,16 +21,16 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = shallowRef<GroupShape>(props.data);
+let render_item = toRaw<GroupShape>(props.data);
 const tip_name = ref('');
 
 function gen_view_box() {
-    const frame = render_item.value.frame;
+    const frame = render_item.frame;
     return `-8 -8 ${frame.width + 16} ${frame.height + 16}`;
 }
 
 function render() {
-    return r(h, render_item.value as any, comsMap);
+    return r(h, render_item as any, comsMap);
 }
 
 function selection_watcher(t: number) {
@@ -85,9 +85,10 @@ function check_render_item() {
         return;
     }
 
-    render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
+    render_item = toRaw((props.data?.childs[0] as GroupShape) || props.data);
+    
     props.data.unwatch(shape_watcher);
-    render_item.value.watch(shape_watcher);
+    render_item.watch(shape_watcher);
 }
 
 const shape_watcher = debounce(_shape_watcher, 1000);
@@ -112,7 +113,7 @@ function intersection(entries: any) {
     } else {
         props.context.selection.unwatch(selection_watcher);
         props.data.unwatch(shape_watcher);
-        render_item.value.unwatch(shape_watcher);
+        render_item.unwatch(shape_watcher);
     }
 }
 

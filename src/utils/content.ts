@@ -1226,7 +1226,6 @@ export function redo(context: Context) {
 
     modify_selection(context);
 }
-
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
     try {
         const __buff = new Uint8Array(buff);

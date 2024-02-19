@@ -2,6 +2,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page } from '@/utils/content';
+import { onMounted } from 'vue';
 import { ref, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 interface Props {
@@ -20,7 +21,8 @@ const surplusX = ref<number>(0);
 const subMenu = ref<HTMLDivElement>();
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
-const items = ref<string[]>(['half', 'hundred', 'double', 'canvas', 'cursor', 'comment']);
+const isPixel = ref<boolean>(props.context.user.isPixelAlignMent);
+const items = ref<string[]>(['half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'pixel']);
 /**
  * 50%视图
  */
@@ -78,9 +80,17 @@ function comment() {
   isComment.value = !status;
   props.context.comment.setVisibleComment(isComment.value);
   emit('close');
-} if (props.site) {
-  surplusX.value = document.documentElement.clientWidth - props.site.x
 }
+function modifyPixelAlgin() {
+  const status = props.context.user.isPixelAlignMent;
+  props.context.user.modifyPixelAlignment(!status);
+  emit('close');
+}
+onMounted(() => {
+  if (props.site) {
+    surplusX.value = document.documentElement.clientWidth - props.site.x
+  }
+})
 </script>
 <template>
   <div ref="subMenu" class="subMenu" @mousemove.stop>
@@ -108,6 +118,12 @@ function comment() {
         <svg-icon icon-class="white-select" v-show="isComment"></svg-icon>
       </div>
       <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
+    </div>
+    <div class="item" v-if="items.includes('pixel')" @click="modifyPixelAlgin">
+      <div class="choose">
+        <svg-icon icon-class="white-select" v-show="isPixel"></svg-icon>
+      </div>
+      <span :style="{ marginLeft: isPixel ? '8px' : '20px' }">{{ t('system.pixel') }}</span>
     </div>
   </div>
   <div class="bottom"></div>

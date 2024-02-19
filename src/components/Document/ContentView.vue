@@ -42,6 +42,7 @@ import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
 import Overview from './Content/Overview.vue';
+import MessageBoxBeta from '../common/MessageBoxBeta.vue';
 
 interface Props {
     context: Context
@@ -586,6 +587,7 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.assist.init();
+    props.context.user.updateUserConfig();
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -648,5 +650,6 @@ onUnmounted(() => {
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
+        <!-- <MessageBoxBeta :context="props.context"></MessageBoxBeta> -->
     </div>
 </template>
