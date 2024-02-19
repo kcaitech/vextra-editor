@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -33,9 +33,11 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-import { GradientFrom, getTextIndexAndLen, get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import { GradientFrom, getTextIndexAndLen, get_add_gradient_color, isSelectText } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
+import { watch } from 'vue';
+import { onUpdated } from 'vue';
 
 
 interface Props {
@@ -670,6 +672,7 @@ function blockUnmount() {
     if (exsit === blockId) {
         menu.clearColorPickerId();
     }
+    props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
 /**
@@ -681,6 +684,7 @@ function removeCurColorPicker() {
         need_update_recent.value = false;
     }
     props.context.menu.clearColorPickerId();
+    props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
     props.context.color.select_stop(undefined);
@@ -842,11 +846,18 @@ function move_stop_position(e: MouseEvent) {
             const page = props.context.selection.selectedPage;
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const locat = props.locat;
-            if(locat.type !== 'text') {
+            if (locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
-            }else {
-                const length = shapes.filter((s) => s.type === ShapeType.Text).length === 1;
+            } else {
+                if (!props.gradient) return;
+                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                if (isSelectText(props.context)) {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, 0, Infinity);
+                } else {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, textIndex, selectLength);
+                }
             }
         }
     }
@@ -879,6 +890,7 @@ function color_type_change(val: GradientType | 'solid') {
 const set_gradient = (val: GradientType | 'solid') => {
     if (val === 'solid') {
         props.context.color.set_gradient_type(undefined);
+        props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
     } else {
         props.context.color.set_gradient_type(val);
@@ -899,19 +911,17 @@ function update_gradient_type(type: GradientType | 'solid') {
 }
 // 获取渐变类型
 const get_gradient_type = () => {
-    if (props.context.selection.selectedShapes.length < 1) return;
-
     if (props.fillType === FillType.Gradient) {
         gradient_type.value = props.gradient?.gradientType;
-        let id = props.context.color.selected_stop;
         props.context.color.set_gradient_type(gradient_type.value);
-        props.context.color.switch_editor_mode(true, props.gradient);
-        if (id === undefined) id = props.gradient?.stops[0].id;
+        // props.context.color.switch_editor_mode(true, props.gradient);
+        let id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
     } else if (props.fillType === FillType.SolidColor) {
         gradient_type.value = 'solid';
         props.context.color.select_stop(undefined);
         props.context.color.set_gradient_type(undefined);
+        props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
@@ -960,9 +970,10 @@ function window_blur() {
 }
 const is_gradient_selected = () => {
     const shapes = props.context.selection.selectedShapes;
-    if(shapes.length !== 1) return true;
-   return shapes[0].type === ShapeType.Contact ? false : true;
+    if (shapes.length !== 1) return true;
+    return shapes[0].type === ShapeType.Contact ? false : true;
 }
+
 const observer = new ResizeObserver(locate);
 onMounted(() => {
     if (document.body) observer.observe(document.body);
@@ -972,6 +983,7 @@ onMounted(() => {
     window.addEventListener('blur', window_blur);
     update();
 })
+
 onUnmounted(() => {
     observer.disconnect();
     eyeDropper.destroy();

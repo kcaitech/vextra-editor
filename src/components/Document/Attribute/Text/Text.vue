@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, Fill, FillType, Gradient, GradientType, ShapeType, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
+import { AttrGetter, BasicArray, Fill, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -668,6 +668,73 @@ function gradient_stop_color_change(color: Color, index: number) {
     }
 }
 
+function gradient_add_stop(position: number, color: Color, id: string) {
+    if (!gradient.value) return;
+    const stop = new Stop(new BasicArray(), id, position, color);
+    const g = cloneGradient(gradient.value);
+    g.stops.push(stop);
+    const s = g.stops;
+    s.sort((a, b) => {
+        if (a.position > b.position) {
+            return 1;
+        } else if (a.position < b.position) {
+            return -1;
+        } else {
+            return 0;
+        }
+    })
+    editor_gradient(g);
+}
+function gradient_reverse() {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
+    for (let _i = 0, _l = g.stops.length; _i < _l; _i++) {
+        const _stop = g.stops[_i];
+        const inver_index = g.stops.length - 1 - _i;
+        new_stops.push(new Stop(_stop.crdtidx, _stop.id, _stop.position, g.stops[inver_index].color));
+    }
+    g.stops = new_stops;
+    editor_gradient(g);
+}
+
+function gradient_rotate() {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    const { from, to } = g;
+    const gradientType = g.gradientType;
+    if (gradientType === GradientType.Linear) {
+        const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+        const m = new Matrix();
+        m.trans(-midpoint.x, -midpoint.y);
+        m.rotate(Math.PI / 2);
+        m.trans(midpoint.x, midpoint.y);
+        g.to = m.computeCoord3(to) as any;
+        g.from = m.computeCoord3(from) as any;
+    } else if (gradientType === GradientType.Radial || gradientType === GradientType.Angular) {
+        const m = new Matrix();
+        m.trans(-from.x, -from.y);
+        m.rotate(Math.PI / 2);
+        m.trans(from.x, from.y);
+        g.to = m.computeCoord3(to) as any;
+    }
+    editor_gradient(g);
+}
+
+const editor_gradient = (g: Gradient) => {
+    const editor = props.context.editor4TextShape(props.shape);
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextGradient(g, 0, Infinity);
+        } else {
+            editor.setTextGradient(g, textIndex, selectLength);
+        }
+    } else {
+        editor.setTextGradientMulti(props.textShapes.map(s => adapt2Shape(s)), g);
+    }
+}
+
 const sizeColorInput = () => {
     if (sizeColor.value && alphaFill.value) {
         const value = sizeColor.value.value;
@@ -875,10 +942,12 @@ onUnmounted(() => {
                 }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="{ index: 0, type: 'text' }"
-                        :fill-type="fillType" :gradient="gradient" @change="c => getColorFromPicker(c, 'color')"
-                        @gradient-type="(type) => togger_gradient_type(type)"
-                        @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)">
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
+                        :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
+                        @change="c => getColorFromPicker(c, 'color')" @gradient-type="(type) => togger_gradient_type(type)"
+                        @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
+                        @gradient-rotate="gradient_rotate">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"

@@ -19,6 +19,7 @@ function init() {
 function down(e: MouseEvent) {
     e.stopPropagation();
     if (dbl_action()) {
+        props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
     }
 }
@@ -58,5 +59,6 @@ onUnmounted(() => {
     height: 100%;
     position: absolute;
     z-index: 9;
+    // background-color: rgba(0, 0, 0, 0.1);
 }
 </style>

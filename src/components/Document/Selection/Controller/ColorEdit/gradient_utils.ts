@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D } from "@kcdesign/data";
+import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data/dist/data/baseimport";
 import { v4 } from "uuid";
 
@@ -42,10 +42,21 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
             const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             gradient_type = shapes[0].style[locat.type];
         }
+        if(!gradient_type[locat.index]) return;
         const gradient = gradient_type[locat.index].gradient;
         return gradient;
     } else {
-        return context.color.gradient;
+        if(shape.type !== ShapeType.Text) return;
+        const { textIndex, selectLength } = getTextIndexAndLen(context);
+        const editor = context.editor4TextShape(shape as TextShapeView)
+        let format: AttrGetter
+        const __text = (shape as TextShapeView).getText();
+        if (textIndex === -1) {
+            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        } else {
+            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        }
+        return format.gradient;
     }
 }
 

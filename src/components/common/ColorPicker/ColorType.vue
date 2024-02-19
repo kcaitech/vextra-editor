@@ -34,7 +34,8 @@ onMounted(() => {
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
             :class="{ selected: gradient_type === GradientType.Angular }">
-            <img :src="angular">
+            <!-- <img :src="angular"> -->
+            <div class="angular"></div>
         </div>
         <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
             :class="{ selected: is_checked === GradientType.Radial }">
@@ -100,7 +101,13 @@ onMounted(() => {
     }
 
     .angular {
-        background: conic-gradient(var(--active-color-beta), var(--theme-color-anti));
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        // border: 1.5px solid #434343;
+        box-shadow: 0px 0px 0px 1.3px #434343;
+        box-sizing: border-box;
+        background: conic-gradient(#8C8C8C, #FFFFFF);
     }
 }
 </style>

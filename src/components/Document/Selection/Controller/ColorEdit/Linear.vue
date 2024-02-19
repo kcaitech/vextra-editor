@@ -3,8 +3,8 @@ import { Context } from '@/context';
 import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { getTextIndexAndLen, get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, Point2D, ShapeType, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { getTextIndexAndLen, get_add_gradient_color, get_gradient, get_temporary_stop, isSelectText, to_rgba } from './gradient_utils';
+import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, Point2D, ShapeType, ShapeView, Stop, TextShapeView, adapt2Shape, cloneGradient } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -92,11 +92,11 @@ const dot_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
+    const shape = shapes.value[0] as ShapeView;
+    const gradient = get_gradient(props.context, shape);
+    if (!gradient) return;
     if (isDragging && gradientEditor) {
         startPosition.x = x, startPosition.y = y;
-        const shape = shapes.value[0] as ShapeView;
-        const gradient = get_gradient(props.context, shape);
-        if (!gradient) return;
         const matrix = new Matrix();
         const frame = shape.frame;
         matrix.preScale(frame.width, frame.height);
@@ -116,8 +116,14 @@ const dot_mousemove = (e: MouseEvent) => {
             if (locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
             } else {
-                const length = shapes.value.filter((s) => s.type === ShapeType.Text).length === 1;
+                const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                if (isSelectText(props.context)) {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                } else {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                }
             }
         }
     }
@@ -189,24 +195,49 @@ const add_stop = (e: MouseEvent) => {
     const shape = shapes.value[0] as ShapeView;
     startPosition = props.context.workspace.getContentXY(e);
     if (!locat) return;
+    const gradient = get_gradient(props.context, shape);
+    if (!gradient) return;
+    const _stop = get_add_gradient_color(gradient.stops, posi);
+    if (!_stop) return;
+    const selected = props.context.selection.selectedShapes;
+    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const page = props.context.selection.selectedPage!;
+    const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
     if (locat.type !== 'text') {
         const gradient_type = shape.style[locat.type];
-        const gradient = get_gradient(props.context, shape);
-        if (!gradient) return;
-        const _stop = get_add_gradient_color(gradient.stops, posi);
-        if (!_stop) return;
         const idx = gradient_type.length - locat.index - 1;
-        const selected = props.context.selection.selectedShapes;
-        const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-        const page = props.context.selection.selectedPage!;
         const editor = props.context.editor4Page(page);
-        const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
         const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
         editor.addShapesGradientStop(actions);
-        nextTick(() => {
-            down_stop(e, stop.id);
+    } else {
+        const text_shapes = (shapes.value as ShapeView[]).filter((s) => s.type === ShapeType.Text);
+        const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+        const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+        const new_gradient = cloneGradient(gradient);
+        new_gradient.stops.push(stop);
+        const s = new_gradient.stops;
+        s.sort((a, b) => {
+            if (a.position > b.position) {
+                return 1;
+            } else if (a.position < b.position) {
+                return -1;
+            } else {
+                return 0;
+            }
         })
+        if (text_shapes.length === 1) {
+            if (isSelectText(props.context)) {
+                editor.setTextGradient(new_gradient, 0, Infinity);
+            } else {
+                editor.setTextGradient(new_gradient, textIndex, selectLength);
+            }
+        } else {
+            editor.setTextGradientMulti(text_shapes.map(t => adapt2Shape(t)), new_gradient);
+        }
     }
+    nextTick(() => {
+        down_stop(e, stop.id);
+    })
 }
 
 const get_stop_position = (e: MouseEvent) => {
@@ -252,11 +283,11 @@ const stop_mousemove = (e: MouseEvent) => {
     const { x: sx, y: sy } = startPosition;
     const dx = x - sx;
     const dy = y - sy;
+    const shape = shapes.value[0] as ShapeView;
+    const gradient = get_gradient(props.context, shape);
+    if (!gradient) return;
     if (isDragging && gradientEditor) {
         startPosition.x = x, startPosition.y = y;
-        const shape = shapes.value[0] as ShapeView;
-        const gradient = get_gradient(props.context, shape);
-        if (!gradient) return;
         const posi = get_stop_position(e);
         get_percent_posi(e);
         percent.value = +(posi * 100).toFixed(0);
@@ -268,8 +299,14 @@ const stop_mousemove = (e: MouseEvent) => {
             if (locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
             } else {
-                const length = shapes.value.filter((s) => s.type === ShapeType.Text).length === 1;
+                const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
+                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                if (isSelectText(props.context)) {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                } else {
+                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                }
             }
         }
     }
