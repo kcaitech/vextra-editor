@@ -28,6 +28,8 @@ export class CoopNet implements ICoopNet {
     async pullCmds(from: string, to: string): Promise<Cmd[]> {
         if (!this.isConnected) return [];
         console.log("pullCmds", from, to)
+        if (from) from = this.radixRevert.to(from).toString(10);
+        if (to) to = this.radixRevert.to(to).toString(10);
         this.send?.({
             type: "pullCmds",
             from: from,
