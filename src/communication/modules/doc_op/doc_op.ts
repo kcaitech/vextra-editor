@@ -31,6 +31,7 @@ export class DocOp extends Communication {
         docOp.coopNet = new CoopNet(versionId)
         docOp.coopNet.setSend(docOp.send.bind(docOp))
         repo.setNet(docOp.coopNet)
+        repo.setBaseVer(document.lastCmdId)
         return docOp
     }
 
