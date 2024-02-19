@@ -30,7 +30,7 @@ export class DocOp extends Communication {
         docOp.repo = repo
         docOp.versionId = versionId
         docOp.onMessage = docOp._onMessage.bind(docOp)
-        docOp.coopNet = new CoopNet(versionId)
+        docOp.coopNet = new CoopNet()
         docOp.coopNet.setSend(docOp.send.bind(docOp))
         repo.setNet(docOp.coopNet)
         repo.setBaseVer(radixRevert.from(document.lastCmdId))
