@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue';
 import { GroupShape, Shape, ShapeType, SymbolShape, SymbolUnionShape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
@@ -60,9 +60,9 @@ function down(e: MouseEvent, shape: Shape) {
 
     if (is_dbl_action()) {
         const page = props.context.selection.selectedPage;
-        if(!page) return;
+        if (!page) return;
         const shape = page.getShape(target.id);
-        if(!shape) return;
+        if (!shape) return;
         shape_track(props.context, shape);
         return;
     }
@@ -124,7 +124,6 @@ function window_blur() {
     is_drag = false;
     remove_move_and_up_from_document(move, up);
 }
-
 onMounted(() => {
     init();
     add_blur_for_window(window_blur);

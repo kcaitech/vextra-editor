@@ -1,5 +1,5 @@
 import { WatchableObject, Document, CoopRepository, Cmd } from "@kcdesign/data"
-import { Options, DocOp as _DocOp } from "@/communication/modules/doc_op"
+import { Options, DocOp as _DocOp } from "@/communication/modules/doc_op/doc_op"
 
 export class DocOp extends WatchableObject {
     private docOp?: _DocOp
@@ -40,10 +40,6 @@ export class DocOp extends WatchableObject {
         return this.docOp?.hasPendingSyncCmd?.() ?? false
     }
 
-    public get lastServerCmdId(): string | undefined {
-        return this.docOp?.lastServerCmdId
-    }
-
     public close() {
         if (this.isClosed) return;
         this.isClosed = true
@@ -51,13 +47,5 @@ export class DocOp extends WatchableObject {
         this.docOp.close()
         this.docOp = undefined
         this.startPromise = undefined
-    }
-
-    public addOnLocalUpdateAsync(onUpdate: (cmd: Cmd) => void) {
-        this.docOp?.addOnLocalUpdateAsync(onUpdate)
-    }
-
-    public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
-        this.docOp?.removeOnLocalUpdateAsync(onUpdate)
     }
 }

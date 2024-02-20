@@ -1,7 +1,8 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape, Matrix
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
+    TableCellType, TableShape, Matrix, Page
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -205,7 +206,7 @@ export class Clipboard {
 
             const points = points_map.get(shape.id);
             if (points) {
-                (shape as PathShape).points = points.map(i => new CurvePoint(v4(), i.x, i.y, i.mode)) as any;
+                (shape as PathShape).points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
             }
         }
 
@@ -884,6 +885,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         if (!page) {
             return;
         }
+        const page_data = adapt2Shape(page) as Page;
 
         let insert_result: { shapes: Shape[] } | false = false;
         let insert_env: Shape = adapt2Shape(page);
@@ -912,7 +914,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
         // 3. 将图层导入文档（还未插入文档）
         const medias = data?.media;
-        const shapes = import_shape_from_clipboard(context.data, source, medias);
+        const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
         if (!shapes.length) {
             throw new Error('invalid source: !shapes.length');
         }
@@ -925,7 +927,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 const env = selection_envs[i];
                 const xy = __xys[i];
                 modify_frame_by_xy(xy, source);
-                const shapes = import_shape_from_clipboard(context.data, source);
+                const shapes = import_shape_from_clipboard(context.data, page_data, source);
                 actions.push({ env, shapes });
             }
             const __res = editor.pasteShapes3(actions);
@@ -990,20 +992,20 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
         throw new Error('no shapes');
     }
 
+    const page = context.selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
     const source = JSON.parse(text_html.split(identity)[1]);
 
-    const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
+    const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
     if (!shapes.length) {
         throw new Error('invalid source');
     }
 
     after_import(context, source.media);
 
-    const page = context.selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
@@ -1225,12 +1227,11 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
         }
     }
 
-    const new_source = transform_data(context.data, pre_shapes);
-
     const page = context.selection.selectedPage;
     if (!page) {
         return [];
     }
+    const new_source = transform_data(context.data, page.data, pre_shapes);
 
     let result: Shape[] = [];
 

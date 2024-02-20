@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { BasicArray, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, reactive, nextTick, watch } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -50,7 +50,7 @@ const preview = ref();
 let renderSvgs = ref<SvgFormat[]>([]);
 
 function update(args: any[]) {
-    if (args.includes('export-options')) {
+    if (args.includes('exportOptions')) {
         updateData();
     }
     if (args.includes('layout')) {
@@ -141,7 +141,7 @@ const preinstall = (v: string) => {
     }
 }
 const addDefault = (len: number) => {
-    const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const format = new ExportFormat(new BasicArray(), v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
     const formars = [format];
     if (len === 1) {
         const shape = props.shapes[0];
@@ -172,10 +172,10 @@ const addDefault = (len: number) => {
     }
 }
 const addAndroid = (len: number) => {
-    const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-    const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
-    const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
-    const format4 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
+    const format1 = new ExportFormat([0] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const format2 = new ExportFormat([1] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
+    const format3 = new ExportFormat([2] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
+    const format4 = new ExportFormat([3] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
     const formars = [format1, format2, format3, format4]
     if (len === 1) {
         const shape = props.shapes[0];
@@ -206,9 +206,9 @@ const addAndroid = (len: number) => {
     }
 }
 const addIos = (len: number) => {
-    const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-    const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
-    const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
+    const format1 = new ExportFormat([0] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const format2 = new ExportFormat([1] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
+    const format3 = new ExportFormat([2] as BasicArray<number>, v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
     const formars = [format1, format2, format3]
     if (len === 1) {
         const shape = props.shapes[0];

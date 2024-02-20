@@ -53,14 +53,13 @@ function change_c(e: Event) {
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    const f = page.getFills()[0];
-    if (!f) {
+    if (!page.data.backgroundColor) { // todo ??
         const editor = props.context.editor4Page(page);
         editor.setBackground(new Color(1, 239, 239, 239));
-        const c = page.getFills()[0].color;
+        const c = page.data.backgroundColor!;
         init_value(c);
     } else {
-        init_value(f.color);
+        init_value(page.data.backgroundColor);
     }
 }
 function change_a(e: Event) {

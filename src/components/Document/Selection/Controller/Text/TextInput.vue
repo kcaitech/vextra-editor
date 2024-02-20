@@ -64,7 +64,7 @@ function _updateInputPos() {
     } else if (end >= 0) {
         index = end;
     }
-    const locatepoints = text.locateCursor(index, cursorAtBefore);
+    const locatepoints = props.shape.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
     const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
 
@@ -231,7 +231,7 @@ function onKeyDown(e: KeyboardEvent) {
     if (e.code === 'Tab') {
         e.preventDefault();
     }
-    handleKeyEvent(e, props.context, getText(props.shape), editor);
+    handleKeyEvent(e, props.context, (props.shape), editor);
 }
 
 function onKeyUp(e: KeyboardEvent) {
@@ -241,7 +241,7 @@ function onKeyPress(e: KeyboardEvent) {
     if (e.code === 'Tab') {
         e.preventDefault();
     }
-    handleKeyEvent(e, props.context, getText(props.shape), editor);
+    handleKeyEvent(e, props.context, (props.shape), editor);
 }
 </script>
 <template>
