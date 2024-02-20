@@ -294,8 +294,8 @@ const alpha_message = (idx: number, fill: Fill) => {
     if (fill.fillType === FillType.SolidColor) {
         alpha = fill.color.alpha * 100;
     } else if (fill.gradient && fill.fillType === FillType.Gradient) {
-        const opacity = fill.gradient.gradientOpacity || 1
-        alpha = opacity * 100;
+        const opacity = fill.gradient.gradientOpacity;
+        alpha = (opacity === undefined ? 1 : opacity) * 100;
     }
     alphaFill.value[idx].value = alpha + '%'
 }
@@ -376,8 +376,8 @@ const filterAlpha = (fill: Fill) => {
     if (fill.fillType === FillType.SolidColor) {
         a = fill.color.alpha * 100;
     } else if (fill.gradient && fill.fillType === FillType.Gradient) {
-        const opacity = fill.gradient.gradientOpacity || 1
-        a = opacity * 100;
+        const opacity = fill.gradient.gradientOpacity;
+        a = (opacity === undefined ? 1 : opacity) * 100;
     }
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {

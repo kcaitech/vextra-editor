@@ -252,7 +252,7 @@ const add_stop = (e: MouseEvent) => {
         const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
         const new_gradient = cloneGradient(gradient);
         new_gradient.stops.push(stop);
-        const s = new_gradient.stops;
+        const s = new_gradient.stops as BasicArray<Stop>;
         s.sort((a, b) => {
             if (a.position > b.position) {
                 return 1;

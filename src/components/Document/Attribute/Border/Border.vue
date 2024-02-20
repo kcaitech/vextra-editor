@@ -327,8 +327,8 @@ const alpha_message = (idx: number, border: Border) => {
     if (border.fillType === FillType.SolidColor) {
         alpha = border.color.alpha * 100;
     } else if (border.gradient && border.fillType === FillType.Gradient) {
-        const opacity = border.gradient.gradientOpacity || 1;
-        alpha = opacity * 100;
+        const opacity = border.gradient.gradientOpacity;
+        alpha = (opacity === undefined ? 1 : opacity) * 100;
     }
     alphaBorder.value[idx].value = alpha + '%'
 }
@@ -409,8 +409,8 @@ const filterAlpha = (border: Border) => {
     if (border.fillType === FillType.SolidColor) {
         a = border.color.alpha * 100;
     } else if (border.gradient && border.fillType === FillType.Gradient) {
-        const opacity = border.gradient.gradientOpacity || 1;
-        a = opacity * 100;
+        const opacity = border.gradient.gradientOpacity;
+        a = (opacity === undefined ? 1 : opacity) * 100;
     }
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {

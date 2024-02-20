@@ -1134,7 +1134,7 @@ onUnmounted(() => {
         border-radius: 8px;
         border: 1px solid #F0F0F0;
         overflow: hidden;
-
+        z-index: 99;
         >.header {
             width: 100%;
             height: 40px;
