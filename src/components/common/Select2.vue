@@ -184,7 +184,7 @@ onMounted(render)
     position: relative;
 
     .trigger {
-        width: 100%;
+        width: 90%;
         height: 100%;
 
         position: relative;
@@ -230,7 +230,7 @@ onMounted(render)
     }
 
     .options-container {
-        width: 100%;
+        width: 90%;
         position: absolute;
         outline: none;
         background-color: #FFFFFF;
