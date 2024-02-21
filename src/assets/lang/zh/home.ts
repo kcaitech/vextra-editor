@@ -206,7 +206,7 @@ export const attr: any = {
     prototype: '原型',
     inspect: '标注',
     constraints: '约束',
-    groupings: '相对编组位置及大小',
+    groupings: '相对位置及大小',
     border: '边框',
     opacity: '不透明度',
     fill: '填充',

@@ -29,7 +29,7 @@
                         </div>
                         <div v-if="!shownicknameinput" class="details">{{ uname }}</div>
                         <div v-else>
-                            <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
+                            <input v-focus class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
                             <span></span>
                         </div>
                     </div>
@@ -109,10 +109,6 @@ async function handleFileSelected(event: any,) {
 
 function updatename() {
     shownicknameinput.value = true
-    setTimeout(() => {
-        const input: any = document.querySelector('.newname')
-        input.focus()
-    }, 100);
 }
 
 async function changename() {

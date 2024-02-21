@@ -14,10 +14,10 @@
                     {{ t('Createteam.team_name') }}
                     <span>{{ t('Createteam.required') }}</span>
                 </div>
-                <input
+                <input v-focus
                     :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: inputValue !== '' ? '#262626' : '' }"
                     ref="inputteam" type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue"
-                    maxlength="20" required>
+                    maxlength="20" required/>
             </div>
             <div class="team-description">
                 <div class="title">
@@ -61,7 +61,7 @@ const route = useRoute()
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
-const inputteam = ref()
+// const inputteam = ref()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -121,9 +121,9 @@ const selectimg = (e: any) => {
     }
 }
 
-nextTick(() => {
-    inputteam.value.focus()
-})
+// nextTick(() => {
+//     inputteam.value.focus()
+// })
 
 const close = () => {
     emits('close')
