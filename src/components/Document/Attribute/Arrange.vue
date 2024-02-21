@@ -2,17 +2,19 @@
 import { Context } from '@/context';
 import { ShapeType, ShapeView } from '@kcdesign/data';
 import { PositonAdjust } from "@kcdesign/data";
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution, is_container } from '@/utils/arrange';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Arrange } from '@/context/arrange';
 import { reactive } from 'vue';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import { Selection } from '@/context/selection';
 interface Props {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    shapes: ShapeView[];
+    trigger: any[];
+    selectionChange: number;
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -190,27 +192,34 @@ function _modify_model_disable() {
     }
 }
 
-const modify_model_disable = debounce(_modify_model_disable, 150, { leading: true });
+// const modify_model_disable = debounce(_modify_model_disable, 150, { leading: true });
 
 function reset_model() {
     model_enable.hv = false;
     model_enable.o = false;
 }
 
-function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) {
-        modify_model_disable();
-    }
-}
+// function selection_watcher(t: number) {
+//     if (t === Selection.CHANGE_SHAPE) {
+//         modify_model_disable();
+//     }
+// }
+const update = throttle(_modify_model_disable, 160, { leading: true });
+
+// 这里在下代协作算法出来后可以优化
+const stop = watch(() => props.trigger, update); // 监听图层变化
+const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
 
 onMounted(() => {
     _modify_model_disable();
     props.context.arrange.watch(arrange_watcher);
-    props.context.selection.watch(selection_watcher);
+    // props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
+    stop
+    stop2
     props.context.arrange.unwatch(arrange_watcher);
-    props.context.selection.unwatch(selection_watcher);
+    // props.context.selection.unwatch(selection_watcher);
 })
 </script>
 <template>
