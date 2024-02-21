@@ -356,7 +356,7 @@ export function align_left(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_left([first, first_p]);
+        c_apex = get_colony_left([first_p]);
     }
     else {
         c_apex = get_colony_left(shapes);
@@ -392,7 +392,7 @@ export function align_cneter_x(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_center_x([first, first_p]);
+        c_apex = get_colony_center_x([first_p]);
     }
     else {
         c_apex = get_colony_center_x(shapes);
@@ -428,7 +428,7 @@ export function align_right(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_right([first, first_p]);
+        c_apex = get_colony_right([first_p]);
     }
     else {
         c_apex = get_colony_right(shapes);
@@ -464,7 +464,7 @@ export function align_top(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_top([first, first_p]);
+        c_apex = get_colony_top([first_p]);
     }
     else {
         c_apex = get_colony_top(shapes);
@@ -500,7 +500,7 @@ export function align_cneter_y(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_center_y([first, first_p]);
+        c_apex = get_colony_center_y([first_p]);
     }
     else {
         c_apex = get_colony_center_y(shapes);
@@ -535,7 +535,7 @@ export function align_bottom(shapes: ShapeView[]) {
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
-        c_apex = get_colony_bottom([first, first_p]);
+        c_apex = get_colony_bottom([first_p]);
     }
     else {
         c_apex = get_colony_bottom(shapes);
