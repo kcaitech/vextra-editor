@@ -1,282 +1,421 @@
 <script setup lang="ts">
-import { ShapeView } from '@kcdesign/data';
-import { Context } from 'aws-sdk/clients/autoscaling';
-import { reactive, ref } from 'vue'
-import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import { Page, ResizingConstraints2, adapt2Shape } from '@kcdesign/data';
+import { Context } from '@/context';
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import Select, { SelectItem, SelectSource } from '@/components/common/Select2.vue';
 import { genOptions } from '@/utils/common';
 import { useI18n } from 'vue-i18n';
+import TypeHeader from '../TypeHeader.vue';
+import { throttle } from 'lodash';
 
 interface Props {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    trigger: any[];
+    selectionChange: number;
 }
 const { t } = useI18n();
 const props = defineProps<Props>();
-const horizontal_position = ref<boolean>(true);
-const vertical_position = ref<boolean>(true);
-const checked1 = ref(false)
-const checked2 = ref(false)
+const mixed = t('attr.mixed');
 
-const horizontalSelected = ref<SelectItem>({ value: 'left', content: t('attr.fixed_left') });
-const horizontalOptions: SelectSource[] = genOptions([
+const horizontalPositionSelected = ref<SelectItem>({ value: 'left', content: t('attr.fixed_left') });
+const horizontalPositionOptions: SelectSource[] = genOptions([
     ['left', t('attr.fixed_left')],
     ['right', t('attr.fixed_right')],
-    ['centerh', t('attr.center')],
-    ['lr', t('attr.fixed_left_right')],
-    ['widthWithContainer', t('attr.follow_container')]
+    ['lrfixed', t('attr.fixed_left_right')],
+    ['hcenter', t('attr.center')],
+    ['hfollow', t('attr.follow_container')]
 ]);
 
-const verticalSelected = ref<SelectItem>({ value: 'top', content: t('attr.fixed_top') });
-const verticalOptions: SelectSource[] = genOptions([
+const VerticalPositionSelected = ref<SelectItem>({ value: 'top', content: t('attr.fixed_top') });
+const VerticalPositionOptions: SelectSource[] = genOptions([
     ['top', t('attr.fixed_top')],
     ['bottom', t('attr.fixed_bottom')],
-    ['centerv', t('attr.center')],
-    ['tb', t('attr.fixed_top_bottom')],
-    ['heightWithContainer', t('attr.follow_container')]
+    ['tbfixed', t('attr.fixed_top_bottom')],
+    ['vcenter', t('attr.center')],
+    ['vfollow', t('attr.follow_container')]
 ]);
 
-const state = ref<number>(0);
-type Side = 'left' | 'right' | 'hcenter' | 'lrfixed' | 'hfollow' | 'top' | 'bottom' | 'vcenter' | 'tbfixed' | 'vfollow';
-enum Codes1 {
-    Left = 1,
-    Right = 2,
-    HCenter = 4,
-    LRFixed = 8,
-    HFollow = 16,
+const fixedWidth = ref<boolean | string>(false);
+const disableToFixedWidth = ref<boolean>(false);
+const fixedHeight = ref<boolean | string>(false);
+const disableToFixedHeight = ref<boolean>(false);
+
+function createEditor() {
+    const page = props.context.selection.selectedPage!;
+    return props.context.editor.editor4ResizingConstraint(adapt2Shape(page) as Page);
 }
-enum Codes2 {
-    Top = 1,
-    Bottom = 2,
-    VCenter = 4,
-    TBFixed = 8,
-    VFollow = 16,
-}
-interface Controller {
-    left: boolean;
-    right: boolean;
-    hcenter: boolean;
-    lrfixed: boolean;
-    follow: boolean;
-    top: boolean;
-    bottom: boolean;
-    vcenter: boolean;
-    tbfixed: boolean
-}
-const controller: Controller = reactive({
-    left: false,
-    right: false,
-    hcenter: false,
-    lrfixed: false,
-    follow: false,
-    top: false,
-    bottom: false,
-    vcenter: false,
-    tbfixed: false,
-});
-function horizontalJudgment() {
-    controller.left = Boolean((~state & Codes1.Left));
-    controller.right = Boolean((~state & Codes1.Right));
-    controller.hcenter = Boolean((~state & Codes1.HCenter));
-    controller.lrfixed = Boolean((~state & Codes1.LRFixed));
-    controller.follow = Boolean((~state & Codes1.HFollow));
-}
-function verticalJudgment() {
-    controller.top = Boolean((~state & Codes2.Top));
-    controller.bottom = Boolean((~state & Codes2.Bottom));
-    controller.vcenter = Boolean((~state & Codes2.VCenter));
-    controller.tbfixed = Boolean((~state & Codes2.TBFixed));
-    controller.follow = Boolean((~state & Codes2.VFollow));
-}
-//更新水平状态
-function horizontalChange(side: Side) {
-    switch (side) {
+
+function handleHorizontalPositionSelect(item: SelectItem) {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    switch (item.value) {
         case 'left':
-            state.value |= Codes1.Left;
+            e.fixedToLeft(selected);
             break;
         case 'right':
-            state.value |= Codes1.Right;
+            e.fixedToRight(selected);
             break;
         case 'hcenter':
-            state.value |= Codes1.HCenter;
+            e.HorizontaljustifyCenter(selected);
             break;
         case 'lrfixed':
-            state.value |= Codes1.LRFixed;
+            e.fixedToLR(selected);
             break;
         case 'hfollow':
-            state.value |= Codes1.HFollow;
+            e.scaleByWidth(selected);
             break;
         default:
             break;
     }
-    //更新controller对象
-    horizontalJudgment();
 }
-function horizontalSelect(selected: SelectItem) {
-    // props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-    horizontalSelected.value = selected;
-    // if (state.value === )
+
+function handleCheckboxChangeForWidth() {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    if (fixedWidth.value === 'mixed') {
+        e.fixedToWidth(selected)
+        return
+
+    }
+    if (fixedWidth.value) {
+        e.flexWidth(selected);
+    } else {
+        e.fixedToWidth(selected);
+    }
 }
-//更新垂直状态
-function verticalChange(side: Side) {
-    switch (side) {
+
+function handleVerticalPositionSelect(item: SelectItem) {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    switch (item.value) {
         case 'top':
-            state.value |= Codes2.Top;
+            e.fixedToTop(selected);
             break;
         case 'bottom':
-            state.value |= Codes2.Bottom;
+            e.fixedToBottom(selected);
             break;
         case 'vcenter':
-            state.value |= Codes2.VCenter;
+            e.VerticaljustifyCenter(selected);
             break;
         case 'tbfixed':
-            state.value |= Codes2.TBFixed;
+            e.fixedToTB(selected);
             break;
         case 'vfollow':
-            state.value |= Codes2.VFollow;
+            e.scaleByHeight(selected);
             break;
         default:
             break;
     }
-    //更新controller对象
-    verticalJudgment();
 }
-function verticalSelect(selected: SelectItem) {
-    verticalSelected.value = selected;
+function handleCheckboxChangeForHeight() {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    if (fixedHeight.value === 'mixed') {
+        e.fixedToHeight(selected);
+        return;
+    }
+    if (fixedHeight.value) {
+        e.flexHeight(selected);
+    } else {
+        e.fixedToHeight(selected);
+    }
 }
-// function constraint(side: Side): string {
-//     const
-//     switch (side) {
-//         case 'left':
-//         if(controller.left && controller.hcenter) return
-//     }
-// }
-function fix_width() {
-    checked1.value = !checked1.value
+
+const disabled = ref(false)
+const selected = ref()
+function _update() {
+    modifyhorizontalPositionStatus();
+    modifyverticalPositionStatus();
+    modifyWidthStatus();
+    modifyHeightStatus();
+    disabled.value = props.context.selection.selectedShapes.some(item => item.isVirtualShape);
+    selected.value = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
 }
-function fix_height() {
-    checked2.value = !checked2.value
+
+function modifyhorizontalPositionStatus() {
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+
+    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
+    for (let i = 1, l = shapes.length; i < l; i++) {
+        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+        if (__rc !== commonRC) {
+            horizontalPositionSelected.value = { value: 'mixed', content: mixed };
+            return;
+        }
+    }
+
+    let rc = shapes[0].resizingConstraint || 0;
+
+    if (ResizingConstraints2.isFixedLeftAndRight(rc)) {
+        horizontalPositionSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') };
+    } else if (ResizingConstraints2.isFixedToLeft(rc)) {
+        horizontalPositionSelected.value = { value: 'left', content: t('attr.fixed_left') };
+    } else if (ResizingConstraints2.isFixedToRight(rc)) {
+        horizontalPositionSelected.value = { value: 'right', content: t('attr.fixed_right') };
+    } else if (ResizingConstraints2.isHorizontalJustifyCenter(rc)) {
+        horizontalPositionSelected.value = { value: 'hcenter', content: t('attr.center') };
+    } else if (ResizingConstraints2.isFlexWidth(rc)) {
+        horizontalPositionSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
+    }
+
+    function getGroupVal(val: number) {
+        return (val & ResizingConstraints2.Left) + (val & ResizingConstraints2.Right) + (val & ResizingConstraints2.HCenter);
+    }
 }
+
+function modifyWidthStatus() {
+    disableToFixedWidth.value = false;
+    fixedWidth.value = false;
+
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+    const rc0 = shapes[0].resizingConstraint || 0;
+    fixedWidth.value = ResizingConstraints2.isFixedWidth(rc0);
+
+    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const rc = shapes[i].resizingConstraint || 0;
+        if (ResizingConstraints2.isFixedLeftAndRight(rc) || ResizingConstraints2.isHorizontalScale(rc)) {
+            disableToFixedWidth.value = true;
+        }
+
+        let __rc = getGroupVal(rc);
+        if (__rc !== commonRC) {
+            fixedWidth.value = 'mixed';
+        }
+    }
+
+    function getGroupVal(val: number) {
+        return val & ResizingConstraints2.Width;
+    }
+}
+
+function modifyverticalPositionStatus() {
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+
+    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
+    for (let i = 1, l = shapes.length; i < l; i++) {
+        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+        if (__rc !== commonRC) {
+            VerticalPositionSelected.value = { value: 'mixed', content: mixed };
+            return;
+        }
+    }
+
+    let rc = shapes[0].resizingConstraint || 0;
+
+    if (ResizingConstraints2.isFixedTopAndBottom(rc)) {
+        VerticalPositionSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') };
+    } else if (ResizingConstraints2.isFixedToTop(rc)) {
+        VerticalPositionSelected.value = { value: 'top', content: t('attr.fixed_top') };
+    } else if (ResizingConstraints2.isFixedToBottom(rc)) {
+        VerticalPositionSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') };
+    } else if (ResizingConstraints2.isVerticalJustifyCenter(rc)) {
+        VerticalPositionSelected.value = { value: 'vcenter', content: t('attr.center') };
+    } else if (ResizingConstraints2.isFlexHeight(rc)) {
+        VerticalPositionSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
+    }
+
+    function getGroupVal(val: number) {
+        return (val & ResizingConstraints2.Top) + (val & ResizingConstraints2.Bottom) + (val & ResizingConstraints2.VCenter);
+    }
+}
+
+function modifyHeightStatus() {
+    disableToFixedHeight.value = false;
+    fixedHeight.value = false;
+
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+
+    const rc0 = shapes[0].resizingConstraint || 0;
+    fixedHeight.value = ResizingConstraints2.isFixedHeight(rc0);
+
+    let commonRC = getGroupVal(rc0);
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const rc = shapes[i].resizingConstraint || 0;
+        let __rc = getGroupVal(rc);
+        if (__rc !== commonRC) {
+            fixedHeight.value = 'mixed';
+        }
+        if (ResizingConstraints2.isFixedTopAndBottom(rc) || ResizingConstraints2.isVerticalScale(rc)) {
+            disableToFixedHeight.value = true;
+        }
+    }
+
+    function getGroupVal(val: number) {
+        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Height);
+    }
+}
+
+const update = throttle(_update, 160, { leading: true });
+
+// 这里在下代协作算法出来后可以优化
+const stop = watch(() => props.trigger, update); // 监听图层变化
+const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
+
+onMounted(update);
+onUnmounted(() => {
+    stop();
+    stop2();
+});
 </script>
 <template>
     <div class="wrap">
-        <h6 style="font-weight: 600;flex-shrink: 0;margin-left: 4%;height: 5%;">{{ t('attr.groupings') }}</h6>
-        <div v-if="horizontal_position" class="horizontal-container">
-            <label style="margin-left: 4%;">{{ t('attr.horizontal') }}</label>
-            <Select :selected="horizontalSelected" :source="horizontalOptions" @select="horizontalSelect"></Select>
-            <div class="checkbox1">
-                <div :class="checked1 ? 'visibility' : 'hidden'" @click="fix_width">
-                    <svg-icon v-if="checked1" icon-class="select"></svg-icon>
+        <TypeHeader :title="t('attr.groupings')" class="mt-24" :active="!disabled">
+        </TypeHeader>
+        <div class="content" :class="{ 'disabled': disabled }">
+            <div class="main">
+                <div class="row">
+                    <label>{{ t('attr.horizontal') }}</label>
+                    <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
+                        @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
+                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
+                        @click="handleCheckboxChangeForWidth">
+                        <div class="checkbox" :style="{ border: fixedWidth ? 'none' : '' }">
+                            <div v-if="fixedWidth === 'mixed'" class="mixed-status">
+                                <div class="mixed"></div>
+                            </div>
+                            <div v-else-if="fixedWidth" class="active">
+                                <svg-icon icon-class="select"></svg-icon>
+                            </div>
+                        </div>
+                        <span>{{ t('attr.fixedWidth') }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <label>{{ t('attr.vertical') }}</label>
+                    <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
+                        @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
+                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
+                        @click="handleCheckboxChangeForHeight">
+                        <div class="checkbox" :style="{ border: fixedHeight ? 'none' : '' }">
+                            <div v-if="fixedHeight === 'mixed'" class="mixed-status">
+                                <div class="mixed"></div>
+                            </div>
+                            <div v-else-if="fixedHeight" class="active">
+                                <svg-icon icon-class="select"></svg-icon>
+                            </div>
+                        </div>
+                        <span>{{ t('attr.fixedHeight') }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="word1"><span>{{ t('attr.fixedWidth') }}</span></div>
-        </div>
-        <div v-if="vertical_position" class="vertical-container">
-            <label style="margin-left: 4%;">{{ t('attr.vertical') }}</label>
-            <Select :selected="verticalSelected" :source="verticalOptions" @select="verticalSelect"></Select>
-            <div class="checkbox2">
-                <div :class="checked2 ? 'visibility' : 'hidden'" @click="fix_height">
-                    <svg-icon v-if="checked2" icon-class="select"></svg-icon>
-                </div>
-            </div>
-            <div class="word2"><span>{{ t('attr.fixedHeight') }}</span></div>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
+
+.disabled {
+    opacity: 0.4;
+    z-index: -1;
+}
+
 .wrap {
     width: 100%;
-    height: 200px;
-    background-color: rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px 18px 8px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
-    .horizontal-container {
+    .content {
         display: flex;
         align-items: center;
+        gap: 12px;
+        width: 100%;
 
-        .word1 {
-            margin-top: -2px;
-            margin-left: 5px;
-        }
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
 
-        .checkbox1 {
-            margin-left: -2px;
-
-            .visibility {
-                flex: 0 0 18px;
-                height: 13px;
-                width: 13px;
-                margin-left: 15px;
-                background-color: var(--active-color);
-                border-radius: var(--default-radius);
-                border: 1px solid var(--input-background);
-                box-sizing: border-box;
-                color: #ffffff;
+            .row {
+                width: 100%;
                 display: flex;
-                justify-content: center;
                 align-items: center;
 
-                >svg {
-                    width: 60%;
-                    height: 60%;
+                >label {
+                    flex: 0 0 42px;
+                    line-height: 32px;
                 }
-            }
 
-            .hidden {
-                flex: 0 0 18px;
-                height: 13px;
-                width: 13px;
-                margin-left: 15px;
-                background-color: transparent;
-                border-radius: var(--default-radius);
-                border: 1px solid var(--input-background);
-                box-sizing: border-box;
-            }
-        }
-
-    }
-
-    .vertical-container {
-        display: flex;
-        align-items: center;
-        margin-top: 5%;
-
-        .word2 {
-            margin-top: -2px;
-            margin-left: 5px;
-        }
-
-        .checkbox2 {
-            margin-left: -2px;
-
-            .visibility {
-                flex: 0 0 18px;
-                height: 13px;
-                width: 13px;
-                margin-left: 15px;
-                background-color: var(--active-color);
-                border-radius: var(--default-radius);
-                border: 1px solid var(--input-background);
-                box-sizing: border-box;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                >svg {
-                    width: 60%;
-                    height: 60%;
+                >.select-container {
+                    flex: 1 1 84px;
+                    height: 32px;
                 }
-            }
 
-            .hidden {
-                flex: 0 0 18px;
-                height: 13px;
-                width: 13px;
-                margin-left: 15px;
-                background-color: transparent;
-                border-radius: var(--default-radius);
-                border: 1px solid var(--input-background);
-                box-sizing: border-box;
+                .checkboxWrap {
+                    flex: 0 0 72px;
+                    height: 14px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    cursor: pointer;
+
+                    >.checkbox {
+                        box-sizing: border-box;
+                        border-radius: 3px;
+                        background-color: transparent;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #808080;
+                        overflow: hidden;
+                        flex: 0 0 14px;
+                        height: 14px;
+
+                        >.mixed-status {
+                            width: 14px;
+                            height: 14px;
+                            background-color: var(--active-color);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >div {
+                                background-color: #ffffff;
+                                width: 7px;
+                                height: 1px;
+                            }
+                        }
+
+                        .active {
+                            width: 14px;
+                            height: 14px;
+                            background-color: var(--active-color);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >svg {
+                                width: 60%;
+                                height: 60%;
+                            }
+                        }
+                    }
+
+                    >span {
+                        margin-left: 4px;
+                    }
+                }
+
+                >.disabledBox {
+                    pointer-events: none;
+                    opacity: 0.3;
+                }
             }
         }
     }

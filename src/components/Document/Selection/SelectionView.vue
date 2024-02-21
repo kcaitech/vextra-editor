@@ -82,9 +82,9 @@ function watchShapes() { // 监听选区相关shape的变化
         }
     })
 }
-function shapesWatcher() {
-    if (props.context.workspace.shouldSelectionViewUpdate) {
-        update_by_shapes();
+function shapesWatcher(...args: any) {
+    if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
+        // update_by_shapes();
     }
 }
 
@@ -187,7 +187,7 @@ function createShapeTracing() {
 /**
  * @description 创建控件
  */
-function createController() {    
+function createController() {
     // const s = Date.now();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
     if (!selection.length) {
