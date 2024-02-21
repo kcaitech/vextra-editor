@@ -92,7 +92,9 @@ function bar_mousemove(event: MouseEvent) {
             ? er_scale(asyncMultiAction, sx, sy, mx, my)
             : irregular_scale(asyncMultiAction, sx, sy, mx, my);
 
-        workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        props.context.nextTick(props.context.selection.selectedPage!, () => {
+            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        })
 
         startPosition = { x: mx, y: my };
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {

@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { ResizingConstraints2, ShapeView } from "@kcdesign/data";
+import { ResizingConstraints, ShapeView } from "@kcdesign/data";
 
 /**
  * @description 获取a点到b点的距离
@@ -47,16 +47,16 @@ export function get_dashes(context: Context, shape: ShapeView, rect: [XY, XY, XY
 
     const center = { x: (rect[0].x + rect[2].x) / 2, y: (rect[0].y + rect[2].y) / 2 };
 
-    const resizing = shape.resizingConstraint || ResizingConstraints2.Mask;
+    // const resizing = shape.resizingConstraint || ResizingConstraints.Mask;
 
-    if (ResizingConstraints2.isFixedToLeft(resizing)) {
-        const s = findPerpendicularFoot(apex2[0], apex2[3], center);
-        const e = get_border_apex(s, center, rect);
+    // if (ResizingConstraints.isFixedToLeft(resizing)) {
+    //     const s = findPerpendicularFoot(apex2[0], apex2[3], center);
+    //     const e = get_border_apex(s, center, rect);
 
-        if (e) {
-            result.push(`M ${s.x} ${s.y} L ${e.x} ${e.y} z`);
-        }
-    }
+    //     if (e) {
+    //         result.push(`M ${s.x} ${s.y} L ${e.x} ${e.y} z`);
+    //     }
+    // }
 
     return result;
 }
