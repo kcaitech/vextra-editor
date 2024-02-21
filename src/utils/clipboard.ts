@@ -1,7 +1,8 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape, Matrix
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
+    TableCellType, TableShape, Matrix, Page
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -884,6 +885,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         if (!page) {
             return;
         }
+        const page_data = adapt2Shape(page) as Page;
 
         let insert_result: { shapes: Shape[] } | false = false;
         let insert_env: Shape = adapt2Shape(page);
@@ -912,7 +914,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
         // 3. 将图层导入文档（还未插入文档）
         const medias = data?.media;
-        const shapes = import_shape_from_clipboard(context.data, source, medias);
+        const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
         if (!shapes.length) {
             throw new Error('invalid source: !shapes.length');
         }
@@ -925,8 +927,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 const env = selection_envs[i];
                 const xy = __xys[i];
                 modify_frame_by_xy(xy, source);
-
-                const shapes = import_shape_from_clipboard(context.data, page.data, source);
+                const shapes = import_shape_from_clipboard(context.data, page_data, source);
                 actions.push({ env, shapes });
             }
             const __res = editor.pasteShapes3(actions);

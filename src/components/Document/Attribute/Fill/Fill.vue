@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView, TableShape, Stop, GradientType, adapt2Shape, BasicArray } from "@kcdesign/data";
+import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableView, Stop, GradientType, BasicArray } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -95,10 +95,6 @@ function updateData() {
             fills.push(..._fs.reverse());
         }
     }
-}
-
-function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
 }
 
 function addFill(): void {

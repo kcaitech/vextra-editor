@@ -914,7 +914,7 @@ const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
         gradient_type.value = props.gradient?.gradientType;
         props.context.color.set_gradient_type(gradient_type.value);
-        // props.context.color.switch_editor_mode(true, props.gradient);
+        props.context.color.switch_editor_mode(true, props.gradient);
         let id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
     } else if (props.fillType === FillType.SolidColor) {
@@ -945,14 +945,7 @@ function update_alpha_indicator(color: Color) {
     const { alpha } = color;
     alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
-function selectionWatcher(t: any) {
-    if (t === Selection.CHANGE_SHAPE && picker_visible.value) {
-        nextTick(() => {
-            update();
-            get_gradient_type();
-        });
-    }
-}
+
 function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
@@ -974,10 +967,20 @@ const is_gradient_selected = () => {
     return shapes[0].type === ShapeType.Contact ? false : true;
 }
 
+watch(() => props.gradient, () => watch_picker(), { deep: true })
+
+watch(() => props.color, () => watch_picker(), { deep: true })
+
+const watch_picker = () => {
+    if (picker_visible.value) {
+        update();
+        get_gradient_type();
+    }
+}
+
 const observer = new ResizeObserver(locate);
 onMounted(() => {
     if (document.body) observer.observe(document.body);
-    props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
     props.context.color.watch(color_watch);
     window.addEventListener('blur', window_blur);
@@ -987,7 +990,6 @@ onMounted(() => {
 onUnmounted(() => {
     observer.disconnect();
     eyeDropper.destroy();
-    props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.color.unwatch(color_watch);
     window.removeEventListener('blur', window_blur);
@@ -1135,6 +1137,7 @@ onUnmounted(() => {
         border: 1px solid #F0F0F0;
         overflow: hidden;
         z-index: 99;
+
         >.header {
             width: 100%;
             height: 40px;

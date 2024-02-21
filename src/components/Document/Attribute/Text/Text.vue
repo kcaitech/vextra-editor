@@ -309,9 +309,8 @@ const _textFormat = () => {
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.underlineIsMulti) isUnderline.value = false
         if (format.strikethroughIsMulti) isDeleteline.value = false
-        if (format.fillTypeIsMulti || format.gradientIsMulti) mixed.value = true;
-        console.log(format, 'format');
-        
+        if (format.fillTypeIsMulti) mixed.value = true;
+        if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText()
     } else {
         let formats: any[] = [];
@@ -378,7 +377,7 @@ const _textFormat = () => {
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
-        if (format.color === 'unlikeness' || format.colorIsMulti === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
+        if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.bold === 'unlikeness') isBold.value = false;
         if (format.italic === 'unlikeness') isTilt.value = false;
@@ -387,7 +386,8 @@ const _textFormat = () => {
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
         if (format.fillType === 'unlikeness' || format.gradient === 'unlikeness') mixed.value = true;
-        if (format.fillTypeIsMulti === 'unlikeness' || format.gradientIsMulti === 'unlikeness') mixed.value = true;
+        if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
+        if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
     }
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
@@ -653,7 +653,7 @@ const setMixedTextColor = () => {
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
         editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
         editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
-        if(format.gradient) {
+        if (format.gradient) {
             editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
@@ -661,7 +661,7 @@ const setMixedTextColor = () => {
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
         editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(alpha, red, green, blue));
         editor.setTextFillTypeMulti(props.textShapes.map(s => adapt2Shape(s)), format.fillType || FillType.SolidColor);
-        if(format.gradient) {
+        if (format.gradient) {
             editor.setTextGradientMulti(props.textShapes.map(s => adapt2Shape(s)), format.gradient);
         }
     }
@@ -723,6 +723,11 @@ function gradient_add_stop(position: number, color: Color, id: string) {
     const g = cloneGradient(gradient.value);
     g.stops.push(stop);
     const s = g.stops as BasicArray<Stop>;
+    s.forEach((v, i) => {
+        const idx = new BasicArray<number>();
+        idx.push(i);
+        v.crdtidx = idx;
+    })
     s.sort((a, b) => {
         if (a.position > b.position) {
             return 1;

@@ -2,19 +2,15 @@ import { Cmd, ICoopNet, serialCmds, parseCmds, RadixConvert } from "@kcdesign/da
 
 export class CoopNet implements ICoopNet {
 
-    private versionId: string = ""
     private send?: (data: any, isListened?: boolean, timeout?: number) => Promise<boolean>
     private watcherList: ((cmds: Cmd[]) => void)[] = []
     private onClose?: () => void
     private isConnected = false
     private pullCmdsPromiseList: Record<string, {
         resolve: (value: Cmd[]) => void,
+        reject: (reason: any) => void
     }[]> = {}
     private radixRevert: RadixConvert = new RadixConvert(62)
-
-    constructor(versionId: string) {
-        this.versionId = versionId
-    }
 
     setSend(send: (data: any, isListened?: boolean, timeout?: number) => Promise<boolean>): this {
         this.send = send
@@ -31,21 +27,25 @@ export class CoopNet implements ICoopNet {
 
     async pullCmds(from: string, to: string): Promise<Cmd[]> {
         if (!this.isConnected) return [];
+        console.log("pullCmds", from, to)
+        if (from) from = this.radixRevert.to(from).toString(10);
+        if (to) to = this.radixRevert.to(to).toString(10);
         this.send?.({
             type: "pullCmds",
             from: from,
             to: to,
         })
-        return new Promise<Cmd[]>(resolve => {
+        return new Promise<Cmd[]>((resolve, reject) => {
             const key = `${from}-${to}`
             const promiseList = this.pullCmdsPromiseList[key]
             if (!promiseList) this.pullCmdsPromiseList[key] = [];
-            promiseList.push({ resolve: resolve })
+            promiseList.push({ resolve: resolve, reject: reject })
         })
     }
 
     async postCmds(cmds: Cmd[]): Promise<boolean> {
         if (!this.isConnected) return false;
+        console.log("postCmds", cmds)
         return this.send?.({
             type: "commit",
             cmds: serialCmds(cmds),
@@ -56,12 +56,8 @@ export class CoopNet implements ICoopNet {
         this.watcherList.push(watcher)
     }
 
-    getWatcherList(): ((cmds: Cmd[]) => void)[] {
-        return this.watcherList
-    }
-
     onMessage(data: any): void {
-        const cmdsData = JSON.parse(data.cmds_data) as any[]
+        const cmdsData = JSON.parse(data.cmds_data ?? '""') as any[]
         let cmds: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
             cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
@@ -71,25 +67,53 @@ export class CoopNet implements ICoopNet {
                 return item.cmd
             })))
         }
-        if (data.type === "commitResult") { // 本地上传到服务器的返回结果
-            if (data.status !== "success") {
+        // pullCmdsResult update errorInvalidParams errorNoPermission errorInsertFailed errorPullCmdsFailed
+        if (data.type === "pullCmdsResult" || data.type === "errorPullCmdsFailed") {
+            if (data.type === "errorPullCmdsFailed") console.log("拉取数据失败");
 
-            }
-        } else if (data.type === "update") { // 服务器推送的cmd
-            if (!Array.isArray(cmds)) {
-                console.log("服务器数据格式错误")
+            if (typeof data.from !== "string" || typeof data.to !== "string") {
+                console.log("返回数据格式错误")
                 return
             }
-            for (const watcher of this.watcherList) watcher(cmds);
-        } else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
-            if (!Array.isArray(cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
-                console.log("服务器数据格式错误")
-                return
-            }
+
             const key = `${data.from}-${data.to}`
             if (!this.pullCmdsPromiseList[key]) return;
-            for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
+
+            if (data.type === "pullCmdsResult") {
+                if (!Array.isArray(cmds)) {
+                    console.log("返回数据格式错误")
+                    for (const item of this.pullCmdsPromiseList[key]) item.reject(new Error("返回数据格式错误"));
+                } else {
+                    console.log("pullCmdsResult", cmds)
+                    for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
+                }
+                if (typeof data.previous_id !== "string") {
+                    console.log("返回数据格式错误，缺少previous_id")
+                }
+            } else {
+                for (const item of this.pullCmdsPromiseList[key]) item.reject(new Error("拉取数据失败"));
+            }
+
             delete this.pullCmdsPromiseList[key]
+        } else if (data.type === "update") {
+            if (!Array.isArray(cmds)) {
+                console.log("返回数据格式错误")
+                return
+            }
+            console.log("update", cmds)
+            for (const watcher of this.watcherList) watcher(cmds);
+        } else if (data.type === "errorInvalidParams") {
+            console.log("参数错误")
+        } else if (data.type === "errorNoPermission") {
+            console.log("无权限")
+        } else if (data.type === "errorInsertFailed") {
+            console.log("数据插入失败", data.cmd_id_list)
+            if (!Array.isArray(data.cmd_id_list)) {
+                console.log("返回数据格式错误")
+                return
+            }
+        } else {
+            console.log("未知的数据类型", data.type)
         }
     }
 }

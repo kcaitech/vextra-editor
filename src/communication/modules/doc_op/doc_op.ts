@@ -1,11 +1,13 @@
 import { Communication } from "@/communication/index"
 import { TunnelType } from "@/communication/types"
 import { CoopNet } from "@/communication/modules/doc_op/coop_net"
-import { Document, CoopRepository } from "@kcdesign/data"
+import { Document, CoopRepository, RadixConvert } from "@kcdesign/data"
 
 export type Options = {
 
 }
+
+const radixRevert: RadixConvert = new RadixConvert(62)
 
 export class DocOp extends Communication {
     private token: string = ""
@@ -28,9 +30,10 @@ export class DocOp extends Communication {
         docOp.repo = repo
         docOp.versionId = versionId
         docOp.onMessage = docOp._onMessage.bind(docOp)
-        docOp.coopNet = new CoopNet(versionId)
+        docOp.coopNet = new CoopNet()
         docOp.coopNet.setSend(docOp.send.bind(docOp))
         repo.setNet(docOp.coopNet)
+        repo.setBaseVer(radixRevert.from(document.lastCmdId))
         return docOp
     }
 
