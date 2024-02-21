@@ -5,7 +5,6 @@ import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
 import { is_symbol_class } from '@/utils/controllerFn';
-import { throttle } from 'lodash';
 
 const watchedShapes = new Map();
 
