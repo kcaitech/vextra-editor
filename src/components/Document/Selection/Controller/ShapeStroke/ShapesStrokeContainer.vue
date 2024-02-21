@@ -5,6 +5,7 @@ import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
 import { is_symbol_class } from '@/utils/controllerFn';
+import { throttle } from 'lodash';
 
 const watchedShapes = new Map();
 
@@ -43,7 +44,6 @@ function selection_watcher(t?: number) {
         update_paths();
     }
 }
-
 function update_paths() {
     const shapes = props.context.selection.selectedShapes;
     const workspace = props.context.workspace;

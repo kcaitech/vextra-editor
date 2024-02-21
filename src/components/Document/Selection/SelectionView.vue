@@ -15,6 +15,7 @@ import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
+import { throttle } from "lodash";
 
 export interface Point {
     x: number
@@ -184,10 +185,14 @@ function createShapeTracing() {
     }
 }
 
+const createController = throttle(_createController, 10, { leading: true, trailing: true })
+
 /**
  * @description 创建控件
  */
-function createController() {
+function _createController() {
+    console.log('_createController emit');
+    
     // const s = Date.now();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
     if (!selection.length) {
