@@ -11,6 +11,6 @@ call npm i
 call npm run build:web
 
 docker build -t webapp:%VERSION_TAG% -f Dockerfile ../../
-docker tag webapp:%VERSION_TAG% docker-registry.protodesign.cn:35000/webapp:%VERSION_TAG%
-docker login docker-registry.protodesign.cn:35000 -u kcai -p kcai1212
-docker push docker-registry.protodesign.cn:35000/webapp:%VERSION_TAG%
+docker tag webapp:%VERSION_TAG% registry.protodesign.cn:36000/kcserver/webapp:%VERSION_TAG%
+docker login registry.protodesign.cn:36000 -u admin -p Kcai1212
+docker push registry.protodesign.cn:36000/kcserver/webapp:%VERSION_TAG%

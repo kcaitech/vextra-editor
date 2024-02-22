@@ -37,7 +37,7 @@ export class DocOp extends WatchableObject {
     }
 
     public hasPendingSyncCmd(): boolean {
-        return this.docOp?.hasPendingSyncCmd?.() ?? false
+        return this.docOp?.hasPendingSyncCmd() ?? false
     }
 
     public close() {
