@@ -65,9 +65,10 @@
             </div>
             <div class="centent">
                 <div class="textarea-container">
-                    <textarea v-if="!(titlevalue === t('teamsetting.title_name1'))" class="text-textarea"
+                    <textarea v-if="!(titlevalue === t('teamsetting.title_name1'))" v-focus class="text-textarea"
                         :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue"></textarea>
-                    <input v-else class="text-input" type="text" v-model="textareaValue" :maxlength="maxvalue" required>
+                    <input v-else v-focus class="text-input" type="text" v-model="textareaValue"
+                        :maxlength="maxvalue" required>
                 </div>
             </div>
             <div class="addproject">
@@ -135,19 +136,6 @@ const isDisabled: any = computed(() => {
     return (teamSelfPermType.value < 2 && teamSelfPermType.value !== 255) ? false : true
 })
 
-
-//获取元素，设置焦点并全选内容
-const el = () => {
-    const el = document.querySelector('.text-textarea') as HTMLTextAreaElement
-    el.focus()
-    el.select()
-}
-
-const el2 = () => {
-    const el = document.querySelector('.text-input') as HTMLTextAreaElement
-    el.focus()
-    el.select()
-}
 //关闭弹窗
 const closeDisband = () => {
     showDialog.value = false;
@@ -282,7 +270,6 @@ const midname = () => {
     titlevalue.value = t('teamsetting.title_name1')
     textareaValue.value = teamName.value
     maxvalue.value = 20
-    nextTick(() => el2())
 }
 
 const middescription = () => {
@@ -291,7 +278,6 @@ const middescription = () => {
     titlevalue.value = t('teamsetting.title_name2')
     textareaValue.value = teamDescription.value
     maxvalue.value = 120
-    nextTick(() => el())
 }
 
 const dissolveteam = () => {

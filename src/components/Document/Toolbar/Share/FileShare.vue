@@ -328,7 +328,7 @@ const shareSwitch = () => {
     <template #header>
       <div class="card-header">
         <div class="title">{{ t('share.file_sharing') }}</div>
-        <div class="close" @click.stop="emit('close')">
+        <div class="close" @click.stop="emit('close')" @mousedown.stop>
           <svg-icon icon-class="close"></svg-icon>
         </div>
       </div>

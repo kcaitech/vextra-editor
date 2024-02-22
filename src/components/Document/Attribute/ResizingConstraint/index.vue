@@ -257,7 +257,7 @@ function modifyHeightStatus() {
         return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Height);
     }
 }
-
+clearTimeout
 const update = throttle(_update, 160, { leading: true });
 
 // 这里在下代协作算法出来后可以优化

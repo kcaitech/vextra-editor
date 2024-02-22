@@ -279,7 +279,8 @@ onUnmounted(() => {
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-else class="attr-wrapper">
-                <Arrange :context="props.context" :shapes="shapes"></Arrange>
+                <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
+                    :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>

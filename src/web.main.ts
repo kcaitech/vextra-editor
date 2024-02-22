@@ -1,4 +1,4 @@
-import { createApp } from "vue"
+import { createApp, nextTick } from "vue"
 import App from "./App.vue"
 import i18n from "./i18n"
 import SvgIcon from '@/components/common/SvgIcon.vue'
@@ -14,4 +14,13 @@ app.use(i18n)
 app.component('svg-icon', SvgIcon)
 app.use(ElementPlus)
 app.use(router)
+app.directive('focus', {
+    mounted: (el) => {
+        el.focus()
+        nextTick(() => {
+            el.select()
+        })
+    }
+})
+
 app.mount("#app")

@@ -49,7 +49,7 @@ watch(() => props.projectVisible, (newvalue) => {
 
 <template>
     <el-dialog class="my_content" v-model="isshow" width=480 align-center :close-on-click-modal="false"
-        :before-close="handleClose" :show-close="false">
+        :before-close="handleClose" :show-close="false" :destroy-on-close="true">
         <template #header>
             <div class="my-header">
                 <div class="title">{{ title }}</div>
