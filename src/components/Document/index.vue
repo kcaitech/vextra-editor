@@ -402,9 +402,7 @@ const getDocumentInfo = async () => {
             init_keyboard_uints();
             const docId = route.query.id as string;
             const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
-            if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId, {
-                repoPendingCmdListBeforeStart: repoPendingCmdListBeforeStart,
-            })) {
+            if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
                 router.push("/files");
                 return;
             }
@@ -484,8 +482,6 @@ function init_keyboard_uints() {
     uninstall_keyboard_units = keyboardUints(context)
 }
 
-type FuncType = (...args: any[]) => any;
-const repoPendingCmdListBeforeStart: Cmd[] = []; // 保存在start前repo产生的cmd
 function init_doc() {
     if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
