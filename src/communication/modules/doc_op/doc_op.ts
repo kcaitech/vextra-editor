@@ -38,7 +38,7 @@ export class DocOp extends Communication {
     }
 
     public hasPendingSyncCmd(): boolean {
-        return false;
+        return !!this.repo?.hasPendingSyncCmd();
     }
 
     private _onMessage(data: any) {
