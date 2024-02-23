@@ -460,3 +460,27 @@ export function modifyOpacity(context: Context, val: number) {
     editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
     hidden_selection(context);
 }
+
+export function modifyXYByAlignSetting(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.round(xy.x);
+        xy.y = Math.round(xy.y);
+    }
+    return xy;
+}
+
+export function modifyXYByAlignSettingCell(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.ceil(xy.x);
+        xy.y = Math.ceil(xy.y);
+    }
+    return xy;
+}
+
+export function modifyXYByAlignSettingFloor(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.floor(xy.x);
+        xy.y = Math.floor(xy.y);
+    }
+    return xy;
+}

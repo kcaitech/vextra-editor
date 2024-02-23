@@ -4,7 +4,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
-import { getHorizontalAngle } from '@/utils/common';
+import { getHorizontalAngle, modifyXYByAlignSetting } from '@/utils/common';
 import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
@@ -289,6 +289,7 @@ function modify_page_xy_1(e: MouseEvent) {
     const { x, y } = props.context.workspace.getContentXY(e);
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
     page_xy_1 = matrix1.computeCoord2(x, y);
+    modifyXYByAlignSetting(props.context, page_xy_1);
 }
 
 function modify_client_xy_1(e: MouseEvent) {
@@ -361,9 +362,8 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
         }
         asyncCreator.setFrame({ x: p2.x, y: p2.y });
     } else {
-        const del = x - page_xy_2.x;
-        y = page_xy_2.y + del;
-        console.log('delta xy:', x - page_xy_1.x, y - page_xy_1.y);
+        const del = x - page_xy_1.x;
+        y = page_xy_1.y + del;
         asyncCreator.setFrame({ x, y });
     }
 }
@@ -376,7 +376,7 @@ function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
-    const shapeFrame = new ShapeFrame(x, y, 4, 4);
+    const shapeFrame = new ShapeFrame(page_xy_1.x, page_xy_1.y, Math.abs(x - page_xy_1.x), Math.abs(y - page_xy_1.y));
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {
@@ -409,10 +409,12 @@ function modify_new_shape_frame(e: MouseEvent) {
         if (isOut) return;
         if (newShape && newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
-        } else if (e.shiftKey) {
-            er_frame(asyncCreator, x, y); // 等比
         } else {
-            asyncCreator.setFrame(correct_page_xy(x, y));
+            if (e.shiftKey) {
+                er_frame(asyncCreator, x, y); // 等比
+            } else {
+                asyncCreator.setFrame(correct_page_xy(x, y));
+            }
         }
     }
 }
