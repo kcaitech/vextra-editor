@@ -96,7 +96,9 @@ function point_mousemove(event: MouseEvent) {
 
         startPosition = { x: mx, y: my };
 
-        workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        props.context.nextTick(props.context.selection.selectedPage!, () => {
+            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        })
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         set_status_before_action();
 

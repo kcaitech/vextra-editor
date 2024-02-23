@@ -600,7 +600,7 @@ onUnmounted(() => {
             width: 100%;
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            // justify-content: space-between;
             align-items: center;
             margin-top: 4px;
 

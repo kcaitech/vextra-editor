@@ -12,11 +12,12 @@ import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
 import Opacity from './Opacity/Opacity.vue';
+import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
@@ -84,6 +85,7 @@ const symbol_attribute = ref<boolean>(true);
 const opacity = ref<boolean>(false);
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
+const constraintShow = ref<boolean>(true);
 
 const reflush_by_selection = ref<number>(0);
 const reflush_by_table_selection = ref<number>(0);
@@ -108,6 +110,7 @@ function _selection_change() {
     shapes.value = [];
     textShapes.value = [];
     opacity.value = false;
+    constraintShow.value = true;
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
@@ -118,12 +121,20 @@ function _selection_change() {
         if (!shape.isVirtualShape) {
             opacity.value = true;
         }
+        if (!is_constrainted(shape)) {
+            constraintShow.value = false;
+        }
     }
 
     reflush_by_selection.value++;
     reflush.value++;
 }
+
 const selection_change = debounce(_selection_change, 160, { leading: true });
+
+function is_constrainted(shape: ShapeView) {
+    return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
+}
 
 // 表格选区变化
 function table_selection_change() {
@@ -132,10 +143,19 @@ function table_selection_change() {
 
 // 选区图层变化
 function update_by_shapes(...args: any[]) {
+    modify_constraint_show();
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
     reflush.value++;
 }
+
+function _modify_constraint_show() {
+    constraintShow.value = props.context.selection.selectedShapes.every(
+        s => is_constrainted(s)
+    );
+}
+
+const modify_constraint_show = throttle(_modify_constraint_show, 160, { leading: true });
 
 // 表格选区单元格变化
 function update_by_cells(...args: any[]) {
@@ -259,10 +279,14 @@ onUnmounted(() => {
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-else class="attr-wrapper">
-                <Arrange :context="props.context" :shapes="shapes"></Arrange>
+                <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
+                    :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
+                    :selection-change="reflush_by_selection">
+                </ResizingConstraints>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>

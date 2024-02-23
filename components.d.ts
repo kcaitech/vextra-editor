@@ -245,6 +245,7 @@ declare module '@vue/runtime-core' {
     SCVisible: typeof import('./src/components/Document/Attribute/Module/ComponentStatusCard/SCVisible.vue')['default']
     SearchPanel: typeof import('./src/components/Document/Navigation/Search/SearchPanel.vue')['default']
     Select: typeof import('./src/components/common/Select.vue')['default']
+    Select2: typeof import('./src/components/common/Select2.vue')['default']
     SelectBySearch: typeof import('./src/components/Document/Selection/Controller/Text/SelectBySearch.vue')['default']
     SelectFont: typeof import('./src/components/Document/Attribute/Text/SelectFont.vue')['default']
     SelectionView: typeof import('./src/components/Document/Selection/SelectionView.vue')['default']

@@ -106,7 +106,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding: 9px 0 9px 12px;
+    padding: 9px 8px;
+    margin-right: 5px;
     color: #000000;
 
     &:hover {
@@ -126,7 +127,7 @@ onUnmounted(() => {
         width: 24px;
         height: 24px;
         border-radius: 4px;
-        margin-right: 3px;
+        // margin-right: 3px;
         display: flex;
         align-items: center;
         justify-content: center;
