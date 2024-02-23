@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TableCell, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -37,13 +37,11 @@ import { GradientFrom, getTextIndexAndLen, get_add_gradient_color, isSelectText 
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
-import { onUpdated } from 'vue';
-
 
 interface Props {
     context: Context
     color: Color
-    locat?: { index: number, type: GradientFrom }
+    locat?: { index: number, type: GradientFrom } | 'table'
     fillType?: FillType
     gradient?: Gradient
     late?: number
@@ -658,7 +656,7 @@ function triggle() {
 function colorPickerMount() {
     picker_visible.value = true;
     props.context.menu.setupColorPicker(blockId);
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+    if (props.locat && props.locat !== 'table') props.context.color.gradinet_locat(props.locat);
     update();
     init_document_colors();
     switch_editor_mode();
@@ -691,7 +689,7 @@ function removeCurColorPicker() {
     props.context.color.clear_locat();
 }
 function switch_editor_mode() {
-    if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
+    if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient && props.locat === 'table')) {
         return;
     }
     props.context.color.switch_editor_mode(true, props.gradient);
@@ -846,17 +844,45 @@ function move_stop_position(e: MouseEvent) {
             const page = props.context.selection.selectedPage;
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const locat = props.locat;
-            if (locat.type !== 'text') {
+            if (locat !== 'table' && locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
             } else {
                 if (!props.gradient) return;
-                const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                if (isSelectText(props.context)) {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, 0, Infinity);
+                if (locat === 'table') {
+                    const tableSelection = props.context.tableSelection;
+                    const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+                    if (tableSelection.editingCell) {
+                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const editor_text = props.context.editor4TextShape(table_cell);
+                        if (isSelectText(props.context)) {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, 0, Infinity);
+                        } else {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, textIndex, selectLength);
+                        }
+                    } else {
+                        let cells: (TableCell | undefined)[] = []
+                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                            cells = Array.from(table_shape.data.cells.values()) || [];
+                        } else {
+                            cells = tableSelection.getSelectedCells(true).map(item => item.cell) || [];
+                        }
+                        if (!cells[0]) return;
+                        const editor = props.context.editor4Table(table_shape);
+                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                            gradientEditor = editor.asyncSetTextGradient(props.gradient);
+                        } else {
+                            gradientEditor = editor.asyncSetTextGradient(props.gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                        }
+                    }
                 } else {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, textIndex, selectLength);
+                    const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
+                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                    if (isSelectText(props.context)) {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, 0, Infinity);
+                    } else {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, textIndex, selectLength);
+                    }
                 }
             }
         }
@@ -882,7 +908,7 @@ function color_type_change(val: GradientType | 'solid') {
     update_gradient_type(val);
     nextTick(() => {
         set_gradient(val);
-        if (props.locat) props.context.color.gradinet_locat(props.locat);
+        if (props.locat && props.locat !== 'table') props.context.color.gradinet_locat(props.locat);
         update();
         locate();
     })
@@ -894,9 +920,9 @@ const set_gradient = (val: GradientType | 'solid') => {
         props.context.color.switch_editor_mode(false);
     } else {
         props.context.color.set_gradient_type(val);
-        props.context.color.switch_editor_mode(true, props.gradient);
+        if (props.locat && props.locat !== 'table') props.context.color.switch_editor_mode(true, props.gradient);
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+    if (props.locat && props.locat !== 'table') props.context.color.gradinet_locat(props.locat);
 }
 // 切换渐变类型
 function update_gradient_type(type: GradientType | 'solid') {
@@ -907,15 +933,18 @@ function update_gradient_type(type: GradientType | 'solid') {
         if (id === undefined) id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
     }
-    gradient_type.value = type;
+    nextTick(() => {
+        gradient_type.value = type;
+    })
 }
 // 获取渐变类型
 const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
         gradient_type.value = props.gradient?.gradientType;
         props.context.color.set_gradient_type(gradient_type.value);
-        props.context.color.switch_editor_mode(true, props.gradient);
-        let id = props.gradient?.stops[0].id;
+        if (props.locat && props.locat !== 'table') props.context.color.switch_editor_mode(true, props.gradient);
+        let id = props.context.color.selected_stop;
+        if (id === undefined) id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
     } else if (props.fillType === FillType.SolidColor) {
         gradient_type.value = 'solid';
@@ -924,7 +953,7 @@ const get_gradient_type = () => {
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+    if (props.locat && props.locat !== 'table') props.context.color.gradinet_locat(props.locat);
 }
 // 渐变翻转
 function reverse() {
@@ -962,9 +991,25 @@ function window_blur() {
     isDrag = false;
 }
 const is_gradient_selected = () => {
-    const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) return true;
-    return shapes[0].type === ShapeType.Contact ? false : true;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    if (shapes.length === 1) {
+        if (shapes[0].type === ShapeType.Table && props.locat && props.locat !== 'table') {
+            const t = props.context.tableSelection;
+            if (t.editingCell || !(t.tableRowStart < 0 || t.tableColStart < 0)) {
+                return false;
+            }
+        }
+        return shapes[0].type === ShapeType.Contact ? false : true;
+    } else {
+        let ret = false;
+        shapes.forEach((s) => {
+            if (s.type !== ShapeType.Contact) {
+                ret = true;
+            }
+        })
+        return ret;
+    }
 }
 
 watch(() => props.gradient, () => watch_picker(), { deep: true })
@@ -1019,7 +1064,8 @@ onUnmounted(() => {
                 </ColorType>
             </div>
             <!-- 渐变工具 -->
-            <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient" class="gradient-container">
+            <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
+                class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
                         @mouseup.stop="_gradient_channel_down"></div>

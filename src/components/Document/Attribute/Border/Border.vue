@@ -406,7 +406,7 @@ const alphaInput = (e: Event) => {
 }
 const filterAlpha = (border: Border) => {
     let a: number = 100;
-    if (border.fillType === FillType.SolidColor) {
+    if (border.fillType === FillType.SolidColor || !isGradient()) {
         a = border.color.alpha * 100;
     } else if (border.gradient && border.fillType === FillType.Gradient) {
         const opacity = border.gradient.gradientOpacity;
@@ -601,6 +601,18 @@ function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
 }
 
+const isGradient = () => {
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    let ret = false;
+    shapes.forEach(s => {
+        if (s.type !== ShapeType.Contact) {
+            ret = true;
+        }
+    })
+    return ret;
+}
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 onMounted(() => {
@@ -641,18 +653,18 @@ onUnmounted(() => {
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
                         :locat="{ index: borders.length - idx - 1, type: 'borders' }" @change="(c: Color) => getColorFromPicker(c, idx)"
-                        @gradient-reverse="() => gradient_reverse(idx)" :gradient="b.border.gradient"
+                        @gradient-reverse="() => gradient_reverse(idx)" :gradient="isGradient() ? b.border.gradient : undefined"
                         :fillType="b.border.fillType" @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
                     <input ref="colorBorder" class="colorBorder" :spellcheck="false"
-                        v-if="b.border.fillType !== FillType.Gradient" :value="(toHex(b.border.color)).slice(1)"
+                        v-if="b.border.fillType !== FillType.Gradient || !isGradient()" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                     <span class="colorBorder" style="line-height: 14px;"
-                        v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient">{{
+                        v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
                             t(`color.${b.border.gradient.gradientType}`) }}</span>
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
                         :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
@@ -777,6 +789,7 @@ onUnmounted(() => {
                     margin-left: 8px;
                     flex: 1;
                     font-size: 12px;
+                    box-sizing: border-box;
                 }
 
                 .alphaBorder {
@@ -787,6 +800,7 @@ onUnmounted(() => {
                     //margin-left: 20%;
                     text-align: center;
                     font-size: 12px;
+                    box-sizing: border-box;
                 }
 
                 input+input {

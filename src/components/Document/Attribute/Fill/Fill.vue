@@ -654,6 +654,7 @@ onUnmounted(() => {
                     margin-left: 8px;
                     flex: 1;
                     font-size: 12px;
+                    box-sizing: border-box;
                 }
 
                 .alphaFill {
@@ -663,6 +664,7 @@ onUnmounted(() => {
                     width: 37px;
                     text-align: center;
                     font-size: 12px;
+                    box-sizing: border-box;
                 }
 
                 input+input {

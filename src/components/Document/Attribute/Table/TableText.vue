@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -379,8 +379,10 @@ const textFormat = () => {
     } else {
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
+            // 整个表格的单元格
             cells = Array.from(props.shape.data.cells.values()) || [];
         } else {
+            // 选中多个单元格
             cells = table.getSelectedCells(true).map(item => item.cell) || [];
         }
         shape.value = undefined
@@ -403,6 +405,21 @@ const textFormat = () => {
                 for (let i = 1; i < formats.length; i++) {
                     if (formats[i][key] && referenceValue && (key === 'color' || key === 'highlight')) {
                         if (!(formats[i][key] as Color).equals(referenceValue as Color)) {
+                            foundEqual = false;
+                            break;
+                        }
+                    } else if (key === 'gradient') {
+                        if (formats[i][key]) {
+                            if (!referenceValue) {
+                                foundEqual = false;
+                                break;
+                            }
+                            if (!(gradient_equals(formats[i][key], referenceValue))) {
+                                foundEqual = false;
+                                break;
+                            }
+                        }
+                        else if (referenceValue) {
                             foundEqual = false;
                             break;
                         }
@@ -447,6 +464,7 @@ const textFormat = () => {
         if (format.fillType === 'unlikeness' || format.gradient === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
+        if (format.gradient === 'unlikeness') gradient.value = undefined;
     }
 }
 
@@ -736,6 +754,50 @@ const addTextColor = () => {
     textFormat();
 }
 
+const setMixedTextColor = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    let format: AttrGetter
+    if (shape.value) {
+        const editor = props.context.editor4TextShape(shape.value);
+        format = shape.value.text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr());
+        const { alpha, red, green, blue} = format.color || new Color(1, 6, 6, 6);
+        editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
+        editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
+        if(format.gradient) {
+            editor.setTextGradient(format.gradient, textIndex, selectLength);
+        }
+    } else {
+        const table = props.shape;
+        const table_Selection = props.context.tableSelection;
+        let cells: (TableCell | undefined)[] = []
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            cells = Array.from(table.data.cells.values()) || [];
+        } else {
+            cells = table_Selection.getSelectedCells(true).map(item => item.cell) || [];
+        }
+        if(!cells[0]) return;
+        const cell_editor = props.context.editor4TextShape(cells[0] as any);
+        const forma = (cells[0].text as Text).getTextFormat(0, 1, cell_editor.getCachedSpanAttr());
+        const { alpha, red, green, blue } = forma.color || new Color(1, 6, 6, 6);
+        const editor = props.context.editor4Table(table)
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextColor(new Color(alpha, red, green, blue));
+            editor.setTextFillType(forma.fillType || FillType.SolidColor);
+            if(forma.gradient) {
+                editor.setTextGradient(forma.gradient);
+            }
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextColor(new Color(alpha, red, green, blue), cell_selection);
+            editor.setTextFillType(forma.fillType || FillType.SolidColor, cell_selection);
+            if(forma.gradient) {
+                editor.setTextGradient(forma.gradient, cell_selection);
+            }
+        }
+    }
+    textFormat();
+}
+
 const togger_gradient_type = (type: GradientType | 'solid') => {
     const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
     const g = type !== 'solid' && getGradient(gradient.value, type, textColor.value!);
@@ -828,6 +890,14 @@ function gradient_add_stop(position: number, color: Color, id: string) {
     })
     editor_gradient(g);
 }
+
+function gradient_stop_delete(index: number) {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    g.stops.splice(index, 1);
+    editor_gradient(g);
+}
+
 function gradient_reverse() {
     if (!gradient.value) return;
     const g = cloneGradient(gradient.value);
@@ -938,7 +1008,6 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
-                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
@@ -1040,12 +1109,12 @@ onUnmounted(() => {
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
-                        :fill-type="fillType" :gradient="gradient" @gradient-type="(type) => togger_gradient_type(type)"
-                        @change="c => getColorFromPicker(c, 'color')"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="'table'"
+                        :fill-type="fillType" :gradient="gradient instanceof Gradient ? gradient : undefined"
+                        @gradient-type="(type) => togger_gradient_type(type)" @change="c => getColorFromPicker(c, 'color')"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
-                        @gradient-rotate="gradient_rotate">
+                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
                     <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor" @focus="selectColorValue"
                         :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
@@ -1061,7 +1130,7 @@ onUnmounted(() => {
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                     </div>
-                    <div class="add" @click="addTextColor">
+                    <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>

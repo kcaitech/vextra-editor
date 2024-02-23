@@ -388,6 +388,7 @@ const _textFormat = () => {
         if (format.fillType === 'unlikeness' || format.gradient === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
+        if (format.gradient === 'unlikeness') gradient.value = undefined;
     }
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
@@ -739,6 +740,14 @@ function gradient_add_stop(position: number, color: Color, id: string) {
     })
     editor_gradient(g);
 }
+
+function gradient_stop_delete(index: number) {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    g.stops.splice(index, 1);
+    editor_gradient(g);
+}
+
 function gradient_reverse() {
     if (!gradient.value) return;
     const g = cloneGradient(gradient.value);
@@ -1008,7 +1017,7 @@ onUnmounted(() => {
                         @change="c => getColorFromPicker(c, 'color')" @gradient-type="(type) => togger_gradient_type(type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
-                        @gradient-rotate="gradient_rotate">
+                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
                     <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor" @focus="selectColorValue"
                         :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
