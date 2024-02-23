@@ -71,12 +71,10 @@ export class CoopNet implements ICoopNet {
         if (data.type === "pullCmdsResult" || data.type === "errorPullCmdsFailed") {
             if (data.type === "errorPullCmdsFailed") console.log("拉取数据失败");
 
-            if (typeof data.from !== "string" || typeof data.to !== "string") {
-                console.log("返回数据格式错误")
-                return
-            }
+            const from = typeof data.from === "string" ? data.from : ""
+            const to = typeof data.to === "string" ? data.to : ""
 
-            const key = `${data.from}-${data.to}`
+            const key = `${from}-${to}`
             if (!this.pullCmdsPromiseList[key]) return;
 
             if (data.type === "pullCmdsResult") {
