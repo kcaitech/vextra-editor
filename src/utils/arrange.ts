@@ -1,4 +1,4 @@
-import { Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { PositonAdjust } from "@kcdesign/data";
 // 群的最左端
 export function get_colony_left(shapes: ShapeView[]) {
@@ -347,12 +347,13 @@ export function align_left(shapes: ShapeView[]) {
     if (!first_p) {
         return [];
     }
+
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_left([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_left(shapes);
+        } else {
+            c_apex = get_colony_left([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
@@ -368,6 +369,7 @@ export function align_left(shapes: ShapeView[]) {
         const s_apex = get_individuality_left(shape);
         actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
     }
+
     return actions;
 }
 // 水平线对齐
@@ -385,10 +387,10 @@ export function align_cneter_x(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_center_x([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_center_x(shapes);
+        } else {
+            c_apex = get_colony_center_x([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
@@ -421,10 +423,10 @@ export function align_right(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_right([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_right(shapes);
+        } else {
+            c_apex = get_colony_right([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
@@ -457,10 +459,10 @@ export function align_top(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_top([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_top(shapes);
+        } else {
+            c_apex = get_colony_top([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
@@ -493,10 +495,10 @@ export function align_cneter_y(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_center_y([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_center_y(shapes);
+        } else {
+            c_apex = get_colony_center_y([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
@@ -528,10 +530,10 @@ export function align_bottom(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        if (shapes.length === 1) {
-            c_apex = get_colony_bottom([first, first_p]);
-        } else {
+        if (first.childs.length > 1) {
             c_apex = get_colony_bottom(shapes);
+        } else {
+            c_apex = get_colony_bottom([first]);
         }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
