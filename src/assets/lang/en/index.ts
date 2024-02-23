@@ -9,4 +9,4 @@ export * from "./shadow"
 export * from "./cutout"
 export * from "./component"
 export * from "./report"
-
+export * from "./setting"

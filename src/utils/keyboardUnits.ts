@@ -8,6 +8,7 @@ import { deleteUnits } from "./delete";
 import { enter_path_edit_mode } from "./pathedit";
 import { untie_instance } from "./symbol";
 import { modifyOpacity } from "./common";
+import { message } from "./message";
 
 // todo 键盘事件的权限处理
 
@@ -560,4 +561,16 @@ keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Tab'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     // TODO 选区切换
+}
+
+keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    if (event.shiftKey && (event.ctrlKey || event.metaKey)) {
+        const status = context.user.isPixelAlignMent;
+        context.user.modifyPixelAlignment(!status);
+        message('info', status
+            ? context.workspace.t('setting.pixelAlignMentOff')
+            : context.workspace.t('setting.pixelAlignMentOn'));
+        return;
+    }
 }
