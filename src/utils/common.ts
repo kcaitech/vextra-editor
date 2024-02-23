@@ -1,10 +1,10 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
-import { selectShapes } from './content';
+import { hidden_selection, selectShapes } from './content';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
@@ -173,10 +173,15 @@ export function is_box_outer_view(box: { top: number, bottom: number, left: numb
     return (box.right > right - x) || (box.left < 0) || (box.top < 0) || (box.bottom > bottom - y);
 }
 export function is_box_outer_view2(shapes: Shape[], context: Context) {
-    const wm = context.workspace.matrix, { x, right, y, bottom } = context.workspace.root;
+    const wm = context.workspace.matrix
+    const { x, right, y, bottom } = context.workspace.root;
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const f = shapes[i].frame, p = wm.computeCoord3(f);
-        if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) return true;
+        const f = shapes[i].frame;
+        const p = wm.computeCoord3(f);
+        
+        if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) {
+            return true;
+        }
     }
     return false;
 }
@@ -287,17 +292,18 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
 }
+/**
+ * @param includes 需要全包含
+ */
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
 
     if (isIncluded2(selectorPoints, points)) {
         return true;
     }
-
     if (includes) {
         return false;
     }
-
     if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
         return true;
     }
@@ -429,7 +435,8 @@ export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_p
     el.style.top = top + 'px';
 }
 
-export function isInt(num: number) {
+export function isInt(num: number, fix = 2) {
+    num = Number(num.toFixed(fix));
     return (num | 0) === num;
 }
 
@@ -439,8 +446,16 @@ export function format_value(val: number | string, fix = 2) {
     }
 
     if (isInt(val)) {
-        return val;
+        return Number(val.toFixed(0));
     }
 
     return val.toFixed(fix);
+}
+
+export function modifyOpacity(context: Context, val: number) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
+    hidden_selection(context);
 }

@@ -1,13 +1,10 @@
 import {
     CoopRepository,
     TaskMgr,
-    Task,
     WatchableObject,
-    TaskPriority,
     TableShape,
     TableEditor,
     Text,
-    SymbolShape,
     PageView,
     ShapeView,
     adapt2Shape,
@@ -36,7 +33,11 @@ import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
+import { PdMedia } from "./medias";
+import { User } from './user';
+
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { startLoadTask } from "./loadtask";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -71,13 +72,13 @@ export class RepoWraper {
         throw new Error("Not implemented")
     }
 
-    onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
-        return this.m_repo.onCommit(...args)
-    }
+    // onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
+    //     return this.m_repo.onCommit(...args)
+    // }
 
-    onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
-        return this.m_repo.onUndoRedo(...args)
-    }
+    // onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
+    //     return this.m_repo.onUndoRedo(...args)
+    // }
 }
 
 export class Context extends WatchableObject {
@@ -100,6 +101,8 @@ export class Context extends WatchableObject {
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
+    private m_medias: PdMedia;
+    private m_user: User;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -112,6 +115,7 @@ export class Context extends WatchableObject {
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
+        repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
         this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
@@ -127,57 +131,10 @@ export class Context extends WatchableObject {
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
-        const pagelist = data.pagesList.slice(0);
-        const checkSymLoaded: (() => boolean)[] = [];
-        const pageloadTask = new class implements Task { // page auto loader
-            isValid(): boolean {
-                return !this.isDone();
-            }
-
-            isDone(): boolean {
-                return pagelist.length <= 0;
-            }
-
-            async run(): Promise<void> {
-                let id;
-                while (pagelist.length > 0) {
-                    const i = pagelist[0];
-                    if (data.pagesMgr.getSync(i.id)) {
-                        pagelist.splice(0, 1);
-                    } else {
-                        id = i.id;
-                        break;
-                    }
-                }
-                if (id) {
-                    await data.pagesMgr.get(id);
-                    pagelist.splice(0, 1);
-                    for (let i = 0; i < checkSymLoaded.length;) {
-                        if (checkSymLoaded[i]()) {
-                            checkSymLoaded.splice(i, 1);
-                        } else {
-                            ++i;
-                        }
-                    }
-                }
-            }
-        }
-
-        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
-        this.m_taskMgr.startLoop();
-
-        // symbol loader
-        data.symbolsMgr.setLoader(async (id: string): Promise<SymbolShape> => {
-            return new Promise((resolve, reject) => {
-                checkSymLoaded.push(() => {
-                    const sym = data.symbolsMgr.getSync(id);
-                    if (sym) resolve(sym);
-                    else if (pageloadTask.isDone()) reject();
-                    else return false;
-                    return true;
-                })
-            })
-        })
+        this.m_medias = new PdMedia(this);
+        this.m_user = new User();
+        
+        startLoadTask(data, this.m_taskMgr);
     }
 
     get editor(): Editor {
@@ -291,6 +248,14 @@ export class Context extends WatchableObject {
         return this.m_path;
     }
 
+    get medias() {
+        return this.m_medias;
+    }
+
+    get user() {
+        return this.m_user;
+    }
+
     private createVDom(page: Page) {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
@@ -305,7 +270,7 @@ export class Context extends WatchableObject {
     getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
-        page = page instanceof PageView? page.data : page;
+        page = page instanceof PageView ? page.data : page;
         return this.createVDom(page);
     }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -25,6 +25,8 @@ import Apex from './Apex.vue';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface BorderItem {
     id: number
@@ -84,17 +86,16 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variable'))) {
-        updateData();
-        apex_view.value++;
-    }
+    if ((args.includes('style') || args.includes('variable'))) [
+        updateData()
+    ]
 }
 
 function updateData() {
     borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = props.context.selection.selectedShapes;
+    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
     const shape = selecteds[0];
     if (selecteds.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         const table = props.context.tableSelection;
@@ -157,7 +158,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).data.isBoolOpShape)) {
         const shape = props.shapes[0] as TableView;
         if (shape.type === ShapeType.Table) {
@@ -194,14 +195,16 @@ function addBorder() {
         }
     } else if (len.value > 1) {
         if (mixed.value) {
-            const actions = get_actions_border_unify(props.shapes);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_border_unify(shapes);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesBordersUnify(actions);
             }
         } else {
-            const actions = get_actions_add_boder(props.shapes, border);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_add_boder(shapes, border);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -227,7 +230,7 @@ function addBorder() {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -268,7 +271,8 @@ function deleteBorder(idx: number) {
             editor.value.deleteBorder(_idx);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_delete(props.shapes, _idx);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_delete(shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -284,7 +288,7 @@ function deleteBorder(idx: number) {
             editor.shapesDeleteBorder(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -323,7 +327,8 @@ function toggleVisible(idx: number) {
             editor.value.setBorderEnable(_idx, isEnabled);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_enabled(props.shapes, _idx, isEnabled);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -339,7 +344,7 @@ function toggleVisible(idx: number) {
             editor.setShapesBorderEnabled(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -424,7 +429,7 @@ function onColorChange(e: Event, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function onAlphaChange(e: Event, idx: number) {
@@ -568,7 +573,7 @@ function onAlphaChange(e: Event, idx: number) {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function getColorFromPicker(color: Color, idx: number) {
@@ -604,7 +609,8 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.value.setBorderColor(_idx, color);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_color(props.shapes, _idx, color);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_border_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -620,6 +626,7 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (i: number) => {

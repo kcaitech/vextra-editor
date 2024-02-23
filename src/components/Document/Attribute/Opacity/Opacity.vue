@@ -5,10 +5,13 @@ import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { throttle } from 'lodash';
+import { modifyOpacity } from '@/utils/common';
+import { hidden_selection } from '@/utils/content';
 
 interface Props {
-    context: Context
-    change: number
+    context: Context;
+    selectionChange: number;
+    trigger: any[]
 }
 
 const props = defineProps<Props>();
@@ -61,12 +64,6 @@ const ipt = () => {
     }
 }
 
-function opacityChange(value: number) {
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    editor.modifyShapesContextSettingOpacity((shapes.value as ShapeView[]).map(s => adapt2Shape(s)), value);
-}
-
 function change(e: Event) {
     if (!executed.value) return;
     executed.value = false;
@@ -79,14 +76,15 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
-    opacityChange(value);
+
+    modifyOpacity(props.context, value);
 }
 
 function down(v: number) {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!selected.length || !page) return;
-    const value = limitValue(v) / 100;
+    const value = limitValue(v);
     if (isNaN(value)) return;
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
@@ -115,14 +113,16 @@ const onMouseDown = (e: MouseEvent) => {
             document.addEventListener('mouseup', onMouseUP)
         }
     })
+    hidden_selection(props.context);
 }
 const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
         updateProgress(e.clientX);
         if (opacity_editor && typeof opacity.value === 'number') {
-            opacity_editor.execute(opacity.value / 100);
+            opacity_editor.execute(opacity.value);
         }
     }
+    hidden_selection(props.context);
 }
 const onMouseUP = () => {
     isDragging = false;
@@ -140,7 +140,7 @@ function updateProgress(x: number) {
         if (progress.value) {
             progress.value.style.width = progressPercentage + '%';
             progressBtn.value!.style.left = progressPercentage - 4 + '%';
-            opacity.value = Number(progressPercentage.toFixed(0));
+            opacity.value = Number(progressPercentage.toFixed(0)) / 100;
         }
     }
 }
@@ -150,6 +150,7 @@ function input(e: Event) {
     if (isNaN(value) || !opacity_editor) return;
     opacity.value = limitValue(Number(value));
     opacity_editor.execute(value);
+    hidden_selection(props.context);
 }
 
 const handleOPacity = (e: Event) => {
@@ -202,14 +203,23 @@ function _update() {
 
 const update = throttle(_update, 320, { leading: true });
 
-const stop = watch(() => props.change, update);
+const stop = watch(() => props.trigger, (v) => {
+    if (v.includes('context-settings')) {
+        update();
+    }
+});
+const stop2 = watch(() => props.selectionChange, () => {
+    update()
+});
 
 onMounted(update);
 onUnmounted(() => {
     if (opacity_editor) {
         opacity_editor.close();
     }
+
     stop();
+    stop2();
 })
 </script>
 <template>
@@ -462,7 +472,7 @@ onUnmounted(() => {
     background-color: var(--grey-dark);
     border-radius: 3px;
     position: relative;
-
+    cursor: pointer;
 }
 
 .progress {
@@ -470,6 +480,7 @@ onUnmounted(() => {
     height: 100%;
     background-color: var(--active-color);
     border-radius: 5px;
+    cursor: pointer;
 }
 
 .progress-button {
@@ -482,7 +493,6 @@ onUnmounted(() => {
     background-color: #fff;
     box-sizing: border-box;
     cursor: pointer;
-    z-index: 1;
     box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.2);
 }
 </style>

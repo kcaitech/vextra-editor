@@ -5,14 +5,14 @@ import { renderPathShape as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 
 const props = defineProps<{
-    data: RectShape, 
+    data: RectShape,
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
+
 const common = initCommonShape(props);
 
 function render() {
-    const ret = r(h, props.data, props.varsContainer, common.reflush);
-    return ret;
+    return r(h, props.data, props.varsContainer, common.reflush);
 }
 </script>
 <template>

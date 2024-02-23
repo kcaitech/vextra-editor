@@ -18,20 +18,19 @@ import {
     SymbolRefShape,
     SymbolRefView,
     SymbolShape,
-    TableShape,
     TableView,
     TextShape,
     adapt2Shape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
-import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
-import { Groups } from "aws-sdk/clients/budgets";
+import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 
 export interface Media {
@@ -954,16 +953,18 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         }
     }
 }
-
-let scale_delta = 1.06;
-let scale_delta_ = 1 / scale_delta;
-
+const MAX = 25600;
+const MIN = 2;
 export function root_scale(context: Context, e: WheelEvent) {
-    if (Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+    let scale_delta = 1.2;
+    let scale_delta_ = 1 / scale_delta;
+    const scale = Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0));
+    if (scale <= MIN) {
         scale_delta_ = 1
-    } else {
-        scale_delta_ = 1 / scale_delta;
+    } else if (scale >= MAX) {
+        scale_delta = MAX / scale;
     }
+
     const matrix = context.workspace.matrix;
     const root = context.workspace.root;
     const offsetX = e.x - root.x;
@@ -1225,7 +1226,6 @@ export function redo(context: Context) {
 
     modify_selection(context);
 }
-
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
     try {
         const __buff = new Uint8Array(buff);
@@ -1256,4 +1256,8 @@ export function detectZoom() {
     if (ratio) {
         ratio = Math.round(ratio * 100);
     }
+}
+
+export function hidden_selection(context: Context) {
+    context.selection.notify(Selection.SELECTION_HIDDEN);
 }

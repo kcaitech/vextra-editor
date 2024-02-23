@@ -122,7 +122,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
                     const text = editingCell.cell.text;
                     if (!text) return;
-                    const m_index = text.locateText(xy.x, xy.y);
+                    const m_index = editingCell.cell.locateText(xy.x, xy.y);
                     text_selection.selectText(down_index.index, m_index.index);
                 }
             } else {
@@ -162,7 +162,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     table_selection.setEditingCell(down_item);
                     const text = down_item.cell.text;
                     if (!text) return;
-                    down_index = text.locateText(xy.x, xy.y);
+                    down_index = down_item.cell.locateText(xy.x, xy.y);
                     text_selection = context.textSelection;
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
@@ -181,7 +181,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
                 table_selection.setEditingCell(down_item);
-                down_index = down_item?.cell?.text!.locateText(0, 0) || { index: -1, before: false };
+                down_index = down_item?.cell?.locateText(0, 0) || { index: -1, before: false };
                 text_selection = context.textSelection;
                 context.nextTick(context.selection.selectedPage!, () => {
                     text_selection.setCursor(down_index.index, down_index.before);
@@ -230,8 +230,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             get_matrix4table();
             init_down_timer();
             table_selection = context.tableSelection;
-            table_selection.resetSelection();
-            table_selection.setEditingCell();
+            // table_selection.resetSelection();
+            // table_selection.setEditingCell();
         }
     }
     function init_down_timer() {

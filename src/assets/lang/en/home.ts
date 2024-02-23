@@ -65,7 +65,8 @@ export const system = {
     'artboart_title_visible': 'Show artboard title',
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
-    sensitive_reminder3: 'Contains sensitive information and cannot be accessed.'
+    sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
+    piexl: 'Pixel Round'
 }
 
 export const home = {

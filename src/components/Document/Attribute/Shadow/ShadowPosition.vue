@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
+import { hidden_selection } from '@/utils/content';
 import { get_actions_shadow_position } from '@/utils/shape_style';
 import { Shadow, ShadowPosition, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -41,6 +42,7 @@ const togglePositinon = (position: ShadowPosition) => {
         }
     }
     close();
+    hidden_selection(props.context);
 }
 
 const close = () => {
@@ -105,7 +107,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding: 9px 0 9px 12px;
+    padding: 9px 8px;
+    margin-right: 5px;
     color: #000000;
 
     &:hover {
@@ -125,7 +128,7 @@ onUnmounted(() => {
         width: 24px;
         height: 24px;
         border-radius: 4px;
-        margin-right: 3px;
+        // margin-right: 3px;
         display: flex;
         align-items: center;
         justify-content: center;

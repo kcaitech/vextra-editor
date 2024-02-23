@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
+import { BasicArray, Color, Fill, FillType, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
+import { GroupShapeView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -16,9 +17,9 @@ import {
     get_fills
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
-import { TableSelection } from '@/context/tableselection';
-import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
+import { getShapesForStyle } from '@/utils/style';
 
 interface FillItem {
     id: number,
@@ -26,64 +27,35 @@ interface FillItem {
 }
 
 interface Props {
-    context: Context
-    shapes: ShapeView[]
+    context: Context;
+    shapes: ShapeView[];
+    selectionChange: number;
+    triggle: any[];
+    tableSelectionChange: number;
+    cellsTrigger: any[];
 }
 
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
-const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
 const alphaFill = ref<HTMLInputElement[]>();
 const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>([]);
-let table: TableView;
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
 }
 
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        for (let i = 0, l = selectedShapes.length; i < l; i++) {
-            const v = selectedShapes[i];
-            if (v.isVirtualShape) {
-                let p = v.parent;
-                while (p) {
-                    if (p.type === ShapeType.SymbolRef) {
-                        needWatchShapes.set(p.id, p);
-                        break;
-                    }
-                    p = p.parent;
-                }
-            }
-            needWatchShapes.set(v.id, v);
-        }
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
-
 function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = props.context.selection.selectedShapes;
+    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
     if (selecteds.length === 1 && (selecteds[0].type !== ShapeType.Group || (selecteds[0] as GroupShapeView).data.isBoolOpShape)) {
         const shape = selecteds[0];
         const table = props.context.tableSelection;
@@ -139,13 +111,9 @@ function updateData() {
     }
 }
 
-function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
-}
-
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
-    const fill = new Fill(v4(), true, FillType.SolidColor, color);
+    const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
     const s = props.context.selection.selectedShapes[0];
     if (len.value === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         const e = props.context.editor4Shape(s);
@@ -183,14 +151,16 @@ function addFill(): void {
         }
     } else if (len.value > 1) {
         if (mixed.value) {
-            const actions = get_actions_fill_unify(props.shapes);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_fill_unify(shapes);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesFillsUnify(actions);
             }
         } else {
-            const actions = get_actions_add_fill(props.shapes, fill);
+            const shapes = getShapesForStyle(props.shapes);
+            const actions = get_actions_add_fill(shapes, fill);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -216,6 +186,7 @@ function addFill(): void {
             }
         }
     }
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -255,7 +226,8 @@ function deleteFill(idx: number) {
             editor.value.deleteFill(_idx);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_fill_delete(props.shapes, _idx);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_fill_delete(shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -271,6 +243,7 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -308,7 +281,8 @@ function toggleVisible(idx: number) {
     } else if (len.value > 1) {
         const fills = props.shapes[0].getFills();
         const value = !fills[_idx].isEnabled;
-        const actions = get_actions_fill_enabled(props.shapes, _idx, value);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_fill_enabled(shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -326,6 +300,7 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -383,7 +358,8 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             editor.setFillColor(_idx, new Color(alpha, r, g, b));
         }
     } else if (shapes.value.length > 1) {
-        const actions = get_actions_fill_color(shapes.value as ShapeView[], _idx, new Color(alpha, r, g, b));
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -399,9 +375,10 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
-function onColorChange(idx: number, e: Event) {
+function onColorChange(idx: number) {
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
@@ -413,7 +390,7 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        if(!colorFill.value) return;
+        if (!colorFill.value) return;
         return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
@@ -496,7 +473,8 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.value.setFillColor(_idx, color);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_fill_color(props.shapes, _idx, color);
+        const shapes = getShapesForStyle(props.shapes);
+        const actions = get_actions_fill_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -512,6 +490,7 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (id: number) => {
@@ -565,84 +544,24 @@ const filterAlpha = (a: number) => {
     }
 }
 
-function update_by_shapes() {
-    watchShapes();
-    updateData();
-}
-
-function shapes_watcher(v: ShapeView[]) {
-    update_by_shapes();
-    watchCells.forEach((v) => v.unwatch(updateData));
-    watchCells.clear();
-    if (v.length === 1 && v[0].type === ShapeType.Table) {
-        table?.unwatch(table_watcher);
-        v[0].watch(table_watcher);
-    } else {
-        table?.unwatch(table_watcher);
-    }
-}
-
-function table_watcher() {
-    cells_watcher();
-}
-
-let watchCells: Map<string, TableCell> = new Map();
-
-function cells_watcher() {
-    const table_selection = props.context.tableSelection;
-    const is_edting = table_selection.editingCell;
-    if (table_selection.tableRowStart > -1 || is_edting) {
-        let cells: any[] = [];
-        if (is_edting) {
-            cells.push(is_edting);
-        } else {
-            cells = table_selection.getSelectedCells(true);
-        }
-        const needWatch: Map<string, TableCell> = new Map();
-        for (let i = 0, len = cells.length; i < len; i++) {
-            let c = cells[i];
-            if (c.cell) {
-                needWatch.set(c.cell.id, c.cell);
-                c.cell.watch(updateData);
-            }
-        }
-        watchCells.forEach((v, k) => {
-            if (!needWatch.get(k)) v.unwatch(updateData);
-        })
-        watchCells = needWatch;
-    }
-}
-
-function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
-}
-
 // hooks
-const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
-
-function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) {
-        updateData();
-        cells_watcher();
-    } else if (t === TableSelection.CHANGE_EDITING_CELL) {
-        updateData();
-        cells_watcher();
-    }
-}
-
-onMounted(() => {
-    update_by_shapes();
-    props.context.tableSelection.watch(table_selection_watcher);
-    props.context.selection.watch(selection_watcher);
+const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
+const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
+});
+const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
+const stop5 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
+    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
 })
+
+onMounted(updateData);
 
 onUnmounted(() => {
-    stop();
-    props.context.tableSelection.unwatch(table_selection_watcher);
-    props.context.selection.unwatch(selection_watcher);
-    watchedShapes.forEach(v => v.unwatch(watcher));
+    stop2();
+    stop3();
+    stop4();
+    stop5();
 })
-
 </script>
 
 <template>
@@ -671,7 +590,7 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" @input="colorInput(idx)"
+                        @change="(e) => onColorChange(idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
@@ -724,7 +643,7 @@ onUnmounted(() => {
             width: 100%;
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            // justify-content: space-between;
             align-items: center;
             margin-top: 4px;
 
@@ -739,6 +658,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
                 border-radius: 4px;
+                margin-right: 5px;
 
                 >svg {
                     width: 60%;
@@ -761,7 +681,7 @@ onUnmounted(() => {
                 height: 32px;
                 width: 172px;
                 padding: 9px 8px;
-                margin-left: 5px;
+                // margin-left: 5px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;

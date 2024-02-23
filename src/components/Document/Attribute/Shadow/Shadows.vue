@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Shadow, ShadowPosition, ShapeView, ShapeType } from "@kcdesign/data";
+import { Color, Shadow, ShadowPosition, ShapeView, ShapeType, BasicArray } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
 import { v4 } from 'uuid';
 import ShadowPositionItem from './ShadowPosition.vue';
 import { get_actions_add_shadow, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_unify, get_shadows } from '@/utils/shape_style';
+import { hidden_selection } from '@/utils/content';
 
 interface ShadowItem {
   id: number,
@@ -30,24 +31,24 @@ function watchShapes() {
     needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
   }
 
-const selectedShapes = props.context.selection.selectedShapes;
-if (selectedShapes.length > 0) {
+  const selectedShapes = props.context.selection.selectedShapes;
+  if (selectedShapes.length > 0) {
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
-        const v = selectedShapes[i];
-        if (v.isVirtualShape) {
-            let p = v.parent;
-            while (p) {
-                if (p.type === ShapeType.SymbolRef) {
-                    needWatchShapes.set(p.id, p);
-                    break;
-                }
-                p = p.parent;
-            }
+      const v = selectedShapes[i];
+      if (v.isVirtualShape) {
+        let p = v.parent;
+        while (p) {
+          if (p.type === ShapeType.SymbolRef) {
+            needWatchShapes.set(p.id, p);
+            break;
+          }
+          p = p.parent;
         }
-        needWatchShapes.set(v.id, v);
+      }
+      needWatchShapes.set(v.id, v);
     }
-}
-  
+  }
+
   watchedShapes.forEach((v, k) => {
     if (needWatchShapes.has(k)) return;
     v.unwatch(watcher);
@@ -82,11 +83,11 @@ function updateData() {
   reflush.value++;
 }
 function watcher(...args: any[]) {
-  if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+  if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
 }
 function addShadow(): void {
   const len = props.shapes.length;
-  const s = new Shadow(v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
+  const s = new Shadow(new BasicArray(), v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
   if (len === 1) {
     const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
     e.addShadow(s);
@@ -107,6 +108,7 @@ function addShadow(): void {
       }
     }
   }
+  hidden_selection(props.context);
 }
 function first() {
   if (shadows.length === 0 && !mixed.value) addShadow();
@@ -125,6 +127,7 @@ function deleteFill(idx: number) {
       editor.shapesDeleteShasow(actions);
     }
   }
+  hidden_selection(props.context);
 }
 function toggleVisible(idx: number) {
   const _idx = shadows.length - idx - 1;
@@ -142,6 +145,7 @@ function toggleVisible(idx: number) {
       editor.setShapesShadowEnabled(actions);
     }
   }
+  hidden_selection(props.context);
 }
 
 function update_by_shapes() {
@@ -151,7 +155,11 @@ function update_by_shapes() {
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(update_by_shapes);
-onUnmounted(stop);
+onUnmounted(() => {
+  stop();
+  watchedShapes.forEach(i => i.unwatch(watcher));
+  watchedShapes.clear();
+});
 </script>
 
 <template>
@@ -213,9 +221,10 @@ onUnmounted(stop);
 
     transition: .2s;
   }
-    .add:hover {
-        background-color: #F5F5F5;
-    }
+
+  .add:hover {
+    background-color: #F5F5F5;
+  }
 
   //.add:hover {
   //  transform: scale(1.25);
@@ -262,7 +271,7 @@ onUnmounted(stop);
       }
 
       .shadow_posi {
-        flex: 1;
+        // flex: 1;
         height: 100%;
         //padding: 0px 5px;
         box-sizing: border-box;
@@ -295,7 +304,7 @@ onUnmounted(stop);
       }
 
       .delete:hover {
-          background-color: #F5F5F5;
+        background-color: #F5F5F5;
       }
     }
   }
@@ -305,11 +314,11 @@ onUnmounted(stop);
 
     .mixed-tips {
       display: block;
-        width: 218px;
-        height: 14px;
+      width: 218px;
+      height: 14px;
       text-align: center;
       font-size: var(--font-default-fontsize);
-        color: #737373;
+      color: #737373;
     }
   }
 

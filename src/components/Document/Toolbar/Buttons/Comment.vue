@@ -1,20 +1,23 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
-import { WorkSpace, Perm } from '@/context/workspace';
+import { Perm } from '@/context/workspace';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Context } from '@/context';
 const { t } = useI18n()
 const props = defineProps<{
   active: boolean,
-  workspace: WorkSpace,
+  context: Context,
 }>();
 const emit = defineEmits<{
   (e: "select", action: Action): void;
 }>();
 function select(action: Action) {
-  if (props.workspace.documentPerm === Perm.isRead) return;
-  props.workspace.keydown_c()
+  if (props.context.workspace.documentPerm === Perm.isRead) {
+    return;
+  }
+  props.context.tool.setAction(Action.AddComment)
   emit('select', action);
 }
 </script>
@@ -35,12 +38,12 @@ function select(action: Action) {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
 
   >svg {
-      width: 18px;
-      height: 18px;
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

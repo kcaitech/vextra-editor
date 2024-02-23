@@ -65,7 +65,8 @@ export const system = {
     'artboart_title_visible': '显示容器标题',
     sensitive_reminder: '含有敏感信息，请重新输入。',
     sensitive_reminder2: '含有敏感信息，无法分享。',
-    sensitive_reminder3: '含有敏感信息，无法访问。'
+    sensitive_reminder3: '含有敏感信息，无法访问。',
+    pixel: '对齐像素'
 }
 
 export const home = {
@@ -204,13 +205,13 @@ export const attr: any = {
     design: '设计',
     prototype: '原型',
     inspect: '标注',
-    constraints: '相对容器位置',
-    groupings: '相对编组位置及大小',
+    constraints: '约束',
+    groupings: '相对位置及大小',
     border: '边框',
     opacity: '不透明度',
     fill: '填充',
     text: '文本',
-    'follow_container_scaling': '跟随容器缩放',
+    'follow_container_scaling': '跟随缩放',
     'advanced_stroke': '边框设置',
     position: '位置',
     'corner_smoothing': '平滑圆角',
@@ -220,7 +221,7 @@ export const attr: any = {
     fixedHeight: '固定高度',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
-    withContainer: '跟随容器缩放',
+    withContainer: '跟随缩放',
     fixedTop: '顶部固定',
     fixedBottom: '底部固定',
     thickness: '厚度',
@@ -236,7 +237,7 @@ export const attr: any = {
     'fixed_right': '靠右固定',
     'fixed_left_right': '左右固定',
     'center': '居中',
-    'follow_container': '跟随容器缩放',
+    'follow_container': '跟随缩放',
     'fixed_bottom': '底部固定',
     'fixed_top': '顶部固定',
     'fixed_top_bottom': '上下固定',

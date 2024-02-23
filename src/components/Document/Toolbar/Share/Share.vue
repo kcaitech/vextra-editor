@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted, watchEffect } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -16,9 +16,6 @@ const route = useRoute()
 const docID = (route.query.id as string)
 const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
-const pageHeight = ref(0)
-const shareSwitch = ref<boolean>(true)
-const selectValue = ref<number>(1)
 const userInfo = ref<UserInfo | undefined>()
 const docInfo = ref<DocInfo>()
 const projectPerm = ref()
@@ -57,24 +54,6 @@ async function documentInfo(id: any) {
   }
 }
 
-// 实时获取页面的高度
-const getPageHeight = () => {
-  pageHeight.value = window.innerHeight
-}
-const getSelectValue = (val: string) => {
-  documentInfo(val).then((res: any) => {
-    if (res && res.document) {
-      selectValue.value = res.document.doc_type
-    }
-  })
-}
-watchEffect(() => {
-  if (route.query.id) {
-    const id = (route.query.id as string).split(' ')[0]
-    getSelectValue(id)
-  }
-})
-
 const GetprojectLists = async (id: string) => {
   try {
     const { data } = await team_api.GetprojectLists()
@@ -89,13 +68,12 @@ const GetprojectLists = async (id: string) => {
   }
 }
 
-onMounted(() => {
-  getPageHeight()
-  route.query.id && getSelectValue((route.query.id as string))
-  window.addEventListener('resize', getPageHeight);
+watch(() => route.query.id, () => {
+  documentInfo(route.query.id)
 })
-onUnmounted(() => {
-  window.removeEventListener('resize', getPageHeight);
+
+onMounted(() => {
+  documentInfo(docID);
 })
 </script>
 

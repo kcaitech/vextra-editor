@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
+import { ClientXY, PageXY, SelectionTheme, XY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
+import { get_dashes } from './common';
 interface Props {
     matrix: number[]
     context: Context
@@ -21,8 +22,8 @@ interface Bar {
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
-const data: { paths: Bar[] } = reactive({ paths: [] });
-const { paths } = data;
+const data: { paths: Bar[], dashes: string[] } = reactive({ paths: [], dashes: [] });
+const { paths, dashes } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
@@ -54,7 +55,7 @@ function update_dot_path() {
         { x: frame.width, y: frame.height },
         { x: 0, y: frame.height }
     ];
-    apex = apex.map(p => matrix.computeCoord(p.x, p.y));
+    apex = apex.map(p => matrix.computeCoord3(p));
 
     apex.push(apex[0]);
 
@@ -62,9 +63,19 @@ function update_dot_path() {
         const path = get_bar_path(apex[i], apex[i + 1]);
         paths.push({ path, type: types[i] });
     }
+
+    // dashes.length = 0;
+    // if (!is_constrainted()) {
+    //     return;
+    // }
+    // dashes.push(...get_dashes(props.context, props.shape, apex as [XY, XY, XY, XY]));
 }
+function is_constrainted() {
+    return props.shape.parent?.type === ShapeType.Artboard;
+}
+
 function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
-    return `M ${s.x} ${s.y} L ${e.x} ${e.y} z`;
+    return `M ${s.x} ${s.y} L ${e.x} ${e.y}`;
 }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
@@ -281,6 +292,8 @@ onUnmounted(() => {
         <path :d="b.path" class="assist-path">
         </path>
     </g>
+    <path v-for="(d, i) in dashes" :key="i" :d="d" class="dash" :stroke="theme">
+    </path>
 </template>
 <style lang='scss' scoped>
 .main-path {
@@ -291,5 +304,9 @@ onUnmounted(() => {
     fill: none;
     stroke: transparent;
     stroke-width: 10px;
+}
+
+.dash {
+    stroke-dasharray: 2 2;
 }
 </style>

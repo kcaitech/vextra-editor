@@ -14,9 +14,9 @@
                     {{ t('Createteam.project_name') }}
                     <span>{{ t('Createteam.required') }}</span>
                 </div>
-                <input
+                <input v-focus
                     :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: inputValue !== '' ? '#262626' : '' }"
-                    ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue"
+                    type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue"
                     maxlength="20" required>
             </div>
             <div class="project-description">
@@ -49,7 +49,6 @@ const props = defineProps<{
     teamid: string
 }>()
 
-const projectinput = ref()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -77,10 +76,6 @@ const createProject = async () => {
         ElMessage.error(t('home.other_tips'))
     }
 }
-
-nextTick(() => {
-    projectinput.value.focus()
-})
 
 const close = () => {
     emits('close')

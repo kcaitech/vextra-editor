@@ -7,6 +7,7 @@ import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import { User } from '@/context/user'
+import isMobileDevice from '@/utils/mobileDeviceChecker'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -28,8 +29,6 @@ function onmessage(e: any) {
 async function getlogin(code: string, invite_code: string = '', id: string = '') {
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
         if (linfo) {
-            const user = new User(linfo.data);
-            (window as any).skuser = user
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
@@ -138,6 +137,7 @@ function clickaffirm() {
 }
 
 function wxcode() {
+    if (isMobileDevice()) return
     new (window as any).WxLogin({
         self_redirect: true,
         id: "login_container",
@@ -158,6 +158,7 @@ const handleOpenNewWindow = (routeName: string) => {
 }
 
 watchEffect(() => {
+    if (isMobileDevice()) return
     if (loginshow.value) {
         setTimeout(() => {
             isLoading.value = true
@@ -179,7 +180,11 @@ watchEffect(() => {
 
 
 onMounted(() => {
-    window.addEventListener('message', onmessage, false)
+    if (isMobileDevice()) {
+        router.push({ name: "privacypolicy" })
+    } else {
+        window.addEventListener('message', onmessage, false)
+    }
 })
 
 onUnmounted(() => {
@@ -363,6 +368,7 @@ const pasteEvent = async (e: any) => {
     justify-content: center;
     width: 100%;
     height: 100%;
+
     .login {
         width: 400px;
         min-width: 400px;

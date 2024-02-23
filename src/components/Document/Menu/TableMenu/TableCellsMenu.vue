@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, TableView, Text } from '@kcdesign/data';
+import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, TableView, Text } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
@@ -46,7 +46,7 @@ const getColorFromPicker = (c: Color) => {
     const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableView)
-        const fill = new Fill(uuid(), true, FillType.SolidColor, c);
+        const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, c);
         editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
 }

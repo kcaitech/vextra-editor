@@ -82,9 +82,8 @@ function watchShapes() { // 监听选区相关shape的变化
         }
     })
 }
-
-function shapesWatcher() {
-    if (props.context.workspace.shouldSelectionViewUpdate) {
+function shapesWatcher(...args: any) {
+    if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
         update_by_shapes();
     }
 }
@@ -184,8 +183,6 @@ function createShapeTracing() {
         modfiy_tracing_class(hoveredShape);
     }
 }
-
-
 
 /**
  * @description 创建控件
