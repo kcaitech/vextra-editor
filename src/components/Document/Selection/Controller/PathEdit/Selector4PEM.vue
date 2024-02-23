@@ -199,7 +199,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .selector {
     position: absolute;
-    border: 1px solid var(--theme-color-anti);
-    background-color: rgba($color: #ffffff, $alpha: 0.1);
+    border: 1px solid var(--active-color);
+    background-color: rgba($color: #1878f5, $alpha: 0.1);
 }
 </style>
