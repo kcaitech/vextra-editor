@@ -69,6 +69,7 @@ export class Server {
                 this.ws!.onopen = _ => resolve()
                 this.ws!.onerror = err => reject(err)
             })
+            setTimeout(() => resolve(false), 3000)
         } catch (err) {
             console.log(err)
             this.ws = undefined
@@ -98,6 +99,7 @@ export class Server {
                     resolve(false)
                 }
             }
+            setTimeout(() => resolve(false), 3000)
         })) {
             this.ws = undefined
             resolve(false)
