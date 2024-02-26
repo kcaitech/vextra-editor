@@ -9,4 +9,4 @@ yarn.lock
 .vscode
 .idea
 *.sql
-/src/communication/communication-worker.js
+/src/communication/communication.js
