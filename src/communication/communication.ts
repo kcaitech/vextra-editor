@@ -30,7 +30,7 @@ function sendNetworkStatusToClient(status: NetworkStatusType) {
     }
 }
 
-function setOnMessage(port: MessagePort) {
+export function newConnect(port: MessagePort) {
     port.onmessage = async (messageEvent) => {
         const data = messageEvent.data as CommunicationInfo
         if (server && token !== "" && data.token !== token) { // 当有第二个用户连接时，关闭前面用户的连接
@@ -84,6 +84,6 @@ function setOnMessage(port: MessagePort) {
 
 if (isWorker) {
     (self as any as SharedWorkerGlobalScope).onconnect = (event) => {
-        setOnMessage(event.ports[0])
+        newConnect(event.ports[0])
     }
 }

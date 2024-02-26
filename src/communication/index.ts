@@ -9,12 +9,14 @@ import {
     WorkerPostData,
     TunnelTypeStr
 } from "./types"
+import * as communication from "./communication"
 
 declare const COMMUNICATION_WORKER_URL: string
 
 export class Communication {
     private info: CommunicationInfo
     private worker: SharedWorker | undefined = undefined
+    private channel: MessageChannel | undefined = undefined
     protected onMessage: (data: any) => void = () => {}
     protected onClose: () => void = () => {}
     private isClosed: boolean = false
@@ -37,19 +39,29 @@ export class Communication {
         }
     }
 
-    public async start(token: string): Promise<boolean> {
-        return this.startOfWorker(token)
+    private get port() {
+        return this.worker ? this.worker.port : this.channel?.port1
     }
 
-    private async startOfWorker(token: string): Promise<boolean> {
+    public async start(token: string): Promise<boolean> {
         if (this.isStarted) return true;
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
-        this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
-        const port = this.worker.port
+
+        if (SharedWorker) {
+            this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
+            this.channel = undefined
+        } else {
+            this.channel = new MessageChannel()
+            this.worker = undefined
+            communication.newConnect(this.channel.port2)
+        }
+
+        const port = this.port!
         this.info.name = uuid()
         this.info.id = ""
         this.info.token = token
+
         this.startPromise = new Promise<boolean>(resolve => {
             port.onmessage = (event) => {
                 const data = event.data as CommunicationInfo
@@ -73,15 +85,13 @@ export class Communication {
                 this.startPromise = undefined
                 console.log("通道建立", TunnelTypeStr[this.info.tunnelType], this.info.id)
             }
+
             port.start()
             port.postMessage(this.info)
         })
+
         return this.startPromise
     }
-
-    // private async startOfDirect(token: string): Promise<boolean> {
-    //
-    // }
 
     private receiveFromWorker(event: MessageEvent) {
         const data = event.data as WorkerPostData
@@ -131,7 +141,7 @@ export class Communication {
     public async send(data: any, isListened: boolean = false, timeout: number = -1): Promise<boolean> {
         if (this.isClosed) return false;
         if (this.startPromise) await this.startPromise;
-        if (!this.isStarted || !this.worker) {
+        if (!this.isStarted || !this.port) {
             console.log("通道未启动")
             return false
         }
@@ -141,8 +151,8 @@ export class Communication {
             dataType: data instanceof ArrayBuffer ? DataType.Binary : DataType.Text,
         }
         if (!(data instanceof ArrayBuffer)) postData.data = data;
-        this.worker.port.postMessage(postData)
-        if (data instanceof ArrayBuffer) this.worker.port.postMessage(data, [data]);
+        this.port.postMessage(postData)
+        if (data instanceof ArrayBuffer) this.port.postMessage(data, [data]);
         if (isListened) {
             let resolve: (value: CmdResult) => void = () => {}
             const promise: Promise<CmdResult> = new Promise(r => resolve = r)
@@ -173,12 +183,12 @@ export class Communication {
         if (this.isClosed) return;
         console.log("通道关闭", TunnelTypeStr[this.info.tunnelType], this.info.id)
         if (closePeer) {
-            this.worker?.port.postMessage({
+            this.port?.postMessage({
                 dataType: DataType.Text,
                 close: true,
             } as ClientPostData)
         }
-        this.worker?.port.close()
+        this.port?.close()
         this.onClose()
         this.isClosed = true
     }
