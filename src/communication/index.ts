@@ -17,6 +17,7 @@ export class Communication {
     private info: CommunicationInfo
     private worker: SharedWorker | undefined = undefined
     private channel: MessageChannel | undefined = undefined
+    private enabledWorker: boolean = typeof SharedWorker !== "undefined"
     protected onMessage: (data: any) => void = () => {}
     protected onClose: () => void = () => {}
     private isClosed: boolean = false
@@ -39,16 +40,25 @@ export class Communication {
         }
     }
 
-    private get port() {
-        return this.worker ? this.worker.port : this.channel?.port1
+    public enableWorker() {
+        this.enabledWorker = true
     }
 
-    public async start(token: string): Promise<boolean> {
+    public disableWorker() {
+        this.enabledWorker = false
+    }
+
+    private get port() {
+        return this.enabledWorker ? this.worker?.port : this.channel?.port1
+    }
+
+    public async start(token: string, retryCount: number = 0): Promise<boolean> {
         if (this.isStarted) return true;
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
 
-        if (typeof SharedWorker !== "undefined") {
+        console.log("this.enabledWorker", this.enabledWorker)
+        if (this.enabledWorker) {
             this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
             this.channel = undefined
         } else {
@@ -62,6 +72,7 @@ export class Communication {
         this.info.id = ""
         this.info.token = token
 
+        console.log("开始建立通道", TunnelTypeStr[this.info.tunnelType], this.info.id)
         this.startPromise = new Promise<boolean>(resolve => {
             port.onmessage = (event) => {
                 const data = event.data as CommunicationInfo
@@ -88,9 +99,21 @@ export class Communication {
 
             port.start()
             port.postMessage(this.info)
+
+            setTimeout(() => {
+                if (!this.startPromise) return;
+                console.log("通道建立超时", TunnelTypeStr[this.info.tunnelType], this.info.id)
+                resolve(false)
+                this.startPromise = undefined
+            }, 3000)
         })
 
-        return this.startPromise
+        const res = await this.startPromise
+        if (res) return true;
+        if (retryCount > 0) return false;
+
+        this.disableWorker()
+        return this.start(token, retryCount++)
     }
 
     private receiveFromWorker(event: MessageEvent) {
