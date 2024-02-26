@@ -42,7 +42,10 @@ export class Tunnel {
 
     async start(): Promise<boolean> {
         const cmdId = await this.sendToServer(ClientCmdType.OpenTunnel, { data: this.info.data }, true)
-        const cmdResult = await this.getCmdResult(cmdId)
+        if (!cmdId) return false;
+        const getCmdResultPromise = this.getCmdResult(cmdId)
+        const timeoutPromise = new Promise<undefined>(resolve => setTimeout(() => resolve(undefined), 3000))
+        const cmdResult = await Promise.race([getCmdResultPromise, timeoutPromise])
         if (!cmdResult || typeof cmdResult.data.tunnel_id !== "string" || cmdResult.data.tunnel_id === "") return false;
         this.tunnelId = cmdResult.data.tunnel_id
         return true
@@ -168,7 +171,7 @@ export class Tunnel {
             })
             this.sendToServerHandler?.(cmdId, cmd)
         }
-        await this.server.send(JSON.stringify(cmd))
+        if (!await this.server.send(JSON.stringify(cmd))) cmdId = "";
         return cmdId
     }
 

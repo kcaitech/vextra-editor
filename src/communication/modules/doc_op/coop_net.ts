@@ -1,4 +1,4 @@
-import { Cmd, ICoopNet, serialCmds, parseCmds, RadixConvert } from "@kcdesign/data"
+import { Cmd, ICoopNet, serialCmds, parseCmds, cloneCmds, RadixConvert } from "@kcdesign/data"
 
 export class CoopNet implements ICoopNet {
 
@@ -25,11 +25,11 @@ export class CoopNet implements ICoopNet {
         return this.isConnected
     }
 
-    async pullCmds(from: string, to: string): Promise<Cmd[]> {
+    async pullCmds(from?: string, to?: string): Promise<Cmd[]> {
         if (!this.isConnected) return [];
+        from = from ? this.radixRevert.to(from).toString(10) : ""
+        to = to ? this.radixRevert.to(to).toString(10) : ""
         console.log("pullCmds", from, to)
-        if (from) from = this.radixRevert.to(from).toString(10);
-        if (to) to = this.radixRevert.to(to).toString(10);
         this.send?.({
             type: "pullCmds",
             from: from,
@@ -45,7 +45,7 @@ export class CoopNet implements ICoopNet {
 
     async postCmds(cmds: Cmd[]): Promise<boolean> {
         if (!this.isConnected) return false;
-        console.log("postCmds", cmds)
+        console.log("postCmds", cloneCmds(cmds))
         return this.send?.({
             type: "commit",
             cmds: serialCmds(cmds),
@@ -59,8 +59,15 @@ export class CoopNet implements ICoopNet {
     onMessage(data: any): void {
         const cmdsData = JSON.parse(data.cmds_data ?? '""') as any[]
         let cmds: Cmd[] | undefined
+        let cmds1: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
             cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
+                item.cmd.id = item.cmd_id
+                item.cmd.version = this.radixRevert.from(item.id)
+                item.cmd.previousVersion = this.radixRevert.from(item.previous_id)
+                return item.cmd
+            })))
+            cmds1 = parseCmds(JSON.stringify(cmdsData.map(item => {
                 item.cmd.id = item.cmd_id
                 item.cmd.version = this.radixRevert.from(item.id)
                 item.cmd.previousVersion = this.radixRevert.from(item.previous_id)
@@ -71,12 +78,10 @@ export class CoopNet implements ICoopNet {
         if (data.type === "pullCmdsResult" || data.type === "errorPullCmdsFailed") {
             if (data.type === "errorPullCmdsFailed") console.log("拉取数据失败");
 
-            if (typeof data.from !== "string" || typeof data.to !== "string") {
-                console.log("返回数据格式错误")
-                return
-            }
+            const from = typeof data.from === "string" ? data.from : ""
+            const to = typeof data.to === "string" ? data.to : ""
 
-            const key = `${data.from}-${data.to}`
+            const key = `${from}-${to}`
             if (!this.pullCmdsPromiseList[key]) return;
 
             if (data.type === "pullCmdsResult") {
@@ -84,7 +89,7 @@ export class CoopNet implements ICoopNet {
                     console.log("返回数据格式错误")
                     for (const item of this.pullCmdsPromiseList[key]) item.reject(new Error("返回数据格式错误"));
                 } else {
-                    console.log("pullCmdsResult", cmds)
+                    console.log("pullCmdsResult", cmds1)
                     for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
                 }
                 if (typeof data.previous_id !== "string") {
@@ -100,7 +105,7 @@ export class CoopNet implements ICoopNet {
                 console.log("返回数据格式错误")
                 return
             }
-            console.log("update", cmds)
+            console.log("update", cmds1)
             for (const watcher of this.watcherList) watcher(cmds);
         } else if (data.type === "errorInvalidParams") {
             console.log("参数错误")
