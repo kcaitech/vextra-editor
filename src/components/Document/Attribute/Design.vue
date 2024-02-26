@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell } from "@kcdesign/data"
+import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell, TableCellView } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -204,7 +204,7 @@ function watch_shapes() {
     });
 }
 
-const watchCells = new Map<string, TableCell>(); // 表格单元格监听
+const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
 function watch_cells() {
     watchCells.forEach((v, k) => {
         v.unwatch(update_by_cells);
@@ -215,16 +215,16 @@ function watch_cells() {
 
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
-    const list = [...selectedCells, editedCell];
+    const list = [...selectedCells.map(s => s.cell), editedCell];
 
     if (list.length) {
         baseAttr.value = false;
     }
 
     list.forEach(v => {
-        if (v?.cell) {
-            v.cell.watch(update_by_cells);
-            watchCells.set(v.cell.id, v.cell);
+        if (v) {
+            v.watch(update_by_cells);
+            watchCells.set(v.id, v);
         }
     })
 }

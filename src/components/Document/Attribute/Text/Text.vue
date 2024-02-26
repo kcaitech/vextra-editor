@@ -111,7 +111,7 @@ const onBold = () => {
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes.map(s => adapt2Shape(s)), isBold.value);
+        editor.setTextBoldMulti(props.textShapes, isBold.value);
     }
 }
 // 设置文本倾斜
@@ -127,7 +127,7 @@ const onTilt = () => {
             textFormat()
         }
     } else {
-        editor.setTextItalicMulti(props.textShapes.map(s => adapt2Shape(s)), isTilt.value);
+        editor.setTextItalicMulti(props.textShapes, isTilt.value);
     }
 }
 //设置下划线
@@ -143,7 +143,7 @@ const onUnderlint = () => {
             textFormat()
         }
     } else {
-        editor.setTextUnderlineMulti(props.textShapes.map(s => adapt2Shape(s)), isUnderline.value);
+        editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
     }
 }
 // 设置删除线
@@ -159,7 +159,7 @@ const onDeleteline = () => {
             textFormat()
         }
     } else {
-        editor.setTextStrikethroughMulti(props.textShapes.map(s => adapt2Shape(s)), isDeleteline.value);
+        editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
     }
 }
 // 设置水平对齐
@@ -175,7 +175,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
             textFormat()
         }
     } else {
-        editor.setTextHorAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+        editor.setTextHorAlignMulti(props.textShapes, icon);
     }
 }
 //设置垂直对齐
@@ -186,7 +186,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
         textFormat()
     } else {
-        editor.setTextVerAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+        editor.setTextVerAlignMulti(props.textShapes, icon);
     }
 }
 //设置字体大小
@@ -203,7 +203,7 @@ const changeTextSize = (size: number) => {
             textFormat()
         }
     } else {
-        editor.setTextFontSizeMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), size);
+        editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
 }
 //设置字体
@@ -220,7 +220,7 @@ const setFont = (font: string) => {
             textFormat()
         }
     } else {
-        editor.setTextFontNameMulti(props.textShapes.map(s => adapt2Shape(s)), font);
+        editor.setTextFontNameMulti(props.textShapes, font);
     }
 }
 
@@ -509,9 +509,9 @@ function getColorFromPicker(color: Color, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
+            editor.setTextColorMulti(props.textShapes, color)
         } else {
-            editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
+            editor.setTextHighlightColorMulti(props.textShapes, color)
         }
     }
 }
@@ -544,9 +544,9 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         } else {
-            editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         }
     }
 }
@@ -562,7 +562,7 @@ const deleteHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), undefined);
+        editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
 }
 
@@ -577,7 +577,7 @@ const addHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 216, 216, 216))
+        editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
 }
 const higAlphaInput = () => {
@@ -605,7 +605,7 @@ const addTextColor = () => {
         }
         textFormat()
     } else {
-        editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 6, 6, 6))
+        editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
 }
 const sizeColorInput = () => {
