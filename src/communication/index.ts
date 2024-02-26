@@ -48,7 +48,7 @@ export class Communication {
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
 
-        if (SharedWorker) {
+        if (typeof SharedWorker !== "undefined") {
             this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
             this.channel = undefined
         } else {
