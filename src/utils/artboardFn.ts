@@ -108,7 +108,8 @@ export function insertFrameTemplate(context: Context) {
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const { x, y } = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
-        let artboard: Shape | false = editor.createArtboard(tf.name, frame);
+        // let artboard: Shape | false = editor.createArtboard(tf.name, frame);
+        let artboard: Shape | false = editor.create(ShapeType.Artboard, tf.name, frame);
         artboard = editor.insert(parent.data, shapes.length, artboard);
         context.nextTick(parent, () => {
             if (artboard) {
