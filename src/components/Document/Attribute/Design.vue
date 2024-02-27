@@ -35,7 +35,8 @@ const WITH_FILL = [
     ShapeType.Table,
     ShapeType.TableCell,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
@@ -54,7 +55,8 @@ const WITH_BORDER = [
     ShapeType.Line,
     ShapeType.Contact,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ];
 const WITH_TABLE = [ShapeType.Table];
 const WITH_SHADOW = [
@@ -68,7 +70,8 @@ const WITH_SHADOW = [
     ShapeType.Group,
     ShapeType.Line,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ]
 const WITHOUT_OPACITY = [
     ShapeType.Cutout,
