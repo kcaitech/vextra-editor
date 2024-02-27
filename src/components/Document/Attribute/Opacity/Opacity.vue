@@ -204,7 +204,7 @@ function _update() {
 const update = throttle(_update, 320, { leading: true });
 
 const stop = watch(() => props.trigger, (v) => {
-    if (v.includes('context-settings')) {
+    if (v.includes('contextSettings') || v.includes('overrideContextSettings')) {
         update();
     }
 });
