@@ -7,6 +7,7 @@ import { Point } from '../../SelectionView.vue';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { shapes_organize } from '@/utils/common';
+import { ScaleHandler } from '@/transform/scale';
 interface Props {
     matrix: number[]
     context: Context
@@ -33,6 +34,7 @@ const types = [
     CtrlElementType.RectLeft
 ];
 let need_reset_cursor_after_transform = true;
+let scaler: ScaleHandler | undefined = undefined;
 
 function update() {
     matrix.reset(props.matrix);
@@ -78,10 +80,13 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     startPosition = props.context.workspace.getContentXY(event)
 
+    scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
+    scaler?.excute(event);
     const workspace = props.context.workspace;
 
     const { x: sx, y: sy } = startPosition;
@@ -110,13 +115,14 @@ function bar_mousemove(event: MouseEvent) {
         set_status_before_action();
 
         isDragging = true;
+        console.log('scaler:', scaler);
+
     }
 }
 function bar_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
-
     clear_status();
 }
 function set_status_on_down() {
@@ -142,6 +148,8 @@ function clear_status() {
 
         workspace.setSelectionViewUpdater(true);
         isDragging = false;
+
+        scaler?.fulfil();
     }
     workspace.scaling(false);
     workspace.setCtrl('page');
@@ -266,14 +274,38 @@ function frame_watcher() {
         passive_update();
     }
 }
-
+function keydown(event: KeyboardEvent) {
+    if (event.repeat) {
+        return;
+    }
+    if (event.shiftKey) {
+        scaler?.modifyShiftStatus(true);
+    }
+    if (event.altKey) {
+        scaler?.modifyAltStatus(true);
+    }
+}
+function keyUp(event: KeyboardEvent) {
+    if (event.code === 'ShiftLeft') {
+        scaler?.modifyShiftStatus(false);
+    }
+    if (event.code === 'AltLeft') {
+        scaler?.modifyAltStatus(false);
+    }
+}
 watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
     update();
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyUp);
+
     window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
+    document.removeEventListener('keydown', keydown);
+    document.removeEventListener('keyup', keyUp);
+
     window.removeEventListener('blur', window_blur);
 })
 </script>

@@ -392,6 +392,87 @@ export class Asssit extends WatchableObject {
         return target;
     }
 
+    alignX(point: XY, self: XY[]) {
+        if (!this.m_except.size) {
+            return;
+        }
+
+        this.m_nodes_x = [];
+        const target = { x: 0, sticked_by_x: false };
+        const pre_target: PT4P1 = { x: 0, sy: 0, delta: undefined };
+
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const shape = this.m_shape_inner[i];
+            if (this.m_except.get(shape.id)) {
+                continue;
+            }
+
+            const c_pg = this.m_pg_inner.get(shape.id);
+            if (!c_pg) {
+                continue;
+            }
+
+            modify_pt_x4p(pre_target, point, c_pg.apexX, this.m_stickness);
+        }
+
+        if (pre_target.delta !== undefined) {
+            target.x = pre_target.x;
+            target.sticked_by_x = true;
+
+            const _self = [];
+
+            for (let i = 0; i < self.length; i++) {
+                _self.push({ id: 'self', p: { x: target.x, y: self[i].y } });
+            }
+
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat(_self);
+        }
+
+        this.notify(Asssit.UPDATE_ASSIST);
+
+        return target;
+    }
+
+    alignY(point: XY, self: XY[]) {
+        if (!this.m_except.size) {
+            return;
+        }
+        this.m_nodes_y = [];
+        const target = { y: 0, sticked_by_y: false };
+        const pre_target: PT4P2 = { y: 0, sx: 0, delta: undefined };
+
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
+            const shape = this.m_shape_inner[i];
+            if (this.m_except.get(shape.id)) {
+                continue;
+            }
+
+            const c_pg = this.m_pg_inner.get(shape.id);
+            if (!c_pg) {
+                continue;
+            }
+
+            modify_pt_y4p(pre_target, point, c_pg.apexY, this.m_stickness);
+        }
+
+        if (pre_target.delta !== undefined) {
+            target.y = pre_target.y;
+            target.sticked_by_y = true;
+
+            const _self = [];
+
+            for (let i = 0; i < self.length; i++) {
+                _self.push({ id: 'self', p: { x: self[i].x, y: target.y } })
+            }
+
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat(_self);
+        }
+
+        this.notify(Asssit.UPDATE_ASSIST);
+
+        return target;
+    }
+
     create_match(p: PageXY) {
         const st = Date.now();
         if (!this.m_except.size) return;
