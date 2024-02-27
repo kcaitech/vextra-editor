@@ -84,7 +84,7 @@ const textShapes = ref<ShapeView[]>([]);
 const { t } = useI18n();
 const shapeType = ref();
 const symbol_attribute = ref<boolean>(true);
-const opacity = ref<boolean>(false);
+// const opacity = ref<boolean>(false);
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 
@@ -110,7 +110,7 @@ function _selection_change() {
 
     shapes.value = [];
     textShapes.value = [];
-    opacity.value = false;
+    // opacity.value = false;
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
@@ -118,9 +118,9 @@ function _selection_change() {
         if (shape.type === ShapeType.Text) {
             textShapes.value.push(shape);
         }
-        if (!shape.isVirtualShape) {
-            opacity.value = true;
-        }
+        // if (!shape.isVirtualShape) {
+        //     opacity.value = true;
+        // }
     }
 
     reflush_by_selection.value++;
@@ -266,7 +266,7 @@ onUnmounted(() => {
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
+                <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
