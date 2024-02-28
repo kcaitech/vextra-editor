@@ -4,6 +4,7 @@ import comsMap from '@/components/Document/Content/comsmap';
 import { SymbolShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
 import { initCommonShape } from "@/components/Document/Content/common";
+import { toRaw } from 'vue';
 
 interface Props {
     data: SymbolShape
@@ -15,8 +16,7 @@ function gen_view_box() {
     return `0 0 ${frame.width} ${frame.height}`;
 }
 function render() {
-    const ret = r(h, props.data, comsMap, common.reflush);
-    return ret;
+    return r(h, toRaw(props.data), comsMap, common.reflush);
 }
 </script>
 <template>

@@ -43,7 +43,6 @@ function selection_watcher(t?: number) {
         update_paths();
     }
 }
-
 function update_paths() {
     const shapes = props.context.selection.selectedShapes;
     const workspace = props.context.workspace;

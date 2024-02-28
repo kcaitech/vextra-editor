@@ -318,8 +318,8 @@ onUnmounted(() => {
                     <label for="filetips">申请后需管理员审批确认</label>
                 </div>
                 <div class="invitemember">
-                    <button type="button" @click.stop="emit('closeDialog')">
-                        {{ t('Createteam.confirm') }}
+                    <button type="button" @click.stop="linkSwitch ? copyLink() : emit('closeDialog')">
+                        {{ linkSwitch ? t('Createteam.copylink') : t('Createteam.confirm') }}
                     </button>
                 </div>
             </div>

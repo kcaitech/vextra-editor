@@ -73,7 +73,7 @@ function _calc_attri() {
     rotate.value = get_shapes_rotation(selected, mixed);
 }
 
-const calc_attri = throttle(_calc_attri, 96, { trailing: true });
+const calc_attri = throttle(_calc_attri, 60, { trailing: true });
 
 const parentSymbolRef = () => {
     const len = props.context.selection.selectedShapes.length;
