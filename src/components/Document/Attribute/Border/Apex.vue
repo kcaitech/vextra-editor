@@ -52,7 +52,7 @@ function borderApexStyleSelect(selected: SelectItem) {
 function init_v() {
     const len = props.shapes.length;
     if (len === 1) {
-        const s = props.shapes[0].style;
+        const s = props.shapes[0];
         const sm = s.startMarkerType;
         const em = s.endMarkerType;
         borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
