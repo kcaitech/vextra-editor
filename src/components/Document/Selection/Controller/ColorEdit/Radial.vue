@@ -363,6 +363,7 @@ const stop_mouseup = (e: MouseEvent) => {
 const stop_content_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     get_percent_posi(e);
+    temporary.value = false;
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
@@ -390,12 +391,10 @@ const leave_ellipse_dot = (e: MouseEvent) => {
     ellipse_show.value = false;
 }
 const stop_leave = (e: MouseEvent) => {
-    if (e.buttons !== 0) return;
     enter_stop.value = false;
 }
 
 const stop_content_leave = (e: MouseEvent) => {
-    if (e.buttons !== 0) return;
     percent_show.value = false;
 }
 
@@ -475,16 +474,19 @@ onUnmounted(() => {
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"></circle>
+            <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"></circle>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"></circle>
+            <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"></circle>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"></circle>
+            <circle r="6" fill="transparent" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
                 @mouseleave="leave_ellipse_dot"></circle>
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="(e) => stop_content_enter(e, index)"
                 @mouseleave="stop_content_leave"
-                :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
+                :style="{ transform: `translate(${stop.x + 3.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
                 <g
                     transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
                     <path

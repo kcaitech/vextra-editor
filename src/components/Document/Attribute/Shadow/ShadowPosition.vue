@@ -107,7 +107,6 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     padding: 9px 8px;
-    margin-right: 5px;
     color: #000000;
 
     &:hover {

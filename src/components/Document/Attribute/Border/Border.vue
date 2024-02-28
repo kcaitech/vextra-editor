@@ -831,7 +831,6 @@ onUnmounted(() => {
                 height: 28px;
                 transition: 0.2s;
                 border-radius: var(--default-radius);
-
                 >svg {
                     width: 16px;
                     height: 16px;
