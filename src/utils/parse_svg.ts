@@ -3,9 +3,9 @@ import { Shape, creator, GroupShape, ShapeFrame, Artboard, Path } from "@kcdesig
 
 interface ShapeCreator {
     create(): Shape | undefined // 创建shape
-    afterChildrenCreated(): void // 子节点create之后
-    afterSiblingCreated(): void // 兄弟节点create之后
-    afterRootCreated(): void // 根节点create之后
+    afterChildrenCreated(): void // 所有子节点create之后
+    afterSiblingCreated(): void // 所有兄弟节点create之后
+    afterAllCreated(): void // 所有节点create之后
 }
 
 function parseTranslate(translate: string): {
@@ -78,15 +78,13 @@ class BaseShapeCreator implements ShapeCreator {
 
     }
 
-    afterRootCreated(): void {
+    afterAllCreated(): void {
 
     }
 }
 
 class NoneShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
-        return
-    }
+
 }
 
 class GroupShapeCreator extends BaseShapeCreator {
@@ -153,15 +151,36 @@ class SvgShapeCreator extends BaseShapeCreator {
     }
 }
 
+const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+hiddenSvgElement.setAttribute("width", "100%")
+hiddenSvgElement.setAttribute("height", "100%")
+hiddenSvgElement.setAttribute("style", "position:absolute;top:-100%;left:-100%;visibility:hidden")
+
+function getHiddenSvgElement() {
+    if (!document.contains(hiddenSvgElement)) document.body.appendChild(hiddenSvgElement);
+    if (hiddenSvgElement.childElementCount > 100) hiddenSvgElement.innerHTML = "";
+    return hiddenSvgElement
+}
+
+function getPathWHFromD(d: string): { width: number, height: number } {
+    const svg = getHiddenSvgElement()
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    path.setAttribute("d", d)
+    svg.appendChild(path)
+    const box = path.getBBox()
+    return { width: box.width, height: box.height }
+}
+
 class PathShapeCreator extends BaseShapeCreator {
     create(): Shape | undefined {
         const d = this.svgNode.getAttribute("d")
         if (!d) return;
         const x = this.x || 0
         const y = this.y || 0
+        const { width, height } = getPathWHFromD(d)
         const path = new Path(d);
         path.translate(-x, -y);
-        return creator.newPathShape("路径", new ShapeFrame(x, y, 100, 100), path)
+        return creator.newPathShape("路径", new ShapeFrame(x, y, width, height), path)
     }
 }
 
@@ -173,7 +192,7 @@ class Parser {
         this.svgRoot = root
     }
 
-    visit(node: Element) {
+    create(node: Element) { // 处理svg元素内的一个节点，并返回其子节点
         const children = Array.from(node.children)
         let creatorConstruction: typeof BaseShapeCreator
         if (node.tagName === "g") {
@@ -196,22 +215,20 @@ class Parser {
 
     parse(): Shape | undefined {
         const stack = [this.svgRoot]
-        const stack1: [
+        const stack1: [ // 保存遍历树时的路径信息
             Element, // 已create的元素
             number, // 其子节点的数量
         ][] = []
 
         while (stack.length) {
             const node = stack.pop()!
-            const children = this.visit(node)
+            const children = this.create(node)
 
-            const creator = (node as any).creator
-            if (!creator) throw new Error("creator不存在");
+            const creator = (node as any).creator as BaseShapeCreator
 
             const parentNode = node.parentElement
             if (parentNode) {
-                const parentCreator = (parentNode as any).creator
-                if (!parentCreator) throw new Error("creator不存在");
+                const parentCreator = (parentNode as any).creator as BaseShapeCreator
                 parentCreator.children.push(creator)
             }
 
@@ -234,17 +251,25 @@ class Parser {
 
                     const svgParent = parentStack1[0]
                     for (const child of svgParent.children) {
-                        const childCreator = (child as any).creator
-                        if (childCreator) childCreator.afterSiblingCreated();
+                        const childCreator = (child as any).creator as BaseShapeCreator
+                        childCreator.afterSiblingCreated()
                     }
 
-                    const parentCreator = (svgParent as any).creator
+                    const parentCreator = (svgParent as any).creator as BaseShapeCreator
                     parentCreator.afterChildrenCreated()
                 }
             }
         }
 
-        return (this.svgRoot as any).creator?.shape
+        const rootCreator = (this.svgRoot as any).creator as BaseShapeCreator
+        const stack2 = [rootCreator]
+        while (stack2.length) { // 再遍历一次，处理afterAllCreated
+            const creator = stack2.pop()!
+            creator.afterAllCreated()
+            stack2.push(...creator.children)
+        }
+
+        return rootCreator.shape
     }
 }
 
