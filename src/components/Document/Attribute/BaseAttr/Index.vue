@@ -395,8 +395,9 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
-                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
+            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
+                @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"
+                :context="context" />
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
                     <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
