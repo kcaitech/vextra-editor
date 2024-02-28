@@ -32,6 +32,7 @@ import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
+import * as parse_svg from "@/utils/parse_svg";
 
 export interface Media {
     name: string
@@ -456,6 +457,15 @@ export function drop(e: DragEvent, context: Context, t: Function) {
     }
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     const file = data[0];
+    if (file.type === "image/svg+xml") {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const svg = event.target?.result;
+            if (svg) parse_svg.insert(context, svg as string);
+        }
+        reader.readAsText(file);
+        return;
+    }
     item.contentType = file.type;
     const frame = { width: 100, height: 100 };
     const img = new Image();
