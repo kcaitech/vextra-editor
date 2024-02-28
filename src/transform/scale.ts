@@ -1,7 +1,8 @@
 import { Context } from "@/context";
-import { FrameLike, TransformHandler } from "./handler";
-import { CtrlElementType, ShapeView } from "@kcdesign/data";
+import { TransformHandler } from "./handler";
+import { CtrlElementType, FrameLike, Matrix, Scaler, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
+import { Action } from "@/context/tool";
 
 export type ScaleStatus = { flipHorizontal: boolean, flipVertical: boolean, scaleX: number, scaleY: number };
 
@@ -10,6 +11,8 @@ export class ScaleHandler extends TransformHandler {
     livingPoint: XY;
     currentSelectionBox: FrameLike;
     relativeTransform: ScaleStatus;
+
+    relativeFilp: { fh: boolean, fv: boolean } = { fh: false, fv: false };
 
     constructor(context: Context, selected: ShapeView[], event: MouseEvent, ctrlElementType: CtrlElementType) {
         super(context, selected, event);
@@ -21,12 +24,33 @@ export class ScaleHandler extends TransformHandler {
         this.context.assist.set_trans_target(selected);
     }
 
+    createApiCaller() {
+        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, 'scale', this.page, this.shapes);
+
+        this.workspace.scaling(true);
+        this.workspace.setSelectionViewUpdater(false);
+    }
+
+    fulfil() {
+        this.__fulfil();
+
+        this.workspace.scaling(false);
+        this.workspace.setSelectionViewUpdater(true);
+
+        return undefined;
+    }
+
+    // 执行主体
     excute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.livingPointAlignByAssist();
 
         this.__excute();
+    }
+
+    isFixedRatio() {
+        return this.fixedRatioWhileScaling || this.shiftStatus || this.context.tool.action === Action.AutoK;
     }
 
     livingPointAlignByAssist() {
@@ -162,9 +186,62 @@ export class ScaleHandler extends TransformHandler {
     __excuteSide4Right() {
         const originWidth = this.originSelectionBox.width;
         const originLeft = this.originSelectionBox.x;
-        const scale = (this.livingPoint.x - originLeft) / originWidth;
-        const flip = scale < 0;
-        // console.log('__excuteSide4Right:', scale);
+        const scaleX = (this.livingPoint.x - originLeft) / originWidth;
+        const isFixedRatio = this.isFixedRatio();
+        const scaleY = isFixedRatio ? scaleX : 1;
+        console.log('__excuteSide4Right:', this.livingPoint, scaleX);
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const referencePoint1 = this.referencePoint;
+        const referencePoint2 = this.referencePoint;
+
+        const matrixCache: Map<string, Matrix> = new Map();
+
+        if (!isFixedRatio) {
+            const _height = this.originSelectionBox.height * scaleY - this.originSelectionBox.height;
+            referencePoint2.y -= _height / 2;
+        }
+
+
+        for (let i = 0; i < this.shapes.length; i++) {
+            const shape = this.shapes[i];
+
+            const baseStatus = this.originStatus.get(shape.id);
+
+            if (!baseStatus) {
+                continue;
+            }
+
+            const parent = shape.parent;
+            if (!parent) {
+                return;
+            }
+
+            const m = shape.matrix2Root();
+            const lt = m.computeCoord2(0, 0);
+
+            const disX = lt.x - referencePoint1.x;
+            const disY = lt.y - referencePoint1.y;
+
+            const targetXY = { x: referencePoint2.x + scaleX * disX, y: referencePoint2.y + scaleY * disY };
+
+            let matrixParent2root = matrixCache.get(parent.id)!;
+            if (!matrixParent2root) {
+                matrixParent2root = new Matrix(parent.matrix2Root().inverse);
+                matrixCache.set(parent.id, matrixParent2root);
+            }
+
+            const _targetXY = matrixParent2root.computeCoord3(targetXY);
+
+            // const transformUnits
+        }
+
+        (this.asyncApiCaller as Scaler).excute4multi();
     }
     __excuteSide4Vertical() {
 

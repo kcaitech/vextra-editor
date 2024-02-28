@@ -34,6 +34,7 @@ const types = [
     CtrlElementType.RectLeft
 ];
 let need_reset_cursor_after_transform = true;
+
 let scaler: ScaleHandler | undefined = undefined;
 
 function update() {
@@ -74,49 +75,56 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     event.stopPropagation();
 
+    if (scaler) {
+        return;
+    }
+
     cur_ctrl_type = ele;
 
-    set_status_on_down();
+    // set_status_on_down();
 
-    startPosition = props.context.workspace.getContentXY(event)
+    startPosition = props.context.workspace.getContentXY(event);
 
     scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+
+    console.log('scaler:', scaler);
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
-    scaler?.excute(event);
     const workspace = props.context.workspace;
 
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = workspace.getContentXY(event);
 
-    if (isDragging && asyncMultiAction) {
-        (event.shiftKey || props.context.tool.action === Action.AutoK)
-            ? er_scale(asyncMultiAction, sx, sy, mx, my)
-            : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+    if (isDragging) {
+        // if (isDragging && asyncMultiAction) {
+        // (event.shiftKey || props.context.tool.action === Action.AutoK)
+        //     ? er_scale(asyncMultiAction, sx, sy, mx, my)
+        //     : irregular_scale(asyncMultiAction, sx, sy, mx, my);
 
-        props.context.nextTick(props.context.selection.selectedPage!, () => {
-            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-        })
+        // props.context.nextTick(props.context.selection.selectedPage!, () => {
+        //     workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        // })
+        scaler?.excute(event);
 
         startPosition = { x: mx, y: my };
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         const selection = props.context.selection
         const shapes = shapes_organize(selection.selectedShapes);
 
-        asyncMultiAction = props.context.editor
-            .controller()
-            .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
+        // asyncMultiAction = props.context.editor
+        //     .controller()
+        //     .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
 
         submatrix.reset(workspace.matrix.inverse);
 
-        set_status_before_action();
+        // set_status_before_action();
 
         isDragging = true;
-        console.log('scaler:', scaler);
 
+        scaler?.createApiCaller();
     }
 }
 function bar_mouseup(event: MouseEvent) {
@@ -141,23 +149,26 @@ function set_status_before_action() {
 function clear_status() {
     const workspace = props.context.workspace;
     if (isDragging) {
-        if (asyncMultiAction) {
-            asyncMultiAction.close();
-            asyncMultiAction = undefined;
-        }
+        // if (asyncMultiAction) {
+        //     asyncMultiAction.close();
+        //     asyncMultiAction = undefined;
+        // }
 
-        workspace.setSelectionViewUpdater(true);
+        // workspace.setSelectionViewUpdater(true);
         isDragging = false;
 
         scaler?.fulfil();
     }
-    workspace.scaling(false);
-    workspace.setCtrl('page');
+    // workspace.scaling(false);
+    // workspace.setCtrl('page');
 
-    props.context.cursor.cursor_freeze(false);
+    // props.context.cursor.cursor_freeze(false);
+
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
+
+    scaler = undefined;
 
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
