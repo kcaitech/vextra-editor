@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Action, Tool} from '@/context/tool';
-import {nextTick, onMounted, onUnmounted, ref} from 'vue';
-import {useI18n} from 'vue-i18n';
+import { Context } from '@/context';
+import { Action, Tool } from '@/context/tool';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ShapeMenu from '../ShapeMenu.vue';
 import ToolButton from '../ToolButton.vue';
+import { string_by_sys } from '@/utils/common';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -19,11 +20,12 @@ const popoverVisible = ref(false);
 const popover = ref<HTMLDivElement>();
 const checked = ref<Action>(Action.AddRect);
 const visible = ref(false);
-const patterns = ((items: [string, Action, string][]) => (items.map(item => ({value: item[0], content: item[1], key: item[2]}))))([
+const shift_l = string_by_sys('Shift L');
+const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
     ['rect', Action.AddRect, 'R'],
     ['oval', Action.AddEllipse, 'O'],
     ['line', Action.AddLine, 'L'],
-    ['arrow', Action.AddArrow, 'Shift L']
+    ['arrow', Action.AddArrow, shift_l]
 ]);
 const emits = defineEmits<Emits>();
 interface Emits {
@@ -46,7 +48,7 @@ function get_tooltip_class() {
     } else if (tool === Action.AddLine) {
         shortcut_keys.value = `${t('shape.line')}\u00a0\u00a0\u00a0\u00a0L`;
     } else if (tool === Action.AddArrow) {
-        shortcut_keys.value = `${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0Shift L`;
+        shortcut_keys.value = `${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0${shift_l}`;
     }
 }
 
@@ -89,7 +91,7 @@ function showMenu(e: MouseEvent) {
         popoverVisible.value = true
         nextTick(() => {
             if (popover.value) {
-                popover.value.style.left = el.offsetLeft  + 'px';
+                popover.value.style.left = el.offsetLeft + 'px';
                 popover.value.style.top = el.offsetHeight + 13 + 'px';
             }
         })
@@ -140,11 +142,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="shortcut_keys" placement="bottom" :show-after="600"
-                :offset="10"
-                :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton ref="button" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
-                    :selected="is_active">
+    <el-tooltip class="box-item" effect="dark" :content="shortcut_keys" placement="bottom" :show-after="600" :offset="10"
+        :hide-after="0" :visible="popoverVisible ? false : visible">
+        <ToolButton ref="button" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave" :selected="is_active">
             <div class="svg-container" @click="short">
                 <svg-icon :icon-class="cur_class"></svg-icon>
             </div>
@@ -156,7 +156,7 @@ onUnmounted(() => {
     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
         <template v-for="item in patterns" :key="item.value">
             <ShapeMenu @select="check_shape" :lg="item.value" :quick="item.key" :action="item.content"
-                       :is-active="checked === item.content"></ShapeMenu>
+                :is-active="checked === item.content"></ShapeMenu>
         </template>
     </div>
 </template>
@@ -165,8 +165,6 @@ onUnmounted(() => {
     width: 20px;
     height: 32px;
     display: flex;
-    //padding-right: 4px;
-    //margin-right: 2px;
     justify-content: center;
     align-items: center;
     color: #ffffff;
@@ -174,7 +172,7 @@ onUnmounted(() => {
     padding: 10px 8px 10px 0;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 12px;
         height: 12px;
     }
@@ -207,7 +205,7 @@ onUnmounted(() => {
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 18px;
         height: 18px;
     }

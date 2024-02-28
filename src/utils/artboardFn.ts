@@ -102,11 +102,14 @@ export function insertFrameTemplate(context: Context) {
     const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
-        const editor = context.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
+        const editor = context.editor4Page(parent);
+        const tf = tool.frameSize
+        const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const { x, y } = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
-        let artboard: Shape | false = editor.create(type, tf.name, frame);
+        // let artboard: Shape | false = editor.createArtboard(tf.name, frame);
+        let artboard: Shape | false = editor.create(ShapeType.Artboard, tf.name, frame);
         artboard = editor.insert(parent.data, shapes.length, artboard);
         context.nextTick(parent, () => {
             if (artboard) {
@@ -114,15 +117,6 @@ export function insertFrameTemplate(context: Context) {
                 view && scrollToContentView(view, context);
             }
         })
-        // if (artboard) {
-        //     const timer = setTimeout(() => {
-        //         if (artboard) {
-        //             const view = parent.shapes.get(artboard.id);
-        //             view && scrollToContentView(view, context);
-        //         }
-        //         clearTimeout(timer);
-        //     }, 100)
-        // }
     }
     context.tool.setAction(Action.AutoV);
 }

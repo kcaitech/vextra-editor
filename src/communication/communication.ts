@@ -30,7 +30,8 @@ function sendNetworkStatusToClient(status: NetworkStatusType) {
     }
 }
 
-function setOnMessage(port: MessagePort) {
+export function newConnect(port: MessagePort) {
+    console.log("newConnect")
     port.onmessage = async (messageEvent) => {
         const data = messageEvent.data as CommunicationInfo
         if (server && token !== "" && data.token !== token) { // 当有第二个用户连接时，关闭前面用户的连接
@@ -72,18 +73,20 @@ function setOnMessage(port: MessagePort) {
             networkStatusTunnelMap.set(tunnel.tunnelId, tunnel)
         }
         tunnel.setSendToServerHandler((cmdId, cmd) => cmdIdToTunnel.set(cmdId, tunnel))
+        console.log("await tunnel.start", data)
         if (data.tunnelType === TunnelType.NetworkStatus || await tunnel.start()) {
             console.log("tunnel创建成功", tunnel.tunnelId)
             sendData.id = tunnel.tunnelId
             tunnelMap.set(tunnel.tunnelId, tunnel)
             port.onmessage = tunnel.receiveFromClient.bind(tunnel)
         }
+        console.log("sendData", data, sendData)
         port.postMessage(sendData)
     }
 }
 
 if (isWorker) {
     (self as any as SharedWorkerGlobalScope).onconnect = (event) => {
-        setOnMessage(event.ports[0])
+        newConnect(event.ports[0])
     }
 }

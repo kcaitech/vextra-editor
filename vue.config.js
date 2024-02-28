@@ -84,8 +84,8 @@ var configureWebpack = (config) => {
         },
     )
 
-    const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
-    const communicationWorkerTargetFilename = `communication-worker.${crypto.createHash('md5')
+    const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication.js')
+    const communicationWorkerTargetFilename = `communication.${crypto.createHash('md5')
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)

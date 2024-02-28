@@ -178,7 +178,7 @@ export function is_box_outer_view2(shapes: Shape[], context: Context) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const f = shapes[i].frame;
         const p = wm.computeCoord3(f);
-        
+
         if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) {
             return true;
         }
@@ -298,16 +298,17 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
 
-    if (isIncluded2(selectorPoints, points)) {
+    if (isIncluded2(selectorPoints, points)) { // 选择器是否完全覆盖目标
         return true;
     }
-    if (includes) {
+    if (includes) { // 需要完全覆盖而未完全覆盖，判为false
         return false;
     }
-    if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
+    if (isIncluded2(points, selectorPoints)) { // 目标是否覆盖了选择器
         return true;
     }
 
+    // 检测是否相交
     const selectorPointsSides = get_side_by_points(selectorPoints);
     const shapeSides = get_side_by_points(points);
 
@@ -458,4 +459,28 @@ export function modifyOpacity(context: Context, val: number) {
     const editor = context.editor4Page(page);
     editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
     hidden_selection(context);
+}
+
+export function modifyXYByAlignSetting(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.round(xy.x);
+        xy.y = Math.round(xy.y);
+    }
+    return xy;
+}
+
+export function modifyXYByAlignSettingCell(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.ceil(xy.x);
+        xy.y = Math.ceil(xy.y);
+    }
+    return xy;
+}
+
+export function modifyXYByAlignSettingFloor(context: Context, xy: XY) {
+    if (context.user.isPixelAlignMent) {
+        xy.x = Math.floor(xy.x);
+        xy.y = Math.floor(xy.y);
+    }
+    return xy;
 }

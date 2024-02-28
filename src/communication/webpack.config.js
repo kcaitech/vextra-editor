@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = {
     entry: {
-        "communication-worker": "./communication-worker.ts",
+        "communication": "./communication.ts",
     },
     target: "web",
     module: {

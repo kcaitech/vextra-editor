@@ -8,6 +8,7 @@ import { deleteUnits } from "./delete";
 import { enter_path_edit_mode } from "./pathedit";
 import { untie_instance } from "./symbol";
 import { modifyOpacity } from "./common";
+import { message } from "./message";
 
 // todo 键盘事件的权限处理
 
@@ -283,15 +284,7 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
     }
 
     if (is_ctrl) {
-        // context.workspace.clipboard
-        //     .cut()
-        //     .then((res) => {
-        //         if (!res) {
-        //             return;
-        //         }
-        //         context.selection.resetSelectShapes(); // 剪切图形
-        //     });
-        return;
+        return; // 剪切操作已经系统监听
     }
     context.tool.setAction(Action.AddContact); // 连接线功能
 }
@@ -300,16 +293,19 @@ keydownHandler['KeyY'] = function (event: KeyboardEvent, context: Context) { }
 
 keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
+    try {
+        if (is_ctrl && event.shiftKey) { // 重做
+            event.preventDefault();
+            redo(context);
+            return;
+        }
 
-    if (is_ctrl && event.shiftKey) { // 重做
-        event.preventDefault();
-        redo(context);
-        return;
-    }
-
-    if (is_ctrl) { // 撤销
-        event.preventDefault();
-        undo(context);
+        if (is_ctrl) { // 撤销
+            event.preventDefault();
+            undo(context);
+        }
+    } catch (error) {
+        console.log('wrong timing:', error);
     }
 }
 
@@ -565,4 +561,16 @@ keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Tab'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     // TODO 选区切换
+}
+
+keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    if (event.shiftKey && (event.ctrlKey || event.metaKey)) {
+        const status = context.user.isPixelAlignMent;
+        context.user.modifyPixelAlignment(!status);
+        message('info', status
+            ? context.workspace.t('setting.pixelAlignMentOff')
+            : context.workspace.t('setting.pixelAlignMentOn'));
+        return;
+    }
 }
