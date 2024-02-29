@@ -145,19 +145,16 @@ export class Context extends WatchableObject {
         return this.editor.editor4Doc();
     }
 
-    editor4Page(page: Page | PageView): PageEditor {
-        if (page instanceof PageView) page = adapt2Shape(page) as Page;
+    editor4Page(page: PageView): PageEditor {
         return this.editor.editor4Page(page);
     }
 
-    editor4Shape(shape: Shape | ShapeView): ShapeEditor {
-        if (shape instanceof ShapeView) shape = adapt2Shape(shape);
+    editor4Shape(shape: ShapeView): ShapeEditor {
         return this.editor.editor4Shape(shape);
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
-    editor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor {
-        if (shape instanceof ShapeView) shape = adapt2Shape(shape) as Shape & { text: Text };
+    editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
@@ -165,14 +162,13 @@ export class Context extends WatchableObject {
         return this.m_textEditor;
     }
 
-    peekEditor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor | undefined {
+    peekEditor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor | undefined {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
     }
 
-    editor4Table(shape: TableShape | TableView): TableEditor {
-        if (shape instanceof TableView) shape = adapt2Shape(shape) as TableShape;
+    editor4Table(shape: TableView): TableEditor {
         return this.editor.editor4Table(shape);
     }
 

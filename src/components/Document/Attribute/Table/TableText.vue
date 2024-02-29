@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView, TableCellView } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -41,8 +41,8 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref<TableCell & { text: Text; }>()
-const table = ref<TableCell & { text: Text; }>()
+const shape = ref<TableCellView>()
+const table = ref<TableCellView>()
 const sizeHoverIndex = ref(-1);
 // const selection = ref(props.context.selection) 
 
@@ -231,7 +231,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     textFormat();
 }
 //设置字体大小
-const changeTextSize = (size: number, shape: TableCell & { text: Text; }) => {
+const changeTextSize = (size: number, shape: TableCellView) => {
     showSize.value = false;
     if (shape) {
         const editor = props.context.editor4TextShape(shape)
@@ -309,7 +309,7 @@ const setTextSize = () => {
         value = '1'
     }
     if (!isNaN(Number(value)) && Number(value) > 0) {
-        changeTextSize(Number(value), table.value as TableCell & { text: Text; });
+        changeTextSize(Number(value), table.value!);
         textFormat();
     } else {
         textFormat();
@@ -319,7 +319,7 @@ const setTextSize = () => {
 const selectTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    changeTextSize(size, shape.value as TableCell & { text: Text; });
+    changeTextSize(size, shape.value!);
 }
 const handleSize = () => {
     executed.value = true;
@@ -337,7 +337,7 @@ const textFormat = () => {
     const table = props.context.tableSelection;
     shape.value = undefined;
     if (table.editingCell) {
-        shape.value = table.editingCell?.cell as TableCell & { text: Text; };
+        shape.value = table.editingCell;
         // 拿到某个单元格
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -368,19 +368,19 @@ const textFormat = () => {
         if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
     } else {
-        let cells: (TableCell | undefined)[] = []
+        let cells: (TableCellView)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            cells = props.shape.data.datas || [];
+            cells = (props.shape.childs) as (TableCellView)[];
         } else {
-            cells = table.getSelectedCells(true).map(item => item.cell) || [];
+            cells = table.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
         }
         shape.value = undefined
         const formats: any[] = [];
-        
+
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (cell && cell.text) {
-                const editor = props.context.editor4TextShape(cell as any);
+                const editor = props.context.editor4TextShape(cell);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
             }
@@ -664,6 +664,7 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
+    if(highlight.value && !highlightIsMulti.value) return
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -920,7 +921,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
+            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
@@ -1338,4 +1339,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

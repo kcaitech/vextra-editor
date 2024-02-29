@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, TableView, Text } from '@kcdesign/data';
+import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableCellView, TableShape, TableView, Text } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
@@ -162,7 +162,7 @@ const handleCellMenu = () => {
 const getCellsFormat = () => {
     const table = props.context.tableSelection;
     if (!table || table.tableRowStart < 0 || table.tableColStart < 0) return;
-    const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
+    const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item) as TableCellView[];
     if (cells.length === 1) {
         const style = cells[0]!.style;
         if (style.fills[0]) {
@@ -171,7 +171,7 @@ const getCellsFormat = () => {
             color.value = new Color(1, 216, 216, 216);
         }
     } else if (cells.length > 1) {
-        const _fs = get_fills(cells as Shape[]);
+        const _fs = get_fills(cells);
         if (_fs === 'mixed' || !_fs.length) {
             color.value = new Color(1, 216, 216, 216);
         } else {
@@ -183,7 +183,7 @@ const getCellsFormat = () => {
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (cell && cell.text) {
-                const editor = props.context.editor4TextShape(cell as any);
+                const editor = props.context.editor4TextShape(cell);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
             }

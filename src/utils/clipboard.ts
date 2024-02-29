@@ -272,7 +272,7 @@ export class Clipboard {
 
             const table = this.context.selection.tableshape;
             if (text && table) {
-                const editor = this.context.editor4Table(table as TableShape);
+                const editor = this.context.editor4Table(table);
                 const ts = this.context.tableSelection;
                 editor.resetTextCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
                 ts.resetSelection();
@@ -285,7 +285,7 @@ export class Clipboard {
             }
 
             const editor = this.context.editor4Page(page);
-            const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
+            const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
 
             if (delete_res) {
                 this.context.selection.resetSelectShapes();

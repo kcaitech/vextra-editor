@@ -30,7 +30,7 @@ const InsertCell = (state: string) => {
     const shape: TableView = props.context.selection.selectedShapes[0] as TableView;
     const layout = (shape as TableView).getLayout();
     const table = props.context.tableSelection;
-    const editor = props.context.editor4Table(adapt2Shape(shape) as TableShape);
+    const editor = props.context.editor4Table(shape);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (state === 'top') {

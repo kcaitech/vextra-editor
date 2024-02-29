@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Shape, ShapeView, TableCellType, TableShape, adapt2Shape } from "@kcdesign/data";
+import { Shape, ShapeView, TableCellType, TableShape, TableView, adapt2Shape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
     const path_edit_mode = context.workspace.is_path_edit_mode;
@@ -58,14 +58,14 @@ function delete_shapes(context: Context, shapes: ShapeView[]) {
     const page = context.selection.selectedPage;
     if (page) {
         const editor = context.editor4Page(page);
-        editor.delete_batch(shapes.map((s => adapt2Shape(s))));
+        editor.delete_batch(shapes);
     }
     context.selection.resetSelectShapes();
 }
 
-function delete_for_table(context: Context, table: TableShape) {
+function delete_for_table(context: Context, table: TableView) {
     const ts = context.tableSelection;
-    const editor = context.editor4Table(table as TableShape);
+    const editor = context.editor4Table(table);
     const rs = ts.tableRowStart;
     const cs = ts.tableColStart;
     if (rs > -1 || cs > -1) {
@@ -73,12 +73,12 @@ function delete_for_table(context: Context, table: TableShape) {
         ts.resetSelection();
 
         context.nextTick(context.selection.selectedPage!, () => {
-            const ec = table.getCellAt(rs, cs);
+            const ec = table.data.getCellAt(rs, cs);
             if (!ec || ec.cellType === TableCellType.None) {
                 return;
             }
 
-            const cell = table.locateCell2(ec);
+            const cell = table.cells.get(ec.id);
 
             ts.setEditingCell(cell);
 

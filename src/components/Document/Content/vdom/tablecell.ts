@@ -4,7 +4,7 @@ import { IMAGE_DEFAULT } from "../common";
 import { elpatch } from "./patch";
 
 export class TableCellDom extends (TableCellView) {
-    constructor(ctx: DViewCtx, props: PropsType & { frame?: ShapeFrame }) {
+    constructor(ctx: DViewCtx, props: PropsType & { frame: ShapeFrame } & { index: { row: number, col: number } }) {
         super(ctx, props, IMAGE_DEFAULT);
     }
     el?: HTMLElement | SVGElement; // 不要改名，patch用到

@@ -17,7 +17,8 @@ import {
     TextShapeView,
     adapt2Shape,
     GroupShapeView,
-    SymbolRefView
+    SymbolRefView,
+TableCellView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -66,7 +67,7 @@ function showLayerSubMenu(e: MouseEvent, type: string) {
     })
 }
 
-function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
+function is_inner_textshape(): TextShapeView | TableCellView | undefined {
     const selected = props.context.selection.selectedShapes;
     const isEditing = props.context.workspace.isEditing;
     if (selected.length === 1 && selected[0].type === ShapeType.Text && (selected[0] as TextShapeView).text && isEditing) {
@@ -74,8 +75,8 @@ function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined 
     }
     if (selected.length === 1 && selected[0].type === ShapeType.Table) {
         const tableSelection = props.context.tableSelection;
-        if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
-            return tableSelection.editingCell.cell as any as Shape & { text: Text }
+        if (tableSelection.editingCell && tableSelection.editingCell && tableSelection.editingCell.cellType === TableCellType.Text) {
+            return tableSelection.editingCell;
         }
     }
     // return false;
@@ -119,7 +120,7 @@ function cut() {
         const copy_result = props.context.workspace.clipboard.write();
 
         if (copy_result) {
-            const editor = props.context.editor4TextShape(textlike as TextShape);
+            const editor = props.context.editor4TextShape(textlike);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
                 selection.setCursor(Math.min(start, end), false);
             }

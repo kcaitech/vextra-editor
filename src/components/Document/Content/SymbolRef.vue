@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, onUnmounted, shallowRef, watch } from 'vue';
 import comsMap from './comsmap'
-import { ArtboradView, ContactLineView, CutoutShapeView, DViewCtx, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolRefView, SymbolUnionShape, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape, isAdaptedShape, renderSymbolRef as r } from "@kcdesign/data"
+import { ArtboradView, ContactLineView, CutoutShapeView, DViewCtx, GroupShapeView, ImageShapeView, LineView, OverrideType, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolRefView, SymbolUnionShape, SymbolView, TableCellView, TableView, TextShapeView, VariableType, adapt2Shape, findOverrideAndVar, isAdaptedShape, renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape, RenderTransform, SymbolShape } from '@kcdesign/data';
 import { initCommonShape } from './common';
 
@@ -15,6 +15,18 @@ const watcher = () => {
     updater();
 }
 
+function getRefId2(_this: SymbolRefShape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    if (_this.isVirtualShape) return _this.refId;
+    if (!varsContainer) return _this.refId;
+    const _vars = findOverrideAndVar(_this, OverrideType.SymbolID, varsContainer);
+    if (!_vars) return _this.refId;
+    const _var = _vars[_vars.length - 1];
+    if (_var && _var.type === VariableType.SymbolRef) {
+        return _var.value;
+    }
+    return _this.refId;
+}
+
 // 需要自己加载symbol
 let __data = shallowRef<SymbolShape>();
 let __union: SymbolShape | undefined;
@@ -22,7 +34,7 @@ let __startLoad: string = "";
 function updater() {
     const symMgr = props.data.getSymbolMgr();
     if (!symMgr) return;
-    const refId = props.data.getRefId2(props.varsContainer);
+    const refId = getRefId2(props.data, props.varsContainer);
     if (__startLoad === refId) {
         return;
     }

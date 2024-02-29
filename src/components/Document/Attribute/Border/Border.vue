@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -46,7 +46,7 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const editor = computed(() => props.context.editor4Shape(adapt2Shape(props.shapes[0])));
+const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
@@ -86,7 +86,7 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variable'))) [
+    if ((args.includes('style') || args.includes('variables'))) [
         updateData()
     ]
 }
@@ -101,7 +101,7 @@ function updateData() {
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
         if (shape.type === ShapeType.Table && (table.tableRowStart > -1 || is_edting)) {
-            let cells = [], might_is_mixed = false;
+            let cells: TableCellView[] = [], might_is_mixed = false;
             if (table.tableRowStart > -1) {
                 const _cs = table.getSelectedCells(true);
                 for (let i = 0, len = _cs.length; i < len; i++) {
@@ -110,10 +110,10 @@ function updateData() {
                     else cells.push(c.cell);
                 }
             } else if (is_edting) {
-                cells.push(is_edting.cell)
+                cells.push(is_edting)
             }
             if (cells.length > 0) {
-                const _bs = get_borders(cells as Shape[]);
+                const _bs = get_borders(cells);
                 if (_bs === 'mixed') {
                     mixed_cell.value = true;
                 } else {
@@ -377,7 +377,7 @@ function onColorChange(e: Event, idx: number) {
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
     const _idx = borders.length - idx - 1;
-    const editor = props.context.editor4Shape(adapt2Shape(shape))
+    const editor = props.context.editor4Shape((shape))
     if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const e = props.context.editor4Table(shape as TableView);
@@ -452,7 +452,7 @@ function onAlphaChange(e: Event, idx: number) {
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
-            const editor = props.context.editor4Shape(adapt2Shape(shape))
+            const editor = props.context.editor4Shape((shape))
             if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                 if (shape.type === ShapeType.Table) {
                     const e = props.context.editor4Table(shape as TableView);
@@ -515,7 +515,7 @@ function onAlphaChange(e: Event, idx: number) {
                 const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
                 const _idx = borders.length - idx - 1;
-                const editor = props.context.editor4Shape(adapt2Shape(shape))
+                const editor = props.context.editor4Shape((shape))
                 if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                     if (shape.type === ShapeType.Table) {
                         const e = props.context.editor4Table(shape as TableView);
