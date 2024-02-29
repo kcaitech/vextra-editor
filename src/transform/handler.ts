@@ -1,61 +1,82 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { XYsBounding } from "@/utils/common";
+import { boundingBox2Root } from "@/utils/common";
 import { AsyncApiCaller, FrameLike, Matrix, PageView, ShapeView } from "@kcdesign/data";
 
 export type OriginStatus = Map<string, FrameLike>;
 
+export type Box = {
+    origin: XY;
+
+    baseX: number;
+    baseY: number;
+    baseWidth: number;
+    baseHeight: number;
+
+    boxX: number;
+    boxY: number;
+    boxWidth: number;
+    boxHeight: number;
+};
+
+export type BaseFrames = Map<string, Box>;
+
 export class TransformHandler {
     context: Context;
-    originStatus: OriginStatus = new Map();
-    originSelectionBox: FrameLike;
+    workspace: WorkSpace;
+
+    originSelectionBox: FrameLike = { x: 0, y: 0, height: 0, width: 0 };
+    baseFrames: BaseFrames = new Map();
+
     shapes: ShapeView[];
     page: PageView;
     referencePoint: XY;
-    workspace: WorkSpace;
+
     shiftStatus: boolean;
     altStatus: boolean;
     alignPixel: boolean;
+    fixedRatioWhileScaling: boolean = false;
 
     horFixedStatus: boolean = false;
     horFixedValue: number = 0;
     verFixedStatus: boolean = false;
     verFixedValue: number = 0;
 
-    asyncApiCaller: AsyncApiCaller | undefined;
-
-    fixedRatioWhileScaling: boolean = false;
-
-    __originFrameCache: Map<string, FrameLike> = new Map();
     __parent2RootMatrixCache: Map<string, Matrix> = new Map();
+    __baseFramesCache: BaseFrames = new Map();
+
+    asyncApiCaller: AsyncApiCaller | undefined;
 
     constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
         this.context = context;
+        this.workspace = context.workspace;
         this.shapes = shapes;
-        this.initByShapes();
         this.page = context.selection.selectedPage!;
-        this.originSelectionBox = this.computeSelectionBox();
         this.referencePoint = context.workspace.getRootXY(event);
+
         this.shiftStatus = event.shiftKey;
         this.altStatus = event.altKey;
-        this.workspace = context.workspace;
         this.alignPixel = context.user.isPixelAlignMent;
 
+        this.getBaseFrames();
         this.beforeTransform();
     }
 
-    initByShapes() {
+
+    getBaseFrames() {
+        const matrixParent2rootCache = new Map();
+
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
+            const cache = this.__baseFramesCache.get(shape.id);
 
-            const _fl = this.__originFrameCache.get(shape.id);
-            if (_fl) {
-                this.originStatus.set(shape.id, _fl);
-                continue;
-            }
-
-            if (shape.isVirtualShape) {
+            if (cache) {
                 continue;
             }
 
@@ -63,26 +84,31 @@ export class TransformHandler {
                 this.fixedRatioWhileScaling = true;
             }
 
-            const parent = shape.parent;
-            if (!parent) {
-                continue;
+            const f = boundingBox2Root(shape, matrixParent2rootCache);
+
+            if (f.boxX < left) {
+                left = f.boxX;
             }
 
-            let m: Matrix = this.__parent2RootMatrixCache.get(parent.id)!;
-            if (!m) {
-                m = parent.matrix2Root();
-                this.__parent2RootMatrixCache.set(parent.id, m);
+            if (f.boxY < top) {
+                top = f.boxY;
             }
 
-            const box = shape.boundingBox();
+            const _right = f.boxX + f.boxWidth
+            if (_right > right) {
+                right = _right;
+            }
 
-            const lt = m.computeCoord2(box.x, box.y);
-            const rb = m.computeCoord2(box.x + box.width, box.y + box.height);
+            const _bottom = f.boxY + f.boxHeight;
+            if (_bottom > bottom) {
+                bottom = _bottom;
+            }
 
-            const frameLike = { x: lt.x, y: lt.y, width: rb.x - lt.x, height: rb.y - lt.y };
-            this.originStatus.set(shape.id, frameLike);
-            this.__originFrameCache.set(shape.id, frameLike);
+            this.baseFrames.set(shape.id, f);
+            this.__baseFramesCache.set(shape.id, f);
         }
+
+        this.originSelectionBox = { x: left, y: top, width: right - left, height: bottom - top };
     }
 
     beforeTransform() {
@@ -93,72 +119,17 @@ export class TransformHandler {
         this.workspace.setCtrl('controller'); // 将编辑器控制权交给控件
     }
 
-    computeSelectionBox(): FrameLike {
-        let left = Infinity;
-        let top = Infinity;
-        let right = -Infinity;
-        let bottom = -Infinity;
-
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
-
-            const cacheFrame = this.__originFrameCache.get(shape.id);
-
-            if (cacheFrame) {
-                if (cacheFrame.x < left) {
-                    left = cacheFrame.x;
-                }
-                if (cacheFrame.y < top) {
-                    top = cacheFrame.y;
-                }
-                const _right = cacheFrame.x + cacheFrame.width;
-                if (_right > right) {
-                    right = _right;
-                }
-                const _bottom = cacheFrame.y + cacheFrame.height;
-                if (_bottom > bottom) {
-                    bottom = _bottom
-                }
-            }
-            else {
-                const frame = shape.frame;
-
-                const m = shape.matrix2Root();
-
-                const points = [
-                    { x: 0, y: 0 },
-                    { x: frame.width, y: 0 },
-                    { x: frame.width, y: frame.height },
-                    { x: 0, y: frame.height }
-                ].map(p => m.computeCoord3(p));
-
-                const box = XYsBounding(points);
-
-                if (box.left < left) {
-                    left = box.left;
-                }
-                if (box.top < top) {
-                    top = box.top;
-                }
-                if (box.right > right) {
-                    right = box.right;
-                }
-                if (box.bottom > bottom) {
-                    bottom = box.bottom;
-                }
-            }
-        }
-
-        return { x: left, y: top, width: right - left, height: bottom - top };
-    }
-
     modifyShiftStatus(v: boolean) {
         this.shiftStatus = v;
+        this.passiveExcute();
     }
 
     modifyAltStatus(v: boolean) {
         this.altStatus = v;
+        this.passiveExcute();
     }
+
+    passiveExcute() { }
 
     abort() { }
 

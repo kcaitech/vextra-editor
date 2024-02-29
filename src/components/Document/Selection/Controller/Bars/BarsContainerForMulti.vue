@@ -84,10 +84,10 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     // set_status_on_down();
 
     startPosition = props.context.workspace.getContentXY(event);
-
     scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
 
     console.log('scaler:', scaler);
+
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
@@ -104,10 +104,11 @@ function bar_mousemove(event: MouseEvent) {
         //     ? er_scale(asyncMultiAction, sx, sy, mx, my)
         //     : irregular_scale(asyncMultiAction, sx, sy, mx, my);
 
-        // props.context.nextTick(props.context.selection.selectedPage!, () => {
-        //     workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-        // })
         scaler?.excute(event);
+
+        props.context.nextTick(props.context.selection.selectedPage!, () => {
+            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        })
 
         startPosition = { x: mx, y: my };
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {

@@ -1,10 +1,12 @@
 import { Context } from "@/context";
 import { TransformHandler } from "./handler";
-import { CtrlElementType, FrameLike, Matrix, Scaler, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, FrameLike, Matrix, ScaleUnit, Scaler, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
 
 export type ScaleStatus = { flipHorizontal: boolean, flipVertical: boolean, scaleX: number, scaleY: number };
+
+export const minimum_WH = 0.01;
 
 export class ScaleHandler extends TransformHandler {
     ctrlElementType: CtrlElementType;
@@ -49,6 +51,10 @@ export class ScaleHandler extends TransformHandler {
         this.__excute();
     }
 
+    passiveExcute() {
+        this.__excute();
+    }
+
     isFixedRatio() {
         return this.fixedRatioWhileScaling || this.shiftStatus || this.context.tool.action === Action.AutoK;
     }
@@ -74,16 +80,16 @@ export class ScaleHandler extends TransformHandler {
         }
 
         if (this.ctrlElementType === CtrlElementType.RectLT) {
-
+            this.fixToAlignWhileMofdifyPoint();
         }
         else if (this.ctrlElementType === CtrlElementType.RectRT) {
-
+            this.fixToAlignWhileMofdifyPoint();
         }
         else if (this.ctrlElementType === CtrlElementType.RectRB) {
-
+            this.fixToAlignWhileMofdifyPoint();
         }
         else if (this.ctrlElementType === CtrlElementType.RectLB) {
-
+            this.fixToAlignWhileMofdifyPoint();
         }
 
         if (this.horFixedStatus) {
@@ -112,19 +118,6 @@ export class ScaleHandler extends TransformHandler {
         }
     }
 
-    fixToAlignWhileModifyRightOrLeft() {
-        const x = this.livingPoint.x;
-        const y1 = this.originSelectionBox.y;
-        const y2 = y1 + this.originSelectionBox.height;
-
-        const target = this.context.assist.alignX(this.livingPoint, [{ x, y: y1 }, { x, y: y2 }]);
-        if (!target) {
-            return;
-        }
-
-        this.updateHorFixedStatus(x, target);
-    }
-
     updateVerFixedStatus(livingY: number, assistResult: { y: number, sticked_by_y: boolean }) {
         const stickness = this.context.assist.stickness;
         if (this.verFixedStatus) {
@@ -143,6 +136,19 @@ export class ScaleHandler extends TransformHandler {
         }
     }
 
+    fixToAlignWhileModifyRightOrLeft() {
+        const x = this.livingPoint.x;
+        const y1 = this.originSelectionBox.y;
+        const y2 = y1 + this.originSelectionBox.height;
+
+        const target = this.context.assist.alignX(this.livingPoint, [{ x, y: y1 }, { x, y: y2 }]);
+        if (!target) {
+            return;
+        }
+
+        this.updateHorFixedStatus(x, target);
+    }
+
     fixToAlignWhileMofdifyTopOrBottom() {
         const y = this.livingPoint.y;
         const x1 = this.originSelectionBox.x;
@@ -154,6 +160,18 @@ export class ScaleHandler extends TransformHandler {
         }
 
         this.updateVerFixedStatus(y, assistResult);
+    }
+
+    fixToAlignWhileMofdifyPoint() {
+        const assistResult = this.context.assist.alignXY(this.livingPoint);
+        console.log('assistResult:', assistResult);
+
+        if (!assistResult) {
+            return;
+        }
+
+        this.updateHorFixedStatus(this.livingPoint.x, assistResult);
+        this.updateVerFixedStatus(this.livingPoint.y, assistResult);
     }
 
     __excute() {
@@ -171,64 +189,60 @@ export class ScaleHandler extends TransformHandler {
 
     __excute4multi() {
         if (this.ctrlElementType === CtrlElementType.RectLeft) {
+            this.__excuteSide4Left();
         }
         else if (this.ctrlElementType === CtrlElementType.RectRight) {
             this.__excuteSide4Right();
         }
         else if (this.ctrlElementType === CtrlElementType.RectTop) {
-
+            this.__excuteSide4Top();
         }
         else if (this.ctrlElementType === CtrlElementType.RectBottom) {
-
+            this.__excuteSide4Bottom();
+        }
+        else if (this.ctrlElementType === CtrlElementType.RectLT) {
+            this.__excuteSide4LeftTop();
+        }
+        else if (this.ctrlElementType === CtrlElementType.RectRT) {
+            this.__excuteSide4RightTop();
+        }
+        else if (this.ctrlElementType === CtrlElementType.RectRB) {
+            this.__excuteSide4RightBottom();
+        }
+        else if (this.ctrlElementType === CtrlElementType.RectLB) {
+            this.__excuteSide4LeftBottom();
         }
     }
 
-    __excuteSide4Right() {
-        const originWidth = this.originSelectionBox.width;
-        const originLeft = this.originSelectionBox.x;
-        const scaleX = (this.livingPoint.x - originLeft) / originWidth;
-        const isFixedRatio = this.isFixedRatio();
-        const scaleY = isFixedRatio ? scaleX : 1;
-        console.log('__excuteSide4Right:', this.livingPoint, scaleX);
-
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
-
-        if (needFlipH) {
-            this.relativeFilp.fh = true;
-        }
-
-        const referencePoint1 = this.referencePoint;
-        const referencePoint2 = this.referencePoint;
-
+    generateTransformUnits(
+        referencePoint1: XY,
+        referencePoint2: XY,
+        scaleX: number,
+        scaleY: number,
+        needFlipH: boolean,
+        needFlipV: boolean
+    ) {
         const matrixCache: Map<string, Matrix> = new Map();
-
-        if (!isFixedRatio) {
-            const _height = this.originSelectionBox.height * scaleY - this.originSelectionBox.height;
-            referencePoint2.y -= _height / 2;
-        }
-
-
+        const transformUnits: ScaleUnit[] = [];
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
 
-            const baseStatus = this.originStatus.get(shape.id);
-
-            if (!baseStatus) {
+            const baseFrame = this.baseFrames.get(shape.id);
+            if (!baseFrame) {
                 continue;
             }
 
-            const parent = shape.parent;
-            if (!parent) {
-                return;
-            }
+            const origin = baseFrame.origin;
 
-            const m = shape.matrix2Root();
-            const lt = m.computeCoord2(0, 0);
+            const disX = origin.x - referencePoint1.x;
+            const disY = origin.y - referencePoint1.y;
 
-            const disX = lt.x - referencePoint1.x;
-            const disY = lt.y - referencePoint1.y;
+            const targetXY = {
+                x: referencePoint2.x + scaleX * disX,
+                y: referencePoint2.y + scaleY * disY
+            };
 
-            const targetXY = { x: referencePoint2.x + scaleX * disX, y: referencePoint2.y + scaleY * disY };
+            const parent = shape.parent!;
 
             let matrixParent2root = matrixCache.get(parent.id)!;
             if (!matrixParent2root) {
@@ -237,28 +251,282 @@ export class ScaleHandler extends TransformHandler {
             }
 
             const _targetXY = matrixParent2root.computeCoord3(targetXY);
+            let width = baseFrame.baseWidth * scaleX;
+            let height = baseFrame.baseHeight * scaleY;
 
-            // const transformUnits
+            const alignPixel = this.alignPixel;
+
+            _targetXY.x = alignPixel ? Math.round(_targetXY.x) : _targetXY.x;
+            _targetXY.y = alignPixel ? Math.round(_targetXY.y) : _targetXY.y;
+
+            width = alignPixel ? Math.round(width) : width;
+            height = alignPixel ? Math.round(height) : height;
+
+            transformUnits.push({
+                shape,
+                targetXY: _targetXY,
+                targetWidth: width,
+                targetHeight: height,
+                baseWidth: baseFrame.baseWidth,
+                baseHeight: baseFrame.baseHeight,
+                needFlipH: needFlipH,
+                needFlipV: needFlipV
+            });
         }
 
-        (this.asyncApiCaller as Scaler).excute4multi();
-    }
-    __excuteSide4Vertical() {
-
+        return transformUnits;
     }
 
-    passiveExcute() {
+    __excuteSide4Left() {
+        const originWidth = this.originSelectionBox.width;
+        const originRight = this.originSelectionBox.x + originWidth;
+
+        const scaleX = (originRight - this.livingPoint.x) / originWidth;
+        const isFixedRatio = this.isFixedRatio();
+        const scaleY = isFixedRatio ? scaleX : 1;
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = !this.relativeFilp.fh;
+        }
+
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.livingPoint.x, y: this.originSelectionBox.y };
+
+        if (isFixedRatio) {
+            const _height = this.originSelectionBox.height * scaleY - this.originSelectionBox.height;
+            referencePoint2.y -= _height / 2;
+        }
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+    __excuteSide4Right() {
+        const originWidth = this.originSelectionBox.width;
+        const originLeft = this.originSelectionBox.x;
+
+        const scaleX = (this.livingPoint.x - originLeft) / originWidth;
+        const isFixedRatio = this.isFixedRatio();
+        const scaleY = isFixedRatio ? scaleX : 1;
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        if (isFixedRatio) {
+            const _height = this.originSelectionBox.height * scaleY - this.originSelectionBox.height;
+            referencePoint2.y -= _height / 2;
+        }
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+
+    __excuteSide4Top() {
+        const originHeight = this.originSelectionBox.height;
+        const originBottom = this.originSelectionBox.y + originHeight;
+
+        const scaleY = (originBottom - this.livingPoint.y) / originHeight;
+        const isFixedRatio = this.isFixedRatio();
+        const scaleX = isFixedRatio ? scaleY : 1;
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.originSelectionBox.x, y: this.livingPoint.y };
+
+        if (isFixedRatio) {
+            const _width = this.originSelectionBox.width * scaleX - this.originSelectionBox.width;
+            referencePoint2.x -= _width / 2;
+        }
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+
+    __excuteSide4Bottom() {
+        const originHeight = this.originSelectionBox.height;
+        const originTop = this.originSelectionBox.y;
+
+        const scaleY = (this.livingPoint.y - originTop) / originHeight;
+        const isFixedRatio = this.isFixedRatio();
+        const scaleX = isFixedRatio ? scaleY : 1;
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+
+        if (isFixedRatio) {
+            const _width = (scaleX - 1) * this.originSelectionBox.width;
+            referencePoint2.x -= _width / 2;
+        }
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+
+    __excuteSide4LeftTop() {
+        const originWidth = this.originSelectionBox.width;
+        const originHeight = this.originSelectionBox.height;
+        const originLeft = this.originSelectionBox.x;
+        const originTop = this.originSelectionBox.y;
+        const originRight = originLeft + originWidth;
+        const originBottom = originTop + originHeight;
+
+        let scaleX = (originRight - this.livingPoint.x) / originWidth;
+        let scaleY = (originBottom - this.livingPoint.y) / originHeight;
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const isFixedRatio = this.isFixedRatio();
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.livingPoint.x, y: this.livingPoint.y };
+
+        if (isFixedRatio) {
+            if (scaleX > scaleY) {
+                referencePoint2.y -= (scaleX - scaleY) * originHeight;
+                scaleY = scaleX;
+            } else {
+                referencePoint2.x -= (scaleY - scaleX) * originWidth;
+                scaleX = scaleY;
+            }
+        }
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+
+    __excuteSide4RightTop() {
+        const originWidth = this.originSelectionBox.width;
+        const originHeight = this.originSelectionBox.height;
+        const originLeft = this.originSelectionBox.x;
+        const originTop = this.originSelectionBox.y;
+        const originBottom = originTop + originHeight;
+
+        let scaleX = (this.livingPoint.x - originLeft) / originWidth;
+        let scaleY = (originBottom - this.livingPoint.y) / originHeight;
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const isFixedRatio = this.isFixedRatio();
+        const referencePoint1 = { x: originLeft, y: originTop };
+        const referencePoint2 = { x: originLeft, y: this.livingPoint.y };
+
+        if (isFixedRatio) {
+            if (scaleX > scaleY) {
+                referencePoint2.y -= (scaleX - scaleY) * originHeight;
+                scaleY = scaleX;
+            } else {
+                scaleX = scaleY;
+            }
+        }
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
 
     }
 
-    updateCurrentTransform() {
-        const width = this.livingPoint.x - this.originSelectionBox.x;
-        const height = this.livingPoint.y - this.originSelectionBox.y;
+    __excuteSide4RightBottom() {
+        const originWidth = this.originSelectionBox.width;
+        const originHeight = this.originSelectionBox.height;
+        const originLeft = this.originSelectionBox.x;
+        const originTop = this.originSelectionBox.y;
 
-        this.relativeTransform.scaleX = width / this.originSelectionBox.width;
-        this.relativeTransform.scaleY = height / this.originSelectionBox.height;
+        let scaleX = (this.livingPoint.x - originLeft) / originWidth;
+        let scaleY = (this.livingPoint.y - originTop) / originHeight;
 
-        this.relativeTransform.flipHorizontal = !!(this.relativeTransform.scaleX < 0);
-        this.relativeTransform.flipVertical = !!(this.relativeTransform.scaleY < 0);
+        const isFixedRatio = this.isFixedRatio();
+
+        if (isFixedRatio) {
+            if (scaleX > scaleY) {
+                scaleY = scaleX;
+            } else {
+                scaleX = scaleY;
+            }
+        }
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+        const referencePoint2 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
+    }
+
+    __excuteSide4LeftBottom() {
+        const originWidth = this.originSelectionBox.width;
+        const originHeight = this.originSelectionBox.height;
+        const originLeft = this.originSelectionBox.x;
+        const originTop = this.originSelectionBox.y;
+        const originRight = originLeft + originWidth;
+
+        let scaleX = (originRight - this.livingPoint.x) / originWidth;
+        let scaleY = (this.livingPoint.y - originTop) / originHeight;
+
+        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        if (needFlipV) {
+            this.relativeFilp.fv = !this.relativeFilp.fv;
+        }
+
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = true;
+        }
+
+        const isFixedRatio = this.isFixedRatio();
+        const referencePoint1 = { x: originLeft, y: originTop };
+        const referencePoint2 = { x: this.livingPoint.x, y: originTop };
+
+        if (isFixedRatio) {
+            if (scaleX > scaleY) {
+                scaleY = scaleX;
+            } else {
+                referencePoint2.x -= (scaleY - scaleX) * originWidth;
+                scaleX = scaleY;
+            }
+        }
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+
+        (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 }

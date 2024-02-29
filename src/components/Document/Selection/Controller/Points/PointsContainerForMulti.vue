@@ -8,6 +8,8 @@ import { update_dot2 } from './common';
 import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
+import { ScaleHandler } from '@/transform/scale';
+
 interface Props {
     matrix: number[]
     context: Context
@@ -32,6 +34,8 @@ let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 let need_reset_cursor_after_transform = true;
+
+let scaler: ScaleHandler | undefined = undefined;
 
 // #region view
 function update() {
@@ -64,9 +68,11 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     cur_ctrl_type = ele;
 
-    set_status_on_down();
+    // set_status_on_down();
 
     startPosition = props.context.workspace.getContentXY(event);
+
+    scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -76,7 +82,8 @@ function point_mousemove(event: MouseEvent) {
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = workspace.getContentXY(event)
     const { x: ax, y: ay } = props.axle;
-    if (isDragging && asyncMultiAction) {
+    // if (isDragging && asyncMultiAction) {
+    if (isDragging) {
         if (cur_ctrl_type.endsWith('rotate')) {
             const deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
             const root_axle = submatrix.computeCoord(ax, ay);
@@ -84,14 +91,15 @@ function point_mousemove(event: MouseEvent) {
             const r = new Matrix();
             r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y);
 
-            asyncMultiAction.executeRotate(deg, r);
+            // asyncMultiAction.executeRotate(deg, r);
 
             props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
-            const action = props.context.tool.action;
-            (event.shiftKey || action === Action.AutoK)
-                ? er_scale(asyncMultiAction, sx, sy, mx, my)
-                : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+            // const action = props.context.tool.action;
+            // (event.shiftKey || action === Action.AutoK)
+            //     ? er_scale(asyncMultiAction, sx, sy, mx, my)
+            //     : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+            scaler?.excute(event);
         }
 
         startPosition = { x: mx, y: my };
@@ -100,16 +108,19 @@ function point_mousemove(event: MouseEvent) {
             workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
         })
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status_before_action();
+        // set_status_before_action();
 
         const shapes = shapes_organize(props.context.selection.selectedShapes);
         const page = props.context.selection.selectedPage!;
 
-        asyncMultiAction = props.context.editor
-            .controller()
-            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
+        // asyncMultiAction = props.context.editor
+        //     .controller()
+        //     .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
 
         submatrix.reset(workspace.matrix.inverse);
+
+        scaler?.createApiCaller();
+
 
         isDragging = true;
     }
@@ -280,25 +291,28 @@ function set_status_before_action() {
 }
 function clear_status() {
     const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.rotating(false);
-    workspace.setCtrl('page');
+    // workspace.scaling(false);
+    // workspace.rotating(false);
+    // workspace.setCtrl('page');
 
     if (isDragging) {
         isDragging = false;
+        scaler?.fulfil();
     }
 
-    if (asyncMultiAction) {
-        asyncMultiAction.close();
-        asyncMultiAction = undefined;
-        workspace.setSelectionViewUpdater(true);
-    }
+    // if (asyncMultiAction) {
+    //     asyncMultiAction.close();
+    //     asyncMultiAction = undefined;
+    //     workspace.setSelectionViewUpdater(true);
+    // }
 
 
     props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
+
+    scaler = undefined;
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
@@ -316,6 +330,25 @@ function frame_watcher() {
         passive_update();
     }
 }
+function keydown(event: KeyboardEvent) {
+    if (event.repeat) {
+        return;
+    }
+    if (event.shiftKey) {
+        scaler?.modifyShiftStatus(true);
+    }
+    if (event.altKey) {
+        scaler?.modifyAltStatus(true);
+    }
+}
+function keyUp(event: KeyboardEvent) {
+    if (event.code === 'ShiftLeft') {
+        scaler?.modifyShiftStatus(false);
+    }
+    if (event.code === 'AltLeft') {
+        scaler?.modifyAltStatus(false);
+    }
+}
 function window_blur() {
     clear_status();
 }
@@ -326,10 +359,14 @@ watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
     window.addEventListener('blur', window_blur);
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyUp);
     update();
 })
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
+    document.removeEventListener('keydown', keydown);
+    document.removeEventListener('keyup', keyUp);
 })
 // #endregion
 </script>
