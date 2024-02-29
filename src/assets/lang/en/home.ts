@@ -211,6 +211,7 @@ export const attr: any = {
     opacity: 'Opacity',
     fill: 'Fill',
     text: 'Text',
+    table_text: 'Table Text',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
     position: 'Position',

@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { getTextIndexAndLen, get_add_gradient_color, get_gradient, isSelectText, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, Stop, TextShapeView, adapt2Shape, cloneGradient } from '@kcdesign/data';
+import { AsyncGradientEditor, BasicArray, Color, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, Stop, TableCell, TableView, TextShapeView, adapt2Shape, cloneGradient } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -62,12 +62,45 @@ const get_linear_points = () => {
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Angular) return;
     active.value = props.context.color.selected_stop;
-    const frame = shape.frame;
+    let frame = shape.frame;
+    let d1 = { x: 0, y: 0 }
+    let d2 = { x: 0, y: 0 }
     const m = shape.matrix2Root();
-    m.preScale(frame.width, frame.height);
-    m.multiAtLeft(matrix);
-    const d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
-    const d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
+    if (shape.type === ShapeType.Table) {
+        const tableSelection = props.context.tableSelection;
+        if (tableSelection.editingCell) {
+            const cell = tableSelection.editingCell;
+            const grid = (shape as TableView).getLayout().grid;
+            frame = grid.get(cell.index.row, cell.index.col).frame;
+            m.trans(frame.x, frame.y)
+            m.preScale(frame.width, frame.height);
+            m.multiAtLeft(matrix);
+            d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+            d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
+        } else {
+            if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                m.preScale(frame.width, frame.height);
+                m.multiAtLeft(matrix);
+                d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+                d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
+            } else {
+                const cells = tableSelection.getSelectedCells(true);
+                const cell_start = cells[0];
+                const grid = (shape as TableView).getLayout().grid;
+                frame = grid.get(cell_start.rowIdx, cell_start.colIdx).frame;
+                m.trans(frame.x, frame.y)
+                m.preScale(frame.width, frame.height);
+                m.multiAtLeft(matrix);
+                d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+                d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
+            }
+        }
+    } else {
+        m.preScale(frame.width, frame.height);
+        m.multiAtLeft(matrix);
+        d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+        d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
+    }
     dot1.value = { x: d1.x, y: d1.y, type: 'from' }
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
@@ -124,7 +157,26 @@ const dot_mousemove = (e: MouseEvent) => {
     if (isDragging && gradientEditor) {
         startPosition.x = x, startPosition.y = y;
         const matrix = new Matrix();
-        const frame = shape.frame;
+        let frame = shape.frame;
+        if (shape.type === ShapeType.Table) {
+            const tableSelection = props.context.tableSelection;
+            if (tableSelection.editingCell) {
+                const cell = tableSelection.editingCell;
+                const grid = (shape as TableView).getLayout().grid;
+                frame = grid.get(cell.index.row, cell.index.col).frame;
+                matrix.trans(frame.x, frame.y);
+            } else {
+                if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                    frame = shape.frame;
+                } else {
+                    const cells = tableSelection.getSelectedCells(true);
+                    const cell_start = cells[0];
+                    const grid = (shape as TableView).getLayout().grid;
+                    frame = grid.get(cell_start.rowIdx, cell_start.colIdx).frame;
+                    matrix.trans(frame.x, frame.y);
+                }
+            }
+        }
         matrix.preScale(frame.width, frame.height);
         matrix.multiAtLeft(shape.matrix2Root());
         matrix.multiAtLeft(props.context.workspace.matrix);
@@ -135,20 +187,44 @@ const dot_mousemove = (e: MouseEvent) => {
         } else if (dot_type === 'to') {
             gradientEditor.execute_to(posi);
         }
+        if (locat.type === 'table_text') {
+            get_linear_points();
+        }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            if (locat.type !== 'text') {
+            if (locat.type !== 'text' && locat.type !== 'table_text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
             } else {
-                const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                if (isSelectText(props.context)) {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                if (locat.type === "text") {
+                    const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
+                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                    if (isSelectText(props.context)) {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                    } else {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                    }
                 } else {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                    const tableSelection = props.context.tableSelection;
+                    const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+                    if (tableSelection.editingCell) {
+                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const editor_text = props.context.editor4TextShape(table_cell);
+                        if (isSelectText(props.context)) {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
+                        } else {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, textIndex, selectLength);
+                        }
+                    } else {
+                        const editor = props.context.editor4Table(table_shape);
+                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                            gradientEditor = editor.asyncSetTextGradient(gradient);
+                        } else {
+                            gradientEditor = editor.asyncSetTextGradient(gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                        }
+                    }
                 }
             }
         }
@@ -199,16 +275,14 @@ const add_stop = (e: MouseEvent) => {
     const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
-    if (locat.type !== 'text') {
+    if (locat.type !== 'text' && locat.type !== 'table_text') {
         const gradient_type = shape.style[locat.type];
         const idx = gradient_type.length - locat.index - 1;
         const editor = props.context.editor4Page(page);
         const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
         editor.addShapesGradientStop(actions);
     } else {
-        const text_shapes = (shapes.value as ShapeView[]).filter((s) => s.type === ShapeType.Text);
         const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-        const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
         const new_gradient = cloneGradient(gradient);
         new_gradient.stops.push(stop);
         const s = new_gradient.stops as BasicArray<Stop>;
@@ -221,19 +295,45 @@ const add_stop = (e: MouseEvent) => {
                 return 0;
             }
         })
-        if (text_shapes.length === 1) {
-            if (isSelectText(props.context)) {
-                editor.setTextGradient(new_gradient, 0, Infinity);
+        if (locat.type === 'text') {
+            const text_shapes = (shapes.value as ShapeView[]).filter((s) => s.type === ShapeType.Text);
+            const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+            if (text_shapes.length === 1) {
+                if (isSelectText(props.context)) {
+                    editor.setTextGradient(new_gradient, 0, Infinity);
+                } else {
+                    editor.setTextGradient(new_gradient, textIndex, selectLength);
+                }
             } else {
-                editor.setTextGradient(new_gradient, textIndex, selectLength);
+                editor.setTextGradientMulti(text_shapes.map(t => adapt2Shape(t)), new_gradient);
             }
         } else {
-            editor.setTextGradientMulti(text_shapes.map(t => adapt2Shape(t)), new_gradient);
+            const tableSelection = props.context.tableSelection;
+            const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+            if (tableSelection.editingCell) {
+                const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                const editor_text = props.context.editor4TextShape(table_cell);
+                if (isSelectText(props.context)) {
+                    editor_text.setTextGradient(new_gradient, 0, Infinity);
+                } else {
+                    editor_text.setTextGradient(new_gradient, textIndex, selectLength);
+                }
+            } else {
+                const editor = props.context.editor4Table(table_shape)
+                if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                    editor.setTextGradient(new_gradient);
+                } else {
+                    editor.setTextGradient(new_gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                }
+            }
         }
     }
     nextTick(() => {
         down_stop(e, stop.id);
         temporary.value = false;
+        if (locat.type === 'table_text') {
+            get_linear_points();
+        }
     })
 }
 
@@ -288,20 +388,44 @@ const stop_mousemove = (e: MouseEvent) => {
         const posi = get_stop_position(e);
         percent.value = +(posi * 100).toFixed(0);
         gradientEditor.execute_stop_position(posi, down_stop_id.value);
+        if (locat.type === 'table_text') {
+            get_linear_points();
+        }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage;
-            if (locat.type !== 'text') {
+            if (locat.type !== 'text' && locat.type !== 'table_text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
             } else {
-                const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
-                const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
-                if (isSelectText(props.context)) {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                if (locat.type === 'text') {
+                    const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
+                    const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
+                    if (isSelectText(props.context)) {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                    } else {
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                    }
                 } else {
-                    gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                    const tableSelection = props.context.tableSelection;
+                    const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
+                    if (tableSelection.editingCell) {
+                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const editor_text = props.context.editor4TextShape(table_cell);
+                        if (isSelectText(props.context)) {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
+                        } else {
+                            gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, textIndex, selectLength);
+                        }
+                    } else {
+                        const editor = props.context.editor4Table(table_shape);
+                        if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
+                            gradientEditor = editor.asyncSetTextGradient(gradient);
+                        } else {
+                            gradientEditor = editor.asyncSetTextGradient(gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                        }
+                    }
                 }
             }
         }

@@ -297,7 +297,7 @@ onUnmounted(() => {
                     :selection-change="reflush_by_selection" :triggle="reflush_trigger"
                     :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)" :selection-change="reflush_by_selection"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
                     :trigger="reflush_trigger"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">

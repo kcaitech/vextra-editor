@@ -137,7 +137,7 @@ function clickaffirm() {
 }
 
 function wxcode() {
-    if (isMobileDevice()) return
+    // if (isMobileDevice()) return
     new (window as any).WxLogin({
         self_redirect: true,
         id: "login_container",
@@ -158,7 +158,7 @@ const handleOpenNewWindow = (routeName: string) => {
 }
 
 watchEffect(() => {
-    if (isMobileDevice()) return
+    // if (isMobileDevice()) return
     if (loginshow.value) {
         setTimeout(() => {
             isLoading.value = true
@@ -180,11 +180,12 @@ watchEffect(() => {
 
 
 onMounted(() => {
-    if (isMobileDevice()) {
-        router.push({ name: "privacypolicy" })
-    } else {
-        window.addEventListener('message', onmessage, false)
-    }
+    // if (isMobileDevice()) {
+    //     router.push({ name: "privacypolicy" })
+    // } else {
+    //     window.addEventListener('message', onmessage, false)
+    // }
+  window.addEventListener('message', onmessage, false)
 })
 
 onUnmounted(() => {

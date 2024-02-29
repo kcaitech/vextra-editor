@@ -461,10 +461,11 @@ const textFormat = () => {
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
-        if (format.fillType === 'unlikeness' || format.gradient === 'unlikeness') mixed.value = true;
+        if (format.fillType === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
         if (format.gradient === 'unlikeness') gradient.value = undefined;
+        if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
 }
 
@@ -790,6 +791,8 @@ const setMixedTextColor = () => {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextColor(new Color(alpha, red, green, blue), cell_selection);
             editor.setTextFillType(forma.fillType || FillType.SolidColor, cell_selection);
+            console.log(forma, 'forma');
+            
             if(forma.gradient) {
                 editor.setTextGradient(forma.gradient, cell_selection);
             }
@@ -994,7 +997,7 @@ onUnmounted(() => {
 
 <template>
     <div class="text-panel">
-        <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
+        <TypeHeader :title="t('attr.table_text')" class="mt-24" :active="true">
             <template #tool>
                 <TableTextSetting :context="props.context" :textShape="props.shape"></TableTextSetting>
             </template>
@@ -1105,11 +1108,11 @@ onUnmounted(() => {
                 <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="'table'"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="{ index: 0, type: 'table_text' }"
                         :fill-type="fillType" :gradient="gradient instanceof Gradient ? gradient : undefined"
                         @gradient-type="(type) => togger_gradient_type(type)" @change="c => getColorFromPicker(c, 'color')"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
@@ -1126,7 +1129,7 @@ onUnmounted(() => {
                 </div>
                 <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                     </div>
@@ -1136,7 +1139,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                     </div>

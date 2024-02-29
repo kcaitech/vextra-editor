@@ -21,6 +21,7 @@ interface Props {
     context: Context
     shape: TextShapeView
     textShapes: TextShapeView[]
+    selectionChange: number
     trigger: any[]
 }
 
@@ -385,10 +386,11 @@ const _textFormat = () => {
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
-        if (format.fillType === 'unlikeness' || format.gradient === 'unlikeness') mixed.value = true;
+        if (format.fillType === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
         if (format.gradient === 'unlikeness') gradient.value = undefined;
+        if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
@@ -877,6 +879,7 @@ const stop3 = watch(() => props.trigger, v => {
         textFormat();
     }
 })
+const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
@@ -888,6 +891,7 @@ onUnmounted(() => {
     // stop();
     stop2();
     stop3();
+    stop4();
 })
 </script>
 

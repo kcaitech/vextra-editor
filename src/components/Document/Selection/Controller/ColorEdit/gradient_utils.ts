@@ -1,10 +1,10 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape } from "@kcdesign/data";
+import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data/dist/data/baseimport";
 import { v4 } from "uuid";
 
-export type GradientFrom = 'fills' | 'borders' | 'text';
+export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';
 
 export function to_rgba(options: {
     red: number,
@@ -36,27 +36,61 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
-    if (locat.type !== 'text') {
+    if (locat.type !== 'text' && locat.type !== 'table_text') {
         let gradient_type = shape.style[locat.type];
         if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
             const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             gradient_type = shapes[0].style[locat.type];
         }
-        if(!gradient_type[locat.index]) return;
+        if (!gradient_type[locat.index]) return;
         const gradient = gradient_type[locat.index].gradient;
         return gradient;
     } else {
-        if(shape.type !== ShapeType.Text) return;
-        const { textIndex, selectLength } = getTextIndexAndLen(context);
-        const editor = context.editor4TextShape(shape as TextShapeView)
-        let format: AttrGetter
-        const __text = (shape as TextShapeView).getText();
-        if (textIndex === -1) {
-            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        if (locat.type === 'text') {
+            if (shape.type !== ShapeType.Text) return;
+            const { textIndex, selectLength } = getTextIndexAndLen(context);
+            const editor = context.editor4TextShape(shape as TextShapeView)
+            let format: AttrGetter
+            const __text = (shape as TextShapeView).getText();
+            if (textIndex === -1) {
+                format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+            } else {
+                format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+            }
+            return format.gradient;
         } else {
-            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+            if (shape.type !== ShapeType.Table) return;
+            const table_s = context.tableSelection;
+            if (table_s.editingCell) {
+                const cell = table_s.editingCell?.cell as TableCell & { text: Text; };
+                const { textIndex, selectLength } = getTextIndexAndLen(context);
+                const editor = context.editor4TextShape(cell);
+                let format: AttrGetter;
+                if (textIndex === -1) {
+                    format = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+                } else {
+                    format = cell.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
+                }
+                return format.gradient;
+            } else {
+                let cells: (TableCell | undefined)[] = []
+                if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
+                    cells = Array.from((shape as TableView).data.cells.values()) || [];
+                } else {
+                    cells = table_s.getSelectedCells(true).map(item => item.cell) || [];
+                }
+                const formats: any[] = [];
+                for (let i = 0; i < cells.length; i++) {
+                    const cell = cells[i];
+                    if (cell && cell.text) {
+                        const editor = context.editor4TextShape(cell as any);
+                        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+                        formats.push(forma);
+                    }
+                }
+                return formats[0].gradient;
+            }
         }
-        return format.gradient;
     }
 }
 
