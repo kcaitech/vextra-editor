@@ -1,7 +1,8 @@
 import { Context } from "@/context"
-import { Shape, creator, GroupShape, ShapeFrame, Artboard, Path } from "@kcdesign/data"
+import { Shape, creator as shapeCreator, GroupShape, ShapeFrame, Artboard, Path } from "@kcdesign/data"
 
 interface ShapeCreator {
+    make(): BaseShapeCreator // 重载make方法，可返回另一类型的creator代替自身
     create(): Shape | undefined // 创建shape
     afterChildrenCreated(): void // 所有子节点create之后
     afterSiblingCreated(): void // 所有兄弟节点create之后
@@ -18,6 +19,26 @@ function parseTranslate(translate: string): {
     return { x: parseFloat(match[1]), y: parseFloat(match[2]) }
 }
 
+type Attributes = { // 从元素的attributes中解析出来的属性
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number,
+}
+
+// 将父元素的属性合并到子元素
+function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
+    const parentShape = parent.shape
+    const childShape = child.shape
+    if (!parentShape || !childShape) return;
+
+    // 合并xy
+    const parentFrame = parentShape.frame
+    const childFrame = childShape.frame
+    childFrame.x += parentFrame.x
+    childFrame.y += parentFrame.y
+}
+
 class BaseShapeCreator implements ShapeCreator {
     root: BaseShapeCreator | undefined
     parent: BaseShapeCreator | undefined
@@ -27,10 +48,7 @@ class BaseShapeCreator implements ShapeCreator {
     svgNodeTagName: string
     shape: Shape | undefined = undefined
 
-    x: number | undefined
-    y: number | undefined
-    width: number | undefined
-    height: number | undefined
+    attributes: Attributes = {}
 
     constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element) {
         this.root = root
@@ -41,8 +59,8 @@ class BaseShapeCreator implements ShapeCreator {
         this.parseAttributes()
         this.shape = this.create()
         if (this.shape) {
-            this.shape.frame.x = this.x || 0
-            this.shape.frame.y = this.y || 0
+            this.shape.frame.x = this.attributes.x || 0
+            this.shape.frame.y = this.attributes.y || 0
             if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) {
                 this.shape.frame.x -= this.parent.viewBox[0]
                 this.shape.frame.y -= this.parent.viewBox[1]
@@ -50,20 +68,24 @@ class BaseShapeCreator implements ShapeCreator {
         }
     }
 
+    make(): BaseShapeCreator {
+        return this
+    }
+
     parseAttributes() {
         const transform = this.svgNode.getAttribute("transform")
         if (transform) {
             const { x, y } = parseTranslate(transform)
-            this.x = x
-            this.y = y
+            this.attributes.x = x
+            this.attributes.y = y
         }
 
         const width = this.svgNode.getAttribute("width")
-        if (width) this.width = parseFloat(width);
+        if (width) this.attributes.width = parseFloat(width);
         const height = this.svgNode.getAttribute("height")
-        if (height) this.height = parseFloat(height);
+        if (height) this.attributes.height = parseFloat(height);
 
-        console.log(`${this.svgNodeTagName} x: ${this.x}, y: ${this.y}, width: ${this.width}, height: ${this.height}}`)
+        console.log(this.svgNodeTagName, this.attributes)
     }
 
     create(): Shape | undefined {
@@ -89,17 +111,24 @@ class NoneShapeCreator extends BaseShapeCreator {
 
 class GroupShapeCreator extends BaseShapeCreator {
     create(): Shape | undefined {
-        return creator.newGroupShape("编组")
+        return shapeCreator.newGroupShape("编组")
     }
 
     afterChildrenCreated(): void {
         if (!this.shape) return;
-        const groupShape = this.shape as GroupShape
         const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
         if (childrenShapes.length === 0) {
             this.shape = undefined
             return
         }
+        if (childrenShapes.length === 1) {
+            const childShape = childrenShapes[0]
+            mergeAttributes(this, this.children[0])
+            this.shape = childShape
+            return
+        }
+
+        const groupShape = this.shape as GroupShape
         groupShape.childs.push(...childrenShapes)
 
         let ltX = groupShape.frame.x
@@ -134,9 +163,9 @@ class SvgShapeCreator extends BaseShapeCreator {
                 this.viewBox = viewBoxSplitRes as [number, number, number, number]
             }
         }
-        const width = (this.viewBox ? this.viewBox[2] : this.width) || 0
-        const height = (this.viewBox ? this.viewBox[3] : this.height) || 0
-        return creator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
+        const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
+        const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
+        return shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
     }
 
     afterChildrenCreated(): void {
@@ -175,12 +204,12 @@ class PathShapeCreator extends BaseShapeCreator {
     create(): Shape | undefined {
         const d = this.svgNode.getAttribute("d")
         if (!d) return;
-        const x = this.x || 0
-        const y = this.y || 0
+        const x = this.attributes.x || 0
+        const y = this.attributes.y || 0
         const { width, height } = getPathWHFromD(d)
         const path = new Path(d);
         path.translate(-x, -y);
-        return creator.newPathShape("路径", new ShapeFrame(x, y, width, height), path)
+        return shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path)
     }
 }
 
@@ -209,7 +238,7 @@ class Parser {
             (node.parentElement as any)?.creator, // parent
             this.svgRoot, // svgRoot
             node, // svgNode
-        )
+        ).make()
         return children
     }
 
@@ -279,7 +308,6 @@ export function insert(context: Context, svgString: string) {
     const svgElement = svgDocument.documentElement
     const svgParser = new Parser(svgElement)
     const shape = svgParser.parse()
-    console.log("parse result", shape)
     const page = context.selection.selectedPage?.data
     const repo = context.coopRepo
     if (shape && page) {
