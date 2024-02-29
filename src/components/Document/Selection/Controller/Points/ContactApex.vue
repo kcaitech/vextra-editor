@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncContactEditor, ContactForm, ContactLineView, ContactShape, ContactType, GroupShape, Matrix, Shape, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, watch, reactive, ref, computed } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { get_apexs } from './common';
@@ -19,6 +19,11 @@ interface Apex {
     type: 'from' | 'to'
 }
 
+interface FAT {
+    from:object,
+    to:object
+}
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
@@ -26,6 +31,7 @@ const apex = ref<boolean>(false);
 const contact = ref<boolean>(false);
 const data: { apex1: Apex, apex2: Apex } = reactive({ apex1: { point: { x: 0, y: 0 }, type: 'from' }, apex2: { point: { x: 0, y: 0 }, type: 'to' } });
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
+const fromOrto = ref<FAT>()
 
 let { apex1, apex2 } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
@@ -40,7 +46,9 @@ const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
+    fromOrto.value = props.shape.fromAndto as FAT
 }
+
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     apex.value = false;
@@ -217,10 +225,10 @@ onUnmounted(() => {
 <template>
     <g v-if="apex">
         <rect :x="apex1.point.x - 8" :y="apex1.point.y - 8" rx="8" ry="8" height="16" width="16"
-            @mousedown.stop="(e) => point_mousedown(e, apex1.type)" class="point">
+            @mousedown.stop="(e) => point_mousedown(e, apex1.type)" class="point" :class="{ activation: fromOrto?.from }">
         </rect>
         <rect :x="apex2.point.x - 8" :y="apex2.point.y - 8" rx="8" ry="8" height="16" width="16"
-            @mousedown.stop="(e) => point_mousedown(e, apex2.type)" class="point">
+            @mousedown.stop="(e) => point_mousedown(e, apex2.type)" class="point" :class="{ activation: fromOrto?.to }">
         </rect>
     </g>
     <g v-if="contact">
@@ -240,6 +248,14 @@ onUnmounted(() => {
 }
 
 .point:hover {
+    width: 16px;
+    height: 16px;
+    fill: var(--active-color);
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.activation {
     width: 16px;
     height: 16px;
     fill: var(--active-color);
