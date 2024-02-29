@@ -224,10 +224,11 @@ function colorPickerMount() {
             }
 
             const doc_height = document.documentElement.clientHeight;
+
             const { height, y } = el.getBoundingClientRect();
 
             if (doc_height - y < height + 10) {
-                el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+                el.style.top = ((parseInt(el.style.top) - ((height + 20) - (doc_height - y))) < 46 ? 54 : parseInt(el.style.top) - ((height + 20) - (doc_height - y))) + 'px'
             }
 
             if (props.late) {
@@ -726,6 +727,39 @@ function window_blur() {
     isDrag = false;
 }
 
+let isDragging = false
+let elpx: any
+let elpy: any
+let mx: any
+let my: any
+function startDrag(e: MouseEvent) {
+    if (!props.cell) return
+    isDragging = true
+    const elp = document.querySelector('.custom-popover') as HTMLElement
+    //父元素的页面位置
+    elpx = elp.getBoundingClientRect().left
+    elpy = elp.getBoundingClientRect().top
+    //鼠标相对于盒子的坐标
+    mx = e.offsetX
+    my = e.offsetY
+    document.addEventListener('mousemove', onDrag)
+}
+
+function onDrag(e: MouseEvent) {
+    let el = popoverEl.value as HTMLElement
+    if (isDragging) {
+        const ex = e.pageX
+        const ey = e.pageY
+        el.style.left = ex - mx - elpx + 'px'
+        el.style.top = ey - my - elpy + 'px'
+    }
+}
+
+function stopDrag(e: MouseEvent) {
+    isDragging = false
+    document.removeEventListener('mousemove', onDrag)
+}
+
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
@@ -743,9 +777,9 @@ onUnmounted(() => {
 
 <template>
     <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-        <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
+        <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel">
             <!-- 头部 -->
-            <div class="header">
+            <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="color-type">{{ t('color.solid') }}</div>
                 <div @click="removeCurColorPicker" class="close">
                     <svg-icon icon-class="close"></svg-icon>
@@ -848,6 +882,7 @@ onUnmounted(() => {
         border-radius: 8px;
         border: 1px solid #F0F0F0;
         overflow: hidden;
+        z-index: 1;
 
         // box-sizing: border-box;
 

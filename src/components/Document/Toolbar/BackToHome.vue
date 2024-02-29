@@ -91,7 +91,7 @@ const hasPendingSyncCmd = () => {
     //   }
     // )
     //   .then(() => {
-    window.document.title = t('product.name');    
+    window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     const index = sessionStorage.getItem('index');
@@ -265,20 +265,22 @@ onUnmounted(() => {
 
     .rename {
         max-width: 224px;
-        height: 52px;
+        line-height: 32px;
         flex: 1;
         box-sizing: border-box;
-        padding: 16px 8px;
+        padding: 0px 8px;
 
         .save {
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
+            position: relative;
+            top: -2px;
         }
 
         span {
             display: block;
             max-width: 210px;
-            height: 25px;
+            height: 32px;
             color: #ffffff;
             cursor: pointer;
             overflow: hidden;

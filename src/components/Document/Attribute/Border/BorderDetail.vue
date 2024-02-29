@@ -53,6 +53,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 
 function showMenu() {
     updater();
+    layout()
     popover.value.show();
 }
 
@@ -458,6 +459,7 @@ const selectBorderThicknes = () => {
 function blur2() {
     isActived.value = false
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     layout();

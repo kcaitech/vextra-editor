@@ -664,6 +664,7 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
+    if(highlight.value && !highlightIsMulti.value) return
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -920,7 +921,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
+            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
