@@ -61,8 +61,7 @@ class Matrix { // 矩阵
     }
 
     get isSquare() { // 判断是否为方阵
-        const [m, n] = this.dimension
-        return m === n
+        return this.data.length === this.data[0].length
     }
 
     multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
@@ -156,7 +155,7 @@ class Matrix { // 矩阵
         return rank
     }
 
-    determinant(): number | undefined { // 求矩阵的行列式（递归法）
+    determinant(): number | undefined { // 求矩阵的行列式（递归降阶法）
         if (!this.isSquare) return; // 矩阵不是方阵，无行列式
         const [m, n] = this.dimension // 矩阵的阶数
         if (m === 1) return this.data[0][0] // 1阶矩阵的行列式
@@ -174,7 +173,7 @@ class Matrix { // 矩阵
         return result
     }
 
-    adjoint(): Matrix | undefined { // 求矩阵的伴随矩阵（递归法）
+    adjoint(): Matrix | undefined { // 求矩阵的伴随矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无伴随矩阵
         const [m, n] = this.dimension // 矩阵的阶数
         const result: number[][] = buildArray(m, n)
@@ -317,7 +316,7 @@ class Transform3D { // 变换
         }
     }
 
-    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（YXZ顺序），返回值的单位为弧度
+    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（YXZ序），返回值的单位为弧度
         const m = matrix.data
         const sy = Math.sqrt(m[0][0] ** 2 + m[1][0] ** 2)
         const singular = sy < 1e-6
@@ -338,7 +337,7 @@ class Transform3D { // 变换
         }
     }
 
-    decomposeToEulerYXZ() { // 分解出平移、欧拉角（YXZ顺序）、缩放矩阵
+    decomposeToEulerYXZ() { // 分解出平移、欧拉角（YXZ序）、缩放矩阵
         const decompose = this.decomposeMatrix()
         return {
             translate: {
