@@ -285,7 +285,7 @@ export class Clipboard {
             }
 
             const editor = this.context.editor4Page(page);
-            const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
+            const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
 
             if (delete_res) {
                 this.context.selection.resetSelectShapes();

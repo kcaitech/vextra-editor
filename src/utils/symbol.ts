@@ -837,7 +837,7 @@ function search_binds_for_state(
 /**
  * @description 获取实例symref身上的某个变量variable的值
  */
-export function get_vari_value_for_ref(symbol_ref: SymbolRefShape, variable: Variable) {
+export function get_vari_value_for_ref(symbol_ref: SymbolRefView, variable: Variable) {
     const overrides = symbol_ref.findOverride(variable.id, OverrideType.Variable);
     return overrides ? overrides[overrides.length - 1].value : variable.value;
 
@@ -1127,11 +1127,6 @@ export function switch_symref_state(context: Context, variable: Variable, state:
     if (!symbol_ref) return;
     const editor = context.editor4Shape(symbol_ref);
     editor.switchSymState(variable.id, state === t('compos.dlt') ? SymbolShape.Default_State : state);
-}
-
-export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variable: Variable) {
-    const overrides = symbolref.findOverride(variable.id, OverrideType.Variable);
-    return overrides ? overrides[overrides.length - 1] : variable;
 }
 
 /**

@@ -60,7 +60,7 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
         const { isEnabled, fillType, color, contextSettings } = fill;
         const new_fill = new Fill(new BasicArray(), v4(), isEnabled, fillType, color);
         new_fill.contextSettings = contextSettings;
-        actions.push({ target: adapt2Shape(shapes[i]), value: new_fill });
+        actions.push({ target: (shapes[i]), value: new_fill });
     }
     return actions;
 }
@@ -68,7 +68,7 @@ export function get_actions_fill_color(shapes: ShapeView[], index: number, color
     const actions: FillColorAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value: color });
+        actions.push({ target: (shapes[i]), index, value: color });
     }
     return actions;
 }
@@ -90,7 +90,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
             new_fill.contextSettings = contextSettings;
             new_fills.push(new_fill);
         }
-        actions.push({ target: adapt2Shape(shapes[i]), value: new_fills });
+        actions.push({ target: (shapes[i]), value: new_fills });
     }
     return actions;
 }
@@ -98,7 +98,7 @@ export function get_actions_fill_enabled(shapes: ShapeView[], index: number, val
     const actions: FillEnableAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value });
+        actions.push({ target: (shapes[i]), index, value });
     }
     return actions;
 }
@@ -106,7 +106,7 @@ export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
     const actions: FillDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index });
+        actions.push({ target: (shapes[i]), index });
     }
     return actions;
 }
@@ -166,7 +166,7 @@ export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
         const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
-        actions.push({ target: adapt2Shape(shapes[i]), value: new_border });
+        actions.push({ target: (shapes[i]), value: new_border });
     }
     return actions;
 }
@@ -174,7 +174,7 @@ export function get_actions_border_color(shapes: ShapeView[], index: number, col
     const actions: BorderColorAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value: color });
+        actions.push({ target: (shapes[i]), index, value: color });
     }
     return actions;
 }
@@ -195,7 +195,7 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
             const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
             new_borders.push(new_border);
         }
-        actions.push({ target: adapt2Shape(shapes[i]), value: new_borders });
+        actions.push({ target: (shapes[i]), value: new_borders });
     }
     return actions;
 }
@@ -203,7 +203,7 @@ export function get_actions_border_enabled(shapes: ShapeView[], index: number, v
     const actions: BorderEnableAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value });
+        actions.push({ target: (shapes[i]), index, value });
     }
     return actions;
 }
@@ -211,7 +211,7 @@ export function get_actions_border_delete(shapes: ShapeView[], index: number) {
     const actions: BorderDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index });
+        actions.push({ target: (shapes[i]), index });
     }
     return actions;
 }
@@ -219,7 +219,7 @@ export function get_actions_border_thickness(shapes: ShapeView[], index: number,
     const actions: BorderThicknessAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value: thickness });
+        actions.push({ target: (shapes[i]), index, value: thickness });
     }
     return actions;
 }
@@ -227,7 +227,7 @@ export function get_actions_border_position(shapes: ShapeView[], index: number, 
     const actions: BorderPositionAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shapes[i]), index, value: position });
+        actions.push({ target: (shapes[i]), index, value: position });
     }
     return actions;
 }
@@ -239,7 +239,7 @@ export function get_actions_border_style(shapes: ShapeView[], index: number, sty
         if (style === 'dash') {
             bs.gap = 10, bs.length = 10;
         }
-        actions.push({ target: adapt2Shape(shapes[i]), index, value: bs });
+        actions.push({ target: (shapes[i]), index, value: bs });
     }
     return actions;
 }
