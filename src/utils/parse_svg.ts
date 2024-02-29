@@ -39,7 +39,7 @@ class Matrix { // 矩阵
         for (let i = 0; i < data.length; i++) {
             data[i].length = columnCount
             for (let j = 0; j < columnCount; j++) {
-                if (!Number.isInteger(data[i][j])) data[i][j] = 0;
+                if (typeof data[i][j] !== "number") data[i][j] = 0;
             }
         }
     }
@@ -190,19 +190,6 @@ class Matrix { // 矩阵
         return new Matrix(result)
     }
 
-    normalize() { // 矩阵列向量单位化
-        const [m, n] = this.dimension
-        const result: number[][] = buildArray(m, n)
-        for (let j = 0; j < n; j++) {
-            let sum = 0
-            for (let i = 0; i < m; i++) sum += this.data[i][j] ** 2
-            sum = Math.sqrt(sum)
-            if (sum === 0) continue;
-            for (let i = 0; i < m; i++) result[i][j] = this.data[i][j] / sum
-        }
-        return new Matrix(result)
-    }
-
     toString() { // 转为字符串
         return this.data.map(item => item.join(",")).join("\n")
     }
@@ -302,6 +289,74 @@ class Transform3D { // 变换
         this.matrix = transform.matrix.multiply(this.matrix)
     }
 
+
+    decomposeMatrix() { // 分解出平移、旋转、缩放矩阵
+        const m = this.matrix.data
+        const sx = Math.sqrt(m[0][0] ** 2 + m[1][0] ** 2 + m[2][0] ** 2)
+        const sy = Math.sqrt(m[0][1] ** 2 + m[1][1] ** 2 + m[2][1] ** 2)
+        const sz = Math.sqrt(m[0][2] ** 2 + m[1][2] ** 2 + m[2][2] ** 2)
+        return {
+            translate: new Matrix([
+                [1, 0, 0, m[0][3]],
+                [0, 1, 0, m[1][3]],
+                [0, 0, 1, m[2][3]],
+                [0, 0, 0, 1],
+            ]),
+            rotate: new Matrix([
+                [m[0][0] / sx, m[1][0] / sy, m[2][0] / sz, 0],
+                [m[0][1] / sx, m[1][1] / sy, m[2][1] / sz, 0],
+                [m[0][2] / sx, m[1][2] / sy, m[2][2] / sz, 0],
+                [0, 0, 0, 1],
+            ]),
+            scale: new Matrix([
+                [sx, 0, 0, 0],
+                [0, sy, 0, 0],
+                [0, 0, sz, 0],
+                [0, 0, 0, 1],
+            ]),
+        }
+    }
+
+    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（YXZ顺序），返回值的单位为弧度
+        const m = matrix.data
+        const sy = Math.sqrt(m[0][0] ** 2 + m[1][0] ** 2)
+        const singular = sy < 1e-6
+        let x, y, z
+        if (!singular) {
+            x = Math.atan2(m[2][1], m[2][2])
+            y = Math.atan2(-m[2][0], sy)
+            z = Math.atan2(m[1][0], m[0][0])
+        } else {
+            x = Math.atan2(-m[1][2], m[1][1])
+            y = Math.atan2(-m[2][0], sy)
+            z = 0
+        }
+        return {
+            x: x,
+            y: y,
+            z: z,
+        }
+    }
+
+    decomposeToEulerYXZ() { // 分解出平移、欧拉角（YXZ顺序）、缩放矩阵
+        const decompose = this.decomposeMatrix()
+        return {
+            translate: {
+                x: decompose.translate.data[0][3],
+                y: decompose.translate.data[1][3],
+                z: decompose.translate.data[2][3],
+
+            },
+            rotate: Transform3D.decomposeEulerYXZ(decompose.rotate),
+            scale: {
+                x: decompose.scale.data[0][0],
+                y: decompose.scale.data[1][1],
+                z: decompose.scale.data[2][2],
+
+            },
+        }
+    }
+
     toString() {
         return this.matrix.toString()
     }
@@ -324,63 +379,38 @@ function getAllFunctionCallFromString(content: string): FunctionCall[] {
     return result
 }
 
-class TransformParser { // 解析transform属性
-    /** 变换矩阵
-     * | a b tx |
-     * | c d ty |
-     * | 0 0 1  |
-     */
-    matrix: number[][] = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1],
-    ]
-
-    functionCalls: FunctionCall[] = []
-
-    constructor(transform: string) {
-        this.functionCalls = getAllFunctionCallFromString(transform)
-        this.parse()
-    }
-
-    parseMatrix(args: string) {
-        const values = args.split(",").map(item => parseFloat(item))
-        if (values.length === 6) {
-            this.matrix = [
-                [values[0], values[2], values[4]],
-                [values[1], values[3], values[5]],
-                [0, 0, 1],
-            ]
+function parseTransform(transform: string) {
+    const functionCalls = getAllFunctionCallFromString(transform)
+    const transform3D = new Transform3D()
+    for (const [name, args] of functionCalls) {
+        const argList = args.split(",")
+        if (name === "translate") {
+            transform3D.translate(parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2] || "0"))
+        } else if (name === "scale") {
+            transform3D.scale(parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2] || "1"))
+        } else if (name === "rotate") {
+            transform3D.rotateZ(parseFloat(argList[0]) * Math.PI / 180)
+        } else if (name === "rotateX") {
+            transform3D.rotateX(parseFloat(argList[0]) * Math.PI / 180)
+        } else if (name === "rotateY") {
+            transform3D.rotateY(parseFloat(argList[0]) * Math.PI / 180)
+        } else if (name === "rotateZ") {
+            transform3D.rotateZ(parseFloat(argList[0]) * Math.PI / 180)
+        } else if (name === "rotate3d") {
+            transform3D.rotate(Matrix.colVec([parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2])]), parseFloat(argList[3]) * Math.PI / 180)
+        } else if (name === "matrix") {
+            const matrix = new Matrix([
+                [parseFloat(argList[0]), parseFloat(argList[2]), 0, parseFloat(argList[4])],
+                [parseFloat(argList[1]), parseFloat(argList[3]), 0, parseFloat(argList[5])],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ])
+            transform3D.addTransform(new Transform3D(matrix))
+        } else {
+            console.log("不支持的变换函数", name, args)
         }
     }
-
-    parseTranslate(args: string) {
-        const values = args.split(",").map(item => parseFloat(item))
-        if (values.length === 1) {
-            this.matrix[0][2] += values[0]
-            this.matrix[1][2] += values[0]
-        }
-    }
-
-    parse() {
-        for (const [name, args] of this.functionCalls) {
-            if (name === "matrix") {
-                this.parseMatrix(args)
-            } else {
-                console.log("未知的transform函数", name, args)
-            }
-        }
-    }
-}
-
-function parseTranslate(translate: string): {
-    x: number | undefined,
-    y: number | undefined,
-} {
-    const regexp = /translate\(([\d.]+?),([\d.]+?)\)/
-    const match = translate.match(regexp)
-    if (!match) return { x: undefined, y: undefined }
-    return { x: parseFloat(match[1]), y: parseFloat(match[2]) }
+    return transform3D.decomposeToEulerYXZ()
 }
 
 type Attributes = { // 从元素的attributes中解析出来的属性
@@ -447,9 +477,11 @@ class BaseShapeCreator implements ShapeCreator {
     parseAttributes() {
         const transform = this.svgNode.getAttribute("transform")
         if (transform) {
-            const { x, y } = parseTranslate(transform)
-            this.attributes.x = x
-            this.attributes.y = y
+            console.log("transform", transform)
+            const { translate, rotate, scale } = parseTransform(transform)
+            this.attributes.x = translate.x
+            this.attributes.y = translate.y
+            console.log(translate, rotate, scale)
         }
 
         const width = this.svgNode.getAttribute("width")
