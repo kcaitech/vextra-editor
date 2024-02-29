@@ -164,8 +164,6 @@ export class ScaleHandler extends TransformHandler {
 
     fixToAlignWhileMofdifyPoint() {
         const assistResult = this.context.assist.alignXY(this.livingPoint);
-        console.log('assistResult:', assistResult);
-
         if (!assistResult) {
             return;
         }
