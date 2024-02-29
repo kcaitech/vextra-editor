@@ -44,6 +44,14 @@ class Matrix { // 矩阵
         }
     }
 
+    static colVec(data: number[]) { // 列向量
+        return new Matrix(data.map(item => [item]))
+    }
+
+    static rowVec(data: number[]) { // 行向量
+        return new Matrix([data])
+    }
+
     copy() {
         return new Matrix(this.data.map(item => item.slice()))
     }
@@ -57,7 +65,7 @@ class Matrix { // 矩阵
         return m === n
     }
 
-    multiply(matrix: Matrix) { // 矩阵相乘，右乘，不修改原矩阵，返回新矩阵
+    multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
@@ -148,8 +156,154 @@ class Matrix { // 矩阵
         return rank
     }
 
+    determinant(): number | undefined { // 求矩阵的行列式（递归法）
+        if (!this.isSquare) return; // 矩阵不是方阵，无行列式
+        const [m, n] = this.dimension // 矩阵的阶数
+        if (m === 1) return this.data[0][0] // 1阶矩阵的行列式
+        if (m === 2) return this.data[0][0] * this.data[1][1] - this.data[0][1] * this.data[1][0] // 2阶矩阵的行列式
+        let result = 0
+        for (let i = 0; i < n; i++) {
+            const factor = this.data[0][i] // 第0行第i列的元素
+            if (factor === 0) continue; // 该元素为0，跳过
+            const subMatrixData = this.data.slice(1).map(item => item.slice(0, i).concat(item.slice(i + 1))) // 去掉第0行第i列的子矩阵
+            const subMatrix = new Matrix(subMatrixData, true) // 子矩阵
+            const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
+            if (subDeterminant === undefined) return; // 子矩阵的行列式不存在，行列式不存在
+            result += (i % 2 === 0 ? 1 : -1) * factor * subDeterminant // 递归计算行列式
+        }
+        return result
+    }
+
+    adjoint(): Matrix | undefined { // 求矩阵的伴随矩阵（递归法）
+        if (!this.isSquare) return; // 矩阵不是方阵，无伴随矩阵
+        const [m, n] = this.dimension // 矩阵的阶数
+        const result: number[][] = buildArray(m, n)
+        for (let i = 0; i < m; i++) {
+            for (let j = 0; j < n; j++) {
+                const subMatrixData = this.data.slice(0, i).concat(this.data.slice(i + 1)).map(item => item.slice(0, j).concat(item.slice(j + 1))) // 去掉第i行第j列的子矩阵
+                const subMatrix = new Matrix(subMatrixData, true) // 子矩阵
+                const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
+                if (subDeterminant === undefined) return; // 子矩阵的行列式不存在，伴随矩阵不存在
+                result[i][j] = (i + j) % 2 === 0 ? subDeterminant : -subDeterminant // 伴随矩阵的元素
+            }
+        }
+        return new Matrix(result)
+    }
+
+    normalize() { // 矩阵列向量单位化
+        const [m, n] = this.dimension
+        const result: number[][] = buildArray(m, n)
+        for (let j = 0; j < n; j++) {
+            let sum = 0
+            for (let i = 0; i < m; i++) sum += this.data[i][j] ** 2
+            sum = Math.sqrt(sum)
+            if (sum === 0) continue;
+            for (let i = 0; i < m; i++) result[i][j] = this.data[i][j] / sum
+        }
+        return new Matrix(result)
+    }
+
     toString() { // 转为字符串
         return this.data.map(item => item.join(",")).join("\n")
+    }
+}
+
+class Transform3D { // 变换
+    /** 变换矩阵
+     * | a b c tx |
+     * | d e f ty |
+     * | g h i tz |
+     * | 0 0 0 1  |
+     */
+    matrix: Matrix
+
+    constructor(matrix?: Matrix) {
+        this.matrix = matrix || new Matrix(buildIdentityArray(4))
+    }
+
+    translate(x: number, y: number, z: number) { // 平移
+        const matrix = new Matrix([
+            [1, 0, 0, x],
+            [0, 1, 0, y],
+            [0, 0, 1, z],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    scale(xScale: number, yScale: number, zScale: number) { // 缩放
+        const matrix = new Matrix([
+            [xScale, 0, 0, 0],
+            [0, yScale, 0, 0],
+            [0, 0, zScale, 0],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    rotateX(angle: number) { // 绕x轴旋转
+        const sin = Math.sin(angle)
+        const cos = Math.cos(angle)
+        const matrix = new Matrix([
+            [1, 0, 0, 0],
+            [0, cos, -sin, 0],
+            [0, sin, cos, 0],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    rotateY(angle: number) { // 绕y轴旋转
+        const sin = Math.sin(angle)
+        const cos = Math.cos(angle)
+        const matrix = new Matrix([
+            [cos, 0, sin, 0],
+            [0, 1, 0, 0],
+            [-sin, 0, cos, 0],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    rotateZ(angle: number) { // 绕z轴旋转
+        const sin = Math.sin(angle)
+        const cos = Math.cos(angle)
+        const matrix = new Matrix([
+            [cos, -sin, 0, 0],
+            [sin, cos, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量
+        if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
+        const [x, y, z] = axis.data.map(item => item[0])
+        const c = Math.cos(angle)
+        const s = Math.sin(angle)
+        const t = 1 - c
+        const matrix = new Matrix([
+            [t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0],
+            [t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0],
+            [t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0],
+            [0, 0, 0, 1],
+        ])
+        this.matrix = matrix.multiply(this.matrix)
+    }
+
+    rotateAt(axis: Matrix, point: Matrix, angle: number) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点
+        this.translate(-point.data[0][0], -point.data[1][0], -point.data[2][0])
+        this.rotate(axis, angle)
+        this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
+    }
+
+    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
+        this.matrix = transform.matrix.multiply(this.matrix)
+    }
+
+    toString() {
+        return this.matrix.toString()
     }
 }
 
@@ -162,8 +316,9 @@ type FunctionCall = [
 function getAllFunctionCallFromString(content: string): FunctionCall[] {
     const regexp = /(\w+)\(([^)]+)\)/g
     const result: [string, string][] = []
-    let match
-    while (match = regexp.exec(content)) {
+    for(;;) {
+        const match = regexp.exec(content)
+        if (!match) break;
         result.push([match[1], match[2]])
     }
     return result
