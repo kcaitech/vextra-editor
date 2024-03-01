@@ -16,9 +16,10 @@ function buildArray(n: number, m: number, value?: number) { // 构建一个n*m�
     return result
 }
 
-function buildIdentityArray(n: number) { // 构建n阶单位数组
-    const result = buildArray(n, n, 0)
-    for (let i = 0; i < n; i++) result[i][i] = 1;
+function buildIdentityArray(m: number, n: number = m) { // 构建m*n数组，n默认为m，主元为1，其余元素为0
+    const result: number[][] = buildArray(m, n, 0)
+    const rank = Math.min(m, n)
+    for (let i = 0; i < rank; i++) result[i][i] = 1
     return result
 }
 
@@ -44,16 +45,16 @@ class Matrix { // 矩阵
         }
     }
 
-    static colVec(data: number[]) { // 列向量
-        return new Matrix(data.map(item => [item]))
+    static build(m: number, n: number, fillValue?: number) { // 构建m*n的矩阵
+        return new Matrix(buildArray(m, n, fillValue), true)
     }
 
-    static rowVec(data: number[]) { // 行向量
-        return new Matrix([data])
+    static buildIdentity(m: number, n: number) { // 构建m*n的单位矩阵
+        return new Matrix(buildIdentityArray(m, n), true)
     }
 
     copy() {
-        return new Matrix(this.data.map(item => item.slice()))
+        return new Matrix(this.data.map(item => item.slice()), true)
     }
 
     get dimension() { // 矩阵的阶数
@@ -62,6 +63,145 @@ class Matrix { // 矩阵
 
     get isSquare() { // 判断是否为方阵
         return this.data.length === this.data[0].length
+    }
+
+    resize(m?: number, n?: number, fillValue: number = 0) { // 调整矩阵的大小，返回新矩阵
+        const [m0, n0] = this.dimension
+        if (m === undefined) m = m0;
+        if (n === undefined) n = n0;
+        const result: number[][] = buildArray(m, n, fillValue)
+        for (let i = 0; i < Math.min(m, m0); i++) {
+            for (let j = 0; j < Math.min(n, n0); j++) {
+                result[i][j] = this.data[i][j]
+            }
+        }
+        return new Matrix(result, true)
+    }
+
+    forEach(callback: (value: number, row: number, column: number) => void) { // 遍历（横向优先）
+        const [m, n] = this.dimension
+        for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) callback(this.data[j][i], j, i);
+    }
+
+    flat() { // 转为一维数组（横向优先）
+        return this.data.reduce((prev, curr) => prev.concat(curr), [])
+    }
+
+    static colVec(data: number[]) { // 列向量
+        return new Matrix(data.map(item => [item]), true)
+    }
+
+    static rowVec(data: number[]) { // 行向量
+        return new Matrix([data], true)
+    }
+
+    static fromColumnVectors(vectors: Matrix[]) { // 从列向量构建矩阵
+        const n = vectors.length
+        const m = vectors[0].dimension[0]
+        const result: number[][] = buildArray(m, n)
+        for (let i = 0; i < n; i++) {
+            const vector = vectors[i]
+            if (vector.dimension[0] !== m) throw new Error("列向量的维度不匹配");
+            for (let j = 0; j < m; j++) result[j][i] = vector.data[j][0]
+        }
+        return new Matrix(result, true)
+    }
+
+    static fromRowVectors(vectors: Matrix[]) { // 从行向量构建矩阵
+        const m = vectors.length
+        const n = vectors[0].dimension[1]
+        const result: number[][] = buildArray(m, n)
+        for (let i = 0; i < m; i++) {
+            const vector = vectors[i]
+            if (vector.dimension[1] !== n) throw new Error("行向量的维度不匹配");
+            for (let j = 0; j < n; j++) result[i][j] = vector.data[0][j]
+        }
+        return new Matrix(result, true)
+    }
+
+    static colVec3D(x: number, y: number, z: number) { // 列向量
+        return new Matrix([
+            [x],
+            [y],
+            [z],
+            [1],
+        ], true)
+    }
+
+    static rowVec3D(x: number, y: number, z: number) { // 行向量
+        return new Matrix([
+            [x, y, z, 1],
+        ], true)
+    }
+
+    colVec(n: number) { // 获取第n列列向量
+        if (n < 0 || n >= this.dimension[1]) throw new Error("列数越界");
+        return Matrix.colVec(this.data.map(item => item[n]))
+    }
+
+    colVectors() { // 获取所有列向量
+        const n = this.dimension[1]
+        const result: Matrix[] = []
+        for (let i = 0; i < n; i++) result.push(Matrix.colVec(this.data.map(item => item[n])));
+        return result
+    }
+
+    rowVec(m: number) { // 获取第n行行向量
+        if (m < 0 || m >= this.dimension[0]) throw new Error("行数越界");
+        return Matrix.rowVec(this.data[m])
+    }
+
+    rowVectors() { // 获取所有行向量
+        return this.data.map(item => Matrix.rowVec(item))
+    }
+
+    colExtend(matrix: Matrix) { // 列扩展
+        const [m0, n0] = this.dimension
+        const [m1, n1] = matrix.dimension
+        if (m0 !== m1) throw new Error("矩阵行数不匹配，无法扩展");
+        const result: number[][] = buildArray(m0, n0 + n1)
+        for (let i = 0; i < m0; i++) {
+            for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j]
+            for (let j = 0; j < n1; j++) result[i][n0 + j] = matrix.data[i][j]
+        }
+        return new Matrix(result, true)
+    }
+
+    rowExtend(matrix: Matrix) { // 行扩展
+        const [m0, n0] = this.dimension
+        const [m1, n1] = matrix.dimension
+        if (n0 !== n1) throw new Error("矩阵列数不匹配，无法扩展");
+        const result: number[][] = buildArray(m0 + m1, n0)
+        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j]
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result[m0 + i][j] = matrix.data[i][j]
+        return new Matrix(result, true)
+    }
+
+    transpose() { // 转置，不修改原矩阵，返回新矩阵
+        const [m, n] = this.dimension
+        const result: number[][] = buildArray(n, m)
+        for (let i = 0; i < m; i++) {
+            for (let j = 0; j < n; j++) {
+                result[j][i] = this.data[i][j]
+            }
+        }
+        return new Matrix(result, true)
+    }
+
+    add(matrix: Matrix) { // 矩阵相加
+        const [m0, n0] = this.dimension
+        const [m1, n1] = matrix.dimension
+        if (m0 !== m1 || n0 !== n1) throw new Error("矩阵阶数不匹配，无法相加");
+        const result: number[][] = buildArray(m0, n0)
+        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j] + matrix.data[i][j]
+        return new Matrix(result, true)
+    }
+
+    multiplyByNumber(number: number) { // 矩阵数乘
+        const [m, n] = this.dimension
+        const result: number[][] = buildArray(m, n)
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) result[i][j] = this.data[i][j] * number
+        return new Matrix(result, true)
     }
 
     multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
@@ -79,20 +219,8 @@ class Matrix { // 矩阵
                 result[i][j] = sum
             }
         }
-        return new Matrix(result)
+        return new Matrix(result, true)
     }
-
-    transpose() { // 转置，不修改原矩阵，返回新矩阵
-        const [m, n] = this.dimension
-        const result: number[][] = buildArray(n, m)
-        for (let i = 0; i < m; i++) {
-            for (let j = 0; j < n; j++) {
-                result[j][i] = this.data[i][j]
-            }
-        }
-        return new Matrix(result)
-    }
-
 
     inverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
@@ -126,7 +254,7 @@ class Matrix { // 矩阵
                 }
             }
         }
-        return new Matrix(result)
+        return new Matrix(result, true)
     }
 
     rank(): number { // 求矩阵的秩（消元法）
@@ -186,11 +314,23 @@ class Matrix { // 矩阵
                 result[i][j] = (i + j) % 2 === 0 ? subDeterminant : -subDeterminant // 伴随矩阵的元素
             }
         }
-        return new Matrix(result)
+        return new Matrix(result, true)
+    }
+
+    normalize() { // 将矩阵的每一列化为单位向量
+        const [m, n] = this.dimension
+        const result: number[][] = buildArray(m, n)
+        for (let i = 0; i < n; i++) {
+            let sum = 0
+            for (let j = 0; j < m; j++) sum += this.data[j][i] ** 2
+            sum = Math.sqrt(sum)
+            for (let j = 0; j < m; j++) result[j][i] = this.data[j][i] / sum
+        }
+        return new Matrix(result, true)
     }
 
     toString() { // 转为字符串
-        return this.data.map(item => item.join(",")).join("\n")
+        return this.data.map(item => item.join(", ")).join("\n")
     }
 }
 
@@ -204,7 +344,21 @@ class Transform3D { // 变换
     matrix: Matrix
 
     constructor(matrix?: Matrix) {
-        this.matrix = matrix || new Matrix(buildIdentityArray(4))
+        this.matrix = matrix || new Matrix(buildIdentityArray(4), true)
+    }
+
+    clone() {
+        return new Transform3D(this.matrix.copy())
+    }
+
+    transform(points: Matrix) { // 对多个三维点（列向量）进行变换
+        const [m, n] = points.dimension
+        if (m !== 3) throw new Error("点必须是3维向量");
+        return this.matrix.multiply(points.rowExtend(Matrix.build(1, n, 1))).resize(3, points.dimension[1])
+    }
+
+    transformPoint(x: number, y: number, z: number) { // 对一个三维点（列向量）进行变换
+        return this.transform(Matrix.colVec3D(x, y, z))
     }
 
     translate(x: number, y: number, z: number) { // 平移
@@ -213,7 +367,7 @@ class Transform3D { // 变换
             [0, 1, 0, y],
             [0, 0, 1, z],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
@@ -223,7 +377,7 @@ class Transform3D { // 变换
             [0, yScale, 0, 0],
             [0, 0, zScale, 0],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
@@ -235,7 +389,7 @@ class Transform3D { // 变换
             [0, cos, -sin, 0],
             [0, sin, cos, 0],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
@@ -247,7 +401,7 @@ class Transform3D { // 变换
             [0, 1, 0, 0],
             [-sin, 0, cos, 0],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
@@ -259,12 +413,13 @@ class Transform3D { // 变换
             [sin, cos, 0, 0],
             [0, 0, 1, 0],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
     rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
+        axis = axis.normalize() // axis化为单位向量
         const [x, y, z] = axis.data.map(item => item[0])
         const c = Math.cos(angle)
         const s = Math.sin(angle)
@@ -274,7 +429,7 @@ class Transform3D { // 变换
             [t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0],
             [t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0],
             [0, 0, 0, 1],
-        ])
+        ], true)
         this.matrix = matrix.multiply(this.matrix)
     }
 
@@ -284,10 +439,14 @@ class Transform3D { // 变换
         this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
     }
 
-    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
-        this.matrix = transform.matrix.multiply(this.matrix)
+    hasRotation() { // 判断是否有旋转
+        return this.matrix.colVec(3).resize(3).flat().some(item => item !== 0) // 第4列的前3个元素是否有不为0的
     }
 
+    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改本变换的数据
+        this.matrix = transform.matrix.multiply(this.matrix)
+        return this
+    }
 
     decomposeMatrix() { // 分解出平移、旋转、缩放矩阵
         const m = this.matrix.data
@@ -300,19 +459,19 @@ class Transform3D { // 变换
                 [0, 1, 0, m[1][3]],
                 [0, 0, 1, m[2][3]],
                 [0, 0, 0, 1],
-            ]),
+            ], true),
             rotate: new Matrix([
                 [m[0][0] / sx, m[1][0] / sy, m[2][0] / sz, 0],
                 [m[0][1] / sx, m[1][1] / sy, m[2][1] / sz, 0],
                 [m[0][2] / sx, m[1][2] / sy, m[2][2] / sz, 0],
                 [0, 0, 0, 1],
-            ]),
+            ], true),
             scale: new Matrix([
                 [sx, 0, 0, 0],
                 [0, sy, 0, 0],
                 [0, 0, sz, 0],
                 [0, 0, 0, 1],
-            ]),
+            ], true),
         }
     }
 
@@ -356,8 +515,65 @@ class Transform3D { // 变换
         }
     }
 
+    clearRotation() { // 清除旋转操作
+        const m = this.matrix.data
+        m[0][0] = m[1][1] = m[2][2] = 1
+        m[0][1] = m[0][2] = m[1][0] = m[1][2] = m[2][0] = m[2][1] = 0
+        return this
+    }
+
+    clearScale() { // 清除缩放操作
+        this.matrix = this.matrix.resize(4, 3).normalize().colExtend(this.matrix.colVec(3))
+        return this
+    }
+
+    clearTranslate() { // 清除平移操作
+        const m = this.matrix.data
+        m[0][3] = m[1][3] = m[2][3] = 0
+        return this
+    }
+
+    decomposeToRotate() { // 分解出旋转矩阵
+        return this.clone().clearScale().clearTranslate()
+    }
+
+    decomposeToScale() { // 分解出缩放矩阵
+        return this.clone().clearRotation().clearTranslate()
+    }
+
+    decomposeToTranslate() { // 分解出平移矩阵
+        return this.clone().clearRotation().clearScale()
+    }
+
     toString() {
         return this.matrix.toString()
+    }
+}
+
+// 获取一个矩形的包围盒的lt和rb坐标
+function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: Transform3D) {
+    if (!transform.hasRotation()) return {
+        lt: { x: x, y: y },
+        rb: { x: x + w, y: y + h },
+    };
+    transform = transform.decomposeToRotate()
+    // 矩形中心为原点的情况下，矩形的四个顶点坐标
+    const points = Matrix.fromColumnVectors([
+        Matrix.colVec3D(-w / 2, -h / 2, 0), // 左上
+        Matrix.colVec3D(w / 2, -h / 2, 0), // 右上
+        Matrix.colVec3D(w / 2, h / 2, 0), // 右下
+        Matrix.colVec3D(-w / 2, h / 2, 0), // 左下
+    ])
+    // 变换后的四个顶点坐标
+    const newPoints = transform.transform(points)
+    // 四个顶点坐标的最小值和最大值
+    const minX = Math.min(...newPoints.data[0])
+    const maxX = Math.max(...newPoints.data[0])
+    const minY = Math.min(...newPoints.data[1])
+    const maxY = Math.max(...newPoints.data[1])
+    return {
+        lt: { x: minX + x, y: minY + y },
+        rb: { x: maxX + x, y: maxY + y },
     }
 }
 
@@ -370,7 +586,7 @@ type FunctionCall = [
 function getAllFunctionCallFromString(content: string): FunctionCall[] {
     const regexp = /(\w+)\(([^)]+)\)/g
     const result: [string, string][] = []
-    for(;;) {
+    for (; ;) {
         const match = regexp.exec(content)
         if (!match) break;
         result.push([match[1], match[2]])
@@ -378,38 +594,63 @@ function getAllFunctionCallFromString(content: string): FunctionCall[] {
     return result
 }
 
-function parseTransform(transform: string) {
+// 获取style属性中的所有key:value
+function getAllStyleFromString(content: string) {
+    const result: { [key: string]: string } = {}
+    const items = content.split(";")
+    for (const item of items) {
+        const [key, value] = item.split(":").map(item => item.trim())
+        if (key && value) result[key] = value
+    }
+    return result
+}
+
+function parseTransform(transform: string, isCssStyle = false) { // 解析transform属性，isCssStyle为false时，transform为svg的transform属性，为true时，transform为css的transform属性
     const functionCalls = getAllFunctionCallFromString(transform)
     const transform3D = new Transform3D()
     for (const [name, args] of functionCalls) {
         const argList = args.split(",")
-        if (name === "translate") {
-            transform3D.translate(parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2] || "0"))
-        } else if (name === "scale") {
-            transform3D.scale(parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2] || "1"))
-        } else if (name === "rotate") {
-            transform3D.rotateZ(parseFloat(argList[0]) * Math.PI / 180)
-        } else if (name === "rotateX") {
-            transform3D.rotateX(parseFloat(argList[0]) * Math.PI / 180)
-        } else if (name === "rotateY") {
-            transform3D.rotateY(parseFloat(argList[0]) * Math.PI / 180)
-        } else if (name === "rotateZ") {
-            transform3D.rotateZ(parseFloat(argList[0]) * Math.PI / 180)
-        } else if (name === "rotate3d") {
-            transform3D.rotate(Matrix.colVec([parseFloat(argList[0]), parseFloat(argList[1]), parseFloat(argList[2])]), parseFloat(argList[3]) * Math.PI / 180)
-        } else if (name === "matrix") {
+        const numArgList = argList.map(angle => {
+            if (angle.includes("deg")) return parseFloat(angle.replace("deg", "")) * Math.PI / 180;
+            else if (angle.includes("rad")) return parseFloat(angle.replace("rad", ""));
+            else if (angle.includes("grad")) return parseFloat(angle.replace("grad", "")) * Math.PI / 200;
+            else if (angle.includes("turn")) return parseFloat(angle.replace("turn", "")) * Math.PI * 2;
+            else return parseFloat(angle);
+        })
+        console.log(name, numArgList)
+        console.log("before")
+        console.log(transform3D.matrix.toString())
+        if (name === "matrix") {
             const matrix = new Matrix([
-                [parseFloat(argList[0]), parseFloat(argList[2]), 0, parseFloat(argList[4])],
-                [parseFloat(argList[1]), parseFloat(argList[3]), 0, parseFloat(argList[5])],
+                [numArgList[0], numArgList[2], 0, numArgList[4]],
+                [numArgList[1], numArgList[3], 0, numArgList[5]],
                 [0, 0, 1, 0],
                 [0, 0, 0, 1],
-            ])
+            ], true)
             transform3D.addTransform(new Transform3D(matrix))
+        } else if (name.startsWith("rotate")) {
+            if (name === "rotate") {
+                transform3D.rotateZ(numArgList[0])
+            } else if (name === "rotateX") {
+                transform3D.rotateX(numArgList[0])
+            } else if (name === "rotateY") {
+                transform3D.rotateY(numArgList[0])
+            } else if (name === "rotateZ") {
+                transform3D.rotateZ(numArgList[0])
+            } else if (name === "rotate3d") {
+                transform3D.rotate(Matrix.colVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3])
+            }
+        } else if (name === "scale") {
+            transform3D.scale(numArgList[0], numArgList[1], numArgList[2] || 1)
+        } else if (name === "translate") {
+            transform3D.translate(numArgList[0], numArgList[1], numArgList[2] || 0)
         } else {
             console.log("不支持的变换函数", name, args)
         }
+        console.log("after")
+        console.log(transform3D.matrix.toString())
     }
-    return transform3D.decomposeToEulerYXZ()
+    return transform3D
 }
 
 type Attributes = { // 从元素的attributes中解析出来的属性
@@ -417,6 +658,8 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     y?: number,
     width?: number,
     height?: number,
+    transform?: string,
+    styleTransform?: string,
 }
 
 // 将父元素的属性合并到子元素
@@ -450,6 +693,7 @@ class BaseShapeCreator implements ShapeCreator {
     shape: Shape | undefined = undefined
 
     attributes: Attributes = {}
+    transform = new Transform3D()
 
     constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element) {
         this.root = root
@@ -459,14 +703,6 @@ class BaseShapeCreator implements ShapeCreator {
         this.svgNodeTagName = svgNode.tagName
         this.parseAttributes()
         this.shape = this.create()
-        if (this.shape) {
-            this.shape.frame.x = this.attributes.x || 0
-            this.shape.frame.y = this.attributes.y || 0
-            if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) {
-                this.shape.frame.x -= this.parent.viewBox[0]
-                this.shape.frame.y -= this.parent.viewBox[1]
-            }
-        }
     }
 
     make(): BaseShapeCreator {
@@ -474,21 +710,57 @@ class BaseShapeCreator implements ShapeCreator {
     }
 
     parseAttributes() {
-        const transform = this.svgNode.getAttribute("transform")
-        if (transform) {
-            console.log("transform", transform)
-            const { translate, rotate, scale } = parseTransform(transform)
-            this.attributes.x = translate.x
-            this.attributes.y = translate.y
-            console.log(translate, rotate, scale)
-        }
+        const x = this.svgNode.getAttribute("x")
+        if (x) this.attributes.x = parseFloat(x);
+        const y = this.svgNode.getAttribute("y")
+        if (y) this.attributes.y = parseFloat(y);
 
         const width = this.svgNode.getAttribute("width")
         if (width) this.attributes.width = parseFloat(width);
         const height = this.svgNode.getAttribute("height")
         if (height) this.attributes.height = parseFloat(height);
 
+        const style = this.svgNode.getAttribute("style")
+
+        let transform
+        if (style) {
+            const styleAttributes = getAllStyleFromString(style)
+            this.attributes.styleTransform = styleAttributes.transform
+            transform = this.attributes.styleTransform
+        }
+        if (!transform) {
+            this.attributes.transform = this.svgNode.getAttribute("transform") ?? undefined
+            transform = this.attributes.transform
+        }
+        if (transform) {
+            this.transform.addTransform(parseTransform(transform))
+        }
+
         console.log(this.svgNodeTagName, this.attributes)
+    }
+
+    updateShapeAttr() { // 设置shape的属性
+        const shape = this.shape
+        if (!shape) return;
+
+        const { translate, rotate } = this.transform.decomposeToEulerYXZ()
+        console.log("updateShapeByAttributesAfterCreate", translate, rotate)
+
+        // 设置xy
+        shape.frame.x = (this.attributes.x || 0) + translate.x
+        shape.frame.y = (this.attributes.y || 0) + translate.y
+        // viewBox偏移
+        if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) {
+            shape.frame.x -= this.parent.viewBox[0]
+            shape.frame.y -= this.parent.viewBox[1]
+        }
+
+        // 设置旋转
+        shape.rotate(rotate.z * 180 / Math.PI)
+
+        // 设置翻转
+        if (Math.abs(rotate.x) > Math.PI / 2) shape.flipVertical();
+        if (Math.abs(rotate.y) > Math.PI / 2) shape.flipHorizontal();
     }
 
     create(): Shape | undefined {
@@ -497,6 +769,11 @@ class BaseShapeCreator implements ShapeCreator {
 
     afterChildrenCreated(): void {
 
+    }
+
+    afterChildrenCreated1(): void {
+        this.afterChildrenCreated()
+        this.updateShapeAttr()
     }
 
     afterSiblingCreated(): void {
@@ -519,34 +796,46 @@ class GroupShapeCreator extends BaseShapeCreator {
 
     afterChildrenCreated(): void {
         if (!this.shape) return;
-        const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
-        if (childrenShapes.length === 0) {
+        const children: {
+            shape: Shape,
+            creator: BaseShapeCreator,
+        }[] = this.children.filter(child => child.shape).map(child => {
+            return {
+                shape: child.shape!,
+                creator: child,
+            }
+        })
+        if (children.length === 0) {
             this.shape = undefined
             return
         }
-        if (childrenShapes.length === 1) {
-            const childShape = childrenShapes[0]
+        if (children.length === 1) {
+            const childShape = children[0].shape
             mergeAttributes(this, this.children[0])
             this.shape = childShape
             return
         }
 
         const groupShape = this.shape as GroupShape
-        groupShape.childs.push(...childrenShapes)
+        groupShape.childs.push(...children.map(child => child.shape))
 
         let ltX = groupShape.frame.x
         let ltY = groupShape.frame.y
         let rbX = groupShape.frame.x + groupShape.frame.width
         let rbY = groupShape.frame.y + groupShape.frame.height
-        for (const item of childrenShapes) {
-            const itemLtX = ltX + item.frame.x
-            const itemLtY = ltY + item.frame.y
-            const itemRbX = ltX + item.frame.x + item.frame.width
-            const itemRbY = ltY + item.frame.y + item.frame.height
-            if (itemLtX < ltX) ltX = itemLtX;
-            if (itemLtY < ltY) ltY = itemLtY;
-            if (itemRbX > rbX) rbX = itemRbX;
-            if (itemRbY > rbY) rbY = itemRbY;
+
+        for (const child of children) {
+            const childShape = child.shape
+            const childCreator = child.creator
+            const childLTRB = getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
+            const childLtX = ltX + childLTRB.lt.x
+            const childLtY = ltY + childLTRB.lt.y
+            const childRbX = ltX + childLTRB.rb.x
+            const childRbY = ltY + childLTRB.rb.y
+            if (childLtX < ltX) ltX = childLtX;
+            if (childLtY < ltY) ltY = childLtY;
+            if (childRbX > rbX) rbX = childRbX;
+            if (childRbY > rbY) rbY = childRbY;
         }
         groupShape.frame.x = ltX
         groupShape.frame.y = ltY
@@ -668,7 +957,7 @@ class Parser {
                 stack.push(...children.reverse())
                 stack1.push([node, children.length])
             } else {
-                creator.afterChildrenCreated()
+                creator.afterChildrenCreated1()
 
                 if (stack1.length === 0 && node !== this.svgRoot) throw new Error("svg root元素不匹配");
 
@@ -688,7 +977,7 @@ class Parser {
                     }
 
                     const parentCreator = (svgParent as any).creator as BaseShapeCreator
-                    parentCreator.afterChildrenCreated()
+                    parentCreator.afterChildrenCreated1()
                 }
             }
         }
