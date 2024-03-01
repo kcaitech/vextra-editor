@@ -65,6 +65,41 @@ class Matrix { // 矩阵
         return this.data.length === this.data[0].length
     }
 
+    get isIdentity() { // 判断是否为单位矩阵
+        const [m, n] = this.dimension
+        if (m !== n) return false;
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (i === j && this.data[i][j] !== 1 || i !== j && this.data[i][j] !== 0) return false;
+        return true
+    }
+
+    get isDiagonal() { // 判断是否为对角矩阵
+        const [m, n] = this.dimension
+        if (m !== n) return false;
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (i !== j && this.data[i][j] !== 0) return false;
+        return true
+    }
+
+    get isSymmetric() { // 判断是否为对称矩阵
+        const [m, n] = this.dimension
+        if (m !== n) return false;
+        for (let i = 0; i < m; i++) for (let j = i + 1; j < m; j++) if (this.data[i][j] !== this.data[j][i]) return false;
+        return true
+    }
+
+    get isUpperTriangular() { // 判断是否为上三角矩阵
+        const [m, n] = this.dimension
+        if (m !== n) return false;
+        for (let i = 0; i < m; i++) for (let j = 0; j < i; j++) if (this.data[i][j] !== 0) return false;
+        return true
+    }
+
+    get isLowerTriangular() { // 判断是否为下三角矩阵
+        const [m, n] = this.dimension
+        if (m !== n) return false;
+        for (let i = 0; i < m; i++) for (let j = i + 1; j < n; j++) if (this.data[i][j] !== 0) return false;
+        return true
+    }
+
     resize(m?: number, n?: number, fillValue: number = 0) { // 调整矩阵的大小，返回新矩阵
         const [m0, n0] = this.dimension
         if (m === undefined) m = m0;
@@ -380,40 +415,44 @@ class Transform3D { // 变换
         this.matrix = matrix.multiply(this.matrix)
     }
 
+    _rotate(matrix: Matrix) { // 旋转
+        const translateVector = this.matrix.colVec(3)
+        this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
+        return this
+    }
+
+    // 所有旋转操作进行时均忽略平移
     rotateX(angle: number) { // 绕x轴旋转
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
-            [1, 0, 0, 0],
-            [0, cos, -sin, 0],
-            [0, sin, cos, 0],
-            [0, 0, 0, 1],
+            [1, 0, 0],
+            [0, cos, -sin],
+            [0, sin, cos],
         ], true)
-        this.matrix = matrix.multiply(this.matrix)
+        return this._rotate(matrix)
     }
 
     rotateY(angle: number) { // 绕y轴旋转
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
-            [cos, 0, sin, 0],
-            [0, 1, 0, 0],
-            [-sin, 0, cos, 0],
-            [0, 0, 0, 1],
+            [cos, 0, sin],
+            [0, 1, 0],
+            [-sin, 0, cos],
         ], true)
-        this.matrix = matrix.multiply(this.matrix)
+        return this._rotate(matrix)
     }
 
     rotateZ(angle: number) { // 绕z轴旋转
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
-            [cos, -sin, 0, 0],
-            [sin, cos, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1],
+            [cos, -sin, 0],
+            [sin, cos, 0],
+            [0, 0, 1],
         ], true)
-        this.matrix = matrix.multiply(this.matrix)
+        return this._rotate(matrix)
     }
 
     rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量
@@ -424,12 +463,11 @@ class Transform3D { // 变换
         const s = Math.sin(angle)
         const t = 1 - c
         const matrix = new Matrix([
-            [t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0],
-            [t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0],
-            [t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0],
-            [0, 0, 0, 1],
+            [t * x * x + c, t * x * y - s * z, t * x * z + s * y],
+            [t * x * y + s * z, t * y * y + c, t * y * z - s * x],
+            [t * x * z - s * y, t * y * z + s * x, t * z * z + c],
         ], true)
-        this.matrix = matrix.multiply(this.matrix)
+        return this._rotate(matrix)
     }
 
     rotateAt(axis: Matrix, point: Matrix, angle: number) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点
@@ -439,7 +477,7 @@ class Transform3D { // 变换
     }
 
     hasRotation() { // 判断是否有旋转
-        return this.matrix.colVec(3).resize(3).flat().some(item => item !== 0) // 第4列的前3个元素是否有不为0的
+        return !this.matrix.resize(3, 3).isDiagonal
     }
 
     addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改本变换的数据
@@ -616,9 +654,6 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
             else if (angle.includes("turn")) return parseFloat(angle.replace("turn", "")) * Math.PI * 2;
             else return parseFloat(angle);
         })
-        console.log(name, numArgList)
-        console.log("before")
-        console.log(transform3D.matrix.toString())
         if (name === "matrix") {
             const matrix = new Matrix([
                 [numArgList[0], numArgList[2], 0, numArgList[4]],
@@ -629,15 +664,15 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
             transform3D.addTransform(new Transform3D(matrix))
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
-                transform3D.rotateZ(numArgList[0])
+                transform3D.rotateZ(-numArgList[0])
             } else if (name === "rotateX") {
-                transform3D.rotateX(numArgList[0])
+                transform3D.rotateX(-numArgList[0])
             } else if (name === "rotateY") {
-                transform3D.rotateY(numArgList[0])
+                transform3D.rotateY(-numArgList[0])
             } else if (name === "rotateZ") {
-                transform3D.rotateZ(numArgList[0])
+                transform3D.rotateZ(-numArgList[0])
             } else if (name === "rotate3d") {
-                transform3D.rotate(Matrix.colVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3])
+                transform3D.rotate(Matrix.colVec([numArgList[0], numArgList[1], numArgList[2]]), -numArgList[3])
             }
         } else if (name === "scale") {
             transform3D.scale(numArgList[0], numArgList[1], numArgList[2] || 1)
@@ -646,8 +681,6 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
         } else {
             console.log("不支持的变换函数", name, args)
         }
-        console.log("after")
-        console.log(transform3D.matrix.toString())
     }
     return transform3D
 }
@@ -733,8 +766,6 @@ class BaseShapeCreator implements ShapeCreator {
         if (transform) {
             this.transform.addTransform(parseTransform(transform))
         }
-
-        console.log(this.svgNodeTagName, this.attributes)
     }
 
     updateShapeAttrByTransform() { // 根据transform更新shape的属性
@@ -742,7 +773,6 @@ class BaseShapeCreator implements ShapeCreator {
         if (!shape) return;
 
         const { translate, rotate } = this.transform.decomposeToEulerYXZ()
-        console.log("updateShapeAttrByTransform", translate, rotate)
 
         // 设置xy
         shape.frame.x = translate.x
@@ -832,12 +862,15 @@ class GroupShapeCreator extends BaseShapeCreator {
             const childShape = child.shape
             const childCreator = child.creator
             const childLTRB = getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
-            const childLtX = ltX + childLTRB.lt.x
-            const childLtY = ltY + childLTRB.lt.y
-            const childRbX = ltX + childLTRB.rb.x
-            const childRbY = ltY + childLTRB.rb.y
-            if (childLtX < ltX) ltX = childLtX;
-            if (childLtY < ltY) ltY = childLtY;
+            // 超出左、上边界的偏移量
+            const ltXDiff = ltX - childLTRB.lt.x
+            const ltYDiff = ltY - childLTRB.lt.y
+            // 若超出左、上边界，整体向右、下偏移
+            let childRbX = ltX + childLTRB.rb.x
+            if (ltXDiff > 0) childRbX += ltXDiff;
+            let childRbY = ltY + childLTRB.rb.y
+            if (ltYDiff > 0) childRbY += ltYDiff;
+            // 拓展右下边界
             if (childRbX > rbX) rbX = childRbX;
             if (childRbY > rbY) rbY = childRbY;
         }
