@@ -698,7 +698,7 @@ function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
     const childShape = child.shape
     if (!parentShape || !childShape) return;
 
-    // 合并xy
+    // 合并transform
     child.transform = parent.transform.clone().addTransform(child.transform)
     child.updateShapeAttrByTransform()
 }
@@ -779,7 +779,7 @@ class BaseShapeCreator implements ShapeCreator {
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
 
-        // 设置翻转
+        // 设置翻转，绝对值大于90度时认为是翻转
         shape.isFlippedVertical = Math.abs(rotate.x) > Math.PI / 2
         shape.isFlippedHorizontal = Math.abs(rotate.y) > Math.PI / 2
     }
