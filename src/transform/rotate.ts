@@ -44,7 +44,34 @@ export class RotateHandler extends TransformHandler {
         }
     }
 
-    getBaseData() {
+    createApiCaller() {
+        this.asyncApiCaller = new Rotator(this.context.coopRepo, this.context.data, 'rotate', this.page);
+
+        this.workspace.rotating(true);
+        this.workspace.setSelectionViewUpdater(false);
+    }
+
+    fulfil() {
+        this.__fulfil();
+
+        this.workspace.rotating(false);
+        this.workspace.setSelectionViewUpdater(true);
+
+        return undefined;
+    }
+
+    // 执行主体
+    excute(event: MouseEvent) {
+        this.livingPoint = this.workspace.getRootXY(event);
+
+        this.__excute();
+    }
+
+    passiveExcute() {
+        this.__excute();
+    }
+
+    private getBaseData() {
         const matrixParent2rootCache: Map<string, Matrix> = new Map();
         const matrixRoot2ParentCache: Map<string, Matrix> = new Map();
 
@@ -143,33 +170,6 @@ export class RotateHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
-    }
-
-    createApiCaller() {
-        this.asyncApiCaller = new Rotator(this.context.coopRepo, this.context.data, 'rotate', this.page);
-
-        this.workspace.rotating(true);
-        this.workspace.setSelectionViewUpdater(false);
-    }
-
-    fulfil() {
-        this.__fulfil();
-
-        this.workspace.rotating(false);
-        this.workspace.setSelectionViewUpdater(true);
-
-        return undefined;
-    }
-
-    // 执行主体
-    excute(event: MouseEvent) {
-        this.livingPoint = this.workspace.getRootXY(event);
-
-        this.__excute();
-    }
-
-    passiveExcute() {
-        this.__excute();
     }
 
     private __excute() {

@@ -49,11 +49,40 @@ export class ScaleHandler extends TransformHandler {
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.getBaseFrames();
-        
+
         this.context.assist.set_trans_target(selected);
     }
 
-    getBaseFrames() {
+    createApiCaller() {
+        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, 'scale', this.page, this.shapes);
+
+        this.workspace.scaling(true);
+        this.workspace.setSelectionViewUpdater(false);
+    }
+
+    fulfil() {
+        this.__fulfil();
+
+        this.workspace.scaling(false);
+        this.workspace.setSelectionViewUpdater(true);
+
+        return undefined;
+    }
+
+    // 执行主体
+    excute(event: MouseEvent) {
+        this.livingPoint = this.workspace.getRootXY(event);
+
+        this.livingPointAlignByAssist();
+
+        this.__excute();
+    }
+
+    passiveExcute() {
+        this.__excute();
+    }
+
+    private getBaseFrames() {
         const matrixParent2rootCache = new Map();
 
         let left = Infinity;
@@ -105,36 +134,6 @@ export class ScaleHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
-    }
-
-
-    createApiCaller() {
-        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, 'scale', this.page, this.shapes);
-
-        this.workspace.scaling(true);
-        this.workspace.setSelectionViewUpdater(false);
-    }
-
-    fulfil() {
-        this.__fulfil();
-
-        this.workspace.scaling(false);
-        this.workspace.setSelectionViewUpdater(true);
-
-        return undefined;
-    }
-
-    // 执行主体
-    excute(event: MouseEvent) {
-        this.livingPoint = this.workspace.getRootXY(event);
-
-        this.livingPointAlignByAssist();
-
-        this.__excute();
-    }
-
-    passiveExcute() {
-        this.__excute();
     }
 
     private isFixedRatio() {
