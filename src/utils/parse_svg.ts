@@ -417,11 +417,11 @@ class Transform3D { // 变换
 
     _rotate(matrix: Matrix) { // 旋转
         const translateVector = this.matrix.colVec(3)
+        // 进行旋转操作时均忽略平移
         this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
         return this
     }
 
-    // 所有旋转操作进行时均忽略平移
     rotateX(angle: number) { // 绕x轴旋转
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
@@ -512,19 +512,20 @@ class Transform3D { // 变换
         }
     }
 
-    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（YXZ序），返回值的单位为弧度
+    // 旋转矩阵转欧拉角
+    // 维基百科：https://en.wikipedia.org/wiki/Euler_angles
+    // 维基中的旋转矩阵R与Transform3D中的旋转矩阵matrix的定义相反，matrix是维基百科中R的转置
+    // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
+    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const m = matrix.data
-        const sy = Math.sqrt(m[0][0] ** 2 + m[1][0] ** 2)
-        const singular = sy < 1e-6
-        let x, y, z
-        if (!singular) {
-            x = Math.atan2(m[2][1], m[2][2])
-            y = Math.atan2(-m[2][0], sy)
-            z = Math.atan2(m[1][0], m[0][0])
-        } else {
-            x = Math.atan2(-m[1][2], m[1][1])
-            y = Math.atan2(-m[2][0], sy)
+        const x = Math.asin(m[1][2])
+        let y, z
+        if (x === Math.PI / 2 || x === -Math.PI / 2) {
+            y = Math.atan2(m[2][0], m[0][0])
             z = 0
+        } else {
+            y = Math.atan2(-m[0][2], m[2][2])
+            z = Math.atan2(-m[1][0], m[1][1])
         }
         return {
             x: x,
@@ -533,7 +534,7 @@ class Transform3D { // 变换
         }
     }
 
-    decomposeToEulerYXZ() { // 分解出平移、欧拉角（YXZ序）、缩放矩阵
+    decomposeToEulerYXZ() { // 分解出平移、欧拉角（ZXY序）、缩放矩阵
         const decompose = this.decomposeMatrix()
         return {
             translate: {
@@ -664,15 +665,15 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
             transform3D.addTransform(new Transform3D(matrix))
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
-                transform3D.rotateZ(-numArgList[0])
+                transform3D.rotateZ(numArgList[0])
             } else if (name === "rotateX") {
-                transform3D.rotateX(-numArgList[0])
+                transform3D.rotateX(numArgList[0])
             } else if (name === "rotateY") {
-                transform3D.rotateY(-numArgList[0])
+                transform3D.rotateY(numArgList[0])
             } else if (name === "rotateZ") {
-                transform3D.rotateZ(-numArgList[0])
+                transform3D.rotateZ(numArgList[0])
             } else if (name === "rotate3d") {
-                transform3D.rotate(Matrix.colVec([numArgList[0], numArgList[1], numArgList[2]]), -numArgList[3])
+                transform3D.rotate(Matrix.colVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3])
             }
         } else if (name === "scale") {
             transform3D.scale(numArgList[0], numArgList[1], numArgList[2] || 1)
