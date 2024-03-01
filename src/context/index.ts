@@ -11,6 +11,9 @@ import {
     TableView,
     TextShapeView,
     TableCellView,
+    Task,
+    TaskPriority,
+    SymbolShape,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -28,8 +31,6 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
-import { Component } from "./component";
-import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
@@ -37,6 +38,10 @@ import { PdMedia } from "./medias";
 import { User } from './user';
 
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { TableSelection } from "./tableselection";
+import { Component } from "./component";
+import { Path } from "./path";
+import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 
 // 仅暴露必要的方法
@@ -101,6 +106,7 @@ export class Context extends WatchableObject {
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
+    private m_color: ColorCtx;
     private m_medias: PdMedia;
     private m_user: User;
 
@@ -131,6 +137,7 @@ export class Context extends WatchableObject {
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
+        this.m_color = new ColorCtx();
         this.m_medias = new PdMedia(this);
         this.m_user = new User();
         
@@ -145,19 +152,16 @@ export class Context extends WatchableObject {
         return this.editor.editor4Doc();
     }
 
-    editor4Page(page: Page | PageView): PageEditor {
-        if (page instanceof PageView) page = adapt2Shape(page) as Page;
+    editor4Page(page: PageView): PageEditor {
         return this.editor.editor4Page(page);
     }
 
-    editor4Shape(shape: Shape | ShapeView): ShapeEditor {
-        if (shape instanceof ShapeView) shape = adapt2Shape(shape);
+    editor4Shape(shape: ShapeView): ShapeEditor {
         return this.editor.editor4Shape(shape);
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
-    editor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor {
-        if (shape instanceof ShapeView) shape = adapt2Shape(shape) as Shape & { text: Text };
+    editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
@@ -165,14 +169,13 @@ export class Context extends WatchableObject {
         return this.m_textEditor;
     }
 
-    peekEditor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor | undefined {
+    peekEditor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor | undefined {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
     }
 
-    editor4Table(shape: TableShape | TableView): TableEditor {
-        if (shape instanceof TableView) shape = adapt2Shape(shape) as TableShape;
+    editor4Table(shape: TableView): TableEditor {
         return this.editor.editor4Table(shape);
     }
 
@@ -281,5 +284,9 @@ export class Context extends WatchableObject {
     nextTick(page: PageView, cb: () => void) {
         const ctx = this.getPageDom(page.data).ctx;
         ctx.once('nextTick', cb);
+    }
+
+    get color() {
+        return this.m_color;
     }
 }

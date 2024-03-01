@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {onMounted, onUnmounted, ref, watch} from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import {OverrideType, SymbolShape, SymbolView, Variable, VariableType} from '@kcdesign/data';
+import { OverrideType, SymbolShape, SymbolView, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import {create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable} from '@/utils/symbol';
-import {message} from '@/utils/message';
-import {Selection} from '@/context/selection';
+import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
+import { message } from '@/utils/message';
+import { Selection } from '@/context/selection';
 
 const props = defineProps<{
     context: Context
 }>()
-const {t} = useI18n();
+const { t } = useI18n();
 const isLayerShow = ref(false);
 const closeLayerShowPopup = () => {
     isLayerShow.value = false
@@ -25,7 +25,7 @@ const layerIsShow = () => {
 }
 const atrrdialog = ref<HTMLDivElement>();
 const card_ref = ref<HTMLDivElement>();
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 const default_name = ref('');
 //选中图层的id
 const selectId = ref<string[]>([]);
@@ -66,7 +66,7 @@ function dlt_change(v: number) {
     dlt_value.value = !v;
 }
 
-function save_layer_show(type: VariableType, name: string) {    
+function save_layer_show(type: VariableType, name: string) {
     if (is_bind.value) {
         if (!sym_layer.value) return;
         modify_variable(props.context, sym_layer.value, is_bind.value, name, dlt_value.value, selectId.value)
@@ -96,7 +96,7 @@ function layer_watcher(args: any) {
 watch(() => shape.value, (v, o) => {
     if (o) o.unwatch(layer_watcher);
     v.watch(layer_watcher);
-}, {immediate: true})
+}, { immediate: true })
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) o.unwatch(layer_watcher);
@@ -150,20 +150,17 @@ onUnmounted(() => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-                       :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
-                       :dialog_posi="dialog_posi"
-                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
-                       @save-layer-show="save_layer_show"
-                       :symbol="sym_layer">
+            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi"
+            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
+            :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                                  :context="props.context" :placeholder="t('compos.place_select_layer')"
-                                  :selectId="selectId">
+                    :context="props.context" :placeholder="t('compos.place_select_layer')" :selectId="selectId">
                 </SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
-                                     :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
+                    :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -183,7 +180,7 @@ onUnmounted(() => {
         justify-content: center;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -217,7 +214,7 @@ onUnmounted(() => {
         align-items: center;
         width: 84px;
 
-        > svg {
+        >svg {
             width: 14px;
             height: 14px;
         }
@@ -240,7 +237,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
@@ -251,7 +248,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            > span {
+            >span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -277,7 +274,7 @@ onUnmounted(() => {
     width: 28px;
     height: 28px;
 
-    > svg {
+    >svg {
         width: 16px;
         height: 16px;
     }

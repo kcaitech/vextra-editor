@@ -33,7 +33,7 @@ const submatrixArray = computed(() => submatrix.toArray());
 const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<ClientXY>({ x: 0, y: 0 });
-const editingCell = shallowRef<TableGridItem & { cell: TableCell | undefined }>();
+const editingCell = shallowRef<TableCellView>();
 const editingCellView = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
@@ -77,8 +77,7 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    if (editingCell.value && editingCell.value.cell) {
-        editingCell.value = props.shape.locateCell2(editingCell.value.cell);
+    if (editingCell.value) {
         updateCellView();
     }
 }
@@ -87,9 +86,8 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 }
 function isEditingText() {
     return editingCell.value &&
-        editingCell.value.cell &&
-        editingCell.value.cell.cellType === TableCellType.Text &&
-        editingCell.value.cell.text &&
+        editingCell.value.cellType === TableCellType.Text &&
+        editingCell.value.text &&
         editingCellView.value;
 }
 const closeCellMenu = () => {
@@ -108,9 +106,9 @@ function table_selection_watcher(t: number) {
 }
 
 function updateCellView() {
-    const cell = editingCell.value?.cell;
+    const cell = editingCell.value;
     if (cell) {
-        editingCellView.value = props.shape.cells.get(cell.id);
+        editingCellView.value = cell;
         if (!editingCellView.value) {
             props.context.nextTick(props.context.selection.selectedPage!, () => {
                 editingCellView.value = props.shape.cells.get(cell.id);

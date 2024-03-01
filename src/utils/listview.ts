@@ -162,12 +162,12 @@ export function hover(context: Context, shape: ShapeView) {
     context.selection.hoverShape(shape);
 }
 
-export function modify_shape_lock_status(context: Context, shape: Shape) {
+export function modify_shape_lock_status(context: Context, shape: ShapeView) {
     const editor = context.editor4Shape(shape);
     editor.toggleLock();
 }
 
-export function modify_shape_visible_status(context: Context, shape: Shape) {
+export function modify_shape_visible_status(context: Context, shape: ShapeView) {
     const editor = context.editor4Shape(shape);
     editor.toggleVisible();
 }
@@ -220,7 +220,7 @@ export function modify_after_drag(context: Context, detail: DragDetail) {
     }
 
     const page = context.selection.selectedPage!;
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     const shapes = compare_layer_3(context.selection.selectedShapes, -1);
 
     editor.afterShapeListDrag(shapes.map((s) => adapt2Shape(s)), adapt2Shape(descend), detail.position);

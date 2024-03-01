@@ -11,7 +11,7 @@ import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
 import { flattenShapes } from '@/utils/cutout';
-import { hidden_selection } from '@/utils/content';
+import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 
 interface Props {
@@ -53,6 +53,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 
 function showMenu() {
     updater();
+    layout()
     popover.value.show();
 }
 
@@ -69,47 +70,22 @@ function updater() {
 
 function borderStyleSelect(selected: SelectItem) {
     borderStyle.value = selected;
-    const shape = props.shapes[0];
-    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
-        if (shape.type === ShapeType.Table) {
-            const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableView);
-            const is_edting = table.editingCell;
-            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                let range
-                if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                }
-                e.setBorderStyle(props.index, bs, range)
-            } else {
-                editor.value.setBorderStyle(props.index, bs);
-            }
-        } else {
-            editor.value.setBorderStyle(props.index, bs);
-        }
-    } else if (len.value > 1) {
-        const shapes = getShapesForStyle(props.shapes);
+        const e = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(table);
+        e.setBorderStyle(props.index, bs, range)
+    } else {
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
         if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderStyle(actions);
-            }
-        }
-    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-        const childs = (shape).childs;
-        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderStyle(actions);
-            }
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderStyle(actions);
         }
     }
     popover.value.focus();
@@ -118,30 +94,14 @@ function borderStyleSelect(selected: SelectItem) {
 
 function positionSelect(selected: SelectItem) {
     position.value = selected;
-    if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).data.isBoolOpShape)) {
-        editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
-    } else if (len.value > 1) {
-        if (props.shapes[0].type === ShapeType.Table) return;
-        const shapes = getShapesForStyle(props.shapes);
-        const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderPosition(actions);
-            }
-        }
-    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group && !(props.shapes[0] as GroupShapeView).data.isBoolOpShape) {
-        const childs = (props.shapes[0]).childs;
-        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderPosition(actions);
-            }
-        }
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shapes = getShapesForStyle(selecteds);
+    const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
+    if (actions && actions.length) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapesBorderPosition(actions);
     }
     popover.value.focus();
     hidden_selection(props.context);
@@ -149,46 +109,21 @@ function positionSelect(selected: SelectItem) {
 
 function setThickness(e: Event) {
     const thickness = Number((e.target as HTMLInputElement).value);
-    const shape = props.shapes[0];
-    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
-        if (shape.type === ShapeType.Table) {
-            const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableView);
-            const is_edting = table.editingCell;
-            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                let range
-                if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                }
-                e.setBorderThickness(props.index, thickness, range)
-            } else {
-                editor.value.setBorderThickness(props.index, thickness);
-            }
-        } else {
-            editor.value.setBorderThickness(props.index, thickness);
-        }
-    } else if (len.value > 1) {
-        const shapes = getShapesForStyle(props.shapes);
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(table);
+        e.setBorderThickness(props.index, thickness, range)
+    } else {
+        const shapes = getShapesForStyle(selecteds);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
         if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderThickness(actions);
-            }
-        }
-    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-        const childs = (shape).childs;
-        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_thickness(shapes, props.index, thickness);
-        if (actions && actions.length) {
-            const page = props.context.selection.selectedPage;
-            if (page) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderThickness(actions);
-            }
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderThickness(actions);
         }
     }
     hidden_selection(props.context);
@@ -196,47 +131,24 @@ function setThickness(e: Event) {
 
 const augment = (e: Event) => {
     if (borderThickness.value) {
+        const selecteds = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage;
+        if (!page || selecteds.length < 1) return;
+        const shape = selecteds[0];
+        const table = props.context.tableSelection;
         const thickness = Number(borderThickness.value.value) + 1
-        const shape = props.shapes[0];
-        if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
-            if (shape.type === ShapeType.Table) {
-                const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape as TableView);
-                const is_edting = table.editingCell;
-                if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                    let range
-                    if (is_edting) {
-                        range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                    } else {
-                        range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                    }
-                    e.setBorderThickness(props.index, thickness, range)
-                } else {
-                    editor.value.setBorderThickness(props.index, thickness);
-                }
-            } else {
-                editor.value.setBorderThickness(props.index, thickness);
-            }
-        } else if (len.value > 1) {
-            const shapes = getShapesForStyle(props.shapes);
+        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+            const table = props.context.tableSelection;
+            const e = props.context.editor4Table(shape as TableView);
+            const range = get_table_range(table);
+            e.setBorderThickness(props.index, thickness, range)
+
+        } else {
+            const shapes = getShapesForStyle(selecteds);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
-                const page = props.context.selection.selectedPage;
-                if (page) {
-                    const editor = props.context.editor4Page(page);
-                    editor.setShapesBorderThickness(actions);
-                }
-            }
-        } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-            const childs = (shape).childs;
-            const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-            const actions = get_actions_border_thickness(shapes, props.index, thickness);
-            if (actions && actions.length) {
-                const page = props.context.selection.selectedPage;
-                if (page) {
-                    const editor = props.context.editor4Page(page);
-                    editor.setShapesBorderThickness(actions);
-                }
+                const editor = props.context.editor4Page(page);
+                editor.setShapesBorderThickness(actions);
             }
         }
         borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
@@ -247,46 +159,23 @@ const decrease = (e: Event) => {
     if (borderThickness.value) {
         if (Number(borderThickness.value.value) === 0) return
         const thickness = Number(borderThickness.value.value) - 1;
-        const shape = props.shapes[0];
-        if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
-            if (shape.type === ShapeType.Table) {
-                const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape as TableView);
-                const is_edting = table.editingCell;
-                if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                    let range
-                    if (is_edting) {
-                        range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                    } else {
-                        range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                    }
-                    e.setBorderThickness(props.index, thickness, range)
-                } else {
-                    editor.value.setBorderThickness(props.index, thickness);
-                }
-            } else {
-                editor.value.setBorderThickness(props.index, thickness);
-            }
-        } else if (len.value > 1) {
-            const shapes = getShapesForStyle(props.shapes);
+        const selecteds = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage;
+        if (!page || selecteds.length < 1) return;
+        const shape = selecteds[0];
+        const table = props.context.tableSelection;
+        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+            const table = props.context.tableSelection;
+            const e = props.context.editor4Table(shape as TableView);
+            const range = get_table_range(table);
+            e.setBorderThickness(props.index, thickness, range)
+
+        } else {
+            const shapes = getShapesForStyle(selecteds);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
-                const page = props.context.selection.selectedPage;
-                if (page) {
-                    const editor = props.context.editor4Page(page);
-                    editor.setShapesBorderThickness(actions);
-                }
-            }
-        } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-            const childs = (shape).childs;
-            const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-            const actions = get_actions_border_thickness(shapes, props.index, thickness);
-            if (actions && actions.length) {
-                const page = props.context.selection.selectedPage;
-                if (page) {
-                    const editor = props.context.editor4Page(page);
-                    editor.setShapesBorderThickness(actions);
-                }
+                const editor = props.context.editor4Page(page);
+                editor.setShapesBorderThickness(actions);
             }
         }
         borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
@@ -316,48 +205,25 @@ const onMouseMove = (e: MouseEvent) => {
         i.value = i.value + 1
         if (i.value >= 3 && isDrag.value) {
             i.value = 0
+            const selecteds = props.context.selection.selectedShapes;
+            const page = props.context.selection.selectedPage;
+            if (!page || selecteds.length < 1) return;
+            const shape = selecteds[0];
+            const table = props.context.tableSelection;
             if (mx > 0) {
                 if (borderThickness.value) {
                     const thickness = Number(borderThickness.value.value) + 1;
-                    const shape = props.shapes[0];
-                    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
-                        if (shape.type === ShapeType.Table) {
-                            const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape as TableView);
-                            const is_edting = table.editingCell;
-                            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                                let range
-                                if (is_edting) {
-                                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                                } else {
-                                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                                }
-                                e.setBorderThickness(props.index, thickness, range)
-                            } else {
-                                editor.value.setBorderThickness(props.index, thickness);
-                            }
-                        } else {
-                            editor.value.setBorderThickness(props.index, thickness);
-                        }
-                    } else if (len.value > 1) {
-                        const actions = get_actions_border_thickness(props.shapes, props.index, thickness);
-                        if (actions && actions.length) {
-                            const page = props.context.selection.selectedPage;
-                            if (page) {
-                                const editor = props.context.editor4Page(page);
-                                editor.setShapesBorderThickness(actions);
-                            }
-                        }
-                    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-                        const childs = (shape).childs;
-                        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+                    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+                        const table = props.context.tableSelection;
+                        const e = props.context.editor4Table(shape as TableView);
+                        const range = get_table_range(table);
+                        e.setBorderThickness(props.index, thickness, range)
+                    } else {
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
-                            const page = props.context.selection.selectedPage;
-                            if (page) {
-                                const editor = props.context.editor4Page(page);
-                                editor.setShapesBorderThickness(actions);
-                            }
+                            const editor = props.context.editor4Page(page);
+                            editor.setShapesBorderThickness(actions);
                         }
                     }
                     borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
@@ -369,45 +235,17 @@ const onMouseMove = (e: MouseEvent) => {
                         thickness = 0
                         _curpt.x = e.screenX
                     }
-                    const shape = props.shapes[0];
-                    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
-                        if (shape.type === ShapeType.Table) {
-                            const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape as TableView);
-                            const is_edting = table.editingCell;
-                            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
-                                let range
-                                if (is_edting) {
-                                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
-                                } else {
-                                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
-                                }
-                                e.setBorderThickness(props.index, thickness, range)
-                            } else {
-                                editor.value.setBorderThickness(props.index, thickness);
-                            }
-                        } else {
-                            editor.value.setBorderThickness(props.index, thickness);
-                        }
-                    } else if (len.value > 1) {
-                        const actions = get_actions_border_thickness(props.shapes, props.index, thickness);
-                        if (actions && actions.length) {
-                            const page = props.context.selection.selectedPage;
-                            if (page) {
-                                const editor = props.context.editor4Page(page);
-                                editor.setShapesBorderThickness(actions);
-                            }
-                        }
-                    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-                        const childs = (shape).childs;
-                        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+                    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+                        const table = props.context.tableSelection;
+                        const e = props.context.editor4Table(shape as TableView);
+                        const range = get_table_range(table);
+                        e.setBorderThickness(props.index, thickness, range)
+                    } else {
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
-                            const page = props.context.selection.selectedPage;
-                            if (page) {
-                                const editor = props.context.editor4Page(page);
-                                editor.setShapesBorderThickness(actions);
-                            }
+                            const editor = props.context.editor4Page(page);
+                            editor.setShapesBorderThickness(actions);
                         }
                     }
                     if (Number(borderThickness.value.value) > 0) {
@@ -458,6 +296,7 @@ const selectBorderThicknes = () => {
 function blur2() {
     isActived.value = false
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     layout();

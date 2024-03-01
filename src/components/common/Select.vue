@@ -15,7 +15,7 @@ export interface SelectSource {
 
 interface Props {
     source: SelectSource[];
-    selected: SelectItem | null;
+    selected?: SelectItem;
 
     itemHeight?: number;
     itemWidth?: number;

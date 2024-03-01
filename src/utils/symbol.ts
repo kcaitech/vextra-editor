@@ -299,7 +299,7 @@ export function tag_values_sort(symbol: SymbolView | SymbolShape, variable: Vari
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        let v = item.symtags?.get(variable.id) || variable.value;
+        let v = item.symtags?.get(variable.id) || SymbolShape.Default_State;
         if (v === SymbolShape.Default_State) v = defaultVal;
         v && result_set.add(v);
     }
@@ -330,7 +330,6 @@ export function states_tag_values_sort(shapes: SymbolView[], t: Function) {
     const result: StatusValueItem[] = [];
     if (shapes.length === 1) {
         const par = shapes[0].parent as SymbolView;
-        const bros: SymbolView[] = par.childs as SymbolView[];
         const variables = par.variables;
         if (!variables) return result;
         variables.forEach((v, k) => {
@@ -374,8 +373,8 @@ export function is_state_selection(shapes: ShapeView[]) {
  * @param state 可变组件
  * @param variable 属性对象
  */
-export function get_tag_value(state: SymbolShape, variable: Variable) {
-    return state.symtags?.get(variable.id) || variable.value || '';
+export function get_tag_value(state: SymbolView, variable: Variable) {
+    return state.symtags?.get(variable.id) || SymbolShape.Default_State;
 }
 
 // endregion
@@ -414,7 +413,7 @@ export function is_exist_invalid_shape(selected: ShapeView[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if ([ShapeType.Contact].includes(item.type)) return true;
         if ((item).childs?.length) result = is_exist_invalid_shape((item).childs);
         if (result) return true;
     }
@@ -432,7 +431,7 @@ export function make_status(context: Context, t: Function) {
         const editor = context.editor4Page(page);
         const name = gen_special_name_for_status(shape, t('compos.attri'));
         if (!name) return;
-        return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'), true);
+        return editor.makeStatus(shape as SymbolView, name, t('compos.dlt'), true);
     }
 }
 
@@ -477,7 +476,7 @@ export function make_state(context: Context, t: Function, hor?: number) {
 /**
  * @description 为组件创建图层显示变量
  */
-export function create_visible_var(context: Context, symbol: SymbolShape, name: string, value: boolean, shapes: ShapeView[]) {
+export function create_visible_var(context: Context, symbol: SymbolView, name: string, value: boolean, shapes: ShapeView[]) {
     const editor = context.editor4Shape(symbol);
     editor.makeVisibleVar(symbol, name, value, shapes.map((s) => adapt2Shape(s)));
 }
@@ -485,7 +484,7 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
 /**
  * @description 为组件创建实例切换变量
  */
-export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: (ShapeView)[]) {
+export function create_ref_var(context: Context, symbol: SymbolView, name: string, shapes: (ShapeView)[]) {
     const editor = context.editor4Shape(symbol);
     editor.makeSymbolRefVar(symbol, name, shapes.map((s) => adapt2Shape(s) as SymbolRefShape));
 }
@@ -493,7 +492,7 @@ export function create_ref_var(context: Context, symbol: SymbolShape, name: stri
 /**
  * @description 为组件创建文本切换变量
  */
-export function create_text_var(context: Context, symbol: SymbolShape, name: string, dlt: string, shapes: ShapeView[]) {
+export function create_text_var(context: Context, symbol: SymbolView, name: string, dlt: string, shapes: ShapeView[]) {
     const editor = context.editor4Shape(symbol);
     editor.makeTextVar(symbol, name, dlt, shapes.map((s) => adapt2Shape(s)));
 }
@@ -506,7 +505,7 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
         const s = page.getShape(values[i]);
         if (s) shapes.push(s);
     }
-    const sym = adapt2Shape(symbol) as SymbolShape;
+    const sym = (symbol) as SymbolView;
     switch (type) {
         case VariableType.Visible:
             return create_visible_var(context, sym, name, value, shapes);
@@ -524,7 +523,7 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
  * @param symbol
  * @param dlt 默认名称
  */
-export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
+export function gen_special_name_for_status(symbol: SymbolView, dlt: string) {
     let index = 1
     if (!symbol.variables) return `${dlt}${index}`;
     const variables = symbol.variables;
@@ -837,13 +836,13 @@ function search_binds_for_state(
 /**
  * @description 获取实例symref身上的某个变量variable的值
  */
-export function get_vari_value_for_ref(symbol_ref: SymbolRefShape, variable: Variable) {
+export function get_vari_value_for_ref(symbol_ref: SymbolRefView, variable: Variable) {
     const overrides = symbol_ref.findOverride(variable.id, OverrideType.Variable);
     return overrides ? overrides[overrides.length - 1].value : variable.value;
 
 }
 
-export function get_vari_value_for_ref2(symbol_ref: SymbolRefShape, variable: Variable) {
+export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Variable) {
     let symbol: SymbolShape | SymbolUnionShape | undefined = symbol_ref.symData;
     if (!symbol) {
         return SymbolShape.Default_State;
@@ -981,7 +980,7 @@ export function is_allow_to_create_sym(shapes: Shape[]) {
 /**
  * @description 判断组件状态是否允许删除
  */
-export function is_status_allow_to_delete(symbol: SymbolShape) {
+export function is_status_allow_to_delete(symbol: SymbolView) {
     let valid = -1;
     if (!symbol.variables) return false;
     symbol.variables.forEach(v => {
@@ -1127,11 +1126,6 @@ export function switch_symref_state(context: Context, variable: Variable, state:
     if (!symbol_ref) return;
     const editor = context.editor4Shape(symbol_ref);
     editor.switchSymState(variable.id, state === t('compos.dlt') ? SymbolShape.Default_State : state);
-}
-
-export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variable: Variable) {
-    const overrides = symbolref.findOverride(variable.id, OverrideType.Variable);
-    return overrides ? overrides[overrides.length - 1] : variable;
 }
 
 /**

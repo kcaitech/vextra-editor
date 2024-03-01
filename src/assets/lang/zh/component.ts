@@ -38,7 +38,7 @@ export const compos: any = {
     add_new: '添加新值',
     error_1: '新的组件不能包含已有组件图层的组成图层',
     error_2: '新的组件不能包含组件实例的组成图层',
-    error_3: '组件内部不能包含连接线、表格',
+    error_3: '组件内部不能包含连接线',
     validate_info_1: '请选择图层',
     validate_info_2: '属性名不能为空',
     validate_info_3: '默认值不能为空',
