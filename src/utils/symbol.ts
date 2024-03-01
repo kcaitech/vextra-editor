@@ -299,7 +299,7 @@ export function tag_values_sort(symbol: SymbolView | SymbolShape, variable: Vari
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        let v = item.symtags?.get(variable.id) || variable.value;
+        let v = item.symtags?.get(variable.id) || SymbolShape.Default_State;
         if (v === SymbolShape.Default_State) v = defaultVal;
         v && result_set.add(v);
     }
@@ -330,7 +330,6 @@ export function states_tag_values_sort(shapes: SymbolView[], t: Function) {
     const result: StatusValueItem[] = [];
     if (shapes.length === 1) {
         const par = shapes[0].parent as SymbolView;
-        const bros: SymbolView[] = par.childs as SymbolView[];
         const variables = par.variables;
         if (!variables) return result;
         variables.forEach((v, k) => {
@@ -375,7 +374,7 @@ export function is_state_selection(shapes: ShapeView[]) {
  * @param variable 属性对象
  */
 export function get_tag_value(state: SymbolView, variable: Variable) {
-    return state.symtags?.get(variable.id) || variable.value || '';
+    return state.symtags?.get(variable.id) || SymbolShape.Default_State;
 }
 
 // endregion
@@ -843,7 +842,7 @@ export function get_vari_value_for_ref(symbol_ref: SymbolRefView, variable: Vari
 
 }
 
-export function get_vari_value_for_ref2(symbol_ref: SymbolRefShape, variable: Variable) {
+export function get_vari_value_for_ref2(symbol_ref: SymbolRefView, variable: Variable) {
     let symbol: SymbolShape | SymbolUnionShape | undefined = symbol_ref.symData;
     if (!symbol) {
         return SymbolShape.Default_State;
@@ -981,7 +980,7 @@ export function is_allow_to_create_sym(shapes: Shape[]) {
 /**
  * @description 判断组件状态是否允许删除
  */
-export function is_status_allow_to_delete(symbol: SymbolShape) {
+export function is_status_allow_to_delete(symbol: SymbolView) {
     let valid = -1;
     if (!symbol.variables) return false;
     symbol.variables.forEach(v => {
