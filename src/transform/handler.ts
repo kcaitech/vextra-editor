@@ -1,52 +1,10 @@
 import { Context } from "@/context";
-import { XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { boundingBox2Root } from "@/utils/common";
-import { AsyncApiCaller, FrameLike, Matrix, PageView, ShapeView } from "@kcdesign/data";
-
-export type OriginStatus = Map<string, FrameLike>;
-
-export type Box = {
-    origin: XY;
-
-    baseX: number;
-    baseY: number;
-    baseWidth: number;
-    baseHeight: number;
-
-    boxX: number;
-    boxY: number;
-    boxWidth: number;
-    boxHeight: number;
-};
-
-export type BaseFrames = Map<string, Box>;
-
-type Base4Rotation = {
-    XYtoRoot: XY;
-
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-
-    rotate: number;
-    flipH: boolean;
-    flipV: boolean;
-
-    root2parentMatrix: Matrix;
-};
-
-type BaseData4Rotate = Map<string, Base4Rotation>;
+import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
 
 export class TransformHandler {
     context: Context;
     workspace: WorkSpace;
-
-    originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
-    baseFrames: BaseFrames = new Map();
-
-    baseData: BaseData4Rotate = new Map();
 
     shapes: ShapeView[];
     page: PageView;
@@ -54,15 +12,6 @@ export class TransformHandler {
     shiftStatus: boolean;
     altStatus: boolean;
     alignPixel: boolean;
-    fixedRatioWhileScaling: boolean = false;
-
-    horFixedStatus: boolean = false;
-    horFixedValue: number = 0;
-    verFixedStatus: boolean = false;
-    verFixedValue: number = 0;
-
-    __parent2RootMatrixCache: Map<string, Matrix> = new Map();
-    __baseFramesCache: BaseFrames = new Map();
 
     asyncApiCaller: AsyncApiCaller | undefined;
 
@@ -76,63 +25,7 @@ export class TransformHandler {
         this.altStatus = event.altKey;
         this.alignPixel = context.user.isPixelAlignMent;
 
-        this.getBaseFrames();
         this.beforeTransform();
-    }
-
-
-    getBaseFrames() {
-        const matrixParent2rootCache = new Map();
-
-        let left = Infinity;
-        let top = Infinity;
-        let right = -Infinity;
-        let bottom = -Infinity;
-
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
-            const cache = this.__baseFramesCache.get(shape.id);
-
-            if (cache) {
-                continue;
-            }
-
-            if (shape.frameType > 1 && shape.rotation) {
-                this.fixedRatioWhileScaling = true;
-            }
-
-            const f = boundingBox2Root(shape, matrixParent2rootCache);
-
-            if (f.boxX < left) {
-                left = f.boxX;
-            }
-
-            if (f.boxY < top) {
-                top = f.boxY;
-            }
-
-            const _right = f.boxX + f.boxWidth
-            if (_right > right) {
-                right = _right;
-            }
-
-            const _bottom = f.boxY + f.boxHeight;
-            if (_bottom > bottom) {
-                bottom = _bottom;
-            }
-
-            this.baseFrames.set(shape.id, f);
-            this.__baseFramesCache.set(shape.id, f);
-        }
-
-        this.originSelectionBox = {
-            x: left,
-            y: top,
-            right,
-            bottom,
-            width: right - left,
-            height: bottom - top,
-        };
     }
 
     beforeTransform() {

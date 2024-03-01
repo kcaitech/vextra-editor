@@ -1,8 +1,25 @@
-import { CtrlElementType, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, FrameLike, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
 import { TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { getHorizontalAngle } from "@/utils/common";
+
+type Base4Rotation = {
+    XYtoRoot: XY;
+
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+
+    rotate: number;
+    flipH: boolean;
+    flipV: boolean;
+
+    root2parentMatrix: Matrix;
+};
+
+type BaseData4Rotate = Map<string, Base4Rotation>;
 
 export class RotateHandler extends TransformHandler {
     ctrlElementType: CtrlElementType;
@@ -10,11 +27,16 @@ export class RotateHandler extends TransformHandler {
     livingPoint: XY;
     centerXY: XY;
 
+    originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
+    baseData: BaseData4Rotate = new Map();
+
     constructor(context: Context, selected: ShapeView[], event: MouseEvent, ctrlElementType: CtrlElementType) {
         super(context, selected, event);
         this.ctrlElementType = ctrlElementType;
         this.referencePoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.referencePoint };
+
+        this.getBaseData();
 
         this.centerXY = {
             x: (this.originSelectionBox.x + this.originSelectionBox.right) / 2,
@@ -22,7 +44,7 @@ export class RotateHandler extends TransformHandler {
         }
     }
 
-    getBaseFrames() {
+    getBaseData() {
         const matrixParent2rootCache: Map<string, Matrix> = new Map();
         const matrixRoot2ParentCache: Map<string, Matrix> = new Map();
 
