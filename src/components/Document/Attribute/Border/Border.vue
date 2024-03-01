@@ -36,6 +36,7 @@ interface BorderItem {
 interface Props {
     context: Context
     shapes: ShapeView[]
+    trigger: any[];
 }
 
 const { t } = useI18n();
@@ -753,6 +754,7 @@ function selection_watcher(t: number) {
 
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
+
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -810,7 +812,7 @@ onUnmounted(() => {
                 <!--                </div>-->
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view">
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view" :trigger="props.trigger">
         </Apex>
     </div>
 </template>
