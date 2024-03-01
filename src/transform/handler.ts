@@ -22,16 +22,34 @@ export type Box = {
 
 export type BaseFrames = Map<string, Box>;
 
+type Base4Rotation = {
+    XYtoRoot: XY;
+
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+
+    rotate: number;
+    flipH: boolean;
+    flipV: boolean;
+
+    root2parentMatrix: Matrix;
+};
+
+type BaseData4Rotate = Map<string, Base4Rotation>;
+
 export class TransformHandler {
     context: Context;
     workspace: WorkSpace;
 
-    originSelectionBox: FrameLike = { x: 0, y: 0, height: 0, width: 0 };
+    originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     baseFrames: BaseFrames = new Map();
+
+    baseData: BaseData4Rotate = new Map();
 
     shapes: ShapeView[];
     page: PageView;
-    referencePoint: XY;
 
     shiftStatus: boolean;
     altStatus: boolean;
@@ -53,7 +71,6 @@ export class TransformHandler {
         this.workspace = context.workspace;
         this.shapes = shapes;
         this.page = context.selection.selectedPage!;
-        this.referencePoint = context.workspace.getRootXY(event);
 
         this.shiftStatus = event.shiftKey;
         this.altStatus = event.altKey;
@@ -108,7 +125,14 @@ export class TransformHandler {
             this.__baseFramesCache.set(shape.id, f);
         }
 
-        this.originSelectionBox = { x: left, y: top, width: right - left, height: bottom - top };
+        this.originSelectionBox = {
+            x: left,
+            y: top,
+            right,
+            bottom,
+            width: right - left,
+            height: bottom - top,
+        };
     }
 
     beforeTransform() {
@@ -133,10 +157,10 @@ export class TransformHandler {
 
     abort() { }
 
-    __fulfil() {
-        this.context.assist.reset();
-
+    protected __fulfil() {
         this.asyncApiCaller?.commit();
+
+        this.context.assist.reset();
 
         this.workspace.setCtrl('page');
 

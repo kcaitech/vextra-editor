@@ -111,9 +111,7 @@ export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: nu
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
-    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    const angle = (angleInDegrees + 360) % 360;
-    return angle;
+    return (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
 }
 
 // 根据若干个点[x, y]，确定最边界的四个点
