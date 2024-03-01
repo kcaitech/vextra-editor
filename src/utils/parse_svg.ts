@@ -122,12 +122,20 @@ class Matrix { // 矩阵
         return this.data.reduce((prev, curr) => prev.concat(curr), [])
     }
 
-    static colVec(data: number[]) { // 列向量
+    static colVec(data: number[]) { // 构建列向量
         return new Matrix(data.map(item => [item]), true)
     }
 
-    static rowVec(data: number[]) { // 行向量
+    static rowVec(data: number[]) { // 构建行向量
         return new Matrix([data], true)
+    }
+
+    static colVec3D(x: number, y: number, z: number) { // 构建三维列向量
+        return Matrix.colVec([x, y, z])
+    }
+
+    static rowVec3D(x: number, y: number, z: number) { // 构建三维行向量
+        return Matrix.rowVec([x, y, z])
     }
 
     static fromColumnVectors(vectors: Matrix[]) { // 从列向量构建矩阵
@@ -154,20 +162,6 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    static colVec3D(x: number, y: number, z: number) { // 列向量
-        return new Matrix([
-            [x],
-            [y],
-            [z],
-        ], true)
-    }
-
-    static rowVec3D(x: number, y: number, z: number) { // 行向量
-        return new Matrix([
-            [x, y, z],
-        ], true)
-    }
-
     colVec(n: number) { // 获取第n列列向量
         if (n < 0 || n >= this.dimension[1]) throw new Error("列数越界");
         return Matrix.colVec(this.data.map(item => item[n]))
@@ -189,7 +183,7 @@ class Matrix { // 矩阵
         return this.data.map(item => Matrix.rowVec(item))
     }
 
-    colExtend(matrix: Matrix) { // 列扩展
+    colExtend(matrix: Matrix) { // 列扩展，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (m0 !== m1) throw new Error("矩阵行数不匹配，无法扩展");
@@ -201,7 +195,7 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    rowExtend(matrix: Matrix) { // 行扩展
+    rowExtend(matrix: Matrix) { // 行扩展，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (n0 !== n1) throw new Error("矩阵列数不匹配，无法扩展");
@@ -222,7 +216,7 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    add(matrix: Matrix) { // 矩阵相加
+    add(matrix: Matrix) { // 矩阵相加，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (m0 !== m1 || n0 !== n1) throw new Error("矩阵阶数不匹配，无法相加");
@@ -231,7 +225,7 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    multiplyByNumber(number: number) { // 矩阵数乘
+    multiplyByNumber(number: number) { // 矩阵数乘，不修改原矩阵，返回新矩阵
         const [m, n] = this.dimension
         const result: number[][] = buildArray(m, n)
         for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) result[i][j] = this.data[i][j] * number
@@ -351,7 +345,7 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    normalize() { // 将矩阵的每一列化为单位向量
+    normalize() { // 将矩阵的每一列化为单位向量，不修改原矩阵，返回新矩阵
         const [m, n] = this.dimension
         const result: number[][] = buildArray(m, n)
         for (let i = 0; i < n; i++) {
@@ -395,7 +389,7 @@ class Transform3D { // 变换
         return this.transform(Matrix.colVec3D(x, y, z))
     }
 
-    translate(x: number, y: number, z: number) { // 平移
+    translate(x: number, y: number, z: number) { // 平移，会修改原变换
         const matrix = new Matrix([
             [1, 0, 0, x],
             [0, 1, 0, y],
@@ -403,9 +397,10 @@ class Transform3D { // 变换
             [0, 0, 0, 1],
         ], true)
         this.matrix = matrix.multiply(this.matrix)
+        return this
     }
 
-    scale(xScale: number, yScale: number, zScale: number) { // 缩放
+    scale(xScale: number, yScale: number, zScale: number) { // 缩放，会修改原变换
         const matrix = new Matrix([
             [xScale, 0, 0, 0],
             [0, yScale, 0, 0],
@@ -413,16 +408,17 @@ class Transform3D { // 变换
             [0, 0, 0, 1],
         ], true)
         this.matrix = matrix.multiply(this.matrix)
+        return this
     }
 
-    _rotate(matrix: Matrix) { // 旋转
+    _rotate(matrix: Matrix) { // 旋转，会修改原变换
         const translateVector = this.matrix.colVec(3)
         // 进行旋转操作时均忽略平移
         this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
         return this
     }
 
-    rotateX(angle: number) { // 绕x轴旋转
+    rotateX(angle: number) { // 绕x轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -433,7 +429,7 @@ class Transform3D { // 变换
         return this._rotate(matrix)
     }
 
-    rotateY(angle: number) { // 绕y轴旋转
+    rotateY(angle: number) { // 绕y轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -444,7 +440,7 @@ class Transform3D { // 变换
         return this._rotate(matrix)
     }
 
-    rotateZ(angle: number) { // 绕z轴旋转
+    rotateZ(angle: number) { // 绕z轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -455,7 +451,7 @@ class Transform3D { // 变换
         return this._rotate(matrix)
     }
 
-    rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量
+    rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         axis = axis.normalize() // axis化为单位向量
         const [x, y, z] = axis.data.map(item => item[0])
@@ -470,17 +466,18 @@ class Transform3D { // 变换
         return this._rotate(matrix)
     }
 
-    rotateAt(axis: Matrix, point: Matrix, angle: number) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点
+    rotateAt(axis: Matrix, point: Matrix, angle: number) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点，会修改原变换
         this.translate(-point.data[0][0], -point.data[1][0], -point.data[2][0])
         this.rotate(axis, angle)
         this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
+        return this
     }
 
     hasRotation() { // 判断是否有旋转
         return !this.matrix.resize(3, 3).isDiagonal
     }
 
-    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改本变换的数据
+    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改原变换
         this.matrix = transform.matrix.multiply(this.matrix)
         return this
     }
@@ -553,19 +550,19 @@ class Transform3D { // 变换
         }
     }
 
-    clearRotation() { // 清除旋转操作
+    clearRotation() { // 清除旋转操作，会修改原变换
         const m = this.matrix.data
         m[0][0] = m[1][1] = m[2][2] = 1
         m[0][1] = m[0][2] = m[1][0] = m[1][2] = m[2][0] = m[2][1] = 0
         return this
     }
 
-    clearScale() { // 清除缩放操作
+    clearScale() { // 清除缩放操作，会修改原变换
         this.matrix = this.matrix.resize(4, 3).normalize().colExtend(this.matrix.colVec(3))
         return this
     }
 
-    clearTranslate() { // 清除平移操作
+    clearTranslate() { // 清除平移操作，会修改原变换
         const m = this.matrix.data
         m[0][3] = m[1][3] = m[2][3] = 0
         return this
