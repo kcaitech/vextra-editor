@@ -124,13 +124,12 @@ class Matrix { // 矩阵
             [x],
             [y],
             [z],
-            [1],
         ], true)
     }
 
     static rowVec3D(x: number, y: number, z: number) { // 行向量
         return new Matrix([
-            [x, y, z, 1],
+            [x, y, z],
         ], true)
     }
 
@@ -669,10 +668,8 @@ function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
     if (!parentShape || !childShape) return;
 
     // 合并xy
-    const parentFrame = parentShape.frame
-    const childFrame = childShape.frame
-    childFrame.x += parentFrame.x
-    childFrame.y += parentFrame.y
+    child.transform = parent.transform.clone().addTransform(child.transform)
+    child.updateShapeAttrByTransform()
 }
 
 interface ShapeCreator {
@@ -703,6 +700,7 @@ class BaseShapeCreator implements ShapeCreator {
         this.svgNodeTagName = svgNode.tagName
         this.parseAttributes()
         this.shape = this.create()
+        this.updateShapeAttr()
     }
 
     make(): BaseShapeCreator {
@@ -739,28 +737,39 @@ class BaseShapeCreator implements ShapeCreator {
         console.log(this.svgNodeTagName, this.attributes)
     }
 
-    updateShapeAttr() { // 设置shape的属性
+    updateShapeAttrByTransform() { // 根据transform更新shape的属性
         const shape = this.shape
         if (!shape) return;
 
         const { translate, rotate } = this.transform.decomposeToEulerYXZ()
-        console.log("updateShapeByAttributesAfterCreate", translate, rotate)
+        console.log("updateShapeAttrByTransform", translate, rotate)
 
         // 设置xy
-        shape.frame.x = (this.attributes.x || 0) + translate.x
-        shape.frame.y = (this.attributes.y || 0) + translate.y
-        // viewBox偏移
-        if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) {
-            shape.frame.x -= this.parent.viewBox[0]
-            shape.frame.y -= this.parent.viewBox[1]
-        }
+        shape.frame.x = translate.x
+        shape.frame.y = translate.y
 
         // 设置旋转
-        shape.rotate(rotate.z * 180 / Math.PI)
+        shape.rotation = rotate.z * 180 / Math.PI
 
         // 设置翻转
-        if (Math.abs(rotate.x) > Math.PI / 2) shape.flipVertical();
-        if (Math.abs(rotate.y) > Math.PI / 2) shape.flipHorizontal();
+        shape.isFlippedVertical = Math.abs(rotate.x) > Math.PI / 2
+        shape.isFlippedHorizontal = Math.abs(rotate.y) > Math.PI / 2
+    }
+
+    updateShapeAttr() { // 设置shape的属性
+        const shape = this.shape
+        if (!shape) return;
+
+        // 叠加xy
+        let x = this.attributes.x || 0
+        let y = this.attributes.y || 0
+        if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) { // viewBox偏移
+            x -= this.parent.viewBox[0]
+            y -= this.parent.viewBox[1]
+        }
+        if (x !== 0 || y !== 0) this.transform.translate(x, y, 0)
+
+        this.updateShapeAttrByTransform()
     }
 
     create(): Shape | undefined {
@@ -769,11 +778,6 @@ class BaseShapeCreator implements ShapeCreator {
 
     afterChildrenCreated(): void {
 
-    }
-
-    afterChildrenCreated1(): void {
-        this.afterChildrenCreated()
-        this.updateShapeAttr()
     }
 
     afterSiblingCreated(): void {
@@ -957,7 +961,7 @@ class Parser {
                 stack.push(...children.reverse())
                 stack1.push([node, children.length])
             } else {
-                creator.afterChildrenCreated1()
+                creator.afterChildrenCreated()
 
                 if (stack1.length === 0 && node !== this.svgRoot) throw new Error("svg root元素不匹配");
 
@@ -977,7 +981,7 @@ class Parser {
                     }
 
                     const parentCreator = (svgParent as any).creator as BaseShapeCreator
-                    parentCreator.afterChildrenCreated1()
+                    parentCreator.afterChildrenCreated()
                 }
             }
         }
