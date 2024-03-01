@@ -853,6 +853,7 @@ class GroupShapeCreator extends BaseShapeCreator {
         const groupShape = this.shape as GroupShape
         groupShape.childs.push(...children.map(child => child.shape))
 
+        // 根据子元素的包围盒，更新groupShape的宽高
         let ltX = groupShape.frame.x
         let ltY = groupShape.frame.y
         let rbX = groupShape.frame.x + groupShape.frame.width
@@ -874,6 +875,7 @@ class GroupShapeCreator extends BaseShapeCreator {
             if (childRbX > rbX) rbX = childRbX;
             if (childRbY > rbY) rbY = childRbY;
         }
+
         groupShape.frame.x = ltX
         groupShape.frame.y = ltY
         groupShape.frame.width = rbX - ltX
