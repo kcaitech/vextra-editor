@@ -6,6 +6,7 @@ export class ColorCtx extends WatchableObject {
     static COLOR_EDITOR = 2;
     static STOP_DELETE = 3;
     static CHANGE_GRADIENT_TYPE = 4;
+    static GRADIENT_UPDATE = 5;
     private m_selected_stop: string | undefined = undefined;
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;

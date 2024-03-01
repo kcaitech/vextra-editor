@@ -72,10 +72,10 @@ function updateData() {
                 else cells.push(c.cell);
             }
         } else if (is_edting) {
-            cells.push(is_edting.cell);
+            cells.push(is_edting);
         }
         if (cells.length > 0) {
-            const _fs = get_fills(cells as Shape[]);
+            const _fs = get_fills(cells);
             if (_fs === 'mixed') {
                 mixed_cell.value = true;
             } else {
@@ -495,11 +495,11 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
 const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
-    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
+    if (v.length > 0 && (v.includes('style') || v.includes('variables'))) updateData();
 });
 const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
 const stop5 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
-    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) updateData();
+    if (v.length > 0 && (v.includes('style') || v.includes('variables'))) updateData();
 })
 
 onMounted(updateData);

@@ -89,7 +89,7 @@ function down(v: number) {
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
         .controller()
-        .asyncOpacityEditor(selected.map(s => adapt2Shape(s)), page);
+        .asyncOpacityEditor(selected, page);
     opacity_editor.execute(value);
 }
 
@@ -204,7 +204,7 @@ function _update() {
 const update = throttle(_update, 320, { leading: true });
 
 const stop = watch(() => props.trigger, (v) => {
-    if (v.includes('context-settings')) {
+    if (v.includes('contextSettings') || v.includes('variables')) {
         update();
     }
 });

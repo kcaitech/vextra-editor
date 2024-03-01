@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {h, onUnmounted, ref, shallowRef, watch} from 'vue';
 import comsMap from '../Content/comsmap'
-import {DViewCtx, SymbolRefView, adapt2Shape, isAdaptedShape, renderSymbolRefStatic as r} from "@kcdesign/data"
+import {DViewCtx, OverrideType, SymbolRefView, VariableType, adapt2Shape, findOverrideAndVar, isAdaptedShape, renderSymbolRefStatic as r} from "@kcdesign/data"
 import {SymbolRefShape, SymbolShape} from '@kcdesign/data';
 import { ArtboradView, ContactLineView, CutoutShapeView, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 
@@ -18,11 +18,23 @@ let __data = shallowRef<SymbolShape>();
 
 let __startLoad: string = "";
 
+function getRefId2(_this: SymbolRefShape, varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+    if (_this.isVirtualShape) return _this.refId;
+    if (!varsContainer) return _this.refId;
+    const _vars = findOverrideAndVar(_this, OverrideType.SymbolID, varsContainer);
+    if (!_vars) return _this.refId;
+    const _var = _vars[_vars.length - 1];
+    if (_var && _var.type === VariableType.SymbolRef) {
+        return _var.value;
+    }
+    return _this.refId;
+}
+
 function updater() {
     const symMgr = props.data.getSymbolMgr();
     if (!symMgr) return;
 
-    const refId = props.data.getRefId2(props.varsContainer);
+    const refId = getRefId2(props.data, props.varsContainer);
     if (__startLoad === refId) {
         return;
     }

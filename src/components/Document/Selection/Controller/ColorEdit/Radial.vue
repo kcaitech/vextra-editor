@@ -97,6 +97,7 @@ const get_linear_points = () => {
                 d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
             }
         }
+        props.context.workspace.notify(WorkSpace.TABLE_TEXT_GRADIENT_UPDATE);
     } else {
         m.preScale(frame.width, frame.height);
         m.multiAtLeft(matrix);
@@ -205,22 +206,22 @@ const dot_mousemove = (e: MouseEvent) => {
             isDragging = true;
             const page = props.context.selection.selectedPage;
             if (locat.type !== 'text' && locat.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locat.index, locat.type);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 if (locat.type === 'text') {
                     const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
                     } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
                     }
                 } else {
                     const tableSelection = props.context.tableSelection;
                     const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
                     if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const table_cell = tableSelection.editingCell;
                         const editor_text = props.context.editor4TextShape(table_cell);
                         if (isSelectText(props.context)) {
                             gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
@@ -346,13 +347,13 @@ const add_stop = (e: MouseEvent) => {
                     editor.setTextGradient(new_gradient, textIndex, selectLength);
                 }
             } else {
-                editor.setTextGradientMulti(text_shapes.map(t => adapt2Shape(t)), new_gradient);
+                editor.setTextGradientMulti(text_shapes as TextShapeView[], new_gradient);
             }
         } else {
             const tableSelection = props.context.tableSelection;
             const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
             if (tableSelection.editingCell) {
-                const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                const table_cell = tableSelection.editingCell;
                 const editor_text = props.context.editor4TextShape(table_cell);
                 if (isSelectText(props.context)) {
                     editor_text.setTextGradient(new_gradient, 0, Infinity);
@@ -428,22 +429,22 @@ const stop_mousemove = (e: MouseEvent) => {
             isDragging = true;
             const page = props.context.selection.selectedPage;
             if (locat.type !== 'text' && locat.type !== 'table_text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.value as ShapeView[], page!, locat.index, locat.type);
             } else {
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
                 if (locat.type === 'text') {
                     const text_shapes = shapes.value.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, 0, Infinity);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, 0, Infinity);
                     } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), gradient, textIndex, selectLength);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], gradient, textIndex, selectLength);
                     }
                 } else {
                     const tableSelection = props.context.tableSelection;
                     const table_shape = shapes.value.filter((s) => s.type === ShapeType.Table)[0] as TableView;
                     if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const table_cell = tableSelection.editingCell;
                         const editor_text = props.context.editor4TextShape(table_cell);
                         if (isSelectText(props.context)) {
                             gradientEditor = editor_text.asyncSetTextGradient([table_cell], gradient, 0, Infinity);
@@ -554,6 +555,8 @@ const workspace_watcher = (t: number) => {
 const color_watcher = (t: number) => {
     if (t === ColorCtx.CHANGE_STOP) {
         active.value = props.context.color.selected_stop;
+    } else if (t === ColorCtx.GRADIENT_UPDATE) {
+        get_linear_points();
     }
 }
 

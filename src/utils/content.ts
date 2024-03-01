@@ -1096,7 +1096,7 @@ export function set_visible_for_shapes(context: Context) {
         return;
     }
     const editor = context.editor4Page(page);
-    editor.toggleShapesVisible(shapes.map(s => adapt2Shape(s)));
+    editor.toggleShapesVisible(shapes);
     context.selection.resetSelectShapes();
 }
 
@@ -1113,7 +1113,7 @@ export function set_lock_for_shapes(context: Context) {
         return;
     }
     const editor = context.editor4Page(page);
-    editor.toggleShapesLock(shapes.map(s => adapt2Shape(s)));
+    editor.toggleShapesLock(shapes);
     context.selection.resetSelectShapes();
 }
 

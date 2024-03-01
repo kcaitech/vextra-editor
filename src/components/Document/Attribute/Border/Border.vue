@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -49,6 +49,7 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
+const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>([]);
@@ -87,7 +88,7 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variable'))) [
+    if ((args.includes('style') || args.includes('variables'))) [
         updateData()
     ]
 }
@@ -101,7 +102,7 @@ function updateData() {
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
         const is_edting = table.editingCell;
-        let cells = [], might_is_mixed = false;
+        let cells: TableCellView[] = [], might_is_mixed = false;
         if (table.tableRowStart > -1) {
             const _cs = table.getSelectedCells(true);
             for (let i = 0, len = _cs.length; i < len; i++) {
@@ -110,10 +111,10 @@ function updateData() {
                 else cells.push(c.cell);
             }
         } else if (is_edting) {
-            cells.push(is_edting.cell)
+            cells.push(is_edting)
         }
         if (cells.length > 0) {
-            const _bs = get_borders(cells as Shape[]);
+            const _bs = get_borders(cells);
             if (_bs === 'mixed') {
                 mixed_cell.value = true;
             } else {

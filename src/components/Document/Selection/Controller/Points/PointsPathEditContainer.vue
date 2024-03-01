@@ -387,7 +387,7 @@ function is_curve_tool() {
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
-    shape = props.context.selection.pathshapeview!;
+    shape = props.context.selection.pathshape!;
     if (!shape) {
         return console.log('wrong shape');
     }

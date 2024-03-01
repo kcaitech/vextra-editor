@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableView, TableCell } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
@@ -22,7 +22,7 @@ const paragraphSpace = ref()
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
-const shape = ref<TableCell & { text: Text; }>()
+const shape = ref<TableCellView>()
 // const selection = ref(props.context.selection)
 const isActived1 = ref(false)
 const isActived2 = ref(false)
@@ -202,7 +202,7 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 const textFormat = () => {
   const table = props.context.tableSelection;
   if (table.editingCell) {
-    shape.value = table.editingCell?.cell as TableCell & { text: Text; };
+    shape.value = table.editingCell;
     // 拿到某个单元格
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
@@ -222,18 +222,18 @@ const textFormat = () => {
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti) selectCase.value = '';
   } else {
-    let cells: (TableCell | undefined)[] = []
+    let cells: (TableCellView)[];
     if (table.tableRowStart < 0 || table.tableColStart < 0) {
-      cells = Array.from(props.textShape.data.cells.values()) || [];
+      cells = props.textShape.childs as (TableCellView)[];
     } else {
-      cells = table.getSelectedCells(true).map(item => item.cell) || [];
+      cells = table.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
     }
     shape.value = undefined
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
       if (cell && cell.text) {
-        const editor = props.context.editor4TextShape(cell as any);
+        const editor = props.context.editor4TextShape(cell);
         const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         formats.push(forma);
       }

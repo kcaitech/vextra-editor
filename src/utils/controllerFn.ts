@@ -43,7 +43,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
 
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {
-            const editor = context.editor4Shape(adapt2Shape(shapes[i]));
+            const editor = context.editor4Shape((shapes[i]));
             editor.translate(dx, dy);
         }
     }

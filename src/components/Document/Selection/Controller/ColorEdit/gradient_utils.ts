@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView } from "@kcdesign/data";
+import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView, TableCellView } from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data/dist/data/baseimport";
 import { v4 } from "uuid";
 
@@ -73,7 +73,7 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
             if (shape.type !== ShapeType.Table) return;
             const table_s = context.tableSelection;
             if (table_s.editingCell) {
-                const cell = table_s.editingCell?.cell as TableCell & { text: Text; };
+                const cell = table_s.editingCell;
                 const { textIndex, selectLength } = getTextIndexAndLen(context);
                 const editor = context.editor4TextShape(cell);
                 let format: AttrGetter;
@@ -84,11 +84,11 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
                 }
                 return format.gradient;
             } else {
-                let cells: (TableCell | undefined)[] = []
+                let cells: (TableCellView)[];
                 if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
-                    cells = Array.from((shape as TableView).data.cells.values()) || [];
+                  cells = shape.childs as (TableCellView)[];
                 } else {
-                    cells = table_s.getSelectedCells(true).map(item => item.cell) || [];
+                  cells = table_s.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
                 }
                 const formats: any[] = [];
                 for (let i = 0; i < cells.length; i++) {

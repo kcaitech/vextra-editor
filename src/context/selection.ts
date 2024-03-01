@@ -191,11 +191,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
             return shape;
         }
         if (shape instanceof TableView) {
-            const ts = this.tableSelection;
-            const cell = ts.editingCell;
-            if (cell?.cell) {
-                return shape.cells.get(cell.cell.id);
-            }
+            return this.tableSelection.editingCell;
         }
     }
 
@@ -474,8 +470,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
             state.shapes = this.selectedShapes.map(s => s.id);
         }
         // table
-        const table = this.tableshape;
-        if (table) {
+        const tableView = this.tableshape;
+        if (tableView) {
+            const table = tableView.data;
             const rowStart = this.tableSelection.tableRowStart;
             const rowEnd = this.tableSelection.tableRowEnd;
             const colStart = this.tableSelection.tableColStart;
@@ -565,8 +562,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
             this.rangeSelectShape(shapes);
         }
         // table
-        let table: TableShape | undefined;
-        if (state.table && (table = this.tableshape)) {
+        let tableView: TableView | undefined;
+        if (state.table && (tableView = this.tableshape)) {
+            const table = tableView.data;
             const colCount = table.colWidths.length;
             const rowCount = table.rowHeights.length;
             let colsIdxs, rowsIdxs;
@@ -657,7 +655,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         if (this.selectedShapes.length !== 1) {
             return;
         }
-        const _textshape = this.selectedShapes[0] instanceof TextShapeView ? adapt2Shape(this.selectedShapes[0]) as TextShape : undefined;
+        const _textshape = this.selectedShapes[0] instanceof TextShapeView ? (this.selectedShapes[0]) : undefined;
 
         if (_textshape) {
             return _textshape;
@@ -667,29 +665,29 @@ export class Selection extends WatchableObject implements ISave4Restore {
                 return
             }
             const tableSelection = this.m_context.tableSelection;
-            if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
-                return tableSelection.editingCell.cell as any;
+            if (tableSelection.editingCell && tableSelection.editingCell && tableSelection.editingCell.cellType === TableCellType.Text) {
+                return tableSelection.editingCell;
             }
         })();
 
-        return _tabletext as TextShape;
+        return _tabletext;
     }
 
     get pathshape() {
         const selected = this.selectedShapes;
         if (selected.length === 1 && selected[0] instanceof PathShapeView) {
-            return adapt2Shape(this.selectedShapes[0]) as PathShape;
-        }
-    }
-    get pathshapeview() {
-        const selected = this.selectedShapes;
-        if (selected.length === 1 && selected[0] instanceof PathShapeView) {
             return (this.selectedShapes[0]) as PathShapeView;
         }
     }
+    // get pathshapeview() {
+    //     const selected = this.selectedShapes;
+    //     if (selected.length === 1 && selected[0] instanceof PathShapeView) {
+    //         return (this.selectedShapes[0]) as PathShapeView;
+    //     }
+    // }
 
     get symbolshape() {
-        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? adapt2Shape(this.selectedShapes[0]) as SymbolShape : undefined;
+        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
     }
     get symbolview() {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
@@ -711,7 +709,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
             if (!p || !(p.data instanceof SymbolUnionShape)) {
                 return;
             }
-            return adapt2Shape(s) as SymbolShape;
+            return (s) as SymbolView;
         }
     }
 
@@ -730,7 +728,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
             if (s.type === ShapeType.SymbolRef) {
-                return adapt2Shape(s) as SymbolRefShape;
+                return (s) as SymbolRefView;
             }
         }
     }
@@ -748,7 +746,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
             if (s instanceof TableView) {
-                return adapt2Shape(s) as TableShape;
+                return s;
             }
         }
     }

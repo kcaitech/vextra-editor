@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell } from "@kcdesign/data"
+import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell, TableCellView } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -36,7 +36,8 @@ const WITH_FILL = [
     ShapeType.Table,
     ShapeType.TableCell,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
@@ -55,7 +56,8 @@ const WITH_BORDER = [
     ShapeType.Line,
     ShapeType.Contact,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ];
 const WITH_TABLE = [ShapeType.Table];
 const WITH_SHADOW = [
@@ -69,7 +71,8 @@ const WITH_SHADOW = [
     ShapeType.Group,
     ShapeType.Line,
     ShapeType.Symbol,
-    ShapeType.SymbolUnion
+    ShapeType.SymbolUnion,
+    ShapeType.SymbolRef
 ]
 const WITHOUT_OPACITY = [
     ShapeType.Cutout,
@@ -83,7 +86,7 @@ const tableShapes = ref<ShapeView[]>([]);
 const { t } = useI18n();
 const shapeType = ref();
 const symbol_attribute = ref<boolean>(true);
-const opacity = ref<boolean>(false);
+// const opacity = ref<boolean>(false);
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 const constraintShow = ref<boolean>(true);
@@ -111,7 +114,7 @@ function _selection_change() {
     shapes.value = [];
     textShapes.value = [];
     tableShapes.value = [];
-    opacity.value = false;
+    // opacity.value = false;
     constraintShow.value = true;
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
@@ -123,9 +126,9 @@ function _selection_change() {
         if (shape.type === ShapeType.Table) {
             tableShapes.value.push(shape);
         }
-        if (!shape.isVirtualShape) {
-            opacity.value = true;
-        }
+        // if (!shape.isVirtualShape) {
+        //     opacity.value = true;
+        // }
         if (!is_constrainted(shape)) {
             constraintShow.value = false;
         }
@@ -229,27 +232,27 @@ function watch_shapes() {
     });
 }
 
-const watchCells = new Map<string, TableCell>(); // 表格单元格监听
+const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
 function watch_cells() {
     watchCells.forEach((v, k) => {
         v.unwatch(update_by_cells);
-        watchedShapes.delete(k);
+        watchCells.delete(k);
     })
 
     const tableSelection = props.context.tableSelection;
 
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
-    const list = [...selectedCells, editedCell];
+    const list = [...selectedCells.map(s => s.cell), editedCell];
 
     if (list.length) {
         baseAttr.value = false;
     }
 
     list.forEach(v => {
-        if (v?.cell) {
-            v.cell.watch(update_by_cells);
-            watchCells.set(v.cell.id, v.cell);
+        if (v) {
+            v.watch(update_by_cells);
+            watchCells.set(v.id, v);
         }
     })
 }
@@ -292,7 +295,7 @@ onUnmounted(() => {
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
                     :selection-change="reflush_by_selection">
                 </ResizingConstraints>
-                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
+                <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>

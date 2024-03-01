@@ -72,7 +72,7 @@ export function get_actions_constrainer_proportions(shapes: ShapeView[], value: 
   const actions: BatchAction2[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    actions.push({ target: adapt2Shape(shape), value })
+    actions.push({ target: shape, value })
   }
   return actions;
 }
@@ -161,7 +161,7 @@ export function get_actions_frame_h(shapes: Shape[], value: number, isLock: bool
     }
     return actions;
 }
-export function get_actions_rotate(shapes: Shape[], value: number) {
+export function get_actions_rotate(shapes: ShapeView[], value: number) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -174,7 +174,7 @@ export function get_actions_flip_v(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shape), value: 'vertical' });
+        actions.push({ target: shape, value: 'vertical' });
     }
     return actions;
 }
@@ -183,7 +183,7 @@ export function get_actions_flip_h(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shape), value: 'horizontal' });
+        actions.push({ target: shape, value: 'horizontal' });
     }
     return actions;
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TableCell, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -759,6 +759,7 @@ function update_gradient(gradient: Gradient | undefined) {
     gradient_channel_style.value = gradient_channel_generator(gradient);
     const id = props.context.color.selected_stop;
     update_stops(id);
+    props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
 }
 const gradient_line = ref<HTMLDivElement>();
 //更新渐变颜色画板
@@ -846,7 +847,7 @@ function move_stop_position(e: MouseEvent) {
             const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const locat = props.locat;
             if (locat.type !== 'table_text' && locat.type !== 'text') {
-                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, locat.index, locat.type);
+                gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
             } else {
                 if (!props.gradient) return;
                 const { textIndex, selectLength } = getTextIndexAndLen(props.context);
@@ -854,7 +855,7 @@ function move_stop_position(e: MouseEvent) {
                     const tableSelection = props.context.tableSelection;
                     const table_shape = shapes.filter((s) => s.type === ShapeType.Table)[0] as TableView;
                     if (tableSelection.editingCell) {
-                        const table_cell = tableSelection.editingCell.cell as TableCell & { text: Text; };
+                        const table_cell = tableSelection.editingCell;
                         const editor_text = props.context.editor4TextShape(table_cell);
                         if (isSelectText(props.context)) {
                             gradientEditor = editor_text.asyncSetTextGradient([table_cell], props.gradient, 0, Infinity);
@@ -873,9 +874,9 @@ function move_stop_position(e: MouseEvent) {
                     const text_shapes = shapes.filter((s) => s.type === ShapeType.Text);
                     const editor = props.context.editor4TextShape(text_shapes[0] as TextShapeView);
                     if (isSelectText(props.context)) {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, 0, Infinity);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, 0, Infinity);
                     } else {
-                        gradientEditor = editor.asyncSetTextGradient(text_shapes.map((s) => adapt2Shape(s as ShapeView)), props.gradient, textIndex, selectLength);
+                        gradientEditor = editor.asyncSetTextGradient(text_shapes as TextShapeView[], props.gradient, textIndex, selectLength);
                     }
                 }
             }
@@ -1017,6 +1018,39 @@ const watch_picker = () => {
 }
 
 const observer = new ResizeObserver(locate);
+let isDragging = false
+let elpx: any
+let elpy: any
+let mx: any
+let my: any
+function startDrag(e: MouseEvent) {
+    if (!props.cell) return
+    isDragging = true
+    const elp = document.querySelector('.custom-popover') as HTMLElement
+    //父元素的页面位置
+    elpx = elp.getBoundingClientRect().left
+    elpy = elp.getBoundingClientRect().top
+    //鼠标相对于盒子的坐标
+    mx = e.offsetX
+    my = e.offsetY
+    document.addEventListener('mousemove', onDrag)
+}
+
+function onDrag(e: MouseEvent) {
+    let el = popoverEl.value as HTMLElement
+    if (isDragging) {
+        const ex = e.pageX
+        const ey = e.pageY
+        el.style.left = ex - mx - elpx + 'px'
+        el.style.top = ey - my - elpy + 'px'
+    }
+}
+
+function stopDrag(e: MouseEvent) {
+    isDragging = false
+    document.removeEventListener('mousemove', onDrag)
+}
+
 onMounted(() => {
     if (document.body) observer.observe(document.body);
     props.context.menu.watch(menu_watcher);

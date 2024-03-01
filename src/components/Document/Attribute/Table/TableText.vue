@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,6 +15,7 @@ import { message } from "@/utils/message";
 import TableTextSetting from './TableTextSetting.vue';
 import { TableSelection } from '@/context/tableselection';
 import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
+import { throttle } from 'lodash';
 interface Props {
     context: Context
     shape: TableView
@@ -42,8 +43,8 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref<TableCell & { text: Text; }>()
-const table = ref<TableCell & { text: Text; }>()
+const shape = ref<TableCellView>()
+const table = ref<TableCellView>()
 const sizeHoverIndex = ref(-1);
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
@@ -235,7 +236,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     textFormat();
 }
 //设置字体大小
-const changeTextSize = (size: number, shape: TableCell & { text: Text; }) => {
+const changeTextSize = (size: number, shape: TableCellView) => {
     showSize.value = false;
     if (shape) {
         const editor = props.context.editor4TextShape(shape)
@@ -313,7 +314,7 @@ const setTextSize = () => {
         value = '1'
     }
     if (!isNaN(Number(value)) && Number(value) > 0) {
-        changeTextSize(Number(value), table.value as TableCell & { text: Text; });
+        changeTextSize(Number(value), table.value!);
         textFormat();
     } else {
         textFormat();
@@ -323,7 +324,7 @@ const setTextSize = () => {
 const selectTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    changeTextSize(size, shape.value as TableCell & { text: Text; });
+    changeTextSize(size, shape.value!);
 }
 const handleSize = () => {
     executed.value = true;
@@ -342,7 +343,7 @@ const textFormat = () => {
     shape.value = undefined;
     mixed.value = false;
     if (table.editingCell) {
-        shape.value = table.editingCell?.cell as TableCell & { text: Text; };
+        shape.value = table.editingCell;
         // 拿到某个单元格
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -377,12 +378,11 @@ const textFormat = () => {
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText();
     } else {
-        let cells: (TableCell | undefined)[] = []
+        let cells: (TableCellView)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            cells = Array.from(props.shape.data.cells.values()) || [];
+            cells = (props.shape.childs) as (TableCellView)[];
         } else {
-            // 选中多个单元格
-            cells = table.getSelectedCells(true).map(item => item.cell) || [];
+            cells = table.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
         }
         shape.value = undefined
         const formats: any[] = [];
@@ -390,7 +390,7 @@ const textFormat = () => {
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (cell && cell.text) {
-                const editor = props.context.editor4TextShape(cell as any);
+                const editor = props.context.editor4TextShape(cell);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
             }
@@ -468,6 +468,8 @@ const textFormat = () => {
     }
 }
 
+const _textFormat = throttle(textFormat, 160, { leading: true })
+
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
@@ -486,11 +488,11 @@ function workspace_wather(t: number) {
         onTilt();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
+    } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
+        _textFormat();
     }
 }
-function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
-}
+
 function onAlphaChange(e: Event, type: string) {
     let value = (e.currentTarget as any)['value'];
     if (value?.slice(-1) === '%') {
@@ -710,6 +712,7 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
+    if(highlight.value && !highlightIsMulti.value) return
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -769,11 +772,11 @@ const setMixedTextColor = () => {
     } else {
         const table = props.shape;
         const table_Selection = props.context.tableSelection;
-        let cells: (TableCell | undefined)[] = []
+        let cells: (TableCellView)[] = []
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            cells = Array.from(table.data.cells.values()) || [];
+            cells = (props.shape.childs) as (TableCellView)[];
         } else {
-            cells = table_Selection.getSelectedCells(true).map(item => item.cell) || [];
+            cells = table_Selection.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
         }
         if(!cells[0]) return;
         const cell_editor = props.context.editor4TextShape(cells[0] as any);
@@ -976,21 +979,41 @@ const selectHiglightColor = () => {
 const selectHiglighAlpha = () => {
     higlighAlpha.value && higlighAlpha.value.select();
 }
-watchEffect(() => {
-    textFormat();
-})
+
+const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
+function watch_cells() {
+    watchCells.forEach((v, k) => {
+        v.unwatch(_textFormat);
+        watchCells.delete(k);
+    })
+
+    const tableSelection = props.context.tableSelection;
+
+    const selectedCells = tableSelection.getSelectedCells();
+    const editedCell = tableSelection.editingCell;
+    const list = [...selectedCells.map(s => s.cell), editedCell];
+
+    list.forEach(v => {
+        if (v) {
+            v.watch(_textFormat);
+            watchCells.set(v.id, v);
+        }
+    })
+}
 onMounted(() => {
-    props.shape.watch(textFormat);
+    props.shape.watch(_textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
-    props.context.tableSelection.watch(table_selection_watcher);
+    watch_cells();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    props.shape.unwatch(textFormat);
-    props.context.tableSelection.unwatch(table_selection_watcher);
+    props.shape.unwatch(_textFormat);
     shapeWatch();
+    watchCells.forEach(v => {
+        v.unwatch(_textFormat);
+    })
 })
 </script>
 
@@ -1175,7 +1198,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
+            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight" @click="addHighlight">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>

@@ -56,7 +56,7 @@ const onSelectId = (icon: BulletNumbersType) => {
       editor.setTextBulletNumbers(icon, textIndex, selectLength)
     }
   } else {
-    editor.setTextBulletNumbersMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+    editor.setTextBulletNumbersMulti(props.textShapes, icon);
   }
 }
 
@@ -66,7 +66,7 @@ const onSelectText = (icon: TextBehaviour) => {
   if (length.value) {
     editor.setTextBehaviour(icon)
   } else {
-    editor.setTextBehaviourMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+    editor.setTextBehaviourMulti(props.textShapes, icon);
   }
 }
 const onSelectCase = (icon: TextTransformType) => {
@@ -81,7 +81,7 @@ const onSelectCase = (icon: TextTransformType) => {
     }
     props.context.workspace.focusText()
   } else {
-    editor.setTextTransformMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+    editor.setTextTransformMulti(props.textShapes, icon);
   }
 }
 
@@ -104,7 +104,7 @@ const setRowHeight = () => {
     }
   } else {
     if (!isNaN(Number(rowHeight.value))) {
-      editor.setLineHeightMulit(props.textShapes.map(s => adapt2Shape(s)), Number(rowHeight.value));
+      editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
     } else {
       textFormat()
     }
@@ -133,7 +133,7 @@ const setWordSpace = () => {
     }
   } else {
     if (!isNaN(Number(wordSpace.value))) {
-      editor.setCharSpacingMulit(props.textShapes.map(s => adapt2Shape(s)), Number(wordSpace.value))
+      editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
     } else {
       textFormat()
     }
@@ -156,7 +156,7 @@ const setParagraphSpace = () => {
     }
   } else {
     if (!isNaN(Number(paragraphSpace.value))) {
-      editor.setParaSpacingMulit(props.textShapes.map(s => adapt2Shape(s)), Number(paragraphSpace.value));
+      editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
     } else {
       textFormat()
     }
