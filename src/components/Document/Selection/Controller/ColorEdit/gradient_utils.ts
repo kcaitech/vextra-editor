@@ -19,15 +19,26 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
     for (let i = 0; i < stops.length; i++) {
         const stop = stops[i];
         if (position < stop.position) {
+            let n_alpha;
             const c = i === 0 ? stop.color : stops[i - 1].color;
             const { red, green, blue, alpha } = c;
-            const n_alpha = i === 0 ? (alpha + 1) / 2 : (alpha + stop.color.alpha) / 2;
+            if (i > 0) {
+                const f_posi = stops[i - 1].position;
+                const a_len = alpha - stop.color.alpha;
+                const proportion = ((position - f_posi) * a_len) / (stop.position - f_posi);
+                if(a_len === 0) {
+                    n_alpha = alpha;
+                }else {
+                    n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
+                }
+            } else {
+                n_alpha = alpha;
+            }
             const color = new Color(n_alpha, red, green, blue);
             return { color, index: i, id: v4() };
         } else if (position > stops[i].position && i === stops.length - 1) {
             const { red, green, blue, alpha } = stop.color;
-            const n_alpha = (alpha + 1) / 2;
-            const color = new Color(n_alpha, red, green, blue);
+            const color = new Color(alpha, red, green, blue);
             return { color, index: i + 1, id: v4() };
         }
     }

@@ -379,7 +379,6 @@ const textFormat = () => {
     } else {
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            // 整个表格的单元格
             cells = Array.from(props.shape.data.cells.values()) || [];
         } else {
             // 选中多个单元格

@@ -79,6 +79,7 @@ const WITHOUT_OPACITY = [
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<ShapeView[]>([]);
 const textShapes = ref<ShapeView[]>([]);
+const tableShapes = ref<ShapeView[]>([]);
 const { t } = useI18n();
 const shapeType = ref();
 const symbol_attribute = ref<boolean>(true);
@@ -109,6 +110,7 @@ function _selection_change() {
 
     shapes.value = [];
     textShapes.value = [];
+    tableShapes.value = [];
     opacity.value = false;
     constraintShow.value = true;
 
@@ -117,6 +119,9 @@ function _selection_change() {
         shapes.value.push(shape);
         if (shape.type === ShapeType.Text) {
             textShapes.value.push(shape);
+        }
+        if (shape.type === ShapeType.Table) {
+            tableShapes.value.push(shape);
         }
         if (!shape.isVirtualShape) {
             opacity.value = true;
@@ -300,7 +305,7 @@ onUnmounted(() => {
                 <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)" :selection-change="reflush_by_selection"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
                     :trigger="reflush_trigger"></Text>
-                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
+                <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>
