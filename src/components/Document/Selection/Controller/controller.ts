@@ -36,6 +36,7 @@ import {
 } from "@/utils/mouse";
 import { find_except_envs, migrate_immediate, migrate_once, record_origin_env } from "@/utils/migrate";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
+import { TranslateHandler } from '@/transform/translate';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -56,6 +57,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let asyncPathEditor: AsyncPathEditor | undefined = undefined;
+
+    let transporter: TranslateHandler | undefined = undefined;
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
@@ -228,6 +231,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (timer) {
                 handleDblClick();
             }
+
+            transporter = new TranslateHandler(context, context.selection.selectedShapes, e);
+            console.log('transporter:', transporter);
+
             initTimer();
             pre_to_translate(e);
         }

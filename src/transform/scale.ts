@@ -54,7 +54,7 @@ export class ScaleHandler extends TransformHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, 'scale', this.page, this.shapes);
+        this.asyncApiCaller = new Scaler(this.context.coopRepo, this.context.data, this.page);
 
         this.workspace.scaling(true);
         this.workspace.setSelectionViewUpdater(false);

@@ -45,7 +45,7 @@ export class RotateHandler extends TransformHandler {
     }
 
     createApiCaller() {
-        this.asyncApiCaller = new Rotator(this.context.coopRepo, this.context.data, 'rotate', this.page);
+        this.asyncApiCaller = new Rotator(this.context.coopRepo, this.context.data, this.page);
 
         this.workspace.rotating(true);
         this.workspace.setSelectionViewUpdater(false);
@@ -244,7 +244,7 @@ export class RotateHandler extends TransformHandler {
             const cy = base.height / 2;
             m.trans(-cx, -cy);
             if (targetRotate) {
-                m.rotate(targetRotate / 360 * 2 * Math.PI);
+                m.rotate(targetRotate / 180 * Math.PI);
             }
             if (base.flipH) {
                 m.flipHoriz();
