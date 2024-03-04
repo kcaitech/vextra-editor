@@ -50,6 +50,7 @@ export class ScaleHandler extends TransformHandler {
 
         this.getBaseFrames();
 
+        this.context.assist.set_collect_target(selected);
         this.context.assist.set_trans_target(selected);
     }
 
@@ -92,6 +93,8 @@ export class ScaleHandler extends TransformHandler {
         let top = Infinity;
         let right = -Infinity;
         let bottom = -Infinity;
+
+
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];

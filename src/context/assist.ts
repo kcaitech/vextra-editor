@@ -244,9 +244,71 @@ export class Asssit extends WatchableObject {
         // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
     }
 
-    set_collect_target(groups: ShapeView[], collect?: boolean) {
-        this.m_collect_target = groups;
-        if (collect) this.collect();
+    set_collect_target(shapes: ShapeView[], collect_immediate = false) {
+        const parents: Map<string, ShapeView> = new Map();
+        for (let i = 0; i < shapes.length; i++) {
+            const parent = shapes[i].parent!;
+            parents.set(parent.id, parent);
+        }
+
+        const page = this.m_context.selection.selectedPage!;
+        if (parents.has(page.id)) {
+            this.m_collect_target = [page];
+        }
+        else {
+            const chains: Map<string, Set<ShapeView>> = new Map();
+            let longest = 0;
+            let longestChains: Set<ShapeView> = new Set<ShapeView>([page]);
+
+            parents.forEach(p => {
+                const id = p.id;
+                const __set: Set<ShapeView> = new Set();
+                let __p: ShapeView | undefined = p;
+                let layoutCount = 0;
+                while (__p) {
+                    __set.add(__p);
+                    __p = __p.parent;
+                    layoutCount++;
+                }
+
+                if (layoutCount > longest) {
+                    longest = layoutCount;
+                    longestChains = __set;
+                }
+
+                chains.set(id, __set);
+            })
+
+            const __longestChains = Array.from(longestChains.values());
+
+            let env: ShapeView = page;
+            for (let i = 0; i < __longestChains.length; i++) {
+                env = __longestChains[i];
+
+                let isCommon = true;
+                chains.forEach(c => {
+                    if (!c.has(env)) {
+                        isCommon = false;
+                    }
+                })
+
+                if (isCommon) {
+                    break;
+                }
+            }
+            this.m_collect_target = [env];
+        }
+
+        if (collect_immediate) {
+            this.collect();
+        }
+    }
+    
+    set_collect_target_force(shapes: ShapeView[], collect_immediate = false) {
+        this.m_collect_target = shapes;
+        if (collect_immediate) {
+            this.collect();
+        }
     }
 
     collect() {
@@ -254,11 +316,13 @@ export class Asssit extends WatchableObject {
         const page = this.m_context.selection.selectedPage;
         if (page) {
             this.clear();
-            let target: ShapeView = page as ShapeView;
-            if (this.m_collect_target.length) {
-                target = this.m_collect_target[0] || page;
+            let targets: ShapeView[] = this.m_collect_target.length ? this.m_collect_target : [page];
+            this.m_shape_inner = [];
+            for (let i = 0; i < targets.length; i++) {
+                const target = targets[i];
+                this.m_shape_inner = this.m_shape_inner
+                    .concat(finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
             }
-            this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         }
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
@@ -515,12 +579,9 @@ export class Asssit extends WatchableObject {
             target.y = pre_target2.y;
             target.sticked_by_y = true;
 
-            if (pre_target1.delta === undefined) {
-                _self.p.y = target.y;
-                this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
-            } else {
-                this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
-            }
+            _self.p.y = target.y;
+
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
         }
 
         this.notify(Asssit.UPDATE_ASSIST);
