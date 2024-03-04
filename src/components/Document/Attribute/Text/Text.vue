@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, BasicArray, Fill, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient, gradient_equals } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,11 +15,13 @@ import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import { throttle } from 'lodash';
 import { watch } from 'vue';
+import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
 
 interface Props {
     context: Context
     shape: TextShapeView
     textShapes: TextShapeView[]
+    selectionChange: number
     trigger: any[]
 }
 
@@ -44,6 +46,8 @@ const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
 const highlight = ref<Color>()
+const fillType = ref<FillType>(FillType.SolidColor);
+const gradient = ref<Gradient>();
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
@@ -111,7 +115,7 @@ const onBold = () => {
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes.map(s => adapt2Shape(s)), isBold.value);
+        editor.setTextBoldMulti(props.textShapes, isBold.value);
     }
 }
 // 设置文本倾斜
@@ -127,7 +131,7 @@ const onTilt = () => {
             textFormat()
         }
     } else {
-        editor.setTextItalicMulti(props.textShapes.map(s => adapt2Shape(s)), isTilt.value);
+        editor.setTextItalicMulti(props.textShapes, isTilt.value);
     }
 }
 //设置下划线
@@ -143,7 +147,7 @@ const onUnderlint = () => {
             textFormat()
         }
     } else {
-        editor.setTextUnderlineMulti(props.textShapes.map(s => adapt2Shape(s)), isUnderline.value);
+        editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
     }
 }
 // 设置删除线
@@ -159,7 +163,7 @@ const onDeleteline = () => {
             textFormat()
         }
     } else {
-        editor.setTextStrikethroughMulti(props.textShapes.map(s => adapt2Shape(s)), isDeleteline.value);
+        editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
     }
 }
 // 设置水平对齐
@@ -175,7 +179,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
             textFormat()
         }
     } else {
-        editor.setTextHorAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+        editor.setTextHorAlignMulti(props.textShapes, icon);
     }
 }
 //设置垂直对齐
@@ -186,7 +190,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
         textFormat()
     } else {
-        editor.setTextVerAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
+        editor.setTextVerAlignMulti(props.textShapes, icon);
     }
 }
 //设置字体大小
@@ -203,7 +207,7 @@ const changeTextSize = (size: number) => {
             textFormat()
         }
     } else {
-        editor.setTextFontSizeMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), size);
+        editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
 }
 //设置字体
@@ -220,12 +224,12 @@ const setFont = (font: string) => {
             textFormat()
         }
     } else {
-        editor.setTextFontNameMulti(props.textShapes.map(s => adapt2Shape(s)), font);
+        editor.setTextFontNameMulti(props.textShapes, font);
     }
 }
 
 function getTextSelection() {
-    return props.context.selection.getTextSelection(props.shape);
+    return props.context.selection.textSelection;
 }
 
 //获取选中字体的长度和开始下标
@@ -273,6 +277,7 @@ const _textFormat = () => {
     const shapes = props.context.selection.selectedShapes;
     const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
+    mixed.value = false;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(t_shape[0])
@@ -293,8 +298,10 @@ const _textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color
         highlight.value = format.highlight
+        fillType.value = format.fillType || FillType.SolidColor
         isBold.value = format.bold || false
         isTilt.value = format.italic || false
+        gradient.value = format.gradient;
         if (format.italicIsMulti) isTilt.value = false
         if (format.boldIsMulti) isBold.value = false
         if (colorIsMulti.value) mixed.value = true;
@@ -303,6 +310,8 @@ const _textFormat = () => {
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.underlineIsMulti) isUnderline.value = false
         if (format.strikethroughIsMulti) isDeleteline.value = false
+        if (format.fillTypeIsMulti) mixed.value = true;
+        if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText()
     } else {
         let formats: any[] = [];
@@ -320,9 +329,22 @@ const _textFormat = () => {
             let foundEqual = true;
             for (let i = 1; i < formats.length; i++) {
                 if ((key === 'color' || key === 'highlight') && formats[i][key] && referenceValue) {
-                    const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
-                    const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
-                    if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
+                    if (!(formats[i][key] as Color).equals(referenceValue as Color)) {
+                        foundEqual = false;
+                        break;
+                    }
+                } else if (key === 'gradient') {
+                    if (formats[i][key]) {
+                        if (!referenceValue) {
+                            foundEqual = false;
+                            break;
+                        }
+                        if (!(gradient_equals(formats[i][key], referenceValue))) {
+                            foundEqual = false;
+                            break;
+                        }
+                    }
+                    else if (referenceValue) {
                         foundEqual = false;
                         break;
                     }
@@ -346,14 +368,17 @@ const _textFormat = () => {
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
+        textColor.value = format.color;
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
+        fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
+        gradient.value = format.gradient;
         if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
-        if (format.color === 'unlikeness') colorIsMulti.value = true;
+        if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.bold === 'unlikeness') isBold.value = false;
         if (format.italic === 'unlikeness') isTilt.value = false;
@@ -361,6 +386,11 @@ const _textFormat = () => {
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
+        if (format.fillType === 'unlikeness') mixed.value = true;
+        if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
+        if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
+        if (format.gradient === 'unlikeness') gradient.value = undefined;
+        if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
@@ -390,11 +420,7 @@ const highlightColorValue = ref('');
 const highlightAlphaValue = ref('');
 function onAlphaChange(e: Event, type: string) {
     let value: any;
-    if (type === 'color') {
-        value = texAlphaValue.value
-    } else {
-        value = highlightAlphaValue.value
-    }
+    value = type === 'color' ? texAlphaValue.value : highlightAlphaValue.value;
     if (value?.slice(-1) === '%') {
         value = Number(value?.slice(0, -1))
         if (value >= 0) {
@@ -404,21 +430,18 @@ function onAlphaChange(e: Event, type: string) {
             value = value.toFixed(2) / 100
             let color;
             if (type === 'color') {
-                color = textColorValue.value
+                color = textColorValue.value;
+                if (fillType.value === FillType.Gradient) {
+                    set_gradient_opacity(value);
+                    return;
+                }
             } else {
                 color = highlightColorValue.value
             }
-            setColor(0, color, value, type);
+            setColor(color, value, type);
             return
         } else {
-            message('danger', t('system.illegal_input'));
-            if (type === 'color') {
-                if (!textColor.value) return;
-                return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            } else {
-                if (!highlight.value) return;
-                return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
-            }
+            alpha_message(type);
         }
     } else if (!isNaN(Number(value))) {
         if (value >= 0) {
@@ -428,31 +451,37 @@ function onAlphaChange(e: Event, type: string) {
             value = Number((Number(value)).toFixed(2)) / 100
             let color;
             if (type === 'color') {
-                color = textColorValue.value
+                color = textColorValue.value;
+                if (fillType.value === FillType.Gradient) {
+                    set_gradient_opacity(value);
+                    return;
+                }
             } else {
                 color = highlightColorValue.value
             }
-            setColor(0, color, value, type);
+            setColor(color, value, type);
             return
         } else {
-            message('danger', t('system.illegal_input'));
-            if (type === 'color') {
-                if (!textColor.value) return;
-                return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            } else {
-                if (!highlight.value) return;
-                return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
-            }
+            alpha_message(type);
         }
     } else {
-        message('danger', t('system.illegal_input'));
-        if (type === 'color') {
-            if (!textColor.value) return;
-            return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-        } else {
-            if (!highlight.value) return;
-            return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
+        alpha_message(type);
+    }
+}
+
+const alpha_message = (type: string) => {
+    message('danger', t('system.illegal_input'));
+    if (type === 'color') {
+        if (!alphaFill.value) return;
+        if (gradient.value && fillType.value === FillType.Gradient) {
+            const opacity = gradient.value.gradientOpacity;
+            return alphaFill.value.value = ((opacity === undefined ? 1 : opacity) * 100) + '%';
         }
+        if (!textColor.value) return;
+        return alphaFill.value.value = (textColor.value!.alpha * 100) + '%'
+    } else {
+        if (!highlight.value || !higlighAlpha.value) return;
+        return higlighAlpha.value.value = (highlight.value!.alpha * 100) + '%'
     }
 }
 
@@ -462,7 +491,7 @@ function onColorChange(e: Event, type: string) {
         if (Reg_HEX.test(value)) {
             let alpha = Number(texAlphaValue.value.slice(0, -1));
             alpha = Number(alpha.toFixed(2)) / 100
-            setColor(0, value, alpha, type);
+            setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
@@ -472,13 +501,21 @@ function onColorChange(e: Event, type: string) {
         if (Reg_HEX.test(value)) {
             let alpha = Number(highlightAlphaValue.value.slice(0, -1));
             alpha = Number(alpha.toFixed(2)) / 100
-            setColor(0, value, alpha, type);
+            setColor(value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
         }
     }
 }
+
+const set_gradient_opacity = (opacity: number) => {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    g.gradientOpacity = opacity;
+    editor_gradient(g);
+}
+
 const getColorValue = (v: string) => {
     let value = v;
     if (value.slice(0, 1) !== '#') {
@@ -509,14 +546,14 @@ function getColorFromPicker(color: Color, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
+            editor.setTextColorMulti(props.textShapes, color)
         } else {
-            editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
+            editor.setTextHighlightColorMulti(props.textShapes, color)
         }
     }
 }
 
-function setColor(idx: number, clr: string, alpha: number, type: string) {
+function setColor(clr: string, alpha: number, type: string) {
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));
@@ -544,9 +581,9 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         } else {
-            editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         }
     }
 }
@@ -562,7 +599,7 @@ const deleteHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), undefined);
+        editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
 }
 
@@ -578,7 +615,7 @@ const addHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 216, 216, 216))
+        editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
 }
 const higAlphaInput = () => {
@@ -606,9 +643,164 @@ const addTextColor = () => {
         }
         textFormat()
     } else {
-        editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 6, 6, 6))
+        editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
 }
+
+const setMixedTextColor = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(props.shape)
+    let format: AttrGetter
+    const __text = props.shape.getText();
+    if (length.value) {
+        format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
+        const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
+        editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
+        editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
+        if (format.gradient) {
+            editor.setTextGradient(format.gradient, textIndex, selectLength);
+        }
+    } else {
+        format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
+        const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
+        editor.setTextColorMulti(props.textShapes, new Color(alpha, red, green, blue));
+        editor.setTextFillTypeMulti(props.textShapes, format.fillType || FillType.SolidColor);
+        if (format.gradient) {
+            editor.setTextGradientMulti(props.textShapes, format.gradient);
+        }
+    }
+}
+
+const togger_gradient_type = (type: GradientType | 'solid') => {
+    const editor = props.context.editor4TextShape(props.shape);
+    const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextFillType(fillType, 0, Infinity)
+            if (type !== 'solid') {
+                const g = getGradient(gradient.value, type, textColor.value!);
+                editor.setTextGradient(g, 0, Infinity);
+            }
+        } else {
+            editor.setTextFillType(fillType, textIndex, selectLength)
+            if (type !== 'solid') {
+                const g = getGradient(gradient.value, type, textColor.value!);
+                editor.setTextGradient(g, textIndex, selectLength);
+            }
+            textFormat()
+        }
+    } else {
+        editor.setTextFillTypeMulti(props.textShapes, fillType);
+        if (type !== 'solid') {
+            const g = getGradient(gradient.value, type, textColor.value!);
+            editor.setTextGradientMulti(props.textShapes, g);
+        }
+    }
+}
+function gradient_stop_color_change(color: Color, index: number) {
+    if (!gradient.value) return;
+    const editor = props.context.editor4TextShape(props.shape);
+    let g: Gradient;
+    g = cloneGradient(gradient.value);
+    if (g) {
+        g.stops[index].color = color;
+    }
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            if (index === 0) editor.setTextColor(0, Infinity, color);
+            editor.setTextGradient(g, 0, Infinity);
+        } else {
+            if (index === 0) editor.setTextColor(textIndex, selectLength, color);
+            editor.setTextGradient(g, textIndex, selectLength);
+        }
+    } else {
+        if (index === 0) editor.setTextColorMulti((shapes.value as TextShapeView[]), color);
+        editor.setTextGradientMulti(props.textShapes, g);
+    }
+}
+
+function gradient_add_stop(position: number, color: Color, id: string) {
+    if (!gradient.value) return;
+    const stop = new Stop(new BasicArray(), id, position, color);
+    const g = cloneGradient(gradient.value);
+    g.stops.push(stop);
+    const s = g.stops as BasicArray<Stop>;
+    s.forEach((v, i) => {
+        const idx = new BasicArray<number>();
+        idx.push(i);
+        v.crdtidx = idx;
+    })
+    s.sort((a, b) => {
+        if (a.position > b.position) {
+            return 1;
+        } else if (a.position < b.position) {
+            return -1;
+        } else {
+            return 0;
+        }
+    })
+    editor_gradient(g);
+}
+
+function gradient_stop_delete(index: number) {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    g.stops.splice(index, 1);
+    editor_gradient(g);
+}
+
+function gradient_reverse() {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    const new_stops: BasicArray<Stop> = new BasicArray<Stop>();
+    for (let _i = 0, _l = g.stops.length; _i < _l; _i++) {
+        const _stop = g.stops[_i];
+        const inver_index = g.stops.length - 1 - _i;
+        new_stops.push(new Stop(_stop.crdtidx, _stop.id, _stop.position, g.stops[inver_index].color));
+    }
+    g.stops = new_stops;
+    editor_gradient(g);
+}
+
+function gradient_rotate() {
+    if (!gradient.value) return;
+    const g = cloneGradient(gradient.value);
+    const { from, to } = g;
+    const gradientType = g.gradientType;
+    if (gradientType === GradientType.Linear) {
+        const midpoint = { x: (to.x + from.x) / 2, y: (to.y + from.y) / 2 };
+        const m = new Matrix();
+        m.trans(-midpoint.x, -midpoint.y);
+        m.rotate(Math.PI / 2);
+        m.trans(midpoint.x, midpoint.y);
+        g.to = m.computeCoord3(to) as any;
+        g.from = m.computeCoord3(from) as any;
+    } else if (gradientType === GradientType.Radial || gradientType === GradientType.Angular) {
+        const m = new Matrix();
+        m.trans(-from.x, -from.y);
+        m.rotate(Math.PI / 2);
+        m.trans(from.x, from.y);
+        g.to = m.computeCoord3(to) as any;
+    }
+    editor_gradient(g);
+}
+
+const editor_gradient = (g: Gradient) => {
+    const editor = props.context.editor4TextShape(props.shape);
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextGradient(g, 0, Infinity);
+        } else {
+            editor.setTextGradient(g, textIndex, selectLength);
+        }
+    } else {
+        editor.setTextGradientMulti(props.textShapes, g);
+    }
+}
+
 const sizeColorInput = () => {
     if (sizeColor.value && alphaFill.value) {
         const value = sizeColor.value.value;
@@ -638,11 +830,11 @@ const selectAlphaValue = () => {
     }
 }
 const sizeAlphaInput = () => {
-    if (alphaFill.value && sizeColor.value) {
+    if (alphaFill.value) {
         const value = alphaFill.value.value;
         texAlphaValue.value = value;
-        textColorValue.value = sizeColor.value.value;
     }
+    if (sizeColor.value) textColorValue.value = sizeColor.value.value;
 }
 const selectHiglightColor = () => {
     if (higlightColor.value) {
@@ -661,7 +853,14 @@ const selectHiglighAlpha = () => {
 const getTextShapes = () => {
     shapes.value = props.textShapes;
 }
-const filterAlpha = (a: number) => {
+const filterAlpha = () => {
+    let a: number = 100;
+    if (fillType.value === FillType.SolidColor) {
+        if (textColor.value) a = textColor.value.alpha * 100;
+    } else if (gradient.value && fillType.value === FillType.Gradient) {
+        const opacity = gradient.value.gradientOpacity;
+        a = (opacity === undefined ? 1 : opacity) * 100;
+    }
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
@@ -682,6 +881,7 @@ const stop3 = watch(() => props.trigger, v => {
         textFormat();
     }
 })
+const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
@@ -693,6 +893,7 @@ onUnmounted(() => {
     // stop();
     stop2();
     stop3();
+    stop4();
 })
 </script>
 
@@ -811,35 +1012,40 @@ onUnmounted(() => {
                 <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
                     t('attr.font_color')
                 }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
-                        @change="c => getColorFromPicker(c, 'color')">
+                        :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
+                        @change="c => getColorFromPicker(c, 'color')" @gradient-type="(type) => togger_gradient_type(type)"
+                        @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
+                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
-                    <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
-                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                    <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor" @focus="selectColorValue"
+                        :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput" />
+                    <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
+                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"
-                        @input="sizeAlphaInput" />
+                        :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')" @input="sizeAlphaInput" />
                 </div>
-                <!--                <div class="perch"></div>-->
+                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                     </div>
-                    <div class="add" @click="addTextColor">
+                    <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1126,12 +1332,14 @@ onUnmounted(() => {
         .text-color {
             display: flex;
             align-items: center;
+            justify-content: space-between;
 
             .color {
                 background-color: var(--input-background);
-                width: 166px;
+                flex: 1;
                 height: 32px;
                 padding: 8px;
+                padding-right: 4px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
@@ -1140,18 +1348,20 @@ onUnmounted(() => {
                 .sizeColor {
                     outline: none;
                     border: none;
-                    width: 88px;
+                    width: 60px;
                     background-color: transparent;
                     margin-left: 8px;
                     font-size: 12px;
+                    flex: auto;
                 }
 
                 .alphaFill {
                     outline: none;
                     border: none;
-                    width: 30px;
+                    width: 35px;
                     background-color: transparent;
                     font-size: 12px;
+                    flex: auto;
                 }
 
                 input+input {
@@ -1163,12 +1373,14 @@ onUnmounted(() => {
         .highlight-color {
             display: flex;
             align-items: center;
+            justify-content: space-between;
 
             .color {
                 background-color: var(--input-background);
-                width: 130px;
+                flex: 1;
                 height: 32px;
                 padding: 8px;
+                padding-right: 4px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
@@ -1178,10 +1390,9 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 85px;
+                    width: 60px;
                     height: 14px;
                     margin-left: 8px;
-                    flex: 1;
                     font-size: 12px;
                 }
 
@@ -1189,10 +1400,10 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 30px;
+                    width: 35px;
                     text-align: center;
-                    margin-left: -28px;
                     font-size: 12px;
+                    flex: auto;
                 }
 
                 input+input {
@@ -1249,7 +1460,7 @@ onUnmounted(() => {
             align-items: center;
             width: 28px;
             height: 28px;
-            margin-left: 8px;
+            margin-left: 5px;
             border-radius: var(--default-radius);
 
             >svg {

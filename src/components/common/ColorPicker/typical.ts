@@ -1,17 +1,27 @@
 import { Color } from "@kcdesign/data";
 
 const t1 = new Color(1, 255, 255, 255);
-const t2 = new Color(1, 0, 0, 0);
-const t3 = new Color(1, 231, 230, 230);
-const t4 = new Color(1, 68, 84, 106);
-const t5 = new Color(1, 91, 155, 213);
-const t6 = new Color(1, 237, 125, 49);
-const t7 = new Color(1, 165, 165, 165);
-const t8 = new Color(1, 255, 192, 0);
-const t9 = new Color(1, 68, 114, 196);
-const t10 = new Color(1, 112, 173, 71);
+const t2 = new Color(1, 245, 245, 245);
+const t3 = new Color(1, 217, 217, 217);
+const t4 = new Color(1, 191, 191, 191);
+const t5 = new Color(1, 140, 140, 140);
+const t6 = new Color(1, 89, 89, 89);
+const t7 = new Color(1, 38, 38, 38);
+const t8 = new Color(1, 0, 0, 0);
+const t9 = new Color(1, 255, 235, 59);
+const t10 = new Color(1, 255, 195, 0);
+const t11 = new Color(1, 255, 141, 26);
+const t12 = new Color(1, 255, 87, 51);
+const t13 = new Color(1, 212, 48, 48);
+const t14 = new Color(1, 227, 60, 100);
+const t15 = new Color(1, 172, 51, 193);
+const t16 = new Color(1, 121, 72, 234);
+const t17 = new Color(1, 42, 130, 228);
+const t18 = new Color(1, 0, 186, 173);
+const t19 = new Color(1, 67, 207, 124);
+const t20 = new Color(1, 165, 214, 63);
 
-export const typical = [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10];
+export const typical = [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20];
 
 export const LABEL_RGB = ['R', 'G', 'B', 'A'];
 export const LABEL_HSL = ['H', 'S', 'L', 'A'];

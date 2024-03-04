@@ -37,14 +37,14 @@ const closeDialog = () => {
     showCompsDialog.value = false;
 }
 
-function select(index: number) {
-    const symref = props.context.selection.symbolrefshape;
-    if (!symref) return console.log("wrong role");
-    const _v = props.data.values[index];
-    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
-    const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
-    modify_vari_value_for_ref(props.context, _var, _v);
-}
+// function select(index: number) {
+//     const symref = props.context.selection.symbolrefshape;
+//     if (!symref) return console.log("wrong role");
+//     const _v = props.data.values[index];
+//     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+//     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+//     modify_vari_value_for_ref(props.context, _var, _v);
+// }
 
 function get_value() {
     const symref = props.context.selection.symbolrefshape;

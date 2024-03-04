@@ -1,4 +1,4 @@
-import { TableCell, TableGridItem, WatchableObject, ShapeType, TableView } from "@kcdesign/data";
+import { TableCell, TableGridItem, WatchableObject, ShapeType, TableView, TableCellView } from "@kcdesign/data";
 import { Context } from ".";
 
 export class TableSelection extends WatchableObject {
@@ -8,7 +8,7 @@ export class TableSelection extends WatchableObject {
     private m_tableRowEnd: number = -1;
     private m_tableColStart: number = -1;
     private m_tableColEnd: number = -1;
-    private m_editing_cell: TableGridItem & { cell: TableCell | undefined } | undefined;
+    private m_editing_cell: TableCellView | undefined;
     private m_context: Context;
     private m_onCellChange: () => void;
     constructor(cxt: Context, onCellChange: () => void) {
@@ -44,7 +44,7 @@ export class TableSelection extends WatchableObject {
         this.m_tableColEnd = -1;
         this.notify(TableSelection.CHANGE_TABLE_CELL);
     }
-    setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
+    setEditingCell(cell?: TableCellView) {
         if (this.m_editing_cell === cell) return;
         if (cell) this.resetSelection(); // 进入编辑状态默认清除所有选区
         this.m_editing_cell = cell;
@@ -52,7 +52,7 @@ export class TableSelection extends WatchableObject {
         this.notify(TableSelection.CHANGE_EDITING_CELL);
     }
     getSelectedCells(visible: boolean = true): {
-        cell: TableCell | undefined;
+        cell: TableCellView | undefined;
         rowIdx: number;
         colIdx: number;
     }[] {

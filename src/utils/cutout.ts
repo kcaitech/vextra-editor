@@ -222,7 +222,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     return shapes.reduce((result: any, item: ShapeView) => {
-        if (item.type === ShapeType.Group) {
+        if (item.type === ShapeType.Group && !(item as GroupShapeView).data.isBoolOpShape) {
             const childs = (item).childs as ShapeView[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));
