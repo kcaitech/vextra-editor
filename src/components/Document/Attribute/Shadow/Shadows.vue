@@ -83,7 +83,7 @@ function updateData() {
   reflush.value++;
 }
 function watcher(...args: any[]) {
-  if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
+  if (args.length > 0 && (args.includes('layout'))) updateData();
 }
 function addShadow(): void {
   const len = props.shapes.length;
