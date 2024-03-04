@@ -68,6 +68,9 @@ export class RotateHandler extends TransformHandler {
     }
 
     passiveExcute() {
+        if (!this.asyncApiCaller) {
+            return;
+        }
         this.__excute();
     }
 
@@ -256,6 +259,10 @@ export class RotateHandler extends TransformHandler {
             m.trans(base.x, base.y);
 
             const self = m.computeCoord2(0, 0);
+            if (shape.name === "老实小狗") {
+                console.log('self:', self, m.toString());
+
+            }
 
             const dx = common.x - self.x;
             const dy = common.y - self.y;

@@ -486,19 +486,7 @@ export function modifyXYByAlignSettingFloor(context: Context, xy: XY) {
 export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<string, Matrix>) {
     const parent = shape.parent!;
 
-    let m = shape.matrix2Parent();
-
-    let _m = parent2rootMatrixCache.get(parent.id)!;
-    if (!_m) {
-        _m = parent.matrix2Root();
-        parent2rootMatrixCache.set(parent.id, _m);
-    }
-
-    m.multiAtLeft(_m);
-
     const frame = shape.frame;
-    const origin = _m.computeCoord2(frame.x, frame.y);
-
     const baseX = frame.x;
     const baseY = frame.y;
     const baseWidth = frame.width;
@@ -511,12 +499,25 @@ export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<s
         { x: 0, y: frame.height }
     ];
 
-    let left = Infinity;
-    let right = -Infinity;
-    let top = Infinity;
-    let bottom = -Infinity;
+    let m = shape.matrix2Parent();
 
-    for (let i = 0; i < 4; i++) {
+    let _m = parent2rootMatrixCache.get(parent.id)!;
+    if (!_m) {
+        _m = parent.matrix2Root();
+        parent2rootMatrixCache.set(parent.id, _m);
+    }
+
+    m.multiAtLeft(_m);
+
+    const origin = m.computeCoord2(0, 0);
+    // const origin = _m.computeCoord2(frame.x, frame.y);
+
+    let left = origin.x;
+    let right = origin.x;
+    let top = origin.y;
+    let bottom = origin.y;
+
+    for (let i = 1; i < 4; i++) {
         const p = m.computeCoord3(points[i]);
 
         if (p.x < left) {

@@ -79,6 +79,9 @@ export class ScaleHandler extends TransformHandler {
     }
 
     passiveExcute() {
+        if (!this.asyncApiCaller) {
+            return;
+        }
         this.__excute();
     }
 
@@ -316,30 +319,53 @@ export class ScaleHandler extends TransformHandler {
             const disX = origin.x - referencePoint1.x;
             const disY = origin.y - referencePoint1.y;
 
-            const targetXY = {
+            let targetXY = {
                 x: referencePoint2.x + scaleX * disX,
                 y: referencePoint2.y + scaleY * disY
             };
 
             const parent = shape.parent!;
 
-            let matrixParent2root = matrixCache.get(parent.id)!;
-            if (!matrixParent2root) {
-                matrixParent2root = new Matrix(parent.matrix2Root().inverse);
-                matrixCache.set(parent.id, matrixParent2root);
+            let m = matrixCache.get(parent.id)!;
+            if (!m) {
+                m = new Matrix(parent.matrix2Root().inverse);
+                matrixCache.set(parent.id, m);
             }
 
-            const _targetXY = matrixParent2root.computeCoord3(targetXY);
-            let width = baseFrame.baseWidth * scaleX;
-            let height = baseFrame.baseHeight * scaleY;
+            let width = Math.abs(baseFrame.baseWidth * scaleX);
+            let height = Math.abs(baseFrame.baseHeight * scaleY);
 
             const alignPixel = this.alignPixel;
 
+            width = Math.max(alignPixel ? Math.round(width) : width, 1);
+            height = Math.max(alignPixel ? Math.round(height) : height, 1);
+
+            const __m = new Matrix();
+            const cx = width / 2;
+            const cy = height / 2;
+            __m.trans(-cx, -cy);
+            if (shape.rotation) {
+                __m.rotate((shape.rotation || 0) / 180 * Math.PI);
+            }
+            const targetFlipH = needFlipH ? shape.isFlippedHorizontal : shape.isFlippedHorizontal;
+            if (targetFlipH) {
+                __m.flipHoriz();
+            }
+            const targetFlipV = needFlipV ? shape.isFlippedVertical : shape.isFlippedVertical;
+            if (targetFlipV) {
+                __m.flipVert();
+            }
+            __m.trans(cx, cy);
+            __m.trans(baseFrame.baseX, baseFrame.baseY);
+
+            const _targetXY = __m.computeCoord2(0, 0);
+            targetXY = m.computeCoord3(targetXY);
+
+            _targetXY.x = baseFrame.baseX + (targetXY.x - _targetXY.x);
+            _targetXY.y = baseFrame.baseY + (targetXY.y - _targetXY.y);
+
             _targetXY.x = alignPixel ? Math.round(_targetXY.x) : _targetXY.x;
             _targetXY.y = alignPixel ? Math.round(_targetXY.y) : _targetXY.y;
-
-            width = alignPixel ? Math.round(width) : width;
-            height = alignPixel ? Math.round(height) : height;
 
             transformUnits.push({
                 shape,
@@ -389,13 +415,13 @@ export class ScaleHandler extends TransformHandler {
 
         const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
         if (needFlipH) {
-            this.relativeFilp.fh = true;
+            this.relativeFilp.fh = !this.relativeFilp.fh;
         }
 
         const referencePoint1 = { x: box.x, y: box.y };
         const referencePoint2 = { x: box.x, y: box.y };
         if (isFixedRatio) {
-            const _height = box.height * scaleY - box.height;
+            const _height = Math.abs(box.height * scaleY) - box.height;
             referencePoint2.y -= _height / 2;
         }
 
@@ -460,14 +486,13 @@ export class ScaleHandler extends TransformHandler {
         let scaleX = (box.right - this.livingPoint.x) / box.width;
         let scaleY = (box.bottom - this.livingPoint.y) / box.height;
 
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = !this.relativeFilp.fh;
+        }
         const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
         if (needFlipV) {
             this.relativeFilp.fv = !this.relativeFilp.fv;
-        }
-
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
-        if (needFlipH) {
-            this.relativeFilp.fh = true;
         }
 
         const isFixedRatio = this.isFixedRatio();
@@ -483,7 +508,7 @@ export class ScaleHandler extends TransformHandler {
                 scaleX = scaleY;
             }
         }
-        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
@@ -494,14 +519,13 @@ export class ScaleHandler extends TransformHandler {
         let scaleX = (this.livingPoint.x - box.x) / box.width;
         let scaleY = (box.bottom - this.livingPoint.y) / box.height;
 
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = !this.relativeFilp.fh;
+        }
         const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
         if (needFlipV) {
             this.relativeFilp.fv = !this.relativeFilp.fv;
-        }
-
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
-        if (needFlipH) {
-            this.relativeFilp.fh = true;
         }
 
         const isFixedRatio = this.isFixedRatio();
@@ -516,7 +540,7 @@ export class ScaleHandler extends TransformHandler {
                 scaleX = scaleY;
             }
         }
-        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
 
@@ -538,20 +562,19 @@ export class ScaleHandler extends TransformHandler {
             }
         }
 
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = !this.relativeFilp.fh;
+        }
         const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
         if (needFlipV) {
             this.relativeFilp.fv = !this.relativeFilp.fv;
         }
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
-        if (needFlipH) {
-            this.relativeFilp.fh = true;
-        }
-
         const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
         const referencePoint2 = { x: box.x, y: box.y };
 
-        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
@@ -562,14 +585,13 @@ export class ScaleHandler extends TransformHandler {
         let scaleX = (box.right - this.livingPoint.x) / box.width;
         let scaleY = (this.livingPoint.y - box.y) / box.height;
 
+        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        if (needFlipH) {
+            this.relativeFilp.fh = !this.relativeFilp.fh;
+        }
         const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
         if (needFlipV) {
             this.relativeFilp.fv = !this.relativeFilp.fv;
-        }
-
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
-        if (needFlipH) {
-            this.relativeFilp.fh = true;
         }
 
         const isFixedRatio = this.isFixedRatio();
@@ -584,7 +606,7 @@ export class ScaleHandler extends TransformHandler {
                 scaleX = scaleY;
             }
         }
-        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
