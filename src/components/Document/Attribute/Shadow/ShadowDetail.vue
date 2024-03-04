@@ -172,6 +172,8 @@ function onAlphaChange(e: Event) {
 function getColorFromPicker(color: Color) {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    console.log(color, 'color');
+    
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowColor(_idx, color);

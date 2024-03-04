@@ -5,7 +5,7 @@ const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
 
 export function createElement(tag: string): HTMLElement | SVGElement {
-    if (tag === "foreignObject") return document.createElement(tag);
+    // if (tag === "foreignObject") return document.createElement("foreignObject");
     if (tag === "div") return document.createElement("div");
     return document.createElementNS(xmlns, tag);
 }

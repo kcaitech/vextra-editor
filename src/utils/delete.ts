@@ -1,7 +1,12 @@
 import { Context } from "@/context";
+import { ColorCtx } from "@/context/color";
 import { Shape, ShapeView, TableCellType, TableShape, TableView, adapt2Shape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
+    if(context.color.selected_stop !== undefined) {
+        context.color.notify(ColorCtx.STOP_DELETE);
+        return
+    }
     const path_edit_mode = context.workspace.is_path_edit_mode;
     if (path_edit_mode) {
         delete_for_path_edit(context);

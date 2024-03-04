@@ -101,14 +101,12 @@ onUnmounted(() => {
     font-size: 12px;
     position: relative;
     background-color: #F4F5F5;
-    width: 144px;
     height: 32px;
     border-radius: var(--default-radius);
     box-sizing: border-box;
     display: flex;
     align-items: center;
     padding: 9px 8px;
-    margin-right: 5px;
     color: #000000;
 
     &:hover {

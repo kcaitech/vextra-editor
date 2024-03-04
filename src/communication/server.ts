@@ -130,7 +130,7 @@ export class Server {
     }
 
     async connectLoop() {
-        console.log("server connectLoop")
+        // console.log("server connectLoop")
         if (this.isClosed) return false;
         if (this.isConnected) return true;
         while (!await this.connect()) {
@@ -217,11 +217,11 @@ export class Server {
             this.cmdIdToTunnel.delete(originCmdId)
         }
         tunnel?.receiveFromServer(data)
-        console.log("receiveFromServer", data)
+        // console.log("receiveFromServer", data)
     }
 
     sendHeartbeat() {
-        console.log("sendHeartbeat")
+        // console.log("sendHeartbeat")
         this.lastSendHeartbeatTime = Date.now()
         this.send(JSON.stringify({
             cmd_type: ClientCmdType.Heartbeat,
@@ -234,14 +234,14 @@ export class Server {
 
     _onNetworkOffline() {
         if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
-        console.log("_onNetworkOffline")
+        // console.log("_onNetworkOffline")
         this.networkStatus = NetworkStatusType.Offline
         this.onNetworkOffline()
         this.offlineTimer = setTimeout(this.closeWs.bind(this), 60000) as any
     }
 
     _onNetworkOnline() {
-        console.log("_onNetworkOnline")
+        // console.log("_onNetworkOnline")
         if (this.receiveHeartbeatTimer !== undefined) clearTimeout(this.receiveHeartbeatTimer);
         this.receiveHeartbeatTimer = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
         if (this.networkStatus === NetworkStatusType.Offline) {
@@ -253,7 +253,7 @@ export class Server {
     }
 
     receiveHeartbeat(cmd: ServerCmd) {
-        console.log("receiveHeartbeat")
+        // console.log("receiveHeartbeat")
         this._onNetworkOnline()
         if (cmd.cmd_type === ServerCmdType.Heartbeat) {
             this.send(JSON.stringify({
