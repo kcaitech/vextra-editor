@@ -350,11 +350,11 @@ export class ScaleHandler extends TransformHandler {
             if (shape.rotation) {
                 __m.rotate((shape.rotation || 0) / 180 * Math.PI);
             }
-            const targetFlipH = needFlipH ? shape.isFlippedHorizontal : shape.isFlippedHorizontal;
+            const targetFlipH = needFlipH ? !shape.isFlippedHorizontal : shape.isFlippedHorizontal;
             if (targetFlipH) {
                 __m.flipHoriz();
             }
-            const targetFlipV = needFlipV ? shape.isFlippedVertical : shape.isFlippedVertical;
+            const targetFlipV = needFlipV ? !shape.isFlippedVertical : shape.isFlippedVertical;
             if (targetFlipV) {
                 __m.flipVert();
             }

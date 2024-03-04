@@ -95,6 +95,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+
+        if (event.shiftKey) {
+            if (event.repeat) {
+                return;
+            }
+            transporter?.modifyShiftStatus(true);
+            transporter?.modifyShiftStatus(true);
+        }
+
         if (isDragging) {
             return;
         }
@@ -187,6 +196,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+        if (event.code === 'ShiftLeft') {
+            transporter?.modifyShiftStatus(false);
+            transporter?.modifyShiftStatus(false);
+        }
+
         const still_active = directionCalc.up(event);
 
         if (still_active) {
@@ -232,9 +246,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 handleDblClick();
             }
 
-            transporter = new TranslateHandler(context, context.selection.selectedShapes, e);
-            console.log('transporter:', transporter);
-
             initTimer();
             pre_to_translate(e);
         }
@@ -263,14 +274,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
+        transporter = new TranslateHandler(context, selection.selectedShapes, e);
+
+        // context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 
         document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
 
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
-        workspace.setCtrl('controller');
+        // workspace.setCtrl('controller');
     }
 
     async function mousemove(e: MouseEvent) {
@@ -279,19 +292,23 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
-        if (isDragging && wheel && asyncTransfer) {
-            speed = get_speed(t_e || e, e);
-            t_e = e;
+        if (isDragging) {
+            // if (isDragging && wheel && asyncTransfer) {
+            // speed = get_speed(t_e || e, e);
+            // t_e = e;
 
-            let update_type = 0;
+            // let update_type = 0;
 
-            const is_need_assit = wheel.is_inner(e);
+            // const is_need_assit = wheel.is_inner(e);
 
-            update_type = transform(startPosition, mousePosition, is_need_assit);
+            // update_type = transform(startPosition, mousePosition, is_need_assit);
 
-            wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
+            // wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
 
-            modify_mouse_position_by_type(update_type, startPosition, mousePosition);
+            // modify_mouse_position_by_type(update_type, startPosition, mousePosition);
+
+            transporter?.excute(e);
+
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) {
                 return;
@@ -305,23 +322,25 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
 
-            reset_assist_before_translate(context, shapes);
+            // reset_assist_before_translate(context, shapes);
 
-            offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+            // offset_map = gen_offset_points_map(shapes, startPositionOnPage);
 
-            asyncTransfer = context.editor
-                .controller()
-                .asyncTransfer(shapes, selection.selectedPage!);
+            // asyncTransfer = context.editor
+            //     .controller()
+            //     .asyncTransfer(shapes, selection.selectedPage!);
 
-            if (e.altKey) {
-                shapes = await paster_short(context, shapes, asyncTransfer);
-            }
+            // if (e.altKey) {
+            //     shapes = await paster_short(context, shapes, asyncTransfer);
+            // }
 
-            context.selection.setShapesSet(shapes);
-            asyncTransfer.setEnvs(record_origin_env(shapes));
-            const except_envs = find_except_envs(context, shapes, e);
-            asyncTransfer.setExceptEnvs(except_envs);
-            asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
+            // context.selection.setShapesSet(shapes);
+            // asyncTransfer.setEnvs(record_origin_env(shapes));
+            // const except_envs = find_except_envs(context, shapes, e);
+            // asyncTransfer.setExceptEnvs(except_envs);
+            // asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
+
+            transporter?.createApiCaller();
 
             isDragging = true;
         }
@@ -493,6 +512,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
 
             end_transalte(context);
+            transporter?.fulfil();
+            transporter = undefined;
             reset_sticked();
             isDragging = false;
         } else {

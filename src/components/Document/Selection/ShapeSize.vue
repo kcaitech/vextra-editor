@@ -22,6 +22,9 @@ const trans = ref({ x: 0, y: 0 });
 const rotate = ref(0);
 const isSizeBox = ref(false);
 const getShapePositionSize = () => {
+    if (!props.context.tool.isLable) {
+        return;
+    }
     const shapes = props.context.selection.selectedShapes;
     const matrix = props.context.workspace.matrix;
     trans.value.x = 0;

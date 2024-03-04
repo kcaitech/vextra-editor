@@ -33,7 +33,7 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
         asyncTransfer.migrate(tp, _shapes, context.workspace.t('compos.dlt'));
     }
 
-    context.assist.set_collect_target([target_parent], true);
+    context.assist.set_collect_target(shapes, true);
 }
 
 /**
