@@ -411,14 +411,13 @@ class Transform3D { // 变换
         return this
     }
 
-    _rotate(matrix: Matrix) { // 旋转，会修改原变换
+    _rotate(matrix: Matrix, ignoreTranslation = true) { // 旋转缩放等，会修改原变换，ignoreTranslation=true：进行旋转缩放等操作时忽略平移
         const translateVector = this.matrix.colVec(3)
-        // 进行旋转操作时均忽略平移
         this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
         return this
     }
 
-    rotateX(angle: number) { // 绕x轴旋转，会修改原变换
+    rotateX(angle: number, ignoreTranslation = true) { // 绕x轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -426,10 +425,10 @@ class Transform3D { // 变换
             [0, cos, -sin],
             [0, sin, cos],
         ], true)
-        return this._rotate(matrix)
+        return this._rotate(matrix, ignoreTranslation)
     }
 
-    rotateY(angle: number) { // 绕y轴旋转，会修改原变换
+    rotateY(angle: number, ignoreTranslation = true) { // 绕y轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -437,10 +436,10 @@ class Transform3D { // 变换
             [0, 1, 0],
             [-sin, 0, cos],
         ], true)
-        return this._rotate(matrix)
+        return this._rotate(matrix, ignoreTranslation)
     }
 
-    rotateZ(angle: number) { // 绕z轴旋转，会修改原变换
+    rotateZ(angle: number, ignoreTranslation = true) { // 绕z轴旋转，会修改原变换
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -448,10 +447,10 @@ class Transform3D { // 变换
             [sin, cos, 0],
             [0, 0, 1],
         ], true)
-        return this._rotate(matrix)
+        return this._rotate(matrix, ignoreTranslation)
     }
 
-    rotate(axis: Matrix, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
+    rotate(axis: Matrix, angle: number, ignoreTranslation = true) { // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         axis = axis.normalize() // axis化为单位向量
         const [x, y, z] = axis.data.map(item => item[0])
@@ -463,12 +462,12 @@ class Transform3D { // 变换
             [t * x * y + s * z, t * y * y + c, t * y * z - s * x],
             [t * x * z - s * y, t * y * z + s * x, t * z * z + c],
         ], true)
-        return this._rotate(matrix)
+        return this._rotate(matrix, ignoreTranslation)
     }
 
-    rotateAt(axis: Matrix, point: Matrix, angle: number) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点，会修改原变换
+    rotateAt(axis: Matrix, point: Matrix, angle: number, ignoreTranslation = true) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点，会修改原变换
         this.translate(-point.data[0][0], -point.data[1][0], -point.data[2][0])
-        this.rotate(axis, angle)
+        this.rotate(axis, angle, ignoreTranslation)
         this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
         return this
     }
@@ -477,8 +476,11 @@ class Transform3D { // 变换
         return !this.matrix.resize(3, 3).isDiagonal
     }
 
-    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改原变换
-        this.matrix = transform.matrix.multiply(this.matrix)
+    addTransform(transform: Transform3D, ignoreTranslationWhenRotate = true) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改原变换，ignoreTranslationWhenRotate=true：叠加旋转缩放等操作时忽略平移
+        const translateVector = transform.matrix.colVec(3)
+        const rotateMatrix = transform.matrix.resize(3, 3)
+        this._rotate(rotateMatrix, ignoreTranslationWhenRotate)
+        this.translate(translateVector.data[0][0], translateVector.data[1][0], translateVector.data[2][0])
         return this
     }
 
@@ -511,9 +513,11 @@ class Transform3D { // 变换
 
     // 旋转矩阵转欧拉角
     // 维基百科：https://en.wikipedia.org/wiki/Euler_angles
-    // 维基中的旋转矩阵R与Transform3D中的旋转矩阵matrix的定义相反，matrix是维基百科中R的转置
+    // 维基中的旋转矩阵R与Transform3D中的旋转矩阵matrix的行列定义相反，matrix是维基百科中R的转置
+    // 欧拉角的“序”与实际操作顺序相反，例如ZXY序指的是先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转
+    // 维基百科中的α、β、γ分别对应Transform3D中的z、x、y
     // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
-    static decomposeEulerYXZ(matrix: Matrix) { // 旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
+    static decomposeEulerYXZ(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const m = matrix.data
         const x = Math.asin(m[1][2])
         let y, z
@@ -531,7 +535,7 @@ class Transform3D { // 变换
         }
     }
 
-    decomposeToEulerYXZ() { // 分解出平移、欧拉角（ZXY序）、缩放矩阵
+    decomposeToEulerZXY() { // 分解出平移、欧拉角（ZXY序）、缩放矩阵
         const decompose = this.decomposeMatrix()
         return {
             translate: {
@@ -601,14 +605,13 @@ function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: T
     ])
     // 变换后的四个顶点坐标
     const newPoints = transform.transform(points)
-    // 四个顶点坐标的最小值和最大值
-    const minX = Math.min(...newPoints.data[0])
+    // 右下角坐标
     const maxX = Math.max(...newPoints.data[0])
-    const minY = Math.min(...newPoints.data[1])
     const maxY = Math.max(...newPoints.data[1])
+    // 从中心点平移回原点
     return {
-        lt: { x: minX + x, y: minY + y },
-        rb: { x: maxX + x, y: maxY + y },
+        lt: { x: -maxX + w / 2 + x, y: -maxY + h / 2 + y },
+        rb: { x: maxX + w / 2 + x, y: maxY + h / 2 + y },
     }
 }
 
@@ -694,13 +697,13 @@ type Attributes = { // 从元素的attributes中解析出来的属性
 
 // 将父元素的属性合并到子元素
 function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
-    const parentShape = parent.shape
-    const childShape = child.shape
+    const parentShape = parent.that.shape
+    const childShape = child.that.shape
     if (!parentShape || !childShape) return;
 
     // 合并transform
-    child.transform = parent.transform.clone().addTransform(child.transform)
-    child.updateShapeAttrByTransform()
+    child.that.transform = parent.that.transform.clone().addTransform(child.that.transform)
+    child.that.updateShapeAttrByTransform()
 }
 
 interface ShapeCreator {
@@ -719,6 +722,7 @@ class BaseShapeCreator implements ShapeCreator {
     svgNode: Element
     svgNodeTagName: string
     shape: Shape | undefined = undefined
+    that: BaseShapeCreator = this
 
     attributes: Attributes = {}
     transform = new Transform3D()
@@ -736,6 +740,11 @@ class BaseShapeCreator implements ShapeCreator {
 
     make(): BaseShapeCreator {
         return this
+    }
+
+    setThat(that: BaseShapeCreator) {
+        while (that.that !== that) that = that.that;
+        this.that = that
     }
 
     parseAttributes() {
@@ -770,7 +779,7 @@ class BaseShapeCreator implements ShapeCreator {
         const shape = this.shape
         if (!shape) return;
 
-        const { translate, rotate } = this.transform.decomposeToEulerYXZ()
+        const { translate, rotate } = this.transform.decomposeToEulerZXY()
 
         // 设置xy
         shape.frame.x = translate.x
@@ -779,9 +788,9 @@ class BaseShapeCreator implements ShapeCreator {
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
 
-        // 设置翻转，绝对值大于90度时认为是翻转
-        shape.isFlippedVertical = Math.abs(rotate.x) > Math.PI / 2
-        shape.isFlippedHorizontal = Math.abs(rotate.y) > Math.PI / 2
+        // 设置翻转，绝对值大于179度时认为是翻转
+        shape.isFlippedVertical = Math.abs(rotate.x) * 180 / Math.PI > 179
+        shape.isFlippedHorizontal = Math.abs(rotate.y) * 180 / Math.PI > 179
     }
 
     updateShapeAttr() { // 设置shape的属性
@@ -831,20 +840,19 @@ class GroupShapeCreator extends BaseShapeCreator {
         const children: {
             shape: Shape,
             creator: BaseShapeCreator,
-        }[] = this.children.filter(child => child.shape).map(child => {
+        }[] = this.children.filter(child => child.that.shape).map(child => {
             return {
-                shape: child.shape!,
-                creator: child,
+                shape: child.that.shape!,
+                creator: child.that,
             }
         })
         if (children.length === 0) {
-            this.shape = undefined
+            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode)
             return
         }
         if (children.length === 1) {
-            const childShape = children[0].shape
-            mergeAttributes(this, this.children[0])
-            this.shape = childShape
+            mergeAttributes(this, children[0].creator)
+            this.setThat(children[0].creator)
             return
         }
 
@@ -862,13 +870,11 @@ class GroupShapeCreator extends BaseShapeCreator {
             const childCreator = child.creator
             const childLTRB = getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
             // 超出左、上边界的偏移量
-            const ltXDiff = ltX - childLTRB.lt.x
-            const ltYDiff = ltY - childLTRB.lt.y
+            const ltXDiff = -childLTRB.lt.x
+            const ltYDiff = -childLTRB.lt.y
             // 若超出左、上边界，整体向右、下偏移
-            let childRbX = ltX + childLTRB.rb.x
-            if (ltXDiff > 0) childRbX += ltXDiff;
-            let childRbY = ltY + childLTRB.rb.y
-            if (ltYDiff > 0) childRbY += ltYDiff;
+            const childRbX = childLTRB.rb.x + Math.max(0, ltXDiff) + ltX
+            const childRbY = childLTRB.rb.y + Math.max(0, ltYDiff) + ltY
             // 拓展右下边界
             if (childRbX > rbX) rbX = childRbX;
             if (childRbY > rbY) rbY = childRbY;
@@ -900,9 +906,9 @@ class SvgShapeCreator extends BaseShapeCreator {
     afterChildrenCreated(): void {
         if (!this.shape) return;
         const svgShape = this.shape as Artboard
-        const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
+        const childrenShapes = this.children.filter(item => item.that.shape).map(item => item.that.shape!)
         if (childrenShapes.length === 0) {
-            this.shape = undefined
+            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode)
             return
         }
         svgShape.childs.push(...childrenShapes)
