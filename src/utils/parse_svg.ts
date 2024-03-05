@@ -1,5 +1,22 @@
 import { Context } from "@/context"
-import { Shape, creator as shapeCreator, GroupShape, ShapeFrame, Artboard, Path } from "@kcdesign/data"
+import {
+    Shape,
+    creator as shapeCreator,
+    GroupShape,
+    ShapeFrame,
+    Artboard,
+    Path,
+    Style,
+    BasicArray,
+    Border,
+    Fill,
+    FillType,
+    Shadow,
+    Color,
+    ContextSettings,
+    BlendMode,
+} from "@kcdesign/data"
+import { v4 as uuid } from "uuid"
 
 function buildArray(n: number, m: number, value?: number) { // 构建一个n*m的二维数组
     const result: number[][] = []
@@ -465,7 +482,9 @@ class Transform3D { // 变换
         return this._rotate(matrix, ignoreTranslation)
     }
 
-    rotateAt(axis: Matrix, point: Matrix, angle: number, ignoreTranslation = true) { // 绕任意旋转点和旋转轴旋转，axis为旋转轴的单位向量，point为旋转点，会修改原变换
+    rotateAt(axis: Matrix, point: Matrix, angle: number, ignoreTranslation = true) { // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点，会修改原变换
+        if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
+        if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
         this.translate(-point.data[0][0], -point.data[1][0], -point.data[2][0])
         this.rotate(axis, angle, ignoreTranslation)
         this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
@@ -686,6 +705,13 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
     return transform3D
 }
 
+type MyColor = {
+    r: number,
+    g: number,
+    b: number,
+    a: number,
+}
+
 type Attributes = { // 从元素的attributes中解析出来的属性
     x?: number,
     y?: number,
@@ -693,17 +719,29 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     height?: number,
     transform?: string,
     styleTransform?: string,
+    opacity?: number,
+    fill?: MyColor,
 }
 
 // 将父元素的属性合并到子元素
 function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
-    const parentShape = parent.that.shape
-    const childShape = child.that.shape
+    parent = parent.that
+    child = child.that
+    const parentShape = parent.shape
+    const childShape = child.shape
     if (!parentShape || !childShape) return;
 
     // 合并transform
-    child.that.transform = parent.that.transform.clone().addTransform(child.that.transform)
-    child.that.updateShapeAttrByTransform()
+    child.transform = parent.transform.clone().addTransform(child.transform)
+    child.updateShapeAttrByTransform()
+
+    // 合并透明度
+    if (parent.attributes.opacity) {
+        console.log("合并透明度", parent.attributes.opacity, child.attributes.opacity)
+        if (child.attributes.opacity) child.attributes.opacity *= parent.attributes.opacity;
+        else child.attributes.opacity = parent.attributes.opacity;
+    }
+    child.updateShapeStyle()
 }
 
 interface ShapeCreator {
@@ -726,6 +764,7 @@ class BaseShapeCreator implements ShapeCreator {
 
     attributes: Attributes = {}
     transform = new Transform3D()
+    style?: Style
 
     constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element) {
         this.root = root
@@ -773,6 +812,34 @@ class BaseShapeCreator implements ShapeCreator {
         if (transform) {
             this.transform.addTransform(parseTransform(transform))
         }
+
+        const opacity = this.svgNode.getAttribute("opacity")
+        if (opacity) this.attributes.opacity = parseFloat(opacity);
+
+        const fill = this.svgNode.getAttribute("fill")
+        if (fill) {
+            if (fill.startsWith("rgba")) {
+                const rgba = fill.slice(5, -1).split(",").map(item => parseFloat(item))
+                this.attributes.fill = {
+                    r: rgba[0],
+                    g: rgba[1],
+                    b: rgba[2],
+                    a: rgba[3],
+                }
+            } else if (fill.startsWith("rgb")) {
+                const rgb = fill.slice(4, -1).split(",").map(item => parseFloat(item))
+                this.attributes.fill = {
+                    r: rgb[0],
+                    g: rgb[1],
+                    b: rgb[2],
+                    a: 1,
+                }
+            } else if (fill === "none") {
+
+            } else {
+                console.log("不支持的fill格式", fill)
+            }
+        }
     }
 
     updateShapeAttrByTransform() { // 根据transform更新shape的属性
@@ -793,6 +860,22 @@ class BaseShapeCreator implements ShapeCreator {
         shape.isFlippedHorizontal = Math.abs(rotate.y) * 180 / Math.PI > 179
     }
 
+    updateShapeStyle() { // 设置shape的样式
+        const borders = new BasicArray<Border>()
+
+        const fills = new BasicArray<Fill>()
+        if (this.attributes.fill) {
+            const fillColor = new Color(this.attributes.fill.a, this.attributes.fill.r, this.attributes.fill.g, this.attributes.fill.b)
+            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor))
+        }
+
+        const shadows = new BasicArray<Shadow>()
+
+        this.style = new Style(borders, fills, shadows)
+        if (this.attributes.opacity) this.style.contextSettings = new ContextSettings(BlendMode.Normal, this.attributes.opacity);
+        this.shape!.style = this.style
+    }
+
     updateShapeAttr() { // 设置shape的属性
         const shape = this.shape
         if (!shape) return;
@@ -807,6 +890,7 @@ class BaseShapeCreator implements ShapeCreator {
         if (x !== 0 || y !== 0) this.transform.translate(x, y, 0)
 
         this.updateShapeAttrByTransform()
+        this.updateShapeStyle()
     }
 
     create(): Shape | undefined {
@@ -832,7 +916,7 @@ class NoneShapeCreator extends BaseShapeCreator {
 
 class GroupShapeCreator extends BaseShapeCreator {
     create(): Shape | undefined {
-        return shapeCreator.newGroupShape("编组")
+        return shapeCreator.newGroupShape("编组", this.style)
     }
 
     afterChildrenCreated(): void {
@@ -846,11 +930,15 @@ class GroupShapeCreator extends BaseShapeCreator {
                 creator: child.that,
             }
         })
-        if (children.length === 0) {
+
+        if (children.length === 0) { // 空的group，用NoneShapeCreator替代
             this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode)
             return
         }
-        if (children.length === 1) {
+
+        const reservedAttributes = ["fill"] // 保留属性，有则不会被子级替代
+        const isReserved = reservedAttributes.some(attr => attr in this.attributes)
+        if (!isReserved && children.length === 1) {
             mergeAttributes(this, children[0].creator)
             this.setThat(children[0].creator)
             return
@@ -944,7 +1032,7 @@ class PathShapeCreator extends BaseShapeCreator {
         const { width, height } = getPathWHFromD(d)
         const path = new Path(d);
         path.translate(-x, -y);
-        return shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path)
+        return shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
     }
 }
 
