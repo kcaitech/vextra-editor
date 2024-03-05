@@ -29,7 +29,7 @@ export function down_while_is_text_editing(e: MouseEvent, context: Context) {
         selection.resetSelectShapes();
         selection.rangeSelectShape(save);
     } else {
-        const editor = context.editor4Shape(adapt2Shape(shapes[0]));
+        const editor = context.editor4Shape((shapes[0]));
         editor.delete();
         selection.resetSelectShapes();
     }

@@ -45,7 +45,7 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Line, LineDom);
     comsMap.set(ShapeType.Table, TableDom);
     comsMap.set(ShapeType.Contact, ContactLineDom);
-    comsMap.set(ShapeType.TableCell, TableCellDom);
+    comsMap.set(ShapeType.TableCell, TableCellDom as any as ViewType);
     comsMap.set(ShapeType.Cutout, CutoutShapeDom);
     comsMap.set(ShapeType.Rectangle, RectShapeDom);
 }

@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data";
+import { GradientType, ShapeType } from "@kcdesign/data";
 export const shape: any = {
     group: "编组",
     page: "页面",
@@ -23,8 +23,16 @@ shape[ShapeType.Rectangle] = '矩形';
 
 export const color = {
     solid: '纯色',
+    linear: '线性渐变',
+    radial: '径向渐变',
+    angular: '旋转渐变',
     esc: '按ESC退出',
     recently: '最近使用',
     documentc: '文档使用',
-    times: '使用xx次'
+    times: '使用xx次',
+    rotate: '旋转90度',
+    reverse: '翻转渐变'
 }
+color[GradientType.Linear] = '线性渐变';
+color[GradientType.Radial] = '径向渐变';
+color[GradientType.Angular] = '旋转渐变';

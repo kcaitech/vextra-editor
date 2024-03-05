@@ -153,7 +153,7 @@ function watchShapes() { // 监听相关shape的变化
 
 const rename = (value: string, shape: ShapeView) => {
     const editor = computed(() => {
-        return props.context.editor4Shape(adapt2Shape(shape));
+        return props.context.editor4Shape((shape));
     });
     editor.value.setName(value)
     props.context.selection.rename();

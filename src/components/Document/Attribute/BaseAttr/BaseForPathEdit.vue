@@ -7,7 +7,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_point, get_value_from_points } from "@/utils/pathedit";
-import { CurveMode, PathShape } from "@kcdesign/data";
+import { CurveMode, PathShape, PathShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
 
 interface Props {
@@ -28,7 +28,7 @@ const r = ref<number | string>('');
 const curve_mode = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({ x: true, y: true, r: true, tool: true });
 const t = useI18n().t;
-let path_shape: PathShape | undefined = undefined;
+let path_shape: PathShapeView | undefined = undefined;
 const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
 function execute_change_xy(key: 'x' | 'y', val: any) {

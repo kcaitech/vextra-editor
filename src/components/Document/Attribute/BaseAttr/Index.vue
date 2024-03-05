@@ -209,7 +209,7 @@ function fliph() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
+        const e = props.context.editor4Shape((selected[0]));
         e.flipH();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -226,7 +226,7 @@ function flipv() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
+        const e = props.context.editor4Shape((selected[0]));
         e.flipV();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -263,7 +263,7 @@ function onChangeRotate(value: string, shapes: ShapeView[]) {
 }
 function adapt() {
     props.context
-        .editor4Shape(adapt2Shape(props.context.selection.selectedShapes[0]))
+        .editor4Shape((props.context.selection.selectedShapes[0]))
         .adapt();
 }
 function modify_multi_radius(shape: ShapeView) {

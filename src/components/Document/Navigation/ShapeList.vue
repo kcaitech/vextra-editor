@@ -191,16 +191,16 @@ function unHovershape() {
     props.context.selection.unHoverShape();
 }
 
-const rename = (value: string, shape: Shape) => {
+const rename = (value: string, shape: ShapeView) => {
     const editor = props.context.editor4Shape(shape);
     editor.setName(value)
 }
 
-const modify_lock_status = (shape: Shape) => {
+const modify_lock_status = (shape: ShapeView) => {
     modify_shape_lock_status(props.context, shape);
 }
 
-const modify_visible_status = (shape: Shape) => {
+const modify_visible_status = (shape: ShapeView) => {
     modify_shape_visible_status(props.context, shape);
 }
 

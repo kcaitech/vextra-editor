@@ -1,6 +1,6 @@
 import { PathShapeView, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { Matrix, PathShape, RectShape, Shape, ShapeFrame, ShapeType } from "@kcdesign/data";
-import { ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
+import { PositonAdjust, FrameAdjust, BatchAction2 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
 
@@ -68,13 +68,13 @@ export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
         }
     }
 }
-export function get_actions_constrainer_proportions(shapes: ShapeView[], value: boolean): ConstrainerProportionsAction[] {
-    const actions: ConstrainerProportionsAction[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        actions.push({ target: adapt2Shape(shape), value })
-    }
-    return actions;
+export function get_actions_constrainer_proportions(shapes: ShapeView[], value: boolean): BatchAction2[] {
+  const actions: BatchAction2[] = [];
+  for (let i = 0; i < shapes.length; i++) {
+    const shape = shapes[i];
+    actions.push({ target: shape, value })
+  }
+  return actions;
 }
 export function get_actions_frame_x(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, x: number }[] = [];
@@ -161,8 +161,8 @@ export function get_actions_frame_h(shapes: Shape[], value: number, isLock: bool
     }
     return actions;
 }
-export function get_actions_rotate(shapes: Shape[], value: number) {
-    const actions: RotateAdjust[] = [];
+export function get_actions_rotate(shapes: ShapeView[], value: number) {
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         actions.push({ target: shape, value: value });
@@ -170,20 +170,20 @@ export function get_actions_rotate(shapes: Shape[], value: number) {
     return actions;
 }
 export function get_actions_flip_v(shapes: ShapeView[]) {
-    const actions: FlipAction[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shape), direction: 'vertical' });
+        actions.push({ target: shape, value: 'vertical' });
     }
     return actions;
 }
 export function get_actions_flip_h(shapes: ShapeView[]) {
-    const actions: FlipAction[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: adapt2Shape(shape), direction: 'horizontal' });
+        actions.push({ target: shape, value: 'horizontal' });
     }
     return actions;
 }

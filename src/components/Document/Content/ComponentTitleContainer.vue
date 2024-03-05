@@ -162,7 +162,7 @@ function watchShapes() { // 监听相关shape的变化
 }
 
 const rename = (value: string, shape: ShapeView) => {
-    const editor = props.context.editor4Shape(adapt2Shape(shape));
+    const editor = props.context.editor4Shape((shape));
     editor.setName(value)
     props.context.selection.rename();
 }
