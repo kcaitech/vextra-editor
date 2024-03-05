@@ -15,6 +15,8 @@ import {
     Color,
     ContextSettings,
     BlendMode,
+    BorderStyle,
+    BorderPosition,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 
@@ -712,6 +714,66 @@ type MyColor = {
     a: number,
 }
 
+function parseColor(content: string): MyColor | undefined {
+    let color
+    if (content.startsWith("rgba")) {
+        const rgba = content.slice(5, -1).split(",").map(item => parseFloat(item))
+        color = {
+            r: rgba[0],
+            g: rgba[1],
+            b: rgba[2],
+            a: rgba[3],
+        }
+    } else if (content.startsWith("rgb")) {
+        const rgb = content.slice(4, -1).split(",").map(item => parseFloat(item))
+        color = {
+            r: rgb[0],
+            g: rgb[1],
+            b: rgb[2],
+            a: 1,
+        }
+    } else if (content.startsWith("#")) {
+        let hex = content.slice(1)
+        let r, g, b, a
+        if (hex.length === 3) {
+            r = parseInt(hex[0] + hex[0], 16)
+            g = parseInt(hex[1] + hex[1], 16)
+            b = parseInt(hex[2] + hex[2], 16)
+            a = 1
+        } else if (hex.length === 4) {
+            r = parseInt(hex[0] + hex[0], 16)
+            g = parseInt(hex[1] + hex[1], 16)
+            b = parseInt(hex[2] + hex[2], 16)
+            a = parseInt(hex[3] + hex[3], 16) / 255
+        } else if (hex.length === 6) {
+            r = parseInt(hex.substring(0, 2), 16)
+            g = parseInt(hex.substring(2, 4), 16)
+            b = parseInt(hex.substring(4, 6), 16)
+            a = 1
+        } else if (hex.length === 8) {
+            r = parseInt(hex.substring(0, 2), 16)
+            g = parseInt(hex.substring(2, 4), 16)
+            b = parseInt(hex.substring(4, 6), 16)
+            a = parseInt(hex.substring(6, 8), 16) / 255
+        } else {
+            console.log("无效的颜色格式", content)
+            return
+        }
+        color = {
+            r: r,
+            g: g,
+            b: b,
+            a: a,
+        }
+    } else if (content === "none") {
+
+    } else {
+        console.log("不支持的颜色格式", content)
+    }
+
+    return color
+}
+
 type Attributes = { // 从元素的attributes中解析出来的属性
     x?: number,
     y?: number,
@@ -721,6 +783,15 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     styleTransform?: string,
     opacity?: number,
     fill?: MyColor,
+    stroke?: MyColor,
+    strokeWidth?: number,
+
+    // 圆、椭圆
+    cx?: number,
+    cy?: number,
+    r?: number,
+    rx?: number,
+    ry?: number,
 }
 
 // 将父元素的属性合并到子元素
@@ -817,29 +888,23 @@ class BaseShapeCreator implements ShapeCreator {
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
         const fill = this.svgNode.getAttribute("fill")
-        if (fill) {
-            if (fill.startsWith("rgba")) {
-                const rgba = fill.slice(5, -1).split(",").map(item => parseFloat(item))
-                this.attributes.fill = {
-                    r: rgba[0],
-                    g: rgba[1],
-                    b: rgba[2],
-                    a: rgba[3],
-                }
-            } else if (fill.startsWith("rgb")) {
-                const rgb = fill.slice(4, -1).split(",").map(item => parseFloat(item))
-                this.attributes.fill = {
-                    r: rgb[0],
-                    g: rgb[1],
-                    b: rgb[2],
-                    a: 1,
-                }
-            } else if (fill === "none") {
+        if (fill) this.attributes.fill = parseColor(fill);
 
-            } else {
-                console.log("不支持的fill格式", fill)
-            }
-        }
+        const stroke = this.svgNode.getAttribute("stroke")
+        if (stroke) this.attributes.stroke = parseColor(stroke);
+        const strokeWidth = this.svgNode.getAttribute("stroke-width")
+        if (strokeWidth) this.attributes.strokeWidth = parseFloat(strokeWidth);
+
+        const cx = this.svgNode.getAttribute("cx")
+        if (cx) this.attributes.cx = parseFloat(cx);
+        const cy = this.svgNode.getAttribute("cy")
+        if (cy) this.attributes.cy = parseFloat(cy);
+        const r = this.svgNode.getAttribute("r")
+        if (r) this.attributes.r = parseFloat(r);
+        const rx = this.svgNode.getAttribute("rx")
+        if (rx) this.attributes.rx = parseFloat(rx);
+        const ry = this.svgNode.getAttribute("ry")
+        if (ry) this.attributes.ry = parseFloat(ry);
     }
 
     updateShapeAttrByTransform() { // 根据transform更新shape的属性
@@ -862,11 +927,15 @@ class BaseShapeCreator implements ShapeCreator {
 
     updateShapeStyle() { // 设置shape的样式
         const borders = new BasicArray<Border>()
+        if (this.attributes.stroke) {
+            const color = new Color(this.attributes.stroke.a, this.attributes.stroke.r, this.attributes.stroke.g, this.attributes.stroke.b)
+            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Outer, this.attributes.strokeWidth ?? 2, new BorderStyle(0, 0)))
+        }
 
         const fills = new BasicArray<Fill>()
         if (this.attributes.fill) {
-            const fillColor = new Color(this.attributes.fill.a, this.attributes.fill.r, this.attributes.fill.g, this.attributes.fill.b)
-            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, fillColor))
+            const color = new Color(this.attributes.fill.a, this.attributes.fill.r, this.attributes.fill.g, this.attributes.fill.b)
+            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, color))
         }
 
         const shadows = new BasicArray<Shadow>()
@@ -936,7 +1005,7 @@ class GroupShapeCreator extends BaseShapeCreator {
             return
         }
 
-        const reservedAttributes = ["fill"] // 保留属性，有则不会被子级替代
+        const reservedAttributes = ["fill", "stroke"] // 保留属性，有则不会被子级替代
         const isReserved = reservedAttributes.some(attr => attr in this.attributes)
         if (!isReserved && children.length === 1) {
             mergeAttributes(this, children[0].creator)
@@ -1036,6 +1105,16 @@ class PathShapeCreator extends BaseShapeCreator {
     }
 }
 
+class RectShapeCreator extends BaseShapeCreator {
+    create(): Shape | undefined {
+        const x = this.attributes.x || 0
+        const y = this.attributes.y || 0
+        const width = this.attributes.width || 0
+        const height = this.attributes.height || 0
+        return shapeCreator.newRectShape("矩形", new ShapeFrame(x, y, width, height))
+    }
+}
+
 class Parser {
     svgRoot: Element
     context: any = {}
@@ -1053,6 +1132,8 @@ class Parser {
             creatorConstruction = SvgShapeCreator
         } else if (node.tagName === "path") {
             creatorConstruction = PathShapeCreator
+        } else if (node.tagName === "rect") {
+            creatorConstruction = RectShapeCreator
         } else {
             creatorConstruction = NoneShapeCreator
         }
