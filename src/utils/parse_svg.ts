@@ -17,6 +17,8 @@ import {
     BlendMode,
     BorderStyle,
     BorderPosition,
+    CurvePoint,
+    CurveMode,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 
@@ -929,6 +931,9 @@ function parseColor(content: string): MyColor | undefined {
 }
 
 type Attributes = { // 从元素的attributes中解析出来的属性
+    style?: string,
+    styleAttributes?: Record<string, string>,
+
     x?: number,
     y?: number,
     width?: number,
@@ -945,6 +950,12 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     cy?: number,
     rx?: number,
     ry?: number,
+
+    // 直线
+    x1?: number,
+    y1?: number,
+    x2?: number,
+    y2?: number,
 }
 
 // 将父元素的属性合并到子元素
@@ -1011,6 +1022,15 @@ class BaseShapeCreator implements ShapeCreator {
     }
 
     parseAttributes() {
+        const style = this.svgNode.getAttribute("style")
+        if (style) {
+            this.attributes.style = style
+            this.attributes.styleAttributes = getAllStyleFromString(style)
+            if ("transform" in this.attributes.styleAttributes) {
+                this.attributes.styleTransform = this.attributes.styleAttributes.transform
+            }
+        }
+
         const x = this.svgNode.getAttribute("x")
         if (x) this.attributes.x = parseFloat(x);
         const y = this.svgNode.getAttribute("y")
@@ -1021,26 +1041,22 @@ class BaseShapeCreator implements ShapeCreator {
         const height = this.svgNode.getAttribute("height")
         if (height) this.attributes.height = parseFloat(height);
 
-        const style = this.svgNode.getAttribute("style")
-
         let transform
-        if (style) {
-            const styleAttributes = getAllStyleFromString(style)
-            this.attributes.styleTransform = styleAttributes.transform
-            transform = this.attributes.styleTransform
-        }
+        if (this.attributes.styleTransform) transform = this.attributes.styleTransform;
         if (!transform) {
             this.attributes.transform = this.svgNode.getAttribute("transform") ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) {
-            this.transform.addTransform(parseTransform(transform))
-        }
+        if (transform) this.transform.addTransform(parseTransform(transform));
 
         const opacity = this.svgNode.getAttribute("opacity")
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
-        const fill = this.svgNode.getAttribute("fill")
+        let fill
+        if (this.attributes.styleAttributes && "fill" in this.attributes.styleAttributes) {
+            fill = this.attributes.styleAttributes.fill
+        }
+        if (!fill) fill = this.svgNode.getAttribute("fill");
         if (fill) this.attributes.fill = parseColor(fill);
 
         const stroke = this.svgNode.getAttribute("stroke")
@@ -1049,15 +1065,24 @@ class BaseShapeCreator implements ShapeCreator {
         if (strokeWidth) this.attributes.strokeWidth = parseFloat(strokeWidth);
 
         const cx = this.svgNode.getAttribute("cx")
-        if (cx) this.attributes.cx = parseFloat(cx);
+        if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
         const cy = this.svgNode.getAttribute("cy")
-        if (cy) this.attributes.cy = parseFloat(cy);
+        if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy);
         const rx = this.svgNode.getAttribute("rx")
         if (rx) this.attributes.rx = parseFloat(rx);
         const ry = this.svgNode.getAttribute("ry")
         if (ry) this.attributes.ry = parseFloat(ry);
         const r = this.svgNode.getAttribute("r")
         if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
+
+        const x1 = this.svgNode.getAttribute("x1")
+        if (x1) this.attributes.x = this.attributes.x1 = parseFloat(x1);
+        const y1 = this.svgNode.getAttribute("y1")
+        if (y1) this.attributes.y = this.attributes.y1 = parseFloat(y1);
+        const x2 = this.svgNode.getAttribute("x2")
+        if (x2) this.attributes.x2 = parseFloat(x2);
+        const y2 = this.svgNode.getAttribute("y2")
+        if (y2) this.attributes.y2 = parseFloat(y2);
     }
 
     updateShapeAttrByTransform() { // 根据transform更新shape的属性
@@ -1285,6 +1310,34 @@ class EllipseShapeCreator extends BaseShapeCreator {
     }
 }
 
+class LineShapeCreator extends BaseShapeCreator {
+    create(): Shape | undefined {
+        const x1 = this.attributes.x1 || 0
+        const y1 = this.attributes.y1 || 0
+        const x2 = this.attributes.x2 || 0
+        const y2 = this.attributes.y2 || 0
+        const dx = x2 - x1
+        const dy = y2 - y1
+        const line = shapeCreator.newLineShape("直线", new ShapeFrame(x1, y1, 1, 1))
+        if (!line.points) line.points = new BasicArray();
+        line.points[0] = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
+        line.points[1] = new CurvePoint([0] as BasicArray<number>, uuid(), dx, dy, CurveMode.Straight);
+        return line
+    }
+}
+
+class TextShapeCreator extends BaseShapeCreator {
+    create(): Shape | undefined {
+        const x = this.attributes.x || 0
+        const y = this.attributes.y || 0
+        const text = this.svgNode.textContent
+        if (!text) return;
+        const fontStyleAttr = this.attributes.styleAttributes?.font
+        const fill = this.attributes.fill
+        return shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
+    }
+}
+
 class Parser {
     svgRoot: Element
     context: any = {}
@@ -1306,6 +1359,10 @@ class Parser {
             creatorConstruction = RectShapeCreator
         } else if (node.tagName === "circle" || node.tagName === "ellipse") {
             creatorConstruction = EllipseShapeCreator
+        } else if (node.tagName === "line") {
+            creatorConstruction = LineShapeCreator
+        } else if (node.tagName === "text") {
+            creatorConstruction = TextShapeCreator
         } else {
             creatorConstruction = NoneShapeCreator
         }
