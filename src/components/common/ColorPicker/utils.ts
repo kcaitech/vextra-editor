@@ -752,7 +752,6 @@ function get_angular_gradient(gradient: Gradient) {
   const angular = "conic-gradient(" + f + "," + angular_gradient + ")"
   return {
     'background': angular,
-    height: '-webkit-fill-available',
     width: '-webkit-fill-available'
   }
 }
