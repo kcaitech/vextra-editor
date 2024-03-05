@@ -260,12 +260,12 @@ onUnmounted(() => {
 <style scoped lang="scss">
 use {
     stroke-width: 1px;
-    stroke: #ff2200;
+    stroke: #ff4400;
 }
 
 .a-path {
     stroke-width: 1px;
-    stroke: #ff2200;
+    stroke: #ff4400;
     fill: none;
 }
 </style>
