@@ -413,7 +413,14 @@ function modify_new_shape_frame(e: MouseEvent) {
             if (e.shiftKey) {
                 er_frame(asyncCreator, x, y); // 等比
             } else {
-                asyncCreator.setFrame(correct_page_xy(x, y));
+                const cxy = correct_page_xy(x, y)
+
+                const align = props.context.user.isPixelAlignMent;
+                if (align) {
+                    cxy.x = Math.round(cxy.x);
+                    cxy.y = Math.round(cxy.y);
+                }
+                asyncCreator.setFrame(cxy);
             }
         }
     }

@@ -1,7 +1,12 @@
 import { Context } from "@/context";
 import { TransformHandler } from "./handler";
-import { FrameLike, Matrix, ShapeView, TranslateUnit, Transporter } from "@kcdesign/data";
+import { FrameLike, GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
 import { XY } from "@/context/selection";
+import { Asssit } from "@/context/assist";
+import { paster_short } from "@/utils/clipboard";
+import { debounce } from "lodash";
+import { find_except_envs, record_origin_env } from "@/utils/migrate";
+import { compare_layer_3 } from "@/utils/group_ungroup";
 
 type OriginEnv = {
     env: ShapeView;
@@ -37,14 +42,17 @@ export class TranslateHandler extends TransformHandler {
 
     baseFrames4trans: Map<string, BaseFrame4Trans> = new Map();
 
-    horFixedStatus: boolean = false;
+    offsetX: number = 0;
+    offsetY: number = 0;
+    horFixed: boolean = false;
     horFixedValue: number = 0;
-    verFixedStatus: boolean = false;
+    verFixed: boolean = false;
     verFixedValue: number = 0;
 
     currentEnvId: string = '';
     exceptEnvs: ShapeView[] = [];
     originEnvs: OriginEnvs = new Map();
+    shapesSet: Set<string> = new Set();
 
     shapesCopy: ShapeView[] = [];
 
@@ -62,16 +70,32 @@ export class TranslateHandler extends TransformHandler {
     }
 
     beforeTransform() {
-        this.context.selection.unHoverShape();
         this.context.cursor.cursor_freeze(true);
         this.workspace.setCtrl('controller');
     }
 
-    createApiCaller() {
-        this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page);
+    async createApiCaller() {
+        this.context.selection.unHoverShape();
 
         this.workspace.translating(true);
         this.workspace.setSelectionViewUpdater(false);
+
+        this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page);
+
+        if (this.altStatus) {
+            this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
+
+            this.context.assist.set_collect_target(this.shapes);
+            this.context.assist.set_trans_target(this.shapes);
+
+            this.getFrames();
+        }
+
+        const t = this.asyncApiCaller as Transporter;
+        t.setEnv(record_origin_env(this.shapes));
+        const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
+        t.setExceptEnvs(except_envs);
+        t.setCurrentEnv(except_envs[0] as any);
     }
 
     private getFrames() {
@@ -81,8 +105,12 @@ export class TranslateHandler extends TransformHandler {
         let top = Infinity;
         let bottom = -Infinity;
 
+        this.shapesSet.clear();
+
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
+
+            this.shapesSet.add(shape.id)
 
             const frame = shape.frame;
 
@@ -171,6 +199,7 @@ export class TranslateHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
+        this.livingBox = { ...this.originSelectionBox };
 
         this.baseFrames4trans.forEach(base => {
             base.offsetLivingPointX = base.rootXY.x - left;
@@ -183,6 +212,7 @@ export class TranslateHandler extends TransformHandler {
 
     excute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
+        this.migrate();
 
         this.updateBoxByAssist();
 
@@ -190,22 +220,142 @@ export class TranslateHandler extends TransformHandler {
 
     }
     private updateBoxByAssist() {
+        this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
+        this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
+        this.livingBox.right = this.livingBox.x + this.livingBox.width;
+        this.livingBox.bottom = this.livingBox.y + this.livingBox.height;
+
+        let l = this.livingBox.x;
+        let t = this.livingBox.y;
+        let r = this.livingBox.right;
+        let b = this.livingBox.bottom;
+
+        const assistResult = this.context.assist.alignPoints(
+            [l, (l + r) / 2, r],
+            [t, (t + b) / 2, b]
+        );
+
+        this.context.assist.notify(Asssit.CLEAR);
+
+        let assistWork = false;
+        if (assistResult) {
+            this.updateHorFixedStatus(l, assistResult);
+            this.updateVerFixedStatus(t, assistResult);
+
+            if (this.horFixed) {
+                this.livingBox.x += this.offsetX;
+                assistWork = true;
+            }
+            if (this.verFixed) {
+                this.livingBox.y += this.offsetY;
+                assistWork = true;
+            }
+        }
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
             const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
 
             if (dx > dy) {
-                this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
                 this.livingBox.y = this.originSelectionBox.y;
             }
             else {
                 this.livingBox.x = this.originSelectionBox.x;
-                this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
             }
         }
-        else {
-            this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
-            this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
+        if (assistWork) {
+            const right = this.livingBox.x + this.livingBox.width;
+            const bottom = this.livingBox.y + this.livingBox.height;
+            const cx = (this.livingBox.x + right) / 2;
+            const cy = (this.livingBox.y + bottom) / 2;
+            const xs: { x: number, pre: XY[] }[] = [
+                {
+                    x: this.livingBox.x,
+                    pre: [
+                        { x: this.livingBox.x, y: this.livingBox.y },
+                        { x: this.livingBox.x, y: bottom }
+                    ]
+                },
+                {
+                    x: right,
+                    pre: [
+                        { x: right, y: this.livingBox.y },
+                        { x: right, y: bottom }
+                    ]
+                },
+                {
+                    x: cx,
+                    pre: [
+                        { x: cx, y: cy }
+                    ]
+                }
+            ]
+
+            const ys: { y: number, pre: XY[] }[] = [
+                {
+                    y: this.livingBox.y,
+                    pre: [
+                        { x: this.livingBox.x, y: this.livingBox.y },
+                        { x: right, y: this.livingBox.y }
+                    ]
+                },
+                {
+                    y: bottom,
+                    pre: [
+                        { x: this.livingBox.x, y: bottom },
+                        { x: right, y: bottom }
+
+                    ]
+                },
+                {
+                    y: cy,
+                    pre: [
+                        { x: cx, y: cy }
+                    ]
+                },
+            ]
+
+            this.context.assist.multi_line_x = xs;
+            this.context.assist.multi_line_y = ys;
+            this.context.assist.notify(Asssit.MULTI_LINE_ASSIST);
+        }
+    }
+
+    private updateHorFixedStatus(livingX: number, assistResult: { targetX: number, sticked_by_x: boolean, dx: number }) {
+        const stickness = this.context.assist.stickness;
+        if (this.horFixed) {
+            if (Math.abs(livingX - this.horFixedValue) >= stickness) {
+                this.horFixed = false;
+            }
+            else {
+                if (Math.abs(assistResult.dx) < Math.abs(this.offsetX)) {
+                    this.horFixedValue = livingX;
+                }
+                this.offsetX = assistResult.dx;
+            }
+        }
+        else if (assistResult.sticked_by_x) {
+            this.horFixed = true;
+            this.horFixedValue = livingX;
+            this.offsetX = assistResult.dx;
+        }
+    }
+    private updateVerFixedStatus(livingY: number, assistResult: { targetY: number, sticked_by_y: boolean, dy: number }) {
+        const stickness = this.context.assist.stickness;
+        if (this.verFixed) {
+            if (Math.abs(livingY - this.verFixedValue) >= stickness) {
+                this.verFixed = false;
+            }
+            else {
+                if (assistResult.dy < this.offsetY) {
+                    this.verFixedValue = livingY;
+                }
+                this.offsetY = assistResult.dy;
+            }
+        }
+        else if (assistResult.sticked_by_y) {
+            this.verFixed = true;
+            this.verFixedValue = livingY;
+            this.offsetY = assistResult.dy;
         }
     }
 
@@ -213,6 +363,7 @@ export class TranslateHandler extends TransformHandler {
         if (!this.asyncApiCaller) {
             return;
         }
+
         this.updateBoxByAssist();
 
         this.__excute();
@@ -275,5 +426,39 @@ export class TranslateHandler extends TransformHandler {
         }
 
         (this.asyncApiCaller as Transporter).excute(transformUnits);
+    }
+
+    modifyAltStatus(v: boolean) {
+        this.altStatus = v;
+        // this.passiveExcute();
+    }
+
+    __migrate() {
+        const t = this.asyncApiCaller as Transporter;
+        if (!t) {
+            return;
+        }
+
+        const pe = this.livingPoint;
+        const target_parent = this.context.selection.getEnvForMigrate(pe);
+        const except = t.getExceptEnvs();
+
+        const o_env = except.find(v => v.id === target_parent.id);
+
+        if (o_env) {
+            t.backToStartEnv(o_env.data, this.context.workspace.t('compos.dlt'));
+        } else {
+            const tp = adapt2Shape(target_parent) as GroupShape;
+            const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
+            t.migrate(tp, _shapes, this.context.workspace.t('compos.dlt'));
+        }
+
+        this.context.assist.set_collect_target(this.shapes, true);
+    }
+
+    migrateOnce = debounce(this.__migrate, 160);
+
+    migrate() {
+        this.migrateOnce();
     }
 }

@@ -2,7 +2,7 @@ import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
     export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
-    TableCellType, TableShape, Matrix, Page
+    TableCellType, TableShape, Matrix, Page, Transporter
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -1199,7 +1199,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 
 // 不经过剪切板，直接复制(Shape[])
-export async function paster_short(context: Context, shapes: ShapeView[], editor: AsyncTransfer): Promise<ShapeView[]> {
+export async function paster_short(context: Context, shapes: ShapeView[], editor: Transporter | AsyncTransfer): Promise<ShapeView[]> {
     const pre_shapes: Shape[] = [];
     const actions: { parent: GroupShape, index: number }[] = [];
 

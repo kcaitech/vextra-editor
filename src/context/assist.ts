@@ -12,7 +12,7 @@ import {
     modify_pt_y4create,
     modify_pt_y4p,
     gen_match_points_by_map,
-    PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit
+    PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit, alignXFromPointGroup, alignYFromPointGroup
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -112,6 +112,7 @@ export class Asssit extends WatchableObject {
     static UPDATE_ASSIST_PATH = 4;
     static UPDATE_MAIN_LINE_PATH = 5;
     static STICKNESS = 6;
+    static MULTI_LINE_ASSIST = 7;
     private m_stickness: number = 5;
     private m_collect_target: ShapeView[] = [];
     private m_context: Context;
@@ -124,6 +125,9 @@ export class Asssit extends WatchableObject {
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
     private m_path_pg: Map<number, PageXY2> = new Map(); // 路径编辑模式
+
+    multi_line_x: { x: number, pre: XY[] }[] = [];
+    multi_line_y: { y: number, pre: XY[] }[] = [];
 
     constructor(context: Context) {
         super();
@@ -220,27 +224,27 @@ export class Asssit extends WatchableObject {
         this.m_y_axis.clear();
     }
 
-    private update_collect() {
-        this.m_collect_target = [];
-        const shapes = this.m_context.selection.selectedShapes;
-        if (shapes.length === 1) {
-            const container = getClosestContainer((shapes[0]));
-            this.m_collect_target = container ? [container] : [];
-        } else {
-            this.m_collect_target = [];
-        }
-    }
+    // private update_collect() {
+    //     this.m_collect_target = [];
+    //     const shapes = this.m_context.selection.selectedShapes;
+    //     if (shapes.length === 1) {
+    //         const container = getClosestContainer((shapes[0]));
+    //         this.m_collect_target = container ? [container] : [];
+    //     } else {
+    //         this.m_collect_target = [];
+    //     }
+    // }
 
-    private selection_watcher(t?: any) {
-        if (t === Selection.CHANGE_SHAPE) {
-            this.update_collect();
-        } else if (t === Selection.CHANGE_PAGE) {
-            this.m_collect_target = [];
-        }
-    }
+    // private selection_watcher(t?: any) {
+    //     if (t === Selection.CHANGE_SHAPE) {
+    //         this.update_collect();
+    //     } else if (t === Selection.CHANGE_PAGE) {
+    //         this.m_collect_target = [];
+    //     }
+    // }
 
     init() {
-        this.m_context.selection.watch(this.selection_watcher.bind(this));
+        // this.m_context.selection.watch(this.selection_watcher.bind(this));
         // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
     }
 
@@ -303,7 +307,7 @@ export class Asssit extends WatchableObject {
             this.collect();
         }
     }
-    
+
     set_collect_target_force(shapes: ShapeView[], collect_immediate = false) {
         this.m_collect_target = shapes;
         if (collect_immediate) {
@@ -588,6 +592,71 @@ export class Asssit extends WatchableObject {
         return target;
     }
 
+    alignPoints(livingXs: number[], livingYs: number[]) {
+        if (!this.m_except.size) {
+            return;
+        }
+        // this.m_nodes_x = [];
+        // this.m_nodes_y = [];
+
+        this.multi_line_x = [];
+        this.multi_line_y = [];
+
+        const assistResult = {
+            dx: 0,
+            dy: 0,
+            sticked_by_x: false,
+            sticked_by_y: false,
+            targetX: 0,
+            targetY: 0
+        }
+
+        let targetX = Infinity;
+        let targetY = Infinity;
+        let dx = Infinity;
+        let dy = Infinity;
+
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const shape = this.m_shape_inner[i];
+            if (this.m_except.get(shape.id)) {
+                continue;
+            }
+
+            const pointsGroup = this.m_pg_inner.get(shape.id);
+            if (!pointsGroup) {
+                continue;
+            }
+
+            const rx = alignXFromPointGroup(dx, pointsGroup.apexX, livingXs);
+            dx = rx.dx;
+            targetX = rx.targetX;
+
+            const ry = alignYFromPointGroup(dy, pointsGroup.apexY, livingYs);
+            dy = ry.dy;
+            targetY = ry.targetY;
+        }
+
+        if (Math.abs(dx) < this.stickness) {
+            assistResult.dx = dx;
+            assistResult.sticked_by_x = true;
+            assistResult.targetX = targetX;
+
+            // this.m_nodes_x = this.m_x_axis.get(targetX) || [];
+            // this.multi_line_x = [targetX];
+        }
+
+        if (Math.abs(dy) < this.stickness) {
+            assistResult.dy = dy;
+            assistResult.sticked_by_y = true;
+            assistResult.targetY = targetY;
+
+            // this.m_nodes_y = this.m_y_axis.get(targetY) || [];
+            // this.multi_line_y = [targetY];
+        }
+
+        return assistResult;
+    }
+
     create_match(p: PageXY) {
         const st = Date.now();
         if (!this.m_except.size) return;
@@ -674,6 +743,8 @@ export class Asssit extends WatchableObject {
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
+        this.multi_line_x = [];
+        this.multi_line_y = [];
         this.m_except.clear();
         this.m_current_pg = undefined;
         this.notify(Asssit.CLEAR);

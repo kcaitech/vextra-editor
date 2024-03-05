@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
@@ -182,7 +182,14 @@ let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
     const target = props.context.assist.point_match(p2);
-    if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    if (!target) {
+        const align = props.context.user.isPixelAlignMent;
+        if (align) {
+            p2.x = Math.round(p2.x);
+            p2.y = Math.round(p2.y);
+        }
+        return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    }
     if (stickedX) {
         if (Math.abs(p2.x - sticked_x_v) >= stickness) {
             stickedX = false
@@ -208,6 +215,12 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         }
     } else if (target.sticked_by_y) {
         modify_fix_y(p2, target.y);
+    }
+    
+    const align = props.context.user.isPixelAlignMent;
+    if (align) {
+        p2.x = Math.round(p2.x);
+        p2.y = Math.round(p2.y);
     }
     asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
@@ -284,6 +297,9 @@ function set_status_before_action() {
         ? workspace.rotating(true)
         : workspace.scaling(true);
 
+    // if (props.shape.type === ShapeType.Artboard) {        
+    //     props.context.assist.set_collect_target_force([props.shape.parent!, props.shape]);
+    // }
     props.context.assist.set_trans_target([props.shape]);
 }
 

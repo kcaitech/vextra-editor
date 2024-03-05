@@ -101,7 +101,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
             transporter?.modifyShiftStatus(true);
-            transporter?.modifyShiftStatus(true);
+        }
+
+        if (event.altKey) {
+            if (event.repeat) {
+                return;
+            }
+            transporter?.modifyAltStatus(true);
         }
 
         if (isDragging) {
@@ -275,6 +281,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         transporter = new TranslateHandler(context, selection.selectedShapes, e);
+        console.log('transporter:', transporter);
+
 
         // context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 
@@ -322,7 +330,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
 
-            // reset_assist_before_translate(context, shapes);
+            reset_assist_before_translate(context, shapes);
 
             // offset_map = gen_offset_points_map(shapes, startPositionOnPage);
 
@@ -330,9 +338,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             //     .controller()
             //     .asyncTransfer(shapes, selection.selectedPage!);
 
-            // if (e.altKey) {
-            //     shapes = await paster_short(context, shapes, asyncTransfer);
-            // }
+         
 
             // context.selection.setShapesSet(shapes);
             // asyncTransfer.setEnvs(record_origin_env(shapes));
@@ -341,6 +347,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             // asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
 
             transporter?.createApiCaller();
+
+            // if (e.altKey) {
+            //     shapes = await paster_short(context, shapes, transporter!.asyncApiCaller!);
+            // }
 
             isDragging = true;
         }

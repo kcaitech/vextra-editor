@@ -276,7 +276,7 @@ export function update_comment(context: Context, need_update_comment: boolean) {
  * @description 动作抬起点在控件上时，在已选图形中选择图形
  * @p root坐标系上一点
  */
-export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {
+export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {    
     const selection = context.selection;
     const selected = selection.selectedShapes;
     const hoveredShape = selection.hoveredShape;

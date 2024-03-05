@@ -29,9 +29,18 @@ let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = dat
 let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST) render();
-    if (t === Asssit.UPDATE_MAIN_LINE) update_main_line();
-    if (t === Asssit.CLEAR && assist.value) clear();
+    if (t === Asssit.UPDATE_ASSIST) {
+        render();
+    }
+    else if (t === Asssit.MULTI_LINE_ASSIST) {
+        renderMultiLine();
+    }
+    else if (t === Asssit.UPDATE_MAIN_LINE) {
+        update_main_line();
+    }
+    else if (t === Asssit.CLEAR && assist.value) {
+        clear();
+    }
 }
 
 function update_main_line() {
@@ -55,6 +64,12 @@ function update_main_line() {
     // console.log('更新主辅助线:', Date.now() - s1);
 }
 
+function renderMultiLine() {
+    getExLineX();
+    getExLineY();
+    assist.value = true;
+}
+
 function render() {
     // const s = Date.now();
     clear();
@@ -72,8 +87,8 @@ function render() {
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
-    getExLineX();
-    getExLineY();
+    // getExLineX();
+    // getExLineY();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 
@@ -82,83 +97,42 @@ function points_to_client(points: { x: number, y: number }[], matrix: Matrix, lo
 }
 
 function getExLineX() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) return;
+    const xs = props.context.assist.multi_line_x;
     const xAxis = props.context.assist.xAxis;
-    const { left, cx, right } = cpg;
-    if (left !== undefined && Math.abs(left - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(left) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, left));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
+    const m = matrix.value;
+    for (let i = 0; i < xs.length; i++) {
+        const _x = xs[i];
+        let points = minus_nodes_x(xAxis.get(_x.x) || []);
+        if (!points.length) {
+            continue;
         }
-    }
-    if (cx !== undefined && Math.abs(cx - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(cx) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, cx));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
+        points = points.concat(_x.pre);
+        const _points = [];
+        for (let i = 0; i < points.length; i++) {
+            _points.push(m.computeCoord3(points[i]));
         }
-
-    }
-    if (right !== undefined && Math.abs(right - ax) > 1) {
-        let t = minus_nodes_x(xAxis.get(right) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_x(cpg, right));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesX.push(...t);
-                exLineX.push(render_line_x(t));
-            }
-        }
+        exNodesX = exNodesX.concat(_points);
+        exLineX = exLineX.concat(render_line_x(_points));
     }
 }
 
 function getExLineY() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) return;
+    const ys = props.context.assist.multi_line_y;
     const yAxis = props.context.assist.yAxis;
-    const { top, cy, bottom } = cpg;
-    if (top !== undefined && Math.abs(top - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(top) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, top));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
+    const m = matrix.value;
+    for (let i = 0; i < ys.length; i++) {
+        const _y = ys[i];
+        let points = minus_nodes_y(yAxis.get(_y.y) || []);
+        if (!points.length) {
+            continue;
         }
-    }
-    if (cy !== undefined && Math.abs(cy - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(cy) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, cy));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
+        points = points.concat(_y.pre);
+        const _points = [];
+        for (let i = 0; i < points.length; i++) {
+            _points.push(m.computeCoord3(points[i]));
         }
-    }
-    if (bottom !== undefined && Math.abs(bottom - ay) > 1) {
-        let t = minus_nodes_y(yAxis.get(bottom) || []);
-        if (t.length) {
-            t = t.concat(get_p_form_pg_by_y(cpg, bottom));
-            t = t.map(n => matrix.value.computeCoord3(n));
-            if (t.length) {
-                exNodesY.push(...t);
-                exLineY.push(render_line_y(t));
-            }
-        }
+        exNodesY = exNodesY.concat(_points);
+        exLineY = exLineY.concat(render_line_y(_points));
     }
 }
 
@@ -216,7 +190,7 @@ function render_line_x(nodes: PageXY[]) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }
-    d += ' z';
+    // d += ' z';
     return d;
 }
 
@@ -230,7 +204,7 @@ function render_line_y(nodes: PageXY[]) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }
-    d += ' z';
+    // d += ' z';
     return d;
 }
 

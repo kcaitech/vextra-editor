@@ -126,8 +126,8 @@ export function colloct_point_group(host: ShapeView): PointGroup1 {
     }
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
-    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
-    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    const apexX = Array.from(new Set([lt.x, rt.x, rb.x, lb.x, pivot.x]).values());
+    const apexY = Array.from(new Set([lt.y, rt.y, rb.y, lb.y, pivot.y]).values());
     const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard || host.type === ShapeType.Symbol) {
         const th = m.computeCoord2(f.width / 2, 0);
@@ -291,6 +291,50 @@ export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup2, apexX: number[]
     }
 }
 
+export function alignXFromPointGroup(dx: number, xs: number[], livingXs: number[]) {
+    let livingD = dx;
+    let livingAD = Math.abs(dx);
+    let targetX = 0;
+
+    for (let i = 0; i < livingXs.length; i++) {
+        const x = livingXs[i];
+
+        for (let j = 0; j < xs.length; j++) {
+            const fixedX = xs[j];
+            const d = fixedX - x;
+            const ad = Math.abs(d);
+
+            if (ad < livingAD) {
+                livingD = d;
+                livingAD = ad;
+                targetX = fixedX;
+            }
+        }
+    }
+    return { dx: livingD, targetX };
+}
+export function alignYFromPointGroup(dy: number, ys: number[], livingYs: number[]) {
+    let livingD = dy;
+    let livingAD = Math.abs(dy);
+    let targetY = 0;
+
+    for (let i = 0; i < livingYs.length; i++) {
+        const y = livingYs[i];
+
+        for (let j = 0; j < ys.length; j++) {
+            const fixedY = ys[j];
+            const d = fixedY - y;
+            const ad = Math.abs(d);
+            
+            if (ad < livingAD) {
+                livingD = d;
+                livingAD = ad;
+                targetY = fixedY;
+            }
+        }
+    }
+    return { dy: livingD, targetY };
+}
 export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup2, apexY: number[], stickness: number) {
     for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i];
