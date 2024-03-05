@@ -50,7 +50,7 @@ const preview = ref();
 let renderSvgs = ref<SvgFormat[]>([]);
 
 function update(args: any[]) {
-    if (args.includes('exportOptions')) {
+    if (args.includes('exportOptions') || args.includes('variables')) {
         updateData();
     }
     if (args.includes('layout')) {

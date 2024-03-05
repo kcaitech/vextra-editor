@@ -164,9 +164,9 @@ function variable_watcher(args: any[]) {
 function list_change(data: string[]) {
     selected.value = data;
     const page = props.context.selection.selectedPage;
-    if(page) {
+    if (page) {
         const shape = page.getShape(data[0]);
-        if(shape) default_value.value = shape.name;
+        if (shape) default_value.value = shape.name;
     }
 }
 
@@ -179,7 +179,9 @@ function dlt_change(v: number) {
 }
 
 function text_dlt_change(v: string) {
-    dlt_value.value = v;
+    if (addType.value === VariableType.Text) {
+        dlt_value.value = v;
+    }
 }
 
 watch(() => props.shape, (v, o) => {
@@ -259,8 +261,9 @@ onUnmounted(() => {
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn" :default_value="default_value"
-                    :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
+                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
+                    :default_value="default_value" :add-type="addType" @select="dlt_change" @change="text_dlt_change">
+                </PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

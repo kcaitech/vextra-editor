@@ -83,7 +83,7 @@ function updateData() {
   reflush.value++;
 }
 function watcher(...args: any[]) {
-  if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
+  if (args.length > 0 && (args.includes('layout'))) updateData();
 }
 function addShadow(): void {
   const len = props.shapes.length;
@@ -192,7 +192,6 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -271,8 +270,9 @@ onUnmounted(() => {
       }
 
       .shadow_posi {
-        // flex: 1;
+        flex: 1;
         height: 100%;
+        margin-right: 5px;
         //padding: 0px 5px;
         box-sizing: border-box;
       }
