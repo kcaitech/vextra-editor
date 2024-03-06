@@ -433,14 +433,14 @@ const textFormat = () => {
                     format[key] = `unlikeness`;
                 }
             }
-        }
+        } 
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
         fontName.value = format.fontName || 'PingFangSC-Regular';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;  
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
@@ -448,8 +448,16 @@ const textFormat = () => {
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
-        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
-        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.fontName === 'unlikeness') {
+            fontName.value = `${t('attr.more_value')}`;
+        } else if (format.fontNameIsMulti) {
+            fontName.value = `${t('attr.more_value')}`;
+        }
+        if (format.fontSize === 'unlikeness') {
+            fonstSize.value = `${t('attr.more_value')}`;
+        } else if (format.fontSizeIsMulti) {
+            fonstSize.value = `${t('attr.more_value')}`;
+        }
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
@@ -479,8 +487,8 @@ function selection_wather(t: number) {
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
+      onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
-        onBold();
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
@@ -712,7 +720,7 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
-    if(highlight.value && !highlightIsMulti.value) return
+    if (highlight.value && !highlightIsMulti.value) return
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -763,10 +771,10 @@ const setMixedTextColor = () => {
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         format = shape.value.text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr());
-        const { alpha, red, green, blue} = format.color || new Color(1, 6, 6, 6);
+        const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
         editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
         editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
-        if(format.gradient) {
+        if (format.gradient) {
             editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
@@ -778,7 +786,7 @@ const setMixedTextColor = () => {
         } else {
             cells = table_Selection.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
         }
-        if(!cells[0]) return;
+        if (!cells[0]) return;
         const cell_editor = props.context.editor4TextShape(cells[0] as any);
         const forma = (cells[0].text as Text).getTextFormat(0, 1, cell_editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = forma.color || new Color(1, 6, 6, 6);
@@ -786,7 +794,7 @@ const setMixedTextColor = () => {
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextColor(new Color(alpha, red, green, blue));
             editor.setTextFillType(forma.fillType || FillType.SolidColor);
-            if(forma.gradient) {
+            if (forma.gradient) {
                 editor.setTextGradient(forma.gradient);
             }
         } else {
@@ -794,8 +802,8 @@ const setMixedTextColor = () => {
             editor.setTextColor(new Color(alpha, red, green, blue), cell_selection);
             editor.setTextFillType(forma.fillType || FillType.SolidColor, cell_selection);
             console.log(forma, 'forma');
-            
-            if(forma.gradient) {
+
+            if (forma.gradient) {
                 editor.setTextGradient(forma.gradient, cell_selection);
             }
         }
@@ -986,9 +994,7 @@ function watch_cells() {
         v.unwatch(_textFormat);
         watchCells.delete(k);
     })
-
     const tableSelection = props.context.tableSelection;
-
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
     const list = [...selectedCells.map(s => s.cell), editedCell];
@@ -1000,6 +1006,8 @@ function watch_cells() {
         }
     })
 }
+
+
 onMounted(() => {
     props.shape.watch(_textFormat);
     props.context.selection.watch(selection_wather);
@@ -1014,6 +1022,7 @@ onUnmounted(() => {
     watchCells.forEach(v => {
         v.unwatch(_textFormat);
     })
+
 })
 </script>
 
@@ -1032,7 +1041,8 @@ onUnmounted(() => {
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context">
+                </SelectFont>
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
@@ -1072,7 +1082,8 @@ onUnmounted(() => {
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
                         <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
+                            <svg-icon
+                                :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
@@ -1134,18 +1145,22 @@ onUnmounted(() => {
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :locat="{ index: 0, type: 'table_text' }"
-                        :fill-type="fillType" :gradient="gradient instanceof Gradient ? gradient : undefined"
-                        @gradient-type="(type) => togger_gradient_type(type)" @change="c => getColorFromPicker(c, 'color')"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
+                        :locat="{ index: 0, type: 'table_text' }" :fill-type="fillType"
+                        :gradient="gradient instanceof Gradient ? gradient : undefined"
+                        @gradient-type="(type) => togger_gradient_type(type)"
+                        @change="c => getColorFromPicker(c, 'color')"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
-                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
+                        @gradient-reverse="gradient_reverse" @gradient-rotate="gradient_rotate"
+                        @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
-                    <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor" @focus="selectColorValue"
-                        :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                    <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor"
+                        @focus="selectColorValue" :spellcheck="false"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
                         @change="(e) => onColorChange(e, 'color')" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
@@ -1153,7 +1168,8 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1163,7 +1179,8 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
