@@ -11,6 +11,7 @@ interface Props {
     context: Context
     shapes: ShapeView[]
     view: number
+    trigger: any[]
 }
 const props = defineProps<Props>();
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
@@ -69,11 +70,15 @@ function exchange() {
 }
 const stop = watch(() => props.shapes, init_v);
 const stop2 = watch(() => props.view, init_v);
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('style') || v.includes('variable'))) init_v();
+});
 
 onMounted(init_v);
 onUnmounted(() => {
     stop();
     stop2();
+    stop3();
 });
 </script>
 <template>

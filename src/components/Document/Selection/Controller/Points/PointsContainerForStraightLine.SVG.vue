@@ -219,6 +219,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
             stickedY = true;
         }
     }
+    const align = props.context.user.isPixelAlignMent;
+    if (align) {
+        p2.x = Math.round(p2.x);
+        p2.y = Math.round(p2.y);
+    }
     asyncBaseAction.executeForLine(index, p2);
 }
 function scale2(asyncBaseAction: AsyncBaseAction, p2: PageXY) {

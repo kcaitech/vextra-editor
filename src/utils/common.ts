@@ -1,7 +1,7 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ContactShape, Matrix, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
@@ -111,9 +111,7 @@ export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: nu
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
     const deltaX = B.x - A.x;
     const deltaY = B.y - A.y;
-    const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    const angle = (angleInDegrees + 360) % 360;
-    return angle;
+    return (Math.atan2(deltaY, deltaX) * 180 / Math.PI + 360) % 360;
 }
 
 // 根据若干个点[x, y]，确定最边界的四个点
@@ -483,4 +481,70 @@ export function modifyXYByAlignSettingFloor(context: Context, xy: XY) {
         xy.y = Math.floor(xy.y);
     }
     return xy;
+}
+
+export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<string, Matrix>) {
+    const parent = shape.parent!;
+
+    const frame = shape.frame;
+    const baseX = frame.x;
+    const baseY = frame.y;
+    const baseWidth = frame.width;
+    const baseHeight = frame.height;
+
+    const points = [
+        { x: 0, y: 0 },
+        { x: frame.width, y: 0 },
+        { x: frame.width, y: frame.height },
+        { x: 0, y: frame.height }
+    ];
+
+    let m = shape.matrix2Parent();
+
+    let _m = parent2rootMatrixCache.get(parent.id)!;
+    if (!_m) {
+        _m = parent.matrix2Root();
+        parent2rootMatrixCache.set(parent.id, _m);
+    }
+
+    m.multiAtLeft(_m);
+
+    const origin = m.computeCoord2(0, 0);
+    // const origin = _m.computeCoord2(frame.x, frame.y);
+
+    let left = origin.x;
+    let right = origin.x;
+    let top = origin.y;
+    let bottom = origin.y;
+
+    for (let i = 1; i < 4; i++) {
+        const p = m.computeCoord3(points[i]);
+
+        if (p.x < left) {
+            left = p.x;
+        }
+        if (p.x > right) {
+            right = p.x;
+        }
+        if (p.y < top) {
+            top = p.y;
+        }
+        if (p.y > bottom) {
+            bottom = p.y;
+        }
+    }
+
+    return {
+        origin,
+
+        baseX,
+        baseY,
+        baseWidth,
+        baseHeight,
+
+        boxX: left,
+        boxY: top,
+        boxWidth: right - left,
+        boxHeight: bottom - top
+    };
 }
