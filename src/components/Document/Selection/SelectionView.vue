@@ -125,6 +125,9 @@ function selectionWatcher(t: number) { // selection的部分动作可触发更�
         createShapeTracing();
         watchShapes();
     }
+    if (t === Selection.SHOW_INTERVAL) {
+        lableLineStatus();
+    }
 }
 
 function tool_watcher(t: number) {
@@ -355,6 +358,7 @@ function keyboard_down_watcher(e: KeyboardEvent) {
             traceEle.value.classList.add('cursor-copy');
             altKey.value = true;
         }
+        props.context.selection.setShowInterval(true);
     }
 }
 
@@ -364,6 +368,7 @@ function keyboard_up_watcher(e: KeyboardEvent) {
             traceEle.value.classList.remove('cursor-copy');
             altKey.value = false;
         }
+        props.context.selection.setShowInterval(false);
     }
 }
 
@@ -378,7 +383,8 @@ function window_blur() {
 const isLableLine = ref(false);
 const lableLineStatus = () => {
     const isLable = props.context.tool.isLable;
-    if (isLable) {
+    const interval = props.context.selection.is_interval;
+    if (isLable || interval) {
         isLableLine.value = true;
     } else {
         isLableLine.value = false;
@@ -423,14 +429,15 @@ onUnmounted(() => {
     remove_page_watcher();
 })
 </script>
+
 <template>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         style="transform: translate(0px, 0px); position: absolute;">
-        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent" stroke-width="14"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent"
+            stroke-width="14" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
         <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
             stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">

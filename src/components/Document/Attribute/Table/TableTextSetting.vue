@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell, TableCellView, TableCellType } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
@@ -232,7 +232,7 @@ const textFormat = () => {
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
-      if (cell && cell.text) {
+      if (cell && cell.cellType === TableCellType.Text && cell.text) {
         const editor = props.context.editor4TextShape(cell);
         const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         formats.push(forma);
@@ -269,7 +269,19 @@ const textFormat = () => {
     if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti === 'unlikeness') selectCase.value = '';
     if (format.transform === 'unlikeness') selectCase.value = '';
+    if (formats.length === 0) {
+      getTableFormat();
+    }
   }
+}
+
+const getTableFormat = () => {
+  const textAttr = props.textShape.data.textAttr;
+  if (!textAttr) return;
+  wordSpace.value = textAttr.kerning || 0;
+  rowHeight.value = textAttr.minimumLineHeight || ''
+  paragraphSpace.value = textAttr.paraSpacing || 0;
+  selectCase.value = textAttr.transform;
 }
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
@@ -283,9 +295,9 @@ function table_selection_watcher(t: any) {
 }
 
 function blur2() {
-    isActived1.value = false
-    isActived2.value = false
-    isActived3.value = false
+  isActived1.value = false
+  isActived2.value = false
+  isActived3.value = false
 }
 
 onMounted(() => {
@@ -313,25 +325,32 @@ onUnmounted(() => {
           </Tooltip>
         </div>
       </template>
+
       <template #body>
         <div class="options-container">
           <div>
             <span>{{ t('attr.word_space') }}</span>
-            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
-                @change="setWordSpace" style="width: 100%;height: 100%"></div>
+            <div :class="{ actived: isActived1 }"
+              style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+              <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace"
+                class="input" @change="setWordSpace" style="width: 100%;height: 100%">
+            </div>
           </div>
           <div>
             <span>{{ t('attr.row_height') }}</span>
-            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
+            <div :class="{ actived: isActived2 }"
+              style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+              <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
+                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%">
+            </div>
           </div>
           <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
+            <div :class="{ actived: isActived3 }"
+              style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%">
+            </div>
           </div>
           <div>
             <span>{{ t('attr.letter_case') }}</span>
@@ -392,7 +411,7 @@ onUnmounted(() => {
     }
 
     .trigger:hover {
-        background-color: #F5F5F5;
+      background-color: #F5F5F5;
     }
 
     .options-container {
@@ -436,8 +455,8 @@ onUnmounted(() => {
         }
 
         .level-aligning {
-            padding: 2px;
-            box-sizing: border-box;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .font-posi {
@@ -481,19 +500,19 @@ onUnmounted(() => {
           outline: none;
         }
 
-          input::selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          input::-moz-selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::-moz-selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          .actived {
-              border: 1px solid #1878F5;
-          }
+        .actived {
+          border: 1px solid #1878F5;
+        }
       }
     }
   }

@@ -2,8 +2,8 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell, TableCellView } from "@kcdesign/data"
+import { onMounted, onUnmounted, shallowRef, ref, nextTick } from 'vue';
+import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell, TableCellView, PageView } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -22,6 +22,7 @@ import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPat
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
+import { TableSelection } from '@/context/tableselection';
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -171,15 +172,21 @@ function update_by_cells(...args: any[]) {
     reflush.value++;
 }
 
-function table_selection_watcher() {
+function table_selection_watcher(t: number) {
     table_selection_change();
     watch_cells();
+    if(t === TableSelection.CHANGE_TABLE_CELL) {
+        const table = props.context.selection.tableSelection;
+        if(table.tableRowStart < 0) {
+            baseAttr.value = true;
+        }
+    }
 }
-
 function selection_watcher(t: number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }
+
     selection_change();
     watch_shapes();
 }
@@ -278,6 +285,7 @@ onUnmounted(() => {
     })
 })
 </script>
+
 <template>
     <section id="Design">
         <el-scrollbar height="100%">
@@ -298,16 +306,17 @@ onUnmounted(() => {
                 <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
-                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
+                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
+                </Module>
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
                     :selection-change="reflush_by_selection" :triggle="reflush_trigger"
                     :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)" :selection-change="reflush_by_selection"
-                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
-                    :trigger="reflush_trigger"></Text>
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
+                    :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
+                    :context="props.context" :trigger="reflush_trigger"></Text>
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">

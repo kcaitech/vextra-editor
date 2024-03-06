@@ -36,7 +36,7 @@ function update_cell_selection(gen_menu_posi?: boolean) {
     }
 }
 const t1 = () => update_cell_selection(true);
-function gen_view(table: TableView, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
+function gen_view(table: TableView, cells: { cell: TableCellView | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
     const t2r = table.matrix2Root();
     const m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
@@ -125,12 +125,12 @@ function _get_menu_position(points: ClientXY[]) {
     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
 
-let watchCells: Map<string, TableCell> = new Map();
+let watchCells: Map<string, TableCellView> = new Map();
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     if (table_selection.tableRowStart > -1) {
         const cells = table_selection.getSelectedCells(true);
-        const needWatch: Map<string, TableCell> = new Map();
+        const needWatch: Map<string, TableCellView> = new Map();
         for (let i = 0, len = cells.length; i < len; i++) {
             let c = cells[i];
             if (c.cell) {

@@ -230,11 +230,14 @@ function locate() {
     }
     const doc_height = document.documentElement.clientHeight;
     const { height, y } = el.getBoundingClientRect();
-    if (doc_height - y < height + 10) {
-        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-    }
     if (props.fillType && props.fillType === FillType.SolidColor) {
-        el.style.top = parseInt(el.style.top) - 38 + 'px';
+        if (doc_height - y < height + 48) {
+            el.style.top = parseInt(el.style.top) - ((height + 58) - (doc_height - y)) + 'px'
+        }
+    } else {
+        if (doc_height - y < height + 10) {
+            el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+        }
     }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
@@ -1137,7 +1140,8 @@ onUnmounted(() => {
                     <div class="alpha-bacground">
                         <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                            <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                            <div class="alphaIndicator" ref="alphaIndicator"
+                                :style="{ left: alphaIndicatorAttr.x + 'px' }">
                             </div>
                         </div>
                     </div>
