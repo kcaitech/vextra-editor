@@ -515,11 +515,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
         if (isDragging) {
-            if (asyncTransfer) {
-                const mousePosition: ClientXY = workspace.getContentXY(e);
-                migrate_immediate(context, asyncTransfer, shapes, mousePosition);
-                asyncTransfer = asyncTransfer.close();
-            }
+            // if (asyncTransfer) {
+            //     const mousePosition: ClientXY = workspace.getContentXY(e);
+            //     migrate_immediate(context, asyncTransfer, shapes, mousePosition);
+            //     asyncTransfer = asyncTransfer.close();
+            // }
 
             end_transalte(context);
             transporter?.fulfil();
