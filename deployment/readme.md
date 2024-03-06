@@ -4,6 +4,7 @@
 
 （1）在C:\Windows\System32\drivers\etc\hosts文件中添加：
 121.199.25.192 registry.protodesign.cn
+127.0.0.1 k8s-test.protodesign.cn
 
 修改hosts文件前需先在文件属性-安全中将Users用户的权限修改为完全控制
 
@@ -22,7 +23,7 @@
 第一次执行需要输入密码：
 kcserver
 
-3、打开页面：http://127.0.0.1:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
+3、打开页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
 右下方查看app容器当前镜像的版本号，例如：`test-0.0.1-23`
 账号密码：
 admin
