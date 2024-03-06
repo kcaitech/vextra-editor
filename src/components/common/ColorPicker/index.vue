@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -218,7 +218,7 @@ function locate() {
     if (cur_t > 0) {
         p_top = p_el.top;
     } else {
-        p_top = p_el.top - Math.abs(cur_t - 10);
+        p_top = p_el.top - Math.abs(cur_t - 10 - (props.fillType && props.fillType === FillType.SolidColor ? 38 : 0));
     }
     if (p_top - 40 < 0) {
         p_top = 40
@@ -1033,6 +1033,7 @@ function startDrag(e: MouseEvent) {
     //父元素的页面位置
     elpx = elp.getBoundingClientRect().left
     elpy = elp.getBoundingClientRect().top
+
     //鼠标相对于盒子的坐标
     mx = e.offsetX
     my = e.offsetY
@@ -1080,7 +1081,7 @@ onUnmounted(() => {
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
-            <div class="header">
+            <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
                 <div class="color-type-desc">
                     <div class="color-type">{{ t(`attr.fill`) }}</div>
                     <!-- <svg-icon icon-class="down"></svg-icon> -->

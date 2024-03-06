@@ -181,7 +181,14 @@ let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
     const target = props.context.assist.point_match(p2);
-    if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    if (!target) {
+        const align = props.context.user.isPixelAlignMent;
+        if (align) {
+            p2.x = Math.round(p2.x);
+            p2.y = Math.round(p2.y);
+        }
+        return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    }
     if (stickedX) {
         if (Math.abs(p2.x - sticked_x_v) >= stickness) {
             stickedX = false
@@ -207,6 +214,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         }
     } else if (target.sticked_by_y) {
         modify_fix_y(p2, target.y);
+    }
+    const align = props.context.user.isPixelAlignMent;
+    if (align) {
+        p2.x = Math.round(p2.x);
+        p2.y = Math.round(p2.y);
     }
     asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }

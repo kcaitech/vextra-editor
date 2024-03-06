@@ -455,6 +455,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     } else if (target.sticked_by_y) {
         modify_fix_y(p2, target.y);
     }
+    const align = props.context.user.isPixelAlignMent;
+    if (align) {
+        p2.x = Math.round(p2.x);
+        p2.y = Math.round(p2.y);
+    }
     asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
 }
 function modify_fix_x(p2: PageXY, fix: number) {
