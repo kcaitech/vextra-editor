@@ -958,6 +958,9 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     y1?: number,
     x2?: number,
     y2?: number,
+
+    // 图片
+    href?: string,
 }
 
 // 将父元素的属性合并到子元素
@@ -974,7 +977,6 @@ function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
 
     // 合并透明度
     if (parent.attributes.opacity) {
-        console.log("合并透明度", parent.attributes.opacity, child.attributes.opacity)
         if (child.attributes.opacity) child.attributes.opacity *= parent.attributes.opacity;
         else child.attributes.opacity = parent.attributes.opacity;
     }
@@ -1087,6 +1089,9 @@ class BaseShapeCreator implements ShapeCreator {
         if (x2) this.attributes.x2 = parseFloat(x2);
         const y2 = this.svgNode.getAttribute("y2")
         if (y2) this.attributes.y2 = parseFloat(y2);
+
+        const href = this.svgNode.getAttribute("xlink:href") ?? this.svgNode.getAttribute("href")
+        if (href) this.attributes.href = href;
     }
 
     updateShapeAttrByTransform() { // 根据transform更新shape的属性
@@ -1110,7 +1115,7 @@ class BaseShapeCreator implements ShapeCreator {
     updateShapeStyle() { // 设置shape的样式
         const borders = new BasicArray<Border>()
         if (this.attributes.stroke) {
-            const strokeWidth = this.attributes.strokeWidth ?? 2
+            const strokeWidth = this.attributes.strokeWidth ?? 1
             const color = new Color(this.attributes.stroke.a, this.attributes.stroke.r, this.attributes.stroke.g, this.attributes.stroke.b)
             borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Center, strokeWidth, new BorderStyle(0, 0)))
         }
@@ -1349,17 +1354,22 @@ class ImageShapeCreator extends BaseShapeCreator {
         const y = this.attributes.y || 0
         const width = this.attributes.width || 0
         const height = this.attributes.height || 0
-        const href = this.svgNode.getAttribute("href")
-        if (!href) return;
-        const media: {
-            buff: Uint8Array,
-            base64: string
-        } = {}
-        const format = getFormatFromBase64(media.base64)
+
+        const href = this.attributes.href
+        if (!href || !href.startsWith("data:image")) return;
+
+        const media = {
+            buff: Uint8Array.from(atob(href.split(",")[1]), c => c.charCodeAt(0)),
+            base64: href,
+        }
+
+        const format = getFormatFromBase64(href)
         const ref = `${uuid()}.${format}`
+
         const mediaResourceMgr = this.context.mediaResourceMgr
-        mediaResourceMgr.mediasMgr.add(ref, media)
-        return shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), this.context.mediaResourceMgr, ref)
+        mediaResourceMgr.add(ref, media)
+
+        return shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), mediaResourceMgr, ref)
     }
 }
 
