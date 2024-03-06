@@ -14,7 +14,7 @@
 1.4、docker desktop中添加以下配置
 {
     "insecure-registries": [
-    "registry.protodesign.cn:36000"
+        "registry.protodesign.cn:36000"
     ]
 }
 
