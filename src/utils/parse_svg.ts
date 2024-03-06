@@ -1106,8 +1106,9 @@ class BaseShapeCreator implements ShapeCreator {
     updateShapeStyle() { // 设置shape的样式
         const borders = new BasicArray<Border>()
         if (this.attributes.stroke) {
+            const strokeWidth = this.attributes.strokeWidth ?? 2
             const color = new Color(this.attributes.stroke.a, this.attributes.stroke.r, this.attributes.stroke.g, this.attributes.stroke.b)
-            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Outer, this.attributes.strokeWidth ?? 2, new BorderStyle(0, 0)))
+            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Center, strokeWidth, new BorderStyle(0, 0)))
         }
 
         const fills = new BasicArray<Fill>()
