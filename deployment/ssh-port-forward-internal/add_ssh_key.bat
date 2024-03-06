@@ -6,7 +6,7 @@ setlocal
 set remote_user_host=%1
 set remote_port=%2
 
-:: 如果ssh需要密码才能链接则将本地公钥添加到远程主机上
+:: 如果ssh需要密码才能连接则将本地公钥添加到远程主机上
 ssh -o BatchMode=yes %remote_user_host% -p %remote_port% "echo" 2>nul
 if %ERRORLEVEL% neq 0 (
     if not exist "%USERPROFILE%\.ssh\id_rsa.pub" (
