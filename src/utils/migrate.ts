@@ -6,7 +6,7 @@ import {
     ShapeView,
     adapt2Shape
 } from "@kcdesign/data";
-import { ClientXY, PageXY } from "@/context/selection";
+import { ClientXY, PageXY, XY } from "@/context/selection";
 import { debounce } from "lodash";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 
@@ -33,7 +33,7 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
         asyncTransfer.migrate(tp, _shapes, context.workspace.t('compos.dlt'));
     }
 
-    context.assist.set_collect_target([target_parent], true);
+    context.assist.set_collect_target(shapes, true);
 }
 
 /**
@@ -78,12 +78,8 @@ export function record_origin_env(shapes: ShapeView[]) {
     return envs;
 }
 
-export function find_except_envs(context: Context, shapes: ShapeView[], e: MouseEvent) {
+export function find_except_envs(context: Context, shapes: ShapeView[], p: XY) {
     const except: ShapeView[] = [];
-
-    const m = new Matrix(context.workspace.matrix.inverse);
-
-    const p = m.computeCoord3(context.workspace.getContentXY(e));
 
     const env1 = context.selection.getEnvForMigrate(p);
     except.push(env1);
