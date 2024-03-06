@@ -25,7 +25,7 @@
 第一次执行需要键入yes并输入密码：
 kcserver
 
-3、打开页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
+3、刷新、打开页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
 右下方查看app容器当前镜像的版本号，例如：`test-0.0.1-23`
 账号密码：
 admin
