@@ -8,11 +8,13 @@
 
 修改hosts文件前需先在文件属性-安全中将Users用户的权限修改为完全控制
 
-（2）安装wsl2
+（2）安装powershell、ssh
 
-（3）安装docker desktop
+（3）安装wsl2
 
-（4）docker desktop中添加以下配置
+（4）安装docker desktop
+
+（5）docker desktop中添加以下配置
 {
     "insecure-registries": [
         "registry.protodesign.cn:36000"
@@ -37,7 +39,7 @@ build.bat version-tag
 执行build.bat前注意修改utils\setting.ts中的production，为true时编译正式环境镜像，为false时编译测试环境镜像
 
 执行完毕后注意仔细查看打包时输出的信息，确认：
-（1）npm编译通过
+（1）npm编译成功
 （2）docker镜像编译成功
 （3）docker镜像上传成功
 
