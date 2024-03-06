@@ -204,7 +204,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         if (event.code === 'ShiftLeft') {
             transporter?.modifyShiftStatus(false);
-            transporter?.modifyShiftStatus(false);
         }
 
         const still_active = directionCalc.up(event);
