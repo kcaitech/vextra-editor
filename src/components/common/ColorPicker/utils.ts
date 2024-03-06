@@ -585,7 +585,9 @@ function c2s(c: Color) {
 }
 export function block_style_generator(color: Color, gradient?: Gradient, fillType?: FillType) {
   let style: any = {
-    'background-color': toRGBA(color)
+    'background-color': toRGBA(color),
+    height: '-webkit-fill-available',
+    width: '-webkit-fill-available'
   }
   if (!gradient || !fillType) {
     return style;
@@ -674,7 +676,7 @@ function get_linear_gradient(gradient: Gradient) {
   const colors = [];
   if(stops.length === 1) {
     return {
-      'background': toRGBA(stops[0].color)
+      'background': toRGBA(stops[0].color),
     }
   }
   for (let i = 0; i < stops.length; i++) {
@@ -684,7 +686,8 @@ function get_linear_gradient(gradient: Gradient) {
   }
   const linear = `linear-gradient(${rotate + 90}deg, ${colors.join(', ')})`
   return {
-    'background': linear
+    'background': linear,
+
   }
 }
 
@@ -693,7 +696,8 @@ function get_radial_gradient(gradient: Gradient) {
   const colors = [];
   if(stops.length === 1) {
     return {
-      'background': toRGBA(stops[0].color)
+      'background': toRGBA(stops[0].color),
+
     }
   }
   for (let i = 0; i < stops.length; i++) {
@@ -703,7 +707,8 @@ function get_radial_gradient(gradient: Gradient) {
   }
   const radial = `radial-gradient(circle closest-side, ${colors.join(', ')})`
   return {
-    'background-image': radial
+    'background-image': radial,
+
   }
 }
 

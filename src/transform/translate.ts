@@ -461,4 +461,11 @@ export class TranslateHandler extends TransformHandler {
     migrate() {
         this.migrateOnce();
     }
+
+    fulfil() {
+        this.__migrate();
+
+        this.__fulfil();
+        return undefined;
+    }
 }
