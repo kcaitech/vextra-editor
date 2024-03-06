@@ -2,16 +2,16 @@
 
 1、先提条件
 
-3.1、在C:\Windows\System32\drivers\etc\hosts文件中添加：
+1.1、在C:\Windows\System32\drivers\etc\hosts文件中添加：
 121.199.25.192 registry.protodesign.cn
 
 修改hosts文件前需先在文件属性-安全中将Users用户的权限修改为完全控制
 
-3.1、安装wsl2
+1.2、安装wsl2
 
-3.2、安装docker desktop
+1.3、安装docker desktop
 
-3.3、docker desktop中添加以下配置
+1.4、docker desktop中添加以下配置
 {
 "insecure-registries": [
 "registry.protodesign.cn:36000"
