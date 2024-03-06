@@ -19,6 +19,8 @@ import {
     BorderPosition,
     CurvePoint,
     CurveMode,
+    ResourceMgr,
+    getFormatFromBase64,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 
@@ -994,6 +996,7 @@ class BaseShapeCreator implements ShapeCreator {
     svgRoot: Element
     svgNode: Element
     svgNodeTagName: string
+    context: any
     shape: Shape | undefined = undefined
     that: BaseShapeCreator = this
 
@@ -1001,12 +1004,13 @@ class BaseShapeCreator implements ShapeCreator {
     transform = new Transform3D()
     style?: Style
 
-    constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element) {
+    constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element, context: any) {
         this.root = root
         this.parent = parent
         this.svgRoot = svgRoot
         this.svgNode = svgNode
         this.svgNodeTagName = svgNode.tagName
+        this.context = context
         this.parseAttributes()
         this.shape = this.create()
         this.updateShapeAttr()
@@ -1180,7 +1184,7 @@ class GroupShapeCreator extends BaseShapeCreator {
         })
 
         if (children.length === 0) { // 空的group，用NoneShapeCreator替代
-            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode)
+            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode, this.context)
             return
         }
 
@@ -1244,7 +1248,7 @@ class SvgShapeCreator extends BaseShapeCreator {
         const svgShape = this.shape as Artboard
         const childrenShapes = this.children.filter(item => item.that.shape).map(item => item.that.shape!)
         if (childrenShapes.length === 0) {
-            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode)
+            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode, this.context)
             return
         }
         svgShape.childs.push(...childrenShapes)
@@ -1339,9 +1343,31 @@ class TextShapeCreator extends BaseShapeCreator {
     }
 }
 
+class ImageShapeCreator extends BaseShapeCreator {
+    create(): Shape | undefined {
+        const x = this.attributes.x || 0
+        const y = this.attributes.y || 0
+        const width = this.attributes.width || 0
+        const height = this.attributes.height || 0
+        const href = this.svgNode.getAttribute("href")
+        if (!href) return;
+        const media: {
+            buff: Uint8Array,
+            base64: string
+        } = {}
+        const format = getFormatFromBase64(media.base64)
+        const ref = `${uuid()}.${format}`
+        const mediaResourceMgr = this.context.mediaResourceMgr
+        mediaResourceMgr.mediasMgr.add(ref, media)
+        return shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), this.context.mediaResourceMgr, ref)
+    }
+}
+
 class Parser {
     svgRoot: Element
-    context: any = {}
+    context: any = {
+        mediaResourceMgr: new ResourceMgr<{ buff: Uint8Array, base64: string }>([uuid(), "medias"]),
+    }
 
     constructor(root: Element) {
         this.svgRoot = root
@@ -1364,6 +1390,8 @@ class Parser {
             creatorConstruction = LineShapeCreator
         } else if (node.tagName === "text") {
             creatorConstruction = TextShapeCreator
+        } else if (node.tagName === "image") {
+            creatorConstruction = ImageShapeCreator
         } else {
             creatorConstruction = NoneShapeCreator
         }
@@ -1372,6 +1400,7 @@ class Parser {
             (node.parentElement as any)?.creator, // parent
             this.svgRoot, // svgRoot
             node, // svgNode
+            this.context, // context
         ).make()
         return children
     }
