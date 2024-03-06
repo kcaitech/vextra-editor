@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue'
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 interface Props {
     data: SelectItem;
     isCurValue: boolean;
@@ -16,14 +16,20 @@ function select() {
     emits('select', props.data)
 }
 
+onMounted(()=>{
+    
+})
+
 </script>
 <template>
     <div class="border-style-item-container" @click="select" @mouseover="isHoverCurValue = true" @mouseleave="isHoverCurValue = false">
         <div class="content">
             <svg-icon :icon-class="props.data.value"></svg-icon>
             <span>{{ props.data.content }}</span>
+            <div v-show="props.isCurValue">test</div>
         </div>
-        <svg-icon class="check" v-show="props.isCurValue" :icon-class="isHoverCurValue ? 'white-select': 'page-select'"></svg-icon>
+        <svg-icon class="check" v-show="props.isCurValue" :icon-class="isHoverCurValue ?'page-select':'white-select'"></svg-icon>
+
     </div>
 </template>
 <style scoped lang="scss">

@@ -339,14 +339,14 @@ const pasteEvent = async (e: any) => {
     width: 100vw;
     height: 100vh;
     background-color: #ffffff;
-    backdrop-filter: blur(51px);
+    // backdrop-filter: blur(51px);
     background-image:
         // url('@/assets/login-img1.svg'),
         // url("@/assets/login-img2.svg"),
         // url("@/assets/login-img3.svg"),
         // url("@/assets/login-img4.svg"),
         // url("@/assets/login-img5.svg");
-        url("@/assets/bgimg.svg");
+        url("@/assets/bgimg2.png");
     // background-position:
     //     0, 80vw,
     //     45vw -100vh,

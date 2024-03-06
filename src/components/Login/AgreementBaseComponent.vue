@@ -123,7 +123,7 @@ onUnmounted(() => {
     height: 56px;
     position: relative;
     top: 56px;
-    background-color: #9775fa;
+    // background-color: #9775fa;
 
     .footer {
         position: relative;

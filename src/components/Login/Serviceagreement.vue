@@ -15,9 +15,25 @@ import Markdowncontent from "@/assets/serviceagreement.md";
 }
 
 @media (max-width:880px) {
-    .content {
-        font-size: 14px;
+    h1 {
+        font-size: 24px;
     }
-}
 
+    h2 {
+        font-size: 18px;
+    }
+
+    .update,
+    .date {
+        margin: 0;
+        margin-bottom: 8px;
+    }
+
+    p,
+    li {
+        font-size: 14px;
+        line-height: 28px !important;
+    }
+
+}
 </style>

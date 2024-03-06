@@ -47,7 +47,7 @@ export const system = {
     'read_Privacy': 'Privacy Agreement',
     'product_name': 'ProtoDesign',
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
-    'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
+    'login_footer': 'Zhuhai Kuangcai Technology Co., Ltd',
     'placeholder': 'Search file',
     'about': 'About',
     'help_manual': 'Help manual',

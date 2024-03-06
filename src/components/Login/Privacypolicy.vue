@@ -19,7 +19,7 @@ import Markdowncontent from "@/assets/privacypolicy.md"
         text-align: center;
     }
 
-    .update,
+    >.update,
     .date {
         font-weight: 500;
         text-align: right;
@@ -48,7 +48,7 @@ import Markdowncontent from "@/assets/privacypolicy.md"
     }
 
     p,
-    li {
+    ul {
         font-size: 14px;
         line-height: 28px !important;
     }
