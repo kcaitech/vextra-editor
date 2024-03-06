@@ -377,6 +377,7 @@ function window_blur() {
         traceEle.value.classList.remove('cursor-copy');
         altKey.value = false;
     }
+    props.context.selection.setShowInterval(false);
 }
 
 //标注线

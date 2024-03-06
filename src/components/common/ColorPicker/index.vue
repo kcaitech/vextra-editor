@@ -230,11 +230,14 @@ function locate() {
     }
     const doc_height = document.documentElement.clientHeight;
     const { height, y } = el.getBoundingClientRect();
-    if (doc_height - y < height + 10) {
-        el.style.top = ((parseInt(el.style.top) - ((height + 20) - (doc_height - y))) < 46 ? 56 : parseInt(el.style.top) - ((height + 20) - (doc_height - y))) + 'px'
-    }
-    if (props.cell) {
-        el.style.top = 40 + 'px';
+    if (props.fillType && props.fillType === FillType.SolidColor) {
+        if (doc_height - y < height + 48) {
+            el.style.top = parseInt(el.style.top) - ((height + 58) - (doc_height - y)) + 'px'
+        }
+    } else {
+        if (doc_height - y < height + 10) {
+            el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+        }
     }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';

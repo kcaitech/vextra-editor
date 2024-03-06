@@ -492,7 +492,7 @@ const getTableFormat = () => {
     isDeleteline.value = textAttr.strikethrough && textAttr.strikethrough !== StrikethroughType.None || false;
     selectLevel.value = textAttr.alignment || 'left';
     selectVertical.value = textAttr.verAlign || 'top';
-    textColor.value = textAttr.color || new Color(0.85, 0, 0, 0);
+    textColor.value = textAttr.color;
     highlight.value = textAttr.highlight;
     fillType.value = textAttr.fillType || FillType.SolidColor;
     gradient.value = textAttr.gradient;
@@ -1199,7 +1199,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
+                    <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
                         }}
                     </div>
                     <div class="add" @click="addTextColor">
@@ -1577,7 +1577,7 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 5px;
+                height: 32px;
 
                 .add {
                     width: 28px;

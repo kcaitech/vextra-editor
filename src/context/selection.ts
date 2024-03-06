@@ -761,4 +761,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_interval = v;
         this.notify(Selection.SHOW_INTERVAL);
     }
+    test() {
+        this.m_context.assist.set_collect_target(this.selectedShapes);
+    }
 }
