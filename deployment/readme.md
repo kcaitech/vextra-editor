@@ -13,9 +13,9 @@
 
 1.4、docker desktop中添加以下配置
 {
-"insecure-registries": [
-"registry.protodesign.cn:36000"
-]
+    "insecure-registries": [
+    "registry.protodesign.cn:36000"
+    ]
 }
 
 2、在cmd命令行进入ssh-port-forward-internal目录，执行start.bat脚本
