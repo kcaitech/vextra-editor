@@ -20,7 +20,7 @@
 }
 
 2、在cmd命令行进入ssh-port-forward-internal目录，执行start.bat脚本
-第一次执行需要输入密码：
+第一次执行需要键入yes并输入密码：
 kcserver
 
 3、打开页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
