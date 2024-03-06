@@ -1,16 +1,6 @@
-前端发布流程
+前端发布流程（windows系统）
 
-1、在cmd命令行进入ssh-port-forward-internal目录，执行start.bat脚本
-第一次执行需要输入密码：
-kcserver
-
-2、打开页面：http://127.0.0.1:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
-右下方查看app容器当前镜像的版本号，例如：`test-0.0.1-23`
-账号密码：
-admin
-kcai1212
-
-3、先提条件
+1、先提条件
 
 3.1、在C:\Windows\System32\drivers\etc\hosts文件中添加：
 121.199.25.192 registry.protodesign.cn
@@ -23,10 +13,20 @@ kcai1212
 
 3.3、docker desktop中添加以下配置
 {
-  "insecure-registries": [
-    "registry.protodesign.cn:36000"
-  ]
+"insecure-registries": [
+"registry.protodesign.cn:36000"
+]
 }
+
+2、在cmd命令行进入ssh-port-forward-internal目录，执行start.bat脚本
+第一次执行需要输入密码：
+kcserver
+
+3、打开页面：http://127.0.0.1:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
+右下方查看app容器当前镜像的版本号，例如：`test-0.0.1-23`
+账号密码：
+admin
+kcai1212
 
 4、在cmd命令行进入kcdesign工程的deployment\app目录，执行build.bat脚本
 
