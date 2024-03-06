@@ -32,6 +32,7 @@ export class Menu extends WatchableObject {
   private m_mulriple: number = 1;
   private m_mulriple_i: number = 1
   private m_lable_menu_mounted: string = '';
+  private m_cell_menu_type: CellMenu | undefined;
   constructor(context: Context) {
     super();
     this.m_context = context;
@@ -105,5 +106,11 @@ export class Menu extends WatchableObject {
   }
   shadowPositionMenu() {
     this.notify(Menu.SHADOW_POSITION_MENU);
+  }
+  get cellMenuType() {
+    return this.m_cell_menu_type;
+  }
+  setCellMenuType(type: CellMenu | undefined) {
+    this.m_cell_menu_type = type;
   }
 }

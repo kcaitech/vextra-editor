@@ -39,7 +39,8 @@ interface BorderItem {
 interface Props {
     context: Context
     shapes: ShapeView[]
-    trigger: any[];
+    trigger: any[]
+    cellsTrigger: any[]
 }
 
 const { t } = useI18n();
@@ -617,7 +618,9 @@ const isGradient = () => {
 
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
-
+const stop2 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
+    if (v.length > 0 && (v.includes('borders'))) updateData();
+})
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -625,6 +628,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     stop();
+    stop2();
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => {
@@ -655,20 +659,23 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: borders.length - idx - 1, type: 'borders' }" @change="(c: Color) => getColorFromPicker(c, idx)"
-                        @gradient-reverse="() => gradient_reverse(idx)" :gradient="isGradient() ? b.border.gradient : undefined"
-                        :fillType="b.border.fillType" @gradient-rotate="() => gradient_rotate(idx)"
+                        :locat="{ index: borders.length - idx - 1, type: 'borders' }"
+                        @change="(c: Color) => getColorFromPicker(c, idx)"
+                        @gradient-reverse="() => gradient_reverse(idx)"
+                        :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                        @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
                     <input ref="colorBorder" class="colorBorder" :spellcheck="false"
-                        v-if="b.border.fillType !== FillType.Gradient || !isGradient()" :value="(toHex(b.border.color)).slice(1)"
-                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
+                        v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                        :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                        @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                     <span class="colorBorder" style="line-height: 14px;"
                         v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                            t(`color.${b.border.gradient.gradientType}`) }}</span>
+            t(`color.${b.border.gradient.gradientType}`) }}</span>
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
                         :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
                         @focus="selectAlpha" @input="alphaInput"
@@ -684,7 +691,8 @@ onUnmounted(() => {
                 <!--                </div>-->
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view" :trigger="props.trigger">
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
+            :trigger="props.trigger">
         </Apex>
     </div>
 </template>
@@ -834,6 +842,7 @@ onUnmounted(() => {
                 height: 28px;
                 transition: 0.2s;
                 border-radius: var(--default-radius);
+
                 >svg {
                     width: 16px;
                     height: 16px;
