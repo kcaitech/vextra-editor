@@ -2,16 +2,16 @@
 
 1、先提条件
 
-1.1、在C:\Windows\System32\drivers\etc\hosts文件中添加：
+（1）在C:\Windows\System32\drivers\etc\hosts文件中添加：
 121.199.25.192 registry.protodesign.cn
 
 修改hosts文件前需先在文件属性-安全中将Users用户的权限修改为完全控制
 
-1.2、安装wsl2
+（2）安装wsl2
 
-1.3、安装docker desktop
+（3）安装docker desktop
 
-1.4、docker desktop中添加以下配置
+（4）docker desktop中添加以下配置
 {
     "insecure-registries": [
         "registry.protodesign.cn:36000"
@@ -35,9 +35,12 @@ build.bat version-tag
 
 执行build.bat前注意修改utils\setting.ts中的production，为true时编译正式环境镜像，为false时编译测试环境镜像
 
-执行完毕后注意仔细查看打包时输出的信息，确认：npm编译通过、docker镜像编译成功且上传成功
+执行完毕后注意仔细查看打包时输出的信息，确认：
+（1）npm编译通过
+（2）docker镜像编译成功
+（3）docker镜像上传成功
 
-可在以下页面中确认镜像是否上传成功：
+在以下页面中可确认镜像是否上传成功：
 http://registry.protodesign.cn:36000/harbor/projects/2/repositories/webapp/artifacts-tab
 账号密码：
 kcserver
