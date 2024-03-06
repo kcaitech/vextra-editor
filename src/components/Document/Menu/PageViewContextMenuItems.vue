@@ -455,7 +455,7 @@ function visible() {
     const page = props.context.selection.selectedPage;
     if (!page) return emit('close');
     const editor = props.context.editor4Page(page);
-    editor.toggleShapesVisible(shapes.map(s => adapt2Shape(s)));
+    editor.toggleShapesVisible(shapes);
     props.context.selection.resetSelectShapes();
     emit('close');
 }
@@ -468,7 +468,7 @@ function lock() {
     const page = props.context.selection.selectedPage;
     if (!page) return emit('close');
     const editor = props.context.editor4Page(page);
-    editor.toggleShapesLock(shapes.map(s => adapt2Shape(s)));
+    editor.toggleShapesLock(shapes);
     props.context.selection.resetSelectShapes();
     emit('close');
 }

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, gradient_equals, TableCellType } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -389,7 +389,7 @@ const textFormat = () => {
 
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell && cell.text) {
+            if (cell && cell.cellType === TableCellType.Text && cell.text) {
                 const editor = props.context.editor4TextShape(cell);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
@@ -473,10 +473,30 @@ const textFormat = () => {
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
+        if (formats.length === 0) {
+            getTableFormat();
+        }
     }
 }
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
+
+const getTableFormat = () => {
+    const textAttr = props.shape.data.textAttr;
+    if (!textAttr) return;
+    isBold.value = textAttr.bold || false;
+    isTilt.value = textAttr.italic || false;
+    fontName.value = textAttr.fontName || 'PingFangSC-Regular';
+    fonstSize.value = textAttr.fontSize || 14;
+    isUnderline.value = textAttr.underline && textAttr.underline !== UnderlineType.None || false;
+    isDeleteline.value = textAttr.strikethrough && textAttr.strikethrough !== StrikethroughType.None || false;
+    selectLevel.value = textAttr.alignment || 'left';
+    selectVertical.value = textAttr.verAlign || 'top';
+    textColor.value = textAttr.color || new Color(0.85, 0, 0, 0);
+    highlight.value = textAttr.highlight;
+    fillType.value = textAttr.fillType || FillType.SolidColor;
+    gradient.value = textAttr.gradient;
+}
 
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
@@ -1007,8 +1027,8 @@ function watch_cells() {
     })
 }
 
-
 onMounted(() => {
+    _textFormat();
     props.shape.watch(_textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);

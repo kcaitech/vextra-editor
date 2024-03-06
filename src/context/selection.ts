@@ -102,6 +102,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
     static SELECTION_HIDDEN = 16;
+    static SHOW_INTERVAL = 17;
 
     // static CHANGE_TEXT_LITE = 16;
 
@@ -125,6 +126,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_context: Context;
     private m_is_new_shape_selection: boolean = false;
     private m_shapes_set: Set<string> = new Set();
+    private m_interval: boolean = false;
 
     constructor(document: Document, context: Context) {
         super();
@@ -751,4 +753,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
         }
     }
     // #endregion
+    get is_interval() {
+        return this.m_interval;
+    }
+
+    setShowInterval(v: boolean) {
+        this.m_interval = v;
+        this.notify(Selection.SHOW_INTERVAL);
+    }
 }

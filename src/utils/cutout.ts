@@ -119,7 +119,7 @@ export const parentIsArtboard = (shape: ShapeView) => {
 export const getPageBounds = (page: PageView) => {
     const childs = page.childs as ShapeView[];
     const { x, y, width, height } = page.frame;
-    if (!childs) return { x, y, width, height };
+    if (!(childs.length > 0)) return { x, y, width, height };
     const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape));
     const page_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(page_bounds_points);
