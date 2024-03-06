@@ -248,6 +248,7 @@ function locate() {
     }
 }
 
+
 function quit(e: MouseEvent) {
     const need_quit = props.fillType === FillType.Gradient && props.gradient
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')

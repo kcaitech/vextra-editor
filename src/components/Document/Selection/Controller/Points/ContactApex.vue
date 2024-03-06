@@ -20,8 +20,8 @@ interface Apex {
 }
 
 interface FAT {
-    from:object,
-    to:object
+    from: Shape | undefined,
+    to: Shape | undefined
 }
 
 const props = defineProps<Props>();
@@ -222,10 +222,12 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 })
 </script>
+
 <template>
     <g v-if="apex">
         <rect :x="apex1.point.x - 8" :y="apex1.point.y - 8" rx="8" ry="8" height="16" width="16"
-            @mousedown.stop="(e) => point_mousedown(e, apex1.type)" class="point" :class="{ activation: fromOrto?.from }">
+            @mousedown.stop="(e) => point_mousedown(e, apex1.type)" class="point"
+            :class="{ activation: fromOrto?.from }">
         </rect>
         <rect :x="apex2.point.x - 8" :y="apex2.point.y - 8" rx="8" ry="8" height="16" width="16"
             @mousedown.stop="(e) => point_mousedown(e, apex2.type)" class="point" :class="{ activation: fromOrto?.to }">
@@ -238,6 +240,7 @@ onUnmounted(() => {
         </rect>
     </g>
 </template>
+
 <style lang='scss' scoped>
 .point {
     width: 16px;

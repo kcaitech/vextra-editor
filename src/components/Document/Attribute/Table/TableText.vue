@@ -433,14 +433,14 @@ const textFormat = () => {
                     format[key] = `unlikeness`;
                 }
             }
-        }
+        } 
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
         fontName.value = format.fontName || 'PingFangSC-Regular';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;  
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
@@ -448,8 +448,16 @@ const textFormat = () => {
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
-        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
-        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.fontName === 'unlikeness') {
+            fontName.value = `${t('attr.more_value')}`;
+        } else if (format.fontNameIsMulti) {
+            fontName.value = `${t('attr.more_value')}`;
+        }
+        if (format.fontSize === 'unlikeness') {
+            fonstSize.value = `${t('attr.more_value')}`;
+        } else if (format.fontSizeIsMulti) {
+            fonstSize.value = `${t('attr.more_value')}`;
+        }
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
@@ -499,8 +507,8 @@ function selection_wather(t: number) {
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
+      onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
-        onBold();
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
@@ -1006,9 +1014,7 @@ function watch_cells() {
         v.unwatch(_textFormat);
         watchCells.delete(k);
     })
-
     const tableSelection = props.context.tableSelection;
-
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
     const list = [...selectedCells.map(s => s.cell), editedCell];
@@ -1036,6 +1042,7 @@ onUnmounted(() => {
     watchCells.forEach(v => {
         v.unwatch(_textFormat);
     })
+
 })
 </script>
 
