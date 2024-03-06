@@ -394,6 +394,11 @@ export class WorkSpace extends WatchableObject {
         return { x: e.clientX - this.root.x, y: e.clientY - this.root.y };
     }
 
+    getRootXY(e: MouseEvent): XY {
+        const m = new Matrix(this.m_matrix.inverse);
+        return m.computeCoord2(e.clientX - this.root.x, e.clientY - this.root.y);
+    }
+
     get isRoundMode() {
         return this.m_round;
     }

@@ -2,12 +2,12 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY, SelectionTheme, XY } from '@/context/selection';
+import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
-import { get_dashes } from './common';
+import { ScaleHandler } from "@/transform/scale";
 interface Props {
     matrix: number[]
     context: Context
@@ -166,6 +166,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
             }
         } else if (target.sticked_by_y) {
             modify_fix_y(p2, target.y);
+        }
+        const align = props.context.user.isPixelAlignMent;
+        if (align) {
+            p2.x = Math.round(p2.x);
+            p2.y = Math.round(p2.y);
         }
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     }

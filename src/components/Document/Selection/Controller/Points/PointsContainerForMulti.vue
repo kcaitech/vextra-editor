@@ -8,6 +8,9 @@ import { update_dot2 } from './common';
 import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
+import { ScaleHandler } from '@/transform/scale';
+import { RotateHandler } from '@/transform/rotate';
+
 interface Props {
     matrix: number[]
     context: Context
@@ -31,7 +34,11 @@ let isDragging = false;
 let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+let isRotateElement = false;
 let need_reset_cursor_after_transform = true;
+
+let scaler: ScaleHandler | undefined = undefined;
+let rotator: RotateHandler | undefined = undefined;
 
 // #region view
 function update() {
@@ -62,11 +69,26 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
     event.stopPropagation();
 
+    if (rotator || scaler) {
+        return;
+    }
+
     cur_ctrl_type = ele;
 
-    set_status_on_down();
+    // set_status_on_down();
 
     startPosition = props.context.workspace.getContentXY(event);
+
+    if (cur_ctrl_type.endsWith('rotate')) {
+        rotator = new RotateHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+        console.log('rotator:', rotator);
+        isRotateElement = true;
+
+    } else {
+        scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+        console.log('scaler:', scaler);
+        isRotateElement = false;
+    }
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -75,23 +97,31 @@ function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = workspace.getContentXY(event)
-    const { x: ax, y: ay } = props.axle;
-    if (isDragging && asyncMultiAction) {
-        if (cur_ctrl_type.endsWith('rotate')) {
-            const deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            const root_axle = submatrix.computeCoord(ax, ay);
+    // const { x: ax, y: ay } = props.axle;
 
-            const r = new Matrix();
-            r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y);
+    // if (isDragging && asyncMultiAction) {
+    if (isDragging) {
+        if (isRotateElement) {
+            // const deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+            // const root_axle = submatrix.computeCoord(ax, ay);
 
-            asyncMultiAction.executeRotate(deg, r);
+            // const r = new Matrix();
+            // r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y);
+
+            // console.log('--deg:', deg);
+
+
+            // asyncMultiAction.executeRotate(deg, r);
+            rotator?.excute(event);
 
             props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
-            const action = props.context.tool.action;
-            (event.shiftKey || action === Action.AutoK)
-                ? er_scale(asyncMultiAction, sx, sy, mx, my)
-                : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+            // const action = props.context.tool.action;
+            // (event.shiftKey || action === Action.AutoK)
+            //     ? er_scale(asyncMultiAction, sx, sy, mx, my)
+            //     : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+
+            scaler?.excute(event);
         }
 
         startPosition = { x: mx, y: my };
@@ -100,16 +130,23 @@ function point_mousemove(event: MouseEvent) {
             workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
         })
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status_before_action();
+        // set_status_before_action();
 
         const shapes = shapes_organize(props.context.selection.selectedShapes);
         const page = props.context.selection.selectedPage!;
 
-        asyncMultiAction = props.context.editor
-            .controller()
-            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
+        // asyncMultiAction = props.context.editor
+        //     .controller()
+        //     .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
 
-        submatrix.reset(workspace.matrix.inverse);
+        // submatrix.reset(workspace.matrix.inverse);
+
+        if (isRotateElement) {
+            rotator?.createApiCaller();
+        }
+        else {
+            scaler?.createApiCaller();
+        }
 
         isDragging = true;
     }
@@ -280,25 +317,30 @@ function set_status_before_action() {
 }
 function clear_status() {
     const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.rotating(false);
-    workspace.setCtrl('page');
+    // workspace.scaling(false);
+    // workspace.rotating(false);
+    // workspace.setCtrl('page');
 
     if (isDragging) {
         isDragging = false;
     }
 
-    if (asyncMultiAction) {
-        asyncMultiAction.close();
-        asyncMultiAction = undefined;
-        workspace.setSelectionViewUpdater(true);
-    }
-
+    // if (asyncMultiAction) {
+    //     asyncMultiAction.close();
+    //     asyncMultiAction = undefined;
+    //     workspace.setSelectionViewUpdater(true);
+    // }
 
     props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
+
+    scaler?.fulfil();
+    rotator?.fulfil();
+
+    scaler = undefined;
+    rotator = undefined;
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
@@ -316,6 +358,28 @@ function frame_watcher() {
         passive_update();
     }
 }
+function updateView() {
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+    })
+}
+function keydown(event: KeyboardEvent) {
+    if (event.repeat) {
+        return;
+    }
+    if (event.shiftKey) {
+        scaler?.modifyShiftStatus(true);
+        rotator?.modifyShiftStatus(true);
+        updateView();
+    }
+}
+function keyUp(event: KeyboardEvent) {
+    if (event.code === 'ShiftLeft') {
+        scaler?.modifyShiftStatus(false);
+        rotator?.modifyShiftStatus(false);
+        updateView();
+    }
+}
 function window_blur() {
     clear_status();
 }
@@ -326,10 +390,14 @@ watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
     window.addEventListener('blur', window_blur);
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('keyup', keyUp);
     update();
 })
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
+    document.removeEventListener('keydown', keydown);
+    document.removeEventListener('keyup', keyUp);
 })
 // #endregion
 </script>

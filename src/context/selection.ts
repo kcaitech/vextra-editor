@@ -751,4 +751,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
         }
     }
     // #endregion
+
+    test() {
+        this.m_context.assist.set_collect_target(this.selectedShapes);
+    }
 }
