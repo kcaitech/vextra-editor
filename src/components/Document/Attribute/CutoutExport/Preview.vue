@@ -9,8 +9,6 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
-import { importShape } from '@kcdesign/data/dist/data/baseimport';
-import { exportShape } from '@kcdesign/data/dist/data/baseexport';
 const { t } = useI18n();
 interface Props {
     context: Context

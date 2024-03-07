@@ -250,8 +250,10 @@ function watch_cells() {
 
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
-    const list = [...selectedCells.map(s => s.cell), editedCell];
-
+    const list = [...selectedCells.map(s => s.cell)];
+    if (editedCell) {
+        list.push(editedCell);
+    }
     if (list.length) {
         baseAttr.value = false;
     }
