@@ -5,8 +5,6 @@ import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
 import { boundingBox2Root } from "@/utils/common";
 
-export const minimum_WH = 0.01;
-
 type Box = {
     origin: XY;
 
@@ -26,7 +24,7 @@ type BaseFrames = Map<string, Box>;
 export class ScaleHandler extends TransformHandler {
     ctrlElementType: CtrlElementType;
     livingPoint: XY;
-    relativeFilp: { fh: boolean, fv: boolean } = { fh: false, fv: false };
+    relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
     fixedRatioWhileScaling: boolean = false;
 
     // base frame
@@ -40,7 +38,6 @@ export class ScaleHandler extends TransformHandler {
     verFixedValue: number = 0;
 
     // cache
-    __parent2RootMatrixCache: Map<string, Matrix> = new Map();
     __baseFramesCache: BaseFrames = new Map();
 
     constructor(context: Context, selected: ShapeView[], event: MouseEvent, ctrlElementType: CtrlElementType) {
@@ -62,28 +59,43 @@ export class ScaleHandler extends TransformHandler {
     }
 
     fulfil() {
-        this.__fulfil();
-
         this.workspace.scaling(false);
         this.workspace.setSelectionViewUpdater(true);
 
-        return undefined;
+        super.fulfil();
     }
 
     // 执行主体
-    excute(event: MouseEvent) {
+    execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.livingPointAlignByAssist();
 
-        this.__excute();
+        this.__execute();
     }
 
-    passiveExcute() {
+    passiveExecute() {
         if (!this.asyncApiCaller) {
             return;
         }
-        this.__excute();
+        this.__execute();
+    }
+
+    protected keydown(event: KeyboardEvent) {
+        if (event.repeat) {
+            return;
+        }
+        if (event.shiftKey) {
+            this.shiftStatus = true;
+            this.passiveExecute();
+        }
+    }
+
+    protected keyup(event: KeyboardEvent) {
+        if (event.code === "ShiftLeft") {
+            this.shiftStatus = false;
+            this.passiveExecute();
+        }
     }
 
     private getBaseFrames() {
@@ -93,8 +105,6 @@ export class ScaleHandler extends TransformHandler {
         let top = Infinity;
         let right = -Infinity;
         let bottom = -Infinity;
-
-
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
@@ -154,29 +164,23 @@ export class ScaleHandler extends TransformHandler {
         if (!(this.shapes.length === 1 && this.shapes[0].rotation)) {
             if (this.ctrlElementType === CtrlElementType.RectRight) {
                 this.fixToAlignWhileModifyRightOrLeft();
-            }
-            else if (this.ctrlElementType === CtrlElementType.RectLeft) {
+            } else if (this.ctrlElementType === CtrlElementType.RectLeft) {
                 this.fixToAlignWhileModifyRightOrLeft();
-            }
-            else if (this.ctrlElementType === CtrlElementType.RectTop) {
-                this.fixToAlignWhileMofdifyTopOrBottom();
-            }
-            else if (this.ctrlElementType === CtrlElementType.RectBottom) {
-                this.fixToAlignWhileMofdifyTopOrBottom();
+            } else if (this.ctrlElementType === CtrlElementType.RectTop) {
+                this.fixToAlignWhileModifyTopOrBottom();
+            } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+                this.fixToAlignWhileModifyTopOrBottom();
             }
         }
 
         if (this.ctrlElementType === CtrlElementType.RectLT) {
-            this.fixToAlignWhileMofdifyPoint();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectRT) {
-            this.fixToAlignWhileMofdifyPoint();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectRB) {
-            this.fixToAlignWhileMofdifyPoint();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectLB) {
-            this.fixToAlignWhileMofdifyPoint();
+            this.fixToAlignWhileModifyPoint();
+        } else if (this.ctrlElementType === CtrlElementType.RectRT) {
+            this.fixToAlignWhileModifyPoint();
+        } else if (this.ctrlElementType === CtrlElementType.RectRB) {
+            this.fixToAlignWhileModifyPoint();
+        } else if (this.ctrlElementType === CtrlElementType.RectLB) {
+            this.fixToAlignWhileModifyPoint();
         }
 
         if (this.horFixedStatus) {
@@ -192,14 +196,12 @@ export class ScaleHandler extends TransformHandler {
         if (this.horFixedStatus) {
             if (Math.abs(livingX - this.horFixedValue) >= stickness) {
                 this.horFixedStatus = false;
-            }
-            else {
+            } else {
                 if (this.horFixedValue !== assistResult.x) {
                     this.horFixedValue = assistResult.x;
                 }
             }
-        }
-        else if (assistResult.sticked_by_x) {
+        } else if (assistResult.sticked_by_x) {
             this.horFixedStatus = true;
             this.horFixedValue = assistResult.x;
         }
@@ -210,14 +212,12 @@ export class ScaleHandler extends TransformHandler {
         if (this.verFixedStatus) {
             if (Math.abs(livingY - this.verFixedValue) >= stickness) {
                 this.verFixedStatus = false;
-            }
-            else {
+            } else {
                 if (this.verFixedValue !== assistResult.y) {
                     this.verFixedValue = assistResult.y;
                 }
             }
-        }
-        else if (assistResult.sticked_by_y) {
+        } else if (assistResult.sticked_by_y) {
             this.verFixedStatus = true;
             this.verFixedValue = assistResult.y;
         }
@@ -236,7 +236,7 @@ export class ScaleHandler extends TransformHandler {
         this.updateHorFixedStatus(x, target);
     }
 
-    private fixToAlignWhileMofdifyTopOrBottom() {
+    private fixToAlignWhileModifyTopOrBottom() {
         const y = this.livingPoint.y;
         const x1 = this.originSelectionBox.x;
         const x2 = this.originSelectionBox.right;
@@ -249,7 +249,7 @@ export class ScaleHandler extends TransformHandler {
         this.updateVerFixedStatus(y, assistResult);
     }
 
-    private fixToAlignWhileMofdifyPoint() {
+    private fixToAlignWhileModifyPoint() {
         const assistResult = this.context.assist.alignXY(this.livingPoint);
         if (!assistResult) {
             return;
@@ -259,43 +259,36 @@ export class ScaleHandler extends TransformHandler {
         this.updateVerFixedStatus(this.livingPoint.y, assistResult);
     }
 
-    private __excute() {
+    private __execute() {
         if (!this.shapes.length) {
             return;
         }
 
         if (this.shapes.length === 1) {
 
-        }
-        else {
-            this.__excute4multi();
+        } else {
+            this.__execute4multi();
+            this.updateCtrlView();
         }
     }
 
-    private __excute4multi() {
+    private __execute4multi() {
         if (this.ctrlElementType === CtrlElementType.RectLeft) {
-            this.__excuteSide4Left();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectRight) {
-            this.__excuteSide4Right();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectTop) {
-            this.__excuteSide4Top();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectBottom) {
-            this.__excuteSide4Bottom();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectLT) {
-            this.__excuteSide4LeftTop();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectRT) {
-            this.__excuteSide4RightTop();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectRB) {
-            this.__excuteSide4RightBottom();
-        }
-        else if (this.ctrlElementType === CtrlElementType.RectLB) {
-            this.__excuteSide4LeftBottom();
+            this.__executeSide4Left();
+        } else if (this.ctrlElementType === CtrlElementType.RectRight) {
+            this.__executeSide4Right();
+        } else if (this.ctrlElementType === CtrlElementType.RectTop) {
+            this.__executeSide4Top();
+        } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+            this.__executeSide4Bottom();
+        } else if (this.ctrlElementType === CtrlElementType.RectLT) {
+            this.__executeSide4LeftTop();
+        } else if (this.ctrlElementType === CtrlElementType.RectRT) {
+            this.__executeSide4RightTop();
+        } else if (this.ctrlElementType === CtrlElementType.RectRB) {
+            this.__executeSide4RightBottom();
+        } else if (this.ctrlElementType === CtrlElementType.RectLB) {
+            this.__executeSide4LeftBottom();
         }
     }
 
@@ -385,16 +378,16 @@ export class ScaleHandler extends TransformHandler {
         return transformUnits;
     }
 
-    private __excuteSide4Left() {
+    private __executeSide4Left() {
         const box = this.originSelectionBox;
 
         const scaleX = (box.right - this.livingPoint.x) / box.width;
         const isFixedRatio = this.isFixedRatio();
         const scaleY = isFixedRatio ? scaleX : 1;
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
 
         const referencePoint1 = { x: box.x, y: box.y };
@@ -409,16 +402,17 @@ export class ScaleHandler extends TransformHandler {
 
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
-    private __excuteSide4Right() {
+
+    private __executeSide4Right() {
         const box = this.originSelectionBox;
 
         const scaleX = (this.livingPoint.x - box.x) / box.width;
         const isFixedRatio = this.isFixedRatio();
         const scaleY = isFixedRatio ? scaleX : 1;
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
 
         const referencePoint1 = { x: box.x, y: box.y };
@@ -433,16 +427,16 @@ export class ScaleHandler extends TransformHandler {
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 
-    private __excuteSide4Top() {
+    private __executeSide4Top() {
         const box = this.originSelectionBox;
 
         const scaleY = (box.bottom - this.livingPoint.y) / box.height;
         const isFixedRatio = this.isFixedRatio();
         const scaleX = isFixedRatio ? scaleY : 1;
 
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const referencePoint1 = { x: box.x, y: box.y };
@@ -458,16 +452,16 @@ export class ScaleHandler extends TransformHandler {
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 
-    private __excuteSide4Bottom() {
+    private __executeSide4Bottom() {
         const box = this.originSelectionBox;
 
         const scaleY = (this.livingPoint.y - box.y) / box.height;
         const isFixedRatio = this.isFixedRatio();
         const scaleX = isFixedRatio ? scaleY : 1;
 
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const referencePoint1 = { x: box.x, y: box.y };
@@ -483,19 +477,19 @@ export class ScaleHandler extends TransformHandler {
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 
-    private __excuteSide4LeftTop() {
+    private __executeSide4LeftTop() {
         const box = this.originSelectionBox;
 
         let scaleX = (box.right - this.livingPoint.x) / box.width;
         let scaleY = (box.bottom - this.livingPoint.y) / box.height;
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const isFixedRatio = this.isFixedRatio();
@@ -516,19 +510,19 @@ export class ScaleHandler extends TransformHandler {
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 
-    private __excuteSide4RightTop() {
+    private __executeSide4RightTop() {
         const box = this.originSelectionBox;
 
         let scaleX = (this.livingPoint.x - box.x) / box.width;
         let scaleY = (box.bottom - this.livingPoint.y) / box.height;
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const isFixedRatio = this.isFixedRatio();
@@ -549,7 +543,7 @@ export class ScaleHandler extends TransformHandler {
 
     }
 
-    private __excuteSide4RightBottom() {
+    private __executeSide4RightBottom() {
         const box = this.originSelectionBox;
 
         let scaleX = (this.livingPoint.x - box.x) / box.width;
@@ -565,13 +559,13 @@ export class ScaleHandler extends TransformHandler {
             }
         }
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
@@ -582,19 +576,19 @@ export class ScaleHandler extends TransformHandler {
         (this.asyncApiCaller as Scaler).excute4multi(scaleX, scaleY, transformUnits);
     }
 
-    private __excuteSide4LeftBottom() {
+    private __executeSide4LeftBottom() {
         const box = this.originSelectionBox;
 
         let scaleX = (box.right - this.livingPoint.x) / box.width;
         let scaleY = (this.livingPoint.y - box.y) / box.height;
 
-        const needFlipH = (scaleX < 0) !== this.relativeFilp.fh
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
         if (needFlipH) {
-            this.relativeFilp.fh = !this.relativeFilp.fh;
+            this.relativeFlip.fh = !this.relativeFlip.fh;
         }
-        const needFlipV = (scaleY < 0) !== this.relativeFilp.fv;
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
         if (needFlipV) {
-            this.relativeFilp.fv = !this.relativeFilp.fv;
+            this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
         const isFixedRatio = this.isFixedRatio();

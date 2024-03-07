@@ -67,6 +67,8 @@ export class TranslateHandler extends TransformHandler {
         this.context.assist.set_trans_target(shapes);
 
         this.getFrames();
+
+        this.beforeTransform()
     }
 
     beforeTransform() {
@@ -210,15 +212,16 @@ export class TranslateHandler extends TransformHandler {
         this.boxOffsetLivingPointY = this.livingPoint.y - top;
     }
 
-    excute(event: MouseEvent) {
+    execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
         this.migrate();
 
         this.updateBoxByAssist();
 
-        this.__excute();
+        this.__execute();
 
     }
+
     private updateBoxByAssist() {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
@@ -257,8 +260,7 @@ export class TranslateHandler extends TransformHandler {
 
             if (dx > dy) {
                 this.livingBox.y = this.originSelectionBox.y;
-            }
-            else {
+            } else {
                 this.livingBox.x = this.originSelectionBox.x;
             }
         }
@@ -320,56 +322,61 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    private updateHorFixedStatus(livingX: number, assistResult: { targetX: number, sticked_by_x: boolean, dx: number }) {
+    private updateHorFixedStatus(livingX: number, assistResult: {
+        targetX: number,
+        sticked_by_x: boolean,
+        dx: number
+    }) {
         const stickness = this.context.assist.stickness;
         if (this.horFixed) {
             if (Math.abs(livingX - this.horFixedValue) >= stickness) {
                 this.horFixed = false;
-            }
-            else {
+            } else {
                 if (Math.abs(assistResult.dx) < Math.abs(this.offsetX)) {
                     this.horFixedValue = livingX;
                 }
                 this.offsetX = assistResult.dx;
             }
-        }
-        else if (assistResult.sticked_by_x) {
+        } else if (assistResult.sticked_by_x) {
             this.horFixed = true;
             this.horFixedValue = livingX;
             this.offsetX = assistResult.dx;
         }
     }
-    private updateVerFixedStatus(livingY: number, assistResult: { targetY: number, sticked_by_y: boolean, dy: number }) {
+
+    private updateVerFixedStatus(livingY: number, assistResult: {
+        targetY: number,
+        sticked_by_y: boolean,
+        dy: number
+    }) {
         const stickness = this.context.assist.stickness;
         if (this.verFixed) {
             if (Math.abs(livingY - this.verFixedValue) >= stickness) {
                 this.verFixed = false;
-            }
-            else {
+            } else {
                 if (assistResult.dy < this.offsetY) {
                     this.verFixedValue = livingY;
                 }
                 this.offsetY = assistResult.dy;
             }
-        }
-        else if (assistResult.sticked_by_y) {
+        } else if (assistResult.sticked_by_y) {
             this.verFixed = true;
             this.verFixedValue = livingY;
             this.offsetY = assistResult.dy;
         }
     }
 
-    passiveExcute() {
+    private passiveExecute() {
         if (!this.asyncApiCaller) {
             return;
         }
 
         this.updateBoxByAssist();
 
-        this.__excute();
+        this.__execute();
     }
 
-    private __excute() {
+    private __execute() {
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
 
@@ -428,12 +435,7 @@ export class TranslateHandler extends TransformHandler {
         (this.asyncApiCaller as Transporter).excute(transformUnits);
     }
 
-    modifyAltStatus(v: boolean) {
-        this.altStatus = v;
-        // this.passiveExcute();
-    }
-
-    __migrate() {
+    private __migrate() {
         const t = this.asyncApiCaller as Transporter;
         if (!t) {
             return;
@@ -464,8 +466,25 @@ export class TranslateHandler extends TransformHandler {
 
     fulfil() {
         this.__migrate();
+        this.workspace.translating(false);
+        this.workspace.setSelectionViewUpdater(true);
+        super.fulfil();
+    }
 
-        this.__fulfil();
-        return undefined;
+    protected keydown(event: KeyboardEvent) {
+        if (event.repeat) {
+            return;
+        }
+        if (event.shiftKey) {
+            this.shiftStatus = true;
+            this.passiveExecute();
+        }
+    }
+
+    protected keyup(event: KeyboardEvent) {
+        if (event.code === 'ShiftLeft') {
+            this.shiftStatus = false;
+            this.passiveExecute();
+        }
     }
 }

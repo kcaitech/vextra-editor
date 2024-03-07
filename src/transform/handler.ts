@@ -26,9 +26,12 @@ export class TransformHandler {
         this.alignPixel = context.user.isPixelAlignMent;
 
         this.beforeTransform();
+
+        document.addEventListener('keydown', this.__keydown);
+        document.addEventListener('keyup', this.__keyup);
     }
 
-    beforeTransform() {
+    protected beforeTransform() {
         this.context.menu.menuMount(); // 关闭已打开的弹窗
 
         this.context.cursor.cursor_freeze(true); // 禁用光标自动变换
@@ -36,32 +39,29 @@ export class TransformHandler {
         this.workspace.setCtrl('controller'); // 将编辑器控制权交给控件
     }
 
-    modifyShiftStatus(v: boolean) {
-        this.shiftStatus = v;
-        this.passiveExcute();
+    protected keydown(event: KeyboardEvent) {
     }
 
-    modifyAltStatus(v: boolean) {
-        this.altStatus = v;
-        this.passiveExcute();
+    protected keyup(event: KeyboardEvent) {
     }
 
-    passiveExcute() { }
+    private __keydown = this.keydown.bind(this);
+    private __keyup = this.keyup.bind(this);
 
-    abort() { }
-
-    protected __fulfil() {
-        this.asyncApiCaller?.commit();
-
-        this.context.assist.reset();
-
-        this.workspace.setCtrl('page');
-
-        this.context.cursor.cursor_freeze(false);
-    }
 
     fulfil() {
-        this.__fulfil();
-        return undefined;
+        this.asyncApiCaller?.commit();
+        this.context.assist.reset();
+        this.workspace.setCtrl('page');
+        this.context.cursor.cursor_freeze(false);
+
+        document.removeEventListener('keydown', this.__keydown);
+        document.removeEventListener('keyup', this.__keyup);
+    }
+
+    updateCtrlView() {
+        this.context.nextTick(this.context.selection.selectedPage!, () => {
+            this.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        })
     }
 }
