@@ -1389,14 +1389,22 @@ class BaseCreator extends BaseTreeNode {
         const borders = new BasicArray<Border>()
         if (this.attributes.stroke) {
             const strokeWidth = this.attributes.stroke.width || 1
+
             const color = new Color(
                 this.attributes.stroke.color.a,
                 this.attributes.stroke.color.r,
                 this.attributes.stroke.color.g,
                 this.attributes.stroke.color.b,
             )
+
+            let position: BorderPosition
+            if (this.attributes.stroke.position === "inside") position = BorderPosition.Inner;
+            else if (this.attributes.stroke.position === "center") position = BorderPosition.Center;
+            else position = BorderPosition.Outer;
+
             const borderStyle = new BorderStyle(this.attributes.stroke.dashArray[0], this.attributes.stroke.dashArray[1])
-            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Center, strokeWidth, borderStyle))
+
+            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, position, strokeWidth, borderStyle))
         }
 
         const fills = new BasicArray<Fill>()
@@ -1537,25 +1545,50 @@ class PathCreator extends BaseCreator {
         // 识别本节点是否为边框部分
         if (this.attributes.fill || !this.attributes.stroke) return;
 
+        const svgRoot = this.root?.htmlElement?.root
+        if (!svgRoot) return;
+
         // 主体部分
-        const mainPath = this.siblings().find(item =>
-            item instanceof PathCreator
-            && item.attributes.fill
-            && item.attributes.x === this.attributes.x
-            && item.attributes.y === this.attributes.y
-            && item.attributes.width === this.attributes.width
-            && item.attributes.height === this.attributes.height
-            && item.localAttributes["d"] === this.localAttributes["d"]
-        ) as PathCreator | undefined
+        let mainPath: PathCreator | undefined
+        let position: "inside" | "center" | "outside"
+
+        const findMainPath = (item: BaseTreeNode) => {
+            return item instanceof PathCreator
+                && item.attributes.fill
+                && item.attributes.x === this.attributes.x
+                && item.attributes.y === this.attributes.y
+                && item.attributes.width === this.attributes.width
+                && item.attributes.height === this.attributes.height
+                && item.localAttributes["d"] === this.localAttributes["d"]
+        }
+
+        const mask = this.localAttributes["mask"]
+        const clip = this.localAttributes["clip-path"]
+        if ((mask && mask.startsWith("url(#")) || (clip && clip.startsWith("url(#"))) { // 外部、内部
+            position = mask ? "outside" : "inside"
+            const urlId = (mask || clip).slice(5, -1)
+            const urlPathElement = svgRoot.querySelector(`#${urlId}>path`)
+            if (urlPathElement) {
+                const urlPathCreator = (urlPathElement as any).creator as BaseCreator
+                if (urlPathCreator instanceof PathCreator && urlPathCreator.localAttributes["d"] === this.localAttributes["d"]) {
+                    mainPath = this.parent?.siblings().find(findMainPath) as PathCreator | undefined
+                }
+            }
+        } else { // 中心
+            position = "center"
+            mainPath = this.siblings().find(findMainPath) as PathCreator | undefined
+        }
+
         if (!mainPath) return;
 
         // 设置边框
-        console.log(this.attributes)
+        let strokeWidth = this.attributes.strokeWidth
+        if (strokeWidth && position !== "center") strokeWidth /= 2;
         mainPath.attributes.stroke = {
             color: this.attributes.stroke.color,
-            width: this.attributes.strokeWidth,
+            width: strokeWidth,
             dashArray: this.attributes.stroke.dashArray,
-            position: "center",
+            position: position,
         }
 
         this.remove() // 移除自身
