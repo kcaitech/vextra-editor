@@ -158,6 +158,7 @@ const workspaceUpdate = (t: number) => {
 const tool_watcher = (t: number) => {
     if (t === Tool.LABLE_CHANGE) {
         size_box_show();
+        getShapePositionSize();
     }
 }
 const watchedShapes = new Map();

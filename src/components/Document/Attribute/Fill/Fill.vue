@@ -500,6 +500,7 @@ const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
 const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
 const stop5 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
     if (v.length > 0 && (v.includes('layout'))) updateData();
+    else if (v.length > 0 && (v.includes('fills'))) updateData();
 })
 
 onMounted(updateData);
@@ -534,9 +535,10 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: fills.length - idx - 1, type: 'fills' }" @change="c => getColorFromPicker(idx, c)"
-                        @gradient-reverse="() => gradient_reverse(idx)" :gradient="f.fill.gradient"
-                        :fillType="f.fill.fillType" @gradient-rotate="() => gradient_rotate(idx)"
+                        :locat="{ index: fills.length - idx - 1, type: 'fills' }"
+                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
+                        :gradient="f.fill.gradient" :fillType="f.fill.fillType"
+                        @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
@@ -548,7 +550,7 @@ onUnmounted(() => {
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
                         v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
-                            t(`color.${f.fill.gradient.gradientType}`) }}</span>
+            t(`color.${f.fill.gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
                         @change="(e) => onAlphaChange(idx, f.fill)" @focus="(e) => selectAlpha(e)" @input="alphaInput"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
@@ -652,7 +654,7 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 70px;
+                    width: calc(100% - 53px);
                     height: 14px;
                     margin-left: 8px;
                     flex: 1;

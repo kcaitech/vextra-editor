@@ -80,7 +80,7 @@ export class TranslateHandler extends TransformHandler {
         this.workspace.translating(true);
         this.workspace.setSelectionViewUpdater(false);
 
-        this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page);
+        this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
 
         if (this.altStatus) {
             this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);

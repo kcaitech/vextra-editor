@@ -166,7 +166,7 @@ onUnmounted(() => {
   <div class="shadow-panel">
     <TypeHeader :title="t('shadow.shadow_stting')" class="mt-24" @click="first" :active="!!shadows.length">
       <template #tool>
-        <div class="add" @click="addShadow">
+        <div class="add" @click.stop="addShadow">
           <svg-icon icon-class="add"></svg-icon>
         </div>
       </template>
