@@ -159,6 +159,7 @@ function up(e: MouseEvent) {
 
     isDragging = false;
     transporter?.fulfil();
+    transporter = undefined;
 
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
@@ -172,6 +173,7 @@ function move2(e: MouseEvent) {
 function windowBlur() {
     isDragging = false;
     transporter?.fulfil();
+    transporter = undefined;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
     window.removeEventListener('blur', windowBlur)
