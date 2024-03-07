@@ -717,7 +717,9 @@ class BaseTreeNode {
         this.insertChildes(index + 1, ...childes)
     }
 
-    traverse(handler: { // 遍历以本节点为根的树
+    // 遍历以本节点为根的树
+    // 遍历顺序：do(根)-do(左)-afterChildrenDo(左)-do(右)-afterChildrenDo(右)-afterSiblingDo(左-右)-afterChildrenDo(根)-afterAllDo(根-左-右)
+    traverse(handler: {
         do?: TreeNodeTraverseHandler,
         afterChildrenDo?: TreeNodeTraverseHandler,
         afterSiblingDo?: TreeNodeTraverseHandler,
@@ -734,7 +736,7 @@ class BaseTreeNode {
 
             const children = creator.children
             if (children.length) {
-                stack0.push(...children.reverse())
+                stack0.push(...children.slice(0).reverse())
                 stack1.push([creator, children.length])
             } else {
                 handler.afterChildrenDo?.(creator)
@@ -759,11 +761,12 @@ class BaseTreeNode {
             }
         }
 
+        // 再遍历一次，处理afterAllDo
         const stack2: BaseTreeNode[] = [this]
-        if (handler.afterAllDo) while (stack2.length) { // 再遍历一次，处理afterAllDo
+        if (handler.afterAllDo) while (stack2.length) {
             const creator = stack2.pop()!
             handler.afterAllDo?.(creator)
-            stack2.push(...creator.children)
+            stack2.push(...creator.children.slice(0).reverse())
         }
     }
 }
@@ -1158,29 +1161,7 @@ function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     child.updateShapeStyle()
 }
 
-interface Creator {
-    // 调整阶段
-    adjust(): void // 调整节点
-    afterChildrenAdjust(): void // 所有子节点adjust之后
-    afterSiblingAdjust(): void // 所有兄弟节点adjust之后
-    afterAllAdjust(): void // 所有节点adjust之后
-
-    // shape创建阶段
-    createShape(): void // 创建shape
-    afterChildrenCreateShape(): void // 所有子节点创建shape之后
-    afterSiblingCreateShape(): void // 所有兄弟节点创建shape之后
-    afterAllCreateShape(): void // 所有节点创建shape之后
-}
-
-type CreatorHandlerName = keyof Creator
-
-function creatorMethod(handlerName: CreatorHandlerName) {
-    return function (creator: BaseCreator) {
-        creator[handlerName]()
-    } as TreeNodeTraverseHandler
-}
-
-class BaseCreator extends BaseTreeNode implements Creator {
+class BaseCreator extends BaseTreeNode {
     context: any
     root: BaseCreator | undefined
     parent: BaseCreator | undefined
@@ -1218,6 +1199,36 @@ class BaseCreator extends BaseTreeNode implements Creator {
         this.parseAttributes()
     }
 
+    static method(handlerName: keyof BaseCreator) {
+        return function (creator: BaseCreator) {
+            creator[handlerName]()
+        } as TreeNodeTraverseHandler
+    }
+
+    getShapeNumberName(name: string) {
+        let shapeNameCountMap = this.context.shapeNameCountMap
+        if (Object.prototype.toString.call(shapeNameCountMap) !== "[object Object]") {
+            shapeNameCountMap = this.context.shapeNameCountMap = {}
+        }
+        if (!(name in shapeNameCountMap)) shapeNameCountMap[name] = 0;
+        const number = ++shapeNameCountMap[name]
+        return name + (number > 1 ? number : "")
+    }
+
+    /**
+     * 调整阶段
+     * adjust(): void // 调整节点
+     * afterChildrenAdjust(): void // 所有子节点adjust之后
+     * afterSiblingAdjust(): void // 所有兄弟节点adjust之后
+     * afterAllAdjust(): void // 所有节点adjust之后
+     *
+     * shape创建阶段
+     * createShape(): void // 创建shape
+     * afterChildrenCreateShape(): void // 所有子节点创建shape之后
+     * afterSiblingCreateShape(): void // 所有兄弟节点创建shape之后
+     * afterAllCreateShape(): void // 所有节点创建shape之后
+     */
+
     adjust() {
 
     }
@@ -1238,6 +1249,11 @@ class BaseCreator extends BaseTreeNode implements Creator {
 
     }
 
+    _createShape() {
+        this.createShape()
+        this.updateShapeAttr()
+    }
+
     afterChildrenCreateShape() {
 
     }
@@ -1247,7 +1263,7 @@ class BaseCreator extends BaseTreeNode implements Creator {
     }
 
     afterAllCreateShape() {
-
+        if (this.shape) this.shape.name = this.getShapeNumberName(this.shape.name);
     }
 
     parseAttributes() {
@@ -1635,27 +1651,24 @@ class Parser {
                 parentCreator.children.push(creator)
             }
 
-            stack0.push(...children.reverse())
+            stack0.push(...children.slice(0).reverse())
         }
         const rootCreator = (this.svgRoot as any).creator as BaseCreator
 
         // 调整阶段
         rootCreator.traverse({
-            do: creatorMethod("adjust"),
-            afterChildrenDo: creatorMethod("afterChildrenAdjust"),
-            afterSiblingDo: creatorMethod("afterSiblingAdjust"),
-            afterAllDo: creatorMethod("afterAllAdjust"),
+            do: BaseCreator.method("adjust"),
+            afterChildrenDo: BaseCreator.method("afterChildrenAdjust"),
+            afterSiblingDo: BaseCreator.method("afterSiblingAdjust"),
+            afterAllDo: BaseCreator.method("afterAllAdjust"),
         })
 
         // 创建shape阶段
         rootCreator.traverse({
-            do: ((creator: BaseCreator) => {
-                creator.createShape()
-                creator.updateShapeAttr()
-            }) as TreeNodeTraverseHandler,
-            afterChildrenDo: creatorMethod("afterChildrenCreateShape"),
-            afterSiblingDo: creatorMethod("afterSiblingCreateShape"),
-            afterAllDo: creatorMethod("afterAllCreateShape"),
+            do: BaseCreator.method("_createShape"),
+            afterChildrenDo: BaseCreator.method("afterChildrenCreateShape"),
+            afterSiblingDo: BaseCreator.method("afterSiblingCreateShape"),
+            afterAllDo: BaseCreator.method("afterAllCreateShape"),
         })
 
         return rootCreator.shape
@@ -1673,7 +1686,7 @@ export function insert(context: Context, svgString: string) {
     if (shape && page) {
         const api = repo.start("parseSvgInsert")
         try {
-            api.shapeInsert(page, page, shape, page.childs.length)
+            api.shapeInsert(context.data, page, page, shape, page.childs.length)
             repo.commit()
         } catch (error) {
             console.log(error)
