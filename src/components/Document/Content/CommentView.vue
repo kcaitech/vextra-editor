@@ -10,6 +10,7 @@ import { searchCommentShape } from '@/utils/comment';
 import { GroupShape, PageView, Shape, ShapeView } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
+import { flattenShapes } from '@/utils/cutout';
 type CommentView = InstanceType<typeof PageCommentItem>;
 
 const { t } = useI18n();
@@ -324,17 +325,6 @@ const saveShapeCommentXY = () => {
         })
     })
     props.context.comment.editShapeComment(false, [])
-}
-
-// 递归函数，用于将数组扁平化处理
-function flattenShapes(shapes: any) {
-    return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray((item as GroupShape).childs)) {
-            // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes((item as GroupShape).childs));
-        }
-        return result.concat(item);
-    }, []);
 }
 
 function commentWatcher(type?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch, toRaw } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, ExportFormat, GroupShapeView, Shape, ShapeType, ShapeView, adapt2Shape, isAdaptedShape } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, GroupShapeView, Shape, ShapeType, ShapeView, adapt2Shape, isAdaptedShape, newText } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
@@ -9,8 +9,6 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
-import { importShape } from '@kcdesign/data/dist/data/baseimport';
-import { exportShape } from '@kcdesign/data/dist/data/baseexport';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -68,15 +66,15 @@ const _getCanvasShape = () => {
         const item = parentIsArtboard(shape);
         getPosition(shape);
         if (shape.isVisible() && item) {
-            renderItems = Array(adapt2Shape(item)).filter(s => s.type !== ShapeType.Cutout);
+            renderItems = toRaw(Array(adapt2Shape(item)).filter(s => s.type !== ShapeType.Cutout));
         } else {
             selectedShapes.clear();
             getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-            if (shape.isVisible()) renderItems = Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
+            if (shape.isVisible()) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     } else if (shapes.length === 1) {
         getPosition(shape);
-        renderItems = [shape].map(s => adapt2Shape(s));
+        renderItems = toRaw([shape].map(s => adapt2Shape(s)));
     } else if (shapes.length === 0) {
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -85,7 +83,7 @@ const _getCanvasShape = () => {
             height.value = _h;
             xy.value.x = x;
             xy.value.y = y;
-            renderItems = page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
+            renderItems = toRaw(page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     }
     setTimeout(() => {
@@ -242,7 +240,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 }
             )
         }
-        renderSvgs.value = renderItems;
+        renderSvgs.value = toRaw(renderItems);
     } else if (shapes.length === 0) {
         let renderItems: SvgFormat[] = [];
         const page = props.context.selection.selectedPage;
@@ -259,7 +257,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 shapes: page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout)
             }
         )
-        renderSvgs.value = renderItems;
+        renderSvgs.value = toRaw(renderItems);
     }
     getCanvasShape();
 }

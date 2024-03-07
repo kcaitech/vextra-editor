@@ -131,7 +131,12 @@ function init() {
  * @param cm 小菜单展示与否
  */
 function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
-    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu_type.value = cmt, cell_menu.value = cm;
+    if (props.context.menu.cellMenuType) {
+        cell_menu_type.value = props.context.menu.cellMenuType;
+    } else {
+        cell_menu_type.value = cmt;
+    }
+    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu.value = cm;
 }
 function move(e: MouseEvent) {
     if (e.buttons !== 0) return;
@@ -294,6 +299,7 @@ const height = computed(() => {
     return h < 10 ? 10 : h;
 })
 </script>
+
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
@@ -304,15 +310,16 @@ const height = computed(() => {
             :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
-            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
+            :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
         <!-- 表头 -->
-        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape" :c-frame="props.controllerFrame"
-            @get-menu="update_menu_posi"></TableHeader>
+        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :c-frame="props.controllerFrame" @get-menu="update_menu_posi"></TableHeader>
         <!-- 表格拖拽 -->
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -332,6 +339,7 @@ const height = computed(() => {
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
 </template>
+
 <style lang='scss' scoped>
 svg {
     position: absolute;

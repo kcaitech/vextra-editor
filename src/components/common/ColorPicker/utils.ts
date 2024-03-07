@@ -586,8 +586,6 @@ function c2s(c: Color) {
 export function block_style_generator(color: Color, gradient?: Gradient, fillType?: FillType) {
   let style: any = {
     'background-color': toRGBA(color),
-    height: '-webkit-fill-available',
-    width: '-webkit-fill-available'
   }
   if (!gradient || !fillType) {
     return style;
@@ -757,7 +755,6 @@ function get_angular_gradient(gradient: Gradient) {
   const angular = "conic-gradient(" + f + "," + angular_gradient + ")"
   return {
     'background': angular,
-    height: '-webkit-fill-available',
     width: '-webkit-fill-available'
   }
 }

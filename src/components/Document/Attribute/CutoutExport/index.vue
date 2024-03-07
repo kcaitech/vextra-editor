@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BasicArray, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, reactive, nextTick, watch } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, nextTick, watch, toRaw } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
 import Preview from './Preview.vue';
@@ -47,7 +47,7 @@ const canvas_bg = ref(false);
 const previewUnfold = ref(false);
 const preview = ref();
 
-let renderSvgs = ref<SvgFormat[]>([]);
+let renderSvgs: SvgFormat[] = reactive([]);
 
 function update(args: any[]) {
     if (args.includes('exportOptions') || args.includes('variables')) {
@@ -58,7 +58,7 @@ function update(args: any[]) {
             if (preview.value) {
                 const selected = props.context.selection.selectedShapes;
                 preview.value.getShapesSvg(selected);
-                renderSvgs.value = preview.value.renderSvgs;
+                renderSvgs = toRaw(preview.value.renderSvgs);
             }
         })
         reflush.value++;
@@ -70,7 +70,7 @@ function updateData() {
     exportOption.value = undefined;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
-    renderSvgs.value = [];
+    renderSvgs = [];
     if (len === 1) {
         const shape = selected[0];
         const options = shape.exportOptions;
@@ -115,7 +115,7 @@ function updateData() {
     nextTick(() => {
         if (preview.value) {
             preview.value.getShapesSvg(selected);
-            renderSvgs.value = preview.value.renderSvgs;
+            renderSvgs = toRaw(preview.value.renderSvgs);
         }
     })
     reflush.value++;
@@ -360,7 +360,8 @@ const exportFill = () => {
     const selected = props.context.selection.selectedShapes;
     if (preview.value) {
         preview.value.getShapesSvg(selected);
-        renderSvgs.value = preview.value.renderSvgs;
+        renderSvgs = toRaw(preview.value.renderSvgs);
+        reflush.value++;
     }
     nextTick(() => {
         for (let i = 0; i < selected.length; i++) {
@@ -368,7 +369,7 @@ const exportFill = () => {
             const shape = selected[i];
             if (previewSvgs.value) {
                 const svg = previewSvgs.value[i];
-                shape.exportOptions!.exportFormats.forEach((format, idx) => {
+                (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                     const id = shape.id + format.id;
                     const { width, height } = svg.viewBox.baseVal
                     svg.setAttribute("width", `${width * format.scale}`);
@@ -414,7 +415,8 @@ const exportFill = () => {
 const exportPageImage = () => {
     const page = props.context.selection.selectedPage;
     if (!page || !page.exportOptions) return;
-    const options = page.exportOptions;
+    const options = page.exportOptions as ExportOptions;
+    
     if (previewSvgs.value) {
         const svg = previewSvgs.value[0];
         options.exportFormats.forEach((format, idx) => {
@@ -443,15 +445,25 @@ function selection_watcher(t: number) {
 const stop = watch(() => props.trigger, (v) => {
     update(v);
 })
+const page_watcher = () => {
+    const page = props.context.selection.selectedPage;
+    page && page.watch(updateData);
+}
+const page_unwatcher = () => {
+    const page = props.context.selection.selectedPage;
+    page && page.unwatch(updateData);
+}
 // hooks
 onMounted(() => {
     update_by_shapes();
     showCheckbox();
     props.context.selection.watch(selection_watcher);
+    page_watcher();
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     stop();
+    page_unwatcher();
 });
 
 </script>
@@ -465,7 +477,8 @@ onUnmounted(() => {
                     @click.stop="showPreinstall">
                     <svg-icon icon-class="export-menu"></svg-icon>
                 </div>
-                <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
+                <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon>
+                </div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
             </div>
@@ -497,7 +510,7 @@ onUnmounted(() => {
                 :trim_bg="trim_bg">
             </Preview>
         </div>
-        <div class="exportsvg">
+        <div class="exportsvg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
                 <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"
                     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
