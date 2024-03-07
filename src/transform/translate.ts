@@ -55,6 +55,7 @@ export class TranslateHandler extends TransformHandler {
     shapesSet: Set<string> = new Set();
 
     shapesCopy: ShapeView[] = [];
+    coping: boolean = false;
 
     constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
         super(context, shapes, event);
@@ -85,8 +86,9 @@ export class TranslateHandler extends TransformHandler {
         this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
 
         if (this.altStatus) {
+            this.coping = true;
             this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
-
+            this.coping = false;
             this.context.assist.set_collect_target(this.shapes);
             this.context.assist.set_trans_target(this.shapes);
 
@@ -219,7 +221,6 @@ export class TranslateHandler extends TransformHandler {
         this.updateBoxByAssist();
 
         this.__execute();
-
     }
 
     private updateBoxByAssist() {
@@ -377,6 +378,9 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __execute() {
+        if (this.coping) {
+            return;
+        }
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
 
@@ -461,6 +465,9 @@ export class TranslateHandler extends TransformHandler {
     migrateOnce = debounce(this.__migrate, 160);
 
     migrate() {
+        if (this.coping) {
+            return;
+        }
         this.migrateOnce();
     }
 
