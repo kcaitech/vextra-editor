@@ -184,11 +184,11 @@ onUnmounted(() => {
 
             <template #body>
                 <div class="row" v-for="(f) in fills" :key="f.id">
-                    <span class="named" style="height: 34px;" v-if="f.fill.fillType === FillType.SolidColor">{{
+                    <span class="named" style="height: 34px;" v-if="!f.fill.fillType || f.fill.fillType === FillType.SolidColor">{{
             t('lable.pure_color') }}</span>
                     <span class="named" :style="{ height: `${28 * f.fill.gradient!.stops.length}px` }" v-else>{{
             t(`color.${f.fill.gradient!.gradientType}`) }}</span>
-                    <div class="color_box" v-if="f.fill.fillType === FillType.SolidColor">
+                    <div class="color_box" v-if="!f.fill.fillType || f.fill.fillType === FillType.SolidColor">
                         <div class="color"
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
                         </div>

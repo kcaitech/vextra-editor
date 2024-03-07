@@ -208,10 +208,10 @@ onUnmounted(() => {
                     </div>
                     <div class="color_row">
                         <span class="color_name" style="height: 34px;"
-                            v-if="b.border.fillType === FillType.SolidColor">{{ t('lable.pure_color') }}</span>
+                            v-if="!b.border.fillType || b.border.fillType === FillType.SolidColor">{{ t('lable.pure_color') }}</span>
                         <span class="color_name" :style="{ height: `${28 * b.border.gradient!.stops.length}px` }"
                             v-else>{{ t(`color.${b.border.gradient!.gradientType}`) }}</span>
-                        <div class="color_box" v-if="b.border.fillType === FillType.SolidColor">
+                        <div class="color_box" v-if="!b.border.fillType || b.border.fillType === FillType.SolidColor">
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
                             </div>

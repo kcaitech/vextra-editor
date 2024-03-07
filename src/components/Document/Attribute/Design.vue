@@ -194,6 +194,8 @@ function selection_watcher(t: number) {
 function workspace_watcher(t: number) {
     if (t === WorkSpace.PATH_EDIT_MODE) {
         const _is_pdm = props.context.workspace.is_path_edit_mode;
+        console.log(_is_pdm);
+
         baseAttr.value = !_is_pdm;
         editAttr.value = _is_pdm;
     }
@@ -250,8 +252,10 @@ function watch_cells() {
 
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
-    const list = [...selectedCells.map(s => s.cell), editedCell];
-
+    const list = [...selectedCells.map(s => s.cell)];
+    if (editedCell) {
+        list.push(editedCell);
+    }
     if (list.length) {
         baseAttr.value = false;
     }
