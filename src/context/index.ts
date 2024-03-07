@@ -2,22 +2,15 @@ import {
     CoopRepository,
     TaskMgr,
     WatchableObject,
-    TableShape,
     TableEditor,
-    Text,
     PageView,
     ShapeView,
-    adapt2Shape,
     TableView,
     TextShapeView,
     TableCellView,
-    Task,
-    TaskPriority,
-    SymbolShape,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
@@ -38,7 +31,6 @@ import { PdMedia } from "./medias";
 import { User } from './user';
 
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
-import { TableSelection } from "./tableselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { ColorCtx } from "./color";
