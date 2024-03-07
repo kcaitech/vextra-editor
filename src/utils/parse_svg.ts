@@ -644,7 +644,7 @@ class BaseTreeNode {
         return this.parent!.children.filter((_, i) => i !== index)
     }
 
-    isAncestorOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的祖先
+    isAncestorOf(node: BaseTreeNode) { // 判断本节点是否为指定节点的祖先
         let parent = node.parent
         while (parent) {
             if (parent === this) return true;
@@ -653,16 +653,16 @@ class BaseTreeNode {
         return false
     }
 
-    isDescendantOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的后代
+    isDescendantOf(node: BaseTreeNode) { // 判断本节点是否为指定节点的后代
         return node.isAncestorOf(this)
     }
 
-    isOnTree() { // 判断本届点是否在树上
+    isOnTree() { // 判断本节点是否在树上
         if (!this.root) return false;
         return this.root.isAncestorOf(this)
     }
 
-    isSiblingOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的兄弟节点
+    isSiblingOf(node: BaseTreeNode) { // 判断本节点是否为指定节点的兄弟节点
         return this.parent === node.parent
     }
 
@@ -682,7 +682,7 @@ class BaseTreeNode {
         this.parent!.children.splice(index, 1)
     }
 
-    replaceWithChildren() { // 用自身子节点代替本节点原本的位置
+    replaceWithChildren() { // 用子节点代替本节点（移除本节点但保留子节点）
         if (!this.parent) return;
         this.parent.insertChildesAfter(this, ...this.children)
         this.remove()
@@ -784,7 +784,7 @@ type RectBox = { // 矩形包围盒
     h: number, // 高
 }
 
-function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: Transform3D): RectBox { // 获取一个矩形的包围盒
+function getRectBox(x: number, y: number, w: number, h: number, transform: Transform3D): RectBox { // 获取一个矩形的包围盒
     if (!transform.hasRotation()) return {
         lt: { x: x, y: y },
         rb: { x: x + w, y: y + h },
@@ -876,7 +876,8 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
             transform3D.addTransform(new Transform3D(matrix))
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
-                transform3D.rotateZ(numArgList[0])
+                if (numArgList.length === 1) transform3D.rotateZ(numArgList[0]);
+                else if (numArgList.length === 3) transform3D.rotateAt(Matrix.colVec([0, 0, 1]), Matrix.colVec([numArgList[1], numArgList[2], 0]), numArgList[0]);
             } else if (name === "rotateX") {
                 transform3D.rotateX(numArgList[0])
             } else if (name === "rotateY") {
@@ -1198,6 +1199,7 @@ class BaseCreator extends BaseTreeNode {
         node: Element,
     }) {
         super()
+
         this.context = context
         this.root = root
         this.parent = parent
@@ -1230,16 +1232,16 @@ class BaseCreator extends BaseTreeNode {
 
     /**
      * 调整阶段
-     * adjust(): void // 调整节点
-     * afterChildrenAdjust(): void // 所有子节点adjust之后
-     * afterSiblingAdjust(): void // 所有兄弟节点adjust之后
-     * afterAllAdjust(): void // 所有节点adjust之后
+     * adjust() // 调整节点
+     * afterChildrenAdjust() // 所有子节点adjust之后
+     * afterSiblingAdjust() // 所有兄弟节点adjust之后
+     * afterAllAdjust() // 所有节点adjust之后
      *
      * shape创建阶段
-     * createShape(): void // 创建shape
-     * afterChildrenCreateShape(): void // 所有子节点创建shape之后
-     * afterSiblingCreateShape(): void // 所有兄弟节点创建shape之后
-     * afterAllCreateShape(): void // 所有节点创建shape之后
+     * createShape() // 创建shape
+     * afterChildrenCreateShape() // 所有子节点创建shape之后
+     * afterSiblingCreateShape() // 所有兄弟节点创建shape之后
+     * afterAllCreateShape() // 所有节点创建shape之后
      */
 
     adjust() {
@@ -1478,7 +1480,7 @@ class GroupCreator extends BaseCreator {
         const childShapeBoxes = children.map(child => {
             const childShape = child.shape
             const childCreator = child.creator
-            return getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
+            return getRectBox(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
         })
         const childesShapeBox = mergeRectBox(...childShapeBoxes) // 合并所有子元素的包围盒
 
