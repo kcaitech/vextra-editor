@@ -4,7 +4,6 @@ import LableType from './LableType.vue'
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
-import { ArrowDown } from '@element-plus/icons-vue';
 import { Color, Para, ShapeType, TextShape, TextShapeView } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { isEqual, uniqWith } from 'lodash';
@@ -186,10 +185,6 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ textMenuItems[text_i] }}</span>
-<!--                    <el-icon>-->
-<!--                        <ArrowDown-->
-<!--                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
-<!--                    </el-icon>-->
                     <svg-icon icon-class="down"></svg-icon>
                     <LableDropMenu v-if="selsectedShow" :context="props.context" :Items="textMenuItems" :choose="text_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
