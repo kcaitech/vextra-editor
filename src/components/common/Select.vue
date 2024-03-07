@@ -115,35 +115,30 @@ function clear_events() {
 function onBlur() {
     optionsContainerVisible.value = false;
     clear_events();
-    
+
 }
 
 function select(data: SelectItem) {
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
-
     curValueIndex.value = index;
     curValue.value = data;
-
     emits('select', curValue.value);
     optionsContainerVisible.value = false;
     clear_events();
-    
+
 }
 
 function render() {
-    nextTick(() => {
-        if (props.source.length) {
-            source.value = cloneDeep(props.source);
+    if (props.source.length) {
+        source.value = cloneDeep(props.source);
+    }
+    if (props.selected && source.value.length) {
+        const index = source.value.findIndex(i => i.data.value === props.selected!.value);
+        if (index > -1) {
+            curValueIndex.value = index;
+            curValue.value = props.selected;
         }
-        if (props.selected && source.value.length) {
-            const index = source.value.findIndex(i => i.data.value === props.selected!.value);
-            if (index > -1) {
-                curValueIndex.value = index;
-                curValue.value = props.selected;
-            }
-        }
-    })
-
+    }
 }
 
 watch(() => props.selected, render);
