@@ -5,7 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { OverrideType, SymbolShape, SymbolView, Variable, VariableType } from '@kcdesign/data';
+import { OverrideType, ShapeView, SymbolView, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
 import { message } from '@/utils/message';
@@ -44,7 +44,7 @@ function edit_visible() {
 
 const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolView>();
-const shape = ref(props.context.selection.selectedShapes[0]);
+const shape = ref<ShapeView>();
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
@@ -85,18 +85,16 @@ function save_layer_show(type: VariableType, name: string) {
 
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
+        if (shape.value) shape.value.unwatch(layer_watcher);
+        shape.value = (props.context.selection.selectedShapes[0]);
+        if (shape.value) shape.value.watch(layer_watcher);
         isBind();
     }
 }
 
 function layer_watcher(args: any) {
-    if (args === 'variables' || args === 'map') isBind();
+    if (args === 'variables' || args === 'varbinds') isBind();
 }
-
-watch(() => shape.value, (v, o) => {
-    if (o) o.unwatch(layer_watcher);
-    v.watch(layer_watcher);
-}, { immediate: true })
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) o.unwatch(layer_watcher);
@@ -113,13 +111,14 @@ function _delete() {
 }
 
 onMounted(() => {
-    shape.value.watch(layer_watcher);
+    shape.value = props.context.selection.selectedShapes[0];
+    if (shape.value) shape.value.watch(layer_watcher);
     props.context.selection.watch(selected_watcher);
     isBind();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
-    shape.value.unwatch(layer_watcher);
+    if (shape.value) shape.value.unwatch(layer_watcher);
 })
 </script>
 <template>
