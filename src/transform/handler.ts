@@ -2,6 +2,15 @@ import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
 import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
 
+export type FrameLike = {
+    x: number;
+    y: number;
+    right: number;
+    bottom: number;
+    width: number;
+    height: number;
+};
+
 export class TransformHandler {
     context: Context;
     workspace: WorkSpace;

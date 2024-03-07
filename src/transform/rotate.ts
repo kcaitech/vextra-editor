@@ -285,6 +285,6 @@ export class RotateHandler extends TransformHandler {
             })
         }
 
-        (this.asyncApiCaller as Rotator).excute4multi(rotateUnits);
+        (this.asyncApiCaller as Rotator).execute4multi(rotateUnits);
     }
 }

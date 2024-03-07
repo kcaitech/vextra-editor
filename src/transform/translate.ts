@@ -1,6 +1,6 @@
 import { Context } from "@/context";
-import { TransformHandler } from "./handler";
-import { FrameLike, GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
+import { FrameLike, TransformHandler } from "./handler";
+import { GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Asssit } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
@@ -432,7 +432,7 @@ export class TranslateHandler extends TransformHandler {
             transformUnits.push({ shape, x, y });
         }
 
-        (this.asyncApiCaller as Transporter).excute(transformUnits);
+        (this.asyncApiCaller as Transporter).execute(transformUnits);
     }
 
     private __migrate() {
