@@ -51,3 +51,7 @@ MEu2o91KHihnuLID6buRGrjRVo9YuM48
 
 5、在页面上方点击“调整镜像版本”按钮，输入新的版本号，例如：`test-0.0.1-24`，点击“确定”
 等待页面刷新，查看左侧“历史版本”栏目，确认新版本已发布，并等待新版本的容器状态变为“Ready”（变成绿色即可）
+
+6、刷新、打开前端页面，查看新版本是否生效
+https://protodesign.cn
+https://test.protodesign.cn
