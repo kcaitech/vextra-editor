@@ -614,11 +614,173 @@ class Transform3D { // 变换
     }
 }
 
-// 获取一个矩形的包围盒的lt和rb坐标
-function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: Transform3D) {
+type TreeNodeTraverseHandler = (node: BaseTreeNode) => void
+
+class BaseTreeNode {
+    root: BaseTreeNode | undefined
+    parent: BaseTreeNode | undefined
+    children: BaseTreeNode[] = []
+
+    index() { // 获取本节点在父节点中的位置
+        if (!this.parent) return -1;
+        return this.parent.children.indexOf(this)
+    }
+
+    prevSibling() { // 获取前一个兄弟节点
+        const index = this.index()
+        if (index <= 0) return;
+        return this.parent!.children[index - 1]
+    }
+
+    nextSibling() { // 获取后一个兄弟节点
+        const index = this.index()
+        if (index === -1 || index === this.parent!.children.length - 1) return;
+        return this.parent!.children[index + 1]
+    }
+
+    isAncestorOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的祖先
+        let parent = node.parent
+        while (parent) {
+            if (parent === this) return true;
+            parent = parent.parent
+        }
+        return false
+    }
+
+    isDescendantOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的后代
+        return node.isAncestorOf(this)
+    }
+
+    isOnTree() { // 判断本届点是否在树上
+        if (!this.root) return false;
+        return this.root.isAncestorOf(this)
+    }
+
+    isSiblingOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的兄弟节点
+        return this.parent === node.parent
+    }
+
+    getPath() { // 获取（从根节点到）本节点的路径
+        const path: BaseTreeNode[] = []
+        let node: BaseTreeNode | undefined = this
+        while (node) {
+            path.push(node)
+            node = node.parent
+        }
+        return path.reverse()
+    }
+
+    remove() { // 移除自身
+        const index = this.index()
+        if (index === -1) return;
+        this.parent!.children.splice(index, 1)
+    }
+
+    replaceWithChildren() { // 用自身子节点代替本节点原本的位置
+        if (!this.parent) return;
+        this.parent.insertChildesAfter(this, ...this.children)
+        this.remove()
+    }
+
+    removeChildes(...childes: BaseTreeNode[]) { // 移除多个子节点
+        for (const child of childes) child.remove();
+    }
+
+    appendChildes(...childes: BaseTreeNode[]) { // 添加多个子节点
+        for (const child of childes) {
+            child.remove()
+            child.parent = this
+            child.root = this.root
+            this.children.push(child)
+        }
+    }
+
+    insertChildes(index: number, ...childes: BaseTreeNode[]) { // 在指定位置插入多个子节点
+        if (index < 0 || index > this.children.length) return;
+        for (const child of childes) {
+            child.remove()
+            child.parent = this
+            child.root = this.root
+        }
+        this.children.splice(index, 0, ...childes)
+    }
+
+    insertChildesBefore(reference: BaseTreeNode, ...childes: BaseTreeNode[]) { // 在reference节点前插入多个子节点
+        const index = reference.index()
+        if (index === -1) return;
+        this.insertChildes(index, ...childes)
+    }
+
+    insertChildesAfter(reference: BaseTreeNode, ...childes: BaseTreeNode[]) { // 在reference节点后插入子节点
+        const index = reference.index()
+        if (index === -1) return;
+        this.insertChildes(index + 1, ...childes)
+    }
+
+    traverse(handler: { // 遍历以本节点为根的树
+        do?: TreeNodeTraverseHandler,
+        afterChildrenDo?: TreeNodeTraverseHandler,
+        afterSiblingDo?: TreeNodeTraverseHandler,
+        afterAllDo?: TreeNodeTraverseHandler,
+    }) {
+        const stack0: BaseTreeNode[] = [this]
+        const stack1: [ // 保存遍历树时的路径信息
+            BaseTreeNode, // 已do的元素
+            number, // 其子节点的数量
+        ][] = []
+        while (stack0.length) {
+            const creator = stack0.pop()!
+            handler.do?.(creator)
+
+            const children = creator.children
+            if (children.length) {
+                stack0.push(...children.reverse())
+                stack1.push([creator, children.length])
+            } else {
+                handler.afterChildrenDo?.(creator)
+
+                if (stack1.length === 0 && creator !== this) throw new Error("rootTreeNode元素不匹配");
+
+                let currentCreator = creator
+                while (stack1.length > 0) {
+                    const parentStack = stack1[stack1.length - 1]
+                    if (parentStack[0] !== currentCreator.parent) throw new Error("treeNode父级元素不匹配");
+
+                    if (--parentStack[1] > 0) break;
+                    stack1.pop()
+
+                    for (const child of parentStack[0].children) handler.afterSiblingDo?.(child);
+
+                    const parentCreator = parentStack[0]
+                    handler.afterChildrenDo?.(parentCreator)
+
+                    currentCreator = parentCreator
+                }
+            }
+        }
+
+        const stack2: BaseTreeNode[] = [this]
+        if (handler.afterAllDo) while (stack2.length) { // 再遍历一次，处理afterAllDo
+            const creator = stack2.pop()!
+            handler.afterAllDo?.(creator)
+            stack2.push(...creator.children)
+        }
+    }
+}
+
+type RectBox = { // 矩形包围盒
+    lt: { x: number, y: number }, // 左上角坐标
+    rb: { x: number, y: number }, // 右下角坐标
+    w: number, // 宽
+    h: number, // 高
+}
+
+function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: Transform3D): RectBox { // 获取一个矩形的包围盒
     if (!transform.hasRotation()) return {
         lt: { x: x, y: y },
         rb: { x: x + w, y: y + h },
+        w: w,
+        h: h,
     };
     transform = transform.decomposeToRotate()
     // 矩形中心为原点的情况下，矩形的四个顶点坐标
@@ -637,6 +799,21 @@ function getRectLTAndRB(x: number, y: number, w: number, h: number, transform: T
     return {
         lt: { x: -maxX + w / 2 + x, y: -maxY + h / 2 + y },
         rb: { x: maxX + w / 2 + x, y: maxY + h / 2 + y },
+        w: maxX * 2,
+        h: maxY * 2,
+    }
+}
+
+function mergeRectBox(...rectBoxes: RectBox[]): RectBox { // 合并多个矩形包围盒
+    const ltX = Math.min(...rectBoxes.map(item => item.lt.x))
+    const ltY = Math.min(...rectBoxes.map(item => item.lt.y))
+    const rbX = Math.max(...rectBoxes.map(item => item.rb.x))
+    const rbY = Math.max(...rectBoxes.map(item => item.rb.y))
+    return {
+        lt: { x: ltX, y: ltY },
+        rb: { x: rbX, y: rbY },
+        w: rbX - ltX,
+        h: rbY - ltY,
     }
 }
 
@@ -964,9 +1141,7 @@ type Attributes = { // 从元素的attributes中解析出来的属性
 }
 
 // 将父元素的属性合并到子元素
-function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
-    parent = parent.that
-    child = child.that
+function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     const parentShape = parent.shape
     const childShape = child.shape
     if (!parentShape || !childShape) return;
@@ -983,52 +1158,105 @@ function mergeAttributes(parent: BaseShapeCreator, child: BaseShapeCreator) {
     child.updateShapeStyle()
 }
 
-interface ShapeCreator {
-    make(): BaseShapeCreator // 重载make方法，可返回另一类型的creator代替自身
-    create(): Shape | undefined // 创建shape
-    afterChildrenCreated(): void // 所有子节点create之后
-    afterSiblingCreated(): void // 所有兄弟节点create之后
-    afterAllCreated(): void // 所有节点create之后
+interface Creator {
+    // 调整阶段
+    adjust(): void // 调整节点
+    afterChildrenAdjust(): void // 所有子节点adjust之后
+    afterSiblingAdjust(): void // 所有兄弟节点adjust之后
+    afterAllAdjust(): void // 所有节点adjust之后
+
+    // shape创建阶段
+    createShape(): void // 创建shape
+    afterChildrenCreateShape(): void // 所有子节点创建shape之后
+    afterSiblingCreateShape(): void // 所有兄弟节点创建shape之后
+    afterAllCreateShape(): void // 所有节点创建shape之后
 }
 
-class BaseShapeCreator implements ShapeCreator {
-    root: BaseShapeCreator | undefined
-    parent: BaseShapeCreator | undefined
-    children: BaseShapeCreator[] = []
-    svgRoot: Element
-    svgNode: Element
-    svgNodeTagName: string
-    context: any
-    shape: Shape | undefined = undefined
-    that: BaseShapeCreator = this
+type CreatorHandlerName = keyof Creator
 
+function creatorMethod(handlerName: CreatorHandlerName) {
+    return function (creator: BaseCreator) {
+        creator[handlerName]()
+    } as TreeNodeTraverseHandler
+}
+
+class BaseCreator extends BaseTreeNode implements Creator {
+    context: any
+    root: BaseCreator | undefined
+    parent: BaseCreator | undefined
+    children: BaseCreator[] = []
+
+    htmlElement?: {
+        root: Element,
+        node: Element,
+        tagName: string,
+    }
+
+    localAttributes: Record<string, string> = {}
     attributes: Attributes = {}
     transform = new Transform3D()
+
+    shape: Shape | undefined = undefined
     style?: Style
 
-    constructor(root: BaseShapeCreator | undefined, parent: BaseShapeCreator | undefined, svgRoot: Element, svgNode: Element, context: any) {
+    constructor(context: any, root: BaseCreator | undefined, parent: BaseCreator | undefined, htmlElement?: {
+        root: Element,
+        node: Element,
+    }) {
+        super()
+        this.context = context
         this.root = root
         this.parent = parent
-        this.svgRoot = svgRoot
-        this.svgNode = svgNode
-        this.svgNodeTagName = svgNode.tagName
-        this.context = context
+
+        if (htmlElement) {
+            this.htmlElement = {
+                ...htmlElement,
+                tagName: htmlElement.node.tagName,
+            }
+        }
+
         this.parseAttributes()
-        this.shape = this.create()
-        this.updateShapeAttr()
     }
 
-    make(): BaseShapeCreator {
-        return this
+    adjust() {
+
     }
 
-    setThat(that: BaseShapeCreator) {
-        while (that.that !== that) that = that.that;
-        this.that = that
+    afterChildrenAdjust() {
+
+    }
+
+    afterSiblingAdjust() {
+
+    }
+
+    afterAllAdjust() {
+
+    }
+
+    createShape() {
+
+    }
+
+    afterChildrenCreateShape() {
+
+    }
+
+    afterSiblingCreateShape() {
+
+    }
+
+    afterAllCreateShape() {
+
     }
 
     parseAttributes() {
-        const style = this.svgNode.getAttribute("style")
+        if (!this.htmlElement) return;
+
+        const attributes = this.htmlElement.node.attributes
+        for (const attribute of attributes) this.localAttributes[attribute.name] = attribute.value;
+
+        const style = this.localAttributes["style"]
         if (style) {
             this.attributes.style = style
             this.attributes.styleAttributes = getAllStyleFromString(style)
@@ -1037,60 +1265,60 @@ class BaseShapeCreator implements ShapeCreator {
             }
         }
 
-        const x = this.svgNode.getAttribute("x")
+        const x = this.localAttributes["x"]
         if (x) this.attributes.x = parseFloat(x);
-        const y = this.svgNode.getAttribute("y")
+        const y = this.localAttributes["y"]
         if (y) this.attributes.y = parseFloat(y);
 
-        const width = this.svgNode.getAttribute("width")
+        const width = this.localAttributes["width"]
         if (width) this.attributes.width = parseFloat(width);
-        const height = this.svgNode.getAttribute("height")
+        const height = this.localAttributes["height"]
         if (height) this.attributes.height = parseFloat(height);
 
         let transform
         if (this.attributes.styleTransform) transform = this.attributes.styleTransform;
         if (!transform) {
-            this.attributes.transform = this.svgNode.getAttribute("transform") ?? undefined
+            this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
         if (transform) this.transform.addTransform(parseTransform(transform));
 
-        const opacity = this.svgNode.getAttribute("opacity")
+        const opacity = this.localAttributes["opacity"]
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
         let fill
         if (this.attributes.styleAttributes && "fill" in this.attributes.styleAttributes) {
             fill = this.attributes.styleAttributes.fill
         }
-        if (!fill) fill = this.svgNode.getAttribute("fill");
+        if (!fill) fill = this.localAttributes["fill"];
         if (fill) this.attributes.fill = parseColor(fill);
 
-        const stroke = this.svgNode.getAttribute("stroke")
+        const stroke = this.localAttributes["stroke"]
         if (stroke) this.attributes.stroke = parseColor(stroke);
-        const strokeWidth = this.svgNode.getAttribute("stroke-width")
+        const strokeWidth = this.localAttributes["stroke-width"]
         if (strokeWidth) this.attributes.strokeWidth = parseFloat(strokeWidth);
 
-        const cx = this.svgNode.getAttribute("cx")
+        const cx = this.localAttributes["cx"]
         if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
-        const cy = this.svgNode.getAttribute("cy")
+        const cy = this.localAttributes["cy"]
         if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy);
-        const rx = this.svgNode.getAttribute("rx")
+        const rx = this.localAttributes["rx"]
         if (rx) this.attributes.rx = parseFloat(rx);
-        const ry = this.svgNode.getAttribute("ry")
+        const ry = this.localAttributes["ry"]
         if (ry) this.attributes.ry = parseFloat(ry);
-        const r = this.svgNode.getAttribute("r")
+        const r = this.localAttributes["r"]
         if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
 
-        const x1 = this.svgNode.getAttribute("x1")
+        const x1 = this.localAttributes["x1"]
         if (x1) this.attributes.x = this.attributes.x1 = parseFloat(x1);
-        const y1 = this.svgNode.getAttribute("y1")
+        const y1 = this.localAttributes["y1"]
         if (y1) this.attributes.y = this.attributes.y1 = parseFloat(y1);
-        const x2 = this.svgNode.getAttribute("x2")
+        const x2 = this.localAttributes["x2"]
         if (x2) this.attributes.x2 = parseFloat(x2);
-        const y2 = this.svgNode.getAttribute("y2")
+        const y2 = this.localAttributes["y2"]
         if (y2) this.attributes.y2 = parseFloat(y2);
 
-        const href = this.svgNode.getAttribute("xlink:href") ?? this.svgNode.getAttribute("href")
+        const href = this.localAttributes["xlink:href"] ?? this.localAttributes["href"]
         if (href) this.attributes.href = href;
     }
 
@@ -1113,6 +1341,9 @@ class BaseShapeCreator implements ShapeCreator {
     }
 
     updateShapeStyle() { // 设置shape的样式
+        const shape = this.shape
+        if (!shape) return;
+
         const borders = new BasicArray<Border>()
         if (this.attributes.stroke) {
             const strokeWidth = this.attributes.strokeWidth ?? 1
@@ -1130,7 +1361,7 @@ class BaseShapeCreator implements ShapeCreator {
 
         this.style = new Style(borders, fills, shadows)
         if (this.attributes.opacity) this.style.contextSettings = new ContextSettings(BlendMode.Normal, this.attributes.opacity);
-        this.shape!.style = this.style
+        shape.style = this.style
     }
 
     updateShapeAttr() { // 设置shape的属性
@@ -1140,7 +1371,7 @@ class BaseShapeCreator implements ShapeCreator {
         // 叠加xy
         let x = this.attributes.x || 0
         let y = this.attributes.y || 0
-        if (this.parent instanceof SvgShapeCreator && this.parent.viewBox) { // viewBox偏移
+        if (this.parent instanceof SvgCreator && this.parent.viewBox) { // viewBox偏移
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
@@ -1149,94 +1380,72 @@ class BaseShapeCreator implements ShapeCreator {
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()
     }
-
-    create(): Shape | undefined {
-        return
-    }
-
-    afterChildrenCreated(): void {
-
-    }
-
-    afterSiblingCreated(): void {
-
-    }
-
-    afterAllCreated(): void {
-
-    }
 }
 
-class NoneShapeCreator extends BaseShapeCreator {
+class NoneCreator extends BaseCreator {
 
 }
 
-class GroupShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
-        return shapeCreator.newGroupShape("编组", this.style)
+class GroupCreator extends BaseCreator {
+    createShape() {
+        this.shape = shapeCreator.newGroupShape("编组", this.style)
     }
 
-    afterChildrenCreated(): void {
+    afterChildrenCreateShape(): void {
         if (!this.shape) return;
         const children: {
             shape: Shape,
-            creator: BaseShapeCreator,
-        }[] = this.children.filter(child => child.that.shape).map(child => {
+            creator: BaseCreator,
+        }[] = this.children.filter(child => child.shape).map(child => {
             return {
-                shape: child.that.shape!,
-                creator: child.that,
+                shape: child.shape!,
+                creator: child,
             }
         })
 
-        if (children.length === 0) { // 空的group，用NoneShapeCreator替代
-            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode, this.context)
+        if (children.length === 0) { // 空的group，移除自身
+            this.remove()
             return
         }
 
         const reservedAttributes = ["fill", "stroke"] // 保留属性，有则不会被子级替代
         const isReserved = reservedAttributes.some(attr => attr in this.attributes)
-        if (!isReserved && children.length === 1) {
+        if (!isReserved && children.length === 1) { // 用子元素替代自身
             mergeAttributes(this, children[0].creator)
-            this.setThat(children[0].creator)
+            this.replaceWithChildren()
             return
         }
 
         const groupShape = this.shape as GroupShape
         groupShape.childs.push(...children.map(child => child.shape))
 
-        // 根据子元素的包围盒，更新groupShape的宽高
-        let ltX = groupShape.frame.x
-        let ltY = groupShape.frame.y
-        let rbX = groupShape.frame.x + groupShape.frame.width
-        let rbY = groupShape.frame.y + groupShape.frame.height
-
-        for (const child of children) {
+        const childShapeBoxes = children.map(child => {
             const childShape = child.shape
             const childCreator = child.creator
-            const childLTRB = getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
-            // 超出左、上边界的偏移量
-            const ltXDiff = -childLTRB.lt.x
-            const ltYDiff = -childLTRB.lt.y
-            // 若超出左、上边界，整体向右、下偏移
-            const childRbX = childLTRB.rb.x + Math.max(0, ltXDiff) + ltX
-            const childRbY = childLTRB.rb.y + Math.max(0, ltYDiff) + ltY
-            // 拓展右下边界
-            if (childRbX > rbX) rbX = childRbX;
-            if (childRbY > rbY) rbY = childRbY;
-        }
+            return getRectLTAndRB(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
+        })
+        const childesShapeBox = mergeRectBox(...childShapeBoxes) // 合并所有子元素的包围盒
 
-        groupShape.frame.x = ltX
-        groupShape.frame.y = ltY
-        groupShape.frame.width = rbX - ltX
-        groupShape.frame.height = rbY - ltY
+        // 根据子元素包围盒更新groupShape的宽高
+        groupShape.frame.width = childesShapeBox.w
+        groupShape.frame.height = childesShapeBox.h
+
+        // 将子元素包围盒偏移至groupShape的左上角
+        for (const child of children) {
+            child.creator.transform.translate(-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0)
+            child.creator.updateShapeAttrByTransform()
+        }
+        // 将groupShape偏移至子元素包围盒原来的位置
+        groupShape.frame.x += childesShapeBox.lt.x
+        groupShape.frame.y += childesShapeBox.lt.y
     }
 }
 
-class SvgShapeCreator extends BaseShapeCreator {
+class SvgCreator extends BaseCreator {
     viewBox: [number, number, number, number] | undefined
 
-    create(): Shape | undefined {
-        const viewBox = this.svgNode.getAttribute("viewBox")
+    createShape() {
+        const viewBox = this.localAttributes["viewBox"]
         if (viewBox) {
             const viewBoxSplitRes = viewBox.split(" ").map(item => parseFloat(item))
             if (viewBoxSplitRes.length === 4) {
@@ -1245,17 +1454,13 @@ class SvgShapeCreator extends BaseShapeCreator {
         }
         const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
         const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
-        return shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
+        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
     }
 
-    afterChildrenCreated(): void {
+    afterChildrenCreateShape(): void {
         if (!this.shape) return;
         const svgShape = this.shape as Artboard
-        const childrenShapes = this.children.filter(item => item.that.shape).map(item => item.that.shape!)
-        if (childrenShapes.length === 0) {
-            this.that = new NoneShapeCreator(this.root, this.parent, this.svgRoot, this.svgNode, this.context)
-            return
-        }
+        const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
         svgShape.childs.push(...childrenShapes)
     }
 }
@@ -1271,40 +1476,38 @@ function getHiddenSvgElement() {
     return hiddenSvgElement
 }
 
-function getPathWHFromD(d: string): { width: number, height: number } {
+function getPathBoxFromD(d: string) {
     const svg = getHiddenSvgElement()
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
     path.setAttribute("d", d)
     svg.appendChild(path)
-    const box = path.getBBox()
-    return { width: box.width, height: box.height }
+    return path.getBBox()
 }
 
-class PathShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
-        const d = this.svgNode.getAttribute("d")
+class PathCreator extends BaseCreator {
+    createShape() {
+        const d = this.localAttributes["d"]
         if (!d) return;
-        const x = this.attributes.x || 0
-        const y = this.attributes.y || 0
-        const { width, height } = getPathWHFromD(d)
+        let { x, y, width, height } = getPathBoxFromD(d)
         const path = new Path(d);
         path.translate(-x, -y);
-        return shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
+        this.transform.translate(x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0)
+        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
     }
 }
 
-class RectShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
+class RectCreator extends BaseCreator {
+    createShape() {
         const x = this.attributes.x || 0
         const y = this.attributes.y || 0
         const width = this.attributes.width || 0
         const height = this.attributes.height || 0
-        return shapeCreator.newRectShape("矩形", new ShapeFrame(x, y, width, height))
+        this.shape = shapeCreator.newRectShape("矩形", new ShapeFrame(x, y, width, height))
     }
 }
 
-class EllipseShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
+class EllipseCreator extends BaseCreator {
+    createShape() {
         const x = this.attributes.x || 0
         const y = this.attributes.y || 0
 
@@ -1316,12 +1519,12 @@ class EllipseShapeCreator extends BaseShapeCreator {
         if (this.attributes.ry) height = this.attributes.ry * 2;
         else if (this.attributes.height) height = this.attributes.height;
 
-        return shapeCreator.newOvalShape("圆形", new ShapeFrame(x, y, width, height))
+        this.shape = shapeCreator.newOvalShape("圆形", new ShapeFrame(x, y, width, height))
     }
 }
 
-class LineShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
+class LineCreator extends BaseCreator {
+    createShape() {
         const x1 = this.attributes.x1 || 0
         const y1 = this.attributes.y1 || 0
         const x2 = this.attributes.x2 || 0
@@ -1332,24 +1535,24 @@ class LineShapeCreator extends BaseShapeCreator {
         if (!line.points) line.points = new BasicArray();
         line.points[0] = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
         line.points[1] = new CurvePoint([0] as BasicArray<number>, uuid(), dx, dy, CurveMode.Straight);
-        return line
+        this.shape = line
     }
 }
 
-class TextShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
+class TextCreator extends BaseCreator {
+    createShape() {
         const x = this.attributes.x || 0
         const y = this.attributes.y || 0
-        const text = this.svgNode.textContent
+        const text = this.htmlElement!.node.textContent
         if (!text) return;
         const fontStyleAttr = this.attributes.styleAttributes?.font
         const fill = this.attributes.fill
-        return shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
+        this.shape = shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
     }
 }
 
-class ImageShapeCreator extends BaseShapeCreator {
-    create(): Shape | undefined {
+class ImageCreator extends BaseCreator {
+    createShape() {
         const x = this.attributes.x || 0
         const y = this.attributes.y || 0
         const width = this.attributes.width || 0
@@ -1369,7 +1572,7 @@ class ImageShapeCreator extends BaseShapeCreator {
         const mediaResourceMgr = this.context.mediaResourceMgr
         mediaResourceMgr.add(ref, media)
 
-        return shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), mediaResourceMgr, ref)
+        this.shape = shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), mediaResourceMgr, ref)
     }
 }
 
@@ -1385,91 +1588,75 @@ class Parser {
 
     create(node: Element) { // 处理svg元素内的一个节点，并返回其子节点
         const children = Array.from(node.children)
-        let creatorConstruction: typeof BaseShapeCreator
+        let creatorConstruction: typeof BaseCreator
         if (node.tagName === "g") {
-            creatorConstruction = GroupShapeCreator
+            creatorConstruction = GroupCreator
         } else if (node.tagName === "svg") {
-            creatorConstruction = SvgShapeCreator
+            creatorConstruction = SvgCreator
         } else if (node.tagName === "path") {
-            creatorConstruction = PathShapeCreator
+            creatorConstruction = PathCreator
         } else if (node.tagName === "rect") {
-            creatorConstruction = RectShapeCreator
+            creatorConstruction = RectCreator
         } else if (node.tagName === "circle" || node.tagName === "ellipse") {
-            creatorConstruction = EllipseShapeCreator
+            creatorConstruction = EllipseCreator
         } else if (node.tagName === "line") {
-            creatorConstruction = LineShapeCreator
+            creatorConstruction = LineCreator
         } else if (node.tagName === "text") {
-            creatorConstruction = TextShapeCreator
+            creatorConstruction = TextCreator
         } else if (node.tagName === "image") {
-            creatorConstruction = ImageShapeCreator
+            creatorConstruction = ImageCreator
         } else {
-            creatorConstruction = NoneShapeCreator
+            creatorConstruction = NoneCreator
         }
         (node as any).creator = new creatorConstruction(
+            this.context, // context
             (this.svgRoot as any).creator, // root
             (node.parentElement as any)?.creator, // parent
-            this.svgRoot, // svgRoot
-            node, // svgNode
-            this.context, // context
-        ).make()
+            {
+                root: this.svgRoot, // svgRoot
+                node: node, // svgNode
+            },
+        )
         return children
     }
 
     parse(): Shape | undefined {
-        const stack = [this.svgRoot]
-        const stack1: [ // 保存遍历树时的路径信息
-            Element, // 已create的元素
-            number, // 其子节点的数量
-        ][] = []
-
-        while (stack.length) {
-            const node = stack.pop()!
+        // 创建creator树
+        const stack0 = [this.svgRoot]
+        while (stack0.length) {
+            const node = stack0.pop()!
             const children = this.create(node)
 
-            const creator = (node as any).creator as BaseShapeCreator
+            const creator = (node as any).creator as BaseCreator
 
             const parentNode = node.parentElement
             if (parentNode) {
-                const parentCreator = (parentNode as any).creator as BaseShapeCreator
+                const parentCreator = (parentNode as any).creator as BaseCreator
                 parentCreator.children.push(creator)
             }
 
-            if (children.length) {
-                stack.push(...children.reverse())
-                stack1.push([node, children.length])
-            } else {
-                creator.afterChildrenCreated()
-
-                if (stack1.length === 0 && node !== this.svgRoot) throw new Error("svg root元素不匹配");
-
-                let currentNode = node
-                while (stack1.length > 0) {
-                    const parentStack1 = stack1[stack1.length - 1]
-                    if (parentStack1[0] !== currentNode.parentElement) throw new Error("svg父级元素不匹配");
-
-                    if (--parentStack1[1] > 0) break;
-                    stack1.pop()
-                    currentNode = parentStack1[0]
-
-                    const svgParent = parentStack1[0]
-                    for (const child of svgParent.children) {
-                        const childCreator = (child as any).creator as BaseShapeCreator
-                        childCreator.afterSiblingCreated()
-                    }
-
-                    const parentCreator = (svgParent as any).creator as BaseShapeCreator
-                    parentCreator.afterChildrenCreated()
-                }
-            }
+            stack0.push(...children.reverse())
         }
+        const rootCreator = (this.svgRoot as any).creator as BaseCreator
 
-        const rootCreator = (this.svgRoot as any).creator as BaseShapeCreator
-        const stack2 = [rootCreator]
-        while (stack2.length) { // 再遍历一次，处理afterAllCreated
-            const creator = stack2.pop()!
-            creator.afterAllCreated()
-            stack2.push(...creator.children)
-        }
+        // 调整阶段
+        rootCreator.traverse({
+            do: creatorMethod("adjust"),
+            afterChildrenDo: creatorMethod("afterChildrenAdjust"),
+            afterSiblingDo: creatorMethod("afterSiblingAdjust"),
+            afterAllDo: creatorMethod("afterAllAdjust"),
+        })
+
+        // 创建shape阶段
+        rootCreator.traverse({
+            do: ((creator: BaseCreator) => {
+                creator.createShape()
+                creator.updateShapeAttr()
+            }) as TreeNodeTraverseHandler,
+            afterChildrenDo: creatorMethod("afterChildrenCreateShape"),
+            afterSiblingDo: creatorMethod("afterSiblingCreateShape"),
+            afterAllDo: creatorMethod("afterAllCreateShape"),
+        })
 
         return rootCreator.shape
     }
