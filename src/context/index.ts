@@ -157,15 +157,17 @@ export class Context extends WatchableObject {
     }
 
     editor4Shape(shape: ShapeView): ShapeEditor {
-        return this.editor.editor4Shape(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Shape(this.selection.selectedPage, shape);
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
     editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
-        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id && this.m_textEditor.view.parent) {
             return this.m_textEditor;
         }
-        this.m_textEditor = this.editor.editor4TextShape(shape);
+        this.m_textEditor = this.editor.editor4TextShape(this.selection.selectedPage, shape);
         return this.m_textEditor;
     }
 
@@ -176,7 +178,8 @@ export class Context extends WatchableObject {
     }
 
     editor4Table(shape: TableView): TableEditor {
-        return this.editor.editor4Table(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Table(this.selection.selectedPage, shape);
     }
 
     get data() {
