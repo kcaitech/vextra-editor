@@ -638,6 +638,12 @@ class BaseTreeNode {
         return this.parent!.children[index + 1]
     }
 
+    siblings() { // 获取所有兄弟节点（排除自身）
+        const index = this.index()
+        if (index === -1) return [];
+        return this.parent!.children.filter((_, i) => i !== index)
+    }
+
     isAncestorOf(node: BaseTreeNode) { // 判断本节点是否是指定节点的祖先
         let parent = node.parent
         while (parent) {
@@ -1120,11 +1126,18 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     y?: number,
     width?: number,
     height?: number,
+
     transform?: string,
     styleTransform?: string,
+
     opacity?: number,
     fill?: MyColor,
-    stroke?: MyColor,
+    stroke?: {
+        color: MyColor,
+        width?: number,
+        dashArray: number[], // 虚线的length、gap参数，实线则为[0, 0]
+        position: "inside" | "center" | "outside", // 位置：内部、中心、外部
+    },
     strokeWidth?: number,
 
     // 椭圆
@@ -1310,9 +1323,22 @@ class BaseCreator extends BaseTreeNode {
         if (fill) this.attributes.fill = parseColor(fill);
 
         const stroke = this.localAttributes["stroke"]
-        if (stroke) this.attributes.stroke = parseColor(stroke);
+        if (stroke) {
+            const color = parseColor(stroke)
+            if (color) {
+                const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
+                this.attributes.stroke = {
+                    color: color,
+                    dashArray: dashArray,
+                    position: "center",
+                }
+            }
+        }
         const strokeWidth = this.localAttributes["stroke-width"]
-        if (strokeWidth) this.attributes.strokeWidth = parseFloat(strokeWidth);
+        if (strokeWidth) {
+            this.attributes.strokeWidth = parseFloat(strokeWidth)
+            if (this.attributes.stroke) this.attributes.stroke.width = this.attributes.strokeWidth;
+        }
 
         const cx = this.localAttributes["cx"]
         if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
@@ -1362,13 +1388,19 @@ class BaseCreator extends BaseTreeNode {
 
         const borders = new BasicArray<Border>()
         if (this.attributes.stroke) {
-            const strokeWidth = this.attributes.strokeWidth ?? 1
-            const color = new Color(this.attributes.stroke.a, this.attributes.stroke.r, this.attributes.stroke.g, this.attributes.stroke.b)
-            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Center, strokeWidth, new BorderStyle(0, 0)))
+            const strokeWidth = this.attributes.stroke.width || 1
+            const color = new Color(
+                this.attributes.stroke.color.a,
+                this.attributes.stroke.color.r,
+                this.attributes.stroke.color.g,
+                this.attributes.stroke.color.b,
+            )
+            const borderStyle = new BorderStyle(this.attributes.stroke.dashArray[0], this.attributes.stroke.dashArray[1])
+            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, BorderPosition.Center, strokeWidth, borderStyle))
         }
 
         const fills = new BasicArray<Fill>()
-        if (this.attributes.fill) {
+        if (this.attributes.fill && !(this instanceof TextCreator)) { // 文本不需要填充
             const color = new Color(this.attributes.fill.a, this.attributes.fill.r, this.attributes.fill.g, this.attributes.fill.b)
             fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, color))
         }
@@ -1501,6 +1533,34 @@ function getPathBoxFromD(d: string) {
 }
 
 class PathCreator extends BaseCreator {
+    afterAllAdjust() {
+        // 识别本节点是否为边框部分
+        if (this.attributes.fill || !this.attributes.stroke) return;
+
+        // 主体部分
+        const mainPath = this.siblings().find(item =>
+            item instanceof PathCreator
+            && item.attributes.fill
+            && item.attributes.x === this.attributes.x
+            && item.attributes.y === this.attributes.y
+            && item.attributes.width === this.attributes.width
+            && item.attributes.height === this.attributes.height
+            && item.localAttributes["d"] === this.localAttributes["d"]
+        ) as PathCreator | undefined
+        if (!mainPath) return;
+
+        // 设置边框
+        console.log(this.attributes)
+        mainPath.attributes.stroke = {
+            color: this.attributes.stroke.color,
+            width: this.attributes.strokeWidth,
+            dashArray: this.attributes.stroke.dashArray,
+            position: "center",
+        }
+
+        this.remove() // 移除自身
+    }
+
     createShape() {
         const d = this.localAttributes["d"]
         if (!d) return;
@@ -1559,11 +1619,17 @@ class TextCreator extends BaseCreator {
     createShape() {
         const x = this.attributes.x || 0
         const y = this.attributes.y || 0
+
         const text = this.htmlElement!.node.textContent
         if (!text) return;
+
         const fontStyleAttr = this.attributes.styleAttributes?.font
         const fill = this.attributes.fill
-        this.shape = shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
+
+        const textShape = shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
+        textShape.text.insertText(text, 0)
+
+        this.shape = textShape
     }
 }
 
