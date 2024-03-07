@@ -194,8 +194,6 @@ function selection_watcher(t: number) {
 function workspace_watcher(t: number) {
     if (t === WorkSpace.PATH_EDIT_MODE) {
         const _is_pdm = props.context.workspace.is_path_edit_mode;
-        console.log(_is_pdm);
-
         baseAttr.value = !_is_pdm;
         editAttr.value = _is_pdm;
     }
