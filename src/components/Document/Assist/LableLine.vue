@@ -24,10 +24,7 @@ const size_posi = ref<CenterPoint[]>([]);
 
 // hover后给选中和hover的图形描边
 const contour = () => {
-    tracingPath.value = [];
-    solid_point.value = [];
-    dotted_point.value = [];
-    size_posi.value = [];
+    clearPoint();
     const hoveredShape = props.context.selection.hoveredShape;
     const selectShape = props.context.selection.selectedShapes;
     if (!hoveredShape || selectShape.length === 0) return;
@@ -37,6 +34,13 @@ const contour = () => {
     hoveredContour(hoveredShape);
     solid_line_point(select_shape_posi.value, hover_shape_posi.value);
     dotted_line_point(select_shape_posi.value, hover_shape_posi.value);
+}
+
+const clearPoint = () => {
+    tracingPath.value = [];
+    solid_point.value = [];
+    dotted_point.value = [];
+    size_posi.value = [];
 }
 
 const selectContour = (shapes: ShapeView[]) => {
@@ -138,13 +142,14 @@ const filterAlpha = (a: number) => {
 }
 
 onMounted(() => {
+    contour();
     props.context.workspace.watch(workspaceUpdate);
     props.context.selection.watch(selectionWatcher);
 })
 onUnmounted(() => {
+    clearPoint();
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.selection.unwatch(selectionWatcher);
-
 })
 </script>
 

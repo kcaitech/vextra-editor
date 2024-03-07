@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { BasicArray, Color, Fill, FillType, Shape, ShapeType, TableCell, TableCellView, TableShape, TableView, Text } from '@kcdesign/data';
@@ -49,6 +49,9 @@ const getColorFromPicker = (c: Color) => {
         const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, c);
         editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
+    nextTick(() => {
+        getCellsFormat();
+    })
 }
 
 const mergeCells = () => {
@@ -229,6 +232,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    props.context.menu.setCellMenuType(undefined);
     props.context.selection.unwatch(selection_watcher);
 })
 </script>
@@ -243,8 +247,8 @@ onUnmounted(() => {
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu" :selectIcon="horIcon"
-                    @textAlginHor="textAlginHor">
+                <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu"
+                    :selectIcon="horIcon" @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
             <div class="ver" @click="showAlginMenu('ver')" :class="{ selected_bgc: isAlignMenu === 'ver' }">
@@ -252,8 +256,8 @@ onUnmounted(() => {
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu" :selectIcon="verIcon"
-                    @textAlginVer="textAlginVer">
+                <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu"
+                    :selectIcon="verIcon" @textAlginVer="textAlginVer">
                 </TableContextAlgin>
             </div>
             <div style="display: flex; align-items: center; justify-content: center; padding: 2px;">
@@ -276,7 +280,8 @@ onUnmounted(() => {
                 <svg-icon icon-class="layer-image"></svg-icon>
             </div>
         </div>
-        <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol" class="popover-content">
+        <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol"
+            class="popover-content">
             <div style="display: flex; align-items: center; justify-content: center;">
                 <ColorPicker :context="props.context" :color="(color as Color)" :cell="true" :top="30"
                     @change="c => getColorFromPicker(c)"></ColorPicker>

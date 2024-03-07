@@ -25,12 +25,14 @@ function keydown(event: KeyboardEvent, context: Context) {
             return;
         }
     }
-
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
 function keyup(event: KeyboardEvent, context: Context) {
-
+    if(event.code === 'AltLeft' || event.code === 'AltRight') {
+        event.preventDefault();
+        context.selection.setShowInterval(false);
+    }
 }
 
 export function setup(context: Context) {
@@ -573,4 +575,13 @@ keydownHandler['Quote'] = function (event: KeyboardEvent, context: Context) {
             : context.workspace.t('setting.pixelAlignMentOn'));
         return;
     }
+}
+
+keydownHandler['AltLeft'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    context.selection.setShowInterval(true);
+}
+keydownHandler['AltRight'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    context.selection.setShowInterval(true);
 }

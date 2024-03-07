@@ -1417,7 +1417,7 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 5px;
+                height: 32px;
 
                 .add {
                     width: 28px;
