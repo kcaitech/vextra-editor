@@ -5,6 +5,7 @@ import { ContactShape, Matrix, PathShape, PathShapeView, Shape, ShapeType, Shape
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
+import { permIsEdit } from './permission';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
@@ -452,6 +453,7 @@ export function format_value(val: number | string, fix = 2) {
 }
 
 export function modifyOpacity(context: Context, val: number) {
+    if(!permIsEdit(context)) return;
     const page = context.selection.selectedPage!;
     const shapes = context.selection.selectedShapes;
     const editor = context.editor4Page(page);
