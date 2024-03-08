@@ -9,6 +9,7 @@ export const shadow: any = {
     effect:'effect',
     blur: 'Blur',
     extend: 'spread',
+    fill_is_visible: "Used when the container's fill is visible"
 }
 
 shadow[ShadowPosition.Inner] = 'Inner shadow';

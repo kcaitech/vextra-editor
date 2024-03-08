@@ -135,11 +135,13 @@ onUnmounted(() => {
     selection.unwatch(selectionWatcher);
 })
 </script>
+
 <template>
     <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#1878f5' stroke-width="2.5px" class="scan">
     </path>
     <path v-if="!isCursor" :d="selectPath" fill="#1878f5" fill-opacity="0.35" stroke='none'></path>
 </template>
+
 <style lang='scss' scoped>
 .scan {
     animation: scan 0.8s none infinite;

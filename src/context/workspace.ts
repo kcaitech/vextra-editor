@@ -314,6 +314,9 @@ export class WorkSpace extends WatchableObject {
 
     setSelectionViewUpdater(isWork: boolean) {
         this.m_should_selection_view_update = isWork;
+        if (isWork) {
+            this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        }
     }
 
     updateRoot(root: Root) {

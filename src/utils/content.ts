@@ -893,22 +893,38 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param context
  * @param shape
  */
-export function shape_track(context: Context, shape: ShapeView) {
-    const page = shape.getPage() as PageView;
+export function shape_track(context: Context, shape: Shape) {
+    const page = shape.getPage() as Page;
     if (!page) return;
-    const target = page.getShape(shape.id);
-    if (!target) return;
     const selection = context.selection;
-    const selectedPage = selection.selectedPage;
-    if (!selectedPage) return;
-    let need_change_page = selectedPage.id !== page.id;
-    if (need_change_page) selection.selectPage(page);
-    selection.selectShape(target);
+    const selectedPage = selection.selectedPage!;
 
-    need_change_page ? setTimeout(track, 10) : track();
-
-    function track() {
-        target && fit_no_transform(context, target);
+    if (selectedPage.id === page.id) {
+        const target = selectedPage.getShape(shape.id);
+        if (target) {
+            fit_no_transform(context, target);
+            selection.selectShape(target);
+        }
+    } else {
+        const ctx: Context = context;
+        const pagesMgr = ctx.data.pagesMgr;
+        pagesMgr.get(page.id).then((page: Page | undefined) => {
+            if (page) {
+                ctx.comment.toggleCommentPage()
+                ctx.comment.commentMount(false)
+                const pagedom = ctx.getPageDom(page).dom;
+                ctx.selection.selectPage(pagedom);
+                let timer = setTimeout(() => {
+                    const selectedPage = selection.selectedPage!
+                    const target = selectedPage.getShape(shape.id);
+                    if (target) {
+                        fit_no_transform(context, target);
+                        selection.selectShape(target);
+                    }
+                    clearTimeout(timer);
+                }, 10)
+            }
+        })
     }
 }
 
@@ -964,8 +980,10 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         }
     }
 }
+
 const MAX = 25600;
 const MIN = 2;
+
 export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
     let scale_delta_ = 1 / scale_delta;
@@ -984,6 +1002,7 @@ export function root_scale(context: Context, e: WheelEvent) {
     matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
     matrix.trans(offsetX, offsetY);
 }
+
 export function root_trans(context: Context, e: WheelEvent) {
     const MAX_STEP = 120;
 
@@ -1020,9 +1039,9 @@ export function pre_modify_anchor(shape: ShapeView) {
 }
 
 /**
- * 
+ *
  * 容器标题的最大视图宽度
-*/
+ */
 export function shape_title_width(shape: ShapeView, matrix: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const f = shape.frame;
@@ -1095,8 +1114,8 @@ function select_all_for_path_edit(context: Context) {
 
 /**
  * @description 图层隐藏与显示
- * @param context 
- * @returns 
+ * @param context
+ * @returns
  */
 export function set_visible_for_shapes(context: Context) {
     let shapes = context.selection.selectedShapes;
@@ -1112,8 +1131,8 @@ export function set_visible_for_shapes(context: Context) {
 
 /**
  * @description 设置图层锁
- * @param context 
- * @returns 
+ * @param context
+ * @returns
  */
 export function set_lock_for_shapes(context: Context) {
     let shapes = context.selection.selectedShapes;
@@ -1129,7 +1148,7 @@ export function set_lock_for_shapes(context: Context) {
 
 /**
  * @description 创建编组
- * @param context 
+ * @param context
  */
 export function component(context: Context) {
     const symbol = make_symbol(context, context.workspace.t.bind(context.workspace));
@@ -1237,6 +1256,7 @@ export function redo(context: Context) {
 
     modify_selection(context);
 }
+
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
     try {
         const __buff = new Uint8Array(buff);
@@ -1254,13 +1274,11 @@ export function detectZoom() {
 
     if (window.devicePixelRatio !== undefined) {
         ratio = window.devicePixelRatio;
-    }
-    else if (~ua.indexOf('msie')) {
+    } else if (~ua.indexOf('msie')) {
         if (screen.deviceXDPI && screen.logicalXDPI) {
             ratio = screen.deviceXDPI / screen.logicalXDPI;
         }
-    }
-    else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
+    } else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
         ratio = window.outerWidth / window.innerWidth;
     }
 
@@ -1294,6 +1312,7 @@ export const get_table_range = (table: TableSelection) => {
 export const is_editing = (table: TableSelection) => {
     return table.editingCell || table.tableRowStart > -1 || table.tableColStart > -1;
 }
+
 export function hidden_selection(context: Context) {
     context.selection.notify(Selection.SELECTION_HIDDEN);
 }

@@ -89,7 +89,7 @@ var configureWebpack = (config) => {
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
-        }.js`
+    }.js`
     config.plugins = [
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] }),
@@ -117,11 +117,16 @@ var configureWebpack = (config) => {
         ],
         poll: 5000,
     }
+
+    if (process.env.NODE_ENV === "production") {
+        config.devtool = "nosources-source-map"
+    }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
     publicPath: './',
+    // publicPath: '/zbb',
     configureWebpack,
 
     pluginOptions: {
@@ -149,8 +154,5 @@ var exports = defineConfig({
             }
         }
     },
-
-
-}
-)
+})
 module.exports = exports

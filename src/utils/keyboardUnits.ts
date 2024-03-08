@@ -189,7 +189,7 @@ keydownHandler['KeyK'] = function (event: KeyboardEvent, context: Context) {
         component(context); // 创建组件
         return;
     }
-    context.tool.setAction(Action.AutoK); // 等比缩放工具
+    // context.tool.setAction(Action.AutoK); // 等比缩放工具
 }
 
 keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {

@@ -162,7 +162,7 @@ export class Tool extends WatchableObject {
 
     keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
         if (!(ctrl || meta || shift)) {
-            this.setAction(Action.AutoK);
+            // this.setAction(Action.AutoK);
         }
     }
 

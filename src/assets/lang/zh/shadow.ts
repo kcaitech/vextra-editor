@@ -9,6 +9,7 @@ export const shadow: any = {
     effect:'效果',
     blur: '模糊',
     extend: '扩展',
+    fill_is_visible: "容器的填充可见时可使用"
 }
 
 

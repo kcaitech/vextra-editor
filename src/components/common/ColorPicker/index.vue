@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    AsyncGradientEditor,
+    Color,
+    FillType,
+    Gradient,
+    GradientType,
+    GroupShapeView,
+    ShapeType,
+    TableView,
+    TextShapeView,
+} from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import {
@@ -33,7 +43,12 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-import { GradientFrom, getTextIndexAndLen, get_add_gradient_color, isSelectText } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import {
+    GradientFrom,
+    getTextIndexAndLen,
+    get_add_gradient_color,
+    isSelectText
+} from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
@@ -41,6 +56,7 @@ import { watch } from 'vue';
 interface Props {
     context: Context
     color: Color
+
     locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
@@ -59,12 +75,19 @@ interface Data {
 
 interface Emits {
     (e: 'change', color: Color): void;
+
     (e: 'choosecolor', color: number[]): void;
+
     (e: 'gradient-reverse'): void;
+
     (e: 'gradient-rotate'): void;
+
     (e: 'gradient-add-stop', position: number, color: Color, id: string): void;
+
     (e: 'gradient-type', type: GradientType | 'solid'): void;
+
     (e: 'gradient-color-change', color: Color, index: number): void;
+
     (e: 'gradient-stop-delete', index: number): void;
 }
 
@@ -230,14 +253,14 @@ function locate() {
     }
     const doc_height = document.documentElement.clientHeight;
     const { height, y } = el.getBoundingClientRect();
-    if (props.fillType && props.fillType === FillType.SolidColor) {
-        if (doc_height - y < height + 48) {
-            el.style.top = parseInt(el.style.top) - ((height + 58) - (doc_height - y)) + 'px'
-        }
-    } else {
-        if (doc_height - y < height + 10) {
-            el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-        }
+
+    //避免工具栏遮挡调色板
+    if (doc_height - y < height + 10) {
+        el.style.top = ((parseInt(el.style.top) - ((height + 20) - (doc_height - y))) < 46 ? 56 : parseInt(el.style.top) - ((height + 20) - (doc_height - y))) + 'px'
+    }
+    //从表单快捷入口调起调色板时固定top
+    if (props.cell) {
+        el.style.top = 40 + 'px';
     }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
@@ -288,7 +311,6 @@ function setHueIndicatorPosition(e: MouseEvent) {
         document.addEventListener('mousemove', mousemove4Hue);
         document.addEventListener('mouseup', mouseup);
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     }
 }
 
@@ -642,6 +664,7 @@ function enter() {
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
 }
+
 function triggle() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -654,6 +677,7 @@ function triggle() {
         colorPickerMount();
     }
 }
+
 /**
  * @description 打开调色板
  */
@@ -669,6 +693,7 @@ function colorPickerMount() {
     if (props.locat && props.gradient && props.fillType === FillType.Gradient) props.context.color.switch_editor_mode(true, props.gradient);
     nextTick(locate);
 }
+
 function blockUnmount() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -678,6 +703,7 @@ function blockUnmount() {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
+
 /**
  * @description 移除调色板
  */
@@ -693,12 +719,14 @@ function removeCurColorPicker() {
     props.context.color.select_stop(undefined);
     props.context.color.clear_locat();
 }
+
 function switch_editor_mode() {
     if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
         return;
     }
     props.context.color.switch_editor_mode(true, props.gradient);
 }
+
 // init
 function init_rescent() {
     let r = localStorage.getItem(key_storage);
@@ -711,9 +739,11 @@ function init_rescent() {
         recent.value.push(parseColorFormStorage(r[i]));
     }
 }
+
 function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
+
 // update
 function update(color = props.color) {
     init_rescent();
@@ -724,11 +754,13 @@ function update(color = props.color) {
     update_alpha_indicator(color);
     update_gradient(props.gradient);
 }
+
 function update_rgb(R: number, G: number, B: number) {
     rgba.R = R;
     rgba.G = G;
     rgba.B = B;
 }
+
 function update_recent_color() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
     let nVal = updateRecently(color) || JSON.stringify([]);
@@ -740,6 +772,7 @@ function update_recent_color() {
         }
     }
 }
+
 function update_dot_indicator_position(color: Color) {
     const { h, s, b } = RGB2HSB(color);
     dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
@@ -751,6 +784,9 @@ function update_dot_indicator_position(color: Color) {
     }
     if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
         hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+    }
+    if (hueIndicator === 0 && hueIndicatorAttr.x) {
+        return;
     }
     hueIndicatorAttr.x = hueIndicator;
 }
@@ -765,7 +801,9 @@ function update_gradient(gradient: Gradient | undefined) {
     update_stops(id);
     props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
 }
+
 const gradient_line = ref<HTMLDivElement>();
+
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
     stop_els.value.length = 0;
@@ -784,6 +822,7 @@ function update_stops(selected: string | undefined) {
     update_dot_indicator_position(c as Color);
     update_alpha_indicator(c as Color);
 }
+
 //新增渐变节点
 function _gradient_channel_down(e: MouseEvent) {
     const target = e.target as HTMLInputElement;
@@ -797,6 +836,7 @@ function _gradient_channel_down(e: MouseEvent) {
         props.context.color.select_stop(stop.id);
     })
 }
+
 function delete_gradient_stop() {
     if (stop_els.value.length <= 1) return;
     let id = props.context.color.selected_stop;
@@ -813,10 +853,12 @@ function delete_gradient_stop() {
         update_gradient(props.gradient!);
     })
 }
+
 // 选中渐变节点
 let stop_start_position: ClientXY = { x: 0, y: 0 };
 let gradientEditor: AsyncGradientEditor | undefined;
 const stop_id = ref<string>('');
+
 function _stop_down(e: MouseEvent, index: number, id: string) {
     e.stopPropagation();
     props.context.color.select_stop(id);
@@ -871,7 +913,12 @@ function move_stop_position(e: MouseEvent) {
                         if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
                             gradientEditor = editor.asyncSetTextGradient(props.gradient);
                         } else {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                            gradientEditor = editor.asyncSetTextGradient(props.gradient, {
+                                rowStart: tableSelection.tableRowStart,
+                                rowEnd: tableSelection.tableRowEnd,
+                                colStart: tableSelection.tableColStart,
+                                colEnd: tableSelection.tableColEnd
+                            });
                         }
                     }
                 } else {
@@ -912,6 +959,7 @@ function color_type_change(val: GradientType | 'solid') {
         locate();
     })
 }
+
 const set_gradient = (val: GradientType | 'solid') => {
     if (val === 'solid') {
         props.context.color.set_gradient_type(undefined);
@@ -923,6 +971,7 @@ const set_gradient = (val: GradientType | 'solid') => {
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
+
 // 切换渐变类型
 function update_gradient_type(type: GradientType | 'solid') {
     if (type === 'solid') {
@@ -936,6 +985,7 @@ function update_gradient_type(type: GradientType | 'solid') {
         gradient_type.value = type;
     })
 }
+
 // 获取渐变类型
 const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
@@ -953,6 +1003,7 @@ const get_gradient_type = () => {
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
+
 // 渐变翻转
 function reverse() {
     emit('gradient-reverse');
@@ -960,6 +1011,7 @@ function reverse() {
         update_gradient(props.gradient!);
     })
 }
+
 // 渐变选中90度
 function rotate() {
     emit('gradient-rotate');
@@ -978,6 +1030,7 @@ function menu_watcher(t: any, id: string) {
         removeCurColorPicker();
     }
 }
+
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
         update_stops(props.context.color.selected_stop);
@@ -985,9 +1038,11 @@ function color_watch(t: number) {
         delete_gradient_stop();
     }
 }
+
 function window_blur() {
     isDrag = false;
 }
+
 const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
@@ -1027,6 +1082,7 @@ let elpx: any
 let elpy: any
 let mx: any
 let my: any
+
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
     isDragging = true

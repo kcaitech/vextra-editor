@@ -1,7 +1,7 @@
 import { Context } from "@/context";
-import { TransformHandler } from "./handler";
-import { FrameLike, GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
-import { XY } from "@/context/selection";
+import { FrameLike, TransformHandler } from "./handler";
+import { GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
+import { Selection, XY } from "@/context/selection";
 import { Asssit } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
@@ -54,7 +54,8 @@ export class TranslateHandler extends TransformHandler {
     originEnvs: OriginEnvs = new Map();
     shapesSet: Set<string> = new Set();
 
-    shapesCopy: ShapeView[] = [];
+    shapesBackup: ShapeView[] = [];
+    coping: boolean = false;
 
     constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
         super(context, shapes, event);
@@ -67,6 +68,8 @@ export class TranslateHandler extends TransformHandler {
         this.context.assist.set_trans_target(shapes);
 
         this.getFrames();
+
+        this.beforeTransform()
     }
 
     beforeTransform() {
@@ -83,10 +86,21 @@ export class TranslateHandler extends TransformHandler {
         this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
 
         if (this.altStatus) {
+            this.coping = true;
+            this.shapesBackup = this.shapes.map(s => s);
             this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
+            this.coping = false;
 
-            this.context.assist.set_collect_target(this.shapes);
-            this.context.assist.set_trans_target(this.shapes);
+            const assist = this.context.assist;
+            assist.set_collect_target(this.shapes);
+            assist.set_trans_target(this.shapes);
+
+            const selection = this.context.selection;
+            selection.resetSelectShapes();
+
+            selection.setLabelFixedGroup(this.shapesBackup);
+            selection.setLabelLivingGroup(this.shapes);
+            selection.setShowInterval(true);
 
             this.getFrames();
         }
@@ -210,15 +224,15 @@ export class TranslateHandler extends TransformHandler {
         this.boxOffsetLivingPointY = this.livingPoint.y - top;
     }
 
-    excute(event: MouseEvent) {
+    execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
         this.migrate();
 
         this.updateBoxByAssist();
 
-        this.__excute();
-
+        this.__execute();
     }
+
     private updateBoxByAssist() {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
@@ -257,8 +271,7 @@ export class TranslateHandler extends TransformHandler {
 
             if (dx > dy) {
                 this.livingBox.y = this.originSelectionBox.y;
-            }
-            else {
+            } else {
                 this.livingBox.x = this.originSelectionBox.x;
             }
         }
@@ -320,56 +333,71 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    private updateHorFixedStatus(livingX: number, assistResult: { targetX: number, sticked_by_x: boolean, dx: number }) {
+    private updateHorFixedStatus(livingX: number, assistResult: {
+        targetX: number,
+        sticked_by_x: boolean,
+        dx: number
+    }) {
         const stickness = this.context.assist.stickness;
         if (this.horFixed) {
             if (Math.abs(livingX - this.horFixedValue) >= stickness) {
                 this.horFixed = false;
-            }
-            else {
+            } else {
                 if (Math.abs(assistResult.dx) < Math.abs(this.offsetX)) {
                     this.horFixedValue = livingX;
                 }
                 this.offsetX = assistResult.dx;
             }
-        }
-        else if (assistResult.sticked_by_x) {
+        } else if (assistResult.sticked_by_x) {
             this.horFixed = true;
             this.horFixedValue = livingX;
             this.offsetX = assistResult.dx;
         }
     }
-    private updateVerFixedStatus(livingY: number, assistResult: { targetY: number, sticked_by_y: boolean, dy: number }) {
+
+    private updateVerFixedStatus(livingY: number, assistResult: {
+        targetY: number,
+        sticked_by_y: boolean,
+        dy: number
+    }) {
         const stickness = this.context.assist.stickness;
         if (this.verFixed) {
             if (Math.abs(livingY - this.verFixedValue) >= stickness) {
                 this.verFixed = false;
-            }
-            else {
+            } else {
                 if (assistResult.dy < this.offsetY) {
                     this.verFixedValue = livingY;
                 }
                 this.offsetY = assistResult.dy;
             }
-        }
-        else if (assistResult.sticked_by_y) {
+        } else if (assistResult.sticked_by_y) {
             this.verFixed = true;
             this.verFixedValue = livingY;
             this.offsetY = assistResult.dy;
         }
     }
 
-    passiveExcute() {
+    private passiveExecute() {
         if (!this.asyncApiCaller) {
             return;
         }
 
         this.updateBoxByAssist();
 
-        this.__excute();
+        this.__execute();
     }
 
-    private __excute() {
+    private __execute() {
+        if (this.coping) {
+            return;
+        }
+
+        if (this.altStatus) {
+            this.context.nextTick(this.page, () => {
+                this.context.selection.notify(Selection.PASSIVE_CONTOUR);
+            })
+        }
+
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
 
@@ -425,15 +453,10 @@ export class TranslateHandler extends TransformHandler {
             transformUnits.push({ shape, x, y });
         }
 
-        (this.asyncApiCaller as Transporter).excute(transformUnits);
+        (this.asyncApiCaller as Transporter).execute(transformUnits);
     }
 
-    modifyAltStatus(v: boolean) {
-        this.altStatus = v;
-        // this.passiveExcute();
-    }
-
-    __migrate() {
+    private __migrate() {
         const t = this.asyncApiCaller as Transporter;
         if (!t) {
             return;
@@ -459,13 +482,56 @@ export class TranslateHandler extends TransformHandler {
     migrateOnce = debounce(this.__migrate, 160);
 
     migrate() {
+        if (this.coping) {
+            return;
+        }
         this.migrateOnce();
     }
 
     fulfil() {
         this.__migrate();
+        this.workspace.translating(false);
+        this.workspace.setSelectionViewUpdater(true);
 
-        this.__fulfil();
-        return undefined;
+        if (this.altStatus) {
+            this.context.selection.setLabelLivingGroup([]);
+            this.context.selection.setLabelFixedGroup([]);
+            this.context.selection.setShowInterval(false);
+        }
+
+        super.fulfil();
+    }
+
+    protected keydown(event: KeyboardEvent) {
+        if (event.repeat) {
+            return;
+        }
+        if (event.shiftKey) {
+            this.shiftStatus = true;
+            this.passiveExecute();
+        }
+        if (event.altKey) {
+            this.altStatus = true;
+            if (this.shapesBackup.length) {
+                this.context.selection.setLabelLivingGroup(this.shapes);
+                this.context.selection.setLabelFixedGroup(this.shapesBackup);
+                this.context.selection.setShowInterval(true);
+                this.passiveExecute();
+                this.context.selection.notify(Selection.PASSIVE_CONTOUR);
+            }
+        }
+    }
+
+    protected keyup(event: KeyboardEvent) {
+        if (event.code === 'ShiftLeft') {
+            this.shiftStatus = false;
+            this.passiveExecute();
+        }
+        if (event.code === "AltLeft") {
+            this.altStatus = false;
+            this.context.selection.setLabelLivingGroup([]);
+            this.context.selection.setLabelFixedGroup([]);
+            this.context.selection.setShowInterval(false);
+        }
     }
 }

@@ -173,7 +173,6 @@ export function end_transalte(context: Context) {
 }
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
-    context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
     const action = context.tool.action;
     return action === Action.AutoV || action === Action.AutoK;
 }
