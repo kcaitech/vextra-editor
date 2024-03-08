@@ -113,7 +113,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true },
     },
     {
         path: "/home",

@@ -913,7 +913,8 @@ onUnmounted(() => {
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context">
+                </SelectFont>
                 <!--                <div class="perch"></div>-->
             </div>
             <div class="text-middle">
@@ -954,7 +955,8 @@ onUnmounted(() => {
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
                         <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
+                            <svg-icon
+                                :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
@@ -1013,31 +1015,36 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                    t('attr.font_color')
-                }}
+                <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
+            t('attr.font_color')
+        }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
                         :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
-                        @change="c => getColorFromPicker(c, 'color')" @gradient-type="(type) => togger_gradient_type(type)"
+                        @change="c => getColorFromPicker(c, 'color')"
+                        @gradient-type="(type) => togger_gradient_type(type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)" @gradient-reverse="gradient_reverse"
-                        @gradient-rotate="gradient_rotate" @gradient-stop-delete="(index) => gradient_stop_delete(index)">
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
+                        @gradient-reverse="gradient_reverse" @gradient-rotate="gradient_rotate"
+                        @gradient-stop-delete="(index) => gradient_stop_delete(index)">
                     </ColorPicker>
-                    <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor" @focus="selectColorValue"
-                        :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                    <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor"
+                        @focus="selectColorValue" :spellcheck="false"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                        :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')" @input="sizeAlphaInput" />
+                        :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
+                        @input="sizeAlphaInput" />
                 </div>
                 <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="setMixedTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1054,11 +1061,11 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"

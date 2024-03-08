@@ -42,11 +42,11 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                         const path = perRoute.split('?')[0].replace('/', '');
                         if (params.get('id') != null) {
                             const id = params.get('id');
+                            const page_id = params.get('page_id');
+                            const query = params.get('page_id') ? { id, page_id } : { id };
                             router.push({
                                 name: path,
-                                query: {
-                                    id: id
-                                }
+                                query
                             })
                         }
                         if (params.get('teamid') != null) {
@@ -105,11 +105,11 @@ function clickaffirm() {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
+                    const page_id = params.get('page_id');
+                    const query = params.get('page_id') ? { id, page_id } : { id };
                     router.push({
                         name: path,
-                        query: {
-                            id: id
-                        }
+                        query
                     })
                 } else {
                     router.push({ name: 'apphome' })

@@ -306,7 +306,7 @@ const hideNotification = (type?: number) => {
     if (type === 0) {
         router.push('/files')
     } else {
-        router.go(0)
+        window.location.reload();
     }
 }
 const showNotification = (type?: number) => {
@@ -406,14 +406,14 @@ const getDocumentInfo = async () => {
                 router.push("/files");
                 return;
             }
-            const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
-            const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
-            switchPage(page?.id || context!.data.pagesList[0]?.id);
             loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             if (perm >= 2) await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+            const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
+            const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
+            switchPage(page?.id || context!.data.pagesList[0]?.id);
         }
     } catch (err) {
         loading.value = false;
