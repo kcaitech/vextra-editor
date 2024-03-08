@@ -147,7 +147,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function init_text_cell(cell: TableGridItem) {
         const editor = context.editor4Table(table);
-        console.log('table:', table)
         editor.initTextCell(cell.index.row, cell.index.col);
     }
     function down(e: MouseEvent) {        
