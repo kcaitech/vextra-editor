@@ -129,6 +129,7 @@ function select(data: SelectItem) {
 }
 
 function render() {
+    curHoverValueIndex.value = -1
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
@@ -161,7 +162,7 @@ onMounted(render)
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
-            <div v-else-if="true">
+            <div v-else-if="props.itemView">
                 <component v-for="(c, idx) in source" v-bind="$attrs" :is="props.itemView" :key="c.id" :data="c.data"
                     :isCurValue="idx === curValueIndex" @select="select" />
             </div>
