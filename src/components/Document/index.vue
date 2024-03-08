@@ -306,7 +306,7 @@ const hideNotification = (type?: number) => {
     if (type === 0) {
         router.push('/files')
     } else {
-        router.go(0)
+        window.location.reload();
     }
 }
 const showNotification = (type?: number) => {
