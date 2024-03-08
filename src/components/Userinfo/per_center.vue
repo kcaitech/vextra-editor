@@ -311,7 +311,7 @@ function closePersonalCenter() {
                 font-size: 14px;
                 font-weight: 500;
                 margin: auto;
-                width: auto;
+                width: 80px;
                 height: 36px;
                 border-radius: 6px;
                 color: #333333;

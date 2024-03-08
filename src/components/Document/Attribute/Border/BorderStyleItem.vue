@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue'
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 interface Props {
     data: SelectItem;
     isCurValue: boolean;
@@ -10,22 +10,26 @@ interface Emits {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const isHoverCurValue = ref(props.isCurValue);
+const isHoverCurValue = ref(false);
 
 function select() {
     emits('select', props.data)
 }
 
 </script>
+
 <template>
-    <div class="border-style-item-container" @click="select" @mouseover="isHoverCurValue = true" @mouseleave="isHoverCurValue = false">
+    <div class="border-style-item-container" @click="select" @mouseenter="isHoverCurValue = true"
+        @mouseleave="isHoverCurValue = false">
         <div class="content">
             <svg-icon :icon-class="props.data.value"></svg-icon>
             <span>{{ props.data.content }}</span>
         </div>
-        <svg-icon class="check" v-show="props.isCurValue" :icon-class="isHoverCurValue ? 'white-select': 'page-select'"></svg-icon>
+        <svg-icon class="check" v-show="props.isCurValue"
+            :icon-class="isHoverCurValue ? 'white-select' : 'page-select'"></svg-icon>
     </div>
 </template>
+
 <style scoped lang="scss">
 .border-style-item-container {
     height: 32px;

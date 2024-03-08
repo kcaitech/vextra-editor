@@ -47,7 +47,7 @@ export const system = {
     'read_Privacy': '隐私协议',
     'product_name': 'ProtoDesign',
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
-    'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
+    'login_footer': '版权所有：珠海市旷才科技有限公司',
     'placeholder': '搜索文件',
     'about': '关于',
     'help_manual': '帮助手册',

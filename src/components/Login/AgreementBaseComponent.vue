@@ -100,8 +100,8 @@ onUnmounted(() => {
             cursor: pointer;
 
             &:hover {
-                border: 1px solid #9775fa;
-                color: #9775fa;
+                border: 1px solid #1878F5;
+                color: #1878F5;
             }
         }
     }
@@ -123,7 +123,7 @@ onUnmounted(() => {
     height: 56px;
     position: relative;
     top: 56px;
-    background-color: #9775fa;
+    // background-color: #9775fa;
 
     .footer {
         position: relative;

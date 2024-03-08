@@ -10,16 +10,19 @@ const { t } = useI18n();
         <span>
             {{ t('system.login_footer') }}
         </span>
+        <span class="lines">|</span>
         <span>
             <RouterLink to="/serviceagreement">{{ t('system.read_TOS') }}</RouterLink>
         </span>
+        <span class="lines">|</span>
         <span>
             <RouterLink to="/privacypolicy">{{ t('system.read_Privacy') }}</RouterLink>
         </span>
-        <br>
+        <span class="lines">|</span>
         <a class="icp" href="https://beian.miit.gov.cn/" target="_blank">
             <span>{{ t('system.license_key') }}</span>
         </a>
+        <span class="lines">|</span>
         <a class="gongan" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44049102496973"
             target="_blank">
             <img :src="gongan" alt="gongan">
@@ -30,6 +33,10 @@ const { t } = useI18n();
 </template>
 
 <style lang="scss" scoped>
+.lines {
+    margin: 6px;
+}
+
 .footer {
     display: flex;
     position: fixed;
@@ -37,16 +44,12 @@ const { t } = useI18n();
     flex-wrap: wrap;
     z-index: 1;
     bottom: 0;
-    color: rgb(96, 96, 96);
+    color: #a8a8a8;
     font-size: 12px;
-
-    span {
-        margin: 5px;
-    }
 
     a {
         text-decoration: none;
-        color: rgb(96, 96, 96);
+        color: #a8a8a8;
     }
 
     img {
@@ -56,10 +59,6 @@ const { t } = useI18n();
     .gongan {
         display: flex;
         align-items: center;
-
-        span {
-            margin-left: 2px;
-        }
     }
 
 }
