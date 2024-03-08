@@ -1020,7 +1020,7 @@ onUnmounted(() => {
         }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
                         :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
                         @change="c => getColorFromPicker(c, 'color')"
                         @gradient-type="(type) => togger_gradient_type(type)"
@@ -1065,7 +1065,7 @@ onUnmounted(() => {
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true" :late="32"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"

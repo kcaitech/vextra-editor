@@ -111,7 +111,7 @@ onUnmounted(() => {
             <span>{{ t('attr.background') }}</span>
         </div>
         <div class="setting">
-            <ColorPicker class="color" :color="(background_color as Color)" :context="props.context"
+            <ColorPicker class="color" :color="(background_color as Color)" :context="props.context" :late="-26"
                 :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
             </ColorPicker>
             <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele" @click="clr_click"
