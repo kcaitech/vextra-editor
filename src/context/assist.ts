@@ -224,30 +224,6 @@ export class Asssit extends WatchableObject {
         this.m_y_axis.clear();
     }
 
-    // private update_collect() {
-    //     this.m_collect_target = [];
-    //     const shapes = this.m_context.selection.selectedShapes;
-    //     if (shapes.length === 1) {
-    //         const container = getClosestContainer((shapes[0]));
-    //         this.m_collect_target = container ? [container] : [];
-    //     } else {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    // private selection_watcher(t?: any) {
-    //     if (t === Selection.CHANGE_SHAPE) {
-    //         this.update_collect();
-    //     } else if (t === Selection.CHANGE_PAGE) {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    init() {
-        // this.m_context.selection.watch(this.selection_watcher.bind(this));
-        // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
-    }
-
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
         const parents: Map<string, ShapeView> = new Map();
         for (let i = 0; i < shapes.length; i++) {

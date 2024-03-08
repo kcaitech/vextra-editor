@@ -520,6 +520,9 @@ export class TranslateHandler extends TransformHandler {
                 this.context.selection.notify(Selection.PASSIVE_CONTOUR);
             }
         }
+        if (event.ctrlKey) {
+            console.log("livingBox:", this.livingBox)
+        }
     }
 
     protected keyup(event: KeyboardEvent) {

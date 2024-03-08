@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPathEditContainer.vue";
-import {Context} from "@/context";
-import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
-import {Matrix} from "@kcdesign/data";
-import {WorkSpace} from "@/context/workspace";
+import { Context } from "@/context";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { Matrix } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
 
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0});
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
     return w < 10 ? 10 : w;
@@ -41,7 +41,7 @@ function update() {
     }
     modify_matrix();
     const f = path_shape.frame;
-    const __points = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+    const __points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
     for (let i = 0; i < __points.length; i++) {
         const p = __points[i];
         __points[i] = matrix.value.computeCoord3(p);
