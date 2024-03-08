@@ -433,14 +433,14 @@ const textFormat = () => {
                     format[key] = `unlikeness`;
                 }
             }
-        } 
+        }
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
         fontName.value = format.fontName || 'PingFangSC-Regular';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;  
+        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
@@ -507,7 +507,7 @@ function selection_wather(t: number) {
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
-      onBold();
+        onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
@@ -1162,7 +1162,7 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
@@ -1199,8 +1199,9 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
-                        }}
+                    <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{
+            t('attr.font_color')
+        }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1209,7 +1210,7 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px"
                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"

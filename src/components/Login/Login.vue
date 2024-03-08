@@ -42,11 +42,11 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                         const path = perRoute.split('?')[0].replace('/', '');
                         if (params.get('id') != null) {
                             const id = params.get('id');
+                            const page_id = params.get('page_id');
+                            const query = params.get('page_id') ? { id, page_id } : { id };
                             router.push({
                                 name: path,
-                                query: {
-                                    id: id
-                                }
+                                query
                             })
                         }
                         if (params.get('teamid') != null) {
@@ -105,11 +105,11 @@ function clickaffirm() {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
+                    const page_id = params.get('page_id');
+                    const query = params.get('page_id') ? { id, page_id } : { id };
                     router.push({
                         name: path,
-                        query: {
-                            id: id
-                        }
+                        query
                     })
                 } else {
                     router.push({ name: 'apphome' })
@@ -185,7 +185,7 @@ onMounted(() => {
     // } else {
     //     window.addEventListener('message', onmessage, false)
     // }
-  window.addEventListener('message', onmessage, false)
+    window.addEventListener('message', onmessage, false)
 })
 
 onUnmounted(() => {
@@ -299,8 +299,8 @@ const pasteEvent = async (e: any) => {
                         <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
                     </Transition>
                     <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
-                        t('percenter.affirm')
-                    }}</button>
+                t('percenter.affirm')
+                        }}</button>
                 </div>
             </div>
             <Footer></Footer>
@@ -513,6 +513,3 @@ const pasteEvent = async (e: any) => {
     }
 }
 </style>
-
-
-
