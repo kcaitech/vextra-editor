@@ -8,7 +8,17 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository, IStorage, PageView, Cmd, PageListItem } from '@kcdesign/data';
+import {
+    Document,
+    importDocument,
+    Repository,
+    Page,
+    CoopRepository,
+    IStorage,
+    PageView,
+    Cmd,
+    PageListItem
+} from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
@@ -66,7 +76,8 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
-let uninstall_keyboard_units: () => void = () => { };
+let uninstall_keyboard_units: () => void = () => {
+};
 
 function screenSetting() {
     const element = document.documentElement;
@@ -215,6 +226,7 @@ function keyToggleTB() {
     }
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
+
 const isLable = ref<boolean>(false);
 
 //只读权限隐藏右侧属性栏
@@ -558,7 +570,9 @@ const networkMessage = (status: NetworkStatusType) => {
 const networkDebounce = (() => {
     const df = debounce(networkMessage, 1000)
     return (status: NetworkStatusType) => {
-        df(status).catch((e) => { console.log(e) });
+        df(status).catch((e) => {
+            console.log(e)
+        });
     }
 })();
 
@@ -658,6 +672,7 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
         }
     }
 }
+
 function component_watcher(t: number) {
     if (!context) {
         return;
@@ -718,32 +733,35 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading || null_context" :size="20"></Loading>
         <div id="top" @dblclick="screenSetting" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context" />
+            <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !loading && !null_context"
-            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+                      v-if="inited && !loading && !null_context"
+                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+                      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+                      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+                      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                            @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
+                            @showNavigation="showHiddenLeft"
+                            :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)">
+                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)">
                 </ContentView>
             </template>
             <template #slot3>
-                <Attribute id="attributes" v-if="!null_context" :context="context!"
-                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                <Attribute id="attributes" v-if="curPage !== undefined && !null_context" :context="context!"
+                           @mouseenter="(e: Event) => { mouseenter('right') }"
+                           @mouseleave="() => { mouseleave('right') }"
+                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
+                           @showAttrbute="showHiddenRight">
                 </Attribute>
             </template>
         </ColSplitView>
@@ -753,7 +771,7 @@ onUnmounted(() => {
         </div>
         <div v-if="showHint" class="notification">
             <el-icon :size="13">
-                <Warning />
+                <Warning/>
             </el-icon>
             <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
             <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
@@ -761,7 +779,7 @@ onUnmounted(() => {
             <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
         </div>
         <Bridge v-if="bridge" :context="context!"></Bridge>
-        <HelpEntrance v-if="!null_context" :context="context!" />
+        <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
 <style>
@@ -898,7 +916,7 @@ onUnmounted(() => {
         border-radius: 4px;
 
         .loading-spinner {
-            >svg {
+            > svg {
                 width: 15px;
                 height: 15px;
                 color: #000;

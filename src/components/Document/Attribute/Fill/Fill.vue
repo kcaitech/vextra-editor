@@ -1,7 +1,18 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableView, Stop, GradientType, BasicArray } from "@kcdesign/data";
+import {
+    BasicArray,
+    Color,
+    Fill,
+    FillType,
+    GradientType,
+    GroupShapeView,
+    ShapeType,
+    ShapeView,
+    Stop,
+    TableView
+} from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -14,13 +25,13 @@ import {
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
-    get_actions_filltype,
     get_actions_fill_unify,
+    get_actions_filltype,
     get_fills
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import { flattenShapes } from '@/utils/cutout';
-import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
+import { get_table_range, hidden_selection, is_editing } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 
 interface FillItem {
@@ -32,7 +43,7 @@ interface Props {
     context: Context;
     shapes: ShapeView[];
     selectionChange: number;
-    triggle: any[];
+    trigger: any[];
     tableSelectionChange: number;
     cellsTrigger: any[];
 }
@@ -57,23 +68,32 @@ function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1) return;
-    const table = props.context.tableSelection;
-    const shape = selecteds[0];
-    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-        const is_edting = table.editingCell;
-        let cells = [], might_is_mixed = false;
-        if (table.tableRowStart > -1) {
-            const _cs = table.getSelectedCells(true);
+    const selected = props.context.selection.selectedShapes;
+    if (!selected.length) {
+        return;
+    }
+    const tableSelection = props.context.tableSelection;
+
+    if (
+        selected.length === 1
+        && selected[0].type === ShapeType.Table
+        && (tableSelection.editingCell || tableSelection.tableRowStart > -1)
+    ) {
+        let cells = [];
+        let might_is_mixed = false;
+
+        if (tableSelection.tableRowStart > -1) {
+            const _cs = tableSelection.getSelectedCells(true);
             for (let i = 0, len = _cs.length; i < len; i++) {
                 const c = _cs[i];
-                if (!c.cell) might_is_mixed = true;
-                else cells.push(c.cell);
+                if (!c.cell) {
+                    might_is_mixed = true;
+                } else cells.push(c.cell);
             }
-        } else if (is_edting) {
-            cells.push(is_edting);
+        } else if (tableSelection.editingCell) {
+            cells.push(tableSelection.editingCell);
         }
+
         if (cells.length > 0) {
             const _fs = get_fills(cells);
             if (_fs === 'mixed') {
@@ -87,7 +107,9 @@ function updateData() {
             }
         }
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selected)
+            .filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).isBoolOpShape);
+
         const _fs = get_fills(shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
@@ -100,20 +122,32 @@ function updateData() {
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+
     const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    const table = props.context.tableSelection;
-    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const editor = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
+    const shape = selected[0];
+
+    const tableSelection = props.context.tableSelection;
+    if (selected.length === 1
+        && shape.type === ShapeType.Table
+        && (tableSelection.editingCell || tableSelection.tableRowStart > -1)) {
+        const editor = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(tableSelection);
         if (mixed_cell.value) {
             editor.addFill4Multi(fill, range);
         } else {
             editor.addFill(fill, range);
         }
+    } else if (selected.length === 1
+        && shape.type === ShapeType.Artboard
+        && !shape.style.fills.length) {
+        const page = props.context.selection.selectedPage!;
+        const color = new Color(1, 255, 255, 255);
+        const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, color);
+        const actions = get_actions_add_fill(selected, fill);
+        const editor = props.context.editor4Page(page);
+        editor.shapesAddFill(actions);
     } else {
+        const page = props.context.selection.selectedPage!;
         const shapes = getShapesForStyle(selected);
         if (mixed.value) {
             const actions = get_actions_fill_unify(shapes);
@@ -125,11 +159,14 @@ function addFill(): void {
             editor.shapesAddFill(actions);
         }
     }
+
     hidden_selection(props.context);
 }
 
 function first() {
-    if (fills.length === 0 && !mixed.value) addFill();
+    if (fills.length === 0 && !mixed.value) {
+        addFill();
+    }
 }
 
 function deleteFill(idx: number) {
@@ -174,8 +211,10 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
+
     hidden_selection(props.context);
 }
+
 const colorValue = ref('');
 const alphaValue = ref('');
 const tableSelect = ref({
@@ -185,12 +224,14 @@ const tableSelect = ref({
     tableColStart: props.context.tableSelection.tableColStart,
     tableColEnd: props.context.tableSelection.tableColEnd
 });
-function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
+
+function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));
         return;
     }
+
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const r = Number.parseInt(res[1], 16);
@@ -198,15 +239,17 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
     const b = Number.parseInt(res[3], 16);
     const s = selected[0] as ShapeView;
     const _idx = fills.length - idx - 1;
-    const table = props.context.tableSelection;
-    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
+    const tableSelection = props.context.tableSelection;
+
+    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(tableSelection)) {
         const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-            table.tableRowEnd,
-            table.tableColStart,
-            table.tableColEnd);
-        if (tablecells.length > 0 && tablecells[0].cell) {
+        const range = get_table_range(tableSelection);
+        const cells = (s as TableView).getVisibleCells(tableSelection.tableRowStart,
+            tableSelection.tableRowEnd,
+            tableSelection.tableColStart,
+            tableSelection.tableColEnd);
+
+        if (cells.length > 0 && cells[0].cell) {
             e.setFillColor(_idx, new Color(alpha, r, g, b), range)
         }
     } else {
@@ -217,8 +260,14 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             editor.setShapesFillColor(actions);
         }
     }
+
     hidden_selection(props.context);
 }
+
+function setColorAsync(idx: number, color: Color) {
+
+}
+
 
 function onColorChange(idx: number) {
     let value = colorValue.value;
@@ -229,10 +278,12 @@ function onColorChange(idx: number) {
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (Reg_HEX.test(value)) {
         const alpha = fills[idx].fill.color.alpha;
-        setColor(idx, value, alpha, true);
+        setColor(idx, value, alpha);
     } else {
         message('danger', t('system.illegal_input'));
-        if (!colorFill.value) return;
+        if (!colorFill.value) {
+            return;
+        }
         return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
@@ -253,7 +304,7 @@ function onAlphaChange(idx: number, fill: Fill) {
                 clr = "#" + clr
             }
             if (fill.fillType === FillType.SolidColor) {
-                setColor(idx, clr, value, false);
+                setColor(idx, clr, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
             }
@@ -272,7 +323,7 @@ function onAlphaChange(idx: number, fill: Fill) {
                 clr = "#" + clr
             }
             if (fill.fillType === FillType.SolidColor) {
-                setColor(idx, clr, value, false);
+                setColor(idx, clr, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
             }
@@ -283,6 +334,7 @@ function onAlphaChange(idx: number, fill: Fill) {
         alpha_message(idx, fill);
     }
 }
+
 const alpha_message = (idx: number, fill: Fill) => {
     if (!alphaFill.value) return;
     message('danger', t('system.illegal_input'));
@@ -384,9 +436,10 @@ const filterAlpha = (fill: Fill) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
+
 /**
  * @description 翻转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_reverse(idx: number) {
     const _idx = fills.length - idx - 1;
@@ -397,9 +450,10 @@ function gradient_reverse(idx: number) {
     const actions = get_aciton_gradient(shapes, _idx, 'fills');
     editor.reverseShapesGradient(actions);
 }
+
 /**
  * @description 旋转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_rotate(idx: number) {
     const _idx = fills.length - idx - 1;
@@ -410,11 +464,12 @@ function gradient_rotate(idx: number) {
     const actions = get_aciton_gradient(shapes, _idx, 'fills');
     editor.rotateShapesGradient(actions);
 }
+
 /**
  * @description 添加渐变节点
- * @param idx 
- * @param position 
- * @param color 
+ * @param idx
+ * @param position
+ * @param color
  */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = fills.length - idx - 1;
@@ -426,9 +481,10 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'fills');
     editor.addShapesGradientStop(actions);
 }
+
 /**
  * @description 切换渐变类型
- * @param idx 
+ * @param idx
  */
 function togger_gradient_type(idx: number, type: GradientType | 'solid') {
     const _idx = fills.length - idx - 1;
@@ -443,10 +499,11 @@ function togger_gradient_type(idx: number, type: GradientType | 'solid') {
         editor.toggerShapeGradientType(actions);
     }
 }
+
 /**
  * @description 修改节点颜色
- * @param idx 
- * @param color 
+ * @param idx
+ * @param color
  */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = fills.length - idx - 1;
@@ -457,10 +514,11 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'fills');
     editor.setShapesGradientStopColor(actions);
 }
+
 /**
  * @description 删除渐变节点
- * @param idx 
- * @param index 
+ * @param idx
+ * @param index
  */
 function gradient_stop_delete(idx: number, index: number) {
     const _idx = fills.length - idx - 1;
@@ -494,7 +552,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
-const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
     if (v.length > 0 && (v.includes('layout'))) updateData();
 });
 const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
@@ -535,25 +593,28 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: fills.length - idx - 1, type: 'fills' }"
-                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
-                        :gradient="f.fill.gradient" :fillType="f.fill.fillType"
-                        @gradient-rotate="() => gradient_rotate(idx)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                        @gradient-type="(type) => togger_gradient_type(idx, type)"
-                        @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
+                                 :locat="{ index: fills.length - idx - 1, type: 'fills' }"
+                                 @change="c => getColorFromPicker(idx, c)"
+                                 @gradient-reverse="() => gradient_reverse(idx)"
+                                 :gradient="f.fill.gradient" :fillType="f.fill.fillType"
+                                 @gradient-rotate="() => gradient_rotate(idx)"
+                                 @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                                 @gradient-type="(type) => togger_gradient_type(idx, type)"
+                                 @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                                 @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
-                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
-                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                           :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                           @change="(e) => onColorChange(idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
+                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                     <span class="colorFill" style="line-height: 14px;"
-                        v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
-            t(`color.${f.fill.gradient.gradientType}`) }}</span>
+                          v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
+                            t(`color.${f.fill.gradient.gradientType}`)
+                        }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
-                        @change="(e) => onAlphaChange(idx, f.fill)" @focus="(e) => selectAlpha(e)" @input="alphaInput"
-                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                           @change="(e) => onAlphaChange(idx, f.fill)" @focus="(e) => selectAlpha(e)"
+                           @input="alphaInput"
+                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                 </div>
                 <div class="temporary"></div>
                 <div class="delete" @click="deleteFill(idx)">
@@ -583,7 +644,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        > svg {
             width: 16px;
             height: 16px;
         }
@@ -592,8 +653,7 @@ onUnmounted(() => {
     }
 
     .add:hover {
-        background-color: #F5F5F5;
-        ;
+        background-color: #F5F5F5;;
     }
 
     .fills-container {
@@ -619,7 +679,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                >svg {
+                > svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -672,7 +732,7 @@ onUnmounted(() => {
                     box-sizing: border-box;
                 }
 
-                input+input {
+                input + input {
                     width: 45px;
                 }
 
@@ -700,7 +760,7 @@ onUnmounted(() => {
                 height: 28px;
                 border-radius: var(--default-radius);
 
-                >svg {
+                > svg {
                     width: 16px;
                     height: 16px;
                 }
