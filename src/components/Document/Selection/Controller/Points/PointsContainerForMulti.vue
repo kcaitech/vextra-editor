@@ -1,12 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncMultiAction, CtrlElementType, Matrix, adapt2Shape } from '@kcdesign/data';
+import { CtrlElementType, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot2 } from './common';
 import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
-import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
 import { RotateHandler } from '@/transform/rotate';
@@ -31,7 +30,6 @@ const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 let isRotateElement = false;
@@ -81,12 +79,12 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     if (cur_ctrl_type.endsWith('rotate')) {
         rotator = new RotateHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
-        console.log('rotator:', rotator);
+        // console.log('rotator:', rotator);
         isRotateElement = true;
 
     } else {
         scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
-        console.log('scaler:', scaler);
+        // console.log('scaler:', scaler);
         isRotateElement = false;
     }
 
@@ -97,31 +95,13 @@ function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = workspace.getContentXY(event)
-    // const { x: ax, y: ay } = props.axle;
-
-    // if (isDragging && asyncMultiAction) {
     if (isDragging) {
         if (isRotateElement) {
-            // const deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            // const root_axle = submatrix.computeCoord(ax, ay);
-
-            // const r = new Matrix();
-            // r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y);
-
-            // console.log('--deg:', deg);
-
-
-            // asyncMultiAction.executeRotate(deg, r);
-            rotator?.excute(event);
+            rotator?.execute(event);
 
             props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
-            // const action = props.context.tool.action;
-            // (event.shiftKey || action === Action.AutoK)
-            //     ? er_scale(asyncMultiAction, sx, sy, mx, my)
-            //     : irregular_scale(asyncMultiAction, sx, sy, mx, my);
-
-            scaler?.excute(event);
+            scaler?.execute(event);
         }
 
         startPosition = { x: mx, y: my };
@@ -130,16 +110,9 @@ function point_mousemove(event: MouseEvent) {
             workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
         })
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        // set_status_before_action();
 
-        const shapes = shapes_organize(props.context.selection.selectedShapes);
-        const page = props.context.selection.selectedPage!;
-
-        // asyncMultiAction = props.context.editor
-        //     .controller()
-        //     .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
-
-        // submatrix.reset(workspace.matrix.inverse);
+        // const shapes = shapes_organize(props.context.selection.selectedShapes);
+        // const page = props.context.selection.selectedPage!;
 
         if (isRotateElement) {
             rotator?.createApiCaller();
@@ -161,120 +134,6 @@ function point_mouseup(event: MouseEvent) {
 // #endregion
 
 // #region utils
-function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
-    if (cur_ctrl_type === CtrlElementType.RectLT) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w - trans.x;
-        const _h = o_h - trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRB : CtrlElementType.RectRT;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRB : CtrlElementType.RectLB;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + (1 - scale) * o_w, y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectRT) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w + trans.x;
-        const _h = o_h - trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLB : CtrlElementType.RectLT;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLB : CtrlElementType.RectRB;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectRB) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const trans = { x: mx - sx, y: my - sy };
-        if (Math.abs(o_w + trans.x) < 1 || Math.abs(o_h + trans.y) < 1) return startPosition = { x: mx, y: my };
-        const _w = o_w + trans.x;
-        const _h = o_h + trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLT : CtrlElementType.RectLB;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLT : CtrlElementType.RectRT;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(origin, { x: origin.x, y: origin.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    } else if (cur_ctrl_type === CtrlElementType.RectLB) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w - trans.x;
-        const _h = o_h + trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRT : CtrlElementType.RectRB;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRT : CtrlElementType.RectLT;
-        const scale = _w / o_w;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + (1 - scale) * o_w, y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
-    }
-}
-function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
-    if (cur_ctrl_type === CtrlElementType.RectLT) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w - trans.x;
-        const _h = o_h - trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRB : CtrlElementType.RectRT;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRB : CtrlElementType.RectLB;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y + trans.y }, _w / o_w, _h / o_h);
-    } else if (cur_ctrl_type === CtrlElementType.RectRT) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w + trans.x;
-        const _h = o_h - trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLB : CtrlElementType.RectLT;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLB : CtrlElementType.RectRB;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + trans.y }, _w / o_w, _h / o_h);
-    } else if (cur_ctrl_type === CtrlElementType.RectRB) {
-        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_lt = props.frame[0];
-        const f_rb = props.frame[2];
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const trans = { x: mx - sx, y: my - sy };
-        if (Math.abs(o_w + trans.x) < 1 || Math.abs(o_h + trans.y) < 1) return startPosition = { x: mx, y: my };
-        const _w = o_w + trans.x;
-        const _h = o_h + trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLT : CtrlElementType.RectLB;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLT : CtrlElementType.RectRT;
-        asyncMultiAction.executeScale(origin, origin, _w / o_w, _h / o_h);
-    } else if (cur_ctrl_type === CtrlElementType.RectLB) {
-        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-        const o_w = f_rb.x - f_lt.x;
-        const o_h = f_rb.y - f_lt.y;
-        const s = submatrix.computeCoord(sx, sy);
-        const e = submatrix.computeCoord(mx, my);
-        const trans = { x: e.x - s.x, y: e.y - s.y };
-        const _w = o_w - trans.x;
-        const _h = o_h + trans.y;
-        if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRT : CtrlElementType.RectRB;
-        if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRT : CtrlElementType.RectLT;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y }, _w / o_w, _h / o_h);
-    }
-}
 function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
     let deg = 0;
@@ -299,39 +158,9 @@ function setCursor(t: CtrlElementType) {
 
     cursor.setType(type, deg);
 }
-function set_status_on_down() {
-    props.context.menu.menuMount()
-
-    const workspace = props.context.workspace;
-    if (cur_ctrl_type.endsWith('rotate')) {
-        workspace.rotating(true);
-    } else {
-        setCursor(cur_ctrl_type);
-        workspace.scaling(true);
-    }
-
-    props.context.cursor.cursor_freeze(true);
-}
-function set_status_before_action() {
-    props.context.workspace.setSelectionViewUpdater(false);
-}
 function clear_status() {
-    const workspace = props.context.workspace;
-    // workspace.scaling(false);
-    // workspace.rotating(false);
-    // workspace.setCtrl('page');
+    isDragging = false;
 
-    if (isDragging) {
-        isDragging = false;
-    }
-
-    // if (asyncMultiAction) {
-    //     asyncMultiAction.close();
-    //     asyncMultiAction = undefined;
-    //     workspace.setSelectionViewUpdater(true);
-    // }
-
-    props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
@@ -358,28 +187,6 @@ function frame_watcher() {
         passive_update();
     }
 }
-function updateView() {
-    props.context.nextTick(props.context.selection.selectedPage!, () => {
-        props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-    })
-}
-function keydown(event: KeyboardEvent) {
-    if (event.repeat) {
-        return;
-    }
-    if (event.shiftKey) {
-        scaler?.modifyShiftStatus(true);
-        rotator?.modifyShiftStatus(true);
-        updateView();
-    }
-}
-function keyUp(event: KeyboardEvent) {
-    if (event.code === 'ShiftLeft') {
-        scaler?.modifyShiftStatus(false);
-        rotator?.modifyShiftStatus(false);
-        updateView();
-    }
-}
 function window_blur() {
     clear_status();
 }
@@ -390,14 +197,10 @@ watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
     window.addEventListener('blur', window_blur);
-    document.addEventListener('keydown', keydown);
-    document.addEventListener('keyup', keyUp);
     update();
 })
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
-    document.removeEventListener('keydown', keydown);
-    document.removeEventListener('keyup', keyUp);
 })
 // #endregion
 </script>

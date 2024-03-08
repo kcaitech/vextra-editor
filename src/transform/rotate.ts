@@ -1,5 +1,5 @@
-import { CtrlElementType, FrameLike, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
-import { TransformHandler } from "./handler";
+import { CtrlElementType, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
+import { FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { getHorizontalAngle } from "@/utils/common";
@@ -52,26 +52,42 @@ export class RotateHandler extends TransformHandler {
     }
 
     fulfil() {
-        this.__fulfil();
-
         this.workspace.rotating(false);
         this.workspace.setSelectionViewUpdater(true);
 
-        return undefined;
+        super.fulfil();
     }
 
     // 执行主体
-    excute(event: MouseEvent) {
+    execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
 
-        this.__excute();
+        this.__execute();
     }
 
-    passiveExcute() {
+    passiveExecute() {
         if (!this.asyncApiCaller) {
             return;
         }
-        this.__excute();
+        this.__execute();
+        this.updateCtrlView();
+    }
+
+    protected keydown(event: KeyboardEvent) {
+        if (event.repeat) {
+            return;
+        }
+        if (event.shiftKey) {
+            this.shiftStatus = true;
+            this.passiveExecute();
+        }
+    }
+
+    protected keyup(event: KeyboardEvent) {
+        if (event.code === "ShiftLeft") {
+            this.shiftStatus = false;
+            this.passiveExecute();
+        }
     }
 
     private getBaseData() {
@@ -175,20 +191,19 @@ export class RotateHandler extends TransformHandler {
         };
     }
 
-    private __excute() {
+    private __execute() {
         if (!this.shapes.length) {
             return;
         }
 
         if (this.shapes.length === 1) {
 
-        }
-        else {
-            this.__excute4multi();
+        } else {
+            this.__execute4multi();
         }
     }
 
-    private __excute4multi() {
+    private __execute4multi() {
         const center = this.centerXY;
 
         const d1 = getHorizontalAngle(center, this.referencePoint);
@@ -202,8 +217,7 @@ export class RotateHandler extends TransformHandler {
             const d = deg % 15;
             if (d > 0) {
                 deg += (15 - d);
-            }
-            else if (d < 0) {
+            } else if (d < 0) {
                 deg -= d;
             }
         }
@@ -259,10 +273,6 @@ export class RotateHandler extends TransformHandler {
             m.trans(base.x, base.y);
 
             const self = m.computeCoord2(0, 0);
-            if (shape.name === "老实小狗") {
-                console.log('self:', self, m.toString());
-
-            }
 
             const dx = common.x - self.x;
             const dy = common.y - self.y;
@@ -275,6 +285,6 @@ export class RotateHandler extends TransformHandler {
             })
         }
 
-        (this.asyncApiCaller as Rotator).excute4multi(rotateUnits);
+        (this.asyncApiCaller as Rotator).execute4multi(rotateUnits);
     }
 }
