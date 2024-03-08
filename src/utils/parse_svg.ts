@@ -21,6 +21,10 @@ import {
     CurveMode,
     ResourceMgr,
     getFormatFromBase64,
+    Gradient,
+    GradientType,
+    Stop,
+    Point2D,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 
@@ -423,20 +427,29 @@ class Transform3D { // 变换
         return this
     }
 
-    scale(xScale: number, yScale: number, zScale: number) { // 缩放，会修改原变换
+    scale(xScale: number, yScale: number, zScale: number, ignoreTranslation = true) { // 缩放，会修改原变换，ignoreTranslation=true：进行缩放等操作时忽略平移
         const matrix = new Matrix([
             [xScale, 0, 0, 0],
             [0, yScale, 0, 0],
             [0, 0, zScale, 0],
             [0, 0, 0, 1],
         ], true)
-        this.matrix = matrix.multiply(this.matrix)
+        if (ignoreTranslation) {
+            const translateVector = this.matrix.colVec(3)
+            this.matrix = matrix.resize(3, 3).multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+        }
         return this
     }
 
-    _rotate(matrix: Matrix, ignoreTranslation = true) { // 旋转缩放等，会修改原变换，ignoreTranslation=true：进行旋转缩放等操作时忽略平移
-        const translateVector = this.matrix.colVec(3)
-        this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
+    _rotate(matrix: Matrix, ignoreTranslation = true) { // 旋转缩放等，会修改原变换，matrix需为3*3矩阵，ignoreTranslation=true：进行旋转缩放等操作时忽略平移
+        if (ignoreTranslation) {
+            const translateVector = this.matrix.colVec(3)
+            this.matrix = matrix.multiply(this.matrix.resize(3, 3)).rowExtend(Matrix.build(1, 3, 0)).colExtend(translateVector)
+        } else {
+            this.matrix = matrix.rowExtend(Matrix.build(1, 3, 0)).colExtend(Matrix.colVec([0, 0, 0, 1])).multiply(this.matrix)
+        }
         return this
     }
 
@@ -536,6 +549,29 @@ class Transform3D { // 变换
         }
     }
 
+
+    decompose3DTranslate() { // 分解出平移的三维值
+        const m = this.matrix.data
+        return {
+            x: m[0][3],
+            y: m[1][3],
+            z: m[2][3],
+        }
+    }
+
+    decomposeEulerYXZ() { // 分解出欧拉角（ZXY序）的三维值
+        return Transform3D.decomposeEulerYXZ(this.clone().clearScale().matrix)
+    }
+
+    decompose3DScale() { // 分解出缩放的三维值
+        const m = this.matrix.data
+        return {
+            x: Math.sqrt(m[0][0] ** 2 + m[1][0] ** 2 + m[2][0] ** 2),
+            y: Math.sqrt(m[0][1] ** 2 + m[1][1] ** 2 + m[2][1] ** 2),
+            z: Math.sqrt(m[0][2] ** 2 + m[1][2] ** 2 + m[2][2] ** 2),
+        }
+    }
+
     // 旋转矩阵转欧拉角
     // 维基百科：https://en.wikipedia.org/wiki/Euler_angles
     // 维基中的旋转矩阵R与Transform3D中的旋转矩阵matrix的行列定义相反，matrix是维基百科中R的转置
@@ -560,7 +596,7 @@ class Transform3D { // 变换
         }
     }
 
-    decomposeToEulerZXY() { // 分解出平移、欧拉角（ZXY序）、缩放矩阵
+    decompose3DWithEulerYXZ() { // 分解出平移、欧拉角（ZXY序）、缩放的三维值
         const decompose = this.decomposeMatrix()
         return {
             translate: {
@@ -581,7 +617,10 @@ class Transform3D { // 变换
 
     clearRotation() { // 清除旋转操作，会修改原变换
         const m = this.matrix.data
-        m[0][0] = m[1][1] = m[2][2] = 1
+        const scale = this.decompose3DScale()
+        m[0][0] = scale.x
+        m[1][1] = scale.y
+        m[2][2] = scale.z
         m[0][1] = m[0][2] = m[1][0] = m[1][2] = m[2][0] = m[2][1] = 0
         return this
     }
@@ -597,15 +636,15 @@ class Transform3D { // 变换
         return this
     }
 
-    decomposeToRotate() { // 分解出旋转矩阵
+    decomposeRotateMatrix() { // 分解出旋转矩阵
         return this.clone().clearScale().clearTranslate()
     }
 
-    decomposeToScale() { // 分解出缩放矩阵
+    decomposeScale() { // 分解出缩放矩阵
         return this.clone().clearRotation().clearTranslate()
     }
 
-    decomposeToTranslate() { // 分解出平移矩阵
+    decomposeTranslate() { // 分解出平移矩阵
         return this.clone().clearRotation().clearScale()
     }
 
@@ -791,7 +830,7 @@ function getRectBox(x: number, y: number, w: number, h: number, transform: Trans
         w: w,
         h: h,
     };
-    transform = transform.decomposeToRotate()
+    transform = transform.decomposeRotateMatrix()
     // 矩形中心为原点的情况下，矩形的四个顶点坐标
     const points = Matrix.fromColumnVectors([
         Matrix.colVec3D(-w / 2, -h / 2, 0), // 左上
@@ -858,7 +897,7 @@ function parseTransform(transform: string, isCssStyle = false) { // 解析transf
     const functionCalls = getAllFunctionCallFromString(transform)
     const transform3D = new Transform3D()
     for (const [name, args] of functionCalls) {
-        const argList = args.split(",")
+        const argList = args.split(/,|\s+/).filter(arg => arg && arg.trim()) // 分隔符为逗号或空格
         const numArgList = argList.map(angle => {
             if (angle.includes("deg")) return parseFloat(angle.replace("deg", "")) * Math.PI / 180;
             else if (angle.includes("rad")) return parseFloat(angle.replace("rad", ""));
@@ -903,6 +942,39 @@ type MyColor = {
     g: number,
     b: number,
     a: number,
+}
+
+function myColorToString(color: MyColor) {
+    return `rgba(${color.r},${color.g},${color.b},${color.a})`
+}
+
+function myColorToColor(color: MyColor | undefined) {
+    if (!color) return new Color(1, 0, 0, 0);
+    return new Color(color.a, color.r, color.g, color.b)
+}
+
+type GradientStop = {
+    offset: number,
+    color: MyColor,
+    opacity: number,
+}
+
+type LinearGradient = {
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    opacity: number,
+    stops: GradientStop[],
+}
+
+type RadialGradient = {
+    cx: number,
+    cy: number,
+    r: number,
+    opacity: number,
+    transform: Transform3D,
+    stops: GradientStop[],
 }
 
 // https://developer.mozilla.org/zh-CN/docs/Web/CSS/named-color
@@ -1134,7 +1206,10 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     opacity?: number,
     fill?: MyColor,
     stroke?: {
-        color: MyColor,
+        colorType: "color" | "linearGradient" | "radialGradient", // 纯色、线性渐变、径向渐变
+        color?: MyColor,
+        linearGradient?: LinearGradient,
+        radialGradient?: RadialGradient,
         width?: number,
         dashArray: number[], // 虚线的length、gap参数，实线则为[0, 0]
         position: "inside" | "center" | "outside", // 位置：内部、中心、外部
@@ -1284,6 +1359,9 @@ class BaseCreator extends BaseTreeNode {
     parseAttributes() {
         if (!this.htmlElement) return;
 
+        const svgRoot = this.root?.htmlElement?.root
+        if (!svgRoot) return;
+
         const attributes = this.htmlElement.node.attributes
         for (const attribute of attributes) this.localAttributes[attribute.name] = attribute.value;
 
@@ -1325,17 +1403,77 @@ class BaseCreator extends BaseTreeNode {
         if (fill) this.attributes.fill = parseColor(fill);
 
         const stroke = this.localAttributes["stroke"]
+        const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
+        let colorType: "color" | "linearGradient" | "radialGradient" | undefined
+        let color: MyColor | undefined
+        let linearGradient: LinearGradient | undefined
+        let radialGradient: RadialGradient | undefined
+
         if (stroke) {
-            const color = parseColor(stroke)
-            if (color) {
-                const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
-                this.attributes.stroke = {
-                    color: color,
-                    dashArray: dashArray,
-                    position: "center",
+            if (stroke.startsWith("url(#")) {
+                const urlId = stroke.slice(5, -1)
+                const el = svgRoot.querySelector(`#${urlId}`)
+                if (el) {
+                    const creator = (el as any).creator as BaseCreator
+                    const stops: GradientStop[] = creator.children.filter(child => child.htmlElement?.tagName === "stop").map(child => {
+                        const attrs = child.localAttributes
+                        const offset = parseFloat(attrs["offset"]?.replace("%", "") || "0") / 100
+                        const stopColor = parseColor(attrs["stop-color"] || "black")!
+                        const stopOpacity = parseFloat(attrs["stop-opacity"] || "1")
+                        return {
+                            offset: offset,
+                            color: stopColor,
+                            opacity: stopOpacity,
+                        }
+                    })
+                    if (creator.htmlElement?.tagName === "linearGradient") {
+                        const x1 = parseFloat(creator.localAttributes["x1"] || "0")
+                        const y1 = parseFloat(creator.localAttributes["y1"] || "0")
+                        const x2 = parseFloat(creator.localAttributes["x2"] || "1")
+                        const y2 = parseFloat(creator.localAttributes["y2"] || "0")
+                        linearGradient = {
+                            x1: x1,
+                            y1: y1,
+                            x2: x2,
+                            y2: y2,
+                            opacity: this.attributes.opacity || 1,
+                            stops: stops,
+                        }
+                        colorType = "linearGradient"
+                    } else if (creator.htmlElement?.tagName === "radialGradient") {
+                        const cx = parseFloat(creator.localAttributes["cx"] || "0")
+                        const cy = parseFloat(creator.localAttributes["cy"] || "0")
+                        const r = parseFloat(creator.localAttributes["r"] || "1")
+                        const transform = new Transform3D()
+                        if (creator.localAttributes["gradientTransform"]) transform.addTransform(parseTransform(creator.localAttributes["gradientTransform"]));
+                        radialGradient = {
+                            cx: cx,
+                            cy: cy,
+                            transform: transform,
+                            opacity: this.attributes.opacity || 1,
+                            r: r,
+                            stops: stops,
+                        }
+                        colorType = "radialGradient"
+                    }
                 }
+            } else { // 纯色
+                color = parseColor(stroke)
+                if (color) colorType = "color";
             }
         }
+
+        if (colorType) {
+            this.attributes.stroke = {
+                colorType: colorType,
+                linearGradient: linearGradient,
+                radialGradient: radialGradient,
+                color: color,
+                dashArray: dashArray,
+                position: "center",
+            }
+        }
+
         const strokeWidth = this.localAttributes["stroke-width"]
         if (strokeWidth) {
             this.attributes.strokeWidth = parseFloat(strokeWidth)
@@ -1370,7 +1508,7 @@ class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const { translate, rotate } = this.transform.decomposeToEulerZXY()
+        const { translate, rotate } = this.transform.decompose3DWithEulerYXZ()
 
         // 设置xy
         shape.frame.x = translate.x
@@ -1389,30 +1527,53 @@ class BaseCreator extends BaseTreeNode {
         if (!shape) return;
 
         const borders = new BasicArray<Border>()
-        if (this.attributes.stroke) {
-            const strokeWidth = this.attributes.stroke.width || 1
-
-            const color = new Color(
-                this.attributes.stroke.color.a,
-                this.attributes.stroke.color.r,
-                this.attributes.stroke.color.g,
-                this.attributes.stroke.color.b,
-            )
+        const stroke = this.attributes.stroke
+        if (stroke) {
+            const strokeWidth = stroke.width || 1
 
             let position: BorderPosition
-            if (this.attributes.stroke.position === "inside") position = BorderPosition.Inner;
-            else if (this.attributes.stroke.position === "center") position = BorderPosition.Center;
+            if (stroke.position === "inside") position = BorderPosition.Inner;
+            else if (stroke.position === "center") position = BorderPosition.Center;
             else position = BorderPosition.Outer;
 
-            const borderStyle = new BorderStyle(this.attributes.stroke.dashArray[0], this.attributes.stroke.dashArray[1])
+            const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
+            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color), position, strokeWidth, borderStyle)
+            borders.push(border)
 
-            borders.push(new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color, position, strokeWidth, borderStyle))
+            if (stroke.colorType !== "color") {
+                const gradient = stroke.colorType === "linearGradient" ? stroke.linearGradient! : stroke.radialGradient!
+
+                let from: Point2D, to: Point2D
+                let colorType
+                let elipseLength
+                const opacity = gradient.opacity
+
+                if (stroke.colorType === "linearGradient") {
+                    from = new Point2D(stroke.linearGradient!.x1, stroke.linearGradient!.y1)
+                    to = new Point2D(stroke.linearGradient!.x2, stroke.linearGradient!.y2)
+                    colorType = GradientType.Linear
+                } else {
+                    const translate = stroke.radialGradient!.transform.decompose3DTranslate()
+                    from = new Point2D(translate.x, translate.y)
+
+                    const toVec = stroke.radialGradient!.transform.transform(Matrix.colVec([1, 0, 0]))
+                    to = new Point2D(toVec.data[0][0], toVec.data[1][0])
+
+                    colorType = GradientType.Radial
+                }
+
+                const stops = gradient.stops.map((item, i) =>
+                    new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+                ) as BasicArray<Stop>
+
+                border.gradient = new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
+            }
+
         }
 
         const fills = new BasicArray<Fill>()
         if (this.attributes.fill && !(this instanceof TextCreator)) { // 文本不需要填充
-            const color = new Color(this.attributes.fill.a, this.attributes.fill.r, this.attributes.fill.g, this.attributes.fill.b)
-            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, color))
+            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(this.attributes.fill)))
         }
 
         const shadows = new BasicArray<Shadow>()
@@ -1569,27 +1730,27 @@ class PathCreator extends BaseCreator {
         if ((mask && mask.startsWith("url(#")) || (clip && clip.startsWith("url(#"))) { // 外部、内部
             position = mask ? "outside" : "inside"
             const urlId = (mask || clip).slice(5, -1)
-            const urlPathElement = svgRoot.querySelector(`#${urlId}>path`)
-            if (urlPathElement) {
-                const urlPathCreator = (urlPathElement as any).creator as BaseCreator
-                if (urlPathCreator instanceof PathCreator && urlPathCreator.localAttributes["d"] === this.localAttributes["d"]) {
+            const el = svgRoot.querySelector(`#${urlId}>path`)
+            if (el) {
+                const creator = (el as any).creator as BaseCreator
+                if (creator instanceof PathCreator && creator.localAttributes["d"] === this.localAttributes["d"]) {
                     mainPath = this.parent?.siblings().find(findMainPath) as PathCreator | undefined
                 }
             }
         } else { // 中心
             position = "center"
             mainPath = this.siblings().find(findMainPath) as PathCreator | undefined
+            if (!mainPath) mainPath = this.parent?.siblings().find(findMainPath) as PathCreator | undefined;
         }
 
         if (!mainPath) return;
 
-        // 设置边框
+        // 设置主体的边框
         let strokeWidth = this.attributes.strokeWidth
         if (strokeWidth && position !== "center") strokeWidth /= 2;
         mainPath.attributes.stroke = {
-            color: this.attributes.stroke.color,
+            ...this.attributes.stroke,
             width: strokeWidth,
-            dashArray: this.attributes.stroke.dashArray,
             position: position,
         }
 
