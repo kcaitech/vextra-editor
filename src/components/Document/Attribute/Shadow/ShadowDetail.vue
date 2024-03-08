@@ -6,7 +6,7 @@ import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { toHex } from "@/utils/color";
-import { Color, Shadow, ShapeView, ShapeType } from '@kcdesign/data';
+import { Color, Shadow, ShapeView, ShapeType, Fill } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
@@ -25,6 +25,8 @@ const popover = ref();
 const reflush = ref<number>(0);
 const alphaShadow = ref<HTMLInputElement>();
 const colorShadow = ref<HTMLInputElement>();
+const disabled = ref(false);
+const spare_tip = ref('');
 
 const setOffsetX = (value: number) => {
     const _idx = props.length - props.idx - 1;
@@ -172,8 +174,6 @@ function onAlphaChange(e: Event) {
 function getColorFromPicker(color: Color) {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    console.log(color, 'color');
-    
     if (len === 1) {
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
         e.setShadowColor(_idx, color);
@@ -211,23 +211,67 @@ const selectColor = () => {
     }
 }
 function showMenu() {
+    disable();
     popover.value.show();
 }
 onUpdated(() => {
     reflush.value++;
 })
-const disable = computed(() => {
-    if (props.shapes.length === 1) {
-        const type = props.shapes[0].type;
-        if (type !== ShapeType.Rectangle && type !== ShapeType.Artboard && type !== ShapeType.Oval) {
-            return true;
+const disable = () => {
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length === 1) {
+        const type = shapes[0].type;
+        const fills = shapes[0].data.style.fills;
+        if (type === ShapeType.Artboard && !isFill(fills)) {
+            spare_tip.value = t('shadow.fill_is_visible');
+            disabled.value = true;
         } else {
-            return false;
+            if (type !== ShapeType.Rectangle && type !== ShapeType.Artboard && type !== ShapeType.Oval) {
+                spare_tip.value = t('shadow.only_used');
+                disabled.value = true;
+            } else {
+                spare_tip.value = t('shadow.extend');
+                disabled.value = false;
+            }
         }
-    } else {
-        return true;
+    } else if (shapes.length > 1) {
+        let artFills = false;
+        let notAllArtboard = false;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            if (shape.type !== ShapeType.Rectangle && shape.type !== ShapeType.Artboard && shape.type !== ShapeType.Oval) {
+                spare_tip.value = t('shadow.only_used');
+                return disabled.value = true;
+            } else if (shape.type !== ShapeType.Artboard) {
+                notAllArtboard = true;
+            } else if (shape.type === ShapeType.Artboard && !isFill(shape.style.fills)) {
+                artFills = true;
+            }
+        }
+        if (notAllArtboard) {
+            spare_tip.value = t('shadow.extend');
+            disabled.value = false;
+        } else {
+            if (artFills) {
+                spare_tip.value = t('shadow.fill_is_visible');
+                disabled.value = true;
+            } else {
+                spare_tip.value = t('shadow.extend');
+                disabled.value = false;
+            }
+        }
     }
-})
+}
+
+const isFill = (fills: Fill[]) => {
+    for (let i = 0; i < fills.length; i++) {
+        const fill = fills[i];
+        if (fill.isEnabled && fill.color.alpha > 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 </script>
 
@@ -254,8 +298,8 @@ const disable = computed(() => {
                         <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
                             :tootip="`${t('shadow.blur')}`" :reflush="reflush">
                         </ShadowInput>
-                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disable"
-                            :tootip="`${t('shadow.extend')}`" :reflush="reflush">
+                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disabled"
+                            :tootip="spare_tip" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">

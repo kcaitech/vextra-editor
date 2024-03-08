@@ -42,11 +42,11 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                         const path = perRoute.split('?')[0].replace('/', '');
                         if (params.get('id') != null) {
                             const id = params.get('id');
+                            const page_id = params.get('page_id');
+                            const query = params.get('page_id') ? { id, page_id } : { id };
                             router.push({
                                 name: path,
-                                query: {
-                                    id: id
-                                }
+                                query
                             })
                         }
                         if (params.get('teamid') != null) {
@@ -105,11 +105,11 @@ function clickaffirm() {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
+                    const page_id = params.get('page_id');
+                    const query = params.get('page_id') ? { id, page_id } : { id };
                     router.push({
                         name: path,
-                        query: {
-                            id: id
-                        }
+                        query
                     })
                 } else {
                     router.push({ name: 'apphome' })
@@ -146,7 +146,7 @@ function wxcode() {
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         state: "STATE",
         style: "",
-        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
+        href:'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
     })
 }
 
@@ -185,7 +185,7 @@ onMounted(() => {
     // } else {
     //     window.addEventListener('message', onmessage, false)
     // }
-  window.addEventListener('message', onmessage, false)
+    window.addEventListener('message', onmessage, false)
 })
 
 onUnmounted(() => {
@@ -263,44 +263,62 @@ const pasteEvent = async (e: any) => {
 
 }
 
+function changesize(e: HTMLElement) {
+    if (window.innerWidth > window.innerHeight) {
+        e.style.aspectRatio = '8/6'
+    } else {
+        e.style.aspectRatio = '8/10'
+    }
+}
+
+onMounted(() => {
+    if (isMobileDevice()) {
+        const el = document.querySelector('.login') as HTMLElement
+        window.onresize = () => { changesize(el) }
+        changesize(el)
+    }
+})
+
 </script>
 
 <template>
-    <div class="main">
-        <div class="all">
-            <Describes></Describes>
-            <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
-                <div class="login-page" v-if="loginshow">
-                    <span>{{ t('system.wx_login') }}</span>
-                    <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-                    <p>
-                        {{ t('system.login_read') }}
-                        <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">
-                            {{ t('system.read_TOS') }}
-                        </a>&nbsp;
-                        <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">
-                            {{ t('system.read_Privacy') }}
-                        </a>
-                    </p>
-                </div>
-                <div class="login-code" v-else>
-                    <div class="back" @click.stop="loginshow = true">
-                        <svg-icon icon-class="back-icon"></svg-icon>
+    <div class="bgiamge">
+        <div class="content">
+            <div class="top">
+                <Describes></Describes>
+                <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
+                    <div class="login-page" v-if="loginshow">
+                        <div class="title">{{ t('system.wx_login') }}</div>
+                        <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading">
+                        </div>
+                        <div class="tips">
+                            <span>{{ t('system.login_read') }}</span>
+                            <span @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS')
+                                }}</span>
+                            <span @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy')
+                                }}</span>
+                        </div>
                     </div>
-                    <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
-                    <div class="inputs">
-                        <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
-                            :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
-                            @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
-                            @compositionend="handleCompositionEnd($event, index)" @keydown.delete="keydownevent(index)"
-                            @paste="pasteEvent($event)" />
+                    <div class="login-code" v-else>
+                        <div class="back" @click.stop="loginshow = true">
+                            <svg-icon icon-class="back-icon"></svg-icon>
+                        </div>
+                        <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
+                        <div class="inputs">
+                            <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
+                                :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
+                                @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
+                                @compositionend="handleCompositionEnd($event, index)"
+                                @keydown.delete="keydownevent(index)" @paste="pasteEvent($event)" />
+                            <Transition name="slide-up">
+                                <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
+                            </Transition>
+                        </div>
+
+                        <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
+                    t('percenter.affirm')
+                            }}</button>
                     </div>
-                    <Transition name="slide-up">
-                        <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
-                    </Transition>
-                    <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
-                        t('percenter.affirm')
-                    }}</button>
                 </div>
             </div>
             <Footer></Footer>
@@ -335,184 +353,181 @@ const pasteEvent = async (e: any) => {
     background-color: #00000010;
 }
 
-.main {
-    width: 100vw;
-    height: 100vh;
-    background-color: #ffffff;
-    backdrop-filter: blur(51px);
-    background-image:
-        // url('@/assets/login-img1.svg'),
-        // url("@/assets/login-img2.svg"),
-        // url("@/assets/login-img3.svg"),
-        // url("@/assets/login-img4.svg"),
-        // url("@/assets/login-img5.svg");
-        url("@/assets/bgimg.svg");
-    // background-position:
-    //     0, 80vw,
-    //     45vw -100vh,
-    //     30vw -30vh,
-    //     -55vw 25vh;
-    background-size:
-        // 80% 100%,
-        // contain,
-        // cover,
-        // cover,
-        cover;
-    background-repeat: no-repeat;
-    box-sizing: border-box;
-
-}
-
-.all {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.bgiamge {
     width: 100%;
     height: 100%;
+    background-color: #ffffff;
+    background-image: url("@/assets/bgimg2.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
 
-    .login {
-        width: 400px;
-        min-width: 400px;
-        height: 480px;
-        background: white;
-        border-radius: 10px;
-        border: 1px solid #F0F0F0;
-        box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
-        box-sizing: border-box;
-        transform-style: preserve-3d;
-        transition: transform 0.5s;
+.content {
+    height: 100%;
+    display: flex;
+    justify-content: center;
 
-        .login-page {
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: center;
+    .top {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
 
-
-            #login_container {
-                width: 200px;
-                height: 200px;
-            }
-
-
-            span {
-                font-size: 20px;
-                font-weight: 600;
-                margin-top: 74px;
-                margin-bottom: 46px;
-                color: rgba(67, 67, 67, 1);
-            }
-
-            p {
-                font-size: 13px;
-                font-weight: 500;
-                color: rgb(146 146 146);
-                margin-top: 24px;
-
-                a {
-                    font-weight: 600;
-                }
-            }
-        }
-
-        .login-code {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
+        .login {
+            width: 80%;
+            // height: 80%;
+            // max-height: 480px;
+            max-width: 400px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #F0F0F0;
+            box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
+            box-sizing: border-box;
             transform-style: preserve-3d;
-            transform: rotateY(180deg);
+            transition: transform 0.5s;
+            aspect-ratio: 8/9.6;
 
-            .back {
-                width: 28px;
-                height: 28px;
-                position: absolute;
-                top: 20px;
-                left: 16px;
-                padding: 4px;
-                border-radius: 6px;
-                box-sizing: border-box;
-
-                &:hover {
-                    background-color: rgba(240, 240, 240, 1);
-                }
-
-                &:active {
-                    background-color: rgba(243, 243, 245, 1);
-                }
-
-                svg {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-
-            .Invitation_code {
-                font-size: 20px;
-                font-weight: 600;
-                color: rgba(67, 67, 67, 1);
-                margin: 74px 0 106px 0;
-            }
-
-            .inputs {
+            .login-page {
                 display: flex;
-                justify-content: space-between;
-                width: 344px;
-                margin-bottom: 56px;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                align-items: center;
+                height: 100%;
+                justify-content: space-around;
 
-                input {
-                    width: 36px;
-                    height: 48px;
-                    border-radius: 6px;
-                    font-size: 24px;
+                #login_container {
+                    width: 200px;
+                    height: 200px;
+                }
+
+
+
+                .title {
+                    font-size: 20px;
                     font-weight: 600;
-                    color: rgba(0, 0, 0, 1);
-                    text-align: center;
-                    background-color: rgba(235, 235, 235, 1);
-                    border: 1px solid #EBEBEB;
+                    // margin-top: 74px;
+                    // margin-bottom: 46px;
+                    color: rgba(67, 67, 67, 1);
+                }
+
+                .tips {
+                    display: flex;
+                    gap: 4px;
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: rgb(146 146 146);
+                    // margin-top: 24px;
+
+                    span:nth-child(n + 2) {
+                        cursor: pointer;
+                        color: rgb(0, 0, 238);
+                        font-weight: 600;
+                    }
+                }
+            }
+
+            .login-code {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+                transform-style: preserve-3d;
+                transform: rotateY(180deg);
+
+                .back {
+                    width: 28px;
+                    height: 28px;
+                    position: absolute;
+                    top: 20px;
+                    left: 16px;
+                    padding: 4px;
+                    border-radius: 6px;
                     box-sizing: border-box;
+
+                    &:hover {
+                        background-color: rgba(240, 240, 240, 1);
+                    }
+
+                    &:active {
+                        background-color: rgba(243, 243, 245, 1);
+                    }
+
+                    svg {
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+
+                .Invitation_code {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: rgba(67, 67, 67, 1);
+                    // margin: 74px 0 106px 0;
+                }
+
+                .inputs {
+                    position: relative;
+                    display: flex;
+                    justify-content: space-evenly;
+                    width: 344px;
+                    width: 100%;
+
+                    // margin-bottom: 56px;
+
+
+
+                    input {
+                        width: 36px;
+                        height: 48px;
+                        border-radius: 6px;
+                        font-size: 24px;
+                        font-weight: 600;
+                        color: rgba(0, 0, 0, 1);
+                        text-align: center;
+                        background-color: rgba(235, 235, 235, 1);
+                        border: 1px solid #EBEBEB;
+                        box-sizing: border-box;
+                        outline: none;
+                    }
+                }
+
+                .code_error_tips {
+                    position: absolute;
+                    top: 58px;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: rgba(234, 0, 0, 1);
+
+                }
+
+                .affirm {
+                    // width: 344px;
+                    width: 80%;
+                    height: 44px;
+                    font-size: 14px;
+                    border: none;
+                    border-radius: 6px;
+                    background-color: rgba(24, 120, 245, 1);
+                    color: white;
+                    text-align: center;
                     outline: none;
-                }
-            }
 
-            .code_error_tips {
-                position: absolute;
-                top: 260px;
-                left: 28px;
-                font-size: 12px;
-                font-weight: 400;
-                color: rgba(234, 0, 0, 1);
+                    &:hover {
+                        background-color: rgba(66, 154, 255, 1);
+                    }
 
-            }
+                    &:active {
+                        background-color: rgba(10, 89, 207, 1);
+                    }
 
-            .affirm {
-                width: 344px;
-                height: 44px;
-                font-size: 14px;
-                border: none;
-                border-radius: 6px;
-                background-color: rgba(24, 120, 245, 1);
-                color: white;
-                text-align: center;
-                outline: none;
-
-                &:hover {
-                    background-color: rgba(66, 154, 255, 1);
-                }
-
-                &:active {
-                    background-color: rgba(10, 89, 207, 1);
-                }
-
-                &[disabled] {
-                    background-color: rgba(189, 226, 255, 1);
+                    &[disabled] {
+                        background-color: rgba(189, 226, 255, 1);
+                    }
                 }
             }
         }
     }
 }
 </style>
-
-
-

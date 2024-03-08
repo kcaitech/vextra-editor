@@ -45,6 +45,7 @@ import { ColorCtx } from '@/context/color';
 import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
 import Overview from './Content/Overview.vue';
 import MessageBoxBeta from '../common/MessageBoxBeta.vue';
+import { permIsEdit } from '@/utils/permission';
 
 interface Props {
     context: Context
@@ -290,18 +291,22 @@ function select(e: MouseEvent) {
 }
 
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
+    const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.value.root;
-    const { x: mx, y: my } = { x: e.clientX - rx, y: e.clientY - ry };
-    const { x: sx, y: sy } = mousedownOnClientXY;
+    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
+    const { x: mx, y: my } = { x: xy.x, y: xy.y };
+    const { x: sx, y: sy } = mousedownOnPageXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    selectorFrame.top = top;
-    selectorFrame.left = left;
-    selectorFrame.width = right - left;
-    selectorFrame.height = bottom - top;
-    selectorFrame.includes = e.altKey;
+    const p = matrix_inverse.inverseCoord({ x: left, y: top })
+    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
+    selectorFrame.top = Math.min(p.y, s.y);
+    selectorFrame.left = Math.min(p.x, s.x);
+    selectorFrame.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
+    selectorFrame.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
+    selectorFrame.includes = altKey;
 }
 
 function updateMouse(e: MouseEvent) {
@@ -544,11 +549,17 @@ function cut_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
     }
+    if (!permIsEdit(props.context)) {
+        return;
+    }
     props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    if (!permIsEdit(props.context)) {
         return;
     }
     return props.context.workspace.clipboard.paste(t, event);
@@ -639,8 +650,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
-        @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
         <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" />
@@ -649,13 +660,14 @@ onUnmounted(() => {
         <SelectionView :context="props.context" :matrix="matrix" />
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
-        <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount" :site="site"
-            ref="contextMenuEl">
+        <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
+            :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
-        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
+        </CellSetting>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>

@@ -4,6 +4,7 @@
     </div>
 </template>
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
+
 <script setup lang="ts">
 import e from 'express';
 import { ref } from 'vue';
@@ -85,19 +86,20 @@ const lineStyle = {
 const sashEl = ref<HTMLElement>();
 
 </script>
-<style scoped>
+
+<style lang="scss" scoped>
 .sash {
     position: absolute;
     z-index: 1;
 }
 
 .draging {
-    //background-color: darkgrey;
+    // background-color: darkgrey;
     background-color: transparent;
 }
 
 .line {
-    //background-color: var(--theme-color-line);
+    // background-color: var(--theme-color-line);
     background-color: transparent;
     position: inherit;
 }

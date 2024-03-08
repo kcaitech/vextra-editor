@@ -253,14 +253,14 @@ function locate() {
     }
     const doc_height = document.documentElement.clientHeight;
     const { height, y } = el.getBoundingClientRect();
-    if (props.fillType && props.fillType === FillType.SolidColor) {
-        if (doc_height - y < height + 48) {
-            el.style.top = parseInt(el.style.top) - ((height + 58) - (doc_height - y)) + 'px'
-        }
-    } else {
-        if (doc_height - y < height + 10) {
-            el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-        }
+
+    //避免工具栏遮挡调色板
+    if (doc_height - y < height + 10) {
+        el.style.top = ((parseInt(el.style.top) - ((height + 20) - (doc_height - y))) < 46 ? 56 : parseInt(el.style.top) - ((height + 20) - (doc_height - y))) + 'px'
+    }
+    //从表单快捷入口调起调色板时固定top
+    if (props.cell) {
+        el.style.top = 40 + 'px';
     }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
@@ -1153,12 +1153,12 @@ onUnmounted(() => {
             </div>
             <!-- 渐变工具 -->
             <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
-                 class="gradient-container">
+                class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                         @mouseup.stop="_gradient_channel_down"></div>
+                        @mouseup.stop="_gradient_channel_down"></div>
                     <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                         @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
                         <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
                     </div>
                 </div>
@@ -1175,7 +1175,7 @@ onUnmounted(() => {
             </div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
                 <div class="white"></div>
                 <div class="black"></div>
                 <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
@@ -1183,7 +1183,7 @@ onUnmounted(() => {
             <!-- 常用色 -->
             <div class="typical-container">
                 <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
             </div>
             <div class="controller">
                 <div class="eyedropper">
@@ -1197,9 +1197,9 @@ onUnmounted(() => {
                     <!-- 透明度 -->
                     <div class="alpha-bacground">
                         <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                            :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
                             <div class="alphaIndicator" ref="alphaIndicator"
-                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                :style="{ left: alphaIndicatorAttr.x + 'px' }">
                             </div>
                         </div>
                     </div>
@@ -1212,7 +1212,7 @@ onUnmounted(() => {
                     <div class="wrap">
                         <div class="value">
                             <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                                                                           @click="(e) => inputClick(e, idx)"/>
+                                    @click="(e) => inputClick(e, idx)" />
                             </div>
                         </div>
                         <div class="label">
@@ -1227,7 +1227,7 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.recently') }}</div>
                     <div class="typical-container">
                         <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1238,9 +1238,9 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
                         <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                             @click="() => setColor(c.color as any)"
-                             :title="t('color.times').replace('xx', c.times.toString())"
-                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                            @click="() => setColor(c.color as any)"
+                            :title="t('color.times').replace('xx', c.times.toString())"
+                            :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1273,7 +1273,7 @@ onUnmounted(() => {
         overflow: hidden;
         z-index: 99;
 
-        > .header {
+        >.header {
             width: 100%;
             height: 40px;
             position: relative;
@@ -1291,7 +1291,7 @@ onUnmounted(() => {
             display: flex;
             justify-content: space-between;
 
-            > .color-type-desc {
+            >.color-type-desc {
                 display: flex;
                 align-items: center;
                 cursor: pointer;
@@ -1300,19 +1300,19 @@ onUnmounted(() => {
                     user-select: none;
                 }
 
-                > svg {
+                >svg {
                     transition: 0.3s;
                     width: 10px;
                     height: 10px;
                     margin-left: 4px;
                 }
 
-                > svg:hover {
+                >svg:hover {
                     transform: translateY(2px);
                 }
             }
 
-            > .close {
+            >.close {
                 flex: 0 0 16px;
                 height: 16px;
                 text-align: center;
@@ -1322,7 +1322,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                > svg {
+                >svg {
                     width: 85%;
                     height: 85%;
                 }
@@ -1338,7 +1338,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        > .gradient-container {
+        >.gradient-container {
             display: flex;
             align-items: center;
             width: 100%;
@@ -1422,28 +1422,28 @@ onUnmounted(() => {
             }
         }
 
-        > .saturation {
+        >.saturation {
             width: 100%;
             height: 200px;
             position: relative;
             cursor: pointer;
             overflow: hidden;
 
-            > .white {
+            >.white {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
 
-            > .black {
+            >.black {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
             }
 
-            > .dot {
+            >.dot {
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
@@ -1453,7 +1453,7 @@ onUnmounted(() => {
             }
         }
 
-        > .typical-container {
+        >.typical-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1464,7 +1464,7 @@ onUnmounted(() => {
             padding-bottom: 6px;
             box-sizing: border-box;
 
-            > .block {
+            >.block {
                 margin: 0 3px;
                 width: 16px;
                 height: 16px;
@@ -1476,7 +1476,7 @@ onUnmounted(() => {
             }
         }
 
-        > .controller {
+        >.controller {
             width: 100%;
             height: 46px;
             display: flex;
@@ -1486,11 +1486,11 @@ onUnmounted(() => {
             box-sizing: border-box;
             justify-content: space-around;
 
-            > .sliders-container {
+            >.sliders-container {
                 width: 196px;
                 height: 32px;
 
-                > .hue {
+                >.hue {
                     position: relative;
                     width: 100%;
                     height: 8px;
@@ -1498,7 +1498,7 @@ onUnmounted(() => {
                     border-radius: 5px 5px 5px 5px;
                     cursor: pointer;
 
-                    > .hueIndicator {
+                    >.hueIndicator {
                         top: -2px;
                         width: 8px;
                         height: 8px;
@@ -1509,7 +1509,7 @@ onUnmounted(() => {
                     }
                 }
 
-                > .alpha-bacground {
+                >.alpha-bacground {
                     margin-top: 8px;
                     width: 100%;
                     height: 8px;
@@ -1519,13 +1519,13 @@ onUnmounted(() => {
                     cursor: pointer;
                     box-sizing: border-box;
 
-                    > .alpha {
+                    >.alpha {
                         position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 5px 5px 5px 5px;
 
-                        > .alphaIndicator {
+                        >.alphaIndicator {
                             top: -2px;
                             width: 8px;
                             height: 8px;
@@ -1539,7 +1539,7 @@ onUnmounted(() => {
                 }
             }
 
-            > .eyedropper {
+            >.eyedropper {
                 width: 30px;
                 height: 30px;
                 display: flex;
@@ -1550,7 +1550,7 @@ onUnmounted(() => {
                 padding: 6px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     width: 18px;
                     height: 18px;
                     cursor: pointer;
@@ -1600,7 +1600,7 @@ onUnmounted(() => {
                             width: 25%;
                             text-align: center;
 
-                            > input {
+                            >input {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -1639,7 +1639,7 @@ onUnmounted(() => {
             }
         }
 
-        > .recently-container {
+        >.recently-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1665,14 +1665,14 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                > .typical-container {
+                >.typical-container {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     box-sizing: border-box;
 
-                    > .block {
+                    >.block {
                         width: 16px;
                         height: 16px;
                         border-radius: 3px;
@@ -1681,14 +1681,14 @@ onUnmounted(() => {
                         box-sizing: border-box;
                     }
 
-                    > .block:not(:first-child) {
+                    >.block:not(:first-child) {
                         margin-left: 6.2px;
                     }
                 }
             }
         }
 
-        > .dc-container {
+        >.dc-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1712,7 +1712,7 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                > .documentc-container {
+                >.documentc-container {
                     width: 100%;
                     max-height: 90px;
                     overflow: scroll;
@@ -1742,7 +1742,7 @@ onUnmounted(() => {
                         background-color: none;
                     }
 
-                    > .block {
+                    >.block {
                         display: inline-block;
                         width: 16px;
                         height: 16px;
