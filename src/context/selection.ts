@@ -103,6 +103,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static PLACEMENT_CHANGE = 15;
     static SELECTION_HIDDEN = 16;
     static SHOW_INTERVAL = 17;
+    static PASSIVE_CONTOUR = 18;
 
     // static CHANGE_TEXT_LITE = 16;
 
@@ -127,6 +128,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_is_new_shape_selection: boolean = false;
     private m_shapes_set: Set<string> = new Set();
     private m_interval: boolean = false;
+
+    private m_label_fixed_group: ShapeView[] = [];
+    private m_label_living_group: ShapeView[] = [];
 
     constructor(document: Document, context: Context) {
         super();
@@ -645,9 +649,11 @@ export class Selection extends WatchableObject implements ISave4Restore {
     }
 
     private m_env_shapes: ShapeView[] = [];
+
     setEnvShapes(shapes: ShapeView[]) {
         this.m_env_shapes = shapes;
     }
+
     get envShapes() {
         return this.m_env_shapes;
     }
@@ -681,6 +687,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
             return (this.selectedShapes[0]) as PathShapeView;
         }
     }
+
     // get pathshapeview() {
     //     const selected = this.selectedShapes;
     //     if (selected.length === 1 && selected[0] instanceof PathShapeView) {
@@ -691,6 +698,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     get symbolshape() {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
     }
+
     get symbolview() {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
     }
@@ -752,6 +760,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
             }
         }
     }
+
     // #endregion
     get is_interval() {
         return this.m_interval;
@@ -760,5 +769,21 @@ export class Selection extends WatchableObject implements ISave4Restore {
     setShowInterval(v: boolean) {
         this.m_interval = v;
         this.notify(Selection.SHOW_INTERVAL);
+    }
+
+    get labelFixedGroup() {
+        return this.m_label_fixed_group.length ? this.m_label_fixed_group : undefined;
+    }
+
+    setLabelFixedGroup(shapes: ShapeView[]) {
+        this.m_label_fixed_group = shapes;
+    }
+
+    get labelLivingGroup() {
+        return this.m_label_living_group.length ? this.m_label_living_group : undefined;
+    }
+
+    setLabelLivingGroup(shapes: ShapeView[]) {
+        this.m_label_living_group = shapes;
     }
 }

@@ -2,22 +2,15 @@ import {
     CoopRepository,
     TaskMgr,
     WatchableObject,
-    TableShape,
     TableEditor,
-    Text,
     PageView,
     ShapeView,
-    adapt2Shape,
     TableView,
     TextShapeView,
     TableCellView,
-    Task,
-    TaskPriority,
-    SymbolShape,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
@@ -38,7 +31,6 @@ import { PdMedia } from "./medias";
 import { User } from './user';
 
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
-import { TableSelection } from "./tableselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { ColorCtx } from "./color";
@@ -157,15 +149,17 @@ export class Context extends WatchableObject {
     }
 
     editor4Shape(shape: ShapeView): ShapeEditor {
-        return this.editor.editor4Shape(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Shape(this.selection.selectedPage, shape);
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
     editor4TextShape(shape: TextShapeView | TableCellView): TextShapeEditor {
-        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id && this.m_textEditor.view.parent) {
             return this.m_textEditor;
         }
-        this.m_textEditor = this.editor.editor4TextShape(shape);
+        this.m_textEditor = this.editor.editor4TextShape(this.selection.selectedPage, shape);
         return this.m_textEditor;
     }
 
@@ -176,7 +170,8 @@ export class Context extends WatchableObject {
     }
 
     editor4Table(shape: TableView): TableEditor {
-        return this.editor.editor4Table(shape);
+        if (!this.selection.selectedPage) throw new Error("not selected page?");
+        return this.editor.editor4Table(this.selection.selectedPage, shape);
     }
 
     get data() {

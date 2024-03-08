@@ -175,9 +175,9 @@ function update_by_cells(...args: any[]) {
 function table_selection_watcher(t: number) {
     table_selection_change();
     watch_cells();
-    if(t === TableSelection.CHANGE_TABLE_CELL) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
         const table = props.context.selection.tableSelection;
-        if(table.tableRowStart < 0) {
+        if (table.tableRowStart < 0) {
             baseAttr.value = true;
         }
     }
@@ -250,8 +250,10 @@ function watch_cells() {
 
     const selectedCells = tableSelection.getSelectedCells();
     const editedCell = tableSelection.editingCell;
-    const list = [...selectedCells.map(s => s.cell), editedCell];
-
+    const list = [...selectedCells.map(s => s.cell)];
+    if (editedCell) {
+        list.push(editedCell);
+    }
     if (list.length) {
         baseAttr.value = false;
     }
@@ -313,10 +315,11 @@ onUnmounted(() => {
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
                     :selection-change="reflush_by_selection" :triggle="reflush_trigger"
                     :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
-                <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></Border>
-                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)" :selection-change="reflush_by_selection"
-                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
-                    :trigger="reflush_trigger"></Text>
+                <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
+                    :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
+                    :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
+                    :context="props.context" :trigger="reflush_trigger"></Text>
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
