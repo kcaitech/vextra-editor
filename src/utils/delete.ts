@@ -78,14 +78,14 @@ function delete_for_table(context: Context, table: TableView) {
         ts.resetSelection();
 
         context.nextTick(context.selection.selectedPage!, () => {
-            const ec = table.data.getCellAt(rs, cs);
+            const ec = table.getCellAt(rs, cs);
             if (!ec || ec.cellType === TableCellType.None) {
                 return;
             }
 
-            const cell = table.cells.get(ec.id);
+            // const cell = table.cells.get(ec.id);
 
-            ts.setEditingCell(cell);
+            ts.setEditingCell(ec);
 
             context.textSelection.setCursor(0, false);
         })
