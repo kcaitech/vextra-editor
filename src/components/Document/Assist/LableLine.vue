@@ -6,11 +6,20 @@ import { Selection } from '@/context/selection';
 import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { genRectPath } from "../Selection/common";
-import { CenterPoint, LintPoint, get_dotted_line_point, get_graph_relative_posi, get_solid_line_center_point, get_solid_line_point } from "@/utils/label";
+import {
+    CenterPoint,
+    LintPoint,
+    get_dotted_line_point,
+    get_graph_relative_posi,
+    get_solid_line_center_point,
+    get_solid_line_point
+} from "@/utils/label";
+
 interface Props {
     context: Context
     matrix: Matrix
 }
+
 const props = defineProps<Props>();
 const tracingPath = ref<string[]>([]);
 const matrix = new Matrix();
@@ -25,13 +34,20 @@ const size_posi = ref<CenterPoint[]>([]);
 // hover后给选中和hover的图形描边
 const contour = () => {
     clearPoint();
-    const hoveredShape = props.context.selection.hoveredShape;
-    const selectShape = props.context.selection.selectedShapes;
-    if (!hoveredShape || selectShape.length === 0) return;
-    if (selectShape.length === 1 && selectShape[0].id === hoveredShape.id) return;
+    const selection = props.context.selection;
+    const living = selection.labelLivingGroup || (selection.hoveredShape ? [selection.hoveredShape] : []);
+    const fixed = selection.labelFixedGroup || selection.selectedShapes;
+    if (!living.length || !fixed.length) {
+        return;
+    }
+
+    if (fixed.length === 1 && living.length === 1 && fixed[0].id === living[0].id) {
+        return;
+    }
+
     matrix.reset(props.matrix);
-    selectContour(selectShape);
-    hoveredContour(hoveredShape);
+    fixedContour(fixed);
+    livingContour(living);
     solid_line_point(select_shape_posi.value, hover_shape_posi.value);
     dotted_line_point(select_shape_posi.value, hover_shape_posi.value);
 }
@@ -43,7 +59,7 @@ const clearPoint = () => {
     size_posi.value = [];
 }
 
-const selectContour = (shapes: ShapeView[]) => {
+const fixedContour = (shapes: ShapeView[]) => {
     const points: { x: number, y: number }[] = [];
     for (let index = 0; index < shapes.length; index++) {
         const s = shapes[index];
@@ -52,8 +68,6 @@ const selectContour = (shapes: ShapeView[]) => {
         const f = s.frame;
         const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
         points.push(...ps);
-        const path = s.getPath().clone();
-        path.transform(m);
     }
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
@@ -66,15 +80,16 @@ const selectContour = (shapes: ShapeView[]) => {
     tracingPath.value.push(borPath);
 }
 
-const hoveredContour = (shape: ShapeView) => {
+const livingContour = (shapes: ShapeView[]) => {
     const points: { x: number, y: number }[] = [];
-    const m = shape.matrix2Root();
-    m.multiAtLeft(matrix);
-    const f = shape.frame;
-    const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
-    points.push(...ps);
-    const path = shape.getPath().clone();
-    path.transform(m);
+    for (let index = 0; index < shapes.length; index++) {
+        const s = shapes[index];
+        const m = s.matrix2Root();
+        m.multiAtLeft(matrix);
+        const f = s.frame;
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        points.push(...ps);
+    }
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
     hover_shape_posi.value = framePoint.map(item => {
@@ -127,6 +142,8 @@ const selectionWatcher = (t: number) => {
         contour();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         contour();
+    } else if (t === Selection.PASSIVE_CONTOUR) {
+        contour();
     }
 }
 
@@ -155,18 +172,20 @@ onUnmounted(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-        :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+         :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
         <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200"></path>
-        <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" style="stroke:#ff2200;">
+        <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"
+              style="stroke:#ff2200;">
         </line>
         <line v-for="(p, i) in dotted_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" stroke-dasharray="3 2"
-            style="stroke:#ff2200;"></line>
+              style="stroke:#ff2200;"></line>
     </svg>
     <template v-for="(item, index) in size_posi" :key="index">
         <span class="size" v-if="+item.length.toFixed(0) !== 0"
-            :style="{ top: item.y + 'px', left: item.x + 'px', transform: `translate(-${item.tran.x}%,-${item.tran.y}%)` }">{{
-                filterAlpha(item.length) }}</span>
+              :style="{ top: item.y + 'px', left: item.x + 'px', transform: `translate(-${item.tran.x}%,-${item.tran.y}%)` }">{{
+                filterAlpha(item.length)
+            }}</span>
     </template>
 </template>
 

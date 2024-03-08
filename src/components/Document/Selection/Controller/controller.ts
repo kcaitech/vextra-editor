@@ -95,21 +95,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-
-        if (event.shiftKey) {
-            if (event.repeat) {
-                return;
-            }
-            transporter?.modifyShiftStatus(true);
-        }
-
-        if (event.altKey) {
-            if (event.repeat) {
-                return;
-            }
-            transporter?.modifyAltStatus(true);
-        }
-
         if (isDragging) {
             return;
         }
@@ -201,10 +186,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
             return;
         }
-
-        if (event.code === 'ShiftLeft') {
-            transporter?.modifyShiftStatus(false);
-        }
+        //
+        // if (event.code === 'ShiftLeft') {
+        //     transporter?.modifyShiftStatus(false);
+        // }
 
         const still_active = directionCalc.up(event);
 
@@ -313,7 +298,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             // modify_mouse_position_by_type(update_type, startPosition, mousePosition);
 
-            transporter?.excute(e);
+            transporter?.execute(e);
 
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) {
@@ -512,28 +497,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (e.button !== 0) {
             return;
         }
-        if (isDragging) {
-            // if (asyncTransfer) {
-            //     const mousePosition: ClientXY = workspace.getContentXY(e);
-            //     migrate_immediate(context, asyncTransfer, shapes, mousePosition);
-            //     asyncTransfer = asyncTransfer.close();
-            // }
 
-            end_transalte(context);
-            transporter?.fulfil();
-            transporter = undefined;
-            reset_sticked();
+        if (isDragging) {
             isDragging = false;
         } else {
             shapes_picker(e, context, startPositionOnPage);
         }
 
-        workspace.setCtrl('page');
-        if (wheel) {
-            wheel = wheel.remove();
-        }
-
-        context.cursor.cursor_freeze(false);
+        transporter?.fulfil();
+        transporter = undefined;
 
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
@@ -608,28 +580,18 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function windowBlur() {
-        if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-            if (asyncTransfer) {
-                asyncTransfer = asyncTransfer.close();
-                directionCalc.reset();
-            }
+        if (isDragging) {
             if (asyncPathEditor) {
                 asyncPathEditor.close();
                 asyncPathEditor = undefined;
                 directionCalc.reset();
             }
+
             isDragging = false;
-            end_transalte(context);
-            reset_sticked();
-            workspace.setCtrl('page');
+            transporter?.fulfil();
 
             remove_move_and_up_from_document(mousemove, mouseup);
         }
-
-        if (wheel) {
-            wheel = wheel.remove();
-        }
-
         timerClear();
     }
 
@@ -655,7 +617,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
-        abortTransact(); // 已经开启的事务需要关闭
+        abortTransact();
     }
 
     return { isDblClick, isDrag, init, dispose };

@@ -149,7 +149,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const editor = context.editor4Table(table);
         editor.initTextCell(cell.index.row, cell.index.col);
     }
-    function down(e: MouseEvent) {
+    function down(e: MouseEvent) {        
         // console.log('单击 cell:', down_item);
         table_selection.resetSelection();
         set_position(e);

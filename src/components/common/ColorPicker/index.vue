@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, Matrix, ShapeType, ShapeView, TableCell, TableCellView, TableView, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    AsyncGradientEditor,
+    Color,
+    FillType,
+    Gradient,
+    GradientType,
+    GroupShapeView,
+    ShapeType,
+    TableView,
+    TextShapeView,
+} from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import {
@@ -33,7 +43,12 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-import { GradientFrom, getTextIndexAndLen, get_add_gradient_color, isSelectText } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import {
+    GradientFrom,
+    getTextIndexAndLen,
+    get_add_gradient_color,
+    isSelectText
+} from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
@@ -41,6 +56,7 @@ import { watch } from 'vue';
 interface Props {
     context: Context
     color: Color
+
     locat?: { index: number, type: GradientFrom }
     fillType?: FillType
     gradient?: Gradient
@@ -59,12 +75,19 @@ interface Data {
 
 interface Emits {
     (e: 'change', color: Color): void;
+
     (e: 'choosecolor', color: number[]): void;
+
     (e: 'gradient-reverse'): void;
+
     (e: 'gradient-rotate'): void;
+
     (e: 'gradient-add-stop', position: number, color: Color, id: string): void;
+
     (e: 'gradient-type', type: GradientType | 'solid'): void;
+
     (e: 'gradient-color-change', color: Color, index: number): void;
+
     (e: 'gradient-stop-delete', index: number): void;
 }
 
@@ -288,7 +311,6 @@ function setHueIndicatorPosition(e: MouseEvent) {
         document.addEventListener('mousemove', mousemove4Hue);
         document.addEventListener('mouseup', mouseup);
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     }
 }
 
@@ -642,6 +664,7 @@ function enter() {
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
 }
+
 function triggle() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -654,6 +677,7 @@ function triggle() {
         colorPickerMount();
     }
 }
+
 /**
  * @description 打开调色板
  */
@@ -669,6 +693,7 @@ function colorPickerMount() {
     if (props.locat && props.gradient && props.fillType === FillType.Gradient) props.context.color.switch_editor_mode(true, props.gradient);
     nextTick(locate);
 }
+
 function blockUnmount() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -678,6 +703,7 @@ function blockUnmount() {
     props.context.color.clear_locat();
     props.context.color.switch_editor_mode(false);
 }
+
 /**
  * @description 移除调色板
  */
@@ -693,12 +719,14 @@ function removeCurColorPicker() {
     props.context.color.select_stop(undefined);
     props.context.color.clear_locat();
 }
+
 function switch_editor_mode() {
     if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
         return;
     }
     props.context.color.switch_editor_mode(true, props.gradient);
 }
+
 // init
 function init_rescent() {
     let r = localStorage.getItem(key_storage);
@@ -711,9 +739,11 @@ function init_rescent() {
         recent.value.push(parseColorFormStorage(r[i]));
     }
 }
+
 function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
+
 // update
 function update(color = props.color) {
     init_rescent();
@@ -724,11 +754,13 @@ function update(color = props.color) {
     update_alpha_indicator(color);
     update_gradient(props.gradient);
 }
+
 function update_rgb(R: number, G: number, B: number) {
     rgba.R = R;
     rgba.G = G;
     rgba.B = B;
 }
+
 function update_recent_color() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
     let nVal = updateRecently(color) || JSON.stringify([]);
@@ -740,6 +772,7 @@ function update_recent_color() {
         }
     }
 }
+
 function update_dot_indicator_position(color: Color) {
     const { h, s, b } = RGB2HSB(color);
     dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
@@ -751,6 +784,9 @@ function update_dot_indicator_position(color: Color) {
     }
     if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
         hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+    }
+    if (hueIndicator === 0 && hueIndicatorAttr.x) {
+        return;
     }
     hueIndicatorAttr.x = hueIndicator;
 }
@@ -765,7 +801,9 @@ function update_gradient(gradient: Gradient | undefined) {
     update_stops(id);
     props.context.color.notify(ColorCtx.GRADIENT_UPDATE);
 }
+
 const gradient_line = ref<HTMLDivElement>();
+
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
     stop_els.value.length = 0;
@@ -784,6 +822,7 @@ function update_stops(selected: string | undefined) {
     update_dot_indicator_position(c as Color);
     update_alpha_indicator(c as Color);
 }
+
 //新增渐变节点
 function _gradient_channel_down(e: MouseEvent) {
     const target = e.target as HTMLInputElement;
@@ -797,6 +836,7 @@ function _gradient_channel_down(e: MouseEvent) {
         props.context.color.select_stop(stop.id);
     })
 }
+
 function delete_gradient_stop() {
     if (stop_els.value.length <= 1) return;
     let id = props.context.color.selected_stop;
@@ -813,10 +853,12 @@ function delete_gradient_stop() {
         update_gradient(props.gradient!);
     })
 }
+
 // 选中渐变节点
 let stop_start_position: ClientXY = { x: 0, y: 0 };
 let gradientEditor: AsyncGradientEditor | undefined;
 const stop_id = ref<string>('');
+
 function _stop_down(e: MouseEvent, index: number, id: string) {
     e.stopPropagation();
     props.context.color.select_stop(id);
@@ -871,7 +913,12 @@ function move_stop_position(e: MouseEvent) {
                         if (tableSelection.tableRowStart < 0 || tableSelection.tableColStart < 0) {
                             gradientEditor = editor.asyncSetTextGradient(props.gradient);
                         } else {
-                            gradientEditor = editor.asyncSetTextGradient(props.gradient, { rowStart: tableSelection.tableRowStart, rowEnd: tableSelection.tableRowEnd, colStart: tableSelection.tableColStart, colEnd: tableSelection.tableColEnd });
+                            gradientEditor = editor.asyncSetTextGradient(props.gradient, {
+                                rowStart: tableSelection.tableRowStart,
+                                rowEnd: tableSelection.tableRowEnd,
+                                colStart: tableSelection.tableColStart,
+                                colEnd: tableSelection.tableColEnd
+                            });
                         }
                     }
                 } else {
@@ -912,6 +959,7 @@ function color_type_change(val: GradientType | 'solid') {
         locate();
     })
 }
+
 const set_gradient = (val: GradientType | 'solid') => {
     if (val === 'solid') {
         props.context.color.set_gradient_type(undefined);
@@ -923,6 +971,7 @@ const set_gradient = (val: GradientType | 'solid') => {
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
+
 // 切换渐变类型
 function update_gradient_type(type: GradientType | 'solid') {
     if (type === 'solid') {
@@ -936,6 +985,7 @@ function update_gradient_type(type: GradientType | 'solid') {
         gradient_type.value = type;
     })
 }
+
 // 获取渐变类型
 const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
@@ -953,6 +1003,7 @@ const get_gradient_type = () => {
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
+
 // 渐变翻转
 function reverse() {
     emit('gradient-reverse');
@@ -960,6 +1011,7 @@ function reverse() {
         update_gradient(props.gradient!);
     })
 }
+
 // 渐变选中90度
 function rotate() {
     emit('gradient-rotate');
@@ -978,6 +1030,7 @@ function menu_watcher(t: any, id: string) {
         removeCurColorPicker();
     }
 }
+
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
         update_stops(props.context.color.selected_stop);
@@ -985,9 +1038,11 @@ function color_watch(t: number) {
         delete_gradient_stop();
     }
 }
+
 function window_blur() {
     isDrag = false;
 }
+
 const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
@@ -1027,6 +1082,7 @@ let elpx: any
 let elpy: any
 let mx: any
 let my: any
+
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
     isDragging = true
@@ -1097,12 +1153,12 @@ onUnmounted(() => {
             </div>
             <!-- 渐变工具 -->
             <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
-                class="gradient-container">
+                 class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                        @mouseup.stop="_gradient_channel_down"></div>
+                         @mouseup.stop="_gradient_channel_down"></div>
                     <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                         @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
                         <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
                     </div>
                 </div>
@@ -1119,7 +1175,7 @@ onUnmounted(() => {
             </div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
                 <div class="white"></div>
                 <div class="black"></div>
                 <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
@@ -1127,7 +1183,7 @@ onUnmounted(() => {
             <!-- 常用色 -->
             <div class="typical-container">
                 <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
             </div>
             <div class="controller">
                 <div class="eyedropper">
@@ -1141,9 +1197,9 @@ onUnmounted(() => {
                     <!-- 透明度 -->
                     <div class="alpha-bacground">
                         <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                            :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
                             <div class="alphaIndicator" ref="alphaIndicator"
-                                :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">
                             </div>
                         </div>
                     </div>
@@ -1156,7 +1212,7 @@ onUnmounted(() => {
                     <div class="wrap">
                         <div class="value">
                             <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                    @click="(e) => inputClick(e, idx)" />
+                                                                                           @click="(e) => inputClick(e, idx)"/>
                             </div>
                         </div>
                         <div class="label">
@@ -1171,7 +1227,7 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.recently') }}</div>
                     <div class="typical-container">
                         <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1182,9 +1238,9 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
                         <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                            @click="() => setColor(c.color as any)"
-                            :title="t('color.times').replace('xx', c.times.toString())"
-                            :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                             @click="() => setColor(c.color as any)"
+                             :title="t('color.times').replace('xx', c.times.toString())"
+                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1217,7 +1273,7 @@ onUnmounted(() => {
         overflow: hidden;
         z-index: 99;
 
-        >.header {
+        > .header {
             width: 100%;
             height: 40px;
             position: relative;
@@ -1235,7 +1291,7 @@ onUnmounted(() => {
             display: flex;
             justify-content: space-between;
 
-            >.color-type-desc {
+            > .color-type-desc {
                 display: flex;
                 align-items: center;
                 cursor: pointer;
@@ -1244,19 +1300,19 @@ onUnmounted(() => {
                     user-select: none;
                 }
 
-                >svg {
+                > svg {
                     transition: 0.3s;
                     width: 10px;
                     height: 10px;
                     margin-left: 4px;
                 }
 
-                >svg:hover {
+                > svg:hover {
                     transform: translateY(2px);
                 }
             }
 
-            >.close {
+            > .close {
                 flex: 0 0 16px;
                 height: 16px;
                 text-align: center;
@@ -1266,7 +1322,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                >svg {
+                > svg {
                     width: 85%;
                     height: 85%;
                 }
@@ -1282,7 +1338,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        >.gradient-container {
+        > .gradient-container {
             display: flex;
             align-items: center;
             width: 100%;
@@ -1366,28 +1422,28 @@ onUnmounted(() => {
             }
         }
 
-        >.saturation {
+        > .saturation {
             width: 100%;
             height: 200px;
             position: relative;
             cursor: pointer;
             overflow: hidden;
 
-            >.white {
+            > .white {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
 
-            >.black {
+            > .black {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
             }
 
-            >.dot {
+            > .dot {
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
@@ -1397,7 +1453,7 @@ onUnmounted(() => {
             }
         }
 
-        >.typical-container {
+        > .typical-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1408,7 +1464,7 @@ onUnmounted(() => {
             padding-bottom: 6px;
             box-sizing: border-box;
 
-            >.block {
+            > .block {
                 margin: 0 3px;
                 width: 16px;
                 height: 16px;
@@ -1420,7 +1476,7 @@ onUnmounted(() => {
             }
         }
 
-        >.controller {
+        > .controller {
             width: 100%;
             height: 46px;
             display: flex;
@@ -1430,11 +1486,11 @@ onUnmounted(() => {
             box-sizing: border-box;
             justify-content: space-around;
 
-            >.sliders-container {
+            > .sliders-container {
                 width: 196px;
                 height: 32px;
 
-                >.hue {
+                > .hue {
                     position: relative;
                     width: 100%;
                     height: 8px;
@@ -1442,7 +1498,7 @@ onUnmounted(() => {
                     border-radius: 5px 5px 5px 5px;
                     cursor: pointer;
 
-                    >.hueIndicator {
+                    > .hueIndicator {
                         top: -2px;
                         width: 8px;
                         height: 8px;
@@ -1453,7 +1509,7 @@ onUnmounted(() => {
                     }
                 }
 
-                >.alpha-bacground {
+                > .alpha-bacground {
                     margin-top: 8px;
                     width: 100%;
                     height: 8px;
@@ -1463,13 +1519,13 @@ onUnmounted(() => {
                     cursor: pointer;
                     box-sizing: border-box;
 
-                    >.alpha {
+                    > .alpha {
                         position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 5px 5px 5px 5px;
 
-                        >.alphaIndicator {
+                        > .alphaIndicator {
                             top: -2px;
                             width: 8px;
                             height: 8px;
@@ -1483,7 +1539,7 @@ onUnmounted(() => {
                 }
             }
 
-            >.eyedropper {
+            > .eyedropper {
                 width: 30px;
                 height: 30px;
                 display: flex;
@@ -1494,7 +1550,7 @@ onUnmounted(() => {
                 padding: 6px;
                 box-sizing: border-box;
 
-                >svg {
+                > svg {
                     width: 18px;
                     height: 18px;
                     cursor: pointer;
@@ -1544,7 +1600,7 @@ onUnmounted(() => {
                             width: 25%;
                             text-align: center;
 
-                            >input {
+                            > input {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -1583,7 +1639,7 @@ onUnmounted(() => {
             }
         }
 
-        >.recently-container {
+        > .recently-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1609,14 +1665,14 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                >.typical-container {
+                > .typical-container {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     box-sizing: border-box;
 
-                    >.block {
+                    > .block {
                         width: 16px;
                         height: 16px;
                         border-radius: 3px;
@@ -1625,14 +1681,14 @@ onUnmounted(() => {
                         box-sizing: border-box;
                     }
 
-                    >.block:not(:first-child) {
+                    > .block:not(:first-child) {
                         margin-left: 6.2px;
                     }
                 }
             }
         }
 
-        >.dc-container {
+        > .dc-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1656,7 +1712,7 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                >.documentc-container {
+                > .documentc-container {
                     width: 100%;
                     max-height: 90px;
                     overflow: scroll;
@@ -1686,7 +1742,7 @@ onUnmounted(() => {
                         background-color: none;
                     }
 
-                    >.block {
+                    > .block {
                         display: inline-block;
                         width: 16px;
                         height: 16px;
