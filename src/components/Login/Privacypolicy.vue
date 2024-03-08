@@ -11,7 +11,6 @@ import isMobileDevice from '@/utils/mobileDeviceChecker'
 function changeFontSize(el: any) {
     for (let index = 0; index < el.length; index++) {
         const element = el[index];
-        console.dir(element);
         if (isMobileDevice()) {
             if (element.tagName === 'H1') {
                 element.style.fontSize = '24px'
