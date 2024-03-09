@@ -88,7 +88,6 @@ function isEditingText() {
     const ret = editingCell.value &&
         editingCell.value.cellType === TableCellType.Text &&
         editingCell.value.text
-        console.log("isEditingText", ret)
         return ret;
 }
 const closeCellMenu = () => {
