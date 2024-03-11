@@ -972,15 +972,25 @@ function getAllStyleFromString(content: string) {
 function parseTransform(transformContent: string, isCssStyle = false) { // 解析transform属性，isCssStyle为false时，transform为svg的transform属性，为true时，transform为css的transform属性
     const functionCalls = getAllFunctionCallFromString(transformContent)
     const transform = new Transform3D()
+
     for (const [name, args] of functionCalls) {
         const argList = args.split(/,|\s+/).filter(arg => arg && arg.trim()) // 分隔符为逗号或空格
-        const numArgList = argList.map(angle => {
-            if (angle.includes("deg")) return parseFloat(angle.replace("deg", "")) * Math.PI / 180;
-            else if (angle.includes("rad")) return parseFloat(angle.replace("rad", ""));
-            else if (angle.includes("grad")) return parseFloat(angle.replace("grad", "")) * Math.PI / 200;
-            else if (angle.includes("turn")) return parseFloat(angle.replace("turn", "")) * Math.PI * 2;
-            else return parseFloat(angle);
+
+        const numArgList = argList.map((value, i) => {
+            if (value.includes("deg")) return parseFloat(value.replace("deg", "")) * Math.PI / 180;
+            else if (value.includes("rad")) return parseFloat(value.replace("rad", ""));
+            else if (value.includes("grad")) return parseFloat(value.replace("grad", "")) * Math.PI / 200;
+            else if (value.includes("turn")) return parseFloat(value.replace("turn", "")) * Math.PI * 2;
+            else {
+                if (name.startsWith("rotate") && !(name === "rotate" && i > 0) && !(name === "rotate3d" && i < 3)) {
+                    return parseFloat(value.replace("deg", "")) * Math.PI / 180
+                }
+                else {
+                    return parseFloat(value)
+                }
+            }
         })
+
         if (name === "matrix") {
             // const matrix = new Matrix([
             //     [numArgList[0], numArgList[2], 0, numArgList[4]],
@@ -1639,7 +1649,7 @@ class BaseCreator extends BaseTreeNode {
                     const translate = stroke.radialGradient!.transform.decompose3DTranslate()
                     from = new Point2D(translate.x / width, translate.y / height)
 
-                    const toVec = stroke.radialGradient!.transform.transform(Matrix.ColVec([0.5, 0, 0]))
+                    const toVec = stroke.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
                     to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
 
                     colorType = GradientType.Radial
