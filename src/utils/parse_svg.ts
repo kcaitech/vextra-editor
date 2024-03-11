@@ -2088,6 +2088,4 @@ export function insert(context: Context, svgString: string) {
             repo.rollback()
         }
     }
-
-    ;(window as any).svgElement = svgElement // eslint-disable-line
 }
