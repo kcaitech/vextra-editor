@@ -1279,6 +1279,13 @@ function parseColor(content: string): MyColor | undefined {
     return color
 }
 
+type FillColor = {
+    colorType: "color" | "linearGradient" | "radialGradient", // 纯色、线性渐变、径向渐变
+    color?: MyColor,
+    linearGradient?: LinearGradient,
+    radialGradient?: RadialGradient,
+}
+
 type Attributes = { // 从元素的attributes中解析出来的属性
     style?: string,
     styleAttributes?: Record<string, string>,
@@ -1292,12 +1299,8 @@ type Attributes = { // 从元素的attributes中解析出来的属性
     styleTransform?: string,
 
     opacity?: number,
-    fill?: MyColor,
-    stroke?: {
-        colorType: "color" | "linearGradient" | "radialGradient", // 纯色、线性渐变、径向渐变
-        color?: MyColor,
-        linearGradient?: LinearGradient,
-        radialGradient?: RadialGradient,
+    fill?: FillColor,
+    stroke?: FillColor & {
         width?: number,
         dashArray: number[], // 虚线的length、gap参数，实线则为[0, 0]
         position: "inside" | "center" | "outside", // 位置：内部、中心、外部
@@ -1483,23 +1486,14 @@ class BaseCreator extends BaseTreeNode {
         const opacity = this.localAttributes["opacity"]
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
-        let fill
-        if (this.attributes.styleAttributes && "fill" in this.attributes.styleAttributes) {
-            fill = this.attributes.styleAttributes.fill
-        }
-        if (!fill) fill = this.localAttributes["fill"];
-        if (fill) this.attributes.fill = parseColor(fill);
+        const parseFillColor = (content: string): FillColor | undefined => {
+            let colorType: "color" | "linearGradient" | "radialGradient" | undefined
+            let color: MyColor | undefined
+            let linearGradient: LinearGradient | undefined
+            let radialGradient: RadialGradient | undefined
 
-        const stroke = this.localAttributes["stroke"]
-        const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
-        let colorType: "color" | "linearGradient" | "radialGradient" | undefined
-        let color: MyColor | undefined
-        let linearGradient: LinearGradient | undefined
-        let radialGradient: RadialGradient | undefined
-
-        if (stroke) {
-            if (stroke.startsWith("url(#")) {
-                const urlId = stroke.slice(5, -1)
+            if (content.startsWith("url(#")) {
+                const urlId = content.slice(5, -1)
                 const el = svgRoot.querySelector(`#${urlId}`)
                 if (el) {
                     const creator = (el as any).creator as BaseCreator
@@ -1548,20 +1542,45 @@ class BaseCreator extends BaseTreeNode {
                     }
                 }
             } else { // 纯色
-                color = parseColor(stroke)
+                color = parseColor(content)
                 if (color) colorType = "color";
+            }
+
+            return colorType && {
+                colorType: colorType,
+                color: color,
+                linearGradient: linearGradient,
+                radialGradient: radialGradient,
             }
         }
 
-        if (colorType) {
-            this.attributes.stroke = {
-                colorType: colorType,
-                linearGradient: linearGradient,
-                radialGradient: radialGradient,
-                color: color,
+        let fill
+        if (this.attributes.styleAttributes && "fill" in this.attributes.styleAttributes) {
+            fill = this.attributes.styleAttributes.fill
+        }
+        if (!fill) fill = this.localAttributes["fill"];
+        if (fill) {
+            const fillColor = parseFillColor(fill)
+            if (fillColor) this.attributes.fill = {
+                colorType: fillColor.colorType,
+                linearGradient: fillColor.linearGradient,
+                radialGradient: fillColor.radialGradient,
+                color: fillColor.color,
+            };
+        }
+
+        const stroke = this.localAttributes["stroke"]
+        const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
+        if (stroke) {
+            const fillColor = parseFillColor(stroke)
+            if (fillColor) this.attributes.stroke = {
+                colorType: fillColor.colorType,
+                linearGradient: fillColor.linearGradient,
+                radialGradient: fillColor.radialGradient,
+                color: fillColor.color,
                 dashArray: dashArray,
                 position: "center",
-            }
+            };
         }
 
         const strokeWidth = this.localAttributes["stroke-width"]
@@ -1616,6 +1635,38 @@ class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
+        const buildGradientByFillColor = (fillColor: FillColor) => {
+            const gradient = fillColor.colorType === "linearGradient" ? fillColor.linearGradient! : fillColor.radialGradient!
+
+            let from: Point2D, to: Point2D
+            let colorType
+            let elipseLength
+            const opacity = gradient.opacity
+            const width = this.attributes.width || 1
+            const height = this.attributes.height || 1
+
+            if (fillColor.colorType === "linearGradient") {
+                from = new Point2D(fillColor.linearGradient!.x1 / width, fillColor.linearGradient!.y1 / height)
+                to = new Point2D(fillColor.linearGradient!.x2 / width, fillColor.linearGradient!.y2 / height)
+                colorType = GradientType.Linear
+            } else {
+                const translate = fillColor.radialGradient!.transform.decompose3DTranslate()
+                from = new Point2D(translate.x / width, translate.y / height)
+
+                const toVec = fillColor.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
+                to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
+
+                colorType = GradientType.Radial
+                elipseLength = fillColor.radialGradient!.scales[1] / fillColor.radialGradient!.scales[0] * height / width
+            }
+
+            const stops = gradient.stops.map((item, i) =>
+                new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+            ) as BasicArray<Stop>
+
+            return new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
+        }
+
         const borders = new BasicArray<Border>()
         const stroke = this.attributes.stroke
         if (stroke) {
@@ -1631,43 +1682,21 @@ class BaseCreator extends BaseTreeNode {
             borders.push(border)
 
             if (stroke.colorType !== "color") {
-                const gradient = stroke.colorType === "linearGradient" ? stroke.linearGradient! : stroke.radialGradient!
-
-                let from: Point2D, to: Point2D
-                let colorType
-                let elipseLength
-                const opacity = gradient.opacity
-
-                if (stroke.colorType === "linearGradient") {
-                    from = new Point2D(stroke.linearGradient!.x1, stroke.linearGradient!.y1)
-                    to = new Point2D(stroke.linearGradient!.x2, stroke.linearGradient!.y2)
-                    colorType = GradientType.Linear
-                } else {
-                    const width = this.attributes.width || 1
-                    const height = this.attributes.height || 1
-
-                    const translate = stroke.radialGradient!.transform.decompose3DTranslate()
-                    from = new Point2D(translate.x / width, translate.y / height)
-
-                    const toVec = stroke.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
-                    to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
-
-                    colorType = GradientType.Radial
-                    elipseLength = stroke.radialGradient!.scales[1] / stroke.radialGradient!.scales[0] * height / width
-                }
-
-                const stops = gradient.stops.map((item, i) =>
-                    new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
-                ) as BasicArray<Stop>
-
-                border.gradient = new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
+                border.gradient = buildGradientByFillColor(stroke)
                 border.fillType = FillType.Gradient
             }
         }
 
         const fills = new BasicArray<Fill>()
-        if (this.attributes.fill && !(this instanceof TextCreator)) { // 文本不需要填充
-            fills.push(new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(this.attributes.fill)))
+        const fillColor = this.attributes.fill
+        if (fillColor && !(this instanceof TextCreator)) { // 文本不需要填充
+            const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(fillColor.color))
+            fills.push(fill)
+
+            if (fillColor.colorType !== "color") {
+                fill.gradient = buildGradientByFillColor(fillColor)
+                fill.fillType = FillType.Gradient
+            }
         }
 
         const shadows = new BasicArray<Shadow>()
@@ -1805,8 +1834,8 @@ class PathCreator extends BaseCreator {
         const svgRoot = this.root?.htmlElement?.root
         if (!svgRoot) return;
 
-        // 主体部分
-        let mainPath: PathCreator | undefined
+        // 填充部分
+        let fillPart: PathCreator | undefined
         let position: "inside" | "center" | "outside"
 
         const findMainPath = (item: BaseTreeNode) => {
@@ -1828,27 +1857,35 @@ class PathCreator extends BaseCreator {
             if (el) {
                 const creator = (el as any).creator as BaseCreator
                 if (creator instanceof PathCreator && creator.localAttributes["d"] === this.localAttributes["d"]) {
-                    mainPath = this.parent?.siblings().find(findMainPath) as PathCreator | undefined
+                    fillPart = this.parent?.siblings().find(findMainPath) as PathCreator | undefined
+                    if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
+                        prev.push(...cur.children)
+                        return prev
+                    }, [] as BaseTreeNode[]).find(findMainPath) as PathCreator | undefined;
                 }
             }
         } else { // 中心
             position = "center"
-            mainPath = this.siblings().find(findMainPath) as PathCreator | undefined
-            if (!mainPath) mainPath = this.parent?.siblings().find(findMainPath) as PathCreator | undefined;
+            fillPart = this.siblings().find(findMainPath) as PathCreator | undefined
+            if (!fillPart) fillPart = this.parent?.siblings().find(findMainPath) as PathCreator | undefined;
+            if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
+                prev.push(...cur.children)
+                return prev
+            }, [] as BaseTreeNode[]).find(findMainPath) as PathCreator | undefined;
         }
 
-        if (!mainPath) return;
+        if (!fillPart) fillPart = this;
 
-        // 设置主体的边框
+        // 设置填充部分的边框
         let strokeWidth = this.attributes.strokeWidth
         if (strokeWidth && position !== "center") strokeWidth /= 2;
-        mainPath.attributes.stroke = {
+        fillPart.attributes.stroke = {
             ...this.attributes.stroke,
             width: strokeWidth,
             position: position,
         }
 
-        this.remove() // 移除自身
+        if (fillPart !== this) this.remove(); // 有填充的情况下移除边框部分
     }
 
     createShape() {
