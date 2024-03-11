@@ -644,8 +644,6 @@ class Transform3D { // 变换
     // 旋转矩阵转欧拉角
     // 维基百科：https://en.wikipedia.org/wiki/Euler_angles
     // 欧拉角的“序”与实际操作顺序相反，例如ZXY序指的是先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转
-    // 维基百科中的α、β、γ分别对应Transform3D中的z、x、y
-    // 维基百科中使用的是右手坐标系，Transform3D中使用的是左手坐标系
     // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
     static decomposeEulerZXY(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const m = matrix.data
