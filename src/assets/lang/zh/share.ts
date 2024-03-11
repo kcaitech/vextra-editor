@@ -47,7 +47,7 @@ export const apply = {
     file_deleted: '文件已被删除，或创建者已关闭分享',
     authorization_failure: '授权失败',
     notification_message: '通知消息',
-    application_documents: '申请文档',
+    application_documents: '申请文件',
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',

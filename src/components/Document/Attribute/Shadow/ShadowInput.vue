@@ -100,7 +100,7 @@ function blur2() {
         </Tooltip>
         <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
             :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
-        <Tooltip v-if="props.disabled" :content="`${t('shadow.only_used')}`" :offset="12">
+        <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
@@ -136,7 +136,7 @@ function blur2() {
         cursor: ew-resize;
         text-align: center;
         width: 8px;
-        height: 14px;
+        height: 16px;
         font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #8C8C8C;

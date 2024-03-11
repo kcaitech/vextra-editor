@@ -115,27 +115,26 @@ function clear_events() {
 function onBlur() {
     optionsContainerVisible.value = false;
     clear_events();
+
 }
 
 function select(data: SelectItem) {
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
-
     curValueIndex.value = index;
     curValue.value = data;
-
     emits('select', curValue.value);
-
     optionsContainerVisible.value = false;
     clear_events();
+
 }
 
 function render() {
+    curHoverValueIndex.value = -1
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
     if (props.selected && source.value.length) {
         const index = source.value.findIndex(i => i.data.value === props.selected!.value);
-
         if (index > -1) {
             curValueIndex.value = index;
             curValue.value = props.selected;
@@ -146,6 +145,7 @@ function render() {
 watch(() => props.selected, render);
 onMounted(render)
 </script>
+
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
@@ -167,14 +167,17 @@ onMounted(render)
                     :isCurValue="idx === curValueIndex" @select="select" />
             </div>
             <div v-else>
-                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
+                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
+                    @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
                     <div class="content-wrap"> {{ c.data.content }}</div>
-                    <svg-icon v-if="idx === curValueIndex" :icon-class="curHoverValueIndex === idx ? 'white-select': 'page-select'"></svg-icon>
+                    <svg-icon v-if="idx === curValueIndex"
+                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
 <style scoped lang="scss">
 .select-container {
     position: relative;
