@@ -126,7 +126,7 @@ function _selection_change() {
         if (shape.type === ShapeType.Text) {
             textShapes.value.push(shape);
         }
-        if (shape.type === ShapeType.Table) {
+        if (shape.type === ShapeType.Table && !shape.isVirtualShape /* 实例暂不支持调整整表的文本属性 */) {
             tableShapes.value.push(shape);
         }
         // if (!shape.isVirtualShape) {
