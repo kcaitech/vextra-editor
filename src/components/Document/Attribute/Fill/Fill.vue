@@ -133,9 +133,9 @@ function addFill(): void {
         const editor = props.context.editor4Table(shape as TableView);
         const range = get_table_range(tableSelection);
         if (mixed_cell.value) {
-            editor.addFill4Multi(fill, range);
+            editor.addFill4Cell(fill, range, true);
         } else {
-            editor.addFill(fill, range);
+            editor.addFill4Cell(fill, range, false);
         }
     } else if (selected.length === 1
         && shape.type === ShapeType.Artboard
@@ -178,7 +178,7 @@ function deleteFill(idx: number) {
     if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.deleteFill(_idx, range)
+        e.deleteFill4Cell(_idx, range)
     } else {
         const shapes = getShapesForStyle(selected);
         const actions = get_actions_fill_delete(shapes, _idx);
@@ -198,7 +198,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillEnable(_idx, !fills[idx].fill.isEnabled, range)
+        e.setFillEnable4Cell(_idx, !fills[idx].fill.isEnabled, range)
 
     } else {
         const shapes = getShapesForStyle(selected);
@@ -243,14 +243,13 @@ function setColor(idx: number, clr: string, alpha: number) {
 
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(tableSelection)) {
         const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(tableSelection);
-        const cells = (s as TableView).getVisibleCells(tableSelection.tableRowStart,
-            tableSelection.tableRowEnd,
-            tableSelection.tableColStart,
-            tableSelection.tableColEnd);
-
-        if (cells.length > 0 && cells[0].cell) {
-            e.setFillColor(_idx, new Color(alpha, r, g, b), range)
+        const range = get_table_range(table);
+        const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
+            table.tableRowEnd,
+            table.tableColStart,
+            table.tableColEnd);
+        if (tablecells.length > 0 && tablecells[0].cell) {
+            e.setFillColor4Cell(_idx, new Color(alpha, r, g, b), range)
         }
     } else {
         const shapes = getShapesForStyle(selected);
@@ -366,7 +365,7 @@ function getColorFromPicker(idx: number, color: Color) {
     if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillColor(_idx, color, range)
+        e.setFillColor4Cell(_idx, color, range)
     } else {
         const selected = props.context.selection.selectedShapes;
         const shapes = getShapesForStyle(selected);
@@ -538,7 +537,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillType(_idx, fillType, range)
+        e.setFillType4Cell(_idx, fillType, range)
     } else {
         const selected = props.context.selection.selectedShapes;
         const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);

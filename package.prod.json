@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@kcdesign/data": "0.3.0"
+    "@kcdesign/data": "^0.3.3"
   }
 }
