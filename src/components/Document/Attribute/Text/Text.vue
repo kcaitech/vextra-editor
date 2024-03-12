@@ -33,13 +33,13 @@ const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
-const isBold = ref<any>(400)
+const isBold = ref<any>()
 const isTilt = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref()
+const fontName = ref('PingFangSC-Regular')
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -55,6 +55,7 @@ const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
+const weightMixed = ref<boolean>(false);
 const shapes = ref<TextShapeView[]>(props.textShapes);
 
 function toHex(r: number, g: number, b: number) {
@@ -106,36 +107,39 @@ const length = computed(() => {
     return props.textShapes.length === 1;
 })
 // 设置加粗
-const onBold = () => {
-    isBold.value = !isBold.value;
+const onBold = (weight: number) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextBold(isBold.value, 0, Infinity)
+            editor.setTextBold(weight, 0, Infinity)
         } else {
-            editor.setTextBold(isBold.value, textIndex, selectLength)
+            editor.setTextBold(weight, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes, isBold.value);
+        editor.setTextBoldMulti(props.textShapes, weight);
     }
 }
 // 设置文本倾斜
-const onTilt = () => {
-    isTilt.value = !isTilt.value;
+const onTilt = (italic: boolean) => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextItalic(isTilt.value, 0, Infinity)
+            editor.setTextItalic(italic, 0, Infinity)
         } else {
-            editor.setTextItalic(isTilt.value, textIndex, selectLength)
+            editor.setTextItalic(italic, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextItalicMulti(props.textShapes, isTilt.value);
+        editor.setTextItalicMulti(props.textShapes, italic);
     }
+}
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
+    onBold(weight);
+    onTilt(italic);
 }
 //设置下划线
 const onUnderlint = () => {
@@ -281,6 +285,7 @@ const _textFormat = () => {
     const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
     mixed.value = false;
+    weightMixed.value = false;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(t_shape[0])
@@ -302,12 +307,12 @@ const _textFormat = () => {
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
-        isBold.value = format.bold || 400
+        isBold.value = format.bold
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
-        fontWeight.value = fontWeightConvert(isBold.value);
-        if (format.italicIsMulti) fontWeight.value = `${t('attr.more_value')}`
-        if (format.boldIsMulti) fontWeight.value = `${t('attr.more_value')}`
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.italicIsMulti) weightMixed.value = true;
+        if (format.boldIsMulti) weightMixed.value = true;
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
         if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
@@ -373,20 +378,20 @@ const _textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         textColor.value = format.color;
-        isBold.value = format.bold || 400;
+        isBold.value = format.bold;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
         gradient.value = format.gradient;
-        fontWeight.value = fontWeightConvert(isBold.value);
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') fontWeight.value = `${t('attr.more_value')}`;
-        if (format.italic === 'unlikeness') fontWeight.value = `${t('attr.more_value')}`;
+        if (format.bold === 'unlikeness') weightMixed.value = true;
+        if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.underline === 'unlikeness') isUnderline.value = false;
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
@@ -407,14 +412,10 @@ function selection_wather(t: number) {
 }
 
 function workspace_wather(t: number) {
-    if (t === WorkSpace.BOLD) {
-        onBold()
-    } else if (t === WorkSpace.UNDER_LINE) {
+    if (t === WorkSpace.UNDER_LINE) {
         onUnderlint()
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline()
-    } else if (t === WorkSpace.ITALIC) {
-        onTilt()
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
     }
@@ -918,7 +919,8 @@ onUnmounted(() => {
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context">
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                    :fontWeight="fontWeight" @setFontWeight="setFontWeight">
                 </SelectFont>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
@@ -942,7 +944,8 @@ onUnmounted(() => {
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
-                   <FontWeightSelected :selected="fontWeight"></FontWeightSelected>
+                    <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
+                        :fontName="fontName" @setFontWeight="setFontWeight"></FontWeightSelected>
                     <!-- <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
                         <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
                             <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
@@ -1283,7 +1286,7 @@ onUnmounted(() => {
             justify-content: space-between;
             margin-bottom: 10px;
 
-            
+
 
             .text-middle-size {
                 width: 100%;

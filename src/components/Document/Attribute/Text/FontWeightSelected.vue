@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { fontWeightList, fontweightNameConvert } from "./FontNameList";
+import { Context } from "@/context";
+import { WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{
+    context: Context;
     selected: string;
+    weightMixed: boolean;
+    fontName: string;
+}>();
+const emit = defineEmits<{
+    (e: "setFontWeight", weight: number, italic: boolean): void;
 }>();
 
-const fontWeight = ["Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Heavy"];
+let fontWeight = ["Regular"];
 const hovered = ref(-1);
 const isSelectList = ref(false);
 const transTop = computed(() => {
@@ -13,6 +22,7 @@ const transTop = computed(() => {
     return index;
 })
 const showWeightList = () => {
+    getFontWeightList(props.fontName);
     isSelectList.value = true;
     document.addEventListener("mousedown", onShowWeightBlur)
 }
@@ -26,8 +36,57 @@ const onShowWeightBlur = (e: MouseEvent) => {
     }
 }
 const selectItem = (item: string) => {
+    const { weight, italic } = fontweightNameConvert(item);
+    emit('setFontWeight', weight, italic);
     isSelectList.value = false;
 }
+
+function getFontWeightList(fontName: string) {
+    const results = fontWeightList(fontName, true);
+    fontWeight = results.map((item: any) => {
+        return item.key;
+    })
+}
+
+const keyboardBold = () => {
+    const { weight, italic } = fontweightNameConvert(props.selected);
+    if (weight >= 700) return;
+    const results = fontWeightList(props.fontName, true);
+    results.forEach((item: any) => {
+        if (italic === item.italic && item.weight >= 700) {
+            return emit('setFontWeight', item.weight, item.italic);
+        }
+    })
+}
+const keyboardItalic = () => {
+    const { weight, italic } = fontweightNameConvert(props.selected);
+    if (italic) return;
+    const results = fontWeightList(props.fontName, true);
+    results.forEach((item: any) => {
+        if (item.italic) {
+            return emit('setFontWeight', weight, item.italic);
+        }
+    })
+}
+
+watch(() => props.fontName, (v) => {
+    getFontWeightList(v);
+})
+
+const watcher_workspace = (t: number) => {
+    if (t === WorkSpace.BOLD) {
+        keyboardBold();
+    } else if (t === WorkSpace.ITALIC) {
+        keyboardItalic();
+    }
+}
+
+onMounted(() => {
+    props.context.workspace.watch(watcher_workspace);
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(watcher_workspace);
+})
 </script>
 
 <template>
@@ -38,7 +97,7 @@ const selectItem = (item: string) => {
                 <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
             </div>
         </div>
-        <div class="font_weight_select" v-if="isSelectList" :style="{ top: -transTop * 32 - 8 + 'px'}">
+        <div class="font_weight_select" v-if="isSelectList" :style="{ top: -transTop * 32 - 8 + 'px' }">
             <div class="font_weight_item" v-for="(item, index) in fontWeight" :key="index"
                 @mouseenter="() => hovered = index" :class="{ active: hovered === index }" @click="selectItem(item)">
                 <div class="icon" v-if="selected === item">

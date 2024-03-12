@@ -23,15 +23,15 @@ export function FontAvailable(fontName: string) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const fontWeight = [
-        { key: "Regular", weight: 400, value: 0 },
-        { key: "Light", weight: 300, value: 0 },
-        { key: "Bold", weight: 700, value: 0 },
         { key: "Thin", weight: 100, value: 0 },
         { key: "ExtraLight", weight: 200, value: 0 },
+        { key: "Light", weight: 300, value: 0 },
+        { key: "Regular", weight: 400, value: 0 },
         { key: "Medium", weight: 500, value: 0 },
         { key: "SemiBold", weight: 600, value: 0 },
+        { key: "Bold", weight: 700, value: 0 },
         { key: "ExtraBold", weight: 800, value: 0 },
-        { key: "Heavy", weight: 900, value: 0 }
+        { key: "Black", weight: 900, value: 0 }
     ]
     if (!context) return;
     const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
@@ -58,17 +58,23 @@ export function FontAvailable(fontName: string) {
         }, {} as any);
         result = Object.values(r);
     }
-
     return result;
 }
 
-export const fontWeightConvert = (weight: number) => {
+
+export const fontWeightConvert = (weight: number | undefined, italic: boolean) => {
     switch (weight) {
         case 400:
+            if (italic) {
+                return 'Italic';
+            }
             return 'Regular';
         case 300:
             return 'Light';
         case 700:
+            if (italic) {
+                return 'Bold Italic';
+            }
             return 'Bold';
         case 100:
             return 'Thin';
@@ -81,8 +87,122 @@ export const fontWeightConvert = (weight: number) => {
         case 800:
             return 'ExtraBold';
         case 900:
-            return 'Heavy';
+            if (italic) {
+                return 'Black Italic';
+            }
+            return 'Black';
+        case undefined:
+            if (italic) {
+                return 'Italic';
+            }
+            return 'Regular';
         default:
             return 'Regular';
+    }
+}
+
+export function fontWeightList(fontName: string, italic: boolean) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const fontWeight = [
+        { key: "Thin", weight: 100, value: 0, italic: false },
+        { key: "ExtraLight", weight: 200, value: 0, italic: false },
+        { key: "Light", weight: 300, value: 0, italic: false },
+        { key: "Regular", weight: 400, value: 0, italic: false },
+        { key: "Medium", weight: 500, value: 0, italic: false },
+        { key: "SemiBold", weight: 600, value: 0, italic: false },
+        { key: "Bold", weight: 700, value: 0, italic: false },
+        { key: "ExtraBold", weight: 800, value: 0, italic: false },
+        { key: "Black", weight: 900, value: 0, italic: false },
+    ]
+    const fontItalic = [
+        { key: "Italic", weight: 400, value: 0, italic: true },
+        { key: "Bold Italic", weight: 700, value: 0, italic: true },
+        { key: "Black Italic", weight: 900, value: 0, italic: true },
+    ]
+    if (!context) return;
+    const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
+    context.font = 'normal 72px monospace';
+    const baselineSize = context.measureText(text).width;
+
+    context.font = 'normal 72px ' + fontName + ', monospace';
+    const newSize = context.measureText(text).width;
+    let result: any = [];
+    if (baselineSize !== newSize) {
+        for (let i = 0; i < fontWeight.length; i++) {
+            const weight = fontWeight[i].weight;
+            context.font = `${weight} 72px ${fontName}, monospace`;
+            const newSizeWeight = context.measureText(text).width;
+            fontWeight[i].value = newSizeWeight;
+        }
+        if (italic) {
+            for (let i = 0; i < fontItalic.length; i++) {
+                const style = fontItalic[i].key;
+                context.font = `${style} 72px ${fontName}, monospace`;
+                const newSizeWeight = context.measureText(text).width;
+                fontWeight.push(fontItalic[i]);
+                fontWeight[fontWeight.length - 1].value = newSizeWeight;
+            }
+        }
+        const r = fontWeight.reduce((dict, item) => {
+            const key = item.value;
+            if (!dict[key]) {
+                dict[key] = item;
+            }
+            return dict;
+        }, {} as any);
+        result = Object.values(r);
+    }
+    if (italic) {
+        context.font = 'Italic 72px ' + fontName + ', monospace';
+        const newSize2 = context.measureText(text).width;
+        if (baselineSize !== newSize2) {
+            for (let i = 0; i < fontItalic.length; i++) {
+                const style = fontItalic[i].key;
+                context.font = `${style} 72px ${fontName}, monospace`;
+                const newSizeWeight = context.measureText(text).width;
+                fontItalic[i].value = newSizeWeight;
+            }
+            const r = fontItalic.reduce((dict, item) => {
+                const key = item.value;
+                if (!dict[key]) {
+                    dict[key] = item;
+                }
+                return dict;
+            }, {} as any);
+            result.push(...Object.values(r));
+        }
+    }
+    return result;
+}
+
+export const fontweightNameConvert = (weight: string) => {
+    switch (weight) {
+        case 'Regular':
+            return { weight: 400, italic: false };
+        case 'Light':
+            return { weight: 300, italic: false };
+        case 'Bold':
+            return { weight: 700, italic: false };
+        case 'Thin':
+            return { weight: 100, italic: false };
+        case 'ExtraLight':
+            return { weight: 200, italic: false };
+        case 'Medium':
+            return { weight: 500, italic: false };
+        case 'SemiBold':
+            return { weight: 600, italic: false };
+        case 'ExtraBold':
+            return { weight: 800, italic: false };
+        case 'Black':
+            return { weight: 900, italic: false };
+        case 'Italic':
+            return { weight: 400, italic: true };
+        case 'Bold Italic':
+            return { weight: 700, italic: true };
+        case 'Black Italic':
+            return { weight: 900, italic: true };
+        default:
+            return { weight: 400, italic: false };
     }
 }
