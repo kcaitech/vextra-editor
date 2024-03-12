@@ -25,7 +25,7 @@
 第一次执行需要键入yes并输入密码：
 kcserver
 
-3、刷新、打开页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
+3、刷新、打开k8s管理页面：http://k8s-test.protodesign.cn:30001/kubernetes/kcserver/namespace/kc/workload/view/Deployment/webapp
 右下方查看app容器当前镜像的版本号，例如：`test-0.0.1-23`
 账号密码：
 admin
@@ -49,9 +49,12 @@ http://registry.protodesign.cn:36000/harbor/projects/2/repositories/webapp/artif
 kcserver
 MEu2o91KHihnuLID6buRGrjRVo9YuM48
 
-5、在页面上方点击“调整镜像版本”按钮，输入新的版本号，例如：`test-0.0.1-24`，点击“确定”
+5、在k8s管理页面的上方点击“调整镜像版本”按钮，输入新的版本号，例如：`test-0.0.1-24`，点击“确定”
 等待页面刷新，查看左侧“历史版本”栏目，确认新版本已发布，并等待新版本的容器状态变为“Ready”（变成绿色即可）
 
 6、刷新、打开前端页面，查看新版本是否生效
 https://protodesign.cn
 https://test.protodesign.cn
+
+7、在k8s管理页面左侧的“历史版本”栏目中可对历史版本进行回滚操作，点击“回滚到”按钮并确认即可。
+若历史版本中不存在“回滚到”按钮，可点击上方的刷新按钮后再试
