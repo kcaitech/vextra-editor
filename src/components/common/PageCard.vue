@@ -21,9 +21,15 @@ const props = defineProps<Props>();
 
 const pageSvg = ref<HTMLElement>();
 
-let pageDom: { dom: PageDom, ctx: DomCtx };
+let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 
 function assemble() {
+    if (pageDom) {
+        pageDom?.dom.unbind();
+        pageDom?.dom.destory();
+        pageDom = undefined;
+    }
+
     let shapes: Shape[] = props.shapes as Shape[];
 
     if (!shapes.length) {
@@ -65,6 +71,7 @@ function assemble() {
 
 function disassemble() {
     pageDom?.dom.unbind();
+    pageDom?.dom.destory();
 }
 
 watch(() => props.shapes, () => {
