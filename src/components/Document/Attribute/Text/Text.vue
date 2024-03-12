@@ -16,6 +16,8 @@ import { message } from "@/utils/message";
 import { throttle } from 'lodash';
 import { watch } from 'vue';
 import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
+import FontWeightSelected from './FontWeightSelected.vue';
+import { fontWeightConvert } from './FontNameList';
 
 interface Props {
     context: Context
@@ -31,7 +33,7 @@ const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
-const isBold = ref(false)
+const isBold = ref<any>(400)
 const isTilt = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
@@ -52,6 +54,7 @@ const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
+const fontWeight = ref('Regular');
 const shapes = ref<TextShapeView[]>(props.textShapes);
 
 function toHex(r: number, g: number, b: number) {
@@ -299,11 +302,12 @@ const _textFormat = () => {
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
-        isBold.value = format.bold || false
+        isBold.value = format.bold || 400
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
-        if (format.italicIsMulti) isTilt.value = false
-        if (format.boldIsMulti) isBold.value = false
+        fontWeight.value = fontWeightConvert(isBold.value);
+        if (format.italicIsMulti) fontWeight.value = `${t('attr.more_value')}`
+        if (format.boldIsMulti) fontWeight.value = `${t('attr.more_value')}`
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
         if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
@@ -369,19 +373,20 @@ const _textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         textColor.value = format.color;
-        isBold.value = format.bold || false;
+        isBold.value = format.bold || 400;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
         gradient.value = format.gradient;
+        fontWeight.value = fontWeightConvert(isBold.value);
         if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') isBold.value = false;
-        if (format.italic === 'unlikeness') isTilt.value = false;
+        if (format.bold === 'unlikeness') fontWeight.value = `${t('attr.more_value')}`;
+        if (format.italic === 'unlikeness') fontWeight.value = `${t('attr.more_value')}`;
         if (format.underline === 'unlikeness') isUnderline.value = false;
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
@@ -915,30 +920,30 @@ onUnmounted(() => {
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context">
                 </SelectFont>
-                <!--                <div class="perch"></div>-->
-            </div>
-            <div class="text-middle">
-                <div class="text-middle-size">
-                    <div class="text-size jointly-text" style="padding-right: 0;">
-                        <div class="size_input">
-                            <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
-                            <div class="down" @click="onShowSize">
-                                <svg-icon icon-class="down" style=""></svg-icon>
-                            </div>
+                <div class="text-size jointly-text" style="padding-right: 0;">
+                    <div class="size_input">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
+                        <div class="down" @click="onShowSize">
+                            <svg-icon icon-class="down" style=""></svg-icon>
                         </div>
-                        <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
-                            v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)"
-                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
-                                <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i"
-                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
-                                </div>
+                    </div>
+                    <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                        v-if="showSize">
+                        <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)"
+                            @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
+                            <div class="icon">
+                                <svg-icon v-if="sizeSelectIndex === i"
+                                    :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
                             </div>
                         </div>
                     </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
+                </div>
+            </div>
+            <div class="text-middle">
+                <div class="text-middle-size">
+                   <FontWeightSelected :selected="fontWeight"></FontWeightSelected>
+                    <!-- <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
                         <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
                             <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
                         </Tooltip>
@@ -947,7 +952,7 @@ onUnmounted(() => {
                         <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
                             <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
                         </Tooltip>
-                    </div>
+                    </div> -->
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
                         <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
                             <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
@@ -1156,35 +1161,27 @@ onUnmounted(() => {
             display: flex;
 
             .select-font {
-                flex: 1;
-                padding: 9px 12px;
+                padding: 8px 12px;
                 box-sizing: border-box;
-                width: 224px;
+                width: calc(100% - 88px);
                 height: 32px;
                 border-radius: 6px;
+                margin-right: 8px;
+
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
 
             .select-font:hover {
                 background: #EBEBEB;
             }
-        }
-
-        .text-middle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-
-            .text-middle-size {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
 
             .text-size {
                 position: relative;
-                width: 62px;
+                width: 80px;
                 height: 32px;
                 border-radius: 6px;
                 padding: 9px 0;
@@ -1194,11 +1191,12 @@ onUnmounted(() => {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding-left: 12px;
-                    padding-right: 6px;
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    box-sizing: border-box;
 
                     .down {
-                        width: 19px;
+                        width: 26px;
                         height: 26px;
                         margin-right: 3px;
 
@@ -1215,7 +1213,7 @@ onUnmounted(() => {
                 }
 
                 .input {
-                    width: 24px;
+                    width: 40px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1277,6 +1275,25 @@ onUnmounted(() => {
                     }
                 }
             }
+        }
+
+        .text-middle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+
+            
+
+            .text-middle-size {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex: 1;
+            }
+
+
 
             .overbold {
                 width: 32px;

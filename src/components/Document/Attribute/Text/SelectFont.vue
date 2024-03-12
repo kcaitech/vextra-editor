@@ -77,16 +77,18 @@ function highlightText(text: string) {
 }
 
 function checkFontsAvailability(fontName: string[], fontList: FontName, lang: string) {
-    const promises = fontName.map(name => FontAvailable(name).length > 0);
+    const promises = fontName.map(name => FontAvailable(name));
     Promise.all(promises)
         .then(results => {
             if (lang === 'ch') {
-                const ch = fontName.filter((name, index) => results[index]);
+                console.log(results, 'results');
+                
+                const ch = fontName.filter((name, index) => results[index].length > 0);
                 fontList.ch.push(...ch)
             } else {
-                const en = fontName.filter((name, index) => results[index]);
+                const en = fontName.filter((name, index) => results[index].length > 0);
                 fontList.en.push(...en)
-            }
+            }            
         })
         .catch(error => {
             console.error('Error checking font availability:', error);

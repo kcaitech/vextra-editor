@@ -27,7 +27,7 @@ const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
-const isBold = ref(false)
+const isBold = ref<any>(400)
 const isTilt = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
@@ -364,12 +364,12 @@ const textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.bold || 400;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
         if (format.italicIsMulti) isTilt.value = false;
-        if (format.boldIsMulti) isBold.value = false;
+        if (format.boldIsMulti) isBold.value = `${t('attr.more_value')}`;
         if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
         if (format.underlineIsMulti) isUnderline.value = false;
@@ -443,7 +443,7 @@ const textFormat = () => {
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.bold || 400;
         isTilt.value = format.italic || false;
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
@@ -462,7 +462,7 @@ const textFormat = () => {
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') isBold.value = false;
+        if (format.bold === 'unlikeness') isBold.value = `${t('attr.more_value')}`;
         if (format.italic === 'unlikeness') isTilt.value = false;
         if (format.underline === 'unlikeness') isUnderline.value = false;
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
@@ -484,7 +484,7 @@ const _textFormat = throttle(textFormat, 160, { leading: true })
 const getTableFormat = () => {
     const textAttr = props.shape.data.textAttr;
     if (!textAttr) return;
-    isBold.value = textAttr.bold || false;
+    isBold.value = textAttr.bold || 400;
     isTilt.value = textAttr.italic || false;
     fontName.value = textAttr.fontName || 'PingFangSC-Regular';
     fonstSize.value = textAttr.fontSize || 14;

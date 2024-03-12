@@ -23,7 +23,7 @@ export function FontAvailable(fontName: string) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const fontWeight = [
-        { key: "Normal", weight: 400, value: 0 },
+        { key: "Regular", weight: 400, value: 0 },
         { key: "Light", weight: 300, value: 0 },
         { key: "Bold", weight: 700, value: 0 },
         { key: "Thin", weight: 100, value: 0 },
@@ -34,7 +34,7 @@ export function FontAvailable(fontName: string) {
         { key: "Heavy", weight: 900, value: 0 }
     ]
     if (!context) return;
-    const text = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
     context.font = 'normal 72px monospace';
     const baselineSize = context.measureText(text).width;
 
@@ -48,16 +48,41 @@ export function FontAvailable(fontName: string) {
             const newSizeWeight = context.measureText(text).width;
             fontWeight[i].value = newSizeWeight;
         }
-        
+
         const r = fontWeight.reduce((dict, item) => {
             const key = item.value;
             if (!dict[key]) {
-              dict[key] = item;
+                dict[key] = item;
             }
             return dict;
-          }, {} as any);
-          result = Object.values(r);
+        }, {} as any);
+        result = Object.values(r);
     }
 
     return result;
+}
+
+export const fontWeightConvert = (weight: number) => {
+    switch (weight) {
+        case 400:
+            return 'Regular';
+        case 300:
+            return 'Light';
+        case 700:
+            return 'Bold';
+        case 100:
+            return 'Thin';
+        case 200:
+            return 'ExtraLight';
+        case 500:
+            return 'Medium';
+        case 600:
+            return 'SemiBold';
+        case 800:
+            return 'ExtraBold';
+        case 900:
+            return 'Heavy';
+        default:
+            return 'Regular';
+    }
 }
