@@ -31,6 +31,8 @@ type BaseFrame4Trans = {
 }
 
 export class TranslateHandler extends TransformHandler {
+    shapes: ShapeView[];
+
     livingPoint: XY;
     fixedPoint: XY;
 
@@ -57,8 +59,10 @@ export class TranslateHandler extends TransformHandler {
     shapesBackup: ShapeView[] = [];
     coping: boolean = false;
 
-    constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
-        super(context, shapes, event);
+    constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
+        super(context, event);
+
+        this.shapes = shapes;
 
         this.livingPoint = this.workspace.getRootXY(event);
 

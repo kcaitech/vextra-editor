@@ -316,7 +316,7 @@ onUnmounted(() => {
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
-                      :selection-change="reflush_by_selection" :triggle="reflush_trigger"
+                      :selection-change="reflush_by_selection" :trigger="reflush_trigger"
                       :table-selection-change="reflush_by_table_selection"
                       :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"

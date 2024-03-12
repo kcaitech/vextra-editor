@@ -22,6 +22,8 @@ type Base4Rotation = {
 type BaseData4Rotate = Map<string, Base4Rotation>;
 
 export class RotateHandler extends TransformHandler {
+    shapes: ShapeView[];
+
     ctrlElementType: CtrlElementType;
     referencePoint: XY;
     livingPoint: XY;
@@ -30,11 +32,13 @@ export class RotateHandler extends TransformHandler {
     originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     baseData: BaseData4Rotate = new Map();
 
-    constructor(context: Context, selected: ShapeView[], event: MouseEvent, ctrlElementType: CtrlElementType) {
-        super(context, selected, event);
+    constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
+        super(context, event);
         this.ctrlElementType = ctrlElementType;
         this.referencePoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.referencePoint };
+
+        this.shapes = selected;
 
         this.getBaseData();
 

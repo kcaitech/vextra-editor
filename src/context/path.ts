@@ -22,23 +22,29 @@ export class Path extends WatchableObject {
     private is_editing: boolean = false;
     private m_segments: Segment[] = [];
     private m_bridging_events: { index: number, event: MouseEvent } | undefined = undefined;
+
     constructor(context: Context) {
         super();
         this.m_context = context;
     }
+
     get selectedPoints() {
         return this.selected_points;
     }
 
-    get_synthetic_points(max: number) {
+    get syntheticPoints() {
         if (!this.selectedSides.length) {
             return this.selected_points;
         }
         const points = [...this.selected_points];
-        for (let i = 0, l = this.selected_sides.length; i < l; i++) {
-            const index = this.selected_sides[i];
-            const anther = index === max ? 0 : index + 1;
-            points.push(index, anther);
+
+        const max = (this.m_context.selection.selectedShapes[0] as any).points?.length;
+        if (max) {
+            for (let i = 0, l = this.selected_sides.length; i < l; i++) {
+                const index = this.selected_sides[i];
+                const anther = index === max ? 0 : index + 1;
+                points.push(index, anther);
+            }
         }
         return Array.from(new Set(points));
     }
@@ -74,9 +80,11 @@ export class Path extends WatchableObject {
         }
         this.notify(Path.SELECTION_CHANGE);
     }
+
     is_selected_segs(index: number) {
         return this.selected_sides.findIndex((i) => i === index) > -1;
     }
+
     push_after_sort_points(index: number) {
         for (let i = this.selected_points.length - 1; i > -1; i--) {
             if (this.selected_points[i] >= index) {
@@ -141,10 +149,12 @@ export class Path extends WatchableObject {
             this.notify(Path.SELECTION_CHANGE);
         }
     }
+
     _reset() {
         this.selected_points.length = 0;
         this.selected_sides.length = 0;
     }
+
     reset() {
         const need_notify = this.selected_points.length || this.selected_sides.length;
         this.selected_points.length = 0;
@@ -167,12 +177,15 @@ export class Path extends WatchableObject {
     clear_highlight() {
         this.notify(Path.CLEAR_HIGH_LIGHT);
     }
+
     selecting(_val: boolean) {
         this.is_selecting = _val;
     }
+
     editing(_val: boolean) {
         this.is_editing = _val;
     }
+
     get no_hover() {
         return this.is_selecting || this.is_editing;
     }
@@ -185,6 +198,7 @@ export class Path extends WatchableObject {
     set_segments(segs: Segment[]) {
         this.m_segments = segs;
     }
+
     get segments() {
         return this.m_segments;
     }
@@ -193,10 +207,12 @@ export class Path extends WatchableObject {
         this.m_bridging_events = event;
         this.notify(Path.BRIDGING);
     }
+
     bridging_completed() {
         this.m_bridging_events = undefined;
         this.notify(Path.BRIDGING_COMPLETED);
     }
+
     get bridging_events() {
         return this.m_bridging_events;
     }

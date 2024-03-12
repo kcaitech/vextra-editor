@@ -243,11 +243,11 @@ function setColor(idx: number, clr: string, alpha: number) {
 
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(tableSelection)) {
         const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-            table.tableRowEnd,
-            table.tableColStart,
-            table.tableColEnd);
+        const range = get_table_range(tableSelection);
+        const tablecells = (s as TableView).getVisibleCells(tableSelection.tableRowStart,
+            tableSelection.tableRowEnd,
+            tableSelection.tableColStart,
+            tableSelection.tableColEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
             e.setFillColor4Cell(_idx, new Color(alpha, r, g, b), range)
         }

@@ -121,7 +121,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        const points = context.path.get_synthetic_points(pathshape.points.length - 1);
+        const points = context.path.syntheticPoints;
         if (!points?.length) {
             return;
         }
@@ -238,8 +238,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             initTimer();
             pre_to_translate(e);
-        }
-        else if (is_mouse_on_content(e)) {
+        } else if (is_mouse_on_content(e)) {
             on_content(e);
         }
     }
@@ -249,8 +248,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (h) {
             selection.selectShape(h);
             pre_to_translate(e);
-        }
-        else {
+        } else {
             selection.resetSelectShapes();
         }
     }
@@ -264,7 +262,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        transporter = new TranslateHandler(context, selection.selectedShapes, e);
+        transporter = new TranslateHandler(context, e, selection.selectedShapes);
         // console.log('transporter:', transporter);
 
         // context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
@@ -320,7 +318,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             // asyncTransfer = context.editor
             //     .controller()
             //     .asyncTransfer(shapes, selection.selectedPage!);
-
 
 
             // context.selection.setShapesSet(shapes);
