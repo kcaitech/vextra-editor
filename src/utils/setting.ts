@@ -17,3 +17,15 @@ export const API_URL = `${BASE_PATH}${API_PATH}`;
 // export const STORAGE_URL = `${BASE_SCHEME}://storage.${BASE_HOST}`;
 // export const STORAGE_URL = "https://oss-cn-hangzhou.aliyuncs.com";
 export const COMMUNICATION_URL = `wss://${BASE_HOST}${API_PATH}/communication`;
+
+
+// 屏蔽掉普通log输出
+if (production) {
+    const _log = console.log;
+    console.log = (...args: any[]) => {
+        // 把异常打印出来
+        for (let i = 0; i < args.length; ++i) {
+            if (args[i] instanceof Error) return _log(...args);
+        }
+    };
+}

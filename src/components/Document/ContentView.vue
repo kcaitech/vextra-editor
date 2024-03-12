@@ -45,6 +45,7 @@ import { ColorCtx } from '@/context/color';
 import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
 import Overview from './Content/Overview.vue';
 import MessageBoxBeta from '../common/MessageBoxBeta.vue';
+import { permIsEdit } from '@/utils/permission';
 
 interface Props {
     context: Context
@@ -548,11 +549,17 @@ function cut_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
     }
+    if (!permIsEdit(props.context)) {
+        return;
+    }
     props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    if (!permIsEdit(props.context)) {
         return;
     }
     return props.context.workspace.clipboard.paste(t, event);

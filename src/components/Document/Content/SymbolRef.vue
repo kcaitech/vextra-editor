@@ -2,7 +2,7 @@
 import { h, onUnmounted, shallowRef, watch } from 'vue';
 import comsMap from './comsmap'
 import { ArtboradView, ContactLineView, CutoutShapeView, DViewCtx, GroupShapeView, ImageShapeView, LineView, OverrideType, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolRefView, SymbolUnionShape, SymbolView, TableCellView, TableView, TextShapeView, VariableType, adapt2Shape, findOverrideAndVar, isAdaptedShape, renderSymbolRef as r } from "@kcdesign/data"
-import { SymbolRefShape, RenderTransform, SymbolShape } from '@kcdesign/data';
+import { SymbolRefShape, RenderTransform, SymbolShape, Document } from '@kcdesign/data';
 import { initCommonShape } from './common';
 
 const props = defineProps<{
@@ -43,7 +43,27 @@ function updater() {
     symMgr.get(refId).then((val) => {
         if (__startLoad !== refId) return;
         if (__data.value) __data.value.unwatch(watcher);
-        __data.value = val;
+
+        if (val) {
+            const symbolregist = (symMgr.parent as Document).symbolregist.get(refId);
+            let sym;
+            if (symbolregist) {
+                // todo val 有多个时，需要提示用户修改
+                for (let i = 0; i < val.length; ++i) {
+                    const v = val[i];
+                    const p = v.getPage();
+                    if (!p && symbolregist === 'freesymbols') {
+                        sym = v;
+                        break;
+                    } else if (p && p.id === symbolregist) {
+                        sym = v;
+                    }
+                }
+            } else {
+                sym = val[val.length - 1];
+            }
+            __data.value = sym;
+        }
         if (__data.value) __data.value.watch(watcher);
 
         // union

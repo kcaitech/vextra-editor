@@ -15,7 +15,7 @@ import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
-type TextShape = Shape & { text: Text };
+
 const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
@@ -34,7 +34,7 @@ const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<ClientXY>({ x: 0, y: 0 });
 const editingCell = shallowRef<TableCellView>();
-const editingCellView = shallowRef<TableCellView>();
+// const editingCellView = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
     if (editingCell.value) {
@@ -77,18 +77,18 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    if (editingCell.value) {
-        updateCellView();
-    }
+    // if (editingCell.value) {
+    //     updateCellView();
+    // }
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
 function isEditingText() {
-    return editingCell.value &&
+    const ret = editingCell.value &&
         editingCell.value.cellType === TableCellType.Text &&
-        editingCell.value.text &&
-        editingCellView.value;
+        editingCell.value.text
+        return ret;
 }
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
@@ -101,24 +101,24 @@ function selection_watcher(t: number) {
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_EDITING_CELL) {
         editingCell.value = props.context.tableSelection.editingCell;
-        updateCellView();
+        // updateCellView();
     }
 }
 
-function updateCellView() {
-    const cell = editingCell.value;
-    if (cell) {
-        editingCellView.value = cell;
-        if (!editingCellView.value) {
-            props.context.nextTick(props.context.selection.selectedPage!, () => {
-                editingCellView.value = props.shape.cells.get(cell.id);
-            })
-        }
-    }
-    else {
-        editingCellView.value = undefined;
-    }
-}
+// function updateCellView() {
+//     const cell = editingCell.value;
+//     if (cell) {
+//         editingCellView.value = cell;
+//         if (!editingCellView.value) {
+//             props.context.nextTick(props.context.selection.selectedPage!, () => {
+//                 editingCellView.value = props.shape.cells.get(cell.id);
+//             })
+//         }
+//     }
+//     else {
+//         editingCellView.value = undefined;
+//     }
+// }
 
 function init() {
     // props.context.tableSelection.resetSelection();
@@ -306,11 +306,11 @@ const height = computed(() => {
         :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
         @mousemove="move" @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCellView"
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell"
             :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!"
             :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
             :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
@@ -333,7 +333,7 @@ const height = computed(() => {
         </g>
     </svg>
     <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
         :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
