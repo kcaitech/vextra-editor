@@ -453,7 +453,7 @@ class Transform3D { // 变换
 
     // 是否为相对坐标系变换
     // 相对坐标系变换：每次基本变换（缩放、旋转、平移等）都相对于图形自身的坐标系进行，缩放、旋转、平移之间互不影响
-    // 变换顺序：缩放、旋转、平移 -> Transform = T·R·S
+    // 相对坐标系变换顺序：缩放、旋转、平移 -> Transform = T·R·S
     isLocalTransform: boolean = true
 
     translateMatrix: Matrix // 平移矩阵
@@ -663,7 +663,11 @@ class Transform3D { // 变换
         if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
         this.rotate(axis, angle, {
             transformMode: TransformMode.LocalPartialTranslate,
-            translate: { x: -point.data[0][0] + this.translateMatrix.data[0][3], y: -point.data[1][0] + this.translateMatrix.data[1][3], z: -point.data[2][0] + this.translateMatrix.data[2][3] },
+            translate: {
+                x: -point.data[0][0] + this.translateMatrix.data[0][3],
+                y: -point.data[1][0] + this.translateMatrix.data[1][3],
+                z: -point.data[2][0] + this.translateMatrix.data[2][3]
+            },
         })
         return this
     }
@@ -1037,16 +1041,13 @@ function getAllStyleFromString(content: string) {
     return result
 }
 
-function parseTransform(transformContent: string, params?: {
-    transformMode?: TransformMode,
+function parseTransform(transformContent: string, transformParams?: TransformParams & {
     diffX?: number,
     diffY?: number,
 }) {
-    const transformParams = {
-        transformMode: params?.transformMode || TransformMode.Local,
-    }
-    const diffX = params?.diffX || 0
-    const diffY = params?.diffY || 0
+    if (!transformParams) transformParams = {
+        transformMode: TransformMode.Local,
+    };
 
     const functionCalls = getAllFunctionCallFromString(transformContent)
     const transform = new Transform3D()
@@ -1080,7 +1081,15 @@ function parseTransform(transformContent: string, params?: {
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
                 if (numArgList.length === 1) transform.rotateZ(numArgList[0], transformParams);
-                else if (numArgList.length === 3) transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0]);
+                else if (numArgList.length === 3) {
+                    let diffX = transformParams.diffX || 0
+                    let diffY = transformParams.diffY || 0
+                    if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+                        diffX += transformParams.translate?.x || 0
+                        diffY += transformParams.translate?.y || 0
+                    }
+                    transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
+                }
             } else if (name === "rotateX") {
                 transform.rotateX(numArgList[0], transformParams)
             } else if (name === "rotateY") {
@@ -1398,6 +1407,11 @@ type Attributes = { // 从元素的attributes中解析出来的属性
 
     // 图片
     href?: string,
+
+    // path
+    d?: string,
+    pathX?: number,
+    pathY?: number,
 }
 
 // 将父元素的属性合并到子元素
@@ -1554,6 +1568,16 @@ class BaseCreator extends BaseTreeNode {
         const height = this.localAttributes["height"]
         if (height) this.attributes.height = parseFloat(height);
 
+        const d = this.localAttributes["d"]
+        if (d) {
+            this.attributes.d = d
+            const { x, y, width, height } = getPathBoxFromD(d)
+            this.attributes.pathX = x
+            this.attributes.pathY = y
+            this.attributes.width = width
+            this.attributes.height = height
+        }
+
         let transform
         if (this.attributes.styleTransform) transform = this.attributes.styleTransform;
         if (!transform) {
@@ -1561,8 +1585,14 @@ class BaseCreator extends BaseTreeNode {
             transform = this.attributes.transform
         }
         if (transform) this.transform.addTransform(parseTransform(transform, {
+            transformMode: TransformMode.LocalPartialTranslate,
+            translate: {
+                x: (this.attributes.width || 0) / 2,
+                y: (this.attributes.height || 0) / 2,
+                z: 0,
+            },
             diffX: parseFloat(x) || 0,
-            diffY: parseFloat(y) || 0
+            diffY: parseFloat(y) || 0,
         }));
 
         const opacity = this.localAttributes["opacity"]
@@ -1982,11 +2012,12 @@ class PathCreator extends BaseCreator {
     }
 
     createShape() {
-        const d = this.localAttributes["d"]
+        const d = this.attributes.d
         if (!d) return;
-        let { x, y, width, height } = getPathBoxFromD(d)
-        this.attributes.width = width
-        this.attributes.height = height
+        const x = this.attributes.pathX || 0
+        const y = this.attributes.pathY || 0
+        const width = this.attributes.width || 0
+        const height = this.attributes.height || 0
         const path = new Path(d);
         path.translate(-x, -y);
         this.transform.translate(x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0)
