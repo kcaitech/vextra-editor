@@ -240,7 +240,7 @@ function for_virtual(shape: ShapeView) {
     if (shape.type === ShapeType.Text) {
         controllerType.value = ControllerType.TextVirtual;
     } else if (shape.type === ShapeType.Table) {
-        controllerType.value = ControllerType.Table;
+        controllerType.value = ControllerType.TableVirtual;
     } else {
         controllerType.value = ControllerType.Virtual;
     }
