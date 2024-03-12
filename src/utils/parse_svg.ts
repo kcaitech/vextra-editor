@@ -11,6 +11,7 @@ import {
     Border,
     Fill,
     FillType,
+    FillRule,
     Shadow,
     Color,
     ContextSettings,
@@ -271,6 +272,15 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
+    subtract(matrix: Matrix) { // 矩阵相减，不修改原矩阵，返回新矩阵
+        const [m0, n0] = this.dimension
+        const [m1, n1] = matrix.dimension
+        if (m0 !== m1 || n0 !== n1) throw new Error("矩阵阶数不匹配，无法相减");
+        const result: number[][] = buildArray(m0, n0)
+        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j] - matrix.data[i][j]
+        return new Matrix(result, true)
+    }
+
     multiplyByNumber(number: number) { // 矩阵数乘，不修改原矩阵，返回新矩阵
         const [m, n] = this.dimension
         const result: number[][] = buildArray(m, n)
@@ -420,6 +430,18 @@ class Matrix { // 矩阵
     }
 }
 
+enum TransformMode { // 变换模式
+    Local, // 相对坐标系变换，缩放、旋转、平移之间互不影响
+    LocalTranslate, // 相对坐标系变换，平移会受到旋转、缩放的影响
+    LocalPartialTranslate, // 相对坐标系变换，支持传入一个translate，旋转、缩放仅影响这部分平移
+    Global, // 全局坐标系变换，缩放、旋转、平移之间相互影响。使用全局坐标系变换时，会使整个Transform3D对象变为全局坐标系变换（isLocalTransform=false），不可逆
+}
+
+type TransformParams = {
+    transformMode?: TransformMode,
+    translate?: { x: number, y: number, z: number },
+}
+
 class Transform3D { // 变换
     /** 变换矩阵
      * | a b c tx |
@@ -429,8 +451,8 @@ class Transform3D { // 变换
      */
     matrix: Matrix
 
-    // 是否为局部变换
-    // 局部变换：每次基本变换（缩放、旋转、平移等）都相对于图形的局部坐标系进行
+    // 是否为相对坐标系变换
+    // 相对坐标系变换：每次基本变换（缩放、旋转、平移等）都相对于图形自身的坐标系进行，缩放、旋转、平移之间互不影响
     // 变换顺序：缩放、旋转、平移 -> Transform = T·R·S
     isLocalTransform: boolean = true
 
@@ -507,37 +529,74 @@ class Transform3D { // 变换
         return this
     }
 
-    scale(xScale: number, yScale: number, zScale: number, isLocalTransform = true) { // 缩放，会修改原变换
+    // 缩放，会修改原变换
+    scale(xScale: number, yScale: number, zScale: number, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
         const matrix = new Matrix([
             [xScale, 0, 0, 0],
             [0, yScale, 0, 0],
             [0, 0, zScale, 0],
             [0, 0, 0, 1],
         ], true)
-        if (!isLocalTransform) {
+        if (transformParams.transformMode === TransformMode.Global) {
             this.updateMatrix()
             this.isLocalTransform = false
             this.matrix = matrix.multiply(this.matrix)
             return this
         }
         this.scaleMatrix = matrix.multiply(this.scaleMatrix)
+        if (transformParams.transformMode === TransformMode.LocalTranslate) {
+            this.translateMatrix = matrix.multiply(this.translateMatrix)
+        } else if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+            const translate = transformParams.translate || { x: 0, y: 0, z: 0 }
+            const translateMatrix = new Matrix([
+                [1, 0, 0, translate.x],
+                [0, 1, 0, translate.y],
+                [0, 0, 1, translate.z],
+                [0, 0, 0, 1],
+            ], true)
+            const translateMatrix2 = matrix.multiply(translateMatrix)
+            const translateDiffMatrix = translateMatrix2.subtract(translateMatrix)
+            this.translateMatrix = this.translateMatrix.add(translateDiffMatrix)
+        }
         this.isMatrixLatest = false
         return this
     }
 
-    _rotate(matrix: Matrix, isLocalTransform = true) { // 旋转缩放等，会修改原变换
-        if (!isLocalTransform) {
+    // 旋转缩放等，会修改原变换
+    _rotate(matrix: Matrix, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
+        if (transformParams.transformMode === TransformMode.Global) {
             this.updateMatrix()
             this.isLocalTransform = false
             this.matrix = matrix.multiply(this.matrix)
             return this
         }
         this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+        if (transformParams.transformMode === TransformMode.LocalTranslate) {
+            this.translateMatrix = matrix.multiply(this.translateMatrix)
+        } else if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+            const translate = transformParams.translate || { x: 0, y: 0, z: 0 }
+            const translateMatrix = new Matrix([
+                [1, 0, 0, translate.x],
+                [0, 1, 0, translate.y],
+                [0, 0, 1, translate.z],
+                [0, 0, 0, 1],
+            ], true)
+            const translateMatrix2 = matrix.multiply(translateMatrix)
+            const translateDiffMatrix = translateMatrix2.subtract(translateMatrix)
+            this.translateMatrix = this.translateMatrix.add(translateDiffMatrix)
+        }
         this.isMatrixLatest = false
         return this
     }
 
-    rotateX(angle: number, isLocalTransform = true) { // 绕x轴旋转，会修改原变换
+    // 绕x轴旋转，会修改原变换
+    rotateX(angle: number, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -546,10 +605,13 @@ class Transform3D { // 变换
             [0, sin, cos, 0],
             [0, 0, 0, 1],
         ], true)
-        return this._rotate(matrix, isLocalTransform)
+        return this._rotate(matrix, transformParams)
     }
 
-    rotateY(angle: number, isLocalTransform = true) { // 绕y轴旋转，会修改原变换
+    // 绕y轴旋转，会修改原变换
+    rotateY(angle: number, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -558,10 +620,13 @@ class Transform3D { // 变换
             [-sin, 0, cos, 0],
             [0, 0, 0, 1],
         ], true)
-        return this._rotate(matrix, isLocalTransform)
+        return this._rotate(matrix, transformParams)
     }
 
-    rotateZ(angle: number, isLocalTransform = true) { // 绕z轴旋转，会修改原变换
+    // 绕z轴旋转，会修改原变换
+    rotateZ(angle: number, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
         const matrix = new Matrix([
@@ -570,10 +635,13 @@ class Transform3D { // 变换
             [0, 0, 1, 0],
             [0, 0, 0, 1],
         ], true)
-        return this._rotate(matrix, isLocalTransform)
+        return this._rotate(matrix, transformParams)
     }
 
-    rotate(axis: Matrix, angle: number, isLocalTransform = true) { // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
+    // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
+    rotate(axis: Matrix, angle: number, transformParams: TransformParams = {
+        transformMode: TransformMode.Local
+    }) {
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         axis = axis.normalize() // axis化为单位向量
         const [x, y, z] = axis.data.map(item => item[0])
@@ -586,15 +654,17 @@ class Transform3D { // 变换
             [t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0],
             [0, 0, 0, 1],
         ], true)
-        return this._rotate(matrix, isLocalTransform)
+        return this._rotate(matrix, transformParams)
     }
 
-    rotateAt(axis: Matrix, point: Matrix, angle: number, isLocalTransform = true) { // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点，会修改原变换
+    // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点，会修改原变换
+    rotateAt(axis: Matrix, point: Matrix, angle: number) {
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
-        this.translate(-point.data[0][0], -point.data[1][0], -point.data[2][0])
-        this.rotate(axis, angle, isLocalTransform)
-        this.translate(point.data[0][0], point.data[1][0], point.data[2][0])
+        this.rotate(axis, angle, {
+            transformMode: TransformMode.LocalPartialTranslate,
+            translate: { x: -point.data[0][0] + this.translateMatrix.data[0][3], y: -point.data[1][0] + this.translateMatrix.data[1][3], z: -point.data[2][0] + this.translateMatrix.data[2][3] },
+        })
         return this
     }
 
@@ -967,7 +1037,17 @@ function getAllStyleFromString(content: string) {
     return result
 }
 
-function parseTransform(transformContent: string, isCssStyle = false) { // 解析transform属性，isCssStyle为false时，transform为svg的transform属性，为true时，transform为css的transform属性
+function parseTransform(transformContent: string, params?: {
+    transformMode?: TransformMode,
+    diffX?: number,
+    diffY?: number,
+}) {
+    const transformParams = {
+        transformMode: params?.transformMode || TransformMode.Local,
+    }
+    const diffX = params?.diffX || 0
+    const diffY = params?.diffY || 0
+
     const functionCalls = getAllFunctionCallFromString(transformContent)
     const transform = new Transform3D()
 
@@ -982,8 +1062,7 @@ function parseTransform(transformContent: string, isCssStyle = false) { // 解�
             else {
                 if (name.startsWith("rotate") && !(name === "rotate" && i > 0) && !(name === "rotate3d" && i < 3)) {
                     return parseFloat(value.replace("deg", "")) * Math.PI / 180
-                }
-                else {
+                } else {
                     return parseFloat(value)
                 }
             }
@@ -1000,19 +1079,19 @@ function parseTransform(transformContent: string, isCssStyle = false) { // 解�
             console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
-                if (numArgList.length === 1) transform.rotateZ(numArgList[0]);
-                else if (numArgList.length === 3) transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1], numArgList[2], 0]), numArgList[0]);
+                if (numArgList.length === 1) transform.rotateZ(numArgList[0], transformParams);
+                else if (numArgList.length === 3) transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0]);
             } else if (name === "rotateX") {
-                transform.rotateX(numArgList[0])
+                transform.rotateX(numArgList[0], transformParams)
             } else if (name === "rotateY") {
-                transform.rotateY(numArgList[0])
+                transform.rotateY(numArgList[0], transformParams)
             } else if (name === "rotateZ") {
-                transform.rotateZ(numArgList[0])
+                transform.rotateZ(numArgList[0], transformParams)
             } else if (name === "rotate3d") {
-                transform.rotate(Matrix.ColVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3])
+                transform.rotate(Matrix.ColVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3], transformParams)
             }
         } else if (name === "scale") {
-            transform.scale(numArgList[0], numArgList[1], numArgList[2] || 1)
+            transform.scale(numArgList[0], numArgList[1], numArgList[2] || 1, transformParams)
         } else if (name === "translate") {
             transform.translate(numArgList[0], numArgList[1], numArgList[2] || 0)
         } else {
@@ -1352,6 +1431,7 @@ class BaseCreator extends BaseTreeNode {
     }
 
     localAttributes: Record<string, string> = {}
+    isLocalAttributesParsed = false
     attributes: Attributes = {}
     transform = new Transform3D()
 
@@ -1374,8 +1454,6 @@ class BaseCreator extends BaseTreeNode {
                 tagName: htmlElement.node.tagName,
             }
         }
-
-        this.parseAttributes()
     }
 
     static method(handlerName: keyof BaseCreator) {
@@ -1395,13 +1473,13 @@ class BaseCreator extends BaseTreeNode {
     }
 
     /**
-     * 调整阶段
+     * 调整节点
      * adjust() // 调整节点
      * afterChildrenAdjust() // 所有子节点adjust之后
      * afterSiblingAdjust() // 所有兄弟节点adjust之后
      * afterAllAdjust() // 所有节点adjust之后
      *
-     * shape创建阶段
+     * 创建shape
      * createShape() // 创建shape
      * afterChildrenCreateShape() // 所有子节点创建shape之后
      * afterSiblingCreateShape() // 所有兄弟节点创建shape之后
@@ -1451,6 +1529,9 @@ class BaseCreator extends BaseTreeNode {
         const svgRoot = this.htmlElement?.root
         if (!svgRoot) return;
 
+        if (this.isLocalAttributesParsed) return;
+        this.isLocalAttributesParsed = true
+
         const attributes = this.htmlElement.node.attributes
         for (const attribute of attributes) this.localAttributes[attribute.name] = attribute.value;
 
@@ -1479,7 +1560,10 @@ class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform));
+        if (transform) this.transform.addTransform(parseTransform(transform, {
+            diffX: parseFloat(x) || 0,
+            diffY: parseFloat(y) || 0
+        }));
 
         const opacity = this.localAttributes["opacity"]
         if (opacity) this.attributes.opacity = parseFloat(opacity);
@@ -1495,9 +1579,15 @@ class BaseCreator extends BaseTreeNode {
                 const el = svgRoot.querySelector(`#${urlId}`)
                 if (el) {
                     const creator = (el as any).creator as BaseCreator
+                    creator.parseAttributes()
                     const stops: GradientStop[] = creator.children.filter(child => child.htmlElement?.tagName === "stop").map(child => {
+                        child.parseAttributes()
                         const attrs = child.localAttributes
-                        const offset = parseFloat(attrs["offset"]?.replace("%", "") || "0") / 100
+                        let offset = 0
+                        if (attrs["offset"]) {
+                            if (attrs["offset"].includes("%")) offset = parseFloat(attrs["offset"].replace("%", "")) / 100;
+                            else offset = parseFloat(attrs["offset"]);
+                        }
                         const stopColor = parseColor(attrs["stop-color"] || "black")!
                         const stopOpacity = parseFloat(attrs["stop-opacity"] || "1")
                         return {
@@ -1511,11 +1601,13 @@ class BaseCreator extends BaseTreeNode {
                         const y1 = parseFloat(creator.localAttributes["y1"] || "0")
                         const x2 = parseFloat(creator.localAttributes["x2"] || "1")
                         const y2 = parseFloat(creator.localAttributes["y2"] || "0")
+                        const parentX = parseFloat(this.localAttributes["x"] || "0")
+                        const parentY = parseFloat(this.localAttributes["y"] || "0")
                         linearGradient = {
-                            x1: x1,
-                            y1: y1,
-                            x2: x2,
-                            y2: y2,
+                            x1: x1 - parentX,
+                            y1: y1 - parentY,
+                            x2: x2 - parentX,
+                            y2: y2 - parentY,
                             opacity: this.attributes.opacity || 1,
                             stops: stops,
                         }
@@ -1665,6 +1757,21 @@ class BaseCreator extends BaseTreeNode {
             return new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
         }
 
+        const fills = new BasicArray<Fill>()
+        const fillColor = this.attributes.fill
+        if (fillColor && !(this instanceof TextCreator)) { // 文本不需要填充
+            const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(fillColor.color))
+            fills.push(fill)
+
+            if (fillColor.colorType !== "color") {
+                fill.gradient = buildGradientByFillColor(fillColor)
+                fill.fillType = FillType.Gradient
+            }
+
+            if (this.localAttributes["fill-rule"] === "evenodd") fill.fillRule = FillRule.Evenodd;
+            else fill.fillRule = FillRule.Nonzero;
+        }
+
         const borders = new BasicArray<Border>()
         const stroke = this.attributes.stroke
         if (stroke) {
@@ -1682,18 +1789,6 @@ class BaseCreator extends BaseTreeNode {
             if (stroke.colorType !== "color") {
                 border.gradient = buildGradientByFillColor(stroke)
                 border.fillType = FillType.Gradient
-            }
-        }
-
-        const fills = new BasicArray<Fill>()
-        const fillColor = this.attributes.fill
-        if (fillColor && !(this instanceof TextCreator)) { // 文本不需要填充
-            const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(fillColor.color))
-            fills.push(fill)
-
-            if (fillColor.colorType !== "color") {
-                fill.gradient = buildGradientByFillColor(fillColor)
-                fill.fillType = FillType.Gradient
             }
         }
 
@@ -1836,7 +1931,7 @@ class PathCreator extends BaseCreator {
         let fillPart: PathCreator | undefined
         let position: "inside" | "center" | "outside"
 
-        const findMainPath = (item: BaseTreeNode) => {
+        const findFillPart = (item: BaseTreeNode) => {
             return item instanceof PathCreator
                 && item.attributes.fill
                 && item.attributes.x === this.attributes.x
@@ -1855,21 +1950,21 @@ class PathCreator extends BaseCreator {
             if (el) {
                 const creator = (el as any).creator as BaseCreator
                 if (creator instanceof PathCreator && creator.localAttributes["d"] === this.localAttributes["d"]) {
-                    fillPart = this.parent?.siblings().find(findMainPath) as PathCreator | undefined
+                    fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined
                     if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
                         prev.push(...cur.children)
                         return prev
-                    }, [] as BaseTreeNode[]).find(findMainPath) as PathCreator | undefined;
+                    }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
                 }
             }
         } else { // 中心
             position = "center"
-            fillPart = this.siblings().find(findMainPath) as PathCreator | undefined
-            if (!fillPart) fillPart = this.parent?.siblings().find(findMainPath) as PathCreator | undefined;
+            fillPart = this.siblings().find(findFillPart) as PathCreator | undefined
+            if (!fillPart) fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined;
             if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
                 prev.push(...cur.children)
                 return prev
-            }, [] as BaseTreeNode[]).find(findMainPath) as PathCreator | undefined;
+            }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
         }
 
         if (!fillPart) fillPart = this;
@@ -2048,7 +2143,12 @@ class Parser {
         }
         const rootCreator = (this.svgRoot as any).creator as BaseCreator
 
-        // 调整阶段
+        // 解析属性
+        rootCreator.traverse({
+            do: BaseCreator.method("parseAttributes"),
+        })
+
+        // 调整节点
         rootCreator.traverse({
             do: BaseCreator.method("adjust"),
             afterChildrenDo: BaseCreator.method("afterChildrenAdjust"),
@@ -2056,7 +2156,7 @@ class Parser {
             afterAllDo: BaseCreator.method("afterAllAdjust"),
         })
 
-        // 创建shape阶段
+        // 创建shape
         rootCreator.traverse({
             do: BaseCreator.method("_createShape"),
             afterChildrenDo: BaseCreator.method("afterChildrenCreateShape"),
