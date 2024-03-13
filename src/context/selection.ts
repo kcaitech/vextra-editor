@@ -490,24 +490,24 @@ export class Selection extends WatchableObject implements ISave4Restore {
                 if (rowStart === 0 && rowEnd === rowCount - 1) {
                     // 选中列
                     state.table.isRowOrCol = true;
-                    if (colStart < 0 || colEnd >= colCount) throw new Error();
-                    for (let i = colStart; i <= colEnd; ++i) {
+                    if (colStart < 0 /*|| colEnd >= colCount 可能的, 比如删除最后一列时*/) throw new Error();
+                    for (let i = colStart; i <= colEnd && i < colCount; ++i) {
                         state.table.cols.push(table.colWidths[i].id);
                     }
                 } else if (colStart === 0 && colEnd === colCount - 1) {
                     // 选中行
                     state.table.isRowOrCol = true;
-                    if (rowStart < 0 || rowEnd >= rowCount) throw new Error();
-                    for (let i = rowStart; i <= rowEnd; ++i) {
+                    if (rowStart < 0 /*|| rowEnd >= rowCount*/) throw new Error();
+                    for (let i = rowStart; i <= rowEnd && i < rowCount; ++i) {
                         state.table.rows.push(table.rowHeights[i].id);
                     }
                 } else {
-                    if (colStart < 0 || colEnd >= colCount) throw new Error();
-                    if (rowStart < 0 || rowEnd >= rowCount) throw new Error();
-                    for (let i = colStart; i <= colEnd; ++i) {
+                    if (colStart < 0 /*|| colEnd >= colCount*/) throw new Error();
+                    if (rowStart < 0 /*|| rowEnd >= rowCount*/) throw new Error();
+                    for (let i = colStart; i <= colEnd && i < colCount; ++i) {
                         state.table.cols.push(table.colWidths[i].id);
                     }
-                    for (let i = rowStart; i <= rowEnd; ++i) {
+                    for (let i = rowStart; i <= rowEnd && i < rowCount; ++i) {
                         state.table.rows.push(table.rowHeights[i].id);
                     }
                 }

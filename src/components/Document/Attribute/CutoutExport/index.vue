@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { BasicArray, ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import {
+    BasicArray,
+    ExportFileFormat,
+    ExportFormat,
+    ExportFormatNameingScheme,
+    ExportOptions,
+    ExportVisibleScaleType,
+    Shape,
+    ShapeType,
+    ShapeView
+} from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, reactive, nextTick, watch, toRaw } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -9,15 +19,26 @@ import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import comsMap from '@/components/Document/Content/comsmap';
-import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
+import {
+    get_actions_add_export_format,
+    get_actions_export_format_delete,
+    get_actions_export_format_file_format,
+    get_actions_export_format_perfix,
+    get_actions_export_format_scale,
+    get_actions_export_format_unify,
+    get_export_formats
+} from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
+import PageCard from "@/components/common/PageCard.vue";
 
 const { t } = useI18n();
+
 interface Props {
     context: Context
     shapes: ShapeView[]
     trigger: any[]
 }
+
 interface SvgFormat {
     id: string
     width: number
@@ -27,10 +48,14 @@ interface SvgFormat {
     background: string
     shapes: Shape[]
 }
+
+type PCard = InstanceType<typeof PageCard>
+
 export interface FormatItems {
     id: number,
     format: ExportFormat
 }
+
 const props = defineProps<Props>();
 const isPreinstall = ref(false);
 
@@ -46,6 +71,8 @@ const trim_bg = ref(false);
 const canvas_bg = ref(false);
 const previewUnfold = ref(false);
 const preview = ref();
+
+const pageCard = ref<PCard>();
 
 let renderSvgs: SvgFormat[] = reactive([]);
 
@@ -64,6 +91,7 @@ function update(args: any[]) {
         reflush.value++;
     }
 }
+
 function updateData() {
     preinstallArgus.length = 0;
     mixed.value = false;
@@ -238,6 +266,7 @@ const addIos = (len: number) => {
         }
     }
 }
+
 function first() {
     if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
@@ -367,8 +396,8 @@ const exportFill = () => {
         for (let i = 0; i < selected.length; i++) {
             if (selected.length === 0) break;
             const shape = selected[i];
-            if (previewSvgs.value) {
-                const svg = previewSvgs.value[i];
+            if (pageCard.value) {
+                const svg = pageCard.value[i].pageSvg;
                 (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                     const id = shape.id + format.id;
                     const { width, height } = svg.viewBox.baseVal
@@ -416,9 +445,9 @@ const exportPageImage = () => {
     const page = props.context.selection.selectedPage;
     if (!page || !page.exportOptions) return;
     const options = page.exportOptions as ExportOptions;
-    
-    if (previewSvgs.value) {
-        const svg = previewSvgs.value[0];
+
+    if (pageCard.value) {
+        const svg = pageCard.value[0].pageSvg;
         options.exportFormats.forEach((format, idx) => {
             const id = page.id + format.id;
             const { width, height } = svg.viewBox.baseVal
@@ -438,10 +467,12 @@ function update_by_shapes() {
     updateData();
     showCheckbox();
 }
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
     if (t === Selection.CHANGE_PAGE) update_by_shapes();
 }
+
 const stop = watch(() => props.trigger, (v) => {
     update(v);
 })
@@ -474,10 +505,11 @@ onUnmounted(() => {
             <div class="name" :class="{ 'checked': preinstallArgus.length > 0 }">{{ t('cutoutExport.export') }}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
-                    @click.stop="showPreinstall">
+                     @click.stop="showPreinstall">
                     <svg-icon icon-class="export-menu"></svg-icon>
                 </div>
-                <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon>
+                <div class="cutout-icon" @click.stop="preinstall('default')">
+                    <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
@@ -489,37 +521,40 @@ onUnmounted(() => {
         <div v-else-if="!mixed">
             <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
                 <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
-                    :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                    :length="preinstallArgus.length" :formatItems="formatItems" @changePerfix="changePerfix"
-                    @change-format="changeFormat" @delete="deleteArgus">
+                                 :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
+                                 :length="preinstallArgus.length" :formatItems="formatItems"
+                                 @changePerfix="changePerfix"
+                                 @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
                 <el-checkbox :model-value="trim_bg" @change="trimBackground"
-                    :label="t('cutoutExport.trim_transparent_pixels')" />
+                             :label="t('cutoutExport.trim_transparent_pixels')"/>
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground"
-                    :label="t('cutoutExport.canvas_background_color')" />
+                             :label="t('cutoutExport.canvas_background_color')"/>
             </div>
             <div class="export-box" v-if="preinstallArgus.length > 0">
                 <div @click="exportFill"><span>{{ t('cutoutExport.export') }}</span></div>
             </div>
             <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
-                :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
-                :trim_bg="trim_bg">
+                     :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
+                     :trim_bg="trim_bg">
             </Preview>
         </div>
         <div class="exportsvg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
-                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"
-                    xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-                    preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"
-                    :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
-                    :style="{ 'background-color': svg.background }">
-                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "
-                        :key="c.id" :data="c" />
-                </svg>
+<!--                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"-->
+                <!--                     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"-->
+                <!--                     preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"-->
+                <!--                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"-->
+                <!--                     :style="{ 'background-color': svg.background }">-->
+                <!--                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "-->
+                <!--                               :key="c.id" :data="c"/>-->
+                <!--                </svg>-->
+                <PageCard ref="pageCard" :background-color="svg.background" :view-box="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
+                          :shapes="svg.shapes" :width="svg.width" :height="svg.height"></PageCard>
             </template>
         </div>
     </div>
@@ -574,7 +609,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                >svg {
+                > svg {
                     width: 16px;
                     height: 16px;
                 }

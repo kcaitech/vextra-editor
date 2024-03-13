@@ -1,15 +1,33 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch, toRaw } from 'vue';
-import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, ExportFormat, GroupShapeView, Shape, ShapeType, ShapeView, adapt2Shape, isAdaptedShape, newText } from '@kcdesign/data';
+import {
+    ExportFileFormat,
+    ExportFormat,
+    GroupShapeView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    adapt2Shape,
+} from '@kcdesign/data';
 import { Context } from '@/context';
-import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
+import {
+    getCutoutShape,
+    getGroupChildBounds,
+    getPageBounds,
+    getShadowMax,
+    getShapeBorderMax,
+    parentIsArtboard
+} from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
+import PageCard from "@/components/common/PageCard.vue";
+type PCard = InstanceType<typeof PageCard>
+
 const { t } = useI18n();
+
 interface Props {
     context: Context
     shapes: ShapeView[]
@@ -17,6 +35,7 @@ interface Props {
     canvas_bg: boolean
     trim_bg: boolean
 }
+
 interface SvgFormat {
     id: string
     width: number
@@ -26,6 +45,7 @@ interface SvgFormat {
     background: string
     shapes: Shape[]
 }
+
 const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
 }>();
@@ -50,6 +70,9 @@ const previewSvg = ref<SVGSVGElement>();
 const pngImage = ref();
 const renderSvgs = ref<SvgFormat[]>([]);
 const ImageUrls: Map<string, string> = new Map();
+
+const pageCard = ref<PCard>();
+
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
@@ -87,7 +110,7 @@ const _getCanvasShape = () => {
         }
     }
     setTimeout(() => {
-        if (previewSvg.value) {
+        if (pageCard.value?.pageSvg) {
             let format: ExportFormat;
             let id = '';
             let shape: ShapeView;
@@ -102,13 +125,13 @@ const _getCanvasShape = () => {
                 format = page && page.exportOptions!.exportFormats[0];
                 id = page.id + format.id;
             }
-            const { width, height } = previewSvg.value.viewBox.baseVal
-            previewSvg.value.setAttribute("width", `${width * format.scale}`);
-            previewSvg.value.setAttribute("height", `${height * format.scale}`);
+            const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
+            pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
+            pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
             if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
-                getPngImageData(previewSvg.value, props.trim_bg, id, format, ImageUrls, shape);
+                getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
             } else if (format.fileFormat === ExportFileFormat.Svg) {
-                getSvgImageData(previewSvg.value, props.trim_bg, id, format, ImageUrls, shape);
+                getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
             }
             setTimeout(() => {
                 pngImage.value = ImageUrls.get(id);
@@ -117,7 +140,6 @@ const _getCanvasShape = () => {
         }
     }, 10);
 }
-
 
 
 const getCanvasShape = debounce(_getCanvasShape, 250, { leading: true });
@@ -165,6 +187,7 @@ const resetSvg = () => {
     xy.value.y = 0;
     reflush.value++;
 }
+
 function page_color() {
     background_color.value = DEFAULT_COLOR();
     const selected = props.context.selection.selectedShapes;
@@ -183,6 +206,7 @@ function page_color() {
         }
     }
 }
+
 const shape = ref<ShapeView | undefined>(props.shapes[0]);
 const select_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
@@ -298,19 +322,24 @@ onUnmounted(() => {
             </div>
             <span>{{ t('cutoutExport.preview') }}</span>
         </div>
-        <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
-            :viewBox="`${xy.x} ${xy.y} ${width} ${height}`" :style="{ 'background-color': background_color }">
-            <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "
-                :key="c.id" :data="c" />
-        </svg>
+        <!--        <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg"-->
+        <!--             xmlns:xlink="http://www.w3.org/1999/xlink"-->
+        <!--             xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width"-->
+        <!--             :height="height"-->
+        <!--             :viewBox="`${xy.x} ${xy.y} ${width} ${height}`" :style="{ 'background-color': background_color }">-->
+        <!--            <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "-->
+        <!--                       :key="c.id" :data="c"/>-->
+        <!--        </svg>-->
+        <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
+                  :shapes="renderItems"
+                  :width="width" :height="height"></PageCard>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
             <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
             </div>
         </div>
         <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-            :reflush="reflush !== 0 ? reflush : undefined">
+             :reflush="reflush !== 0 ? reflush : undefined">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
@@ -327,7 +356,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        >.triangle {
+        > .triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -335,7 +364,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            >.triangle-right {
+            > .triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -346,7 +375,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            >.triangle-down {
+            > .triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -363,7 +392,7 @@ onUnmounted(() => {
         }
     }
 
-    >svg {
+    > svg {
         position: fixed;
         left: 100000px;
         top: 100000px;
@@ -394,7 +423,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >img {
+            > img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -412,7 +441,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        >img {
+        > img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;

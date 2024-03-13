@@ -23,7 +23,6 @@ const pagesvg = ref<HTMLElement>();
 const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
-const WIDE = 1.10;
 
 function pageViewRegister(mount: boolean) {
     if (mount) {

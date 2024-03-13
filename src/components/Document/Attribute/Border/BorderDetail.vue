@@ -79,7 +79,7 @@ function borderStyleSelect(selected: SelectItem) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
         const e = props.context.editor4Table(shape as TableView);
         const range = get_table_range(table);
-        e.setBorderStyle(props.index, bs, range)
+        e.setBorderStyle4Cell(props.index, bs, range)
     } else {
         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
@@ -117,7 +117,7 @@ function setThickness(e: Event) {
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(shape as TableView);
         const range = get_table_range(table);
-        e.setBorderThickness(props.index, thickness, range)
+        e.setBorderThickness4Cell(props.index, thickness, range)
     } else {
         const shapes = getShapesForStyle(selecteds);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -141,7 +141,7 @@ const augment = (e: Event) => {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
             const range = get_table_range(table);
-            e.setBorderThickness(props.index, thickness, range)
+            e.setBorderThickness4Cell(props.index, thickness, range)
 
         } else {
             const shapes = getShapesForStyle(selecteds);
@@ -168,7 +168,7 @@ const decrease = (e: Event) => {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
             const range = get_table_range(table);
-            e.setBorderThickness(props.index, thickness, range)
+            e.setBorderThickness4Cell(props.index, thickness, range)
 
         } else {
             const shapes = getShapesForStyle(selecteds);
@@ -217,7 +217,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const table = props.context.tableSelection;
                         const e = props.context.editor4Table(shape as TableView);
                         const range = get_table_range(table);
-                        e.setBorderThickness(props.index, thickness, range)
+                        e.setBorderThickness4Cell(props.index, thickness, range)
                     } else {
                         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -239,7 +239,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const table = props.context.tableSelection;
                         const e = props.context.editor4Table(shape as TableView);
                         const range = get_table_range(table);
-                        e.setBorderThickness(props.index, thickness, range)
+                        e.setBorderThickness4Cell(props.index, thickness, range)
                     } else {
                         const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);

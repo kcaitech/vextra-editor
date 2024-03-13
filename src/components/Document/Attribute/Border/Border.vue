@@ -152,9 +152,9 @@ function addBorder() {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
         if (mixed_cell.value) {
-            e.addBorder4Multi(border, range)
+            e.addBorder4Cell(border, range, true)
         } else {
-            e.addBorder(border, range)
+            e.addBorder4Cell(border, range, false)
         }
     } else {
         const shapes = getShapesForStyle(props.shapes);
@@ -186,7 +186,7 @@ function deleteBorder(idx: number) {
         const table = props.context.tableSelection;
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.deleteBorder(_idx, range)
+        e.deleteBorder4Cell(_idx, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_delete(shapes, _idx);
@@ -211,7 +211,7 @@ function toggleVisible(idx: number) {
         const table = props.context.tableSelection;
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setBorderEnable(_idx, isEnabled, range)
+        e.setBorderEnable4Cell(_idx, isEnabled, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
@@ -311,7 +311,7 @@ function setColor(idx: number, color: Color) {
             table.tableColStart,
             table.tableColEnd);
         if (tablecells.length > 0 && tablecells[0].cell) {
-            e.setBorderColor(_idx, color, range)
+            e.setBorderColor4Cell(_idx, color, range)
         }
     } else {
         const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
@@ -355,7 +355,7 @@ function getColorFromPicker(color: Color, idx: number) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setBorderColor(_idx, color, range)
+        e.setBorderColor4Cell(_idx, color, range)
     } else {
         const shapes = getShapesForStyle(props.shapes);
         const actions = get_actions_border_color(shapes, _idx, color);
@@ -522,7 +522,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillType(_idx, fillType, range)
+        e.setFillType4Cell(_idx, fillType, range)
     } else {
         const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_filltype(shapes, _idx, fillType);
