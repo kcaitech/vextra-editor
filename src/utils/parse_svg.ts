@@ -263,21 +263,23 @@ class Matrix { // 矩阵
         return new Matrix(result, true)
     }
 
-    add(matrix: Matrix) { // 矩阵相加，不修改原矩阵，返回新矩阵
+    add(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相加，将本矩阵的特定区域与matrix相加，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
-        if (m0 !== m1 || n0 !== n1) throw new Error("矩阵阶数不匹配，无法相加");
+        if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相加");
         const result: number[][] = buildArray(m0, n0)
-        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j] + matrix.data[i][j]
+        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j]; // 复制原矩阵
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result[row + i][column + j] += matrix.data[i][j];
         return new Matrix(result, true)
     }
 
-    subtract(matrix: Matrix) { // 矩阵相减，不修改原矩阵，返回新矩阵
+    subtract(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相减，将本矩阵的特定区域与matrix相减，不修改原矩阵，返回新矩阵
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
-        if (m0 !== m1 || n0 !== n1) throw new Error("矩阵阶数不匹配，无法相减");
+        if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相减");
         const result: number[][] = buildArray(m0, n0)
-        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j] - matrix.data[i][j]
+        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result[i][j] = this.data[i][j]; // 复制原矩阵
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result[row + i][column + j] -= matrix.data[i][j];
         return new Matrix(result, true)
     }
 
@@ -433,7 +435,7 @@ class Matrix { // 矩阵
 enum TransformMode { // 变换模式
     Local, // 相对坐标系变换，缩放、旋转、平移之间互不影响
     LocalTranslate, // 相对坐标系变换，平移会受到旋转、缩放的影响
-    LocalPartialTranslate, // 相对坐标系变换，支持传入一个translate，旋转、缩放仅影响这部分平移
+    LocalSpecialTranslate, // 相对坐标系变换，支持指定一个translate平移属性，进行旋转、缩放时基于该平移进行
     Global, // 全局坐标系变换，缩放、旋转、平移之间相互影响。使用全局坐标系变换时，会使整个Transform3D对象变为全局坐标系变换（isLocalTransform=false），不可逆
 }
 
@@ -547,18 +549,13 @@ class Transform3D { // 变换
         }
         this.scaleMatrix = matrix.multiply(this.scaleMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
-            this.translateMatrix = matrix.multiply(this.translateMatrix)
-        } else if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
+        } else if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
             const translate = transformParams.translate || { x: 0, y: 0, z: 0 }
-            const translateMatrix = new Matrix([
-                [1, 0, 0, translate.x],
-                [0, 1, 0, translate.y],
-                [0, 0, 1, translate.z],
-                [0, 0, 0, 1],
-            ], true)
-            const translateMatrix2 = matrix.multiply(translateMatrix)
-            const translateDiffMatrix = translateMatrix2.subtract(translateMatrix)
-            this.translateMatrix = this.translateMatrix.add(translateDiffMatrix)
+            const translateCol = Matrix.ColVec([translate.x, translate.y, translate.z, 1])
+            const translateCol2 = matrix.multiply(translateCol)
+            const translateDiffCol = translateCol2.subtract(translateCol)
+            this.translateMatrix = this.translateMatrix.add(translateDiffCol, 0, 3)
         }
         this.isMatrixLatest = false
         return this
@@ -576,18 +573,13 @@ class Transform3D { // 变换
         }
         this.rotateMatrix = matrix.multiply(this.rotateMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
-            this.translateMatrix = matrix.multiply(this.translateMatrix)
-        } else if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
+        } else if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
             const translate = transformParams.translate || { x: 0, y: 0, z: 0 }
-            const translateMatrix = new Matrix([
-                [1, 0, 0, translate.x],
-                [0, 1, 0, translate.y],
-                [0, 0, 1, translate.z],
-                [0, 0, 0, 1],
-            ], true)
-            const translateMatrix2 = matrix.multiply(translateMatrix)
-            const translateDiffMatrix = translateMatrix2.subtract(translateMatrix)
-            this.translateMatrix = this.translateMatrix.add(translateDiffMatrix)
+            const translateCol = Matrix.ColVec([translate.x, translate.y, translate.z, 1])
+            const translateCol2 = matrix.multiply(translateCol)
+            const translateDiffCol = translateCol2.subtract(translateCol)
+            this.translateMatrix = this.translateMatrix.add(translateDiffCol, 0, 3)
         }
         this.isMatrixLatest = false
         return this
@@ -662,7 +654,7 @@ class Transform3D { // 变换
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
         this.rotate(axis, angle, {
-            transformMode: TransformMode.LocalPartialTranslate,
+            transformMode: TransformMode.LocalSpecialTranslate,
             translate: {
                 x: -point.data[0][0] + this.translateMatrix.data[0][3],
                 y: -point.data[1][0] + this.translateMatrix.data[1][3],
@@ -1084,7 +1076,7 @@ function parseTransform(transformContent: string, transformParams?: TransformPar
                 else if (numArgList.length === 3) {
                     let diffX = transformParams.diffX || 0
                     let diffY = transformParams.diffY || 0
-                    if (transformParams.transformMode === TransformMode.LocalPartialTranslate) {
+                    if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
                         diffX += transformParams.translate?.x || 0
                         diffY += transformParams.translate?.y || 0
                     }
@@ -1585,7 +1577,7 @@ class BaseCreator extends BaseTreeNode {
             transform = this.attributes.transform
         }
         if (transform) this.transform.addTransform(parseTransform(transform, {
-            transformMode: TransformMode.LocalPartialTranslate,
+            transformMode: TransformMode.LocalSpecialTranslate,
             translate: {
                 x: (this.attributes.width || 0) / 2,
                 y: (this.attributes.height || 0) / 2,
@@ -2196,6 +2188,17 @@ class Parser {
         })
 
         return rootCreator.shape
+    }
+}
+
+export function parse(content: string) {
+    const parser = new DOMParser()
+    const svgDocument = parser.parseFromString(content, "image/svg+xml")
+    const svgElement = svgDocument.documentElement
+    const svgParser = new Parser(svgElement)
+    return {
+        shape: svgParser.parse(),
+        mediaResourceMgr: svgParser.context.mediaResourceMgr,
     }
 }
 
