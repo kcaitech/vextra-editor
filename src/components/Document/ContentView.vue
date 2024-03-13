@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
+import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -43,8 +43,6 @@ import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/Pa
 import { menu_locate } from '@/utils/common';
 import { ColorCtx } from '@/context/color';
 import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
-import Overview from './Content/Overview.vue';
-import MessageBoxBeta from '../common/MessageBoxBeta.vue';
 import { permIsEdit } from '@/utils/permission';
 
 interface Props {
@@ -84,7 +82,7 @@ const cursor = ref<string>('');
 const rootId = ref<string>('content');
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const resizeObserver = new ResizeObserver(frame_watcher);
-const background_color = ref<string>('rgba(239,239,239,1)');
+const background_color = ref<string>(color2string(Page.defaultBGColor));
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
@@ -96,9 +94,9 @@ let matrix_inverse: Matrix = new Matrix();
 const overview = ref<boolean>(false);
 
 function page_watcher(...args: any) {
-    if (args.includes('style')) {
-        const f = props.page.getFills()[0];
-        if (f) background_color.value = color2string(f.color);
+    if (args.includes('backgroundColor')) {
+        const f = props.page.data.backgroundColor;
+        if (f) background_color.value = color2string(f);
     }
     reflush.value++
 }
@@ -592,9 +590,9 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     initMatrix(cur);
-    const f = cur.getFills()[0];
+    const f = cur.data.backgroundColor;
     if (f) {
-        background_color.value = color2string(f.color);
+        background_color.value = color2string(f);
     }
 })
 watch(() => matrix, matrix_watcher, { deep: true });
@@ -629,6 +627,9 @@ onMounted(() => {
         initMatrix(props.page); // 初始化页面视图
     });
     props.context.workspace.setFreezeStatus(false)
+
+    const f = props.page.data.backgroundColor;
+    if (f) background_color.value = color2string(f);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
