@@ -121,27 +121,11 @@ export class PathEditor extends TransformHandler {
             return;
         }
 
-        // let m = this.shape.matrix2Root();
-        // const frame = this.shape.frame;
-        // m.preScale(frame.width, frame.height);
-        // m = new Matrix(m.inverse);
-        //
-        // const firstIndex = indexes[0];
-        // const offset = this.offsetMap.get(firstIndex)!;
-        // const xy = this.baseData.get(firstIndex)!;
-
-        // const __livingPoint = m.computeCoord2(this.livingPoint.x + offset.dx, this.livingPoint.y + offset.dy);
-
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
-        console.log('__living', __living);
-
         const dx = __living.x - __fixed.x;
         const dy = __living.y - __fixed.y;
-
-        // const dx = __livingPoint.x - xy.x;
-        // const dy = __livingPoint.y - xy.y;
 
         const units: ModifyUnits = [];
         for (let i = 0; i < indexes.length; i++) {
@@ -155,10 +139,10 @@ export class PathEditor extends TransformHandler {
                 index,
                 x: base.x + dx,
                 y: base.y + dy,
-                fromX: base.fromX! + dx,
-                fromY: base.fromY! + dy,
-                toX: base.toX! + dx,
-                toY: base.toY! + dy,
+                fromX: (base.fromX || 0) + dx,
+                fromY: (base.fromY || 0) + dy,
+                toX: (base.toX || 0) + dx,
+                toY: (base.toY || 0) + dy,
             })
         }
 

@@ -1,16 +1,15 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncPathEditor, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, PageXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
-import { add_move_and_up_for_document, gen_offset_points_map2 } from "@/utils/mouse";
+import { add_move_and_up_for_document } from "@/utils/mouse";
 import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
-import { ActionEndGenerator } from '@/utils/assist';
 import { Action } from '@/context/tool';
 import { PathEditor } from "@/transform/pathEdit";
 
@@ -26,21 +25,15 @@ interface Dot {
 
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const sub_matrix = new Matrix();
 const data: { dots: Dot[], segments: Segment[] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
-// const current_curve_point_index = ref<number>(-1);
 const dragActiveDis = 3;
 const new_high_light = ref<number>(-1);
 const add_rect = ref<number>(-1);
 let shape: ShapeView;
 let startPosition: ClientXY = { x: 0, y: 0 };
-let startPosition2: PageXY = { x: 0, y: 0 };
 let isDragging = false;
-let pathEditor: AsyncPathEditor | undefined;
 let move: any;
-let offset_map: XY[] | undefined = [];
-let actionEndGenerator: ActionEndGenerator | undefined = undefined;
 let bridged = false;
 
 let pathModifier: PathEditor | undefined;
@@ -162,57 +155,6 @@ function bridging_completed() {
     bridged = false;
 }
 
-// function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
-//     if (!offset_map) {
-//         console.log("!offset_map");
-//         return;
-//     }
-//
-//     if (!actionEndGenerator) {
-//         return;
-//     }
-//
-//
-//     const select_point = props.context.path.syntheticPoints;
-//
-//     if (!select_point?.length) {
-//         console.log('!select_point?.length');
-//         return;
-//     }
-//
-//     const f = props.context.assist
-//         .edit_mode_match
-//         .bind(props.context.assist);
-//
-//     const point = actionEndGenerator.__gen(_point, select_point, f, event.shiftKey); // 开启辅助
-//     // const point = _point;
-//     if (select_point.length === 1) {
-//         pathEditor.execute(current_curve_point_index.value, point);
-//         return;
-//     }
-//
-//     const points = (shape as PathShapeView).points;
-//     if (!points?.length) {
-//         console.log('!points?.length');
-//         return;
-//     }
-//
-//     const first_point = points[select_point[0]];
-//     if (!first_point) {
-//         console.log('!first_point');
-//         return;
-//     }
-//
-//     const first_offset = offset_map[0];
-//     const compute_root_point = { x: point.x + first_offset.x, y: point.y + first_offset.y };
-//     const m = shape.matrix2Root();
-//     m.preScale(shape.frame.width, shape.frame.height);
-//     const m2 = new Matrix(m.inverse);
-//     const compute_unit_point = m2.computeCoord3(compute_root_point);
-//
-//     pathEditor.execute2(select_point, compute_unit_point.x - first_point.x, compute_unit_point.y - first_point.y);
-// }
-
 /**
  * @description 新增一个编辑点
  */
@@ -243,7 +185,6 @@ function n_point_mousemove(event: MouseEvent) {
     if (isDragging) {
         pathModifier?.execute(event);
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-        pathModifier?.createApiCaller();
         isDragging = true;
     }
 }
