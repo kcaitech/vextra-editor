@@ -1723,6 +1723,77 @@ class BaseCreator extends BaseTreeNode {
             if (this.attributes.stroke) this.attributes.stroke.width = this.attributes.strokeWidth;
         }
 
+        // 解析阴影（通过filter）
+        const parseShadow = (content: string): MyShadow | undefined => {
+            if (!content.startsWith("url(#")) return;
+            const urlId = content.slice(5, -1)
+            const el = svgRoot.querySelector(`#${urlId}`)
+            if (!el) return;
+            const creator = (el as any).creator as BaseCreator
+            creator.parseAttributes()
+            for (const child of creator.children) child.parseAttributes();
+
+            const x = creator.localAttributes["x"] || ""
+            const y = creator.localAttributes["y"] || ""
+            const width = creator.localAttributes["width"] || ""
+            const height = creator.localAttributes["height"] || ""
+            const shadowType = (x + y + width + height).includes("%") ? "inner" : "outer"
+
+            let color
+            for (const child of creator.children) {
+                if (child.htmlElement?.tagName === "feColorMatrix" && !("in" in child.localAttributes) && child.localAttributes["values"]) {
+                    const values = child.localAttributes["values"].split(/,|\s+/).filter(arg => arg && arg.trim())
+                    if (values.length !== 20) continue;
+                    color = {
+                        r: (parseFloat(values[4]) || 0) * 255,
+                        g: (parseFloat(values[9]) || 0) * 255,
+                        b: (parseFloat(values[14]) || 0) * 255,
+                        a: (parseFloat(values[18]) || 1),
+                    }
+                    break
+                }
+                if (child.htmlElement?.tagName === "feFlood" && ("flood-color" in child.localAttributes)) {
+                    color = parseColor(child.localAttributes["flood-color"])
+                    break
+                }
+            }
+            if (!color) return;
+
+            let offsetX = 0
+            let offsetY = 0
+            let blur = 0
+            let spread = 0
+            for (const child of creator.children) {
+                if (child.htmlElement?.tagName === "feOffset") {
+                    offsetX = parseFloat(child.localAttributes["dx"] || "0")
+                    offsetY = parseFloat(child.localAttributes["dy"] || "0")
+                }
+                if (child.htmlElement?.tagName === "feGaussianBlur") {
+                    blur = parseFloat(child.localAttributes["stdDeviation"] || "0") * 2
+                }
+                if (child.htmlElement?.tagName === "feMorphology") {
+                    spread = parseFloat(child.localAttributes["radius"] || "0")
+                }
+            }
+
+            const w = this.attributes.width || 1
+            const scale = this.transform.decompose3DScale()
+            if (scale.x !== 1 || scale.y !== 1) {
+                // 按现有算法逆推，详见kcdesign-data/src/render/shadow.ts:shadowOri[ShadowPosition.Outer]
+                spread = 10000 * (scale.x - 1) * w / (19900 - w)
+                offsetX *= scale.x
+            }
+
+            return {
+                type: shadowType,
+                offsetX: offsetX,
+                offsetY: offsetY,
+                blur: blur,
+                spread: spread,
+                color: color,
+            }
+        }
+
         // 圆形
         const cx = this.localAttributes["cx"]
         if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
@@ -1796,6 +1867,7 @@ class BaseCreator extends BaseTreeNode {
                 to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
 
                 colorType = GradientType.Radial
+                // 按现有算法逆推，详见kcdesign-data/src/render/line_gradient.ts:render()->scaleY
                 elipseLength = fillColor.radialGradient!.scales[1] / fillColor.radialGradient!.scales[0] * height / width
             }
 
