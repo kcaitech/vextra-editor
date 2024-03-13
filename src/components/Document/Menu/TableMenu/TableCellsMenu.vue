@@ -47,7 +47,7 @@ const getColorFromPicker = (c: Color) => {
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableView)
         const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, c);
-        editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
+        editor.addFill4Cell(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }, true);
     }
     nextTick(() => {
         getCellsFormat();
@@ -264,7 +264,7 @@ onUnmounted(() => {
                 <ColorPicker :context="props.context" :color="(color as Color)" :cell="true" :top="30"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice">
+            <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice && !(props.context.selection.tableshape?.isVirtualShape)">
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M7.35355 11.3536C7.54882 11.1583 7.54882 10.8417 7.35355 10.6464L4.17157 7.46447C3.97631 7.2692 3.65973 7.2692 3.46447 7.46447C3.2692 7.65973 3.2692 7.97631 3.46447 8.17157L6.29289 11L3.46447 13.8284C3.2692 14.0237 3.2692 14.3403 3.46447 14.5355C3.65973 14.7308 3.97631 14.7308 4.17157 14.5355L7.35355 11.3536ZM0 11.5H7V10.5H0V11.5Z"
