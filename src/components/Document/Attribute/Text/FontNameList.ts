@@ -23,15 +23,15 @@ export function FontAvailable(fontName: string) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const fontWeight = [
+        { key: "Regular", weight: 400, value: 0 },
+        { key: "Bold", weight: 700, value: 0 },
+        { key: "Black", weight: 900, value: 0 },
         { key: "Thin", weight: 100, value: 0 },
         { key: "ExtraLight", weight: 200, value: 0 },
         { key: "Light", weight: 300, value: 0 },
-        { key: "Regular", weight: 400, value: 0 },
         { key: "Medium", weight: 500, value: 0 },
         { key: "SemiBold", weight: 600, value: 0 },
-        { key: "Bold", weight: 700, value: 0 },
         { key: "ExtraBold", weight: 800, value: 0 },
-        { key: "Black", weight: 900, value: 0 }
     ]
     if (!context) return;
     const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
@@ -105,15 +105,15 @@ export function fontWeightList(fontName: string, italic: boolean) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const fontWeight = [
+        { key: "Regular", weight: 400, value: 0, italic: false },
+        { key: "Bold", weight: 700, value: 0, italic: false },
+        { key: "Black", weight: 900, value: 0, italic: false },
         { key: "Thin", weight: 100, value: 0, italic: false },
         { key: "ExtraLight", weight: 200, value: 0, italic: false },
         { key: "Light", weight: 300, value: 0, italic: false },
-        { key: "Regular", weight: 400, value: 0, italic: false },
         { key: "Medium", weight: 500, value: 0, italic: false },
         { key: "SemiBold", weight: 600, value: 0, italic: false },
-        { key: "Bold", weight: 700, value: 0, italic: false },
         { key: "ExtraBold", weight: 800, value: 0, italic: false },
-        { key: "Black", weight: 900, value: 0, italic: false },
     ]
     const fontItalic = [
         { key: "Italic", weight: 400, value: 0, italic: true },
@@ -152,6 +152,15 @@ export function fontWeightList(fontName: string, italic: boolean) {
             return dict;
         }, {} as any);
         result = Object.values(r);
+        result.sort((a: any, b: any) => {
+            if (a.weight > b.weight) {
+                return 1;
+            } else if (a.weight < b.weight) {
+                return -1;
+            } else {
+                return 0;
+            }
+        })
     }
     if (italic) {
         context.font = 'Italic 72px ' + fontName + ', monospace';

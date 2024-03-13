@@ -304,7 +304,7 @@ onMounted(() => {
     background-color: #fff;
     border: 1px solid #F0F0F0;
     box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
-    z-index: 100;
+    z-index: 1001;
 
     .search {
         width: auto;

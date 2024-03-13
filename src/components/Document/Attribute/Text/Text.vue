@@ -57,6 +57,7 @@ const sizeHoverIndex = ref(-1);
 const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
 const shapes = ref<TextShapeView[]>(props.textShapes);
+const disableWeight = ref(false);
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16)
@@ -228,11 +229,11 @@ const setFont = (font: string) => {
             editor.setTextFontName(0, Infinity, font)
         } else {
             editor.setTextFontName(textIndex, selectLength, font)
-            textFormat()
         }
     } else {
         editor.setTextFontNameMulti(props.textShapes, font);
     }
+    textFormat()
 }
 
 function getTextSelection() {
@@ -278,13 +279,14 @@ const handleSize = () => {
     const value = textSize.value!.value;
     sizeValue.value = value;
 }
-
+const reflush = ref(0);
 // 获取当前文字格式
 const _textFormat = () => {
     const shapes = props.context.selection.selectedShapes;
     const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
     mixed.value = false;
+    disableWeight.value = false;
     weightMixed.value = false;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -315,7 +317,10 @@ const _textFormat = () => {
         if (format.boldIsMulti) weightMixed.value = true;
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
-        if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
+        if (format.fontNameIsMulti) {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`
+        }
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
         if (format.underlineIsMulti) isUnderline.value = false
         if (format.strikethroughIsMulti) isDeleteline.value = false
@@ -384,7 +389,10 @@ const _textFormat = () => {
         textColor.value = format.color;
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
-        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
+        if (format.fontName === 'unlikeness') {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`;
+        }
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
@@ -402,6 +410,7 @@ const _textFormat = () => {
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
     }
+    reflush.value++;
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
 
@@ -922,6 +931,7 @@ onUnmounted(() => {
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
                     :fontWeight="fontWeight" @setFontWeight="setFontWeight">
                 </SelectFont>
+                <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
                         <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
@@ -945,17 +955,8 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="text-middle-size">
                     <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
-                        :fontName="fontName" @setFontWeight="setFontWeight"></FontWeightSelected>
-                    <!-- <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
-                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
-                            <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
-                        </Tooltip>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
-                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
-                            <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
-                        </Tooltip>
-                    </div> -->
+                        :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+                    </FontWeightSelected>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
                         <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
                             <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
@@ -968,7 +969,6 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
@@ -1525,5 +1525,14 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
+}
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: transparent;
 }
 </style>

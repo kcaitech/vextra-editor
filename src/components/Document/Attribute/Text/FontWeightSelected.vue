@@ -1,28 +1,34 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch, onUpdated } from "vue";
 import { fontWeightList, fontweightNameConvert } from "./FontNameList";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     context: Context;
     selected: string;
     weightMixed: boolean;
     fontName: string;
+    disable: boolean;
+    reflush: number
 }>();
 const emit = defineEmits<{
     (e: "setFontWeight", weight: number, italic: boolean): void;
 }>();
-
+const { t } = useI18n();
 let fontWeight = ["Regular"];
 const hovered = ref(-1);
 const isSelectList = ref(false);
-const transTop = computed(() => {
+const top = ref(0);
+const transTop = () => {
     const index = fontWeight.indexOf(props.selected);
-    return index;
-})
+    top.value = index;
+}
 const showWeightList = () => {
+    if (props.disable) return;
     getFontWeightList(props.fontName);
+    transTop();
     isSelectList.value = true;
     document.addEventListener("mousedown", onShowWeightBlur)
 }
@@ -37,12 +43,16 @@ const onShowWeightBlur = (e: MouseEvent) => {
 }
 const selectItem = (item: string) => {
     const { weight, italic } = fontweightNameConvert(item);
+    if(item === props.selected) return;
     emit('setFontWeight', weight, italic);
     isSelectList.value = false;
 }
 
 function getFontWeightList(fontName: string) {
     const results = fontWeightList(fontName, true);
+    if(!results.length) {
+        return fontWeight = ["Regular"];
+    }
     fontWeight = results.map((item: any) => {
         return item.key;
     })
@@ -91,13 +101,15 @@ onUnmounted(() => {
 
 <template>
     <div class="font_weight jointly-text">
-        <div class="font_weight_preview" style="padding-right: 0;" @click="showWeightList">
-            <span>{{ selected }}</span>
+        <div :class="{ font_weight_preview: !disable, disabled: disable }" :style="{ opacity: disable ? 0.5 : 1 }"
+            style="padding-right: 0;" @click="showWeightList">
+            <span v-if="weightMixed">{{ t('attr.more_value') }}</span>
+            <span v-else>{{ selected }}</span>
             <div class="down">
                 <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
             </div>
         </div>
-        <div class="font_weight_select" v-if="isSelectList" :style="{ top: -transTop * 32 - 8 + 'px' }">
+        <div class="font_weight_select" v-if="isSelectList" :style="{ top: -top * 32 - 8 + 'px' }">
             <div class="font_weight_item" v-for="(item, index) in fontWeight" :key="index"
                 @mouseenter="() => hovered = index" :class="{ active: hovered === index }" @click="selectItem(item)">
                 <div class="icon" v-if="selected === item">
@@ -108,6 +120,7 @@ onUnmounted(() => {
             </div>
         </div>
     </div>
+    <div class="overlay" @click.stop v-if="isSelectList" @mousedown.stop="isSelectList = false"></div>
 </template>
 
 <style scoped lang="scss">
@@ -138,6 +151,17 @@ onUnmounted(() => {
         }
     }
 
+    .disabled {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        height: 32px;
+        box-sizing: border-box;
+        border-radius: 6px;
+    }
+
     .font_weight_select {
         position: absolute;
         width: 100%;
@@ -149,7 +173,7 @@ onUnmounted(() => {
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border: 1px solid #EBEBEB;
         color: #262626;
-        z-index: 99;
+        z-index: 1001;
 
         .font_weight_item {
             display: flex;
@@ -207,5 +231,15 @@ onUnmounted(() => {
 .active {
     background-color: #1878F5;
     color: #fff;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: transparent;
 }
 </style>
