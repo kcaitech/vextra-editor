@@ -54,6 +54,7 @@ const { t } = useI18n();
 
     img {
         width: 12px;
+        margin-right: 1px;
     }
 
     .gongan {

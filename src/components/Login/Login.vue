@@ -380,7 +380,7 @@ onMounted(() => {
             // max-height: 480px;
             max-width: 400px;
             background: white;
-            border-radius: 10px;
+            border-radius: 32px;
             border: 1px solid #F0F0F0;
             box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
             box-sizing: border-box;
@@ -394,7 +394,7 @@ onMounted(() => {
                 flex-wrap: nowrap;
                 align-items: center;
                 height: 100%;
-                justify-content: space-around;
+                justify-content: space-evenly;
 
                 #login_container {
                     width: 200px;
@@ -409,6 +409,7 @@ onMounted(() => {
                     // margin-top: 74px;
                     // margin-bottom: 46px;
                     color: rgba(67, 67, 67, 1);
+                    opacity: 0.8;
                 }
 
                 .tips {
@@ -422,7 +423,8 @@ onMounted(() => {
                     span:nth-child(n + 2) {
                         cursor: pointer;
                         color: rgb(0, 0, 238);
-                        font-weight: 600;
+                        font-weight: 500;
+                        opacity: 0.5;
                     }
                 }
             }
