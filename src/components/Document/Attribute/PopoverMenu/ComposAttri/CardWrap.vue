@@ -3,6 +3,7 @@ import LevelName from "@/components/Document/Attribute/PopoverMenu/ComposAttri/L
 import StaticAbbrCard from "@/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue";
 import {ShapeView} from "@kcdesign/data";
 import {onMounted, onUnmounted, ref} from "vue";
+import ShapeCard from "@/components/common/ShapeCard.vue";
 
 interface Props {
     data: ShapeView
@@ -39,7 +40,7 @@ onUnmounted(() => {
     <div class="wrapper" ref="wrapper">
         <div class="component" v-if="real">
             <div class="thumbnail">
-                <StaticAbbrCard :data="props.data"></StaticAbbrCard>
+                <ShapeCard :shape="props.data" :size="28"></ShapeCard>
             </div>
             <LevelName :data="props.data" class="name"></LevelName>
         </div>
@@ -57,16 +58,7 @@ onUnmounted(() => {
         padding: 2px 0 2px 2px;
         width: 100%;
         height: 32px;
-        // border-radius: 4px;
         box-sizing: border-box;
-
-        // &:hover {
-        //     background-color: #e5dbff;
-
-        //     .thumbnail {
-        //         opacity: .5;
-        //     }
-        // }
 
         .svg {
             width: 10px;

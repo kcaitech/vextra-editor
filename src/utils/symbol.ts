@@ -404,7 +404,7 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     const editor = context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
+    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
 }
