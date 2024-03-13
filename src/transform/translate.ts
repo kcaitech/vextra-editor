@@ -96,7 +96,6 @@ export class TranslateHandler extends TransformHandler {
             assist.set_trans_target(this.shapes);
 
             const selection = this.context.selection;
-            selection.resetSelectShapes();
 
             selection.setLabelFixedGroup(this.shapesBackup);
             selection.setLabelLivingGroup(this.shapes);
@@ -104,6 +103,8 @@ export class TranslateHandler extends TransformHandler {
 
             this.getFrames();
         }
+
+        this.context.selection.setShapesSet(this.shapes);
 
         const t = this.asyncApiCaller as Transporter;
         t.setEnv(record_origin_env(this.shapes));
