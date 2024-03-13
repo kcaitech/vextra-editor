@@ -9,14 +9,33 @@ export const fontNameListZh = [
     '楷体-简', '翩翩体-简', '苹方-简', '行楷-简', '隶变-简', '雅痞-简', '魏碑-简', '黑体', '等线 Light',
     'Apple LiGothic', 'Apple LiSung', 'BiauKai', 'Hiragino Sans CNS', 'LiHei Pro', 'LiSong Pro',
     '兰亭黑-繁', '凌慧体-繁', '圆体-繁', '娃娃体-繁', '宋体-繁', '手札体-繁', '报隶-繁',
-    '楷体-繁', '翩翩体-繁', '苹方-港', '苹方-繁', '行楷-繁', '隶变-繁', '雅痞-繁', '魏碑-繁', '黑体-繁'
+    '楷体-繁', '翩翩体-繁', '苹方-港', '苹方-繁', '行楷-繁', '隶变-繁', '雅痞-繁', '魏碑-繁', '黑体-繁',
+    "思源等宽", ""
 ]
 
 export const fontNameListEn = [
     'Arial', 'Arial Black', 'Helvetica', 'Helvetica Neue', 'Garamond',
     'Adobe Garamond Pro', 'Adobe Caslon Pro', 'Baskerville', 'Times',
     'Times New Roman', 'Calibri', 'Calibri Light', 'Comic Sans MS',
-    'Georgia', 'MS PMincho', 'Tahoma', 'Courier', 'Courier New', 'Verdana'
+    'Georgia', 'MS PMincho', 'Tahoma', 'Courier', 'Courier New', 'Verdana',
+    "Academy Engraved LET Fonts", "Al Nile", "Al Tarikh", "AlBayan", "Andale Mono", "AppleMyungjo", "AppleSDGothicNeo", "AquaKana", "Arial Narrow", "Arial Rounded",
+    "Arial Unicode", "ArialHB", "Athelas", "Avenir Next Conden,sed", "Avenir Next", "Avenir", "Ayuthaya", "Baghdad", "Bangla MN", "Bangla Sangam MN", "Beirut", "BigCaslon", "Bodoni 72 OS", "Bodoni 72 Smallcaps Book", "Bodoni 72", "Bodoni Ornaments", "Bradley Hand", "Brush Script", "Chalkboard", "ChalkboardSE", "Chalkduster",
+    "Charter", "Cochin", "Copperplate", "Corsiva", 'Damascus', 'DecoTypeNaskh', 'Devanagari Sangam MN', 'DevanagariMT', 'Didot', 'DIN Alternate', 'DIN Condensed', 'Diwan Kufi', 'Diwan Thuluth', 'EuphemiaCAS', 'Farah', 'Farisi', 'Futura', 'FZJiaGW-2', 'Galvji', 'GeezaPro', 'Geneva', 'GillSans', 'Gujarati Sangam MN', 'GujaratiMT', 'Gurmukhi MN', 'Gurmukhi Sangam MN', 'Gurmukhi', 'HelveLTMM', 'HelveticaNeue', 'Herculanum',
+    'Hiragino Sans GB', 'Hoefler Text Ornaments', 'Hoefler Text', 'Impact', 'InaiMathi-MN', 'Iowan Old Style', 'ITFDevanagari', 'Kailasa', 'Kannada MN', 'Kannada Sangam MN', 'Kefa', 'Keyboard', 'Khmer MN', 'Khmer Sangam MN', 'Kohinoor', 'KohinoorBangla', 'KohinoorGujarati', 'KohinoorTelugu', 'Kokonor', 'Krungthep', 'KufiStandardGK', 'Lao MN', 'Lao Sangam MN', 'LastResort', 'LucidaGrande', 'Luminari', 'Malayalam MN', 'Malayalam Sangam MN', 'Marion', 'MarkerFelt', 'Menlo', 'Microsoft Sans Serif', 'Mishafi Gold', 'Mishafi', 'Monaco', 'Mshtakan', 'MuktaMahee',
+    'Muna', 'Myanmar MN', 'Myanmar Sangam MN', 'Nadeem', 'NewPeninimMT', 'NewYork', 'NewYorkItalic', 'NISC18030', 'Noteworthy', 'NotoNastaliq', 'NotoSansAdlam-Regular', 'NotoSansArmenian', 'NotoSansAvestan-Regular', 'NotoSansBamum-Regular', 'NotoSansBassaVah-Regular', 'NotoSansBatak-Regular', 'NotoSansBhaiksuki-Regular', 'NotoSansBrahmi-Regular', 'NotoSansBuginese-Regular', 'NotoSansBuhid-Regular', 'NotoSansCarian-Regular', 'NotoSansCaucasianAlbanian-Regular',
+    'NotoSansChakma-Regular', 'NotoSansCham-Regular', 'NotoSansCoptic-Regular', 'NotoSansCuneiform-Regular', 'NotoSansCypriot-Regular', 'NotoSansDuployan-Regular', 'NotoSansEgyptianHieroglyphs-Regular', 'NotoSansElbasan-Regular', 'NotoSansGlagolitic-Regular', 'NotoSansGothic-Regular', 'NotoSansGunjalaGondi-Regular', 'NotoSansHanifiRohingya-Regular', 'NotoSansHanunoo-Regular', 'NotoSansHatran-Regular',
+    'NotoSansImperialAramaic-Regular', 'NotoSansInscriptionalPahlavi-Regular', 'NotoSansInscriptionalParthian-Regular', 'NotoSansJavanese-Regular', 'NotoSansKaithi-Regular', 'NotoSansKannada', 'NotoSansKayahLi-Regular', 'NotoSansKharoshthi-Regular', 'NotoSansKhojki-Regular', 'NotoSansKhudawadi-Regular',
+    'NotoSansLepcha-Regular', 'NotoSansLimbu-Regular', 'NotoSansLinearA-Regular', 'NotoSansLinearB-Regular', 'NotoSansLisu-Regular', 'NotoSansLycian-Regular', 'NotoSansLydian-Regular', 'NotoSansMahajani-Regular', 'NotoSansMandaic-Regular', 'NotoSansManichaean-Regular', 'NotoSansMarchen-Regular', 'NotoSansMasaramGondi-Regular', 'NotoSansMeeteiMayek-Regular', 'NotoSansMendeKikakui-Regular', 'NotoSansMeroitic-Regular',
+    'NotoSansMiao-Regular', 'NotoSansModi-Regular', 'NotoSansMongolian-Regular', 'NotoSansMro-Regular', 'NotoSansMultani-Regular', 'NotoSansMyanmar', 'NotoSansNabataean-Regular', 'NotoSansNewa-Regular', 'NotoSansNewTaiLue-Regular', 'NotoSansNKo-Regular', 'NotoSansOlChiki-Regular', 'NotoSansOldHungarian-Regular', 'NotoSansOldItalic-Regular', 'NotoSansOldNorthArabian-Regular',
+    'NotoSansOldPermic-Regular', 'NotoSansOldPersian-Regular', 'NotoSansOldSouthArabian-Regular', 'NotoSansOldTurkic-Regular', 'NotoSansOriya', 'NotoSansOsage-Regular', 'NotoSansOsmanya-Regular', 'NotoSansPahawhHmong-Regular', 'NotoSansPalmyrene-Regular', 'NotoSansPauCinHau-Regular', 'NotoSansPhagsPa-Regular', 'NotoSansPhoenician-Regular', 'NotoSansPsalterPahlavi-Regular', 'NotoSansRejang-Regular', 'NotoSansSamaritan-Regular',
+    'NotoSansSaurashtra-Regular', 'NotoSansSharada-Regular', 'NotoSansSiddham-Regular', 'NotoSansSoraSompeng-Regular', 'NotoSansSundanese-Regular', 'NotoSansSylotiNagri-Regular', 'NotoSansSyriac-Regular', 'NotoSansTagalog-Regular', 'NotoSansTagbanwa-Regular', 'NotoSansTaiLe-Regular', 'NotoSansTaiTham-Regular', 'NotoSansTaiViet-Regular', 'NotoSansTakri-Regular', 'NotoSansThaana-Regular',
+    'NotoSansTifinagh-Regular', 'NotoSansTirhuta-Regular', 'NotoSansUgaritic-Regular', 'NotoSansVai-Regular', 'NotoSansWancho-Regular', 'NotoSansWarangCiti-Regular', 'NotoSansYi-Regular', 'NotoSerifAhom-Regular', 'NotoSerifBalinese-Regular', 'NotoSerifMyanmar', 'NotoSerifYezidi-Regular', 'Optima', 'Oriya MN', 'Oriya Sangam MN', 'Palatino', 'Papyrus', 'PartyLET-plain', 'Phosphate', 'PingFang', 'PlantagenetCherokee', 'PTMono', 'PTSans', 'PTSerif', 'PTSerifCaption', 'Raanana', 'Rockwell', 'Sana', 'Sathu',
+    'Savoye LET', 'Seravek', 'SFArabic', 'SFCompact', 'SFCompactItalic', 'SFCompactRounded', 'SFNS', 'SFNSItalic', 'SFNSMono', 'SFNSMonoItalic', 'SFNSRounded', 'Shree714', 'SignPainter', 'Silom', 'Sinhala MN', 'Sinhala Sangam MN', 'Skia', 'SnellRoundhand', 'Songti', 'SourceHanMono-Light', 'SourceHanMono-LightIt', 'SourceHanMono-Medium', 'SourceHanMono-MediumIt', 'SourceHanMono-Normal', 'SourceHanMono-NormalIt',
+    'SourceHanMono', 'SourceHanMonoHC-Light', 'SourceHanMonoHC-LightIt', 'SourceHanMonoHC-Medium', 'SourceHanMonoHC-MediumIt', 'SourceHanMonoHC-Normal', 'SourceHanMonoHC-NormalIt', 'SourceHanMonoK-Light', 'SourceHanMonoK-LightIt', 'SourceHanMonoK-Medium', 'SourceHanMonoK-MediumIt', 'SourceHanMonoK-Normal', 'SourceHanMonoK-NormalIt', 'SourceHanMonoSC-Light', 'SourceHanMonoSC-LightIt', 'SourceHanMonoSC-Medium',
+    'SourceHanMonoSC-MediumIt', 'SourceHanMonoSC-Normal', 'SourceHanMonoSC-NormalIt', 'SourceHanMonoTC-Light', 'SourceHanMonoTC-LightIt', 'SourceHanMonoTC-Medium', 'SourceHanMonoTC-MediumIt', 'SourceHanMonoTC-Normal', 'SourceHanMonoTC-NormalIt', 'SourceHanSansCN-Bold',
+    'SourceHanSansCN-ExtraLight', 'SourceHanSansCN-Heavy', 'SourceHanSansCN-Light', 'SourceHanSansCN-Medium', 'SourceHanSansCN-Normal', 'SourceHanSansCN-Regular', 'STHeiti', 'STIXGeneral', 'STIXGeneralBol', 'STIXGeneralBolIta', 'STIXGeneralItalic', 'STIXIntDBol', 'STIXIntDReg', 'STIXIntSmBol', 'STIXIntSmReg', 'STIXIntUpBol', 'STIXIntUpDBol', 'STIXIntUpDReg', 'STIXIntUpReg', 'STIXIntUpSmBol', 'STIXIntUpSmReg', 'STIXNonUni', 'STIXNonUniBol', 'STIXNonUniBolIta', 'STIXNonUniIta',
+    'STIXSizFiveSymReg', 'STIXSizFourSymBol', 'STIXSizFourSymReg', 'STIXSizOneSymBol', 'STIXSizOneSymReg', 'STIXSizThreeSymBol', 'STIXSizThreeSymReg', 'STIXSizTwoSymBol', 'STIXSizTwoSymReg', 'STIXVar', 'STIXVarBol', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'TimesLTMM', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
+    'Source Han Mono El', 'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
 ]
 
 export function FontAvailable(fontName: string) {
@@ -26,15 +45,15 @@ export function FontAvailable(fontName: string) {
         { key: "Regular", weight: 400, value: 0 },
         { key: "Bold", weight: 700, value: 0 },
         { key: "Black", weight: 900, value: 0 },
-        { key: "Thin", weight: 100, value: 0 },
-        { key: "ExtraLight", weight: 200, value: 0 },
-        { key: "Light", weight: 300, value: 0 },
         { key: "Medium", weight: 500, value: 0 },
         { key: "SemiBold", weight: 600, value: 0 },
         { key: "ExtraBold", weight: 800, value: 0 },
+        { key: "Light", weight: 300, value: 0 },
+        { key: "ExtraLight", weight: 200, value: 0 },
+        { key: "Thin", weight: 100, value: 0 },
     ]
     if (!context) return;
-    const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
+    const text = 'abcdefghijklmnopqrSTUVWXYZ0123456789!@#$%^&*(中文字体';
     context.font = 'normal 72px monospace';
     const baselineSize = context.measureText(text).width;
 
@@ -107,10 +126,10 @@ export function fontWeightList(fontName: string, italic: boolean) {
     const fontWeight = [
         { key: "Regular", weight: 400, value: 0, italic: false },
         { key: "Bold", weight: 700, value: 0, italic: false },
+        { key: "Light", weight: 300, value: 0, italic: false },
+        { key: "ExtraLight", weight: 200, value: 0, italic: false },
         { key: "Black", weight: 900, value: 0, italic: false },
         { key: "Thin", weight: 100, value: 0, italic: false },
-        { key: "ExtraLight", weight: 200, value: 0, italic: false },
-        { key: "Light", weight: 300, value: 0, italic: false },
         { key: "Medium", weight: 500, value: 0, italic: false },
         { key: "SemiBold", weight: 600, value: 0, italic: false },
         { key: "ExtraBold", weight: 800, value: 0, italic: false },
@@ -121,7 +140,7 @@ export function fontWeightList(fontName: string, italic: boolean) {
         { key: "Black Italic", weight: 900, value: 0, italic: true },
     ]
     if (!context) return;
-    const text = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(';
+    const text = 'abcdefghijklmnopqrSTUVWXYZ0123456789!@#$%^&*(中文字体';
     context.font = 'normal 72px monospace';
     const baselineSize = context.measureText(text).width;
 

@@ -928,7 +928,7 @@ onUnmounted(() => {
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
                     :fontWeight="fontWeight" @setFontWeight="setFontWeight">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
