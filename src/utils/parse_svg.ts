@@ -1300,7 +1300,7 @@ function parseColor(content: string): MyColor | undefined {
     if (content in namedColorMap) content = namedColorMap[content];
     let color
     if (content.startsWith("rgba")) {
-        const rgba = content.slice(5, -1).split(",").map(item => parseFloat(item))
+        const rgba = content.slice(5, -1).split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
         color = {
             r: rgba[0],
             g: rgba[1],
@@ -1308,7 +1308,7 @@ function parseColor(content: string): MyColor | undefined {
             a: rgba[3],
         }
     } else if (content.startsWith("rgb")) {
-        const rgb = content.slice(4, -1).split(",").map(item => parseFloat(item))
+        const rgb = content.slice(4, -1).split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
         color = {
             r: rgb[0],
             g: rgb[1],
@@ -1364,7 +1364,16 @@ type FillColor = {
     radialGradient?: RadialGradient,
 }
 
-type Attributes = { // 从元素的attributes中解析出来的属性
+type MyShadow = { // 阴影
+    type: "inner" | "outer", // 类型：内阴影、外阴影
+    offsetX: number,
+    offsetY: number,
+    blur: number, // 模糊
+    spread: number, // 扩散
+    color: MyColor,
+}
+
+type Attributes = { // 保存元素的一些属性
     style?: string,
     styleAttributes?: Record<string, string>,
 
@@ -1384,6 +1393,7 @@ type Attributes = { // 从元素的attributes中解析出来的属性
         position: "inside" | "center" | "outside", // 位置：内部、中心、外部
     },
     strokeWidth?: number,
+    shadow?: Shadow,
 
     // 椭圆
     cx?: number,
@@ -1541,6 +1551,7 @@ class BaseCreator extends BaseTreeNode {
         const attributes = this.htmlElement.node.attributes
         for (const attribute of attributes) this.localAttributes[attribute.name] = attribute.value;
 
+        // css样式属性
         const style = this.localAttributes["style"]
         if (style) {
             this.attributes.style = style
@@ -1550,16 +1561,18 @@ class BaseCreator extends BaseTreeNode {
             }
         }
 
+        // x、y
         const x = this.localAttributes["x"]
         if (x) this.attributes.x = parseFloat(x);
         const y = this.localAttributes["y"]
         if (y) this.attributes.y = parseFloat(y);
-
+        // width、height
         const width = this.localAttributes["width"]
         if (width) this.attributes.width = parseFloat(width);
         const height = this.localAttributes["height"]
         if (height) this.attributes.height = parseFloat(height);
 
+        // path
         const d = this.localAttributes["d"]
         if (d) {
             this.attributes.d = d
@@ -1570,6 +1583,7 @@ class BaseCreator extends BaseTreeNode {
             this.attributes.height = height
         }
 
+        // transform
         let transform
         if (this.attributes.styleTransform) transform = this.attributes.styleTransform;
         if (!transform) {
@@ -1587,9 +1601,11 @@ class BaseCreator extends BaseTreeNode {
             diffY: parseFloat(y) || 0,
         }));
 
+        // opacity
         const opacity = this.localAttributes["opacity"]
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
+        // 解析fill、stroke
         const parseFillColor = (content: string, fillOpacity: number): FillColor | undefined => {
             let colorType: "color" | "linearGradient" | "radialGradient" | undefined
             let color: MyColor | undefined
@@ -1669,6 +1685,7 @@ class BaseCreator extends BaseTreeNode {
             }
         }
 
+        // fill
         let fill
         if (this.attributes.styleAttributes && "fill" in this.attributes.styleAttributes) {
             fill = this.attributes.styleAttributes.fill
@@ -1685,8 +1702,9 @@ class BaseCreator extends BaseTreeNode {
             };
         }
 
+        // stroke
         const stroke = this.localAttributes["stroke"]
-        const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
+        const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item)) || [0, 0]
         if (stroke) {
             const fillColor = parseFillColor(stroke, 1)
             if (fillColor) this.attributes.stroke = {
@@ -1698,13 +1716,14 @@ class BaseCreator extends BaseTreeNode {
                 position: "center",
             };
         }
-
+        // stroke-width
         const strokeWidth = this.localAttributes["stroke-width"]
         if (strokeWidth) {
             this.attributes.strokeWidth = parseFloat(strokeWidth)
             if (this.attributes.stroke) this.attributes.stroke.width = this.attributes.strokeWidth;
         }
 
+        // 圆形
         const cx = this.localAttributes["cx"]
         if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
         const cy = this.localAttributes["cy"]
@@ -1716,15 +1735,19 @@ class BaseCreator extends BaseTreeNode {
         const r = this.localAttributes["r"]
         if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
 
+        // 直线
         const x1 = this.localAttributes["x1"]
-        if (x1) this.attributes.x = this.attributes.x1 = parseFloat(x1);
+        if (x1) this.attributes.x1 = parseFloat(x1);
+        if (!this.attributes.x) this.attributes.x = this.attributes.x1;
         const y1 = this.localAttributes["y1"]
-        if (y1) this.attributes.y = this.attributes.y1 = parseFloat(y1);
+        if (y1) this.attributes.y1 = parseFloat(y1);
+        if (!this.attributes.y) this.attributes.y = this.attributes.y1;
         const x2 = this.localAttributes["x2"]
         if (x2) this.attributes.x2 = parseFloat(x2);
         const y2 = this.localAttributes["y2"]
         if (y2) this.attributes.y2 = parseFloat(y2);
 
+        // 图片
         const href = this.localAttributes["xlink:href"] ?? this.localAttributes["href"]
         if (href) this.attributes.href = href;
     }
@@ -1908,7 +1931,7 @@ class SvgCreator extends BaseCreator {
     createShape() {
         const viewBox = this.localAttributes["viewBox"]
         if (viewBox) {
-            const viewBoxSplitRes = viewBox.split(" ").map(item => parseFloat(item))
+            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
             if (viewBoxSplitRes.length === 4) {
                 this.viewBox = viewBoxSplitRes as [number, number, number, number]
             }
