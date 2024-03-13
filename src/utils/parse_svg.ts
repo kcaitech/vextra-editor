@@ -1590,7 +1590,7 @@ class BaseCreator extends BaseTreeNode {
         const opacity = this.localAttributes["opacity"]
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
-        const parseFillColor = (content: string): FillColor | undefined => {
+        const parseFillColor = (content: string, fillOpacity: number): FillColor | undefined => {
             let colorType: "color" | "linearGradient" | "radialGradient" | undefined
             let color: MyColor | undefined
             let linearGradient: LinearGradient | undefined
@@ -1655,7 +1655,10 @@ class BaseCreator extends BaseTreeNode {
                 }
             } else { // 纯色
                 color = parseColor(content)
-                if (color) colorType = "color";
+                if (color) {
+                    color.a *= fillOpacity
+                    colorType = "color"
+                }
             }
 
             return colorType && {
@@ -1672,7 +1675,8 @@ class BaseCreator extends BaseTreeNode {
         }
         if (!fill) fill = this.localAttributes["fill"];
         if (fill) {
-            const fillColor = parseFillColor(fill)
+            const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
+            const fillColor = parseFillColor(fill, fillOpacity)
             if (fillColor) this.attributes.fill = {
                 colorType: fillColor.colorType,
                 linearGradient: fillColor.linearGradient,
@@ -1684,7 +1688,7 @@ class BaseCreator extends BaseTreeNode {
         const stroke = this.localAttributes["stroke"]
         const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(",").map(item => parseFloat(item)) || [0, 0]
         if (stroke) {
-            const fillColor = parseFillColor(stroke)
+            const fillColor = parseFillColor(stroke, 1)
             if (fillColor) this.attributes.stroke = {
                 colorType: fillColor.colorType,
                 linearGradient: fillColor.linearGradient,
