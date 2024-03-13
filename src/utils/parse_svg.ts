@@ -446,10 +446,10 @@ type TransformParams = {
 
 class Transform3D { // 变换
     /** 变换矩阵
-     * | a b c tx |
-     * | d e f ty |
-     * | g h i tz |
-     * | 0 0 0 1  |
+     * | a b c tx |         |         |   |
+     * | d e f ty | ------> |   R·S   | T |
+     * | g h i tz | ------> |_________|___|
+     * | 0 0 0 1  |         | 0  0  0 | 1 |
      */
     matrix: Matrix
 
