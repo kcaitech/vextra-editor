@@ -196,7 +196,7 @@ export class BaseCreator extends BaseTreeNode {
             transform = this.attributes.transform
         }
         if (transform) this.transform.addTransform(parseTransform(transform, {
-            transformMode: TransformMode.LocalSpecialTranslate,
+            transformMode: TransformMode.LocalSpecialOrigin,
             origin: {
                 x: -(this.attributes.width || 0) / 2,
                 y: -(this.attributes.height || 0) / 2,

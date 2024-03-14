@@ -122,7 +122,7 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                 else if (numArgList.length === 3) {
                     let diffX = transformParams.diffX || 0
                     let diffY = transformParams.diffY || 0
-                    if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
+                    if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
                         diffX -= transformParams.origin?.x || 0
                         diffY -= transformParams.origin?.y || 0
                     }

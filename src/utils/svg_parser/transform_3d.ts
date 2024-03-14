@@ -3,13 +3,13 @@ import { buildIdentityArray, Matrix } from "./matrix"
 export enum TransformMode { // 变换模式
     Local, // 相对坐标系变换，缩放、旋转、平移之间互不影响
     LocalTranslate, // 相对坐标系变换，平移会受到旋转、缩放的影响
-    LocalSpecialTranslate, // 相对坐标系变换，支持指定origin原点属性，进行旋转、缩放时会基于该原点进行
+    LocalSpecialOrigin, // 相对坐标系变换，支持指定origin原点属性，进行旋转、缩放时会基于该原点进行
     Global, // 全局坐标系变换，缩放、旋转、平移之间相互影响。使用全局坐标系变换时，会使整个Transform3D对象变为全局坐标系变换（isLocalTransform=false），不可逆
 }
 
 export type TransformParams = {
     transformMode?: TransformMode,
-    origin?: { x: number, y: number, z: number },
+    origin?: { x: number, y: number, z: number }, // 指定原点，仅在transformMode为LocalSpecialOrigin时有效
 }
 
 export class Transform3D { // 变换
@@ -118,7 +118,7 @@ export class Transform3D { // 变换
         this.scaleMatrix = matrix.multiply(this.scaleMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
             this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
-        } else if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
+        } else if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
             const origin = transformParams.origin || { x: 0, y: 0, z: 0 }
             const originCol = Matrix.ColVec([origin.x, origin.y, origin.z, 1])
             const originCol2 = matrix.multiply(originCol)
@@ -142,7 +142,7 @@ export class Transform3D { // 变换
         this.rotateMatrix = matrix.multiply(this.rotateMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
             this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
-        } else if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
+        } else if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
             const origin = transformParams.origin || { x: 0, y: 0, z: 0 }
             const originCol = Matrix.ColVec([origin.x, origin.y, origin.z, 1])
             const originCol2 = matrix.multiply(originCol)
@@ -222,7 +222,7 @@ export class Transform3D { // 变换
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
         this.rotate(axis, angle, {
-            transformMode: TransformMode.LocalSpecialTranslate,
+            transformMode: TransformMode.LocalSpecialOrigin,
             origin: {
                 x: point.data[0][0] - this.translateMatrix.data[0][3],
                 y: point.data[1][0] - this.translateMatrix.data[1][3],
