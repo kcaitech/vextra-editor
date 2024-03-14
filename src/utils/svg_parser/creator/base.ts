@@ -35,8 +35,8 @@ import {
 import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
 import { Transform3D, TransformMode } from "../transform_3d"
 import { Matrix } from "../matrix"
-import { SvgCreator } from "@/utils/svg_parser/creator/svg";
-import { TextCreator } from "@/utils/svg_parser/creator/text";
+import { SvgCreator } from "./svg"
+import { TextCreator } from "./text"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
