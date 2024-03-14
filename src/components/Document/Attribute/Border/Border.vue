@@ -730,7 +730,7 @@ function onMouseMove(e: MouseEvent) {
             const range = get_table_range(table);
             e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
             if (actions && actions.length) {
                 const editor = props.context.editor4Page(page);
