@@ -2,8 +2,8 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { onMounted, onUnmounted, shallowRef, ref, nextTick } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCell, TableCellView, PageView } from "@kcdesign/data"
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCellView, PageView } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -23,8 +23,6 @@ import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
-import ShapeCard from "@/components/common/ShapeCard.vue";
-import PageCard from "@/components/common/PageCard.vue";
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -186,7 +184,7 @@ function table_selection_watcher(t: number) {
 }
 
 function selection_watcher(t: number) {
-    if (t !== Selection.CHANGE_SHAPE) {
+    if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
 
