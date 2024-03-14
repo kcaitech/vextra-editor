@@ -5,7 +5,7 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { insert_imgs, Media } from '@/utils/content';
+import { insert_imgs, Media, SVGReader } from '@/utils/content';
 import { Tool } from '@/context/tool';
 import { after_import } from '@/utils/clipboard';
 const { t } = useI18n();
@@ -37,6 +37,10 @@ function change(e: Event) {
         if (files) {
             if (files.length === 1) {
                 const file = files[0];
+                if (file.type === "image/svg+xml") {
+                    SVGReader(props.context, file);
+                    return;
+                }
                 const frame: { width: number, height: number } = { width: 100, height: 100 };
                 const reader = new FileReader();
                 let buff: any, base64: any;
