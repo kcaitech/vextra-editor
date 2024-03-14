@@ -137,7 +137,11 @@ function danger_check() {
     if (!symbolref) return;
     const sym = props.context.data.getSymbolSync(props.data.id);
     if (!sym) return;
-    const is_circular = is_circular_ref2(sym, symbolref.refId);
+    let is_circular = false;
+    for (let i = 0; i < sym.length; i++) {
+        is_circular = is_circular_ref2(sym[i], symbolref.refId);
+        if (is_circular) break;
+    }
     if (is_circular) danger.value = true;
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
+import { h, nextTick, onMounted, onUnmounted, ref, shallowRef, toRaw } from 'vue';
 import { GroupShape, ShapeType, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
@@ -19,7 +19,7 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = shallowRef<GroupShape>(props.data);
+let render_item = toRaw<GroupShape>(props.data);
 const name = ref<string>('');
 
 function selection_watcher(t: number) {
@@ -29,6 +29,7 @@ function selection_watcher(t: number) {
 function check_selected_status() {
     selected.value = is_select();
 }
+
 function is_select() {
     const selected = props.context.selection.selectedShapes;
 
@@ -60,13 +61,12 @@ function is_select() {
 
 function check_render_item() {
     if (props.data.type !== ShapeType.SymbolUnion) return;
-    render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
+    render_item = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
-    render_item.value.watch(shape_watcher);
+    render_item.watch(shape_watcher);
 }
 
 function _shape_watcher() {
-    console.log('changed');
     check_render_item();
     get_name();
 }
@@ -90,7 +90,7 @@ function intersection(entries: any) {
     } else {
         props.context.selection.unwatch(selection_watcher);
         props.data.unwatch(shape_watcher);
-        render_item.value.unwatch(shape_watcher);
+        render_item.unwatch(shape_watcher);
     }
 }
 
@@ -171,7 +171,7 @@ onUnmounted(() => {
         padding: 4px 0;
         box-sizing: border-box;
 
-        >.render-wrap {
+        > .render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
             // border: 1px solid var(--grey-dark);
@@ -180,7 +180,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
 
-        >div {
+        > div {
             margin-left: 4px;
             max-height: 100%;
             overflow: hidden;
