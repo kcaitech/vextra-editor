@@ -19,13 +19,13 @@ interface Props {
 
     itemHeight?: number;
     itemWidth?: number;
-
+    index?: number;
     valueView?: any;
     itemView?: any;
 }
 
 interface Emits {
-    (e: "select", value: SelectItem): void;
+    (e: "select", value: SelectItem, index: number): void;
 }
 
 const DEFAULT_ITEM_HEIGHT = 32;
@@ -122,7 +122,7 @@ function select(data: SelectItem) {
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
     curValueIndex.value = index;
     curValue.value = data;
-    emits('select', curValue.value);
+    emits('select', curValue.value, props.index!);
     optionsContainerVisible.value = false;
     clear_events();
 
@@ -186,15 +186,13 @@ onMounted(render)
     .trigger {
         width: 100%;
         height: 100%;
-
         position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-
         background-color: #F5F5F5;
         border-radius: var(--default-radius);
-        padding: 0 7px;
+        padding: 8px 7px 8px 12px;
         box-sizing: border-box;
 
         .value-wrap {
@@ -206,8 +204,8 @@ onMounted(render)
         }
 
         >.svg-wrap {
-            flex: 0 0 12px;
-            height: 100%;
+            flex: 0 0 10px;
+            height: 10px;
             display: flex;
             align-items: center;
 

@@ -293,6 +293,7 @@ const selectBorderThicknes = () => {
     isActived.value = true
     borderThickness.value?.select()
 }
+
 function blur2() {
     isActived.value = false
 }
@@ -313,27 +314,29 @@ onUnmounted(() => {
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" @click="showMenu">
-                        <svg-icon icon-class="gear"></svg-icon>
+                        <svg-icon :icon-class="show_position?'select-more':'gear'"></svg-icon>
                     </div>
                 </div>
             </template>
             <template #body>
                 <div class="options-container">
                     <!-- 边框位置 -->
-                    <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
+                    <div v-if="show_position && props.shapes[0].type === ShapeType.Line"
+                        :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
                         <label>{{ t('attr.position') }}</label>
                         <Select class="select" :source="positonOptionsSource" :selected="position"
                             @select="positionSelect"></Select>
                     </div>
                     <!-- 边框厚度 -->
-                    <div>
+                    <div v-if="props.shapes[0].type === ShapeType.Line">
                         <label>{{ t('attr.thickness') }}</label>
                         <div class="thickness-container" :class="{ actived: isActived }">
                             <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
                             <input ref="borderThickness" type="text" :value="border.thickness"
                                 @change="e => setThickness(e)" @blur="blur2" @focus="selectBorderThicknes">
                             <div class="up_down" :class="{ active: isActived }">
-                                <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
+                                <svg-icon icon-class="down" style="transform: rotate(180deg);"
+                                    @click="augment"></svg-icon>
                                 <svg-icon icon-class="down" @click="decrease"></svg-icon>
                             </div>
                         </div>
