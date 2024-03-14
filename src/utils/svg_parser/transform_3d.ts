@@ -17,7 +17,7 @@ export class Transform3D { // 变换
      * | a b c tx |         |         |   |
      * | d e f ty | ------> |   R·S   | T |
      * | g h i tz | ------> |_________|___|
-     * | 0 0 0 1  |         | 0  0  0 | 1 |
+     * | 0 0 0 1  |         |    0    | 1 |
      */
     matrix: Matrix
 
@@ -76,11 +76,11 @@ export class Transform3D { // 变换
         const [m, n] = points.dimension
         if (m !== 3) throw new Error("点必须是3维向量");
         this.updateMatrix()
-        return this.matrix.multiply(points.insertRows(Matrix.build(1, n, 1))).resize(3, points.dimension[1])
+        return this.matrix.multiply(points.insertRows(Matrix.build(1, n, 1))).resize(3, n)
     }
 
     transformPoint(x: number, y: number, z: number) { // 对一个三维点（列向量）进行变换
-        return this.transform(Matrix.ColVec3D(x, y, z))
+        return this.transform(Matrix.ColVec3D(x, y, z)).toXYZ()
     }
 
     translate(x: number, y: number, z: number) { // 平移，会修改原变换

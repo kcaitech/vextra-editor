@@ -1,10 +1,24 @@
-import {
-    Shape,
-    creator as shapeCreator,
-    GroupShape,
-} from "@kcdesign/data"
+import { creator as shapeCreator, GroupShape, Shape, } from "@kcdesign/data"
 import { BaseCreator } from "./base"
-import { getRectBox, mergeAttributes, mergeRectBox } from "../utils"
+import { getRectBox, mergeRectBox } from "../utils"
+
+// 将父元素的属性合并到子元素
+export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
+    const parentShape = parent.shape
+    const childShape = child.shape
+    if (!parentShape || !childShape) return;
+
+    // 合并transform
+    child.transform = parent.transform.clone().addTransform(child.transform)
+    child.updateShapeAttrByTransform()
+
+    // 合并透明度
+    if (parent.attributes.opacity) {
+        if (child.attributes.opacity) child.attributes.opacity *= parent.attributes.opacity;
+        else child.attributes.opacity = parent.attributes.opacity;
+    }
+    child.updateShapeStyle()
+}
 
 export class GroupCreator extends BaseCreator {
     createShape() {

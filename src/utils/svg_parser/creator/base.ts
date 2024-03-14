@@ -1,20 +1,23 @@
 import {
-    Style,
-    Point2D,
     BasicArray,
-    Shape,
-    Gradient,
-    GradientType,
-    Stop,
-    Fill,
-    FillType,
-    FillRule,
+    BlendMode,
     Border,
     BorderPosition,
     BorderStyle,
-    Shadow,
     ContextSettings,
-    BlendMode,
+    Fill,
+    FillRule,
+    FillType,
+    Gradient,
+    GradientType,
+    Point2D,
+    Shadow,
+    Shape,
+    Stop,
+    Style,
+    creator as shapeCreator,
+    ShapeFrame,
+    Artboard,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 import {
@@ -35,8 +38,6 @@ import {
 import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
 import { Transform3D, TransformMode } from "../transform_3d"
 import { Matrix } from "../matrix"
-import { SvgCreator } from "./svg"
-import { TextCreator } from "./text"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -298,7 +299,7 @@ export class BaseCreator extends BaseTreeNode {
         if (fill) {
             const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
             const fillColor = parseFillColor(fill, fillOpacity)
-            if (fillColor) this.attributes.fill = {
+            if (fillColor) this.attributes[this.htmlElement?.tagName === "text" ? "textFill" : "fill"] = {
                 colorType: fillColor.colorType,
                 linearGradient: fillColor.linearGradient,
                 radialGradient: fillColor.radialGradient,
@@ -484,7 +485,7 @@ export class BaseCreator extends BaseTreeNode {
 
         const fills = new BasicArray<Fill>()
         const fillColor = this.attributes.fill
-        if (fillColor && !(this instanceof TextCreator)) { // 文本不需要填充
+        if (fillColor) { // 文本不需要填充
             const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(fillColor.color))
             fills.push(fill)
 
@@ -539,5 +540,29 @@ export class BaseCreator extends BaseTreeNode {
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()
+    }
+}
+
+export class SvgCreator extends BaseCreator {
+    viewBox: [number, number, number, number] | undefined
+
+    createShape() {
+        const viewBox = this.localAttributes["viewBox"]
+        if (viewBox) {
+            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
+            if (viewBoxSplitRes.length === 4) {
+                this.viewBox = viewBoxSplitRes as [number, number, number, number]
+            }
+        }
+        const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
+        const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
+        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
+    }
+
+    afterChildrenCreateShape(): void {
+        if (!this.shape) return;
+        const svgShape = this.shape as Artboard
+        const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
+        svgShape.childs.push(...childrenShapes)
     }
 }

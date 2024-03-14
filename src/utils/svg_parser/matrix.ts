@@ -178,6 +178,12 @@ export class Matrix { // 矩阵
         return this.cols(0)
     }
 
+    toXYZ() { // 列向量转为三维坐标
+        const [m, n] = this.dimension
+        if (m < 3 || n < 1) throw new Error(`${m+1}*${n+1}矩阵不能转为三维坐标`);
+        return { x: this.data[0][0], y: this.data[1][0], z: this.data[2][0] }
+    }
+
     row(m: number) { // 获取第n行行向量
         if (m < 0 || m >= this.dimension[0]) throw new Error("行数越界");
         return Matrix.RowVec(this.data[m])
