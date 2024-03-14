@@ -6,6 +6,7 @@ import { Context } from "@/context";
 import { Color, Page, PageView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
+import { debounce } from "@/utils/timing_util";
 interface Props {
     context: Context
     page: PageView
@@ -33,12 +34,15 @@ function setColor(clr: string, alpha: number) {
     const editor = props.context.editor4Page(page);
     editor.setBackground(nc);
 }
-function colorChangeFromPicker(c: Color) {
+const _colorChangeFromPicker = debounce((c: Color) => {
     const page = props.context.selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
     editor.setBackground(c);
-}
+}, 100)
+const colorChangeFromPicker = (c: Color) => {
+    _colorChangeFromPicker(c).catch((e) => {});
+};
 function change_c(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') value = "#" + value;
@@ -53,10 +57,10 @@ function change_c(e: Event) {
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    if (!page.data.backgroundColor) { // todo ??
-        const editor = props.context.editor4Page(page);
-        editor.setBackground(new Color(1, 239, 239, 239));
-        const c = page.data.backgroundColor!;
+    if (!page.data.backgroundColor) {
+        // const editor = props.context.editor4Page(page);
+        // editor.setBackground(new Color(1, 239, 239, 239));
+        const c = Page.defaultBGColor;
         init_value(c);
     } else {
         init_value(page.data.backgroundColor);
@@ -92,8 +96,8 @@ function alpha_click() {
     if (alpha_ele.value) alpha_ele.value.select();
 }
 const stopWatch = watch(() => props.page, (cur) => {
-    const f = cur.getFills()[0];
-    if (f) init_value(f.color);
+    const f = cur.data.backgroundColor;
+    if (f) init_value(f);
 })
 onMounted(() => {
     update();

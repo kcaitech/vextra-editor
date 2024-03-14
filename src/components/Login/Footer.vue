@@ -26,7 +26,7 @@ const { t } = useI18n();
         <a class="gongan" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44049102496973"
             target="_blank">
             <img :src="gongan" alt="gongan">
-            <span>粤公网安备 44049102496973号</span>
+            <span>粤公网安备44049102496973号</span>
         </a>
 
     </div>
@@ -54,6 +54,7 @@ const { t } = useI18n();
 
     img {
         width: 12px;
+        margin-right: 1px;
     }
 
     .gongan {

@@ -81,7 +81,7 @@ const cursor = ref<string>('');
 const rootId = ref<string>('content');
 let isMouseLeftPress: boolean = false;
 const resizeObserver = new ResizeObserver(frame_watcher);
-const background_color = ref<string>('rgba(239,239,239,1)');
+const background_color = ref<string>(color2string(Page.defaultBGColor));
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
@@ -634,6 +634,9 @@ onMounted(() => {
         initMatrix(props.page); // 初始化页面视图
     });
     props.context.workspace.setFreezeStatus(false)
+
+    const f = props.page.data.backgroundColor;
+    if (f) background_color.value = color2string(f);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();

@@ -389,9 +389,9 @@ const textFormat = () => {
 
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell && cell.cellType === TableCellType.Text && cell.text) {
-                const editor = props.context.editor4TextShape(cell);
-                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            if (cell && cell.cellType === TableCellType.Text && cell.data.text) {
+                const editor = props.context.peekEditor4TextShape(cell);
+                const forma = (cell.data.text as Text).getTextFormat(0, Number.MAX_SAFE_INTEGER, editor?.getCachedSpanAttr());
                 formats.push(forma);
             }
         }
