@@ -1,10 +1,6 @@
-import {
-    Shadow,
-    Color,
-} from "@kcdesign/data"
+import { Color, Shadow, } from "@kcdesign/data"
 import { Transform3D, TransformMode, TransformParams } from "./transform_3d"
 import { Matrix } from "./matrix"
-import { BaseCreator } from "./creator"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -126,9 +122,9 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                 else if (numArgList.length === 3) {
                     let diffX = transformParams.diffX || 0
                     let diffY = transformParams.diffY || 0
-                    if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
-                        diffX += transformParams.translate?.x || 0
-                        diffY += transformParams.translate?.y || 0
+                    if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
+                        diffX -= transformParams.origin?.x || 0
+                        diffY -= transformParams.origin?.y || 0
                     }
                     transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
                 }
@@ -432,6 +428,7 @@ export type Attributes = { // 保存元素的一些属性
 
     opacity?: number,
     fill?: FillColor,
+    textFill?: FillColor,
     stroke?: FillColor & {
         width?: number,
         dashArray: number[], // 虚线的length、gap参数，实线则为[0, 0]
@@ -459,24 +456,6 @@ export type Attributes = { // 保存元素的一些属性
     d?: string,
     pathX?: number,
     pathY?: number,
-}
-
-// 将父元素的属性合并到子元素
-export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
-    const parentShape = parent.shape
-    const childShape = child.shape
-    if (!parentShape || !childShape) return;
-
-    // 合并transform
-    child.transform = parent.transform.clone().addTransform(child.transform)
-    child.updateShapeAttrByTransform()
-
-    // 合并透明度
-    if (parent.attributes.opacity) {
-        if (child.attributes.opacity) child.attributes.opacity *= parent.attributes.opacity;
-        else child.attributes.opacity = parent.attributes.opacity;
-    }
-    child.updateShapeStyle()
 }
 
 const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")
