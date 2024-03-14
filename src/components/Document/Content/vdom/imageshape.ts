@@ -1,5 +1,5 @@
 import { DViewCtx, EL, ImageShapeView, PropsType } from "@kcdesign/data";
-import { IMAGE_DEFAULT } from "../common";
+import { IMAGE_DEFAULT } from "./common";
 import { elpatch } from "./patch";
 
 export class ImageShapeDom extends (ImageShapeView) {

@@ -18,7 +18,6 @@ import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
-import comsMap from '@/components/Document/Content/comsmap';
 import {
     get_actions_add_export_format,
     get_actions_export_format_delete,
@@ -72,7 +71,7 @@ const canvas_bg = ref(false);
 const previewUnfold = ref(false);
 const preview = ref();
 
-const pageCard = ref<PCard>();
+const pageCard = ref<PCard[]>();
 
 let renderSvgs: SvgFormat[] = reactive([]);
 
@@ -397,7 +396,7 @@ const exportFill = () => {
             if (selected.length === 0) break;
             const shape = selected[i];
             if (pageCard.value) {
-                const svg = pageCard.value[i].pageSvg;
+                const svg = pageCard.value[i].pageSvg!;
                 (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                     const id = shape.id + format.id;
                     const { width, height } = svg.viewBox.baseVal
@@ -447,7 +446,7 @@ const exportPageImage = () => {
     const options = page.exportOptions as ExportOptions;
 
     if (pageCard.value) {
-        const svg = pageCard.value[0].pageSvg;
+        const svg = pageCard.value[0].pageSvg!;
         options.exportFormats.forEach((format, idx) => {
             const id = page.id + format.id;
             const { width, height } = svg.viewBox.baseVal

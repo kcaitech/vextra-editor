@@ -1,6 +1,6 @@
 import { EL, TableCellView } from "@kcdesign/data";
 import { DViewCtx, PropsType, ShapeFrame } from "@kcdesign/data";
-import { IMAGE_DEFAULT } from "../common";
+import { IMAGE_DEFAULT } from "./common";
 import { elpatch } from "./patch";
 
 export class TableCellDom extends (TableCellView) {
