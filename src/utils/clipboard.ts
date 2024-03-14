@@ -27,7 +27,7 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { Media, getName, upload_image } from '@/utils/content';
+import { Media, getName, upload_image, SVGReader } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding, is_box_outer_view2 } from './common';
@@ -1084,6 +1084,10 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
 }
 
 function image_reader(context: Context, val: any, contentType: string, t: Function, _xy?: PageXY) {
+    if (contentType === "image/svg+xml") {
+        SVGReader(context, val, _xy);
+        return;
+    }
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType, content: '' };
     const frame: { width: number, height: number } = { width: 100, height: 100 };
     const img = new Image();
@@ -1177,7 +1181,7 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
  * 调整插入数据的位置以及大小，让插入的数据不会超过可视区域的大小并居中
  * @returns { {x: number,y: number} } 位置
  */
-function adjust_content_xy(context: Context, m: { width: number, height: number }, fixFrame = true) {
+export function adjust_content_xy(context: Context, m: { width: number, height: number }, fixFrame = true) {
     const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
 
     if (fixFrame) {

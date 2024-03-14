@@ -27,7 +27,7 @@ import { Perm, WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { after_import, paster_image } from "./clipboard";
+import { adjust_content_xy, after_import, paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
@@ -392,7 +392,7 @@ export function insert_imgs(context: Context, t: Function, media: Media[], uploa
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
-        const xy = adjust_content_xy(context, media[0]);
+        const xy = adjust_content_xy(context, media[0] as any);
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);
@@ -426,28 +426,6 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
     const dragActiveDis = threshold || 4;
     const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
     return Boolean(diff > dragActiveDis);
-}
-
-export function adjust_content_xy(context: Context, m: Media) {
-    const workspace = context.workspace;
-    const root = workspace.root;
-    const matrix = workspace.matrix;
-    const ratio_wh = m.frame.width / m.frame.height;
-    const page_height = root.height / matrix.m00;
-    const page_width = root.width / matrix.m00;
-    if (m.frame.height >= m.frame.width) {
-        if (m.frame.height > page_height * 0.95) {
-            m.frame.height = page_height * 0.95;
-            m.frame.width = m.frame.height * ratio_wh;
-        }
-    } else {
-        if (m.frame.width > page_width * 0.95) {
-            m.frame.width = page_width * 0.95;
-            m.frame.height = m.frame.width / ratio_wh;
-        }
-    }
-    const page_center = matrix.inverseCoord(root.center);
-    return { x: page_center.x - m.frame.width / 2, y: page_center.y - m.frame.height / 2 };
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
@@ -505,7 +483,7 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                     parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;
                     parseResult.shape.frame.y = xy.y - parseResult.shape.frame.height / 2;
                 } else {
-                    const __xy = adjust_content_xy(context, parseResult.shape as any);
+                    const __xy = adjust_content_xy(context, parseResult.shape.frame as any, false);
                     parseResult.shape.frame.x = __xy.x;
                     parseResult.shape.frame.y = __xy.y;
                 }
