@@ -378,7 +378,7 @@ function getColorFromPicker(color: Color, idx: number) {
     hidden_selection(props.context);
 }
 
-const selectColor = (i: number) => {
+const selectColor = (e: FocusEvent) => {
     if (colorBorder.value) {
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
@@ -388,13 +388,13 @@ const selectColor = (i: number) => {
             tableRowEnd: table.tableRowEnd,
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
-        }
-        colorBorder.value[i].select()
+        },
+            (e.target as HTMLInputElement).select()
     }
 }
-const colorInput = (i: number) => {
+const colorInput = (e: Event) => {
     if (colorBorder.value) {
-        const value = colorBorder.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         colorValue.value = value;
     }
 }
@@ -662,8 +662,12 @@ function positionSelect(selected: SelectItem, id: number | undefined) {
 
 const testEl = ref<HTMLElement>()
 const testidx = ref<number>(0)
-
+const pointX = ref<number>()
+const pointY = ref<number>()
 async function onMouseDown(e: MouseEvent, index: number) {
+    console.log(e);
+    pointX.value = e.clientX - 6
+    pointY.value = e.clientY - 6
     testEl.value = borderThickness.value![index] as HTMLElement
     testidx.value = index
     const el = e.target as HTMLElement
@@ -677,11 +681,14 @@ async function onMouseDown(e: MouseEvent, index: number) {
     document.addEventListener("pointerlockchange", lockChangeAlert, false);
 }
 
-
+const showpoint = ref<boolean>(false)
+const rotate = ref<boolean>(true)
 function lockChangeAlert() {
     if (document.pointerLockElement) {
+        showpoint.value = true
         document.addEventListener("mousemove", onMouseMove, false);
     } else {
+        showpoint.value = false
         document.removeEventListener("mousemove", onMouseMove, false);
     }
 }
@@ -697,6 +704,17 @@ const selectBorderThicknes = (e: FocusEvent, index: number) => {
 }
 
 function onMouseMove(e: MouseEvent) {
+    if (e.movementX > 0) {
+        rotate.value = true
+    } else {
+        rotate.value = false
+    }
+    pointY.value! += e.movementY
+    pointX.value! += e.movementX
+    if (pointY.value! > document.documentElement.clientHeight) return pointY.value = 0
+    if (pointX.value! > document.documentElement.clientWidth) return pointX.value = 0
+    if (pointY.value! < 0) return pointY.value = document.documentElement.clientHeight
+    if (pointX.value! < 0) return pointX.value = document.documentElement.clientWidth
     const index = testidx.value
     const id = borders.length - index - 1
     const selecteds = props.context.selection.selectedShapes;
@@ -710,7 +728,7 @@ function onMouseMove(e: MouseEvent) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
             const range = get_table_range(table);
-            e.setBorderThickness(id, thickness, range)
+            e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
         } else {
             const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
@@ -719,7 +737,6 @@ function onMouseMove(e: MouseEvent) {
                 editor.setShapesBorderThickness(actions);
             }
         }
-        borderThickness.value[index].value = String(Number(borders[index].border.thickness) + 1)
     }
 
 }
@@ -739,7 +756,7 @@ function setThickness(e: Event, id: number) {
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(shape as TableView);
         const range = get_table_range(table);
-        e.setBorderThickness(id, thickness < 0 ? 0 : thickness, range)
+        e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
     } else {
         const shapes = getShapesForStyle(selecteds);
         const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
@@ -788,7 +805,7 @@ function setThickness(e: Event, id: number) {
                         <input ref="colorBorder" class="colorBorder" :spellcheck="false"
                             v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
                             :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                            @focus="selectColor(idx)" @input="colorInput(idx)"
+                            @focus="selectColor($event)" @input="colorInput($event)"
                             :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                         <span class="colorBorder" style="line-height: 14px;"
                             v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
@@ -832,9 +849,49 @@ function setThickness(e: Event, id: number) {
             :trigger="props.trigger">
         </Apex>
     </div>
+    <teleport to="body">
+        <Transition name="bounce">
+        <div v-if="showpoint" class="point"
+            :style="{ top: pointY + 'px', left: pointX + 'px', transform: `rotate(${rotate ? '180' :'0'}deg)`}">
+        </div>
+    </Transition>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
+.bounce-enter-active {
+    animation: bounce-in 0.25s;
+}
+
+.bounce-leave-active {
+    animation: bounce-in 0.25s reverse;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.point {
+    position: absolute;
+    border-right-color: red;
+    position: absolute;
+    border: 8px solid transparent;
+    border-left-width: 0;
+    border-right-color: #1878f5;
+    filter: drop-shadow(1px 0px 4px #1878f5);
+    z-index: 10000;
+}
+
 .actived {
     border-color: #1878F5 !important;
 }
@@ -886,8 +943,11 @@ function setThickness(e: Event, id: number) {
             width: 100%;
             display: flex;
             flex-direction: column;
-            margin-top: 4px;
             gap: 6px;
+
+            &:nth-child(n+2) {
+                margin-top: 16px;
+            }
 
             .top {
                 display: flex;
@@ -1029,7 +1089,7 @@ function setThickness(e: Event, id: number) {
                         cursor: ew-resize;
                         flex: 0 0 16px;
                         height: 16px;
-                    }
+                                            }
 
                     >input {
                         outline: none;
