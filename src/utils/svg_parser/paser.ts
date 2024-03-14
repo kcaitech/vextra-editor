@@ -3,18 +3,16 @@ import {
     ResourceMgr,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
-import {
-    BaseCreator,
-    EllipseCreator,
-    GroupCreator,
-    ImageCreator,
-    LineCreator,
-    NoneCreator,
-    PathCreator,
-    RectCreator,
-    SvgCreator,
-    TextCreator
-} from "./creator"
+import { BaseCreator } from "./creator/base"
+import { NoneCreator } from "./creator/none"
+import { GroupCreator } from "./creator/group"
+import { SvgCreator } from "./creator/svg"
+import { PathCreator } from "./creator/path"
+import { RectCreator } from "./creator/rect"
+import { EllipseCreator } from "./creator/ellipse"
+import { LineCreator } from "./creator/line"
+import { TextCreator } from "./creator/text"
+import { ImageCreator } from "./creator/image"
 
 export class Parser {
     svgRoot: Element

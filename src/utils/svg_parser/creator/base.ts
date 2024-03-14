@@ -1,51 +1,42 @@
 import {
-    Shape,
-    creator as shapeCreator,
-    GroupShape,
-    ShapeFrame,
-    Artboard,
-    Path,
     Style,
+    Point2D,
     BasicArray,
-    Border,
-    Fill,
-    FillType,
-    FillRule,
-    Shadow,
-    ContextSettings,
-    BlendMode,
-    BorderStyle,
-    BorderPosition,
-    CurvePoint,
-    CurveMode,
-    getFormatFromBase64,
+    Shape,
     Gradient,
     GradientType,
     Stop,
-    Point2D,
+    Fill,
+    FillType,
+    FillRule,
+    Border,
+    BorderPosition,
+    BorderStyle,
+    Shadow,
+    ContextSettings,
+    BlendMode,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
-import { BaseTreeNode, TreeNodeTraverseHandler } from "./tree"
 import {
     Attributes,
     FillColor,
     getAllFunctionCallFromString,
     getAllStyleFromString,
     getPathBoxFromD,
-    getRectBox,
     GradientStop,
     LinearGradient,
-    mergeAttributes,
-    mergeRectBox,
     MyColor,
     myColorToColor,
     MyShadow,
     parseColor,
     parseTransform,
     RadialGradient
-} from "./utils"
-import { Transform3D, TransformMode } from "./transform_3d"
-import { Matrix } from "./matrix"
+} from "../utils"
+import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
+import { Transform3D, TransformMode } from "../transform_3d"
+import { Matrix } from "../matrix"
+import { SvgCreator } from "@/utils/svg_parser/creator/svg";
+import { TextCreator } from "@/utils/svg_parser/creator/text";
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -548,250 +539,5 @@ export class BaseCreator extends BaseTreeNode {
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()
-    }
-}
-
-export class NoneCreator extends BaseCreator {
-
-}
-
-export class GroupCreator extends BaseCreator {
-    createShape() {
-        this.shape = shapeCreator.newGroupShape("编组", this.style)
-    }
-
-    afterChildrenCreateShape(): void {
-        if (!this.shape) return;
-        const children: {
-            shape: Shape,
-            creator: BaseCreator,
-        }[] = this.children.filter(child => child.shape).map(child => {
-            return {
-                shape: child.shape!,
-                creator: child,
-            }
-        })
-
-        if (children.length === 0) { // 空的group，移除自身
-            this.remove()
-            return
-        }
-
-        const reservedAttributes = ["fill", "stroke"] // 保留属性，有则不会被子级替代
-        const isReserved = reservedAttributes.some(attr => attr in this.attributes)
-        if (!isReserved && children.length === 1) { // 用子元素替代自身
-            mergeAttributes(this, children[0].creator)
-            this.replaceWithChildren()
-            return
-        }
-
-        const groupShape = this.shape as GroupShape
-        groupShape.childs.push(...children.map(child => child.shape))
-
-        const childShapeBoxes = children.map(child => {
-            const childShape = child.shape
-            const childCreator = child.creator
-            return getRectBox(childShape.frame.x, childShape.frame.y, childShape.frame.width, childShape.frame.height, childCreator.transform)
-        })
-        const childesShapeBox = mergeRectBox(...childShapeBoxes) // 合并所有子元素的包围盒
-
-        // 根据子元素包围盒更新groupShape的宽高
-        groupShape.frame.width = childesShapeBox.w
-        groupShape.frame.height = childesShapeBox.h
-
-        // 将子元素包围盒偏移至groupShape的左上角
-        for (const child of children) {
-            child.creator.transform.translate(-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0)
-            child.creator.updateShapeAttrByTransform()
-        }
-        // 将groupShape偏移至子元素包围盒原来的位置
-        groupShape.frame.x += childesShapeBox.lt.x
-        groupShape.frame.y += childesShapeBox.lt.y
-    }
-}
-
-export class SvgCreator extends BaseCreator {
-    viewBox: [number, number, number, number] | undefined
-
-    createShape() {
-        const viewBox = this.localAttributes["viewBox"]
-        if (viewBox) {
-            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
-            if (viewBoxSplitRes.length === 4) {
-                this.viewBox = viewBoxSplitRes as [number, number, number, number]
-            }
-        }
-        const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
-        const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
-        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
-    }
-
-    afterChildrenCreateShape(): void {
-        if (!this.shape) return;
-        const svgShape = this.shape as Artboard
-        const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
-        svgShape.childs.push(...childrenShapes)
-    }
-}
-
-export class PathCreator extends BaseCreator {
-    afterAllAdjust() {
-        // 识别本节点是否为边框部分
-        if (this.attributes.fill || !this.attributes.stroke) return;
-
-        const svgRoot = this.root?.htmlElement?.root
-        if (!svgRoot) return;
-
-        // 填充部分
-        let fillPart: PathCreator | undefined
-        let position: "inside" | "center" | "outside"
-
-        const findFillPart = (item: BaseTreeNode) => {
-            return item instanceof PathCreator
-                && item.attributes.fill
-                && item.attributes.x === this.attributes.x
-                && item.attributes.y === this.attributes.y
-                && item.attributes.width === this.attributes.width
-                && item.attributes.height === this.attributes.height
-                && item.localAttributes["d"] === this.localAttributes["d"]
-        }
-
-        const mask = this.localAttributes["mask"]
-        const clip = this.localAttributes["clip-path"]
-        if ((mask && mask.startsWith("url(#")) || (clip && clip.startsWith("url(#"))) { // 外部、内部
-            position = mask ? "outside" : "inside"
-            const urlId = (mask || clip).slice(5, -1)
-            const el = svgRoot.querySelector(`#${urlId}>path`)
-            if (el) {
-                const creator = (el as any).creator as BaseCreator
-                if (creator instanceof PathCreator && creator.localAttributes["d"] === this.localAttributes["d"]) {
-                    fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined
-                    if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
-                        prev.push(...cur.children)
-                        return prev
-                    }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
-                }
-            }
-        } else { // 中心
-            position = "center"
-            fillPart = this.siblings().find(findFillPart) as PathCreator | undefined
-            if (!fillPart) fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined;
-            if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
-                prev.push(...cur.children)
-                return prev
-            }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
-        }
-
-        if (!fillPart) fillPart = this;
-
-        // 设置填充部分的边框
-        let strokeWidth = this.attributes.strokeWidth
-        if (strokeWidth && position !== "center") strokeWidth /= 2;
-        fillPart.attributes.stroke = {
-            ...this.attributes.stroke,
-            width: strokeWidth,
-            position: position,
-        }
-
-        if (fillPart !== this) this.remove(); // 有填充的情况下移除边框部分
-    }
-
-    createShape() {
-        const d = this.attributes.d
-        if (!d) return;
-        const x = this.attributes.pathX || 0
-        const y = this.attributes.pathY || 0
-        const width = this.attributes.width || 0
-        const height = this.attributes.height || 0
-        const path = new Path(d);
-        path.translate(-x, -y);
-        this.transform.translate(x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0)
-        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
-    }
-}
-
-export class RectCreator extends BaseCreator {
-    createShape() {
-        const x = this.attributes.x || 0
-        const y = this.attributes.y || 0
-        const width = this.attributes.width || 0
-        const height = this.attributes.height || 0
-        this.shape = shapeCreator.newRectShape("矩形", new ShapeFrame(x, y, width, height))
-    }
-}
-
-export class EllipseCreator extends BaseCreator {
-    createShape() {
-        const x = this.attributes.x || 0
-        const y = this.attributes.y || 0
-
-        let width = 0
-        if (this.attributes.rx) width = this.attributes.rx * 2;
-        else if (this.attributes.width) width = this.attributes.width;
-
-        let height = 0
-        if (this.attributes.ry) height = this.attributes.ry * 2;
-        else if (this.attributes.height) height = this.attributes.height;
-
-        this.shape = shapeCreator.newOvalShape("圆形", new ShapeFrame(x, y, width, height))
-    }
-}
-
-export class LineCreator extends BaseCreator {
-    createShape() {
-        const x1 = this.attributes.x1 || 0
-        const y1 = this.attributes.y1 || 0
-        const x2 = this.attributes.x2 || 0
-        const y2 = this.attributes.y2 || 0
-        const dx = x2 - x1
-        const dy = y2 - y1
-        const line = shapeCreator.newLineShape("直线", new ShapeFrame(x1, y1, 1, 1))
-        if (!line.points) line.points = new BasicArray();
-        line.points[0] = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-        line.points[1] = new CurvePoint([0] as BasicArray<number>, uuid(), dx, dy, CurveMode.Straight);
-        this.shape = line
-    }
-}
-
-export class TextCreator extends BaseCreator {
-    createShape() {
-        const x = this.attributes.x || 0
-        const y = this.attributes.y || 0
-
-        const text = this.htmlElement!.node.textContent
-        if (!text) return;
-
-        const fontStyleAttr = this.attributes.styleAttributes?.font
-        const fill = this.attributes.fill
-
-        const textShape = shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
-        textShape.text.insertText(text, 0)
-
-        this.shape = textShape
-    }
-}
-
-export class ImageCreator extends BaseCreator {
-    createShape() {
-        const x = this.attributes.x || 0
-        const y = this.attributes.y || 0
-        const width = this.attributes.width || 0
-        const height = this.attributes.height || 0
-
-        const href = this.attributes.href
-        if (!href || !href.startsWith("data:image")) return;
-
-        const media = {
-            buff: Uint8Array.from(atob(href.split(",")[1]), c => c.charCodeAt(0)),
-            base64: href,
-        }
-
-        const format = getFormatFromBase64(href)
-        const ref = `${uuid()}.${format}`
-
-        const mediaResourceMgr = this.context.mediaResourceMgr
-        mediaResourceMgr.add(ref, media)
-
-        this.shape = shapeCreator.newImageShape("图片", new ShapeFrame(x, y, width, height), mediaResourceMgr, ref)
     }
 }

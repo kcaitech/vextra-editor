@@ -4,7 +4,7 @@ import {
 } from "@kcdesign/data"
 import { Transform3D, TransformMode, TransformParams } from "./transform_3d"
 import { Matrix } from "./matrix"
-import { BaseCreator } from "./creator"
+import { BaseCreator } from "./creator/base"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
