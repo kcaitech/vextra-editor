@@ -123,8 +123,8 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                     let diffX = transformParams.diffX || 0
                     let diffY = transformParams.diffY || 0
                     if (transformParams.transformMode === TransformMode.LocalSpecialTranslate) {
-                        diffX += transformParams.translate?.x || 0
-                        diffY += transformParams.translate?.y || 0
+                        diffX -= transformParams.origin?.x || 0
+                        diffY -= transformParams.origin?.y || 0
                     }
                     transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
                 }
