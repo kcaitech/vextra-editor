@@ -1,16 +1,14 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
+import { Matrix, TableCellType, TableLayout, TableView, TableCellView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
-import BarsContainer from "./Bars/BarsContainerForTable.vue";
-import PointsContainer from "./Points/PointsContainerForTable.vue";
+import PointsContainer from "./Points/PointsContainerForVirtualTable.vue";
 import { useController } from './controller4table';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
@@ -156,18 +154,18 @@ function move(e: MouseEvent) {
         if (cell.index.row) y_checked = true, m_row = cell.index.row;
     } else if (frame.height - trans_p.y < 3) y_checked = true, m_row = cell.index.row + 1;
 
-    if (!x_checked && !y_checked) {
-        props.context.cursor.reset();
-    } else {
-        let deg = props.shape.rotation || 0;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        if (x_checked) {
-            props.context.cursor.setType('scale', deg);
-        } else if (y_checked) {
-            props.context.cursor.setType('scale', 90 + deg);
-        }
-    }
+    // if (!x_checked && !y_checked) {
+    //     props.context.cursor.reset();
+    // } else {
+    //     let deg = props.shape.rotation || 0;
+    //     if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    //     if (props.shape.isFlippedVertical) deg = 360 - deg;
+    //     if (x_checked) {
+    //         props.context.cursor.setType('scale', deg);
+    //     } else if (y_checked) {
+    //         props.context.cursor.setType('scale', 90 + deg);
+    //     }
+    // }
 }
 function down(e: MouseEvent) {
     if (e.button !== 0) {
@@ -202,10 +200,10 @@ function move_x(e: MouseEvent) {
     x2 = xy2.x, y2 = xy2.y;
 }
 function up_x() {
-    const dx = down_x - m_x.value;
-    const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape);
-    editor.adjColWidth(m_col - 1, m_col, dx / scale);
+    // const dx = down_x - m_x.value;
+    // const scale = props.context.workspace.matrix.m00;
+    // const editor = props.context.editor4Table(props.shape);
+    // editor.adjColWidth(m_col - 1, m_col, dx / scale);
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
     document.removeEventListener('mouseup', up_x);
@@ -220,13 +218,13 @@ function move_y(e: MouseEvent) {
     x2 = xy2.x, y2 = xy2.y;
 }
 function up_y(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
-    const xy1 = submatrix.computeCoord2(0, y);
-    const dy = down_y - xy1.y;
-    const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape);
-    editor.adjRowHeight(m_row - 1, m_row, dy / scale);
+    // const root = props.context.workspace.root;
+    // const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
+    // const xy1 = submatrix.computeCoord2(0, y);
+    // const dy = down_y - xy1.y;
+    // const scale = props.context.workspace.matrix.m00;
+    // const editor = props.context.editor4Table(props.shape);
+    // editor.adjRowHeight(m_row - 1, m_row, dy / scale);
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
@@ -313,24 +311,10 @@ const height = computed(() => {
         <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!"
             :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
             :selection="props.context.selection.textSelection"></SelectView>
-        <!-- 列宽缩放 -->
-        <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame">
-        </BarsContainer>
-        <!-- 表头 -->
-        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame" @get-menu="update_menu_posi"></TableHeader>
         <!-- 表格拖拽 -->
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </PointsContainer>
-        <!-- 列宽缩放 -->
-        <g>
-            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                stroke-width="3"></line>
-            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                stroke-width="3"></line>
-        </g>
     </svg>
     <!-- 输入 -->
     <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"

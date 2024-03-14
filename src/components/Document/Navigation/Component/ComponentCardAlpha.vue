@@ -8,6 +8,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
 import { debounce } from "lodash";
+import ShapeCard from "@/components/common/ShapeCard.vue";
 
 interface Props {
     data: GroupShape
@@ -163,11 +164,7 @@ onUnmounted(() => {
 <template>
     <div class="compo-preview-container" ref="preview_container">
         <div class="card-wrap" v-if="render_preview">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="28px" height="28px"
-                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
-                <render></render>
-            </svg>
+            <ShapeCard :shape="render_item" class="render-wrap" :size="28"></ShapeCard>
             <div>{{ name }}</div>
         </div>
         <div :class="{ status: true, selected, danger }"></div>

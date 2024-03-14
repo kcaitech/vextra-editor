@@ -15,24 +15,27 @@ import ShapeSymbol from "./ShapeSymbol.vue";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
-comsMap.set(ShapeType.Artboard, ArtboardView);
-comsMap.set(ShapeType.Group, ShapeGroupShape);
-// comsMap.set(ShapeType.FlattenShape, ShapeGroupShape);
-comsMap.set(ShapeType.Image, ImageView);
-comsMap.set(ShapeType.Page, ShapeGroup);
-comsMap.set(ShapeType.Path, ShapePath);
-comsMap.set(ShapeType.Path2, ShapePath);
-comsMap.set(ShapeType.Rectangle, Rectangle);
-comsMap.set(ShapeType.Oval, Rectangle);
-comsMap.set(ShapeType.Text, TextView);
-// comsMap.set(ShapeType.Text, Rectangle);
+// comsMap.set(ShapeType.Artboard, ArtboardView);
+// comsMap.set(ShapeType.Group, ShapeGroupShape);
+// // comsMap.set(ShapeType.FlattenShape, ShapeGroupShape);
+// comsMap.set(ShapeType.Image, ImageView);
+// comsMap.set(ShapeType.Page, ShapeGroup);
+// comsMap.set(ShapeType.Path, ShapePath);
+// comsMap.set(ShapeType.Path2, ShapePath);
+// comsMap.set(ShapeType.Rectangle, Rectangle);
+// comsMap.set(ShapeType.Oval, Rectangle);
+// comsMap.set(ShapeType.Text, TextView);
+// // comsMap.set(ShapeType.Text, Rectangle);
+//
+// comsMap.set(ShapeType.Symbol, ShapeSymbol);
+// comsMap.set(ShapeType.SymbolUnion, ShapeSymbol);
+// comsMap.set(ShapeType.SymbolRef, SymbolRef);
+// comsMap.set(ShapeType.Line, Line);
+// comsMap.set(ShapeType.Table, ShapeTable);
+// comsMap.set(ShapeType.Contact, ShapeContact);
+// comsMap.set(ShapeType.TableCell, ShapeTableCell);
 
-comsMap.set(ShapeType.Symbol, ShapeSymbol);
-comsMap.set(ShapeType.SymbolUnion, ShapeSymbol);
-comsMap.set(ShapeType.SymbolRef, SymbolRef);
-comsMap.set(ShapeType.Line, Line);
-comsMap.set(ShapeType.Table, ShapeTable);
-comsMap.set(ShapeType.Contact, ShapeContact);
-comsMap.set(ShapeType.TableCell, ShapeTableCell);
-
+/**
+ * @deprecated
+ */
 export default comsMap;

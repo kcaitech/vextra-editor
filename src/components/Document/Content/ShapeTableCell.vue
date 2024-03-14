@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ShapeFrame, TableCell, SymbolRefShape, SymbolShape } from '@kcdesign/data';
+import { ShapeFrame, TableCell, SymbolRefShape, SymbolShape, TableCellType, layoutText, TextLayout } from '@kcdesign/data';
 import { h, onMounted } from 'vue';
 import { renderTableCell as r } from "@kcdesign/data";
 import { IMAGE_DEFAULT, initCommonShape } from './common';
@@ -34,8 +34,14 @@ const common = initCommonShape(props, (...args: any[]) => {
     }
 });
 
+let layout: TextLayout | undefined;
+if (props.data.cellType === TableCellType.Text && props.data.text) {
+    // const frame = props.data.frame; // todo这个不对！
+    layout = layoutText(props.data.text, props.data.frame.width, props.data.frame.height);
+}
+
 function render() {
-    const ret = r(h, props.data, props.frame, IMAGE_DEFAULT, props.varsContainer, common.reflush);
+    const ret = r(h, props.data, props.frame, IMAGE_DEFAULT, props.varsContainer, layout, common.reflush);
     return ret;
 }
 </script>

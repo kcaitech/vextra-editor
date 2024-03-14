@@ -16,6 +16,8 @@ import TableTextSetting from './TableTextSetting.vue';
 import { TableSelection } from '@/context/tableselection';
 import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import { throttle } from 'lodash';
+import FontWeightSelected from '../Text/FontWeightSelected.vue';
+import { fontWeightConvert } from '../Text/FontNameList';
 interface Props {
     context: Context
     shape: TableView
@@ -27,13 +29,13 @@ const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
-const isBold = ref(false)
+const isBold = ref<any>()
 const isTilt = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref()
+const fontName = ref('PingFangSC-Regular')
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -49,6 +51,9 @@ const sizeHoverIndex = ref(-1);
 const fillType = ref<FillType>(FillType.SolidColor);
 const gradient = ref<Gradient>();
 const mixed = ref<boolean>(false);
+const fontWeight = ref('Regular');
+const weightMixed = ref<boolean>(false);
+const disableWeight = ref(false);
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -97,8 +102,8 @@ const cellSelect = (table: TableSelection) => {
     return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
 }
 // 设置加粗
-const onBold = () => {
-    isBold.value = !isBold.value
+const onBold = (weight: number) => {
+    isBold.value = weight
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
@@ -121,8 +126,8 @@ const onBold = () => {
     textFormat();
 }
 // 设置文本倾斜
-const onTilt = () => {
-    isTilt.value = !isTilt.value
+const onTilt = (italic: boolean) => {
+    isTilt.value = italic
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
@@ -143,6 +148,11 @@ const onTilt = () => {
         }
     }
     textFormat();
+}
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
+    onBold(weight);
+    onTilt(italic);
 }
 //设置下划线
 const onUnderlint = () => {
@@ -336,12 +346,14 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
     old.unwatch(textFormat);
     value.watch(textFormat);
 })
-
+const reflush = ref(0);
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.tableSelection;
     shape.value = undefined;
     mixed.value = false;
+    disableWeight.value = false;
+    weightMixed.value = false;
     if (table.editingCell) {
         shape.value = table.editingCell;
         // 拿到某个单元格
@@ -364,13 +376,17 @@ const textFormat = () => {
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.bold;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
-        if (format.italicIsMulti) isTilt.value = false;
-        if (format.boldIsMulti) isBold.value = false;
-        if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.italicIsMulti) weightMixed.value = true;
+        if (format.boldIsMulti) weightMixed.value = true;
+        if (format.fontNameIsMulti) {
+            disableWeight.value = true;
+            fontName.value = `${t('attr.more_value')}`
+        }
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
         if (format.underlineIsMulti) isUnderline.value = false;
         if (format.strikethroughIsMulti) isDeleteline.value = false;
@@ -389,9 +405,9 @@ const textFormat = () => {
 
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell && cell.cellType === TableCellType.Text && cell.text) {
-                const editor = props.context.editor4TextShape(cell);
-                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            if (cell && cell.cellType === TableCellType.Text && cell.data.text) {
+                const editor = props.context.peekEditor4TextShape(cell);
+                const forma = (cell.data.text as Text).getTextFormat(0, Number.MAX_SAFE_INTEGER, editor?.getCachedSpanAttr());
                 formats.push(forma);
             }
         }
@@ -443,14 +459,17 @@ const textFormat = () => {
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
-        isBold.value = format.bold || false;
+        isBold.value = format.bold;
         isTilt.value = format.italic || false;
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
+        fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.fontName === 'unlikeness') {
+            disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`;
         } else if (format.fontNameIsMulti) {
+            disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`;
         }
         if (format.fontSize === 'unlikeness') {
@@ -462,8 +481,8 @@ const textFormat = () => {
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') isBold.value = false;
-        if (format.italic === 'unlikeness') isTilt.value = false;
+        if (format.bold === 'unlikeness') weightMixed.value = true;
+        if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.underline === 'unlikeness') isUnderline.value = false;
         if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
@@ -477,6 +496,7 @@ const textFormat = () => {
             getTableFormat();
         }
     }
+    reflush.value++;
 }
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
@@ -484,7 +504,7 @@ const _textFormat = throttle(textFormat, 160, { leading: true })
 const getTableFormat = () => {
     const textAttr = props.shape.data.textAttr;
     if (!textAttr) return;
-    isBold.value = textAttr.bold || false;
+    isBold.value = textAttr.bold || 400;
     isTilt.value = textAttr.italic || false;
     fontName.value = textAttr.fontName || 'PingFangSC-Regular';
     fonstSize.value = textAttr.fontSize || 14;
@@ -506,14 +526,10 @@ function selection_wather(t: number) {
     }
 }
 function workspace_wather(t: number) {
-    if (t === WorkSpace.BOLD) {
-        onBold();
-    } else if (t === WorkSpace.UNDER_LINE) {
+    if (t === WorkSpace.UNDER_LINE) {
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
-    } else if (t === WorkSpace.ITALIC) {
-        onTilt();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
@@ -1061,40 +1077,34 @@ onUnmounted(() => {
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context">
+                <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
+                    :fontWeight="fontWeight" @setFontWeight="setFontWeight">
                 </SelectFont>
+                <div class="text-size jointly-text" style="padding-right: 0;">
+                    <div class="size_input">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
+                        <div class="down" @click="onShowSize">
+                            <svg-icon icon-class="down"></svg-icon>
+                        </div>
+                    </div>
+                    <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                        v-if="showSize">
+                        <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
+                            @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
+                            <div class="icon">
+                                <svg-icon v-if="sizeSelectIndex === i"
+                                    :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
-                    <div class="text-size jointly-text" style="padding-right: 0;">
-                        <div class="size_input">
-                            <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
-                            <div class="down" @click="onShowSize">
-                                <svg-icon icon-class="down"></svg-icon>
-                            </div>
-                        </div>
-                        <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
-                            v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
-                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
-                                <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i"
-                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
-                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
-                            <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
-                        </Tooltip>
-                    </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
-                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
-                            <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
-                        </Tooltip>
-                    </div>
+                    <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
+                        :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+                    </FontWeightSelected>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
                         <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
                             <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
@@ -1107,7 +1117,6 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
@@ -1303,35 +1312,27 @@ onUnmounted(() => {
             display: flex;
 
             .select-font {
-                flex: 1;
                 padding: 9px 12px;
                 box-sizing: border-box;
-                width: 224px;
+                width: calc(100% - 88px);
                 height: 32px;
                 border-radius: 6px;
+                margin-right: 8px;
+
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
 
             .select-font:hover {
                 background: #EBEBEB;
             }
-        }
-
-        .text-middle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-
-            .text-middle-size {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
 
             .text-size {
                 position: relative;
-                width: 62px;
+                width: 80px;
                 height: 32px;
                 border-radius: 6px;
                 padding: 9px 0;
@@ -1341,11 +1342,11 @@ onUnmounted(() => {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding-left: 12px;
-                    padding-right: 6px;
+                    padding-left: 8px;
+                    padding-right: 8px;
 
                     .down {
-                        width: 19px;
+                        width: 26px;
                         height: 26px;
                         margin-right: 3px;
 
@@ -1361,7 +1362,7 @@ onUnmounted(() => {
                 }
 
                 .input {
-                    width: 24px;
+                    width: 40px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1423,6 +1424,22 @@ onUnmounted(() => {
                     }
                 }
             }
+        }
+
+        .text-middle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+
+            .text-middle-size {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex: 1;
+            }
+
+
 
             .overbold {
                 width: 32px;

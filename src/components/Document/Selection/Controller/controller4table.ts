@@ -145,10 +145,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
     }
-    function init_text_cell(cell: TableGridItem) {
-        const editor = context.editor4Table(table);
-        editor.initTextCell(cell.index.row, cell.index.col);
-    }
+    // function init_text_cell(cell: TableGridItem) {
+    //     const editor = context.editor4Table(table);
+    //     editor.initTextCell(cell.index.row, cell.index.col);
+    // }
     function down(e: MouseEvent) {        
         // console.log('单击 cell:', down_item);
         table_selection.resetSelection();
@@ -171,7 +171,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     table_selection.selectTableCell(down_item.index.row, down_item.index.col);
                 } else {
                     // console.log('unexcept');
-                    init_text_cell(down_item);
+                    // init_text_cell(down_item);
                     context.nextTick(context.selection.selectedPage!, () => {
                         text_selection = context.textSelection;
                         text_selection.setCursor(0, false);
@@ -181,7 +181,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 }
             } else {
                 // console.log('init cell');
-                init_text_cell(down_item);
+                // init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
                 context.nextTick(context.selection.selectedPage!, () => {
                     const cellView = down_item ? table.getCellAt(down_item.index.row, down_item.index.col) : undefined;

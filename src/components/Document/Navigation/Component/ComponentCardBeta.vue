@@ -8,6 +8,7 @@ import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
 import { debounce } from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
+import ShapeCard from "@/components/common/ShapeCard.vue";
 
 interface Props {
     data: GroupShape
@@ -86,7 +87,7 @@ function check_render_item() {
     }
 
     render_item = toRaw((props.data?.childs[0] as GroupShape) || props.data);
-    
+
     props.data.unwatch(shape_watcher);
     render_item.watch(shape_watcher);
 }
@@ -176,11 +177,7 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container">
         <Tooltip :content="tip_name" v-if="render_preview">
             <div>
-                <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                    xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
-                    height="96px" :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
-                    <render></render>
-                </svg>
+                <ShapeCard :shape="render_item" class="render-wrap"></ShapeCard>
                 <div :class="{ status: true, selected, danger }"></div>
             </div>
         </Tooltip>
@@ -200,6 +197,7 @@ onUnmounted(() => {
         margin-top: 2px;
         margin-left: 2px;
     }
+
 
     .status {
         border-radius: 4px;

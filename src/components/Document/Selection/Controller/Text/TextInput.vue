@@ -7,6 +7,7 @@ import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';
 import { WorkSpace } from '@/context/workspace';
 import { TextSelectionLite } from "@/context/textselectionlite";
+import { permIsEdit } from '@/utils/permission';
 
 type SelectionLike = TextSelectionLite;
 
@@ -97,6 +98,10 @@ function copy_watcher(event: ClipboardEvent) {
 function cut_watcher(event: ClipboardEvent) {
     event.stopPropagation();
 
+    if (!permIsEdit(props.context)) {
+        return;
+    }
+
     const write_result = props.context.workspace.clipboard.write(event);
     if (!write_result) {
         return;
@@ -125,6 +130,9 @@ function cut_watcher(event: ClipboardEvent) {
 function paste_watcher(event: ClipboardEvent) {
     event.stopPropagation();
     event.preventDefault();
+    if (!permIsEdit(props.context)) {
+        return;
+    }
     props.context.workspace.clipboard.paste_text(event);
 }
 
