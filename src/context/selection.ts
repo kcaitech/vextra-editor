@@ -332,7 +332,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     setShapesSet(shapes: ShapeView[]) {
         this.m_shapes_set.clear();
         for (let i = 0, l = shapes.length; i < l; i++) {
-            this.m_shapes_set.add(adapt2Shape(shapes[i]).id); // data 和 view的id是否一致
+            this.m_shapes_set.add(shapes[i].id); // data 和 view的id是否一致
         }
     }
 

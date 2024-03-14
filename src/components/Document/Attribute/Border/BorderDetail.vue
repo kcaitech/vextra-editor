@@ -81,7 +81,7 @@ function borderStyleSelect(selected: SelectItem) {
         const range = get_table_range(table);
         e.setBorderStyle4Cell(props.index, bs, range)
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
@@ -219,7 +219,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const range = get_table_range(table);
                         e.setBorderThickness4Cell(props.index, thickness, range)
                     } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
                             const editor = props.context.editor4Page(page);
@@ -241,7 +241,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const range = get_table_range(table);
                         e.setBorderThickness4Cell(props.index, thickness, range)
                     } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
                             const editor = props.context.editor4Page(page);

@@ -161,7 +161,7 @@ const getPosition = (shape: ShapeView) => {
         xy.value.y = p.y;
     }
     if (shape.type !== ShapeType.Cutout) {
-        if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+        if (shape.type === ShapeType.Group) {
             const { left, top, right, bottom } = getShadowMax(shape);
             const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
             xy.value.x = x - left;

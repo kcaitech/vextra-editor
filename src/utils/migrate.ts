@@ -61,8 +61,7 @@ export function record_origin_env(shapes: ShapeView[]) {
         const arr = envs.get(data.id);
         if (arr) {
             arr.push(item);
-        }
-        else {
+        } else {
             envs.set(data.id, [item]);
         }
     }
@@ -84,16 +83,17 @@ export function find_except_envs(context: Context, shapes: ShapeView[], p: XY) {
     const env1 = context.selection.getEnvForMigrate(p);
     except.push(env1);
 
+    const first_shape = shapes[0];
+
     if (shapes.length !== 1) {
         return except;
+    } else {
+        if (first_shape.isContainer && (env1.id !== first_shape.id)) {
+            except.push(first_shape);
+        }
     }
 
-    const first_shape = shapes[0];
-    const parent = first_shape.parent;
-
-    if (!parent) {
-        return except;
-    }
+    const parent = first_shape.parent!;
 
     if (except[0]?.id !== parent.id) {
         except.push(parent);

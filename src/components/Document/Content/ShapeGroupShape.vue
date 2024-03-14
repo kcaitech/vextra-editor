@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, watch } from 'vue';
-import { GroupShape, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { BoolShape, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
-import { renderGroup as normalR } from "@kcdesign/data";
-import comsMap from './comsmap';
 import { initCommonShape } from './common';
 
 const props = defineProps<{
-    data: GroupShape, 
+    data: BoolShape, 
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
 
 let stopbubblewatch: (() => void) | undefined;
 const common = initCommonShape(props, () => { 
-    if (props.data.isBoolOpShape && !stopbubblewatch) stopbubblewatch = props.data.bubblewatch(watcher);
+    if (!stopbubblewatch) stopbubblewatch = props.data.bubblewatch(watcher);
 });
 
 const watcher = () => {
@@ -21,14 +19,14 @@ const watcher = () => {
 }
 
 onMounted(() => {
-    if (props.data.isBoolOpShape) stopbubblewatch = props.data.bubblewatch(watcher);
+    stopbubblewatch = props.data.bubblewatch(watcher);
 })
 watch(() => props.data, (data, old) => {
     if (stopbubblewatch) {
         stopbubblewatch();
         stopbubblewatch = undefined
     }
-    if (props.data.isBoolOpShape) stopbubblewatch = props.data.bubblewatch(watcher);
+    stopbubblewatch = props.data.bubblewatch(watcher);
 });
 onUnmounted(() => {
     if (stopbubblewatch) {
@@ -38,14 +36,7 @@ onUnmounted(() => {
 })
 
 function render() {
-
-    const isBoolOpShape = props.data.isBoolOpShape;
-    if (isBoolOpShape) {
-        const ret = opr(h, props.data, props.varsContainer, common.reflush);
-        return ret;
-    }
-
-    const ret = normalR(h, props.data, comsMap, props.varsContainer, common.reflush);
+    const ret = opr(h, props.data, props.varsContainer, common.reflush);
     return ret;
 }
 
