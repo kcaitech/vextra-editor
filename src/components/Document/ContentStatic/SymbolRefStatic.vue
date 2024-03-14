@@ -31,8 +31,8 @@ function getRefId2(_this: SymbolRefShape, varsContainer: (SymbolRefShape | Symbo
 }
 
 function updater() {
-    const symMgr = props.data.getSymbolMgr();
-    if (!symMgr) return;
+    // const symMgr = props.data.getSymbolMgr();
+    // if (!symMgr) return;
 
     const refId = getRefId2(props.data, props.varsContainer);
     if (__startLoad === refId) {
@@ -40,16 +40,19 @@ function updater() {
     }
 
     __startLoad = refId;
-    symMgr.get(refId).then((val) => {
-        if (__startLoad !== refId) return;
-        __data.value = val;
-        // union
-        // const union = __data?.parent instanceof SymbolUnionShape ? __data.parent : undefined;
-        // if (__union?.id !== union?.id) {
-        //     __union = union;
-        // }
-        reflush.value++;
-    })
+
+    __data.value = props.data.getSymbolSync(refId);
+    reflush.value++;
+    // symMgr.get(refId).then((val) => {
+    //     if (__startLoad !== refId) return;
+    //     __data.value = val;
+    //     // union
+    //     // const union = __data?.parent instanceof SymbolUnionShape ? __data.parent : undefined;
+    //     // if (__union?.id !== union?.id) {
+    //     //     __union = union;
+    //     // }
+    //     reflush.value++;
+    // })
 }
 
 updater();
