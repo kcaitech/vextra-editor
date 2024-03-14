@@ -462,6 +462,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __migrate() {
+        // if (this.workspace.transforming && this.shapes.length > 50) return; @@@
         const t = this.asyncApiCaller as Transporter;
         if (!t) {
             return;

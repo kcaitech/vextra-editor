@@ -763,6 +763,7 @@ onUnmounted(() => {
                            :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
                            @showAttrbute="showHiddenRight">
                 </Attribute>
+<!--                @@@-->
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>

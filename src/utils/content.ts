@@ -573,6 +573,7 @@ export const list2Tree = (list: any, rootValue: string) => {
 }
 
 export function flattenShapes(shapes: ShapeView[]) {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return shapes; @@@
     return shapes.reduce((result: ShapeView[], item: ShapeView) => {
         if (Array.isArray((item as GroupShapeView).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
