@@ -49,8 +49,8 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     if (!locat || !shape || !shape.style) return;
     if (locat.type !== 'text' && locat.type !== 'table_text') {
         let gradient_type = shape.style[locat.type];
-        if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
-            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        if (shape.type === ShapeType.Group) {
+            const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group);
             gradient_type = shapes[0].style[locat.type];
         }
         if (!gradient_type[locat.index]) return;

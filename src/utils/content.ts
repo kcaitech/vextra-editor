@@ -817,7 +817,7 @@ export const permIsEdit = (context: Context) => {
 export const hasRadiusShape = (shape: ShapeView, type: ShapeType[]) => {
     const shapeType = shape.type
     if (shapeType === ShapeType.Group) {
-        if (!(shape as GroupShapeView).data.isBoolOpShape) return false;
+        return false;
     }
     if (!type.includes(shapeType)) return false;
     return true;

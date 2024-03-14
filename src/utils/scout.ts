@@ -201,6 +201,7 @@ export function is_layers_tree_unit(shape: ShapeView) {
         || ShapeType.SymbolUnion === shape.type
         || ShapeType.Symbol === shape.type
         || ShapeType.SymbolRef === shape.type
+        || ShapeType.BoolShape === shape.type
 }
 
 /**

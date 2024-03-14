@@ -283,7 +283,8 @@ function modify_multi_radius(shape: ShapeView) {
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
     ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
+    ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
+    ShapeType.BoolShape
 ];
 function layout() {
     reset_layout();
