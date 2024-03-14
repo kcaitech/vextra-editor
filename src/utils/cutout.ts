@@ -120,7 +120,7 @@ export const getPageBounds = (page: PageView) => {
     const childs = page.childs as ShapeView[];
     const { x, y, width, height } = page.frame;
     if (!(childs.length > 0)) return { x, y, width, height };
-    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape));
+    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
     const page_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(page_bounds_points);
     const min_p = getMinPoint(page_bounds_points);
@@ -160,7 +160,7 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const childs = shape.childs as ShapeView[];
     const { x, y, width, height } = shape.frame;
     if (!childs) return { x, y, width, height };
-    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape));
+    const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
@@ -222,7 +222,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     return shapes.reduce((result: any, item: ShapeView) => {
-        if (item.type === ShapeType.Group && !(item as GroupShapeView).data.isBoolOpShape) {
+        if (item.type === ShapeType.Group) {
             const childs = (item).childs as ShapeView[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));

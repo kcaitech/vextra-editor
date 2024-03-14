@@ -99,7 +99,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       let g_x = 0;
       let g_y = 0;
       const max_border = getShapeBorderMax(shape);
-      if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+      if(shape.type === ShapeType.Group) {
         const { x, y, width, height } = getGroupChildBounds(shape);
         g_x = shape.frame.x - x;
         g_y = shape.frame.y - y;
@@ -184,7 +184,7 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       let g_x = 0;
       let g_y = 0;
       const max_border = getShapeBorderMax(shape);
-      if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+      if(shape.type === ShapeType.Group) {
         const { x, y, width, height } = getGroupChildBounds(shape);
         g_x = shape.frame.x - x;
         g_y = shape.frame.y - y;

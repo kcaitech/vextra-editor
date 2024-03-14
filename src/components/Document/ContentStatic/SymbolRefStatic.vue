@@ -3,7 +3,7 @@ import {h, onUnmounted, ref, shallowRef, watch} from 'vue';
 import comsMap from '../Content/comsmap'
 import {DViewCtx, OverrideType, SymbolRefView, VariableType, adapt2Shape, findOverrideAndVar, isAdaptedShape, renderSymbolRefStatic as r} from "@kcdesign/data"
 import {SymbolRefShape, SymbolShape} from '@kcdesign/data';
-import { ArtboradView, ContactLineView, CutoutShapeView, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ArtboradView, ContactLineView, CutoutShapeView, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolView, TableCellView, TableView, TextShapeView, BoolShapeView } from "@kcdesign/data"
 
 interface Props {
     data: SymbolRefShape
@@ -63,7 +63,7 @@ function initComsMap(comsMap: Map<ShapeType, any>) {
     comsMap.set(ShapeType.Artboard, ArtboradView);
     comsMap.set(ShapeType.Group, GroupShapeView);
     comsMap.set(ShapeType.Image, ImageShapeView);
-    // comsMap.set(ShapeType.Page, ShapeGroup);
+    comsMap.set(ShapeType.BoolShape, BoolShapeView);
     comsMap.set(ShapeType.Path, PathShapeView);
     comsMap.set(ShapeType.Path2, PathShapeView2);
     // comsMap.set(ShapeType.Rectangle, PathShapeDom);

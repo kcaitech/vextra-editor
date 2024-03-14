@@ -16,7 +16,7 @@ const path = ref<string>('');
 const flex_abbr = computed<boolean>(() => {
     const s = props.shape;
     return [ShapeType.Oval, ShapeType.Rectangle, ShapeType.Line, ShapeType.Path].includes(s.type)
-        || (s.type === ShapeType.Group && !!(s.data as GroupShape).isBoolOpShape);
+        || (s.type === ShapeType.BoolShape);
 })
 
 function icon_class() {
