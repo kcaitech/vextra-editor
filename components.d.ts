@@ -121,6 +121,7 @@ declare module '@vue/runtime-core' {
     FilePickButton: typeof import('./src/components/common/FilePickButton.vue')['default']
     FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
+    FontWeightSelected: typeof import('./src/components/Document/Attribute/Text/FontWeightSelected.vue')['default']
     Footer: typeof import('./src/components/Login/Footer.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
     FrameChild: typeof import('./src/components/Document/Toolbar/Buttons/FrameChild.vue')['default']

@@ -1,6 +1,6 @@
 import { debounce, throttle } from "lodash";
 import { Context } from "@/context";
-import { ClientXY, PageXY } from "@/context/selection";
+import { ClientXY, PageXY, XY } from "@/context/selection";
 import {
     AsyncCreator,
     Color,
@@ -27,12 +27,13 @@ import { Perm, WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { paster_image } from "./clipboard";
+import { after_import, paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
+import * as parse_svg from "@/utils/svg_parser";
 
 export interface Media {
     name: string
@@ -457,24 +458,18 @@ export function drop(e: DragEvent, context: Context, t: Function) {
     }
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     const file = data[0];
+    if (file.type === "image/svg+xml") {
+        SVGReader(context, file, context.workspace.getRootXY(e as MouseEvent));
+        return;
+    }
+
     item.contentType = file.type;
     const frame = { width: 100, height: 100 };
     const img = new Image();
     img.onload = function () {
         frame.width = img.width;
         frame.height = img.height;
-        const ratio = frame.width / frame.height;
-        // if (frame.width >= frame.height) {
-        //     if (frame.width > 600) {
-        //         frame.width = 600;
-        //         frame.height = frame.width / ratio;
-        //     }
-        // } else {
-        //     if (frame.height > 600) {
-        //         frame.height = 600;
-        //         frame.width = 600 * ratio;
-        //     }
-        // }
+
         const fr = new FileReader();
         fr.onload = function (event) {
             const base64: any = event.target?.result;
@@ -484,12 +479,7 @@ export function drop(e: DragEvent, context: Context, t: Function) {
                     if (base64 && buff) {
                         item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
                         const content = item!.content as Media;
-                        const root = context.workspace.root;
-                        const { clientX, clientY } = e;
-                        const xy: PageXY = context.workspace.matrix.inverseCoord({
-                            x: clientX - root.x,
-                            y: clientY - root.y
-                        });
+                        const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
                         xy.x = xy.x - frame.width / 2;
                         xy.y = xy.y - frame.height / 2;
                         paster_image(context, xy, t, content);
@@ -501,6 +491,39 @@ export function drop(e: DragEvent, context: Context, t: Function) {
         fr.readAsDataURL(file);
     }
     img.src = URL.createObjectURL(file);
+}
+
+export function SVGReader(context: Context, file: File, xy?: XY) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const svg = event.target?.result;
+        if (svg) {
+            const parseResult = parse_svg.parse(svg as string);
+
+            if (parseResult.shape) {
+                if (xy) {
+                    parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;
+                    parseResult.shape.frame.y = xy.y - parseResult.shape.frame.height / 2;
+                } else {
+                    const __xy = adjust_content_xy(context, parseResult.shape as any);
+                    parseResult.shape.frame.x = __xy.x;
+                    parseResult.shape.frame.y = __xy.y;
+                }
+                const page = context.selection.selectedPage!;
+                const editor = context.editor4Page(page);
+                editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
+
+                if (parseResult.mediaResourceMgr) {
+                    const container: any = {};
+                    parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
+                        container[k] = v;
+                    });
+                    after_import(context, container);
+                }
+            }
+        }
+    }
+    reader.readAsText(file);
 }
 
 /**
@@ -863,7 +886,10 @@ export function map_from_shapes(shapes: ShapeView[], init?: Map<string, ShapeVie
 export function is_shape_out(context: Context, shape: ShapeView, matrix: Matrix) {
     const { x, y, bottom, right } = context.workspace.root;
     const { width, height } = shape.frame;
-    let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
+    let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, {
+        x: 0,
+        y: height
+    }];
     for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
     return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||

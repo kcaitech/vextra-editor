@@ -48,10 +48,16 @@ const getTextFormat = () => {
         text.value = shape.text.getText(0, Infinity).replace(/\n/g, '');
         const paras = shape.text.paras;
         const spans: any = [];
+
         paras.map((item: Para) => {
+            const item_len = item.text.replace(/\n/g, '').length;
+            if (!item_len) return;
             const lineH = item.attr?.minimumLineHeight || 24;
             const p_Spacing = item.attr?.paraSpacing || 0;
+            let span_len = 0;
             const map_spans = item.spans.map((v: any) => {
+                span_len += v.length;
+                if (span_len > item_len) return;
                 const value = { ...v };
                 if (!value.line_height || value.paraSpacing === undefined) {
                     value.line_height = lineH
@@ -82,11 +88,9 @@ const getTextFormat = () => {
                 }
                 value.color = { alpha: value.color.alpha, blue: value.color.blue, green: value.color.green, red: value.color.red };
                 return value;
-            })
+            }).filter(v => v);
             spans.push(...map_spans);
         })
-        console.log(spans);
-
         const newSpans = uniqWith(spans, isEqual);
         textFormat.value = newSpans;
     }
@@ -248,7 +252,7 @@ onUnmounted(() => {
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'weight' + index">
                                 <span @click="(e) => copyLable(e, 'weight' + index)"
                                     style="cursor: pointer;font-weight: 500"
-                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.bold ? 700 : 400
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.bold || 400
                                     }}</span>
                             </LableTootip>
                         </div>

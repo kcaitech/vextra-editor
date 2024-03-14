@@ -39,14 +39,14 @@ export class Server {
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
     onConnected: () => void = () => {}
 
-    constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>,) {
+    constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>) {
         this.token = token
         this.tunnelMap = tunnelMap
         this.cmdIdToTunnel = cmdIdToTunnel
     }
 
     async connect(): Promise<boolean> {
-        console.log("server connect")
+        console.log("server connect", this.isClosed, this.isConnected, this.isConnecting, !!this.connectPromise)
         if (this.isClosed) return false;
         if (this.isConnected) return true;
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;
@@ -55,8 +55,12 @@ export class Server {
         let resolve: (value: boolean) => void = () => {}
         this.connectPromise = new Promise<boolean>(r => resolve = r)
         try {
-            this.ws = new WebSocket(COMMUNICATION_URL)
-            this.ws.binaryType = "arraybuffer"
+            await new Promise<void>((resolve, reject) => {
+                setTimeout(() => reject("new WebSocket timeout"), 3000)
+                this.ws = new WebSocket(COMMUNICATION_URL)
+                this.ws.binaryType = "arraybuffer"
+                resolve()
+            })
         } catch (e) {
             console.log(e)
             this.ws = undefined
@@ -69,8 +73,8 @@ export class Server {
             await new Promise<void>((resolve, reject) => {
                 this.ws!.onopen = _ => resolve()
                 this.ws!.onerror = err => reject(err)
+                setTimeout(() => reject("onopen timeout"), 3000)
             })
-            setTimeout(() => resolve(false), 3000)
         } catch (err) {
             console.log(err)
             this.ws = undefined
@@ -79,7 +83,7 @@ export class Server {
             this.connectPromise = undefined
             return false
         }
-        this.ws.send(JSON.stringify({
+        this.ws!.send(JSON.stringify({
             token: this.token,
         }))
         if (!await new Promise(resolve => {
@@ -90,6 +94,7 @@ export class Server {
                         || typeof data.cmd_id !== "string" || data.cmd_id === ""
                         || data.status !== CmdStatus.Success || !data.data?.communication_id
                     ) {
+                        console.log("init result error", data)
                         resolve(false)
                         return
                     }
@@ -100,7 +105,10 @@ export class Server {
                     resolve(false)
                 }
             }
-            setTimeout(() => resolve(false), 3000)
+            setTimeout(() => {
+                console.log("init timeout")
+                resolve(false)
+            }, 3000)
         })) {
             this.ws = undefined
             resolve(false)
@@ -108,12 +116,12 @@ export class Server {
             this.connectPromise = undefined
             return false
         }
-        this.ws.onmessage = this.onMessage.bind(this)
+        this.ws!.onmessage = this.onMessage.bind(this)
         resolve(true)
         this.isConnecting = false
         this.connectPromise = undefined
         this.isConnected = true
-        this.ws.onclose = this.closeWs.bind(this)
+        this.ws!.onclose = this.closeWs.bind(this)
         if (this.isFirstConnect) {
             this.isFirstConnect = false
             this.networkStatus = NetworkStatusType.Online

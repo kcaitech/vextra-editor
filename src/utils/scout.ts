@@ -498,7 +498,7 @@ export function finder_env_for_migrate(scout: Scout, g: ShapeView[], position: P
         let p: ShapeView | undefined = item;
         let c = false;
         while (p) {
-            if (shape4migrate.has(adapt2Shape(p).id)) {
+            if (shape4migrate.has(p.id)) {
                 c = true;
                 break;
             }
@@ -507,7 +507,7 @@ export function finder_env_for_migrate(scout: Scout, g: ShapeView[], position: P
         if (c) {
             continue;
         }
-        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type)) {
+        if (item.isContainer) {
             return item;
         }
     }

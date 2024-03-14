@@ -1,0 +1,102 @@
+import {
+    Shape,
+    ResourceMgr,
+} from "@kcdesign/data"
+import { v4 as uuid } from "uuid"
+import { BaseCreator, SvgCreator } from "./creator/base"
+import { NoneCreator } from "./creator/none"
+import { GroupCreator } from "./creator/group"
+import { PathCreator } from "./creator/path"
+import { RectCreator } from "./creator/rect"
+import { EllipseCreator } from "./creator/ellipse"
+import { LineCreator } from "./creator/line"
+import { TextCreator } from "./creator/text"
+import { ImageCreator } from "./creator/image"
+
+export class Parser {
+    svgRoot: Element
+    context: any = {
+        mediaResourceMgr: new ResourceMgr<{ buff: Uint8Array, base64: string }>([uuid(), "medias"]),
+    }
+
+    constructor(root: Element) {
+        this.svgRoot = root
+    }
+
+    create(node: Element) { // 处理svg元素内的一个节点，并返回其子节点
+        const children = Array.from(node.children)
+        let creatorConstruction: typeof BaseCreator
+        if (node.tagName === "g") {
+            creatorConstruction = GroupCreator
+        } else if (node.tagName === "svg") {
+            creatorConstruction = SvgCreator
+        } else if (node.tagName === "path") {
+            creatorConstruction = PathCreator
+        } else if (node.tagName === "rect") {
+            creatorConstruction = RectCreator
+        } else if (node.tagName === "circle" || node.tagName === "ellipse") {
+            creatorConstruction = EllipseCreator
+        } else if (node.tagName === "line") {
+            creatorConstruction = LineCreator
+        } else if (node.tagName === "text") {
+            creatorConstruction = TextCreator
+        } else if (node.tagName === "image") {
+            creatorConstruction = ImageCreator
+        } else {
+            creatorConstruction = NoneCreator
+        }
+        (node as any).creator = new creatorConstruction(
+            this.context, // context
+            (this.svgRoot as any).creator, // root
+            (node.parentElement as any)?.creator, // parent
+            {
+                root: this.svgRoot, // svgRoot
+                node: node, // svgNode
+            },
+        )
+        return children
+    }
+
+    parse(): Shape | undefined {
+        // 创建creator树
+        const stack0 = [this.svgRoot]
+        while (stack0.length) {
+            const node = stack0.pop()!
+            const children = this.create(node)
+
+            const creator = (node as any).creator as BaseCreator
+
+            const parentNode = node.parentElement
+            if (parentNode) {
+                const parentCreator = (parentNode as any).creator as BaseCreator
+                parentCreator.children.push(creator)
+            }
+
+            stack0.push(...children.slice(0).reverse())
+        }
+        const rootCreator = (this.svgRoot as any).creator as BaseCreator
+
+        // 解析属性
+        rootCreator.traverse({
+            do: BaseCreator.method("parseAttributes"),
+        })
+
+        // 调整节点
+        rootCreator.traverse({
+            do: BaseCreator.method("adjust"),
+            afterChildrenDo: BaseCreator.method("afterChildrenAdjust"),
+            afterSiblingDo: BaseCreator.method("afterSiblingAdjust"),
+            afterAllDo: BaseCreator.method("afterAllAdjust"),
+        })
+
+        // 创建shape
+        rootCreator.traverse({
+            do: BaseCreator.method("_createShape"),
+            afterChildrenDo: BaseCreator.method("afterChildrenCreateShape"),
+            afterSiblingDo: BaseCreator.method("afterSiblingCreateShape"),
+            afterAllDo: BaseCreator.method("afterAllCreateShape"),
+        })
+
+        return rootCreator.shape
+    }
+}
