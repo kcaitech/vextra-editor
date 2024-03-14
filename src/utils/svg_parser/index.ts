@@ -1,5 +1,6 @@
 import { Context } from "@/context"
 import { Parser } from "./paser"
+import { XY } from "@/context/selection";
 
 export function parse(content: string) {
     const parser = new DOMParser()
@@ -12,7 +13,10 @@ export function parse(content: string) {
     }
 }
 
-export function insert(context: Context, svgString: string) {
+/**
+ * @deprecated
+ */
+export function insert(context: Context, svgString: string, xy?: XY) {
     const parser = new DOMParser()
     const svgDocument = parser.parseFromString(svgString, "image/svg+xml")
     const svgElement = svgDocument.documentElement
@@ -30,4 +34,12 @@ export function insert(context: Context, svgString: string) {
             repo.rollback()
         }
     }
+}
+
+export function maySvgText(content: string) {
+    if (content.length < 11) {
+        return false;
+    }
+
+    return (content.search(/<svg|<?xml/) > -1) && (new RegExp('</svg>').test(content.slice(content.length - 6).toLowerCase()));
 }
