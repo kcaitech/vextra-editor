@@ -19,7 +19,7 @@ export class PageDom extends (PageView) {
         ctx.setIdleCallback(this.onRenderIdle);
     }
 
-    bind(node: HTMLElement /* old, for reuse */) { // 
+    bind(node: HTMLElement | SVGElement /* old, for reuse */) { // 
         if (this.el) throw new Error("already binded");
         this.el = node;
         this.m_first_bind = true;

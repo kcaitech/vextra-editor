@@ -68,7 +68,7 @@ function save_instance(type: VariableType, name: string) {
 }
 
 const getValue = (id: string) => {
-    const sym = props.context.data.symbolsMgr.getSync(id);
+    const sym = props.context.data.getSymbolSync(id);
     return sym?.name || '';
 }
 
