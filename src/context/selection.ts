@@ -683,8 +683,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     get pathshape() {
         const selected = this.selectedShapes;
-        if (selected.length === 1 && (selected[0] instanceof PathShapeView || selected[0] instanceof PathShapeView2)) {
-            return (this.selectedShapes[0]) as PathShapeView;
+        if (selected.length === 1 && selected[0].pathType) {
+            return (this.selectedShapes[0]) as ShapeView;
         }
     }
 

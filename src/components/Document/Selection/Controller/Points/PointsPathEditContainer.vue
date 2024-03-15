@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { ClientXY, PageXY, XY } from '@/context/selection';
+import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
@@ -19,17 +19,18 @@ interface Props {
 
 interface Dot {
     point: { x: number, y: number }
+    segment: number
     index: number
     selected: boolean
 }
 
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const data: { dots: Dot[], segments: Segment[] } = reactive({ dots: [], segments: [] });
+const data: { dots: Dot[], segments: Segment[][] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
 const dragActiveDis = 3;
-const new_high_light = ref<number>(-1);
-const add_rect = ref<number>(-1);
+const new_high_light = ref<string>('');
+const add_rect = ref<string>('');
 let shape: ShapeView;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
@@ -38,6 +39,8 @@ let bridged = false;
 
 let pathModifier: PathEditor | undefined;
 let downXY: XY = { x: 0, y: 0 };
+
+let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 let current_side: number = -1;
 
@@ -47,18 +50,20 @@ function update() {
     }
     dots.length = 0;
     segments.length = 0;
+
     init_matrix();
-    const points_set = new Set(props.context.path.selectedPoints);
-    dots.push(...get_path_by_point(shape as PathShapeView, matrix, points_set));
-    const segs = new Set(props.context.path.selectedSides);
-    segments.push(...get_segments(shape as PathShapeView, matrix, segs));
+
+    dots.push(...get_path_by_point(shape as PathShapeView, matrix, props.context.path.selectedPoints));
+
+    segments.push(...get_segments(shape as PathShapeView, matrix, props.context.path.selectedSides));
+
     props.context.path.set_segments(segments);
 }
 
 /**
  * @description down下任意一个已有的编辑点
  */
-function point_mousedown(event: MouseEvent, index: number) {
+function point_mousedown(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
@@ -69,17 +74,17 @@ function point_mousedown(event: MouseEvent, index: number) {
 
     event.stopPropagation();
 
-    current_curve_point_index = index;
-
     const path = props.context.path;
-
     if (event.shiftKey) {
-        path.adjust_points(current_curve_point_index)
+        path.adjust_points(segment, index)
     } else {
-        if (!path.is_selected(index)) {
-            path.select_point(current_curve_point_index);
+        if (!path.is_selected(segment, index)) {
+            path.select_point(segment, index);
         }
     }
+
+    current_segment = segment;
+    current_curve_point_index = index;
 
     pathModifier = new PathEditor(props.context, event);
     downXY = { x: event.x, y: event.y };
@@ -93,7 +98,7 @@ function point_mousedown(event: MouseEvent, index: number) {
 /**
  * @description 边
  */
-function down_background_path(event: MouseEvent, index: number) {
+function down_background_path(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
@@ -104,13 +109,14 @@ function down_background_path(event: MouseEvent, index: number) {
     const path = props.context.path;
 
     if (event.shiftKey) {
-        path.adjust_sides(index);
+        path.adjust_sides(segment, index);
     } else {
-        if (!path.is_selected_segs(index)) {
-            path.select_side(index);
+        if (!path.is_selected_segs(segment, index)) {
+            path.select_side(segment, index);
         }
     }
 
+    current_segment = segment;
     current_side = index;
 
     pathModifier = new PathEditor(props.context, event);
@@ -134,7 +140,7 @@ function point_mousemove(event: MouseEvent) {
         isDragging = true;
 
         if (is_curve_tool()) {
-            if (props.context.path.selectedSides.length) {
+            if (props.context.path.selectedSides.size) {
                 return;
             }
 
@@ -148,7 +154,7 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function launch_bridging(event: MouseEvent) {
-    props.context.path.bridging({ index: -1, event });
+    props.context.path.bridging({ segment: -1, index: -1, event });
 }
 
 function bridging_completed() {
@@ -158,7 +164,7 @@ function bridging_completed() {
 /**
  * @description 新增一个编辑点
  */
-function n_point_down(event: MouseEvent, index: number) {
+function n_point_down(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
     }
@@ -172,6 +178,7 @@ function n_point_down(event: MouseEvent, index: number) {
 
     if (pathModifier.createApiCaller(__index)) {
         current_curve_point_index = __index;
+        current_segment = segment;
     }
 
     add_move_and_up_for_document(n_point_mousemove, point_mouseup);
@@ -204,11 +211,11 @@ function point_mouseup(event: MouseEvent) {
     } else {
         const path = props.context.path;
 
-        if (path.selectedPoints.length > 1 && !event.shiftKey) {
-            path.select_point(current_curve_point_index);
+        if (path.selectedPointsLength && !event.shiftKey) {
+            path.select_point(current_segment, current_curve_point_index);
         }
-        if (path.selectedSides.length > 1 && !event.shiftKey) {
-            path.select_side(current_side);
+        if (path.selectedSidesLength && !event.shiftKey) {
+            path.select_side(current_segment, current_side);
         }
     }
 
@@ -219,19 +226,21 @@ function point_mouseup(event: MouseEvent) {
     document.removeEventListener('mouseup', point_mouseup);
 }
 
-function enter(event: MouseEvent, index: number) {
+function enter(event: MouseEvent, segment: number, index: number) {
     clear_high_light();
 
     const path = props.context.path;
     if (path.no_hover) {
         return;
     }
-    new_high_light.value = index;
+
+    new_high_light.value = `${segment}-${index}`;
+
     if (path.no_add) {
         return;
     }
 
-    add_rect.value = index;
+    add_rect.value = `${segment}-${index}`;
 }
 
 function leave(event: MouseEvent) {
@@ -239,11 +248,10 @@ function leave(event: MouseEvent) {
 }
 
 function clear_high_light() {
-    new_high_light.value = -1;
-    add_rect.value = -1;
+    new_high_light.value = '';
+    add_rect.value = '';
 }
 
-// listener
 function window_blur() {
     pathModifier?.fulfil();
     pathModifier = undefined;
@@ -307,22 +315,27 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(p, i) in segments" :key="i" data-area="controller-element" @mouseenter="(e) => enter(e, i)"
-       @mouseleave="leave">
-        <g @mousedown="(e) => down_background_path(e, i)">
-            <path class="background-path" :d="p.path"></path>
-            <path :class="{ path: true, 'path-high-light': new_high_light === i, 'path-selected': p.is_selected }"
-                  :d="p.path">
-            </path>
+    <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
+        <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
+           @mouseleave="leave">
+            <g @mousedown="(e) => down_background_path(e, si, i)">
+                <path class="background-path" :d="p.path"></path>
+                <path
+                    :class="{ path: true, 'path-high-light': new_high_light === `${si}-${i}`, 'path-selected': p.is_selected }"
+                    :d="p.path">
+                </path>
+            </g>
+            <rect v-if="add_rect === `${si}-${i}`"
+                  :class="{ 'insert-point': true, 'insert-point-selected': add_rect === `${si}-${i}` }"
+                  :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)">
+            </rect>
         </g>
-        <rect v-if="add_rect === i" :class="{ 'insert-point': true, 'insert-point-selected': add_rect === i }"
-              :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, i)">
-        </rect>
     </g>
+
     <Handle :context="props.context"></Handle>
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
-          @mousedown.stop="(e) => point_mousedown(e, p.index)"
+          @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }">
     </rect>
 </template>

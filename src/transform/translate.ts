@@ -470,6 +470,11 @@ export class TranslateHandler extends TransformHandler {
 
         const pe = this.livingPoint;
         const target_parent = this.context.selection.getEnvForMigrate(pe);
+
+        if (target_parent.id === t.current_env_id) {
+            return;
+        }
+
         const except = t.getExceptEnvs();
 
         const o_env = except.find(v => v.id === target_parent.id);

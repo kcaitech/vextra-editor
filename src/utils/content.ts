@@ -392,7 +392,7 @@ export function insert_imgs(context: Context, t: Function, media: Media[], uploa
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
-        const xy = adjust_content_xy(context, media[0] as any);
+        const xy = adjust_content_xy(context, media[0].frame as any);
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);

@@ -1,15 +1,19 @@
-import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView, Page, Shape, PathShapeView2 } from '@kcdesign/data';
+import {
+    AsyncPathEditor,
+    ShapeView,
+    adapt2Shape,
+    PathShapeView,
+} from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
-import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
-import { DirectionCalc, get_speed, modify_shapes } from "@/utils/controllerFn";
+import { fourWayWheel, Wheel } from "@/utils/wheel";
+import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
-import { paster_short } from '@/utils/clipboard';
 import { useI18n } from 'vue-i18n';
 import {
     PointsOffset, get_apex, pre_render_assist_line
@@ -19,14 +23,12 @@ import {
     add_blur_for_window,
     check_drag_action,
     down_while_is_text_editing,
-    end_transalte,
     gen_assist_target,
     gen_offset_points_map,
     is_ctrl_element,
     is_mouse_on_content,
     is_rid_stick,
     modify_down_position,
-    modify_mouse_position_by_type,
     remove_blur_from_window,
     remove_move_and_up_from_document,
     reset_assist_before_translate,
@@ -34,7 +36,7 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
-import { find_except_envs, migrate_immediate, migrate_once, record_origin_env } from "@/utils/migrate";
+import { migrate_once } from "@/utils/migrate";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 
@@ -48,7 +50,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let wheel: Wheel | undefined = undefined;
     let shapes: ShapeView[] = [];
     let need_update_comment: boolean = false;
-    let t_e: MouseEvent | undefined;
     let speed: number = 0;
     const selection = context.selection;
     const workspace = context.workspace;
@@ -80,7 +81,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        if (shape instanceof PathShapeView || shape instanceof PathShapeView2) {
+        if (shape.pathType) {
             if (forbidden_to_modify_frame(shape)) {
                 return;
             }
@@ -122,7 +123,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         const points = context.path.syntheticPoints;
-        if (!points?.length) {
+        if (!points?.size) {
             return;
         }
 
@@ -131,7 +132,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             asyncPathEditor = context.editor
                 .controller()
-                .asyncPathEditor(pathshape, selection.selectedPage!)
+                .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
         }
 
         if (!asyncPathEditor) {
@@ -142,10 +143,23 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         let { x, y } = directionCalc.calc();
 
-        x = x / pathshape.frame.width;
-        y = y / pathshape.frame.height;
+        const firstPoint = (pathshape as PathShapeView).points[points[0]];
 
-        asyncPathEditor.execute2(points, x, y);
+        if (!firstPoint) {
+            return;
+        }
+
+        const m = pathshape.matrix2Root();
+        m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+        const _firstPoint = m.computeCoord3(firstPoint);
+
+        _firstPoint.x += x;
+        _firstPoint.y += y;
+
+        const __firstPointTarget = m.inverseCoord(_firstPoint);
+
+        asyncPathEditor.execute2(points, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
     }
 
     function keydown_action_for_trans(event: KeyboardEvent) {
@@ -186,10 +200,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
             return;
         }
-        //
-        // if (event.code === 'ShiftLeft') {
-        //     transporter?.modifyShiftStatus(false);
-        // }
 
         const still_active = directionCalc.up(event);
 
