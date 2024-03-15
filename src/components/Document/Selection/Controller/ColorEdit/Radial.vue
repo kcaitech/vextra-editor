@@ -59,7 +59,7 @@ const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
     const selected = props.context.selection.selectedShapes;
-    shapes.value = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    shapes.value = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient || gradient.gradientType !== GradientType.Radial) return;
@@ -314,11 +314,11 @@ const add_stop = (e: MouseEvent) => {
     const _stop = get_add_gradient_color(gradient.stops, posi);
     if (!_stop) return;
     const selected = props.context.selection.selectedShapes;
-    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
     if (locat.type !== 'text' && locat.type !== 'table_text') {
-        const gradient_type = shape.style[locat.type];
+        const gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders();
         const idx = gradient_type.length - locat.index - 1;
         const editor = props.context.editor4Page(page);
         const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);

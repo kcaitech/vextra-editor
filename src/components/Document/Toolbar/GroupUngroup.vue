@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView, GroupShapeView } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView, GroupShapeView, BoolShapeView, BoolShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -36,7 +36,7 @@ function _updater(t?: number) {
             state.value = state.value ^ NOGROUP;
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
-            if (type === ShapeType.Group) {
+            if (type === ShapeType.Group || type === ShapeType.BoolShape) {
                 isBoolGroup.value = true;
                 isUngroup.value = true;
             }
@@ -152,24 +152,29 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
-    console.log(type, n, 'bool', shapes[0] instanceof GroupShape);
+    // console.log(type, n, 'bool', shapes[0] instanceof GroupShape);
 
     const name = t(`bool.${n}`)
     if (shapes.length && page) {
-        if (shapes.length === 1 && shapes[0] instanceof GroupShapeView) {
-            const editor = props.context.editor4Shape(shapes[0])
-            editor.setBoolOp(type, name)
-            props.context.selection.notify(Selection.CHANGE_SHAPE)
+        if (shapes.length === 1) {
+            if (shapes[0] instanceof BoolShapeView) {
+                const editor = props.context.editor4Shape(shapes[0])
+                editor.setBoolOp(type, name)
+            } else if (shapes[0] instanceof GroupShapeView) {
+                const editor = props.context.editor4Page(page);
+                editor.boolgroup2(adapt2Shape(shapes[0]), name, type)
+            }
+            // props.context.selection.notify(Selection.CHANGE_SHAPE)
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(filter_for_group1(shapes));
             const editor = props.context.editor4Page(page)
             const g = editor.boolgroup(shapessorted.map(s => adapt2Shape(s)), name, type)
-            if (g) {
-                props.context.nextTick(page, () => {
-                    const s = page.getShape(g.id);
-                    props.context.selection.selectShape(s)
-                })
-            }
+            // if (g) {
+            //     props.context.nextTick(page, () => {
+            //         const s = page.getShape(g.id);
+            //         props.context.selection.selectShape(s)
+            //     })
+            // }
         }
     }
 }
@@ -182,8 +187,8 @@ const flattenShape = () => {
     const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
-        if (shapes.length === 1 && shapes[0] instanceof GroupShapeView) {
-            const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as GroupShape)
+        if (shapes.length === 1 && shapes[0] instanceof BoolShapeView) {
+            const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
             if (flatten) {
                 props.context.nextTick(page, () => {
                     const s = page.getShape(flatten.id);

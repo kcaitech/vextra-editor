@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { h, nextTick, onMounted, onUnmounted, ref, toRaw } from 'vue';
-import comsMap from '@/components/Document/Content/comsmap';
 import { GroupShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
@@ -24,15 +22,6 @@ const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
 let render_item = toRaw<GroupShape>(props.data);
 const tip_name = ref('');
-
-function gen_view_box() {
-    const frame = render_item.frame;
-    return `-8 -8 ${frame.width + 16} ${frame.height + 16}`;
-}
-
-function render() {
-    return r(h, render_item as any, comsMap);
-}
 
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
@@ -146,16 +135,16 @@ function is_need_scroll_to_view() {
 function danger_check() {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
-    const sym = props.context.data.symbolsMgr.getSync(props.data.id);
+    const sym = props.context.data.getSymbolSync(props.data.id);
     if (!sym) return;
-    const is_circular = is_circular_ref2(sym, symbolref.refId);
+    let is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
 }
 
 function update_name() {
     tip_name.value = '';
     if (is_state(props.data)) {
-        const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+        const sym = props.context.data.getSymbolSync(props.data.parent!.id);
         tip_name.value = sym?.name || props.data.name;
     } else {
         tip_name.value = props.data.name;

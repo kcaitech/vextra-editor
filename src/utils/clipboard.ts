@@ -1,12 +1,33 @@
 import {
-    export_shape, import_shape_from_clipboard,
-    Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray,
-    TableCellType, TableShape, Matrix, Page, Transporter
+    export_shape,
+    import_shape_from_clipboard,
+    Shape,
+    ShapeType,
+    AsyncCreator,
+    ShapeFrame,
+    GroupShape,
+    TextShape,
+    Text,
+    export_text,
+    import_text,
+    TextShapeEditor,
+    ImageShape,
+    transform_data,
+    ContactShape,
+    CurvePoint,
+    PathShape,
+    adapt2Shape,
+    ShapeView,
+    BasicArray,
+    TableCellType,
+    TableShape,
+    Matrix,
+    Page,
+    Transporter
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { Media, getName, upload_image } from '@/utils/content';
+import { Media, getName, upload_image, SVGReader } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding, is_box_outer_view2 } from './common';
@@ -15,17 +36,20 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
+import { maySvgText, parse as SVGParse } from "@/utils/svg_parser";
 
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
     content: Media | string
 }
+
 class ExfContext {
     symbols = new Set<string>()
     medias = new Set<string>()
     referenced = new Set<string>()
 }
+
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'cn.protodesign';
 export const paras = 'cn.protodesign/paras'; // 文字段落
@@ -507,8 +531,7 @@ export class Clipboard {
                 } else if (type === 'text/html') {
                     paster_html_or_plain_inner_shape(_d, this.context, editor, false);
                 }
-            }
-            else if (types.length === 2) {
+            } else if (types.length === 2) {
                 if (types.includes('text/html') && types.includes('text/plain')) {
                     paster_html_or_plain_inner_shape(_d, this.context, editor, false);
                 }
@@ -941,9 +964,6 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             }
         }
 
-        console.log('inserted:', insert_result);
-
-
         // 5. 根据插入结果构建新的选区
         context.nextTick(page, () => {
             if (insert_result) {
@@ -975,6 +995,7 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
 }
+
 async function get_html_from_datatransferitem(data: any) {
     const val = await data.getType('text/html');
     if (!val) {
@@ -983,6 +1004,7 @@ async function get_html_from_datatransferitem(data: any) {
 
     return await val.text();
 }
+
 function replace_action(context: Context, text_html: any, src: ShapeView[]) {
     text_html = decode_html(text_html);
 
@@ -1027,6 +1049,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
         }
     })
 }
+
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
  * @param data 剪切板拿出的数据
@@ -1061,6 +1084,10 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
 }
 
 function image_reader(context: Context, val: any, contentType: string, t: Function, _xy?: PageXY) {
+    if (contentType === "image/svg+xml") {
+        SVGReader(context, val, _xy);
+        return;
+    }
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType, content: '' };
     const frame: { width: number, height: number } = { width: 100, height: 100 };
     const img = new Image();
@@ -1102,6 +1129,10 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         const is_plain = text && typeof text === 'string';
         if (!is_plain) throw new Error('read failure');
 
+        if (maySvgText(text)) {
+            return handleSvgText(context, text, _xy);
+        }
+
         const frame: { width: number, height: number } = { width: 400, height: 100 };
         const __xy = adjust_content_xy(context, frame);
         const xy: PageXY = _xy || __xy;
@@ -1113,31 +1144,62 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
 }
 
 function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
+    if (maySvgText(data)) {
+        return handleSvgText(context, data, _xy);
+    }
+
     const frame: { width: number, height: number } = { width: 400, height: 100 };
     const __xy = adjust_content_xy(context, frame);
     const xy: PageXY = _xy || __xy;
     paster_text(context, xy, data);
 }
 
+export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
+    const parseResult = SVGParse(text);
+
+    if (parseResult.shape) {
+        const xy = _xy || adjust_content_xy(context, parseResult.shape.frame, false);
+        parseResult.shape.frame.x = xy.x;
+        parseResult.shape.frame.y = xy.y;
+
+        const page = context.selection.selectedPage!;
+        const editor = context.editor4Page(page);
+
+        editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
+
+        if (parseResult.mediaResourceMgr) {
+            const container: any = {};
+            parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
+                container[k] = v;
+            });
+            after_import(context, container);
+        }
+    }
+}
+
 /**
  * 调整插入数据的位置以及大小，让插入的数据不会超过可视区域的大小并居中
  * @returns { {x: number,y: number} } 位置
  */
-function adjust_content_xy(context: Context, m: { width: number, height: number }) {
+export function adjust_content_xy(context: Context, m: { width: number, height: number }, fixFrame = true) {
     const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
-    const ratio_wh = m.width / m.height;
-    const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;
-    if (m.height >= m.width) {
-        if (m.height > page_height * 0.95) {
-            m.height = page_height * 0.95;
-            m.width = m.height * ratio_wh;
-        }
-    } else {
-        if (m.width > page_width * 0.95) {
-            m.width = page_width * 0.95;
-            m.height = m.width / ratio_wh;
+
+    if (fixFrame) {
+        const ratio_wh = m.width / m.height;
+        const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;
+        if (m.height >= m.width) {
+            if (m.height > page_height * 0.95) {
+                m.height = page_height * 0.95;
+                m.width = m.height * ratio_wh;
+            }
+        } else {
+            if (m.width > page_width * 0.95) {
+                m.width = page_width * 0.95;
+                m.height = m.width / ratio_wh;
+            }
         }
     }
+
     const page_center = matrix.inverseCoord(root.center);
     return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
 }
@@ -1270,9 +1332,9 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
 }
 
 /***
- * 
+ *
  * 复制页面链接
-*/
+ */
 //复制分享链接
 export const copyLink = async (url: string, t: Function) => {
     if (navigator.clipboard && window.isSecureContext) {
@@ -1301,6 +1363,7 @@ export const copyLink = async (url: string, t: Function) => {
         textArea.remove()
     }
 }
+
 function is_html(items: DataTransferItemList) {
     return items.length === 1 && items[0].type === 'text/html';
 }

@@ -39,7 +39,8 @@ const WITH_FILL = [
     ShapeType.TableCell,
     ShapeType.Symbol,
     ShapeType.SymbolUnion,
-    ShapeType.SymbolRef
+    ShapeType.SymbolRef,
+    ShapeType.BoolShape
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
@@ -59,7 +60,8 @@ const WITH_BORDER = [
     ShapeType.Contact,
     ShapeType.Symbol,
     ShapeType.SymbolUnion,
-    ShapeType.SymbolRef
+    ShapeType.SymbolRef,
+    ShapeType.BoolShape
 ];
 const WITH_TABLE = [ShapeType.Table];
 const WITH_SHADOW = [
@@ -74,7 +76,8 @@ const WITH_SHADOW = [
     ShapeType.Line,
     ShapeType.Symbol,
     ShapeType.SymbolUnion,
-    ShapeType.SymbolRef
+    ShapeType.SymbolRef,
+    ShapeType.BoolShape
 ]
 const WITHOUT_OPACITY = [
     ShapeType.Cutout,
@@ -235,7 +238,7 @@ function watch_shapes() {
     })
 
     const selectedShapes = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selectedShapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selectedShapes).filter(s => s.type !== ShapeType.Group);
     shapes.forEach((v) => {
         v.watch(update_by_shapes);
         watchedShapes.set(v.id, v)

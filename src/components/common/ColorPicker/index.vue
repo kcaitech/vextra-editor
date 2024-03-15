@@ -890,7 +890,7 @@ function move_stop_position(e: MouseEvent) {
             isDrag = true;
             const selected = props.context.selection.selectedShapes;
             const page = props.context.selection.selectedPage;
-            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
             const locat = props.locat;
             if (locat.type !== 'table_text' && locat.type !== 'text') {
                 gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes, page!, locat.index, locat.type);
@@ -967,7 +967,9 @@ const set_gradient = (val: GradientType | 'solid') => {
         props.context.color.switch_editor_mode(false);
     } else {
         props.context.color.set_gradient_type(val);
-        if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        setTimeout(() => {
+            if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        }, 100)
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
@@ -1045,7 +1047,7 @@ function window_blur() {
 
 const is_gradient_selected = () => {
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     if (shapes.length === 1) {
         if (shapes[0].type === ShapeType.Table && props.locat && props.locat.type !== 'table_text') {
             const t = props.context.tableSelection;

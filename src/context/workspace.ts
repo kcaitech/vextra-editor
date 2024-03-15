@@ -110,6 +110,7 @@ export class WorkSpace extends WatchableObject {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_round: boolean = false;
+    private m_font_name_list: {zh: string[], en: string[]} = { zh: [], en: [] };
 
     private m_root: Root = {
         init: false,
@@ -408,5 +409,13 @@ export class WorkSpace extends WatchableObject {
 
     setRoundMode(v: boolean) {
         this.m_round = v;
+    }
+    
+    setFontNameList(zh: string[], en: string[]) {
+        this.m_font_name_list.zh = zh;
+        this.m_font_name_list.en = en;
+    }
+    get fontNameList() {
+        return this.m_font_name_list;
     }
 }

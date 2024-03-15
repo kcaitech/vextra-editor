@@ -40,7 +40,7 @@ const s_mixed = ref(false);
 const e_mixed = ref(false);
 function borderApexStyleSelect(selected: SelectItem) {
     const page = props.context.selection.selectedPage;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     if (selected.content.startsWith('end')) {
         borderEndStyle.value = selected;
         if (shapes.length === 1) {
@@ -69,7 +69,7 @@ function borderApexStyleSelect(selected: SelectItem) {
     hidden_selection(props.context);
 }
 function init_v() {
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     const len = shapes.length;
     if (len === 1) {
         const s = shapes[0];
@@ -97,7 +97,7 @@ function init_v() {
 }
 function exchange() {
     const page = props.context.selection.selectedPage;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     const len = shapes.length;
     if (len === 1) {
         const e = props.context.editor4Shape(shapes[0]);

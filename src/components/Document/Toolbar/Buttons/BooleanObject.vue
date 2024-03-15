@@ -4,9 +4,8 @@ import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
-import { BoolOp, GroupShape, GroupShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { BoolOp, BoolShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
-import Tooltip from '@/components/common/Tooltip.vue';
 import { message } from '@/utils/message';
 const { t } = useI18n()
 const props = defineProps<{ context: Context, selection: Selection }>();
@@ -109,8 +108,8 @@ const selectionWatch = (t?: number) => {
 }
 
 const getBoolGroupType = (shapes: ShapeView[]) => {
-  if (shapes.length === 1 && shapes[0].type === ShapeType.Group) {
-    const type = (shapes[0] as GroupShapeView).getBoolOp()
+  if (shapes.length === 1 && shapes[0].type === ShapeType.BoolShape) {
+    const type = (shapes[0] as BoolShapeView).getBoolOp()
     if (type.op === 'union') {
       selectBool.value = 'union'
     } else if (type.op === 'subtract') {

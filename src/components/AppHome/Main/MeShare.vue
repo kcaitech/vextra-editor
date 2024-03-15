@@ -404,9 +404,8 @@ onUnmounted(() => {
         }
 
         svg {
-            width: 18px;
-            height: 18px;
-            padding: 2px;
+            width: 16px;
+            height: 16px;
             box-sizing: border-box;
         }
     }

@@ -10,3 +10,4 @@ yarn.lock
 .idea
 *.sql
 /src/communication/communication.js
+/deployment/ssh-port-forward-internal/ssh_pids.txt

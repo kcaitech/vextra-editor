@@ -50,7 +50,7 @@ function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
     const id = get_vari_value_for_ref(symref, props.data.variable);
-    vari_value.value = props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
+    vari_value.value = props.context.data.getSymbolSync(id)?.name || 'Error';
     if (vari_value.value) vari_instance_from.value = id;
 }
 
@@ -64,7 +64,7 @@ function component_watcher(type: number, val: Shape) {
         return;
     }
 
-    const sym = props.context.data.symbolsMgr.getSync(val.id);
+    const sym = props.context.data.getSymbolSync(val.id);
     if (!sym) {
         message("info", t('compos.invalid_compos'));
         return;

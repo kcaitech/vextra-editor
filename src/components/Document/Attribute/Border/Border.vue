@@ -90,7 +90,7 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('layout'))) [
+    if ((args.includes('layout') || args.includes('borders'))) [
         updateData()
     ]
 }
@@ -128,7 +128,7 @@ function updateData() {
             }
         }
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
         const _bs = get_borders(shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
@@ -314,7 +314,7 @@ function setColor(idx: number, color: Color) {
             e.setBorderColor4Cell(_idx, color, range)
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -432,7 +432,7 @@ const filterAlpha = (border: Border) => {
 function gradient_reverse(idx: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
@@ -445,7 +445,7 @@ function gradient_reverse(idx: number) {
 function gradient_rotate(idx: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
@@ -460,7 +460,7 @@ function gradient_rotate(idx: number) {
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(new BasicArray(), id, position, color);
@@ -474,7 +474,7 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
 function togger_gradient_type(idx: number, type: GradientType | 'solid') {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     if (type === 'solid') {
@@ -492,7 +492,7 @@ function togger_gradient_type(idx: number, type: GradientType | 'solid') {
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'borders');
@@ -506,7 +506,7 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
 function gradient_stop_delete(idx: number, index: number) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const actions = get_aciton_gradient_stop(shapes, _idx, index, 'borders');
@@ -524,7 +524,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
         const range = get_table_range(table);
         e.setFillType4Cell(_idx, fillType, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_filltype(shapes, _idx, fillType);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -535,7 +535,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 function layout() {
     show_apex.value = false;
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     if (shapes.length === 1) {
         const type = shapes[0].type;
         show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
@@ -609,7 +609,7 @@ function selection_watcher(t: number) {
 
 const isGradient = () => {
     const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     let ret = false;
     shapes.forEach(s => {
         if (s.type !== ShapeType.Contact) {

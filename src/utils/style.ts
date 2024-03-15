@@ -5,7 +5,7 @@ export function getShapesForStyle(shapes: ShapeView[]) {
     const __shapes: ShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        if (s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape) {
+        if (s.type === ShapeType.Group) {
             const shapes = flattenShapes(s.childs).filter(s => s.type !== ShapeType.Group);
             __shapes.push(...shapes);
         } else {

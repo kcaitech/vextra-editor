@@ -135,7 +135,7 @@ function save_layer_show(type: VariableType, name: string) {
 }
 
 const getValue = (id: string) => {
-    return props.context.data.symbolsMgr.getSync(id)?.name;
+    return props.context.data.getSymbolSync(id)?.name;
 }
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
