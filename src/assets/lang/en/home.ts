@@ -325,7 +325,6 @@ export const comment = {
     month: 'month',
     day: 'day',
     no_comment: 'No current comments',
-    leave_a_comment: 'Click anywhere to leave a comment',
     comments_hide: 'Comments are set to hide',
     show_comments: 'Show comments'
 }

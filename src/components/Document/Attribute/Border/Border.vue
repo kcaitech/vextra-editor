@@ -39,8 +39,8 @@ interface BorderItem {
 interface Props {
     context: Context
     shapes: ShapeView[]
-    trigger: any[]
     cellsTrigger: any[]
+    trigger: any[]
 }
 
 const { t } = useI18n();
@@ -535,9 +535,12 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 function layout() {
     show_apex.value = false;
-    if (props.shapes.length === 1) {
-        const type = props.shapes[0].type;
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    if (shapes.length === 1) {
+        const type = shapes[0].type;
         show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
+    }else if (shapes.length > 1) {
+        show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
     }
 }
 
@@ -621,6 +624,9 @@ const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 const stop2 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
     if (v.length > 0 && (v.includes('borders'))) updateData();
 })
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('layout'))) updateData();
+});
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -629,6 +635,7 @@ onMounted(() => {
 onUnmounted(() => {
     stop();
     stop2();
+    stop3();
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => {

@@ -234,7 +234,6 @@ const showHiddenLeft = () => {
 
         <div class="no_comment" v-if="documentCommentList.length <= 0">
             <div>{{ t('comment.no_comment') }}</div>
-            <div>{{ t('comment.leave_a_comment') }}</div>
         </div>
         <div class="visible-comment" v-else-if="!visibleComment && action !== Action.AddComment">
             <div>{{ t('comment.comments_hide') }}</div>

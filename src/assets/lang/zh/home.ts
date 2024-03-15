@@ -325,7 +325,6 @@ export const comment = {
     month: '月',
     day: '日',
     no_comment: '当前无评论',
-    leave_a_comment: '点击任意位置留下你的评论',
     comments_hide: '评论已设置隐藏',
     show_comments: '显示评论'
 }

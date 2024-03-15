@@ -1154,9 +1154,6 @@ export function component(context: Context) {
 
 export function lower_layer(context: Context, layer?: number) {
     const selection = context.selection;
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
 
     const page = selection.selectedPage;
 
@@ -1165,20 +1162,19 @@ export function lower_layer(context: Context, layer?: number) {
     }
 
     const editor = context.editor4Page(page);
-    const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), layer);
-
-    if (!result) {
-        message('info', context.workspace.t('homerightmenu.unable_lower'));
+    if (selection.selectedShapes.length === 1) {
+        const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+        if (!result) {
+            message('info', context.workspace.t('homerightmenu.unable_lower'));
+        }
+    } else if (selection.selectedShapes.length > 1) {
+        editor.lower_layers(selection.selectedShapes.map(s => adapt2Shape(s)), layer);
     }
 }
 
 export function uppper_layer(context: Context, layer?: number) {
     const selection = context.selection;
 
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
-
     const page = selection.selectedPage;
 
     if (!page) {
@@ -1186,10 +1182,13 @@ export function uppper_layer(context: Context, layer?: number) {
     }
 
     const editor = context.editor4Page(page);
-    const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), layer);
-
-    if (!result) {
-        message('info', context.workspace.t('homerightmenu.unable_upper'));
+    if (selection.selectedShapes.length === 1) {
+        const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+        if (!result) {
+            message('info', context.workspace.t('homerightmenu.unable_upper'));
+        }
+    } else if (selection.selectedShapes.length > 1) {
+        editor.uppper_layers(selection.selectedShapes.map(s => adapt2Shape(s)), layer);
     }
 }
 

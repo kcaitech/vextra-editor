@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
-import { onMounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
 import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { watch } from 'vue';
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void;
@@ -144,6 +145,13 @@ const get_top_posi = () => {
         }
     }
 }
+watch(() => props.showFont, (v) => {
+    if(v) {
+        nextTick(() => {
+            get_top_posi();
+        })
+    }
+})
 
 onMounted(() => {
     getAllTextFontName()

@@ -22,6 +22,8 @@ interface Props {
 
     valueView?: any;
     itemView?: any;
+
+    mixed?: boolean;
 }
 
 interface Emits {
@@ -81,7 +83,7 @@ function options() {
     } else {
         top = curValueIndex.value * item_height;
     }
-
+    if (props.mixed) top = 0;
     const over = zero + options_rect.height + PADDING - documnet_height;
 
     if (over > 0) {
@@ -135,7 +137,7 @@ function render() {
     }
     if (props.selected && source.value.length) {
         const index = source.value.findIndex(i => i.data.value === props.selected!.value);
-        if (index > -1) {
+        if (index > -1 || props.mixed) {
             curValueIndex.value = index;
             curValue.value = props.selected;
         }
@@ -149,7 +151,7 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
-            <div v-if="!props.valueView" class="value-wrap">{{ curValue?.content }}</div>
+            <div v-if="!props.valueView || mixed" class="value-wrap">{{ curValue?.content }}</div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
@@ -159,6 +161,11 @@ onMounted(render)
         </div>
 
         <div v-if="optionsContainerVisible" @click.stop class="options-container" ref="optionsContainer" tabindex="-1">
+            <div v-if="mixed">
+                <div class="item-default disabled">
+                    <div class="content-wrap"> {{ t('attr.mixed') }}</div>
+                </div>
+            </div>
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
@@ -271,6 +278,16 @@ onMounted(render)
             >svg {
                 flex: 0 0 12px;
                 height: 12px;
+            }
+        }
+
+        .disabled {
+            border-bottom: 1px solid #efefef;
+            pointer-events: none;
+
+            >div {
+                color: #787878;
+                pointer-events: none;
             }
         }
 

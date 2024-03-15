@@ -21,32 +21,38 @@ const GROUP = 1;
 const UNGROUP = 2;
 const isBoolGroup = ref(false)
 const state = ref(0);
+const isUngroup = ref(false);
+const isGroup = ref(false);
 
 function _updater(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
+        isBoolGroup.value = false;
+        isUngroup.value = false;
+        isGroup.value = false;
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
-            isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
             if (type === ShapeType.Group) {
-                isBoolGroup.value = true
-            } else {
-                isBoolGroup.value = false
+                isBoolGroup.value = true;
+                isUngroup.value = true;
             }
+            isGroup.value = true;
             if (type === ShapeType.Group || type === ShapeType.Artboard) {
                 state.value = state.value ^ UNGROUP ^ GROUP;
             } else {
                 state.value = state.value ^ GROUP;
             }
         } else {
-            isBoolGroup.value = true
+            isBoolGroup.value = true;
+            isGroup.value = true;
             const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard);
             if (groups.length) {
                 state.value = state.value ^ UNGROUP ^ GROUP;
+                isUngroup.value = true;
             } else {
                 state.value = state.value ^ GROUP;
             }
@@ -200,12 +206,12 @@ const flattenShape = () => {
 </script>
 
 <template>
-    <div class="container">
+    <div class="container" v-if="isGroup || isUngroup || isBoolGroup">
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
             <div class="vertical-line" />
         </div>
-        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
-            <div class="group">
+        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5" v-if="isGroup">
+            <div class="group" v-if="isGroup">
                 <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
                     :class="{ active: state & GROUP }">
                     <svg-icon icon-class="group"></svg-icon>
@@ -216,9 +222,11 @@ const flattenShape = () => {
         <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
             @flatten-shape="flattenShape"></BooleanObject>
 
-        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
-            <div class="group">
-                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
+        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5"
+            v-if="isUngroup">
+            <div class="group" v-if="isUngroup">
+                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false"
+                    :class="{ active: state & UNGROUP }">
                     <svg-icon icon-class="ungroup"></svg-icon>
                 </ToolButton>
             </div>

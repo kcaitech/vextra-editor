@@ -32,7 +32,7 @@ interface Props {
     context: Context;
     shapes: ShapeView[];
     selectionChange: number;
-    triggle: any[];
+    trigger: any[];
     tableSelectionChange: number;
     cellsTrigger: any[];
 }
@@ -494,7 +494,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
-const stop3 = watch(() => props.triggle, v => { // 监听选区图层变化
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
     if (v.length > 0 && (v.includes('layout'))) updateData();
 });
 const stop4 = watch(() => props.tableSelectionChange, updateData); // 监听表格选区变化
