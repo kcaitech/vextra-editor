@@ -175,6 +175,7 @@ declare module '@vue/runtime-core' {
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     MessageBoxBeta: typeof import('./src/components/common/MessageBoxBeta.vue')['default']
+    MHome: typeof import('./src/components/Mobile/mHome.vue')['default']
     Module: typeof import('./src/components/Document/Attribute/Module/Module.vue')['default']
     MoveProjectFill: typeof import('./src/components/TeamProject/MoveProjectFill.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']

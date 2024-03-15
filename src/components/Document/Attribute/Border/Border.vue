@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -61,6 +61,10 @@ const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>([]);
 const apex_view = ref<number>(0);
 let table: TableShape;
+let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+let bordercellthickness_editor: any;
+
+
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
@@ -664,8 +668,13 @@ const testEl = ref<HTMLElement>()
 const testidx = ref<number>(0)
 const pointX = ref<number>()
 const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+const rotate = ref<boolean>()
+
 async function onMouseDown(e: MouseEvent, index: number) {
-    console.log(e);
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
     pointX.value = e.clientX - 6
     pointY.value = e.clientY - 6
     testEl.value = borderThickness.value![index] as HTMLElement
@@ -677,12 +686,19 @@ async function onMouseDown(e: MouseEvent, index: number) {
         });
     }
     e.stopPropagation()
+    if (selected.length === 1 && selected[0].type === ShapeType.Table && is_editing(table)) {
+        const table = props.context.tableSelection;
+        const range = get_table_range(table);
+        bordercellthickness_editor = props.context.editor4Table(selected[0] as TableView).asyncBorderThickness4Cell(range);
+        bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    } else {
+        borderthickness_editor = props.context.editor.controller().asyncBorderThickness(selected, page!)
+        borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    }
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("pointerlockchange", lockChangeAlert, false);
 }
 
-const showpoint = ref<boolean>(false)
-const rotate = ref<boolean>(true)
 function lockChangeAlert() {
     if (document.pointerLockElement) {
         showpoint.value = true
@@ -703,18 +719,21 @@ const selectBorderThicknes = (e: FocusEvent, index: number) => {
     }, 200);
 }
 
+
+function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    rotate.value = isRotating
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
 function onMouseMove(e: MouseEvent) {
-    if (e.movementX > 0) {
-        rotate.value = true
-    } else {
-        rotate.value = false
-    }
-    pointY.value! += e.movementY
-    pointX.value! += e.movementX
-    if (pointY.value! > document.documentElement.clientHeight) return pointY.value = 0
-    if (pointX.value! > document.documentElement.clientWidth) return pointX.value = 0
-    if (pointY.value! < 0) return pointY.value = document.documentElement.clientHeight
-    if (pointX.value! < 0) return pointX.value = document.documentElement.clientWidth
+    const isRotating = e.movementX > 0;
+    updatePosition(e.movementX, e.movementY, isRotating)
     const index = testidx.value
     const id = borders.length - index - 1
     const selecteds = props.context.selection.selectedShapes;
@@ -725,16 +744,12 @@ function onMouseMove(e: MouseEvent) {
     if (borderThickness.value?.length) {
         const thickness = Number(borders[index].border.thickness) + e.movementX;
         if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-            const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableView);
-            const range = get_table_range(table);
-            e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
+            bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
         } else {
             const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
-            if (actions && actions.length) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderThickness(actions);
+            if (actions && actions.length && borderthickness_editor) {
+                borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
             }
         }
     }
@@ -744,6 +759,14 @@ function onMouseMove(e: MouseEvent) {
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation()
     document.exitPointerLock()
+    if (borderthickness_editor) {
+        borderthickness_editor.close();
+        borderthickness_editor = undefined;
+    }
+    if (bordercellthickness_editor) {
+        bordercellthickness_editor.close();
+        bordercellthickness_editor = undefined
+    }
 }
 
 function setThickness(e: Event, id: number) {
@@ -851,10 +874,10 @@ function setThickness(e: Event, id: number) {
     </div>
     <teleport to="body">
         <Transition name="bounce">
-        <div v-if="showpoint" class="point"
-            :style="{ top: pointY + 'px', left: pointX + 'px', transform: `rotate(${rotate ? '180' :'0'}deg)`}">
-        </div>
-    </Transition>
+            <div v-if="showpoint" class="point"
+                :style="{ top: pointY + 'px', left: pointX + 'px', transform: `rotate(${rotate ? '180' :'0'}deg)`}">
+            </div>
+        </Transition>
     </teleport>
 </template>
 
@@ -1089,7 +1112,7 @@ function setThickness(e: Event, id: number) {
                         cursor: ew-resize;
                         flex: 0 0 16px;
                         height: 16px;
-                                            }
+                    }
 
                     >input {
                         outline: none;
