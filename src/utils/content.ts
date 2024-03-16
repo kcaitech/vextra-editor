@@ -147,6 +147,7 @@ export function isInner(context: Context, shape: ShapeView) {
 }
 
 export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
+    if (frame.width === 0 || frame.height === 0) throw new Error();
     const selection = context.selection;
     const workspace = context.workspace;
 
