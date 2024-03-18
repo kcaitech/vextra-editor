@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { SymbolShape } from "@kcdesign/data";
-import { initCommonShape } from "@/components/Document/Content/common";
 import ShapeCard from "@/components/common/ShapeCard.vue";
 
 interface Props {
     data: SymbolShape
 }
 const props = defineProps<Props>();
-const common = initCommonShape(props);
 </script>
 <template>
     <div class="compo-preview-container">

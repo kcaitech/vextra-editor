@@ -90,7 +90,7 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('layout'))) [
+    if ((args.includes('layout') || args.includes('borders'))) [
         updateData()
     ]
 }

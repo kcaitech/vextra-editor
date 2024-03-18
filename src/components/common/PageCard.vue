@@ -19,7 +19,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const pageSvg = ref<HTMLElement>();
+const pageSvg = ref<SVGSVGElement>();
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 
