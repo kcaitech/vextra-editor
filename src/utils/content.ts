@@ -34,6 +34,7 @@ import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/sym
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/utils/svg_parser";
+import { sort_by_layer } from "@/utils/group_ungroup";
 
 export interface Media {
     name: string
@@ -705,7 +706,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         }
     } else if (area === 'controller') { // 点击在选区上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container', 'forward', 'back', 'top', 'bottom'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -734,10 +735,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
         }
         const shapes = context.selection.selectedShapes;
-        if (shapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-            if (permIsEdit(context) && !context.tool.isLable) {
-                contextMenuItems.push('forward', 'back', 'top', 'bottom');
-            }
+        if (shapes.length <= 1) {
             if ((e.target as Element).closest('[data-title="symbol-title"]') || shapes[0].type === ShapeType.Symbol || shapes[0].type === ShapeType.SymbolUnion) { // 点在了组件上
                 const index = contextMenuItems.findIndex((item) => item === 'component');
                 if (index > -1) contextMenuItems.splice(index, 1);
@@ -1159,43 +1157,32 @@ export function component(context: Context) {
 
 export function lower_layer(context: Context, layer?: number) {
     const selection = context.selection;
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
-
-    const page = selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
+    const page = selection.selectedPage!;
 
     const editor = context.editor4Page(page);
-    const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+
+    const result = editor.lowerLayer(sort_by_layer(context, selection.selectedShapes, -1), layer);
 
     if (!result) {
         message('info', context.workspace.t('homerightmenu.unable_lower'));
     }
+
+    return result;
 }
 
-export function uppper_layer(context: Context, layer?: number) {
+export function upper_layer(context: Context, layer?: number) {
     const selection = context.selection;
-
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
-
-    const page = selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
+    const page = selection.selectedPage!;
 
     const editor = context.editor4Page(page);
-    const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+
+    const result = editor.upperLayer(sort_by_layer(context, selection.selectedShapes), layer);
 
     if (!result) {
         message('info', context.workspace.t('homerightmenu.unable_upper'));
     }
+
+    return result;
 }
 
 export function scale_0(context: Context) {

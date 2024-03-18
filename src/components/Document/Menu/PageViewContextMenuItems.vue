@@ -18,12 +18,19 @@ import {
     adapt2Shape,
     GroupShapeView,
     SymbolRefView,
-TableCellView
+    TableCellView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { adapt_page, get_shape_within_document, select_all, shape_track } from '@/utils/content';
+import {
+    adapt_page,
+    get_shape_within_document,
+    lower_layer,
+    select_all,
+    shape_track,
+    upper_layer
+} from '@/utils/content';
 import { message } from '@/utils/message';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
@@ -41,6 +48,7 @@ interface Props {
     site?: { x: number, y: number },
     menu_over_left?: number
 }
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -260,11 +268,8 @@ function forward() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
-        const editor = props.context.editor4Page(page);
-        const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), 1);
-        if (!result) {
-            message('info', props.context.workspace.t('homerightmenu.unable_upper'));
-        } else {
+        const result = upper_layer(props.context, 1);
+        if (result) {
             emit('close');
         }
     }
@@ -278,11 +283,8 @@ function back() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
-        const editor = props.context.editor4Page(page);
-        const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), 1);
-        if (!result) {
-            message('info', props.context.workspace.t('homerightmenu.unable_lower'));
-        } else {
+        const result = lower_layer(props.context, 1);
+        if (result) {
             emit('close');
         }
     }
@@ -295,11 +297,8 @@ function top() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
-        const editor = props.context.editor4Page(page);
-        const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]));
-        if (!result) {
-            message('info', props.context.workspace.t('homerightmenu.unable_upper'));
-        } else {
+        const result = upper_layer(props.context);
+        if (result) {
             emit('close');
         }
     }
@@ -312,11 +311,8 @@ function bottom() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
-        const editor = props.context.editor4Page(page);
-        const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]));
-        if (!result) {
-            message('info', props.context.workspace.t('homerightmenu.unable_lower'));
-        } else {
+        const result = lower_layer(props.context);
+        if (result) {
             emit('close');
         }
     }
@@ -472,6 +468,7 @@ function lock() {
     props.context.selection.resetSelectShapes();
     emit('close');
 }
+
 const hoverItem = ref('');
 const mouseenter = (type: string) => {
     hoverItem.value = type;
@@ -507,11 +504,12 @@ onUnmounted(() => {
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
-            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
+             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
-                style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site" :context="props.context">
+                      style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
+            <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site"
+                         :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
         </div>
@@ -536,25 +534,27 @@ onUnmounted(() => {
             </span>
         </div>
         <div :class="invalid_items.includes('paste') ? 'invalid' : 'item'" v-if="props.items.includes('paste')"
-            @click="paste">
+             @click="paste">
             <span>{{ t('system.paste') }}</span>
             <span class="shortkey">
                 <Key code="Ctrl V"></Key>
             </span>
         </div>
         <div :class="invalid_items.includes('only_text') ? 'invalid' : 'item'" v-if="props.items.includes('only_text')"
-            @click="paste_text">
+             @click="paste_text">
             <span>{{ t('system.only_text') }}</span>
             <span class="shortkey">
                 <Key code="Alt Ctrl V"></Key>
             </span>
         </div>
-        <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'" v-if="props.items.includes('paste-here')"
-            @click="paste_here" @mouseenter="() => { show_placement(true) }" @mouseleave="() => { show_placement(false) }">
+        <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'"
+             v-if="props.items.includes('paste-here')"
+             @click="paste_here" @mouseenter="() => { show_placement(true) }"
+             @mouseleave="() => { show_placement(false) }">
             <span>{{ t('system.paste_here') }}</span>
         </div>
         <div :class="invalid_items.includes('replace') ? 'invalid' : 'item'" v-if="props.items.includes('replace')"
-            @click="_replace">
+             @click="_replace">
             <span>{{ t('system.replace') }}</span>
             <span class="shortkey">
                 <Key code="Shift Ctrl R"></Key>
@@ -584,13 +584,15 @@ onUnmounted(() => {
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
         <div class="item" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
-            @mouseleave="hoverItem = ''">
-            <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'" v-show="isCursor"></svg-icon>
+             @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'"
+                      v-show="isCursor"></svg-icon>
             <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
         <div class="item" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
-            @mouseleave="hoverItem = ''">
-            <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'" v-show="isComment"></svg-icon>
+             @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'"
+                      v-show="isComment"></svg-icon>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
@@ -618,12 +620,14 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('forward')" @click="forward">
             <span>{{ t('system.bring_forward') }}</span>
             <span class="shortkey">
-                <Key code="+"></Key>
+                 <Key code="Ctrl ]"></Key>
             </span>
         </div>
         <div class="item" v-if="props.items.includes('back')" @click="back">
             <span>{{ t('system.send_backward') }}</span>
-            <span class="shortkey">- </span>
+            <span class="shortkey">
+                 <Key code="Ctrl ["></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('top')" @click="top">
             <span>{{ t('system.bring_to_top') }}</span>
@@ -696,7 +700,7 @@ onUnmounted(() => {
             </span>
         </div>
         <div class="item" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
-            @mouseleave="hoverItem = ''">
+             @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
             <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
         </div>
@@ -718,16 +722,16 @@ onUnmounted(() => {
         align-items: center;
         box-sizing: border-box;
 
-        >span {
+        > span {
             margin-left: 20px;
         }
 
-        >svg {
+        > svg {
             width: 12px;
             height: 12px;
         }
 
-        >.shortkey {
+        > .shortkey {
             margin-left: auto;
         }
     }
@@ -744,7 +748,7 @@ onUnmounted(() => {
         background-color: #1878F5;
         color: #fff;
 
-        >svg {
+        > svg {
             transform: rotate(0deg);
         }
     }
@@ -761,7 +765,7 @@ onUnmounted(() => {
         background-color: var(--theme-color);
         color: grey;
 
-        >.shortkey {
+        > .shortkey {
             margin-left: auto;
         }
     }
