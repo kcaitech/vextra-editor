@@ -121,6 +121,16 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
+        // 判断是否段首及indent > 0
+        const align = shapetext.alignParaRange(start, 0);
+        if (align.index === start) {
+            const para = shapetext.paraAt(start);
+            if ((para?.para.attr?.indent || 0) > 0) {
+                editor.offsetParaIndent(-1, start, 0);
+                return;
+            }
+        }
+
         if (start === 0) {
             const firstChar = shapetext.charAt(0);
             if (firstChar === '\n') {
