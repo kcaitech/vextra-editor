@@ -1305,5 +1305,9 @@ export const is_editing = (table: TableSelection) => {
 }
 
 export function hidden_selection(context: Context) {
+    if (context.workspace.is_path_edit_mode) {
+        return;
+    }
+
     context.selection.notify(Selection.SELECTION_HIDDEN);
 }
