@@ -102,19 +102,21 @@ onUnmounted(() => {
     width: 100%;
     box-sizing: border-box;
     display: flex;
-    padding: 6px 28px 6px 20px;
     align-items: center;
-    //justify-content: space-between;
+    margin-top: 16px;
+    justify-content: space-between;
+    gap: 6px;
 
     .select-wrap {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        width: 144px;
+        width: calc(100% - 28px - 19px - 6px - 6px);
         height: 100%;
+        gap: 6px;
+        margin-left: 19px;
 
         .select {
-            flex: 0 0 68px;
+            flex: 0 0 50%;
             height: 32px;
         }
     }
@@ -127,7 +129,7 @@ onUnmounted(() => {
         justify-content: center;
         cursor: pointer;
         border-radius: var(--default-radius);
-        margin-left: 4px;
+        // margin-left: 4px;
 
         >svg {
             width: 16px;

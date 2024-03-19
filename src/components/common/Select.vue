@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, watch, computed, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
+import { ShapeType, ShapeView } from '@kcdesign/data';
+import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
     content: string
@@ -16,12 +18,13 @@ export interface SelectSource {
 interface Props {
     source: SelectSource[];
     selected?: SelectItem;
-
+    context?: Context;
     itemHeight?: number;
     itemWidth?: number;
     index?: number;
     valueView?: any;
     itemView?: any;
+    shapes?: ShapeView[];
 }
 
 interface Emits {
@@ -75,17 +78,16 @@ function options() {
     const item_height = props.itemHeight || DEFAULT_ITEM_HEIGHT;
 
     let top = 0;
-
-    if (curValueIndex.value === -1) {
-        top = item_height;
-    } else {
-        top = curValueIndex.value * item_height;
-    }
-
     const over = zero + options_rect.height + PADDING - documnet_height;
 
     if (over > 0) {
         top += over;
+    } else {
+        if (curValueIndex.value === -1) {
+            top = item_height;
+        } else {
+            top = curValueIndex.value * item_height;
+        }
     }
     const TOP = zero - TOPBAR_HEIGHT
     if (top > TOP) {
@@ -142,6 +144,14 @@ function render() {
     }
 }
 
+const showOP = ref<boolean>(true)
+
+watchEffect(() => {
+    if (props.shapes) {
+        showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type)
+    }
+})
+
 watch(() => props.selected, render);
 onMounted(render)
 </script>
@@ -149,11 +159,12 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
-            <div v-if="!props.valueView" class="value-wrap">{{ curValue?.content }}</div>
+            <div v-if="!props.valueView" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{ curValue?.content }}
+            </div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
-            <div class="svg-wrap">
+            <div class="svg-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">
                 <svg-icon icon-class="down"></svg-icon>
             </div>
         </div>
@@ -236,7 +247,7 @@ onMounted(render)
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
-        z-index: 1;
+        z-index: 999;
         border: 1px solid #EBEBEB;
         padding: 4px 0;
         box-sizing: border-box;
