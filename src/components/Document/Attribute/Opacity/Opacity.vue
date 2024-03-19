@@ -82,7 +82,10 @@ function change(e: Event) {
 
 function down(v: number) {
     const selected = props.context.selection.selectedShapes;
+    console.log(selected);
+    
     const page = props.context.selection.selectedPage;
+    console.log(page);
     if (!selected.length || !page) return;
     const value = limitValue(v);
     if (isNaN(value)) return;

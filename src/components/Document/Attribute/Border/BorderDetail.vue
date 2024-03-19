@@ -23,45 +23,22 @@ interface Props {
 
 const props = defineProps<Props>();
 const { t } = useI18n();
-const isActived = ref(false)
-const editor = computed(() => {
-    return props.context.editor4Shape(props.shapes[0]);
-});
-const len = computed(() => props.shapes.length);
 const popover = ref();
-const isDrag = ref(false)
-const curpt: { x: number } = { x: 0 }
-const _curpt: { x: number } = { x: 0 }
-const scale = ref<{ axleX: number }>({
-    axleX: 0
-})
-const show_position = ref<boolean>(true);
 const showStartStyle = ref<boolean>(true)
 const showEndStyle = ref<boolean>(true)
-const borderThickness = ref<HTMLInputElement>();
 const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
     ['solid', t('attr.solid')],
     ['dash', t('attr.dash')]
 ]);
-const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
-const positonOptionsSource: SelectSource[] = genOptions([
-    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
-    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
-    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
-]);
 
 function showMenu() {
     updater();
-    layout()
+    layout();
     popover.value.show();
 }
 
 function updater() {
-    // border position init
-    const positionSelected = positonOptionsSource.find(i => i.data.value === props.border.position)?.data;
-    positionSelected && (position.value = positionSelected);
-
     // border style init
     const bs = ((s: BorderStyle) => s.length > 0 ? 'dash' : 'solid')(props.border.borderStyle);
     const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
@@ -92,185 +69,18 @@ function borderStyleSelect(selected: SelectItem) {
     hidden_selection(props.context);
 }
 
-function positionSelect(selected: SelectItem) {
-    position.value = selected;
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shapes = getShapesForStyle(selecteds);
-    const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
-    if (actions && actions.length) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesBorderPosition(actions);
-    }
-    popover.value.focus();
-    hidden_selection(props.context);
-}
-
-function setThickness(e: Event) {
-    const thickness = Number((e.target as HTMLInputElement).value);
-    const selecteds = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shape = selecteds[0];
-    const table = props.context.tableSelection;
-    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(shape as TableView);
-        const range = get_table_range(table);
-        e.setBorderThickness4Cell(props.index, thickness, range)
-    } else {
-        const shapes = getShapesForStyle(selecteds);
-        const actions = get_actions_border_thickness(shapes, props.index, thickness);
-        if (actions && actions.length) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesBorderThickness(actions);
-        }
-    }
-    hidden_selection(props.context);
-}
-
-const augment = (e: Event) => {
-    if (borderThickness.value) {
-        const selecteds = props.context.selection.selectedShapes;
-        const page = props.context.selection.selectedPage;
-        if (!page || selecteds.length < 1) return;
-        const shape = selecteds[0];
-        const table = props.context.tableSelection;
-        const thickness = Number(borderThickness.value.value) + 1
-        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-            const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableView);
-            const range = get_table_range(table);
-            e.setBorderThickness4Cell(props.index, thickness, range)
-
-        } else {
-            const shapes = getShapesForStyle(selecteds);
-            const actions = get_actions_border_thickness(shapes, props.index, thickness);
-            if (actions && actions.length) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderThickness(actions);
-            }
-        }
-        borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
-        hidden_selection(props.context);
-    }
-}
-const decrease = (e: Event) => {
-    if (borderThickness.value) {
-        if (Number(borderThickness.value.value) === 0) return
-        const thickness = Number(borderThickness.value.value) - 1;
-        const selecteds = props.context.selection.selectedShapes;
-        const page = props.context.selection.selectedPage;
-        if (!page || selecteds.length < 1) return;
-        const shape = selecteds[0];
-        const table = props.context.tableSelection;
-        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-            const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableView);
-            const range = get_table_range(table);
-            e.setBorderThickness4Cell(props.index, thickness, range)
-
-        } else {
-            const shapes = getShapesForStyle(selecteds);
-            const actions = get_actions_border_thickness(shapes, props.index, thickness);
-            if (actions && actions.length) {
-                const editor = props.context.editor4Page(page);
-                editor.setShapesBorderThickness(actions);
-            }
-        }
-        borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
-    }
-    hidden_selection(props.context);
-}
 
 watch(() => props.border, () => {
     updater();
 }, { deep: true })
 
-const onMouseDown = (e: MouseEvent) => {
-    e.stopPropagation()
-    isDrag.value = true
-    //鼠标按下时的位置
-    curpt.x = e.screenX
-    _curpt.x = e.screenX
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-}
-const i = ref(0)
-const onMouseMove = (e: MouseEvent) => {
-    let mx = e.screenX - curpt.x
-    scale.value.axleX = e.screenX - _curpt.x
-    if (scale.value.axleX > 0 || Number(borderThickness.value!.value) !== 0) {
-        curpt.x = e.screenX
-        i.value = i.value + 1
-        if (i.value >= 3 && isDrag.value) {
-            i.value = 0
-            const selecteds = props.context.selection.selectedShapes;
-            const page = props.context.selection.selectedPage;
-            if (!page || selecteds.length < 1) return;
-            const shape = selecteds[0];
-            const table = props.context.tableSelection;
-            if (mx > 0) {
-                if (borderThickness.value) {
-                    const thickness = Number(borderThickness.value.value) + 1;
-                    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-                        const table = props.context.tableSelection;
-                        const e = props.context.editor4Table(shape as TableView);
-                        const range = get_table_range(table);
-                        e.setBorderThickness4Cell(props.index, thickness, range)
-                    } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-                        const actions = get_actions_border_thickness(shapes, props.index, thickness);
-                        if (actions && actions.length) {
-                            const editor = props.context.editor4Page(page);
-                            editor.setShapesBorderThickness(actions);
-                        }
-                    }
-                    borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
-                }
-            } else if (mx < 0) {
-                if (borderThickness.value) {
-                    let thickness = Number(borderThickness.value.value) - 1
-                    if (thickness <= 0) {
-                        thickness = 0
-                        _curpt.x = e.screenX
-                    }
-                    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
-                        const table = props.context.tableSelection;
-                        const e = props.context.editor4Table(shape as TableView);
-                        const range = get_table_range(table);
-                        e.setBorderThickness4Cell(props.index, thickness, range)
-                    } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
-                        const actions = get_actions_border_thickness(shapes, props.index, thickness);
-                        if (actions && actions.length) {
-                            const editor = props.context.editor4Page(page);
-                            editor.setShapesBorderThickness(actions);
-                        }
-                    }
-                    if (Number(borderThickness.value.value) > 0) {
-                        borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
-                    }
-                }
-            }
-        }
-    }
-}
-const onMouseUp = (e: MouseEvent) => {
-    e.stopPropagation()
-    isDrag.value = false
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
-}
 
 function layout() {
     showStartStyle.value = false;
     showEndStyle.value = false;
-    show_position.value = true;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
         if (shape.type === ShapeType.Line) {
-            show_position.value = false;
             if (props.index === 0) {
                 showStartStyle.value = true;
                 showEndStyle.value = true;
@@ -289,13 +99,6 @@ function selection_wather(t?: any) {
     if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) layout();
 }
 
-const selectBorderThicknes = () => {
-    isActived.value = true
-    borderThickness.value?.select()
-}
-function blur2() {
-    isActived.value = false
-}
 
 onMounted(() => {
     props.context.selection.watch(selection_wather);
@@ -312,33 +115,13 @@ onUnmounted(() => {
             :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
-                    <div class="bg" @click="showMenu">
-                        <svg-icon icon-class="gear"></svg-icon>
+                    <div class="bg" :class="{ actived: props.context.menu.ispopover }" @click="showMenu">
+                        <svg-icon icon-class="select-more"></svg-icon>
                     </div>
                 </div>
             </template>
             <template #body>
                 <div class="options-container">
-                    <!-- 边框位置 -->
-                    <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
-                        <label>{{ t('attr.position') }}</label>
-                        <Select class="select" :source="positonOptionsSource" :selected="position"
-                            @select="positionSelect"></Select>
-                    </div>
-                    <!-- 边框厚度 -->
-                    <div>
-                        <label>{{ t('attr.thickness') }}</label>
-                        <div class="thickness-container" :class="{ actived: isActived }">
-                            <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
-                            <input ref="borderThickness" type="text" :value="border.thickness"
-                                @change="e => setThickness(e)" @blur="blur2" @focus="selectBorderThicknes">
-                            <div class="up_down" :class="{ active: isActived }">
-                                <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
-                                <svg-icon icon-class="down" @click="decrease"></svg-icon>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 边框样式 -->
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
@@ -352,6 +135,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.actived {
+    background-color: #EBEBEB;
+}
+
 .border-detail-container {
     >.popover {
         width: 28px;

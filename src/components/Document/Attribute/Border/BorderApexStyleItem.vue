@@ -28,7 +28,6 @@ const isEnd = computed<boolean>(() => {
 <style scoped lang="scss">
 .border-front-style-item-container {
     height: 32px;
-    width: 68px;
 
     padding: 0 6px;
     box-sizing: border-box;

@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, watch, computed, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
+import { ShapeType, ShapeView } from '@kcdesign/data';
+import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
     content: string
@@ -16,16 +18,17 @@ export interface SelectSource {
 interface Props {
     source: SelectSource[];
     selected?: SelectItem;
-
+    context?: Context;
     itemHeight?: number;
     itemWidth?: number;
-
+    index?: number;
     valueView?: any;
     itemView?: any;
+    shapes?: ShapeView[];
 }
 
 interface Emits {
-    (e: "select", value: SelectItem): void;
+    (e: "select", value: SelectItem, index: number): void;
 }
 
 const DEFAULT_ITEM_HEIGHT = 32;
@@ -75,17 +78,16 @@ function options() {
     const item_height = props.itemHeight || DEFAULT_ITEM_HEIGHT;
 
     let top = 0;
-
-    if (curValueIndex.value === -1) {
-        top = item_height;
-    } else {
-        top = curValueIndex.value * item_height;
-    }
-
     const over = zero + options_rect.height + PADDING - documnet_height;
 
     if (over > 0) {
         top += over;
+    } else {
+        if (curValueIndex.value === -1) {
+            top = item_height;
+        } else {
+            top = curValueIndex.value * item_height;
+        }
     }
     const TOP = zero - TOPBAR_HEIGHT
     if (top > TOP) {
@@ -122,7 +124,7 @@ function select(data: SelectItem) {
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
     curValueIndex.value = index;
     curValue.value = data;
-    emits('select', curValue.value);
+    emits('select', curValue.value, props.index!);
     optionsContainerVisible.value = false;
     clear_events();
 
@@ -142,6 +144,14 @@ function render() {
     }
 }
 
+const showOP = ref<boolean>(true)
+
+watchEffect(() => {
+    if (props.shapes) {
+        showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type)
+    }
+})
+
 watch(() => props.selected, render);
 onMounted(render)
 </script>
@@ -149,11 +159,12 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
-            <div v-if="!props.valueView" class="value-wrap">{{ curValue?.content }}</div>
+            <div v-if="!props.valueView" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{ curValue?.content }}
+            </div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
-            <div class="svg-wrap">
+            <div class="svg-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">
                 <svg-icon icon-class="down"></svg-icon>
             </div>
         </div>
@@ -186,15 +197,13 @@ onMounted(render)
     .trigger {
         width: 100%;
         height: 100%;
-
         position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-
         background-color: #F5F5F5;
         border-radius: var(--default-radius);
-        padding: 0 7px;
+        padding: 8px 7px 8px 12px;
         box-sizing: border-box;
 
         .value-wrap {
@@ -206,8 +215,8 @@ onMounted(render)
         }
 
         >.svg-wrap {
-            flex: 0 0 12px;
-            height: 100%;
+            flex: 0 0 10px;
+            height: 10px;
             display: flex;
             align-items: center;
 
@@ -238,7 +247,7 @@ onMounted(render)
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
-        z-index: 1;
+        z-index: 999;
         border: 1px solid #EBEBEB;
         padding: 4px 0;
         box-sizing: border-box;

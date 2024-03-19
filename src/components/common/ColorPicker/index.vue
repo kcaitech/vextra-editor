@@ -64,6 +64,7 @@ interface Props {
     top?: number
     auto_to_right_line?: boolean;
     cell?: boolean
+    op?: boolean
 }
 
 interface Data {
@@ -1135,7 +1136,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
+    <div class="color-block" :style="block_style_generator(color, gradient, fillType)"
+        ref="block" @click="triggle">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
@@ -1250,6 +1252,10 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.showop {
+    opacity: 0.3;
+}
+
 .color-block {
     position: relative;
     // z-index: 99;
