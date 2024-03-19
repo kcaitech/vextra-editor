@@ -81,8 +81,16 @@ function update() {
     //     updateCellView();
     // }
 }
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
+    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
 function isEditingText() {
     const ret = editingCell.value &&
@@ -305,14 +313,6 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
     remove_page_watcher();
-})
-const width = computed(() => {
-    const w = bounds.right - bounds.left;
-    return w < 10 ? 10 : w;
-})
-const height = computed(() => {
-    const h = bounds.bottom - bounds.top;
-    return h < 10 ? 10 : h;
 })
 </script>
 

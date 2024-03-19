@@ -639,7 +639,6 @@ export class Asssit extends WatchableObject {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
         }
 
-        this.notify(Asssit.UPDATE_ASSIST);
         return target;
     }
 
