@@ -32,6 +32,8 @@ function show() {
     if (props.context.menu.ispopover) {
         props.context.menu.notify(Menu.SHUTDOWN_POPOVER);
         popoverClose();
+        props.context.menu.setPopoverVisible(false);
+        return
     }
 
     if (!container.value) {
@@ -100,6 +102,7 @@ function popoverClose() {
 
     popoverVisible.value = false;
     props.context.workspace.focusText();
+    props.context.menu.setPopoverVisible(false);
     document.removeEventListener('click', handleClickOutside);
     return exe_result;
 }

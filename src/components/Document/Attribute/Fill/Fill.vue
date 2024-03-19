@@ -261,12 +261,7 @@ function setColor(idx: number, clr: string, alpha: number) {
     hidden_selection(props.context);
 }
 
-function setColorAsync(idx: number, color: Color) {
-
-}
-
-
-function onColorChange(idx: number) {
+function onColorChange(e: Event, idx: number) {
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
@@ -376,7 +371,7 @@ function getColorFromPicker(idx: number, color: Color) {
     hidden_selection(props.context);
 }
 
-const selectColor = (id: number) => {
+const selectColor = (e: FocusEvent) => {
     if (colorFill.value) {
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
@@ -386,13 +381,13 @@ const selectColor = (id: number) => {
             tableRowEnd: table.tableRowEnd,
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
-        }
-        colorFill.value[id].select()
+        },
+            (e.target as HTMLInputElement).select()
     }
 }
-const colorInput = (i: number) => {
+const colorInput = (e: Event) => {
     if (colorFill.value) {
-        const value = colorFill.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         colorValue.value = value;
     }
 }
@@ -600,9 +595,9 @@ onUnmounted(() => {
                                  @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
-                           :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                           @change="(e) => onColorChange(idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
-                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
+                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                        @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)" @input="colorInput($event)"
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
                           v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
                             t(`color.${f.fill.gradient.gradientType}`)
