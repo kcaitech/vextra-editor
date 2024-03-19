@@ -1,5 +1,16 @@
 import { Context } from "@/context";
-import { adapt_page, component, lower_layer, redo, scale_0, select_all, set_lock_for_shapes, set_visible_for_shapes, undo, uppper_layer } from "./content";
+import {
+    adapt_page,
+    component,
+    lower_layer,
+    redo,
+    scale_0,
+    select_all,
+    set_lock_for_shapes,
+    set_visible_for_shapes,
+    undo,
+    upper_layer,
+} from "./content";
 import { Perm, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
@@ -548,27 +559,39 @@ keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {
+    if (event.ctrlKey) {
+        event.preventDefault();
+        if(!permIsEdit(context)) {
+            return;
+        }
+        upper_layer(context, 1);
+        return;
+    }
     event.preventDefault();
     if(!permIsEdit(context)) return;
-    uppper_layer(context);
+    upper_layer(context);
 }
 
 keydownHandler['BracketLeft'] = function (event: KeyboardEvent, context: Context) {
+    if (event.ctrlKey) {
+        event.preventDefault();
+        if(!permIsEdit(context)) {
+            return;
+        }
+        lower_layer(context, 1);
+        return;
+    }
     event.preventDefault();
     if(!permIsEdit(context)) return;
     lower_layer(context);
 }
 
 keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
-    if(!permIsEdit(context)) return;
-    uppper_layer(context, 1);
+    // todo 缩放页面视图
 }
 
 keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
-    if(!permIsEdit(context)) return;
-    lower_layer(context, 1);
+    // todo 缩放页面视图
 }
 
 keydownHandler['Tab'] = function (event: KeyboardEvent, context: Context) {

@@ -81,8 +81,16 @@ function update() {
     //     updateCellView();
     // }
 }
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
+    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
 function isEditingText() {
     const ret = editingCell.value &&
@@ -169,6 +177,8 @@ function move(e: MouseEvent) {
         }
     }
 }
+let isDragging = false;
+let downXY = { x: 0, y: 0 };
 function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
@@ -180,26 +190,32 @@ function down(e: MouseEvent) {
         e.stopPropagation();
         if (x_checked) {
             get_x_by_col(m_col);
-            col_dash.value = true;
             document.addEventListener('mouseup', up_x);
             document.addEventListener('mousemove', move_x);
         } else if (y_checked) {
             get_y_by_row(m_row);
-            row_dash.value = true;
             document.addEventListener('mouseup', up_y);
             document.addEventListener('mousemove', move_y);
         }
         submatrix_inverse = new Matrix(submatrix.inverse);
+        downXY.x = e.x;
+        downXY.y = e.y;
     }
 }
 function move_x(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const height = layout.height;
-    const x = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).x;
-    const xy1 = submatrix.computeCoord2(x, 0);
-    const xy2 = submatrix.computeCoord2(x, height);
-    m_x.value = xy1.x, x1 = xy1.x, y1 = xy1.y;
-    x2 = xy2.x, y2 = xy2.y;
+    if (isDragging) {
+        const root = props.context.workspace.root;
+        const height = layout.height;
+        const x = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).x;
+        const xy1 = submatrix.computeCoord2(x, 0);
+        const xy2 = submatrix.computeCoord2(x, height);
+        m_x.value = xy1.x, x1 = xy1.x, y1 = xy1.y;
+        x2 = xy2.x, y2 = xy2.y;
+    } else if (Math.hypot(e.x - downXY.x, e.y - downXY.y) > 3) {
+        isDragging = true;
+        col_dash.value = true;
+    }
+
 }
 function up_x() {
     const dx = down_x - m_x.value;
@@ -209,15 +225,22 @@ function up_x() {
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
     document.removeEventListener('mouseup', up_x);
+    isDragging = false;
 }
 function move_y(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const width = layout.width;
-    const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
-    const xy1 = submatrix.computeCoord2(0, y);
-    const xy2 = submatrix.computeCoord2(width, y);
-    m_y.value = xy1.y, x1 = xy1.x, y1 = xy1.y;
-    x2 = xy2.x, y2 = xy2.y;
+    if (isDragging) {
+        const root = props.context.workspace.root;
+        const width = layout.width;
+        const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
+        const xy1 = submatrix.computeCoord2(0, y);
+        const xy2 = submatrix.computeCoord2(width, y);
+        m_y.value = xy1.y, x1 = xy1.x, y1 = xy1.y;
+        x2 = xy2.x, y2 = xy2.y;
+    } else if (Math.hypot(e.x - downXY.x, e.y - downXY.y) > 3) {
+        isDragging = true;
+        row_dash.value = true;
+    }
+
 }
 function up_y(e: MouseEvent) {
     const root = props.context.workspace.root;
@@ -230,6 +253,7 @@ function up_y(e: MouseEvent) {
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
+    isDragging = false;
 }
 function get_x_by_col(col: number) {
     const table = props.shape;
@@ -289,14 +313,6 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
     remove_page_watcher();
-})
-const width = computed(() => {
-    const w = bounds.right - bounds.left;
-    return w < 10 ? 10 : w;
-})
-const height = computed(() => {
-    const h = bounds.bottom - bounds.top;
-    return h < 10 ? 10 : h;
 })
 </script>
 

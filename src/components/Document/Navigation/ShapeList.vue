@@ -231,9 +231,8 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
-        chartMenuItems.value = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container', 'component'];
+        chartMenuItems.value = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container', 'component', 'forward', 'back', 'top', 'bottom'];
         if (selected.length === 1) {
-            chartMenuItems.value.push('forward', 'back', 'top', 'bottom');
             if (selected[0].type === ShapeType.SymbolRef) {
                 chartMenuItems.value.push('edit');
             }
