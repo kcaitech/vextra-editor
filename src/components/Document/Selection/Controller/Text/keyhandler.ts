@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Text, Shape, TextShapeView, TableCellView } from "@kcdesign/data";
+import { TextShapeView, TableCellView } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 
@@ -38,21 +38,22 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
+    end = shape.locatePrevCursor(end);
     if (e.shiftKey) {
-        if (start === end - 1) {
+        if (start === end) {
             const span = shapetext.spanAt(start);
             if (span?.placeholder && span.length === 1) start--;
             selection.setCursor(start, false);
         } else {
-            selection.selectText(start, end - 1);
+            selection.selectText(start, end);
         }
     } else {
-        const span = shapetext.spanAt(end - 1);
+        const span = shapetext.spanAt(end);
         if (span?.placeholder && span.length === 1) {
             if (end - 1 <= 0) end = 2;
             else end--;
         }
-        selection.setCursor(end - 1, false);
+        selection.setCursor(end, false);
     }
 }, keydelays);
 const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
@@ -61,18 +62,19 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
     const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
+    end = shape.locateNextCursor(end);
     if (e.shiftKey) {
-        if (start === end + 1) {
+        if (start === end) {
             const span = shapetext.spanAt(start);
             if (span?.placeholder && span.length === 1) start++;
             selection.setCursor(start, false);
         } else {
-            selection.selectText(start, end + 1);
+            selection.selectText(start, end);
         }
     } else {
-        const span = shapetext.spanAt(end + 1);
+        const span = shapetext.spanAt(end);
         if (span?.placeholder && span.length === 1) end++;
-        selection.setCursor(end + 1, false);
+        selection.setCursor(end, false);
     }
 }, keydelays);
 const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
