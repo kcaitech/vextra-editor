@@ -5,7 +5,6 @@ import { ClientXY, PageXY, XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { Comment } from "@/context/comment";
 import { XYsBounding, scout_once } from "@/utils/common";
-import { get_root_points } from "@/utils/pathedit";
 import { multi_select_shape } from "./listview";
 
 /**
@@ -185,27 +184,6 @@ export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
         rt: { x: rt.x - down.x, y: rt.y - down.y },
         lb: { x: lb.x - down.x, y: lb.y - down.y }
     }
-}
-
-/**
- * @description
- * @param down root坐标系上的一点
- */
-export function gen_offset_points_map2(context: Context, down: PageXY, points: number[]) {
-    const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
-    const op = get_root_points(context, points);
-    if (!op) {
-        return;
-    }
-    const offset: XY[] = [];
-    for (let i = 0, l = op.length; i < l; i++) {
-        const p = op[i];
-        offset.push({ x: p.x - down.x, y: p.y - down.y });
-    }
-    return offset;
 }
 
 /**

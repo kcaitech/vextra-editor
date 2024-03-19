@@ -1,6 +1,14 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { PathShapeView, ImageShapeView, PathModifier, Matrix, ModifyUnits } from "@kcdesign/data";
+import {
+    PathShapeView,
+    PathModifier,
+    Matrix,
+    ModifyUnits,
+    ShapeView,
+    PathType,
+    PathShapeView2, CurvePoint
+} from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 
@@ -13,17 +21,16 @@ type Base = {
     toX: number | undefined;
     toY: number | undefined;
 }
-type BaseData = Map<number, Base>;
+type BaseData = Map<string, Base>;
 
 export class PathEditor extends TransformHandler {
-    shape: PathShapeView | ImageShapeView;
+    shape: ShapeView;
     path: Path;
 
     fixedPoint: XY;
     livingPoint: XY;
 
     baseData: BaseData = new Map();
-    offsetMap: Map<number, { dx: number, dy: number }> = new Map();
 
     baseWidth: number;
     baseHeight: number;
@@ -35,7 +42,7 @@ export class PathEditor extends TransformHandler {
         super(context, event);
         this.path = context.path;
 
-        this.shape = context.selection.selectedShapes[0] as PathShapeView | ImageShapeView;
+        this.shape = context.selection.selectedShapes[0];
 
         this.fixedPoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.fixedPoint };
@@ -53,20 +60,26 @@ export class PathEditor extends TransformHandler {
 
     getBaseData() {
         this.baseData.clear();
-        this.offsetMap.clear();
+        const selected = this.path.syntheticPoints;
 
-        const indexes = this.path.syntheticPoints;
-        const points = this.shape.points;
+        if (this.shape.pathType === PathType.Editable) {
+            const indexes = selected.get(0)!;
+            const points = (this.shape as PathShapeView).points;
 
-        if (!indexes.length || !points.length) {
+            this.__getData(points as CurvePoint[], indexes);
+        } else if (this.shape.pathType === PathType.Multi) {
+            selected.forEach((indexes, segment) => {
+                const points = (this.shape as PathShapeView2).segments[segment].points;
+
+                this.__getData(points as CurvePoint[], indexes);
+            })
+        }
+    }
+
+    __getData(points: CurvePoint[], indexes: number[]) {
+        if (!indexes) {
             return;
         }
-
-        const m = this.shape.matrix2Root();
-        const frame = this.shape.frame;
-        m.preScale(frame.width, frame.height);
-
-
         for (let i = 0; i < indexes.length; i++) {
             const index = indexes[i];
             const point = points[index];
@@ -75,11 +88,7 @@ export class PathEditor extends TransformHandler {
                 continue;
             }
 
-            const __p = m.computeCoord3(point);
-
-            this.offsetMap.set(index, { dx: __p.x - this.fixedPoint.x, dy: __p.y - this.fixedPoint.y });
-
-            this.baseData.set(index, {
+            this.baseData.set(point.id, {
                 x: point.x,
                 y: point.y,
                 fromX: point.fromX,
@@ -90,14 +99,15 @@ export class PathEditor extends TransformHandler {
         }
     }
 
-    createApiCaller(index = -1) {
+    createApiCaller(segment = -1, index = -1) {
         this.asyncApiCaller = new PathModifier(this.context.coopRepo, this.context.data, this.page, this.shape);
 
         let addRes = false;
-        if (index > -1) {
-            addRes = (this.asyncApiCaller as PathModifier).addPoint(index);
+        if (index > -1 && segment > -1) {
+            addRes = (this.asyncApiCaller as PathModifier).addPoint(segment, index);
+
             if (addRes) {
-                this.path.select_point(index);
+                this.path.select_point(segment, index);
             }
         }
 
@@ -115,27 +125,41 @@ export class PathEditor extends TransformHandler {
     }
 
     private __execute() {
-        const indexes = this.path.syntheticPoints;
-
-        if (!indexes.length) {
-            return;
-        }
-
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
         const dx = __living.x - __fixed.x;
         const dy = __living.y - __fixed.y;
 
-        const units: ModifyUnits = [];
+        const selected = this.path.syntheticPoints;
+        const units: ModifyUnits = new Map();
+
+        if (this.shape.pathType === PathType.Editable) {
+            const indexes = selected.get(0) || [];
+            const points = (this.shape as PathShapeView).points;
+            this.__gen(units, points, 0, indexes, dx, dy);
+        } else if (this.shape.pathType === PathType.Multi) {
+            selected.forEach((indexes, segment) => {
+                const points = (this.shape as PathShapeView2).segments[segment].points as CurvePoint[];
+                this.__gen(units, points, segment, indexes, dx, dy);
+            })
+        }
+
+        (this.asyncApiCaller as PathModifier).execute(units);
+    }
+
+    private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {
+        const __units: any[] = [];
         for (let i = 0; i < indexes.length; i++) {
             const index = indexes[i];
-            const base = this.baseData.get(index);
+            const point = points[index];
+
+            const base = this.baseData.get(point.id);
             if (!base) {
                 continue;
             }
 
-            units.push({
+            __units.push({
                 index,
                 x: base.x + dx,
                 y: base.y + dy,
@@ -146,7 +170,7 @@ export class PathEditor extends TransformHandler {
             })
         }
 
-        (this.asyncApiCaller as PathModifier).execute(units);
+        actions.set(segment, __units);
     }
 
     passiveExecute() {

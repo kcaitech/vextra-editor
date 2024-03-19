@@ -12,108 +12,8 @@ import {
     ShapeType
 } from "@kcdesign/data";
 
-export function get_root_points(context: Context, indexes?: number[]) {
+export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        return;
-    }
-    const f = path_shape.frame;
-    const m = new Matrix(path_shape.matrix2Root());
-    m.preScale(f.width, f.height);
-    const points = path_shape.points;
-    const result: XY[] = [];
-    if (indexes) {
-        for (let i = 0, l = indexes.length; i < l; i++) {
-            const __p = points[indexes[i]];
-            if (!__p) {
-                continue;
-            }
-            result.push(m.computeCoord2(__p.x, __p.y));
-        }
-    } else {
-        for (let i = 0, l = points.length; i < l; i++) {
-            const __p = points[i];
-            if (!__p) {
-                continue;
-            }
-            result.push(m.computeCoord(__p.x, __p.y));
-        }
-    }
-    return result;
-}
-
-export function get_parent_points(context: Context, indexes?: number[]) {
-    const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
-    const f = path_shape.frame;
-    const m = new Matrix();
-    m.preScale(f.width, f.height);
-    m.multiAtLeft(path_shape.matrix2Parent());
-    const points = path_shape.points;
-    const result: XY[] = [];
-    if (indexes) {
-        for (let i = 0, l = indexes.length; i < l; i++) {
-            const _p = points[indexes[i]];
-            if (!_p) continue;
-            result.push(m.computeCoord3(_p));
-        }
-    } else {
-        for (let i = 0, l = points.length; i < l; i++) {
-            result.push(m.computeCoord(points[i]));
-        }
-    }
-    return result;
-}
-
-export function get_value_from_point(context: Context, index: number) {
-    const path_shape = context.selection.pathshape;
-    if (!path_shape) {
-        console.log('!path_shape');
-        return;
-    }
-
-    const parent = path_shape.parent;
-
-    if (!parent) {
-        console.log('get_value_from_point: !parent');
-        return;
-    }
-
-    let _m: Matrix;
-
-    if (parent.type === ShapeType.Page) {
-        _m = path_shape.matrix2Root();
-    } else {
-        _m = path_shape.matrix2Parent();
-    }
-
-    const f = path_shape.frame;
-    const m = new Matrix(_m);
-    m.preScale(f.width, f.height);
-
-    const c = path_shape.points[index];
-    if (!c) {
-        console.log('!c:', index);
-        return;
-    }
-
-    const p = m.computeCoord3(c);
-    return {
-        x: p.x,
-        y: p.y,
-        r: c.radius || 0
-    }
-}
-
-export function get_num_by_event(e: Event) {
-    const _val = Number((e.target as HTMLInputElement).value);
-    if (isNaN(_val)) return;
-    return _val;
-}
-
-export function get_parent_points2(context: Context, indexes?: number[]) {
-    const path_shape = context.selection.pathshape;
-
     if (!path_shape) {
         return;
     }
@@ -124,69 +24,89 @@ export function get_parent_points2(context: Context, indexes?: number[]) {
         return;
     }
 
-    let _m: Matrix;
+    let m: Matrix;
 
     if (parent.type === ShapeType.Page) {
-        _m = path_shape.matrix2Root();
+        m = path_shape.matrix2Root();
     } else {
-        _m = path_shape.matrix2Parent();
+        m = path_shape.matrix2Parent();
     }
 
     const f = path_shape.frame;
-    const m = new Matrix(_m);
     m.preScale(f.width, f.height);
 
-    const points = path_shape.points;
-    const result: XY[] = [];
-    if (indexes) {
-        for (let i = 0, l = indexes.length; i < l; i++) {
-            const _p = points[indexes[i]];
-            if (!_p) {
-                continue;
-            }
+    const result: { x: number, y: number, radius: number }[] = [];
+    let points: CurvePoint[] = [];
 
-            result.push(m.computeCoord3(_p));
+    if (range) {
+        if (path_shape.pathType === 1) {
+            exe(range, 0, (path_shape as PathShapeView).points);
+        } else if (path_shape.pathType === 2) {
+            (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+                exe(range, index, segment.points as CurvePoint[]);
+            });
         }
     } else {
-        for (let i = 0, l = points.length; i < l; i++) {
-            result.push(m.computeCoord(points[i]));
+        if (path_shape.pathType === 1) {
+            points = (path_shape as PathShapeView).points;
+        } else if (path_shape.pathType === 2) {
+            points = (path_shape as PathShapeView2).segments.map(s => s.points).flat() as CurvePoint[];
         }
     }
+
+    for (let i = 0, l = points.length; i < l; i++) {
+        const p = points[i];
+        const _p = m.computeCoord3(p);
+        result.push({ x: _p.x, y: _p.y, radius: p.radius || 0 });
+    }
+
     return result;
+
+    function exe(range: Map<number, number[]>, segment: number, __points: CurvePoint[]) {
+        const indexes = range.get(segment);
+        if (!indexes?.length) {
+            return;
+        }
+
+        for (let i = 0; i < indexes.length; i++) {
+            const p = __points[indexes[i]];
+            if (p) {
+                points.push(p);
+            }
+        }
+    }
 }
 
-export function get_value_from_points(context: Context, indexes: number[]) {
-    const points = get_parent_points2(context, indexes);
-
+export function get_value_from_points(context: Context, range?: Map<number, number[]>) {
+    const points = get_parent_points(context, range);
     if (!points?.length) {
         return;
     }
+
     let x: number | 'mix' = points[0].x;
     let y: number | 'mix' = points[0].y;
+    let r: number | 'mix' = points[0].radius;
 
     for (let i = 1, l = points.length; i < l; i++) {
         const p = points[i];
         if (x !== 'mix' && p.x !== x) x = 'mix';
         if (y !== 'mix' && p.y !== y) y = 'mix';
-        if (x === y && x === 'mix') break;
+
+        if (x === y && y === 'mix') {
+            break;
+        }
     }
 
-    const __points = context.selection.pathshape!.points;
-    let r: number | 'mix' = __points[indexes[0]].radius || 0;
-    for (let i = 0, l = indexes.length; i < l; i++) {
-        const index = indexes[i];
-        const _r = __points[index].radius || 0;
-        if (r !== _r) {
+    for (let i = 1, l = points.length; i < l; i++) {
+        const p = points[i];
+
+        if (p.radius !== r) {
             r = 'mix';
             break;
         }
     }
 
-    return {
-        x,
-        y,
-        r
-    }
+    return { x, y, r };
 }
 
 export function get_action_for_key_change(context: Context, val: number, key: 'x' | 'y') {
@@ -194,19 +114,8 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     if (!path_shape) {
         return;
     }
-
-    const indexes = context.path.selectedPoints;
-    if (!indexes.size) {
-        return;
-    }
-
-    const __points = path_shape.points;
-
-    const parent = path_shape.parent;
-
-    if (!parent) {
-        return;
-    }
+    const selected = context.path.selectedPoints;
+    const parent = path_shape.parent!;
 
     if (parent.type === ShapeType.Page) {
         const _m = new Matrix(parent.matrix2Root().inverse);
@@ -223,28 +132,60 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     const m = new Matrix(path_shape.matrix2Parent());
     m.preScale(f.width, f.height);
 
-    const actions: { x: number, y: number, index: number }[] = [];
-
-    for (let i = 0, l = indexes.length; i < l; i++) {
-        const index = indexes[i];
-        const __p = __points[index];
-        const _p = m.computeCoord2(__p.x, __p.y);
-        const item = {
-            x: _p.x,
-            y: _p.y,
-            index
-        }
-        item[key] = val;
-        actions.push(item);
+    const actions: { x: number, y: number, segment: number, index: number }[] = [];
+    if (path_shape.pathType === PathType.Editable) {
+        exe(0, (path_shape as PathShapeView).points);
+    } else if (path_shape.pathType === PathType.Multi) {
+        (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+            exe(index, segment.points as CurvePoint[]);
+        })
     }
+
     return actions;
+
+    function exe(segment: number, points: CurvePoint[]) {
+        const indexes = selected.get(segment);
+        if (!indexes?.length) {
+            return;
+        }
+
+        for (let i = 0, l = indexes.length; i < l; i++) {
+            const index = indexes[i];
+            const __p = points[index];
+            const _p = m.computeCoord2(__p.x, __p.y);
+            const item = {
+                x: _p.x,
+                y: _p.y,
+                segment,
+                index
+            }
+            item[key] = val;
+            actions.push(item);
+        }
+    }
 }
 
-export function modify_point_curve_mode(context: Context, index: number, shape?: PathShapeView) {
-    const path_shape = (shape || context.selection.pathshape) as PathShapeView;
-    if (!path_shape) return;
-    const point = path_shape.points[index];
+export function modify_point_curve_mode(context: Context, index: number) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) {
+        return;
+    }
+
+    const selected = context.path.selectedPoints;
+
+    let point: CurvePoint | undefined = undefined;
+
+    if (path_shape.pathType === PathType.Editable) {
+        point = (path_shape as PathShapeView).points[index];
+    } else if (path_shape.pathType === PathType.Multi) {
+        selected.forEach((indexes, segment) => {
+            point = (path_shape as PathShapeView2).segments[segment].points[index] as CurvePoint;
+        })
+
+    }
+
     if (!point) return;
+
     const editor = context.editor4Shape(path_shape);
     let target_curve_mode: CurveMode;
     const _curve_mode = point.mode;
@@ -253,7 +194,8 @@ export function modify_point_curve_mode(context: Context, index: number, shape?:
     } else {
         target_curve_mode = CurveMode.Straight
     }
-    editor.modifyPointsCurveMode([index], target_curve_mode);
+
+    editor.modifyPointsCurveMode(selected, target_curve_mode);
 }
 
 /**

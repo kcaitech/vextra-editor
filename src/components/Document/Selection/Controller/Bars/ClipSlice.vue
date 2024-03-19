@@ -13,7 +13,7 @@ interface Dot {
     index: number
     selected: boolean
 }
-const props = defineProps<Props>();
+const props = defineProps<Props>(); // m1155
 const data: { segments: Segment2[], dots: Dot[] } = reactive({ segments: [], dots: [] });
 const { segments, dots } = data;
 const new_high_light = ref<number>(-1);

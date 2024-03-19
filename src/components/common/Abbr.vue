@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { GroupShape, Matrix, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
+import { Matrix, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
 import { computed } from 'vue';
@@ -14,9 +14,7 @@ interface Props {
 const props = defineProps<Props>();
 const path = ref<string>('');
 const flex_abbr = computed<boolean>(() => {
-    const s = props.shape;
-    return [ShapeType.Oval, ShapeType.Rectangle, ShapeType.Line, ShapeType.Path].includes(s.type)
-        || (s.type === ShapeType.BoolShape);
+    return !!props.shape.pathType;
 })
 
 function icon_class() {

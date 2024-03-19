@@ -117,49 +117,49 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown_action_for_path_edit(event: KeyboardEvent) {
-        const pathshape = context.selection.pathshape;
-        if (!pathshape) {
-            return;
-        }
+        // const pathshape = context.selection.pathshape;
+        // if (!pathshape) {
+        //     return;
+        // }
+        //
+        // const points = context.path.syntheticPoints;
+        // if (!points?.size) {
+        //     return;
+        // }
+        //
+        // if (!asyncPathEditor) {
+        //     directionCalc.reset();
+        //
+        //     asyncPathEditor = context.editor
+        //         .controller()
+        //         .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
+        // }
+        //
+        // if (!asyncPathEditor) {
+        //     return;
+        // }
+        //
+        // directionCalc.down(event);
+        //
+        // let { x, y } = directionCalc.calc();
+        //
+        // const firstPoint = (pathshape as PathShapeView).points[points[0]];
+        //
+        // if (!firstPoint) {
+        //     return;
+        // }
+        //
+        // const m = pathshape.matrix2Root();
+        // m.preScale(pathshape.frame.width, pathshape.frame.height);
+        //
+        // const _firstPoint = m.computeCoord3(firstPoint);
+        //
+        // _firstPoint.x += x;
+        // _firstPoint.y += y;
 
-        const points = context.path.syntheticPoints;
-        if (!points?.size) {
-            return;
-        }
+        // const __firstPointTarget = m.inverseCoord(_firstPoint);
 
-        if (!asyncPathEditor) {
-            directionCalc.reset();
-
-            asyncPathEditor = context.editor
-                .controller()
-                .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
-        }
-
-        if (!asyncPathEditor) {
-            return;
-        }
-
-        directionCalc.down(event);
-
-        let { x, y } = directionCalc.calc();
-
-        const firstPoint = (pathshape as PathShapeView).points[points[0]];
-
-        if (!firstPoint) {
-            return;
-        }
-
-        const m = pathshape.matrix2Root();
-        m.preScale(pathshape.frame.width, pathshape.frame.height);
-
-        const _firstPoint = m.computeCoord3(firstPoint);
-
-        _firstPoint.x += x;
-        _firstPoint.y += y;
-
-        const __firstPointTarget = m.inverseCoord(_firstPoint);
-
-        asyncPathEditor.execute2(points, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
+        // asyncPathEditor.execute2(points, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y); // todo 键盘对象编辑
     }
 
     function keydown_action_for_trans(event: KeyboardEvent) {

@@ -86,7 +86,7 @@ function reset() {
     next_index.value = -1;
 }
 
-function update() {
+function update() { // m1154
     reset();
     const path_shape = props.context.selection.pathshape;
     if (!path_shape) {

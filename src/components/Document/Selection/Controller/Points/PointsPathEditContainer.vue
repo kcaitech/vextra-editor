@@ -48,13 +48,13 @@ function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
     }
+
     dots.length = 0;
     segments.length = 0;
 
     init_matrix();
 
     dots.push(...get_path_by_point(shape as PathShapeView, matrix, props.context.path.selectedPoints));
-
     segments.push(...get_segments(shape as PathShapeView, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
@@ -68,8 +68,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         return;
     }
 
-    if (dbl_action()) {
-        modify_point_curve_mode(props.context, index, shape as PathShapeView);
+    if (dbl_action()) { // m1458
+        modify_point_curve_mode(props.context, index);
     }
 
     event.stopPropagation();
@@ -176,7 +176,7 @@ function n_point_down(event: MouseEvent, segment: number, index: number) {
 
     const __index = index + 1;
 
-    if (pathModifier.createApiCaller(__index)) {
+    if (pathModifier.createApiCaller(segment, __index)) {
         current_curve_point_index = __index;
         current_segment = segment;
     }

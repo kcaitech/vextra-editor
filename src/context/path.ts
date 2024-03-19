@@ -43,43 +43,50 @@ export class Path extends WatchableObject {
         const pathShape = this.m_context.selection.selectedShapes[0];
         const pathType = pathShape?.pathType;
 
-        const result = new Map<number, number[]>();
+        const result: Map<number, Set<number>> = new Map();
+
+        this.selected_points.forEach((indexes, segment) => {
+            result.set(segment, new Set(indexes));
+        })
 
         if (!pathType) {
-            return result;
-        }
-
-        if (!this.selectedSides.size) {
             return this.selected_points;
         }
 
-        this.selected_points.forEach((v, k) => {
-            const points = v;
-            result.set(k, points);
+        if (!this.selected_sides.size) {
+            return this.selected_points;
+        }
 
-            const sides = this.selected_sides.get(k);
-            if (!sides?.length) {
-                return
+        this.selected_sides.forEach((indexes, segment) => {
+            let points  = result.get(segment);
+            if (!points) {
+                points = new Set<number>();
+                result.set(segment, points);
             }
 
             let max = 0;
             if (pathType === 1) {
-                max = (pathShape as PathShapeView).points.length;
+                max = (pathShape as PathShapeView).points.length - 1;
             } else if (pathType === 2) {
-                max = (pathShape as PathShapeView2).segments[k]?.points?.length;
+                max = (pathShape as PathShapeView2).segments[segment]?.points?.length - 1;
             }
 
-            if (max) {
-                for (let i = 0, l = sides.length; i < l; i++) {
-                    const index = sides[i];
+            if (max > -1) {
+                for (let i = 0, l = indexes.length; i < l; i++) {
+                    const index = indexes[i];
                     const anther = index === max ? 0 : index + 1;
-                    points.push(index, anther);
+
+                    points.add(index);
+                    points.add(anther);
                 }
             }
-
+        });
+        const __result = new Map<number, number[]>();
+        result.forEach((indexes, segment) => {
+            __result.set(segment, Array.from(indexes.values()));
         })
 
-        return result;
+        return __result;
     }
 
     is_selected(segment: number, index: number) {
@@ -160,6 +167,7 @@ export class Path extends WatchableObject {
     get selectedSides() {
         return this.selected_sides;
     }
+
     get selectedSidesLength() {
         return Array.from(this.selected_sides.values()).flat().length;
     }

@@ -6,8 +6,8 @@ import { useI18n } from 'vue-i18n';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
-import { get_action_for_key_change, get_value_from_point, get_value_from_points } from "@/utils/pathedit";
-import { CurveMode, PathShape, PathShapeView } from "@kcdesign/data";
+import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
+import { CurveMode, PathShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
 
 interface Props {
@@ -77,20 +77,8 @@ function calc() {
     x.value = '';
     y.value = '';
     r.value = '';
-    const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;
-    if (l === 1) {
-        const state = get_value_from_point(props.context, selected_points[0]);
-        if (!state) {
-            return;
-        }
-        x.value = state.x;
-        y.value = state.y;
-        r.value = state.r;
-        return;
-    }
 
-    const state = get_value_from_points(props.context, selected_points);
+    const state = get_value_from_points(props.context, props.context.path.selectedPoints);
     if (!state) {
         return;
     }

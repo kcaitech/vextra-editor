@@ -41,10 +41,6 @@ function delete_for_path_edit(context: Context) {
     }
 
     const points = context.path.syntheticPoints;
-    if (!points.length) {
-        console.log('!points.length');
-        return;
-    }
 
     const editor = context.editor4Shape(path_shape);
 

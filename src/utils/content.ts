@@ -20,7 +20,7 @@ import {
     SymbolShape,
     TableView,
     TextShape,
-    adapt2Shape
+    adapt2Shape, PathType, PathShapeView, PathShapeView2
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
@@ -1103,9 +1103,17 @@ function select_all_for_path_edit(context: Context) {
         console.log('select_all_for_path_edit: !path_shape');
         return;
     }
-    const indexes = path_shape.points.map((_, idx) => idx);
-    context.path.select_points(indexes);
-    context.path.select_sides(indexes);
+    if (path_shape.pathType === PathType.Editable) {
+        const indexes = (path_shape as PathShapeView).points.map((_, idx) => idx);
+        context.path.select_points(0, indexes);
+        context.path.select_sides(0, indexes);
+    } else if (path_shape.pathType === PathType.Multi) {
+        (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+            const indexes = segment.points.map((_, idx) => idx);
+            context.path.select_points(index, indexes);
+            context.path.select_sides(index, indexes);
+        })
+    }
 }
 
 /**
