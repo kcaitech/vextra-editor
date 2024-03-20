@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -30,6 +30,10 @@ import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
+import { genOptions } from '@/utils/common';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style'
+
 
 interface BorderItem {
     id: number
@@ -57,7 +61,18 @@ const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
 let table: TableShape;
+let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 
+
+const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
+const positonOptionsSource: SelectSource[] = genOptions([
+    [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
+    [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
+    [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
+]);
+const isActived = ref(-1)
+const borderThickness = ref<HTMLInputElement[] | undefined>();
 function watchShapes() {
     const needWatchShapes = new Map();
     const selectedShapes = props.context.selection.selectedShapes;
@@ -370,7 +385,7 @@ function getColorFromPicker(color: Color, idx: number) {
     hidden_selection(props.context);
 }
 
-const selectColor = (i: number) => {
+const selectColor = (e: FocusEvent) => {
     if (colorBorder.value) {
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
@@ -380,13 +395,13 @@ const selectColor = (i: number) => {
             tableRowEnd: table.tableRowEnd,
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
-        }
-        colorBorder.value[i].select()
+        },
+            (e.target as HTMLInputElement).select()
     }
 }
-const colorInput = (i: number) => {
+const colorInput = (e: Event) => {
     if (colorBorder.value) {
-        const value = colorBorder.value[i].value;
+        const value = (e.target as HTMLInputElement).value;
         colorValue.value = value;
     }
 }
@@ -506,7 +521,7 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
  * @param idx 
  * @param index 
  */
-function gradient_stop_delete(idx: number, index: number) {
+function gradient_stop_delete(idx: number, index: any) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
@@ -645,6 +660,147 @@ onUnmounted(() => {
         v.unwatch(watcher)
     });
 })
+
+function positionSelect(selected: SelectItem, id: number | undefined) {
+    position.value = selected;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shapes = getShapesForStyle(selecteds);
+    const actions = get_actions_border_position(shapes, id!, selected.value as BorderPosition);
+    if (actions && actions.length) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapesBorderPosition(actions);
+    }
+}
+
+const testEl = ref<HTMLElement>()
+const testidx = ref<number>(0)
+const pointX = ref<number>()
+const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+const rotate = ref<boolean>()
+
+async function onMouseDown(e: MouseEvent, index: number) {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
+    pointX.value = e.clientX
+    pointY.value = e.clientY
+    testEl.value = borderThickness.value![index] as HTMLElement
+    testidx.value = index
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    e.stopPropagation()
+    if (selected.length === 1 && selected[0].type === ShapeType.Table && is_editing(table)) {
+        const table = props.context.tableSelection;
+        const range = get_table_range(table);
+        bordercellthickness_editor = props.context.editor4Table(selected[0] as TableView).asyncBorderThickness4Cell(range);
+        bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    } else {
+        borderthickness_editor = props.context.editor.controller().asyncBorderThickness(selected, page!)
+        borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+    }
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("pointerlockchange", lockChangeAlert, false);
+}
+
+function lockChangeAlert() {
+    if (document.pointerLockElement) {
+        showpoint.value = true
+        document.addEventListener("mousemove", onMouseMove, false);
+    } else {
+        showpoint.value = false
+        document.removeEventListener("mousemove", onMouseMove, false);
+    }
+}
+
+let timer: any
+const selectBorderThicknes = (e: FocusEvent, index: number) => {
+    isActived.value = index;
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+        (e.target as HTMLInputElement).select()
+        clearTimeout(timer)
+    }, 200);
+}
+
+
+function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    rotate.value = isRotating
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
+function onMouseMove(e: MouseEvent) {
+    const isRotating = e.movementX > 0;
+    updatePosition(e.movementX, e.movementY, isRotating)
+    const index = testidx.value
+    const id = borders.length - index - 1
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (borderThickness.value?.length) {
+        const thickness = Number(borders[index].border.thickness) + e.movementX;
+        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
+            bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
+        } else {
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+            const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+            if (actions && actions.length && borderthickness_editor) {
+                borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
+            }
+        }
+    }
+
+}
+
+function onMouseUp(e: MouseEvent) {
+    e.stopPropagation()
+    document.exitPointerLock()
+    if (borderthickness_editor) {
+        borderthickness_editor.close();
+        borderthickness_editor = undefined;
+    }
+    if (bordercellthickness_editor) {
+        bordercellthickness_editor.close();
+        bordercellthickness_editor = undefined
+    }
+}
+
+function setThickness(e: Event, id: number) {
+    const thickness = Number((e.target as HTMLInputElement).value);
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(table);
+        e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
+    } else {
+        const shapes = getShapesForStyle(selecteds);
+        const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+        if (actions && actions.length) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderThickness(actions);
+        }
+    }
+
+}
+
 </script>
 
 <template>
@@ -664,50 +820,119 @@ onUnmounted(() => {
         </div>
         <div class="borders-container" v-else-if="!mixed && !mixed_cell">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
-                <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                    <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
-                </div>
-                <div class="color">
-                    <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                        :locat="{ index: borders.length - idx - 1, type: 'borders' }"
-                        @change="(c: Color) => getColorFromPicker(c, idx)"
-                        @gradient-reverse="() => gradient_reverse(idx)"
-                        :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
-                        @gradient-rotate="() => gradient_rotate(idx)"
-                        @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                        @gradient-type="(type) => togger_gradient_type(idx, type)"
-                        @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
-                    <input ref="colorBorder" class="colorBorder" :spellcheck="false"
-                        v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                        :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                        @focus="selectColor(idx)" @input="colorInput(idx)"
-                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
-                    <span class="colorBorder" style="line-height: 14px;"
-                        v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+                <div class="top">
+                    <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                        <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
+                    </div>
+                    <div class="color">
+                        <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
+                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
+                            @change="(c: Color) => getColorFromPicker(c, idx)"
+                            @gradient-reverse="() => gradient_reverse(idx)"
+                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                            @gradient-rotate="() => gradient_rotate(idx)"
+                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                            @gradient-type="(type) => togger_gradient_type(idx, type)"
+                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
+                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
+                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                            @focus="selectColor($event)" @input="colorInput($event)" />
+                        <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
+                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
             t(`color.${b.border.gradient.gradientType}`) }}</span>
-                    <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
-                        :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
-                        @focus="selectAlpha" @input="alphaInput"
-                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
+                        <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
+                            style="text-align: center;" :value="filterAlpha(b.border) + '%'"
+                            @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput" />
+                    </div>
+                    <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
+                        :index="borders.length - idx - 1">
+                    </BorderDetail> -->
+                    <!--                <div class="extra-action">-->
+                    <div class="delete" @click="deleteBorder(idx)">
+                        <svg-icon icon-class="delete"></svg-icon>
+                    </div>
                 </div>
-                <!--                <div class="extra-action">-->
-                <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                    :index="borders.length - idx - 1">
-                </BorderDetail>
-                <div class="delete" @click="deleteBorder(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
+                <div class="bottom">
+                    <!-- 边框位置 -->
+                    <div style=" flex: calc(50% - 20px);"
+                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                        <Select class="select" :context="props.context" :shapes="props.shapes"
+                            :source="positonOptionsSource"
+                            :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
+                            @select="positionSelect" :index="borders.length - idx - 1"></Select>
+                    </div>
+                    <div class="thickness-container" style=" flex: calc(50% - 20px);"
+                        :class="{ actived: isActived === idx }">
+                        <svg-icon icon-class="thickness" @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
+                        <input ref="borderThickness" type="text" :value="b.border.thickness"
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
+                            @focus="selectBorderThicknes($event, idx)">
+                    </div>
+                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
+                        :index="borders.length - idx - 1">
+                    </BorderDetail>
                 </div>
-                <!--                </div>-->
+
             </div>
+            <!--                </div>-->
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
             :trigger="props.trigger">
         </Apex>
     </div>
+    <teleport to="body">
+        <Transition name="bounce">
+            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 11) + 'px', left: (pointX! - 11) + 'px'}">
+            </div>
+        </Transition>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
+.showop {
+    opacity: 0.3;
+}
+
+.bounce-enter-active {
+    animation: bounce-in 0.25s;
+}
+
+.bounce-leave-active {
+    animation: bounce-in 0.25s reverse;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    filter: drop-shadow(1px 0px 4px black);
+    z-index: 10000;
+}
+
+.actived {
+    border-color: #1878F5 !important;
+}
+
 .border-panel {
     width: 100%;
     display: flex;
@@ -752,119 +977,171 @@ onUnmounted(() => {
 
     .borders-container {
         .border {
-            height: 30px;
             width: 100%;
             display: flex;
-            flex-direction: row;
-            align-items: center;
-            margin-top: 4px;
+            flex-direction: column;
+            gap: 6px;
 
-            .visibility {
-                flex: 0 0 14px;
-                height: 14px;
-                width: 14px;
-                background-color: var(--active-color);
-                box-sizing: border-box;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border-radius: 4px;
-                margin-right: 5px;
-
-                >svg {
-                    width: 60%;
-                    height: 60%;
-                }
+            &:nth-child(n+2) {
+                margin-top: 16px;
             }
 
-            .hidden {
-                flex: 0 0 14px;
-                height: 14px;
-                width: 14px;
-                background: #FFFFFF;
-                border-radius: 4px;
-                border: 1px solid #EBEBEB;
-                box-sizing: border-box;
-                margin-right: 5px;
-            }
-
-            .color {
-                flex: 1;
-                background-color: var(--input-background);
-                height: 32px;
-                padding: 9px 8px;
-                //margin-left: -11px;
-                border-radius: var(--default-radius);
-                box-sizing: border-box;
+            .top {
                 display: flex;
                 align-items: center;
-                margin-right: 5px;
 
-                .colorBorder {
-                    outline: none;
-                    border: none;
-                    background-color: transparent;
-                    width: calc(100% - 53px);
+                .visibility {
+                    flex: 0 0 14px;
                     height: 14px;
-                    margin-left: 8px;
+                    width: 14px;
+                    background-color: var(--active-color);
+                    box-sizing: border-box;
+                    color: #ffffff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 4px;
+                    margin-right: 5px;
+
+                    >svg {
+                        width: 60%;
+                        height: 60%;
+                    }
+                }
+
+                .hidden {
+                    flex: 0 0 14px;
+                    height: 14px;
+                    width: 14px;
+                    background: #FFFFFF;
+                    border-radius: 4px;
+                    border: 1px solid #EBEBEB;
+                    box-sizing: border-box;
+                    margin-right: 5px;
+                }
+
+                .color {
                     flex: 1;
-                    font-size: 12px;
+                    background-color: var(--input-background);
+                    height: 32px;
+                    padding: 9px 8px;
+                    //margin-left: -11px;
+                    border-radius: var(--default-radius);
                     box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    margin-right: 5px;
+
+                    .colorBorder {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: calc(100% - 53px);
+                        height: 14px;
+                        margin-left: 8px;
+                        flex: 1;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    .alphaBorder {
+                        outline: none;
+                        border: none;
+                        background-color: transparent;
+                        width: 37px;
+                        //margin-left: 20%;
+                        text-align: center;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    input+input {
+                        width: 45px;
+                    }
+
+
                 }
 
-                .alphaBorder {
-                    outline: none;
-                    border: none;
-                    background-color: transparent;
-                    width: 37px;
-                    //margin-left: 20%;
-                    text-align: center;
-                    font-size: 12px;
-                    box-sizing: border-box;
+                //.extra-action {
+                //    display: flex;
+                //    align-items: center;
+                //    justify-content: center;
+                //    margin-left: 2px;
+
+                .delete {
+                    flex: 0 0 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    height: 28px;
+                    transition: 0.2s;
+                    border-radius: var(--default-radius);
+
+                    >svg {
+                        width: 16px;
+                        height: 16px;
+                    }
                 }
 
-                input+input {
-                    width: 45px;
+                .delete:hover {
+                    background-color: #F5F5F5;
+                    ;
                 }
 
-                .check {
-                    color: #000000;
-                }
-
-                .nocheck {
-                    color: rgba(0, 0, 0, 0.3);
-                }
+                //}
             }
 
-            //.extra-action {
-            //    display: flex;
-            //    align-items: center;
-            //    justify-content: center;
-            //    margin-left: 2px;
-
-            .delete {
-                flex: 0 0 28px;
+            .bottom {
+                width: calc(100% - 19px);
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                width: 28px;
-                height: 28px;
-                transition: 0.2s;
-                border-radius: var(--default-radius);
+                height: 32px;
+                gap: 6px;
+                margin-left: 19px;
 
-                >svg {
-                    width: 16px;
-                    height: 16px;
+                >.select {
+                    height: 100%;
+                    width: 100px;
+                }
+
+                .thickness-container {
+                    box-sizing: border-box;
+                    padding: 8px 12px;
+                    background-color: var(--input-background);
+                    height: 32px;
+                    border-radius: var(--default-radius);
+                    border: 1px solid transparent;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    overflow: hidden;
+
+                    >svg {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 13 13, auto !important;
+                        flex: 0 0 16px;
+                        height: 16px;
+                    }
+
+                    >input {
+                        outline: none;
+                        border: none;
+                        padding: 0;
+                        background-color: transparent;
+                    }
+
+                    input::selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
+                    input::-moz-selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
                 }
             }
-
-            .delete:hover {
-                background-color: #F5F5F5;
-                ;
-            }
-
-            //}
         }
     }
 }

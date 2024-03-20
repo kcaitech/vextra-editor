@@ -333,6 +333,9 @@ function gen_new_shape(e: MouseEvent) {
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
     const shapeFrame = new ShapeFrame(page_xy_1.x, page_xy_1.y, Math.abs(x - page_xy_1.x), Math.abs(y - page_xy_1.y));
+    // fix bug. frame的width或height为零时，后续matrix计算错误
+    if (shapeFrame.width < 1) shapeFrame.width = 1;
+    if (shapeFrame.height < 1) shapeFrame.height = 1;
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {

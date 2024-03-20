@@ -267,8 +267,8 @@ function updater(...args: any[]) {
     const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
     showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
-    lock_status.value = shape.isLocked() ? 1 : 0;
-    visible_status.value = shape.isVisible() ? 0 : 1;
+    lock_status.value = shape.isLocked ? 1 : 0;
+    visible_status.value = shape.isVisible ? 0 : 1;
 }
 
 let oldshape: Shape | undefined;

@@ -24,7 +24,7 @@ const isEnd = computed(() => {
 
     >svg {
         width: 100%;
-        height: 100%;
+        height: auto;
     }
 
     >.isEnd {

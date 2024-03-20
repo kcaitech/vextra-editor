@@ -151,7 +151,7 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
     const selectedShapes: Map<string, ShapeView> = new Map();
     while (ids < childs.length) {
         const shape = childs[ids];
-        if (shape.isLocked() || !shape.isVisible()) {
+        if (shape.isLocked || !shape.isVisible) {
             ids++;
             continue;
         }

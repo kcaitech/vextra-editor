@@ -88,12 +88,12 @@ const _getCanvasShape = () => {
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
         const item = parentIsArtboard(shape);
         getPosition(shape);
-        if (shape.isVisible() && item) {
+        if (shape.isVisible && item) {
             renderItems = toRaw(Array(adapt2Shape(item)).filter(s => s.type !== ShapeType.Cutout));
         } else {
             selectedShapes.clear();
             getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-            if (shape.isVisible()) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
+            if (shape.isVisible) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     } else if (shapes.length === 1) {
         getPosition(shape);
@@ -239,7 +239,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
             let bgc = 'transparent';
             if (shape.type === ShapeType.Cutout) {
                 const item = parentIsArtboard(shape);
-                if (shape.isVisible() && item) {
+                if (shape.isVisible && item) {
                     shapeItem = Array(item).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
                 } else {
                     selectedShapes.clear();

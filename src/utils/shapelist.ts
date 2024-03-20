@@ -61,7 +61,7 @@ export function is_parent_locked(shape: ShapeView): boolean {
     let is_pu = false;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.isLocked()) {
+        if (p.isLocked) {
             is_pu = true;
             break;
         }
