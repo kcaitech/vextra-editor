@@ -85,7 +85,7 @@ function finder(childs: ShapeView[], points: [XY, XY, XY, XY, XY]) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
 
-        if (selectedShapes.get(shape.id) || shape.isLocked() || !shape.isVisible()) {
+        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) {
             continue;
         }
 
