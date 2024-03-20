@@ -145,7 +145,7 @@ function render() {
     }
 }
 
-const showOP = ref<boolean>(true)
+const showOP = ref<boolean>(false)
 
 watchEffect(() => {
     if (props.shapes) {

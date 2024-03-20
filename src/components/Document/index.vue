@@ -40,11 +40,9 @@ import HelpEntrance from '../Help/HelpEntrance.vue';
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 let context: Context | undefined;
-const middleWidth = ref<number>(0.8);
-const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
+const rightWidth = ref(250);
+const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -152,16 +150,10 @@ function selectionWatcher(t: number) {
 const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
     if (showRight.value || (!isEdit.value && !isLable.value)) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
+        rightWidth.value = 0
         showRight.value = false
     } else {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = showLeft.value ? 0.9 - 0.1 : 1 - 0.1;
+        rightWidth.value = 250
         showRight.value = true
     }
 }
@@ -172,13 +164,11 @@ const showHiddenLeft = () => {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
         Left.value.leftMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
         showLeft.value = false
     } else {
         Left.value.leftMin = 250
-        Left.value.leftWidth = 0.1
-        Left.value.leftMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        Left.value.leftWidth = 250
+        Left.value.leftMinWidth = 250
         showLeft.value = true
     }
     w.notify(WorkSpace.CHANGE_NAVI);
@@ -225,20 +215,11 @@ const tool_watcher = (t: number) => {
 }
 const not_perm_hidden_right = () => {
     if (!isEdit.value && !isLable.value) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
+        rightWidth.value = 0
     } else if (isLable.value && !isEdit.value) {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        rightWidth.value = 250
     } else if (!isLable.value && isEdit.value && !showRight.value) {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        rightWidth.value = 250
     }
 }
 enum PermissionChange {
@@ -651,6 +632,10 @@ const closeLoading = () => {
     loading.value = false;
 }
 
+const changeLeftWidth = (width: number) => {
+    Left.value.leftWidth = width;
+}
+
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
@@ -731,11 +716,8 @@ onUnmounted(() => {
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context"
-            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                     @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
@@ -744,7 +726,8 @@ onUnmounted(() => {
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)" @closeLoading="closeLoading">
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                    @closeLoading="closeLoading">
                 </ContentView>
             </template>
             <template #slot3>
@@ -789,11 +772,11 @@ onUnmounted(() => {
 </style>
 <style scoped lang="scss">
 .main {
-    min-width: 1080px;
+    min-width: 700px;
     width: 100%;
     overflow-x: auto;
 
-    @media (max-width: 1080px) {
+    @media (max-width: 700px) {
         overflow-x: scroll;
     }
 
