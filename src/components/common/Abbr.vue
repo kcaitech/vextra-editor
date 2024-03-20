@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { Matrix, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
 import { computed } from 'vue';
@@ -13,24 +13,15 @@ interface Props {
 
 const props = defineProps<Props>();
 const path = ref<string>('');
+
 const flex_abbr = computed<boolean>(() => {
-    return !!props.shape.pathType;
-})
+    return props.shape.isPathIcon;
+});
+const icon_class = computed<string>(() => {
+    return `layer-${props.shape.type}`;
+});
 
-function icon_class() {
-    const shape = props.shape;
-    if (shape.type === ShapeType.Symbol) {
-        if (shape instanceof SymbolUnionShape) {
-            return 'layer-symbol-union';
-        } else {
-            return 'layer-component';
-        }
-    } else {
-        return `layer-${shape.type}`;
-    }
-}
-
-function pather() {
+function getPath() {
     if (!flex_abbr.value) {
         return;
     }
@@ -71,8 +62,9 @@ function pather() {
     _path.transform(m);
     path.value = _path.toString();
 }
-const e = watch(() => props.view, pather);
-onMounted(pather);
+
+const e = watch(() => props.view, getPath);
+onMounted(getPath);
 onUnmounted(e);
 </script>
 <template>
@@ -80,7 +72,7 @@ onUnmounted(e);
         <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
             <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
         </svg>
-        <svg-icon v-else :icon-class="icon_class()" :fill="theme"></svg-icon>
+        <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
     </div>
 </template>
 <style scoped lang="scss">
@@ -90,7 +82,7 @@ onUnmounted(e);
     display: flex;
     align-items: center;
 
-    >svg {
+    > svg {
         width: 13px;
         height: 13px;
     }
