@@ -27,7 +27,6 @@ export class Comment extends WatchableObject {
   static SHUTDOWN_COMMENT = 1;
   static SELECT_LIST_TAB = 2;
   static SEND_COMMENT = 3;
-  static EDIT_COMMENT = 4;
   static HOVER_COMMENT = 5;
   static COMMENT_POPUP = 6;
   static UPDATE_COMMENT = 7;
@@ -35,7 +34,6 @@ export class Comment extends WatchableObject {
   static CURRENT_COMMENT = 9;
   static SELECTE_COMMENT = 10;
   static UPDATE_PAGE_COMMENT = 11;
-  static COMMENT_ALL = 12;
   static UPDATE_COMMENT_POS = 13;
   static SHOW_COMMENT_POPUP = 14;
   static COMMENT_HANDLE_INPUT = 15;
@@ -59,9 +57,10 @@ export class Comment extends WatchableObject {
   private m_select_comment_id: string | undefined; //选中的评论id
   private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
   private m_comment_shape: string[] = [] //保存移动shape上有评论的shape
-  private m_not2tree_comment: any = [] //没有转树的评论列表
+  private m_not2tree_comment: any[] = [] //没有转树的评论列表
   private m_comment_visible: boolean = true; //是否显示评论
   private m_comment_input_move: boolean = false; //是否正在移动评论输入框
+  private m_current_id: string = "";
   constructor() {
     super();
   }
@@ -181,13 +180,7 @@ export class Comment extends WatchableObject {
   }
   setNot2TreeComment(list: any[]) {
     this.m_not2tree_comment = list
-    this.notify(Comment.COMMENT_ALL)
-  }
-  sendComment() {
-    this.notify(Comment.SEND_COMMENT);// listTab栏和content组件之间的通信
-  }
-  editTabComment() {
-    this.notify(Comment.EDIT_COMMENT); // listTab栏和content组件之间的通信
+    this.notify(Comment.SEND_COMMENT);
   }
   hoverComment(v: boolean, id?: string) {
     this.m_hove_commetn = v
@@ -205,5 +198,11 @@ export class Comment extends WatchableObject {
     this.m_comment_list = [];
     this.m_page_comment_list = [];
     this.notify(Comment.TOGGLE_COMMENT_PAGE);//点击评论跳转页面
+  }
+  setCommentId (id: string) {
+    this.m_current_id = id;
+  }
+  get currentId() {
+    return this.m_current_id;
   }
 }

@@ -50,21 +50,10 @@ type CommentInputEl = InstanceType<typeof CommentInput>;
 const commentEl = ref<CommentInputEl>();
 const shapeID = ref('')
 const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
-const documentCommentList = ref<any[]>(props.context.comment.pageCommentList);
 const route = useRoute()
 const posi = ref({ x: 0, y: 0 });
 const rootWidth = ref<number>(props.context.workspace.root.width);
 const cursor = ref<string>('');
-type commentListMenu = {
-    text: string
-    status_p: boolean
-}
-// 左侧评论列表的菜单
-const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status_p: false },
-    { text: `${t('comment.show_about_me')}`, status_p: false },
-    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
-])
 
 // #endregion
 function down(e: MouseEvent) {
@@ -209,44 +198,11 @@ const closeComment = (e?: MouseEvent) => {
 }
 // 调用评论API，并通知listTab组件更新评论列表
 const completed = (succession: boolean, event?: MouseEvent) => {
-    // props.context.comment.sendComment()
-    getDocumentComment()
     commentInput.value = false;
     if (succession && event) {
         addComment(event);
     }
 }
-// 获取评论列表
-const getDocumentComment = async () => {
-    try {
-        const docInfo = props.context.comment.isDocumentInfo;
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: docInfo?.document.id || route.query.id })
-        if (data) {
-            data.forEach((obj: { children: any[]; commentMenu: any; }) => {
-                obj.commentMenu = commentMenuItems.value
-                obj.children = []
-            })
-            const manageData = data.map((item: any) => {
-                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
-                return item
-            })
-            const comment = props.context.comment;
-            const list = list2Tree(manageData, '')
-            comment.setNot2TreeComment(manageData)
-            comment.setPageCommentList(list, props.context.selection.selectedPage!.id)
-            comment.setCommentList(list)
-            documentCommentList.value = comment.pageCommentList
-            if (props.context.selection.isSelectComment) {
-                props.context.selection.selectComment(props.context.selection.commentId)
-                documentCommentList.value = comment.pageCommentList
-                props.context.selection.setCommentSelect(false)
-            }
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-// #endregion
 
 // #region 连接线
 let apex1: ContactForm | undefined, apex2: ContactForm | undefined;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
@@ -34,6 +34,7 @@ const documentCommentList = ref<any[]>(props.context.comment.commentList)
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const isPageSort = ref(props.context.selection.commentPageSort)
 const visibleComment = ref(props.context.comment.isVisibleComment)
+const aboutMeList = ref<any[]>([]);
 const action = ref()
 const showMenu = () => {
     if (commentMenu.value) {
@@ -80,8 +81,8 @@ const aboutMe = () => {
             }
         }
     })
-    const myComment = Array.from(new Set(aboutMeArr))
-    return myComment
+    aboutMeList.value = Array.from(new Set(aboutMeArr));
+    
 }
 
 const handleMenuStatus = (status: boolean, index: number) => {
@@ -96,23 +97,6 @@ const handleMenuStatus = (status: boolean, index: number) => {
         props.context.selection.setCommentAboutMe(status)
     }
     commentMenuItems.value[index].status_p = status
-}
-
-const getDocumentComment = async (id: string) => {
-    try {
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: id })
-        if (!data || data.length === 0) return;
-        data.forEach((obj: { children: any[]; commentMenu: any; }) => {
-            obj.commentMenu = commentMenuItems.value
-            obj.children = []
-        })
-        const list = list2Tree(data, '')
-        props.context.comment.setNot2TreeComment(data)
-        props.context.comment.setCommentList(list)
-        documentCommentList.value = props.context.comment.commentList
-    } catch (err) {
-        console.log(err);
-    }
 }
 
 // 列表转树
@@ -153,9 +137,6 @@ const selectedUpdate = (t: number) => {
     }
 }
 const commentUpdate = (t: number) => {
-    if (t === Comment.SEND_COMMENT) {
-        getDocumentComment(docID)
-    }
     if (t === Comment.UPDATE_COMMENT) {
         documentCommentList.value = props.context.comment.commentList
     }
@@ -172,10 +153,10 @@ const commentUpdate = (t: number) => {
     if (t === Comment.VISIBLE_COMMENT) {
         visibleComment.value = props.context.comment.isVisibleComment
     }
+    if(t === Comment.SEND_COMMENT) {
+        aboutMe();
+    }
 }
-watchEffect(() => {
-    getDocumentComment(docID)
-})
 
 const docComment = (comment: DocCommentOpData) => {
     if (comment.comment.content) {
@@ -195,7 +176,7 @@ const docComment = (comment: DocCommentOpData) => {
         }
     } else if (comment.type === DocCommentOpType.Add) {
         if (!comment.comment.root_id) {
-            documentCommentList.value.unshift(comment.comment)
+            documentCommentList.value.unshift(comment.comment);
         }
     }
 }
@@ -243,7 +224,7 @@ const showHiddenLeft = () => {
             <el-scrollbar ref="scrollbarRef">
                 <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id"
                     :commentItem="item" :index="index" :context="context" :pageId="item.page_id" @resolve="onResolve"
-                    @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
+                    @delete="onDelete" :data-comment="item.id" :myComment="aboutMeList"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>

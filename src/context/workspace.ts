@@ -411,8 +411,10 @@ export class WorkSpace extends WatchableObject {
         this.m_round = v;
     }
     
-    setFontNameList(zh: string[], en: string[]) {
+    setFontNameListZh(zh: string[]) {
         this.m_font_name_list.zh = zh;
+    }
+    setFontNameListEn(en: string[]) {
         this.m_font_name_list.en = en;
     }
     get fontNameList() {

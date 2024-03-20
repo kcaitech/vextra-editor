@@ -32,7 +32,7 @@ export const apply = {
     file_access_request: "文件访问申请",
     applicant: "申请人",
     access_file: "访问文件",
-    authority: '权限：',
+    authority: '权限',
     remarks: '备注',
     agree: '同意',
     refuse: '拒绝',

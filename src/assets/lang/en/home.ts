@@ -326,7 +326,8 @@ export const comment = {
     day: 'day',
     no_comment: 'No current comments',
     comments_hide: 'Comments are set to hide',
-    show_comments: 'Show comments'
+    show_comments: 'Show comments',
+    input_no_perm: 'No permission to comment'
 }
 export const clipboard = {
     'invalid_data': 'invalid data',

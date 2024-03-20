@@ -201,7 +201,7 @@ onMounted(render)
 
         background-color: #F5F5F5;
         border-radius: var(--default-radius);
-        padding: 0 7px;
+        padding: 0 9px;
         box-sizing: border-box;
 
         .value-wrap {

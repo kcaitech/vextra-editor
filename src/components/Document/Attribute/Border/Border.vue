@@ -54,7 +54,7 @@ const mixed_cell = ref(false);
 const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
 let table: TableShape;
 
@@ -96,10 +96,11 @@ function watcher(...args: any[]) {
 }
 
 function updateData() {
-    borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
+    const selecteds = props.context.selection.selectedShapes;
+    if (selecteds.length < 1) return;
+    borders.length = 0;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -282,6 +283,8 @@ function onAlphaChange(b: Border, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
+            console.log(borders, 'borders');
+            
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -298,7 +301,7 @@ function onAlphaChange(b: Border, idx: number) {
 }
 
 function setColor(idx: number, color: Color) {
-    const selected = props.context.selection.selectedShapes;
+    const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const s = selected[0] as ShapeView;
     const _idx = borders.length - idx - 1;

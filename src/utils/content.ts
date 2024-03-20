@@ -1172,7 +1172,6 @@ export function lower_layer(context: Context, layer?: number) {
             message('info', context.workspace.t('homerightmenu.unable_lower'));
         }
     } else if (selection.selectedShapes.length > 1) {
-        editor.lower_layers(selection.selectedShapes.map(s => adapt2Shape(s)), layer);
     }
 }
 
@@ -1192,7 +1191,6 @@ export function uppper_layer(context: Context, layer?: number) {
             message('info', context.workspace.t('homerightmenu.unable_upper'));
         }
     } else if (selection.selectedShapes.length > 1) {
-        editor.uppper_layers(selection.selectedShapes.map(s => adapt2Shape(s)), layer);
     }
 }
 

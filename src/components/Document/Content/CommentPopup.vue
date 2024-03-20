@@ -11,6 +11,7 @@ import { ElScrollbar } from 'element-plus'
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { Perm } from '@/context/workspace';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -28,7 +29,7 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'delete', index: number): void
     (e: 'addComment', info: any): void
-    (e: 'recover', index?: number, id?: string): void
+    (e: 'recover', id?: string): void
     (e: 'editComment', index: number, text: string): void
     (e: 'editCommentChild', index: number, text: string): void
     (e: 'previousArticle', index: number, xy?: { x: number, y: number }, id?: string): void
@@ -65,6 +66,7 @@ const reply = ref<boolean>(props.context.selection.commentStatus)
 const iscommentTop = ref(false);
 const lastHover = ref(false);
 const nextHover = ref(false);
+const cur_perm = ref<Perm>(props.context.workspace.documentPerm);
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
@@ -141,6 +143,7 @@ const commentPosition = () => {
                     }
                 }
                 scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+                if (cur_perm.value === Perm.isRead) return;
                 inputPopup.value && inputPopup.value.focus();
             })
         }
@@ -152,16 +155,16 @@ const handleInput = () => {
     if (!scrollbarRef.value) return;
     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     nextTick(() => {
-    if (textareaEl.value) {
-    const text = inputPopup.value.$refs.textarea
-    if (text) {
-    text.style.height = "auto"; // 重置高度，避免高度叠加
-    text.style.height = text.scrollHeight + "px";
-    const lineHeight = parseInt(getComputedStyle(text).lineHeight)
-    const textareaHeight = text.clientHeight
-    const numberOfLines = Math.ceil(textareaHeight / lineHeight)
-    scrollVisible.value = numberOfLines > 10 ? true : false
-    }
+        if (textareaEl.value) {
+            const text = inputPopup.value.$refs.textarea
+            if (text) {
+                text.style.height = "auto"; // 重置高度，避免高度叠加
+                text.style.height = text.scrollHeight + "px";
+                const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+                const textareaHeight = text.clientHeight
+                const numberOfLines = Math.ceil(textareaHeight / lineHeight)
+                scrollVisible.value = numberOfLines > 10 ? true : false
+            }
         }
         scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     })
@@ -204,7 +207,7 @@ const carriageReturn = (event: KeyboardEvent) => {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     const status = props.commentInfo.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
@@ -212,7 +215,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     props.context.comment.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
@@ -225,7 +228,7 @@ const onDeleteItem = (index: number, e: Event) => {
 const onDeleteChild = (index: number, e: Event, id: string) => {
     e.stopPropagation()
     deleteComment(id).then(() => {
-        emit('recover', index, id)
+        emit('recover', id)
     })
 }
 
@@ -413,6 +416,7 @@ const editCommentChild = (index: number, text: string) => {
 }
 
 const quickReply = (name: string) => {
+    if (cur_perm.value === Perm.isRead) return;
     textarea.value = `@${name} `
     selectedPerson.value = `@${name}`
     inputPopup.value && inputPopup.value.focus()
@@ -435,7 +439,14 @@ const closeComment = (e: KeyboardEvent) => {
 
 const moveCommentPopup = (e: MouseEvent) => {
     e.stopPropagation()
+    if(cur_perm.value === Perm.isRead) return;
     emit('moveCommentPopup', e, props.index)
+}
+
+const inputFocus = () => {
+    if (cur_perm.value === Perm.isRead) {
+        inputPopup.value && inputPopup.value.blur()
+    }
 }
 
 const update = (t: number) => {
@@ -465,6 +476,11 @@ onMounted(() => {
     document.addEventListener('mouseup', handleClickOutside);
     document.addEventListener('mouseup', scrollup)
     document.addEventListener('keydown', closeComment);
+    nextTick(() => {
+        if (scrollbarRef.value) {
+            scrollbarRef.value.scrollTo(0, 0)
+        }
+    })
 })
 onUnmounted(() => {
     props.context.comment.unwatch(commentUpdate)
@@ -494,20 +510,22 @@ onUnmounted(() => {
             </div>
             <div class="comment-commands">
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                    :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                    <div class="onDelete" @click="onDelete" v-if="isControls">
+                    :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && cur_perm !== Perm.isRead">
+                    <div class="onDelete" @click="onDelete">
                         <svg-icon icon-class="comment-delete"></svg-icon>
                     </div>
                 </el-tooltip>
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                    :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                    <div class="onResolve" @click="onResolve" v-if="isControls">
+                    :show-after="1000" :offset="10" :hide-after="0"
+                    v-if="resolve && isControls && cur_perm !== Perm.isRead">
+                    <div class="onResolve" @click="onResolve">
                         <svg-icon icon-class="comment-solve"></svg-icon>
                     </div>
                 </el-tooltip>
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                    :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                    <div class="onResolved" @click="onResolve" v-if="isControls">
+                    :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve">
+                    <div @click="onResolve"
+                        :class="{ hovered: cur_perm === Perm.isRead, onResolved: cur_perm !== Perm.isRead }">
                         <svg-icon icon-class="comment-solved"></svg-icon>
                     </div>
                 </el-tooltip>
@@ -529,9 +547,10 @@ onUnmounted(() => {
         <div class="popup-footer" @mousedown.stop>
             <div class="textarea" ref="textareaEl">
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 0, maxRows: 10 }"
-                    type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
-                    :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
-                    @input="handleInput" />
+                    type="textarea"
+                    :placeholder="cur_perm === Perm.isRead ? t('comment.input_no_perm') : t('comment.input_comments')"
+                    resize="none" size="small" :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }"
+                    @keydown="carriageReturn" @input="handleInput" @focus="inputFocus" />
                 <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
                     <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
                 </div>
@@ -691,6 +710,21 @@ onUnmounted(() => {
                 }
             }
 
+            .hovered {
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
+
+                >svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #169248;
+                }
+            }
+
             .close {
                 width: 24px;
                 height: 24px;
@@ -831,5 +865,4 @@ onUnmounted(() => {
 //.custom-icon {
 //    color: green;
 //    /* 设置颜色为绿色 */
-//}
-</style>
+//}</style>
