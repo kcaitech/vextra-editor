@@ -307,7 +307,7 @@ export class BaseCreator extends BaseTreeNode {
                 radialGradient: fillColor.radialGradient,
                 color: fillColor.color,
             }
-            // svg、g元素没有填充，而是继承到子元素
+            // svg、g元素没有填充，而是继承给子元素
             if (this.htmlElement?.tagName === "svg" || this.htmlElement?.tagName === "g") {
                 for (const child of this.children) {
                     child.attributes[attrName] = attrValue
