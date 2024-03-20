@@ -296,15 +296,25 @@ export class BaseCreator extends BaseTreeNode {
             fill = this.attributes.styleAttributes.fill
         }
         if (!fill) fill = this.localAttributes["fill"];
-        if (fill) {
-            const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
-            const fillColor = parseFillColor(fill, fillOpacity)
-            if (fillColor) this.attributes[this.htmlElement?.tagName === "text" ? "textFill" : "fill"] = {
+        if (!fill) fill = "black"; // 默认填充黑色
+        const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
+        let fillColor = parseFillColor(fill, fillOpacity)
+        if (fillColor) {
+            const attrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
+            const attrValue = {
                 colorType: fillColor.colorType,
                 linearGradient: fillColor.linearGradient,
                 radialGradient: fillColor.radialGradient,
                 color: fillColor.color,
-            };
+            }
+            // svg、g元素没有填充，而是继承给子元素
+            if (this.htmlElement?.tagName === "svg" || this.htmlElement?.tagName === "g") {
+                for (const child of this.children) {
+                    child.attributes[attrName] = attrValue
+                }
+            } else {
+                this.attributes[attrName] = attrValue
+            }
         }
 
         // stroke
@@ -485,7 +495,7 @@ export class BaseCreator extends BaseTreeNode {
 
         const fills = new BasicArray<Fill>()
         const fillColor = this.attributes.fill
-        if (fillColor) { // 文本不需要填充
+        if (fillColor) {
             const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, myColorToColor(fillColor.color))
             fills.push(fill)
 
