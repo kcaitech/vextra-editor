@@ -2,7 +2,7 @@
 import { Matrix, PageView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
@@ -23,6 +23,10 @@ const pagesvg = ref<HTMLElement>();
 const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
+
+const emit = defineEmits<{
+    (e: 'closeLoading'): void;
+}>();
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -119,6 +123,9 @@ onMounted(() => {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
         dom.ctx.loop(window.requestAnimationFrame);
+        props.context.nextTick(props.data ,() => {
+            emit('closeLoading');
+        })
     }
 })
 

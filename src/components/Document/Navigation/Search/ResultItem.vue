@@ -75,8 +75,8 @@ const stop = watch(() => props.data.shape, (value, old) => {
 
 function updater(t?: any) {
     if (t === 'frame') return;
-    lock_status.value = props.data.shape.isLocked() ? 1 : 0;
-    visible_status.value = props.data.shape.isVisible() ? 0 : 1;
+    lock_status.value = props.data.shape.isLocked ? 1 : 0;
+    visible_status.value = props.data.shape.isVisible ? 0 : 1;
     // if (is_parent_locked(props.data.shape) && !lock_status.value) {
     //     lock_status.value = 2;
     // }

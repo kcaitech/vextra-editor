@@ -9,6 +9,7 @@ import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from '@/context/comment';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { Perm } from '@/context/workspace';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -31,7 +32,7 @@ const input = ref()
 const popupItem = ref<HTMLDivElement>()
 const scrollVisible = ref(false)
 const isEditing = ref(false)
-
+const cur_perm = ref<Perm>(props.context.workspace.documentPerm);
 const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
@@ -55,7 +56,7 @@ const unHoverShape = (e: MouseEvent) => {
 
 const onEditContext = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value || !isEdit.value) return
+    if (!isControls.value || !isEdit.value || cur_perm.value === Perm.isRead) return
     if (showEditComment.value) {
         return input.value && input.value.focus()
     }
@@ -84,7 +85,7 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return;
     emit('delete', props.index, e, props.commentInfo.id)
 }
 
@@ -176,20 +177,20 @@ function stopEditing() {
                     </div>
                     <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.edit_content')}`"
-                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && isEdit">
-                            <div class="onEditContext" @click="onEditContext" v-if="isControls && isEdit">
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && isEdit && cur_perm !== Perm.isRead">
+                            <div class="onEditContext" @click="onEditContext">
                                 <svg-icon icon-class="comment-edit"></svg-icon>
                             </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
-                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="cur_perm !== Perm.isRead">
                             <div class="onQuickReply" @click="onQuickReply">
                                 <svg-icon icon-class="comment-quick"></svg-icon>
                             </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                            <div class="onDelete" @click="onDelete" v-if="isControls">
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && cur_perm !== Perm.isRead">
+                            <div class="onDelete" @click="onDelete">
                                 <svg-icon icon-class="comment-delete"></svg-icon>
                             </div>
                         </el-tooltip>

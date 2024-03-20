@@ -346,7 +346,7 @@ export function string_by_sys(str: string): string {
 }
 
 export function forbidden_to_modify_frame(shape: ShapeView) {
-    return shape.isLocked() || shape.isVirtualShape;
+    return shape.isLocked || shape.isVirtualShape;
 }
 
 export function shapes_organize(shapes: ShapeView[]) {
@@ -452,11 +452,13 @@ export function format_value(val: number | string, fix = 2) {
     return val.toFixed(fix);
 }
 
-export function modifyOpacity(context: Context, val: number) {
+export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView[]) {
     if(!permIsEdit(context)) return;
     const page = context.selection.selectedPage!;
-    const shapes = context.selection.selectedShapes;
+    const shapes = _shapes || context.selection.selectedShapes;
     const editor = context.editor4Page(page);
+    console.log(shapes, 'val');
+    
     editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
     hidden_selection(context);
 }

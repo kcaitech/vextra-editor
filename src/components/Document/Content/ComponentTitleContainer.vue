@@ -43,7 +43,7 @@ const setPosition = () => {
     const l = components.length;
     for (let i = 0; i < l; i++) {
         const compo = components[i];
-        if (!(is_symbol_or_union(compo)) || !compo.isVisible()) continue;
+        if (!(is_symbol_or_union(compo)) || !compo.isVisible) continue;
         const matrix_compo_root = compo.matrix2Root();
         const matrix_page_client = props.context.workspace.matrix;
         const matrix_compo = new Matrix(matrix_compo_root);

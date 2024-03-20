@@ -148,7 +148,7 @@ onUnmounted(() => {
             flex: 0 0 126px;
             height: 32px;
             border-radius: 6px;
-            padding: 9px 12px;
+            padding: 9px 9px;
             box-sizing: border-box;
 
             >div {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
@@ -46,6 +46,7 @@ const commentLength = ref(props.context.comment.pageCommentList.length)
 const myComment = ref(props.context.selection.commentAboutMe)
 const visibleComment = ref(props.context.comment.isVisibleComment)
 const action = ref()
+const cur_perm = ref<Perm>(props.context.workspace.documentPerm);
 const aboutMe = ref(false)
 const status = computed(() => {
     if (!visibleComment.value && action.value !== Action.AddComment) {
@@ -149,6 +150,7 @@ const unHover = (e: MouseEvent) => {
 
 const moveCommentPopup = (e: MouseEvent) => {
     e.stopPropagation();
+    if(cur_perm.value === Perm.isRead) return;
     if (props.commentInfo.user.id === props.context.comment.isUserInfo?.id) {
         emit('moveCommentPopup', e, props.index)
     }
@@ -173,9 +175,10 @@ const resolve = (status: number, index: number) => {
     emit('resolve', status, index)
 }
 
-const recover = (index?: number) => {
+const recover = (id?: string) => {
     emit('recover')
-    if (index || index === 0) {
+    const index = documentCommentList.value.findIndex(item => item.id === id);
+    if (index !== -1) {
         documentCommentList.value.splice(index, 1)
     }
 }

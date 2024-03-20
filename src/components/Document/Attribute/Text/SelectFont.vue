@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
-import { onMounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
 import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { watch } from 'vue';
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void;
@@ -84,40 +85,23 @@ function highlightText(text: string) {
     return text;
 }
 
-function checkFontsAvailability(fontName: string[], fontList: FontName, lang: string) {
-    const promises = fontName.map(name => FontAvailable(name));
-    Promise.all(promises)
-        .then(results => {
-            if (lang === 'ch') {
-                const ch = fontName.filter((name, index) => results[index].length > 0);
-                fontList.ch.push(...ch)
-            } else {
-                const en = fontName.filter((name, index) => results[index].length > 0);
-                fontList.en.push(...en)
-            }
-        })
-        .catch(error => {
-            console.error('Error checking font availability:', error);
-        });
-}
-
-const getAllTextFontName = () => {
-    const pageFont = props.context.selection.selectedPage?.data.getUsedFontNames()
-    if (pageFont) {
-        const font = (Array.from(pageFont) as string[])
-        const promises = font.map(name => FontAvailable(name).length > 0);
-        Promise.all(promises).then(res => {
-            const usedSuccess = font.filter((name, index) => res[index]);
+const getAllTextFontName = async () => {
+    try {
+        const pageFont = props.context.selection.selectedPage?.data.getUsedFontNames()
+        if (pageFont) {
+            const font = (Array.from(pageFont) as string[])
+            const result = await Promise.all(font.map(name => FontAvailable(name).length > 0));
+            const usedSuccess = font.filter((name, index) => result[index]);
             fontList.used.success.push(...usedSuccess)
             const usedFailurel = font.filter((name, index) => {
-                if (!res[index]) {
+                if (!result[index]) {
                     return name
                 }
             });
             fontList.used.failurel.push(...usedFailurel)
-        }).catch(err => {
-            console.log(err);
-        })
+        }
+    } catch (error) {
+        console.error('Error checking font availability:', error);
     }
 }
 const isUnfoldUsed = ref(true)
@@ -144,11 +128,19 @@ const get_top_posi = () => {
         }
     }
 }
+watch(() => props.showFont, (v) => {
+    if (v) {
+        const { zh, en } = props.context.workspace.fontNameList;
+        fontList.ch.push(...zh);
+        fontList.en.push(...en);
+        nextTick(() => {
+            get_top_posi();
+        })
+    }
+})
 
 onMounted(() => {
     getAllTextFontName()
-    checkFontsAvailability(fontNameListZh, fontList, 'ch')
-    checkFontsAvailability(fontNameListEn, fontList, 'en')
     get_top_posi();
 })
 </script>

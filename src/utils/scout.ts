@@ -307,7 +307,7 @@ export function finder_group(scout: Scout, g: ShapeView[], position: PageXY, sel
     let result: ShapeView | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         const shape = g[j];
-        if (!shape.isVisible() || shape.isLocked() || !isTarget(scout, shape, position)) continue;
+        if (!shape.isVisible || shape.isLocked || !isTarget(scout, shape, position)) continue;
         if (ShapeType.Group === shape.type) {
             const c: ShapeView[] = (shape).childs;
             result = finder_group(scout, c, position, selected, isCtrl);
@@ -357,7 +357,7 @@ function finder_symbol(context: Context, scout: Scout, symbol: ShapeView, positi
     }
 }
 export function canNotBeApex(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
-    return shape.isVirtualShape || !shape.isVisible() || shape.isLocked() || shape.type === ShapeType.Contact;
+    return shape.isVirtualShape || !shape.isVisible || shape.isLocked || shape.type === ShapeType.Contact;
 }
 export function finder_contact(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
     const result = init || [];
@@ -515,7 +515,7 @@ export function finder_env_for_migrate(scout: Scout, g: ShapeView[], position: P
 }
 
 export function canBeTarget(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
-    return shape.isVisible() && !shape.isLocked();
+    return shape.isVisible && !shape.isLocked;
 }
 
 export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {

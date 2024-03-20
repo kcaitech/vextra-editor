@@ -48,7 +48,7 @@
                             <div class="text">{{ t('home.New_file') }}</div>
                         </div>
                         <div class="right">
-                            <svg-icon icon-class="add-icon"></svg-icon>
+                            <svg-icon icon-class="add"></svg-icon>
                         </div>
                     </div>
                     <div class="openfile" @click="picker.invoke">
@@ -84,7 +84,7 @@
                             </div>
                         </div>
                         <div class="right">
-                            <svg-icon icon-class="add-icon"></svg-icon>
+                            <svg-icon icon-class="add"></svg-icon>
                         </div>
                     </div>
                 </div>
@@ -499,9 +499,8 @@ onUnmounted(() => {
                     margin-right: 16px;
 
                     svg {
-                        width: 18px;
-                        height: 18px;
-                        padding: 2px;
+                        width: 16px;
+                        height: 16px;
                         box-sizing: border-box;
                     }
                 }
@@ -557,9 +556,8 @@ onUnmounted(() => {
         }
 
         svg {
-            width: 18px;
-            height: 18px;
-            padding: 2px;
+            width: 16px;
+            height: 16px;
             box-sizing: border-box;
         }
     }

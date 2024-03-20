@@ -216,7 +216,7 @@ onUnmounted(() => {
                 width: 100%;
                 height: 30px;
                 border-radius: 4px;
-                padding-left: 11px;
+                padding-left: 9px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
@@ -251,7 +251,7 @@ onUnmounted(() => {
     .module_input {
         display: flex;
         align-items: center;
-        padding-left: 10px;
+        padding-left: 9px;
         box-sizing: border-box;
         width: calc(100% - 58px);
         height: 30px;

@@ -232,8 +232,8 @@ watchEffect(() => {
                     @select="selectFormat"></ArgsSelect>
             </div>
         </div>
-        <div class="delete" @click="deleteItem"
-            :class="{ opacity: props.shapes.length === 1 && props.shapes[0].type === ShapeType.Cutout }">
+        <div class="delete" @click="deleteItem">
+            <!-- :class="{ opacity: props.shapes.length === 1 && props.shapes[0].type === ShapeType.Cutout }"> -->
             <svg-icon icon-class="delete"></svg-icon>
         </div>
     </div>

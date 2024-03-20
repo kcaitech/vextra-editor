@@ -9,7 +9,7 @@ import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from "@/context/comment";
-import { WorkSpace } from "@/context/workspace";
+import { Perm, WorkSpace } from "@/context/workspace";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n()
@@ -36,6 +36,7 @@ const resolve = computed(() => {
     return props.commentItem.status === 0 ? true : false
 })
 const selectComment = ref(false)
+const cur_perm = ref<Perm>(props.context.workspace.documentPerm);
 const status = computed(() => {
     const status = props.commentItem.status
     replyStatus()
@@ -154,7 +155,7 @@ function isInner() {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     const state = props.commentItem.status === 0 ? 1 : 0
     setCommentStatus(state)
     emit('resolve', state, props.index)
@@ -162,7 +163,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     props.context.comment.commentInput(false);
     deleteComment()
     emit('delete', props.index)
@@ -272,28 +273,28 @@ onUnmounted(() => {
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <div class="onDelete" @click="onDelete" v-if="isControls" :class="{ checked: selectComment }">
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && cur_perm !== Perm.isRead">
+                        <div class="onDelete" @click="onDelete" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-delete"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <div class="onResolve" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls && cur_perm !== Perm.isRead">
+                        <div class="onResolve" @click="onResolve" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solve"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
+                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve">
+                        <div @click="onResolve" :class="{ checked: selectComment, hovered: cur_perm === Perm.isRead, onResolved: cur_perm !== Perm.isRead }">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
                 </div>
                 <div class="icon" v-else>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="!resolve && isControls">
-                        <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="!resolve">
+                        <div class="onResolved" @click="onResolve" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
@@ -505,6 +506,20 @@ onUnmounted(() => {
 
                 .checked:hover {
                     background-color: #BDE2FF;
+                }
+                .hovered {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 12px;
+                        height: 14px;
+                        color: #169248;
+                    }
                 }
             }
         }

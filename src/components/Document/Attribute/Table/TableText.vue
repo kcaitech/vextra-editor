@@ -1008,6 +1008,8 @@ const selectSizeValue = () => {
     if (textSize.value) {
         executed.value = true;
         table.value = shape.value;
+        const value = textSize.value!.value;
+        sizeValue.value = value;
         textSize.value.select();
     }
 }
