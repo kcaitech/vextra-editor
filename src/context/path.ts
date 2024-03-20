@@ -1,6 +1,13 @@
-import { Matrix, PathShapeView, PathShapeView2, WatchableObject } from "@kcdesign/data";
+import {
+    CurveMode,
+    CurvePoint,
+    Matrix,
+    PathShapeView,
+    PathShapeView2,
+    PathType,
+    WatchableObject
+} from "@kcdesign/data";
 import { Context } from ".";
-import { CurveMode } from "@kcdesign/data";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";
 
@@ -58,7 +65,7 @@ export class Path extends WatchableObject {
         }
 
         this.selected_sides.forEach((indexes, segment) => {
-            let points  = result.get(segment);
+            let points = result.get(segment);
             if (!points) {
                 points = new Set<number>();
                 result.set(segment, points);
@@ -297,5 +304,45 @@ export class Path extends WatchableObject {
 
     get bridging_events() {
         return this.m_bridging_events;
+    }
+
+    getCurvePoints() {
+        const points: CurvePoint[] = [];
+        const shape = this.m_context.selection.pathshape;
+        if (!shape) {
+            return points;
+        }
+
+        if (shape.pathType === PathType.Editable) {
+            const indexes = this.selected_points.get(0);
+            if (!indexes?.length) {
+                return  points;
+            }
+            const __points = (shape as PathShapeView).points;
+            for (let i = 0; i < indexes.length; i++) {
+                const p = __points[indexes[i]];
+                if (p) {
+                    points.push(p);
+                }
+            }
+        } else if (shape.pathType === PathType.Multi) {
+            const segments = (shape as PathShapeView2).segments;
+            this.selected_points.forEach((indexes, segment) => {
+                const __points = segments[segment]?.points as CurvePoint[];
+
+                if (!__points?.length) {
+                    return;
+                }
+
+                for (let i = 0; i < indexes.length; i++) {
+                    const p = __points[indexes[i]];
+                    if (p) {
+                        points.push(p);
+                    }
+                }
+            })
+        }
+
+        return points;
     }
 }

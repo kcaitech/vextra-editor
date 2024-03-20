@@ -9,7 +9,7 @@ import {
     PathShapeView,
     PathShapeView2,
     PathType,
-    ShapeType
+    ShapeType, ShapeView
 } from "@kcdesign/data";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
@@ -217,8 +217,7 @@ export function __next_curve_point(shape: PathShape, index: number) {
 /**
  * @description 获取当前编辑点的周围两点
  */
-export function __round_curve_point(shape: PathShape, index: number) {
-    const points = shape.points;
+export function __round_curve_point(points: CurvePoint[], index: number) {
     const previous_index = index === 0 ? points.length - 1 : index - 1;
     const next_index = index === points.length - 1 ? 0 : index + 1;
     return {
@@ -395,7 +394,7 @@ function _segmeng_generator(m: Matrix, point: CurvePoint, next: CurvePoint, segm
     }
 }
 
-export function get_segments(shape: PathShapeView | PathShapeView2, matrix: Matrix, map: Map<number, number[]>): Segment[][] {
+export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, number[]>): Segment[][] {
     const result_segments: Segment[][] = [];
 
     if (shape.pathType === PathType.Editable) {
@@ -429,150 +428,6 @@ export function get_segments(shape: PathShapeView | PathShapeView2, matrix: Matr
         }
 
         return __seg;
-    }
-}
-
-export interface Segment2 {
-    mode: CurveMode
-    start: XY
-    from: XY
-    to: XY
-    end: XY
-    index: number
-    path: string
-    shape: PathShapeView
-}
-
-function s_s2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShapeView): Segment2 {
-    const _p = m.computeCoord2(point.x, point.y);
-    const _next = m.computeCoord2(next.x, next.y);
-    return {
-        mode: point.mode,
-        start: _p,
-        from: _p,
-        to: _p,
-        end: _next,
-        index,
-        shape,
-        path: `M ${_p.x} ${_p.y} L${_next.x} ${_next.y}`
-    }
-
-}
-
-function s_c2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShapeView): Segment2 {
-    const _p = m.computeCoord2(point.x, point.y);
-    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
-    const _next = m.computeCoord2(next.x, next.y);
-    return {
-        mode: point.mode,
-        start: _p,
-        from: _p,
-        to: _next_to,
-        end: _next,
-        index,
-        shape,
-        path: `M ${_p.x} ${_p.y} C ${_p.x} ${_p.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
-    }
-}
-
-function c_s2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShapeView): Segment2 {
-    const _p = m.computeCoord2(point.x, point.y);
-    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
-    const _next = m.computeCoord2(next.x, next.y);
-    return {
-        mode: point.mode,
-        start: _p,
-        from: _point_from,
-        to: _next,
-        end: _next,
-        index,
-        shape,
-        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next.x} ${_next.y} ${_next.x} ${_next.y}`
-    }
-}
-
-function c_c2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShapeView): Segment2 {
-    const _p = m.computeCoord2(point.x, point.y);
-    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
-    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
-    const _next = m.computeCoord2(next.x, next.y);
-    return {
-        mode: point.mode,
-        start: _p,
-        from: _point_from,
-        to: _next_to,
-        end: _next,
-        index,
-        shape,
-        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
-    }
-}
-
-function _segmeng_generator2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShapeView) {
-    if (point.hasFrom) {
-        if (next.hasTo) {
-            return c_c2(m, point, next, index, shape);
-        } else {
-            return c_s2(m, point, next, index, shape);
-        }
-    } else {
-        if (next.hasTo) {
-            return s_c2(m, point, next, index, shape);
-        } else {
-            return s_s2(m, point, next, index, shape);
-        }
-    }
-}
-
-export function get_segments2(shape: PathShapeView | GroupShapeView, matrices: Map<string, Matrix>) {
-    const result_segments: Segment2[] = [];
-    if (shape instanceof PathShapeView) {
-        const m = matrices.get(shape.id);
-        if (!m) {
-            console.log('!m');
-            return result_segments;
-        }
-        _exe(shape, result_segments, m);
-        return result_segments;
-    }
-    const shapes = shape.childs;
-    if (!shapes?.length) {
-        console.log('points?.length');
-        return result_segments;
-    }
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-        if (shape instanceof GroupShapeView) {
-            result_segments.push(...get_segments2(shape, matrices));
-            continue;
-        }
-        if (!(shape instanceof PathShapeView)) {
-            continue;
-        }
-        const m = matrices.get(shape.id);
-        if (!m) {
-            continue;
-        }
-        _exe(shape, result_segments, m);
-    }
-    return result_segments;
-
-    function _exe(__s: PathShapeView, container: Segment2[], matrix: Matrix) {
-        const points = __s.points;
-        if (!points?.length) {
-            console.log('points?.length');
-            return;
-        }
-        const m = new Matrix(matrix);
-        m.preScale(__s.frame.width, __s.frame.height);
-        for (let index = 0, l = points.length; index < l; index++) {
-            const point = points[index];
-            const next = __next_points(points, index, __s.isClosed);
-            if (!next) {
-                break;
-            }
-            container.push(_segmeng_generator2(m, point, next, index, __s));
-        }
     }
 }
 

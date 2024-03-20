@@ -124,6 +124,14 @@ export class PathEditor extends TransformHandler {
         this.__execute();
     }
 
+    execute4handlePre(index: number, segment = -1) {
+        (this.asyncApiCaller as PathModifier).preCurve(index, segment);
+    }
+
+    execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
+        (this.asyncApiCaller as PathModifier).execute4handle(index, side, from, to, segment);
+    }
+
     private __execute() {
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);

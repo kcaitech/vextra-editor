@@ -54,8 +54,8 @@ function update() {
 
     init_matrix();
 
-    dots.push(...get_path_by_point(shape as PathShapeView, matrix, props.context.path.selectedPoints));
-    segments.push(...get_segments(shape as PathShapeView, matrix, props.context.path.selectedSides));
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
 }
@@ -139,11 +139,12 @@ function point_mousemove(event: MouseEvent) {
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
 
-        if (is_curve_tool()) {
-            if (props.context.path.selectedSides.size) {
-                return;
-            }
+        if (props.context.path.selectedSides.size) {
+            pathModifier?.createApiCaller();
+            return;
+        }
 
+        if (is_curve_tool()) {
             bridged = true;
             launch_bridging(event); // handle交接
             return;
