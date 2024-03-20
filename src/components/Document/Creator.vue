@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY, PageXY, XY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
@@ -8,7 +8,19 @@ import { getHorizontalAngle, modifyXYByAlignSetting } from '@/utils/common';
 import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, PageView, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    Artboard,
+    AsyncCreator,
+    ContactForm,
+    ContactLineView,
+    GroupShape,
+    Matrix,
+    PageView,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    adapt2Shape
+} from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -19,6 +31,7 @@ import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
+import { Asssit } from "@/context/assist";
 
 interface Props {
     context: Context
@@ -63,7 +76,7 @@ function down(e: MouseEvent) {
     const action = props.context.tool.action;
     modify_page_xy_1(e);
     modify_client_xy_1(e);
-    wheelSetup();
+    // wheelSetup();
     if (action !== Action.AddComment) {
         commentInput.value = false;
     }
@@ -88,11 +101,15 @@ function move(e: MouseEvent) {
 }
 
 function move2(e: MouseEvent) {
-    if (just_search || (e.buttons === 0 && props.context.tool.action === Action.AddContact)) search_apex(e);
+    if (just_search || e.buttons === 0) {
+        if (props.context.tool.action === Action.AddContact) {
+            search_apex(e);
+        }
+    }
 }
 
 function up(e: MouseEvent) {
-    removeWheel();
+    // removeWheel();
     // if (commentInput.value) commentInput.value = false;
     if (isDrag && newShape) {
         shapeCreateEnd();
@@ -108,7 +125,6 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
-
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
@@ -242,10 +258,22 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
 
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
-    const { x, y } = props.context.workspace.getContentXY(e);
-    matrix1 = new Matrix(props.context.workspace.matrix.inverse);
-    page_xy_1 = matrix1.computeCoord2(x, y);
+    const rootXY = props.context.workspace.getRootXY(e);
+
+    const assistResult = props.context.assist.alignXY2(rootXY);
+
+    if (assistResult.sticked_by_x) {
+        rootXY.x = assistResult.x;
+    }
+    if (assistResult.sticked_by_y) {
+        rootXY.y = assistResult.y;
+    }
+
+    page_xy_1 = { ...rootXY };
+
     modifyXYByAlignSetting(props.context, page_xy_1);
+
+    matrix1 = new Matrix(props.context.workspace.matrix.inverse);
 }
 
 function modify_client_xy_1(e: MouseEvent) {
@@ -290,29 +318,22 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
         if (type_d === 0) {
             p2.y = lt.y;
-        }
-        else if (type_d === 45) {
+        } else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 90) {
+        } else if (type_d === 90) {
             p2.x = lt.x;
-        }
-        else if (type_d === 135) {
+        } else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 180) {
+        } else if (type_d === 180) {
             p2.y = lt.y;
-        }
-        else if (type_d === 225) {
+        } else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 270) {
+        } else if (type_d === 270) {
             p2.x = lt.x;
-        }
-        else if (type_d === 315) {
+        } else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
         }
@@ -363,9 +384,10 @@ function modify_new_shape_frame(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
-    if (wheel && asyncCreator) {
-        const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
-        if (isOut) return;
+    if (asyncCreator) {
+        // if (wheel && asyncCreator) {
+        // const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
+        // if (isOut) return;
         if (newShape && newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
         } else {
@@ -454,6 +476,8 @@ function init() {
 
         cursor.value = props.context.cursor.type;
     }, 20);
+    props.context.assist.set_collect_target([], true);
+    props.context.selection.resetSelectShapes();
 }
 
 onMounted(() => {
@@ -469,9 +493,11 @@ onUnmounted(() => {
 <template>
     <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
-            :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
-            @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
-            :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+                      :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
+                      :rootWidth="rootWidth"
+                      @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
+                      :matrix="props.context.workspace.matrix"
+                      :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
     </div>
 </template>

@@ -225,17 +225,17 @@ onUnmounted(() => {
 
 <template>
     <g v-if="apex">
-        <rect :x="apex1.point.x - 8" :y="apex1.point.y - 8" rx="8" ry="8" height="16" width="16"
+        <rect :x="apex1.point.x - 5" :y="apex1.point.y - 5" rx="5" ry="5" height="10" width="10"
             @mousedown.stop="(e) => point_mousedown(e, apex1.type)" class="point"
             :class="{ activation: fromOrto?.from }">
         </rect>
-        <rect :x="apex2.point.x - 8" :y="apex2.point.y - 8" rx="8" ry="8" height="16" width="16"
+        <rect :x="apex2.point.x - 5" :y="apex2.point.y - 5" rx="5" ry="5" height="10" width="10"
             @mousedown.stop="(e) => point_mousedown(e, apex2.type)" class="point" :class="{ activation: fromOrto?.to }">
         </rect>
     </g>
     <g v-if="contact">
-        <rect v-for="(p, idx) in contact_points" @mousemove.stop :key="idx" class="contact-point" rx="8px" ry="8px"
-            :x="p.point.x - 8" :y="p.point.y - 8" @mouseenter="() => { enter_new_node(p.type, p.point) }"
+        <rect v-for="(p, idx) in contact_points" @mousemove.stop :key="idx" rx="5px" ry="5px"
+            :x="p.point.x - 5" :y="p.point.y - 5" @mouseenter="() => { enter_new_node(p.type, p.point) }"
             @mouseleave="() => { leave_new_node(p.point) }">
         </rect>
     </g>
@@ -243,24 +243,24 @@ onUnmounted(() => {
 
 <style lang='scss' scoped>
 .point {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
     fill: #fff;
     stroke: var(--active-color);
     stroke-width: 2px;
 }
 
 .point:hover {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
     fill: var(--active-color);
     stroke: #fff;
     stroke-width: 2px;
 }
 
 .activation {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
     fill: var(--active-color);
     stroke: #fff;
     stroke-width: 2px;

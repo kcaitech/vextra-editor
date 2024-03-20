@@ -11,6 +11,7 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
+
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -29,6 +30,7 @@ const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
+
 function modify_selection_hidden() {
     if (hidden_holder) {
         clearTimeout(hidden_holder);
@@ -42,11 +44,13 @@ function modify_selection_hidden() {
 
     selection_hidden.value = true;
 }
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
     hidden_holder = null;
 }
+
 let viewBox = '';
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -59,6 +63,9 @@ const width = computed(() => {
 const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
+})
+const partVisible = computed(() => {
+    return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
 })
 
 // #region 绘制控件
@@ -148,16 +155,19 @@ onUnmounted(() => {
 watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
-        :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         data-area="controller"
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
+         :width="width"
+         :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
         <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-            :c-frame="props.controllerFrame" :theme="theme">
+        <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+                       :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
+        <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+                         :axle="axle"
+                         :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
     </svg>
 </template>

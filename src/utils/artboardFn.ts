@@ -32,24 +32,15 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
         ];
 
         for (let i = 0; i < shapes.length; i++) {
-            const m = shapes[i].matrix2Root();
-            const { width: w, height: h } = shapes[i].frame;
-            const ps: XY[] = [
-                { x: 0, y: 0 },
-                { x: w, y: 0 },
-                { x: w, y: h },
-                { x: 0, y: h },
-                { x: 0, y: 0 },
-            ].map(p => m.computeCoord2(p.x, p.y));
-            if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌
+            if (isTarget2(selectorPoints, shapes[i])) pure = false; // 存在🍌
         }
-        !pure && (start.x += offset); // 挪一下，再找。
+        !pure && (start.x += offset);
         max++;
     }
     if (max === 100000) {
         throw new Error('overflow');
     }
-    return start; // 找到了空白区域的起点
+    return start;
 }
 
 // 使容器滚动到可视区域

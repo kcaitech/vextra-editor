@@ -41,6 +41,10 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+const partVisible = computed(() => {
+    return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
+})
+
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
 function modify_selection_hidden() {
@@ -136,9 +140,9 @@ watchEffect(updateControllerView);
         <path :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
         </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
+        <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
         </BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
+        <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
         </PointsContainer>
     </svg>
 </template>
