@@ -107,11 +107,8 @@ export const parentIsArtboard = (shape: ShapeView) => {
     let result: ShapeView | undefined = undefined;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.type === ShapeType.Artboard) {
-            result = p;
-            break;
-        }
-        p = p.parent;
+        result = p;
+        break;
     }
     return result;
 }

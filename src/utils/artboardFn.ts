@@ -1,10 +1,11 @@
 import { XY, PageXY } from '@/context/selection';
-import { Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView } from '@kcdesign/data';
+import { Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView, Color, Fill, BasicArray, FillType } from '@kcdesign/data';
 import { isTarget, isTarget2 } from './common';
 import { Context } from '@/context';
 import { Action, Tool } from '@/context/tool';
 import { compare_layer_3 } from './group_ungroup';
 import { WorkSpace } from '@/context/workspace';
+import { v4 } from 'uuid';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -98,9 +99,11 @@ export function insertFrameTemplate(context: Context) {
         const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const { x, y } = landFinderOnPage(matrix, context, frame);
-        frame.x = x;
-        frame.y = y;
-        let artboard: Shape | false = editor.createArtboard(tf.name, frame);
+        frame.x = x, frame.y = y;
+        const fillColor = new Color(1, 255, 255, 255);
+        const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
+        let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
+        // let artboard: Shape | false = editor.create(ShapeType.Artboard, tf.name, frame);
         artboard = editor.insert(parent.data, shapes.length, artboard);
         context.nextTick(parent, () => {
             if (artboard) {

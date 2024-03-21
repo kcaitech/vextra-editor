@@ -49,7 +49,8 @@ const textareaEl = ref<HTMLDivElement>()
 const inputIcon = ref<HTMLInputElement>()
 const isShaking = ref(false)
 const reflush = ref(0);
-const position = ref({ x: 0, y: 0 })
+const position = ref({ x: 0, y: 0 });
+const cur_id = ref<string>('');
 
 const commentData = ref<Comment>({
     doc_id: docID,
@@ -129,6 +130,7 @@ const addComment = (succession: boolean, e?: MouseEvent) => {
     const data = commentData.value
     createComment(data)
     textarea.value = '';
+    addCuruentComment(data)
     emit('completed', succession, e);
 }
 const getCurrentTime = () => {
@@ -146,13 +148,71 @@ const getCurrentTime = () => {
 function padNumber(number: number, length = 2) {
     return String(number).padStart(length, '0');
 }
-
-const createComment = async (data: any) => {
+type commentListMenu = {
+    text: string
+    status_p: boolean
+}
+const commentMenuItems = ref<commentListMenu[]>([
+    { text: `${t('comment.sort')}`, status_p: false },
+    { text: `${t('comment.show_about_me')}`, status_p: false },
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
+])
+const createComment = async (info: any) => {
     try {
-        await comment_api.createCommentAPI(data)
+        const data = await comment_api.createCommentAPI(info);
+        const list = data.data;
+        list.commentMenu = commentMenuItems.value;
+        list.children = []
+        list.content = list.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+        const comment = props.context.comment;
+        let commentList = comment.commentList;
+        const index = commentList.findIndex((item) => item.id === cur_id.value);
+        const index2 = comment.not2treeComment.findIndex((item) => item.id === cur_id.value);
+        if (index !== -1) {
+            commentList[index] = list;
+            comment.setPageCommentList(commentList, props.pageID)
+            comment.setCommentList(commentList)
+        }
+        if(index2 !== -1) {
+            const comment_list = [...comment.not2treeComment];
+            comment_list[index2] = list;
+            comment.setNot2TreeComment(comment_list)
+        }
     } catch (err) {
         console.log(err);
     }
+}
+
+const addCuruentComment = (info: Comment) => {
+    const comment: any = { ...info };
+    const id = v4();
+    cur_id.value = id;
+    props.context.comment.setCommentId(id);
+    comment.commentMenu = commentMenuItems.value;
+    comment.children = [];
+    comment.created_at = get_created_at();
+    comment.id = id;
+    comment.parent_id = '';
+    comment.root_id = '';
+    comment.status = 0;
+    comment.user = props.context.comment.isUserInfo;
+    let commentList = props.context.comment.commentList;
+    props.context.comment.setNot2TreeComment([comment, ...props.context.comment.not2treeComment])
+    props.context.comment.setPageCommentList([comment, ...commentList], props.pageID)
+    props.context.comment.setCommentList([comment, ...commentList])
+}
+
+const get_created_at = () => {
+    const dateObject = new Date();
+    const year = dateObject.getFullYear();
+    const month = ("0" + (dateObject.getMonth() + 1)).slice(-2);
+    const day = ("0" + dateObject.getDate()).slice(-2);
+    const hours = ("0" + dateObject.getHours()).slice(-2);
+    const minutes = ("0" + dateObject.getMinutes()).slice(-2);
+    const seconds = ("0" + dateObject.getSeconds()).slice(-2);
+    const milliseconds = ("000" + dateObject.getMilliseconds()).slice(-3);
+    const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds + '000'}`;
+    return formattedTime;
 }
 
 const setPosition = () => {
@@ -225,11 +285,12 @@ onUnmounted(() => {
             <svg-icon icon-class="comment-add"></svg-icon>
         </div>
         <div class="textarea" ref="textareaEl" :class="{ 'shake': isShaking }">
-            <el-input ref="input" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }" type="textarea"
-                :placeholder="t('comment.input_comments')" resize="none" size="small"
+            <el-input ref="input" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
+                type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                 :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                 @input="handleInput" />
-            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment(false)">
+            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }"
+                @click="addComment(false)">
                 <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
             </div>
         </div>

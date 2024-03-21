@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { Context } from '@/context';
-import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/request/comment';
 import moment = require('moment');
@@ -9,6 +8,7 @@ import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from '@/context/comment';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { Perm } from '@/context/workspace';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -29,6 +29,7 @@ const hover = ref(false)
 const commentShow = ref(props.context.comment.isHoverComment)
 const hoverCommentId = ref(comment.value.isHoverCommentId);
 const prePt = ref({ x: 0, y: 0 });
+const cur_perm = ref<Perm>(props.context.workspace.documentPerm);
 const replyNum = computed(() => {
     if (props.commentInfo.children) {
         const child = props.commentInfo.children.length
@@ -42,11 +43,6 @@ const resolve = computed(() => {
 })
 const isControls = computed(() => {
     if (comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
-    else return false
-})
-
-const isControlsDel = computed(() => {
-    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -76,7 +72,7 @@ const onReply = (e: MouseEvent) => {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     const status = props.commentInfo.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
@@ -84,7 +80,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControls.value) return
+    if (!isControls.value || cur_perm.value === Perm.isRead) return
     props.context.comment.hoverComment(false);
     props.context.comment.commentInput(false);
     let timeout = setTimeout(() => {
@@ -92,10 +88,6 @@ const onDelete = (e: Event) => {
         deleteComment()
         clearTimeout(timeout)
     }, 150)
-}
-
-const onClick = (e: MouseEvent) => {
-    emit('showComment', e)
 }
 
 const deleteComment = async () => {
@@ -170,36 +162,30 @@ onUnmounted(() => {
                     <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                 </div>
                 <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
-                    <!--                    <el-button-group class="ml-4">-->
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0">
-                        <!--                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />-->
                         <div class="onReply" @click.stop="onReply">
                             <svg-icon icon-class="comment-reply"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
-                        <div class="onDelete" @click="onDelete" v-if="isControls">
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && cur_perm !== Perm.isRead">
+                        <div class="onDelete" @click="onDelete">
                             <svg-icon icon-class="comment-delete"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <!--                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>-->
-                        <div class="onResolve" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls && cur_perm !== Perm.isRead">
+                        <div class="onResolve" @click="onResolve" @mouseup.stop @mousedown.stop>
                             <svg-icon icon-class="comment-solve"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>-->
-                        <div class="onResolved" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve">
+                        <div @click="onResolve" @mouseup.stop @mousedown.stop :class="{hovered: cur_perm === Perm.isRead, onResolved: cur_perm !== Perm.isRead}">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
-                    <!--                    </el-button-group>-->
                 </div>
             </div>
             <div class="box-context" v-html="commentInfo.content"></div>
@@ -378,6 +364,20 @@ onUnmounted(() => {
 
                 .onResolved:hover {
                     background-color: #EBEBED;
+                }
+                .hovered {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 14px;
+                        height: 14px;
+                        color: #169248;
+                    }
                 }
             }
         }

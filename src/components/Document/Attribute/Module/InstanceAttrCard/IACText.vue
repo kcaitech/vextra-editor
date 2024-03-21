@@ -88,7 +88,7 @@ onMounted(get_value);
         }
 
         .state_value {
-            padding: 0 11px;
+            padding: 0 9px;
             flex: 0 0 126px;
             border-radius: 6px;
 
@@ -103,7 +103,7 @@ onMounted(get_value);
 
                 .el-textarea__inner {
                     font-size: 12px;
-                    padding: 5px 12px !important;
+                    padding: 5px 9px !important;
                     min-height: 32px !important;
                     background-color: #F5F5F5;
                     line-height: 22px;

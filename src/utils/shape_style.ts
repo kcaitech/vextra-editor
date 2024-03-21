@@ -6,7 +6,7 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -38,10 +38,10 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
         const f = { id: i, fill };
         fills.push(f);
         const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue, fill.fillType].join('-');
-        if(fill.gradient) {
+        if (fill.gradient) {
             const g_str = get_gradient_str(fill.gradient);
             has_g_str.push(g_str);
-        }else {
+        } else {
             has_g_str.push('undefined');
         }
         compare_str.push(str);
@@ -57,10 +57,10 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
             const fill = s_fs[j];
             const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue, fill.fillType].join('-');
             if (str !== compare_str[j]) return 'mixed';
-            if(fill.fillType === FillType.SolidColor) continue;
-            if(fill.gradient) {
+            if (fill.fillType === FillType.SolidColor) continue;
+            if (fill.gradient) {
                 if (has_g_str[j] !== get_gradient_str(fill.gradient)) return 'mixed';
-            }else {
+            } else {
                 if (has_g_str[j] !== 'undefined') return 'mixed';
             }
         }
@@ -68,7 +68,7 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
     return fills;
 }
 
-function get_gradient_str (g: Gradient) {
+function get_gradient_str(g: Gradient) {
     const str = [g.elipseLength, g.gradientType, g.gradientOpacity, g.from.x, g.from.y, g.to.x, g.to.y];
     for (let i = 0; i < g.stops.length; i++) {
         const stop = g.stops[i];
@@ -186,10 +186,10 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
             border.position,
             border.fillType
         ].join('-');
-        if(border.gradient) {
+        if (border.gradient) {
             const g_str = get_gradient_str(border.gradient);
             has_g_str.push(g_str);
-        }else {
+        } else {
             has_g_str.push('undefined');
         }
         compare_str.push(str);
@@ -216,10 +216,10 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
                 border.fillType
             ].join('-');
             if (str !== compare_str[j]) return 'mixed';
-            if(border.fillType === FillType.SolidColor) continue;
-            if(border.gradient) {
+            if (border.fillType === FillType.SolidColor) continue;
+            if (border.gradient) {
                 if (has_g_str[j] !== get_gradient_str(border.gradient)) return 'mixed';
-            }else {
+            } else {
                 if (has_g_str[j] !== 'undefined') return 'mixed';
             }
         }
@@ -310,6 +310,21 @@ export function get_actions_border_style(shapes: ShapeView[], index: number, sty
             bs.gap = 10, bs.length = 10;
         }
         actions.push({ target: (shapes[i]), index, value: bs });
+    }
+    return actions;
+}
+
+export function get_actions_border_Apex(shapes: ShapeView[], type: MarkerType, end: boolean) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: (shapes[i]), value: { isEnd: end, mt: type } });
+    }
+    return actions;
+}
+export function get_actions_border_exchange(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: (shapes[i]), value: undefined });
     }
     return actions;
 }

@@ -18,7 +18,7 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 const opacityValue = ref(0);
 const opacityInput = ref<HTMLInputElement>();
 const executed = ref(true);
@@ -76,8 +76,7 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
-
-    modifyOpacity(props.context, value);
+    modifyOpacity(props.context, value, shapes.value);
 }
 
 function down(v: number) {

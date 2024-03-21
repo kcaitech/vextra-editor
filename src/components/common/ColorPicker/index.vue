@@ -968,7 +968,9 @@ const set_gradient = (val: GradientType | 'solid') => {
         props.context.color.switch_editor_mode(false);
     } else {
         props.context.color.set_gradient_type(val);
-        if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        setTimeout(() => {
+            if (props.locat) props.context.color.switch_editor_mode(true, props.gradient);
+        }, 100)
     }
     if (props.locat) props.context.color.gradinet_locat(props.locat);
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
@@ -8,6 +8,7 @@ import { Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
 import PageAttr from "@/components/Document/Attribute/PageAttr.vue";
+import { FontAvailable, fontNameListEn, fontNameListZh } from "./Text/FontNameList";
 const { t } = useI18n();
 
 interface Props {
@@ -92,10 +93,26 @@ const stopMouseDown = (e: MouseEvent) => {
         e.stopPropagation();
     }
 }
+async function getFontNameList(fontName: string[], lang: string) {
+    try {
+        const results = await Promise.all(fontName.map(name => FontAvailable(name)));
+        if (lang === 'zh') {
+            const zh = fontName.filter((name, index) => results[index].length > 0);
+            props.context.workspace.setFontNameListZh(zh)
+        } else {
+            const en = fontName.filter((name, index) => results[index].length > 0);
+            props.context.workspace.setFontNameListEn(en)
+        }
+    } catch (error) {
+        console.error('Error checking font availability:', error);
+    }
+}
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
     init();
     updateUnderlinePosition();
+    getFontNameList(fontNameListZh, 'zh')
+    getFontNameList(fontNameListEn, 'en')
 })
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher)
@@ -103,7 +120,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container" @mouseup="stopMouseDown">
+    <div class="tab-container" @mouseup="stopMouseDown" v-if="isLable || perm === Perm.isEdit">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
@@ -130,7 +147,7 @@ onUnmounted(() => {
         <div class="tab-lable" v-else>
             <Lable :context="context"></Lable>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6, transform:' translateY(50%)' }">
+                :style="{ opacity: showRight ? 1 : 0.6, transform: ' translateY(50%)' }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>

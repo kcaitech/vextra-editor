@@ -57,7 +57,7 @@ const alphaFill = ref<HTMLInputElement[]>();
 const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -229,8 +229,7 @@ function setColor(idx: number, clr: string, alpha: number) {
         message('danger', t('system.illegal_input'));
         return;
     }
-
-    const selected = props.context.selection.selectedShapes;
+    const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
@@ -250,8 +249,8 @@ function setColor(idx: number, clr: string, alpha: number) {
             e.setFillColor4Cell(_idx, new Color(alpha, r, g, b), range)
         }
     } else {
-        const shapes = getShapesForStyle(selected);
-        const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
+        const s = getShapesForStyle(selected);
+        const actions = get_actions_fill_color(s, _idx, new Color(alpha, r, g, b));
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesFillColor(actions);

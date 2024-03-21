@@ -50,6 +50,10 @@ interface Props {
     page: PageView
 }
 
+const emit = defineEmits<{
+    (e: 'closeLoading'): void;
+}>();
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<Props>();
@@ -601,6 +605,11 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur);
     updateBackground(cur);
 })
+
+const closeLoading = () => {
+    emit('closeLoading');
+}
+
 watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -658,12 +667,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="cursor" :data-area="rootId" ref="root"
-         @wheel="onMouseWheel"
-         @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
-         :style="{ 'background-color': background_color }">
-        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"/>
+    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
+        :style="{ 'background-color': background_color }">
+        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" @closeLoading="closeLoading"/>
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
         <SelectionView :context="props.context" :matrix="matrix"/>

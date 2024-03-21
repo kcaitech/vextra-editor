@@ -153,15 +153,6 @@ export function fontWeightList(fontName: string, italic: boolean) {
             const newSizeWeight = context.measureText(text).width;
             fontWeight[i].value = newSizeWeight;
         }
-        if (italic) {
-            for (let i = 0; i < fontItalic.length; i++) {
-                const style = fontItalic[i].key;
-                context.font = `${style} 72px ${fontName}, monospace`;
-                const newSizeWeight = context.measureText(text).width;
-                fontWeight.push(fontItalic[i]);
-                fontWeight[fontWeight.length - 1].value = newSizeWeight;
-            }
-        }
         const r = fontWeight.reduce((dict, item) => {
             const key = item.value;
             if (!dict[key]) {

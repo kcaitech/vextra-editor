@@ -83,6 +83,8 @@ export class WorkSpace extends WatchableObject {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
+    private m_round: boolean = false;
+    private m_font_name_list: {zh: string[], en: string[]} = { zh: [], en: [] };
 
     private m_root: Root = {
         init: false,
@@ -370,5 +372,23 @@ export class WorkSpace extends WatchableObject {
     getRootXY(e: MouseEvent): XY {
         const m = new Matrix(this.m_matrix.inverse);
         return m.computeCoord2(e.clientX - this.root.x, e.clientY - this.root.y);
+    }
+
+    get isRoundMode() {
+        return this.m_round;
+    }
+
+    setRoundMode(v: boolean) {
+        this.m_round = v;
+    }
+
+    setFontNameListZh(zh: string[]) {
+        this.m_font_name_list.zh = zh;
+    }
+    setFontNameListEn(en: string[]) {
+        this.m_font_name_list.en = en;
+    }
+    get fontNameList() {
+        return this.m_font_name_list;
     }
 }

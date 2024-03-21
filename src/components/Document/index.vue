@@ -53,8 +53,8 @@ let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 240, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 240, leftWidth: 0.1, leftMinWidth: 0.1 });
+const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -160,9 +160,9 @@ function selectionWatcher(t: number) {
         }
     }
 }
-
+const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
-    if (showRight.value) {
+    if (showRight.value || (!isEdit.value && !isLable.value)) {
         Right.value.rightMin = 0
         Right.value.rightWidth = 0
         Right.value.rightMinWidth = 0
@@ -172,7 +172,7 @@ const showHiddenRight = () => {
         Right.value.rightMin = 250
         Right.value.rightWidth = 0.1
         Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        middleWidth.value = showLeft.value ? 0.9 - 0.1 : 1 - 0.1;
         showRight.value = true
     }
 }
@@ -227,9 +227,13 @@ function keyToggleTB() {
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-const isLable = ref<boolean>(false);
-
-//只读权限隐藏右侧属性栏
+const tool_watcher = (t: number) => {
+    if (!context) return;
+    if (t === Tool.LABLE_CHANGE) {
+        isLable.value = context.tool.isLable;
+        not_perm_hidden_right();
+    }
+}
 const not_perm_hidden_right = () => {
     if (!isEdit.value && !isLable.value) {
         Right.value.rightMin = 0
@@ -241,17 +245,13 @@ const not_perm_hidden_right = () => {
         Right.value.rightWidth = 0.1
         Right.value.rightMinWidth = 0.1
         middleWidth.value = middleWidth.value - 0.1
+    } else if (!isLable.value && isEdit.value && !showRight.value) {
+        Right.value.rightMin = 250
+        Right.value.rightWidth = 0.1
+        Right.value.rightMinWidth = 0.1
+        middleWidth.value = middleWidth.value - 0.1
     }
 }
-
-const tool_watcher = (t: number) => {
-    if (!context) return;
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = context.tool.isLable;
-        not_perm_hidden_right();
-    }
-}
-
 enum PermissionChange {
     update,
     close,
@@ -293,7 +293,6 @@ const getDocumentAuthority = async () => {
             canComment.value = false
             isEdit.value = true
         }
-        not_perm_hidden_right();
         permType.value = data.data.perm_type
         context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
@@ -418,6 +417,7 @@ const getDocumentInfo = async () => {
                 router.push("/files");
                 return;
             }
+            perm < 3 && showHiddenRight();
             loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             if (perm >= 2) await context.communication.docCommentOp.start(getToken, docId);
@@ -468,6 +468,7 @@ async function upload(projectId: string) {
         await context.communication.docSelectionOp.start(getToken, doc_id, context);
         context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
         context.workspace.notify(WorkSpace.INIT_DOC_NAME);
+        permType.value !== 3 && showHiddenRight();
     })
 }
 
@@ -501,6 +502,7 @@ function init_doc() {
             getDocumentAuthority();
         }, 30000);
     } else if ((window as any).sketchDocument) {
+        loading.value = true;
         context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
         null_context.value = false;
         getUserInfo();
@@ -625,7 +627,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
             } else {
                 networkDebounce(status)
             }
-            context.comment.notify(Comment.EDIT_COMMENT)
+            context.comment.notify(Comment.TOGGLE_COMMENT_PAGE)
             clearInterval(loopNet)
         }
     }
@@ -656,6 +658,10 @@ function closeNetMsg() {
     insertNetworkInfo('networkError', false, network_error);
     insertNetworkInfo('netError', false, network_anomaly);
     insertNetworkInfo('networkSuccess', false, link_success);
+}
+
+const closeLoading = () => {
+    loading.value = false;
 }
 
 //协作人员操作文档执行
@@ -731,7 +737,7 @@ onUnmounted(() => {
 
 <template>
     <div class="main" style="height: 100vh;">
-        <Loading v-if="loading || null_context" :size="20"></Loading>
+        <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="screenSetting" v-if="showTop">
             <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
@@ -739,11 +745,11 @@ onUnmounted(() => {
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-                      v-if="inited && !loading && !null_context"
-                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-                      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-                      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-                      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+            v-if="inited && !null_context"
+            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                             @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
@@ -753,15 +759,13 @@ onUnmounted(() => {
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)">
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)" @closeLoading="closeLoading">
                 </ContentView>
             </template>
             <template #slot3>
-                <Attribute id="attributes" v-if="curPage !== undefined && !null_context" :context="context!"
-                           @mouseenter="(e: Event) => { mouseenter('right') }"
-                           @mouseleave="() => { mouseleave('right') }"
-                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
-                           @showAttrbute="showHiddenRight">
+                <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
 <!--                @@@-->
             </template>

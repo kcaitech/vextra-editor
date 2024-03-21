@@ -57,6 +57,7 @@ const getTextFormat = () => {
             let span_len = 0;
             const map_spans = item.spans.map((v: any) => {
                 span_len += v.length;
+                if (item.spans.length === 1) span_len -= 1;
                 if (span_len > item_len) return;
                 const value = { ...v };
                 if (!value.line_height || value.paraSpacing === undefined) {
