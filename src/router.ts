@@ -3,6 +3,7 @@ import { SKIP_LOGIN } from '@/utils/setting';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
 import _ from "lodash";
+import isMobileDevice from "./utils/mobileDeviceChecker";
 
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
@@ -24,7 +25,7 @@ const joinTeam = () => import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
-const mHome=()=>import('@/components/Mobile/mHome.vue')
+const mHome = () => import('@/components/Mobile/mHome.vue')
 
 let _t: any = i18n.global
 
@@ -145,8 +146,8 @@ const routes = [
     },
     {
         path: "/files",
-        name: "apphome",
-        component: Apphome,
+        name: isMobileDevice() ? "mHome" : "apphome",
+        component: isMobileDevice() ? mHome : Apphome,
         redirect: '/files/recently',
         children: children
     },

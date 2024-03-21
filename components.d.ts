@@ -11,6 +11,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Abbr: typeof import('./src/components/common/Abbr.vue')['default']
     Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
+    About: typeof import('./src/components/Mobile/About.vue')['default']
     AddProject: typeof import('./src/components/TeamProject/addProject.vue')['default']
     AddState: typeof import('./src/components/Document/Selection/Controller/Symbol/AddState.vue')['default']
     AddTeam: typeof import('./src/components/TeamProject/addTeam.vue')['default']
@@ -175,6 +176,7 @@ declare module '@vue/runtime-core' {
     MHome: typeof import('./src/components/Mobile/mHome.vue')['default']
     Module: typeof import('./src/components/Document/Attribute/Module/Module.vue')['default']
     MoveProjectFill: typeof import('./src/components/TeamProject/MoveProjectFill.vue')['default']
+    MyFiles: typeof import('./src/components/Mobile/MyFiles.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']
     NetworkError: typeof import('./src/components/NetworkError.vue')['default']
     Opacity: typeof import('./src/components/Document/Attribute/Opacity/Opacity.vue')['default']
@@ -294,6 +296,7 @@ declare module '@vue/runtime-core' {
     TableStyle: typeof import('./src/components/Document/Attribute/Table/TableStyle.vue')['default']
     TableText: typeof import('./src/components/Document/Attribute/Table/TableText.vue')['default']
     TableTextSetting: typeof import('./src/components/Document/Attribute/Table/TableTextSetting.vue')['default']
+    Team: typeof import('./src/components/Mobile/Team.vue')['default']
     TeamMember: typeof import('./src/components/TeamProject/TeamMember.vue')['default']
     TeamPage: typeof import('./src/components/TeamProject/TeamPage.vue')['default']
     TeamProjectMenu: typeof import('./src/components/TeamProject/TeamProjectMenu.vue')['default']
