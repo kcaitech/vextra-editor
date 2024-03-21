@@ -788,11 +788,11 @@ onUnmounted(() => {
 </style>
 <style scoped lang="scss">
 .main {
-    min-width: 700px;
+    min-width: 460px;
     width: 100%;
     overflow-x: auto;
 
-    @media (max-width: 700px) {
+    @media (max-width: 460px) {
         overflow-x: scroll;
     }
 
