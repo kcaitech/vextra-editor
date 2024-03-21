@@ -22,6 +22,8 @@ type Box = {
 type BaseFrames = Map<string, Box>;
 
 export class ScaleHandler extends TransformHandler {
+    shapes: ShapeView[];
+
     ctrlElementType: CtrlElementType;
     livingPoint: XY;
     relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
@@ -40,8 +42,10 @@ export class ScaleHandler extends TransformHandler {
     // cache
     __baseFramesCache: BaseFrames = new Map();
 
-    constructor(context: Context, selected: ShapeView[], event: MouseEvent, ctrlElementType: CtrlElementType) {
-        super(context, selected, event);
+    constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
+        super(context, event);
+        this.shapes = selected;
+
         this.ctrlElementType = ctrlElementType;
         this.livingPoint = this.workspace.getRootXY(event);
 

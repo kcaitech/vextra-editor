@@ -5,17 +5,20 @@ import { Context } from "@/context";
 import { __angle, __anther_side_xy, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncPathHandle, Matrix } from "@kcdesign/data";
+import { Matrix, PathShapeView, PathShapeView2, PathType } from "@kcdesign/data";
 import { add_blur_for_window, add_move_and_up_for_document, remove_blur_from_window, remove_move_and_up_from_document } from "@/utils/mouse_interactive";
 import { CurvePoint } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { check_drag_action } from "@/utils/mouse";
+import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
 }
 type ActionHandle = 'pre-to' | 'pre-from' | 'current-to' | 'current-from' | 'next-to' | 'next-from';
 const props = defineProps<Props>();
+
+let segment = -1;
 
 const previous = ref<boolean>(false);
 const previous_curve_point = ref<CurvePoint>();
@@ -55,13 +58,14 @@ let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
 let drag: boolean = false;
 let down_site: XY = { x: 0, y: 0 };
-let asyncEditor: AsyncPathHandle | undefined = undefined;
 let down_index: number = -1;
 
 let is_bridging_action: boolean = false;
 
 let _move: any;
 let _up: any;
+
+let pathModifier: PathEditor | undefined;
 
 function reset() {
     previous.value = false;
@@ -93,11 +97,28 @@ function update() {
         return;
     }
     const m = props.context.path.matrix_unit_to_root;
-    const __points = path_shape.points;
-    const selected = props.context.path.selectedPoints;
+
+    let __points: CurvePoint[] = [];
+    let selected: number[] = [];
+
+    if (path_shape.pathType === PathType.Editable) {
+        __points = (path_shape as PathShapeView).points;
+        selected = props.context.path.selectedPoints.get(0) || [];
+    } else if (path_shape.pathType === PathType.Multi) {
+        const __segment =  [...props.context.path.selectedPoints.keys()][0];
+        if (__segment < 0) {
+            return;
+        }
+        __points = (path_shape as PathShapeView2)?.segments[__segment]?.points as CurvePoint[];
+        selected = [...props.context.path.selectedPoints.values()][0] || [];
+
+        segment = __segment;
+    }
+
     if (selected.length !== 1) {
         return;
     }
+
     // current
     const index = selected[0];
     const current_point = __points[index];
@@ -125,7 +146,7 @@ function update() {
         __radius_current_to.value = __angle(site.x, site.y, apex_location_to.x, apex_location_to.y);
     }
 
-    const { previous: __pre, next: __next, previous_index: _pi, next_index: _ni } = __round_curve_point(path_shape, index);
+    const { previous: __pre, next: __next, previous_index: _pi, next_index: _ni } = __round_curve_point(__points, index);
 
     // previous
     if (__pre && __pre.id !== current_point.id) {
@@ -143,6 +164,7 @@ function update() {
             __radius_pre_from.value = __angle(previous_site.x, previous_site.y, __p.x, __p.y);
         }
     }
+
     // next
     if (__next && __next.id !== current_point.id) {
         next.value = true;
@@ -202,7 +224,7 @@ function modify_down_site(e: MouseEvent) {
     down_site.y = e.clientY;
 }
 function move(e: MouseEvent) {
-    if (drag && asyncEditor) {
+    if (drag) {
         const root = props.context.workspace.root;
         const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
         const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
@@ -210,9 +232,10 @@ function move(e: MouseEvent) {
         const current_is_from = side === 'from';
         const from = current_is_from ? current_handle_point : anther;
         const to = current_is_from ? anther : current_handle_point;
-        asyncEditor.execute(side, from, to);
+
+        pathModifier?.execute4handle(down_index, side, from, to, segment);
     } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
-        init_editor(down_index);
+        init_editor(e);
         drag = true;
     }
 }
@@ -234,30 +257,17 @@ function pre_bridging() {
     modify_inverse_matrix_at_down();
     add_move_and_up_for_document(move2, up);
     modify_f_pointer(move2, up);
-    init_editor(current_index.value);
+    init_editor(event);
     __pre();
     update();
     modify_side2(event);
 }
-function init_editor(index: number) {
-    const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
-        console.log('!path_shape');
-        return;
-    }
-
-    const page = props.context.selection.selectedPage!;
-
-    asyncEditor = props.context.editor
-        .controller()
-        .asyncPathHandle(path_shape, page, index);
+function init_editor(e: MouseEvent) {
+    pathModifier = new PathEditor(props.context, e);
+    pathModifier.createApiCaller();
 }
 function __pre() {
-    if (!asyncEditor) {
-        console.log('!asyncEditor');
-        return;
-    }
-    asyncEditor.pre(current_index.value);
+    pathModifier?.execute4handlePre(down_index, segment);
 }
 function __distance(e: MouseEvent, p: XY) {
     const root = props.context.workspace.root;
@@ -269,10 +279,6 @@ function modify_side2(e: MouseEvent) {
     side = distance_to_from > distance_to_to ? 'to' : 'from';
 }
 function move2(e: MouseEvent) {
-    if (!asyncEditor) {
-        console.log('move2: !asyncEditor');
-        return;
-    }
     const root = props.context.workspace.root;
     const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
     const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
@@ -280,7 +286,7 @@ function move2(e: MouseEvent) {
     const current_is_from = side === 'from';
     const from = current_is_from ? current_handle_point : anther;
     const to = current_is_from ? anther : current_handle_point;
-    asyncEditor.execute(side, from, to);
+    pathModifier?.execute4handle(down_index, side, from, to, segment);
 }
 function bridging_completed() {
     props.context.path.bridging_completed();
@@ -288,10 +294,10 @@ function bridging_completed() {
 }
 function clear_state() {
     drag = false;
-    if (asyncEditor) {
-        asyncEditor.close();
-        asyncEditor = undefined;
-    }
+
+    pathModifier?.fulfil();
+    pathModifier = undefined;
+
     if (is_bridging_action) {
         bridging_completed();
     }

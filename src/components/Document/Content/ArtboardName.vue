@@ -2,7 +2,7 @@
 import { ref, nextTick } from 'vue'
 import { ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
-import { XY} from '@/context/selection';
+import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
 import { Perm } from '@/context/workspace';
 import { forbidden_to_modify_frame } from '@/utils/common';
@@ -129,7 +129,7 @@ function down(e: MouseEvent) {
         }
 
         startPosition = { x: e.x, y: e.y };
-        transporter = new TranslateHandler(props.context, [props.shape], e);
+        transporter = new TranslateHandler(props.context, e, [props.shape],);
 
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
@@ -152,6 +152,7 @@ function move(e: MouseEvent) {
         isDragging = true;
     }
 }
+
 function up(e: MouseEvent) {
     if (e.button !== 0) {
         return;
@@ -165,11 +166,13 @@ function up(e: MouseEvent) {
     document.removeEventListener('mouseup', up);
     window.removeEventListener('blur', windowBlur);
 }
+
 function move2(e: MouseEvent) {
     if (e.buttons === 0) {
         e.stopPropagation();
     }
 }
+
 function windowBlur() {
     isDragging = false;
     transporter?.fulfil();
@@ -182,12 +185,12 @@ function windowBlur() {
 
 <template>
     <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
-        @mousemove="move2" data-area="controller">
+         @mousemove="move2" data-area="controller">
         <div v-if="!isInput" class="name" :class="{ selected, active: hover }"
-            :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">{{ props.name }}
+             :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">{{ props.name }}
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
+               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
     </div>
 </template>

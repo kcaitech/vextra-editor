@@ -13,6 +13,7 @@ import PathAssist from "@/components/Document/Assist/PathAssist.vue";
 import { add_move_and_up_for_document, remove_move_and_up_from_document } from "@/utils/mouse";
 import ClipMode from "../../Controller/ClipMode.vue";
 import { scout_once } from "@/utils/common";
+
 interface Props {
     context: Context
 }
@@ -34,7 +35,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         if (Math.abs(deltaX) + Math.abs(deltaY) < 100) {
             matrix.trans(-deltaX, -deltaY);
         } else {
-            root_trans(props.context, e, 50);
+            root_trans(props.context, e);
         }
     }
     props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -58,6 +59,7 @@ function move(e: MouseEvent) {
         e.stopPropagation();
     }
 }
+
 function move2(e: MouseEvent) {
     if (!drag) {
         const root = props.context.workspace.root;
@@ -72,10 +74,12 @@ function move2(e: MouseEvent) {
         select(e);
     }
 }
+
 function _allow_to_select() {
     const action = props.context.tool.action;
     return [Action.AutoV, Action.Curve].includes(action);
 }
+
 function up(e: MouseEvent) {
     clear_state();
 }
@@ -123,16 +127,19 @@ function modify_cursor() {
         switch_to_clip_mode();
     }
 }
+
 function switch_to_clip_mode() {
     props.context.path.reset();
     clip_mode.value = true;
     props.context.esctask.save('clip-to-auto', quit);
 }
+
 function quit() {
     const action = props.context.tool.action;
     props.context.tool.setAction(Action.AutoV);
     return action !== Action.AutoV;
 }
+
 function window_blur() {
     selector_mount.value = false;
     clear_state();
@@ -167,7 +174,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="{ wrapper: true, 'clip-mode': clip_mode }" @wheel.stop @mousedown.stop="down" @mousemove="move"
-        @wheel="onMouseWheel">
+         @wheel="onMouseWheel">
         <ClipMode v-if="clip_mode" :context="context"></ClipMode>
         <CtrlPathEdit v-else :context="context"></CtrlPathEdit>
         <Selector4PEM v-if="selector_mount" :context="context" :selector-frame="selectorFrame"></Selector4PEM>

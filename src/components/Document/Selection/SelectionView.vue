@@ -83,6 +83,7 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 function shapesWatcher(...args: any) {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
         update_by_shapes();
     }
