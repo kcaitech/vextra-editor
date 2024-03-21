@@ -40,8 +40,6 @@ export class Comment extends WatchableObject {
   static VISIBLE_COMMENT = 16;
   static TOGGLE_COMMENT_PAGE = 17;
   static HOVER_SHOW_COMMENT = 18;
-  static UPDATE_COMMENT_CHILD = 19;
-  static WATCH_COMMENT_CHANGE = 20;
   static MOVE_COMMENT_INPUT = 21;
 
   private m_user_info: UserInfo | undefined;
@@ -118,9 +116,6 @@ export class Comment extends WatchableObject {
     this.notify(Comment.MOVE_COMMENT_INPUT)
   }
 
-  onUpdateComment() {
-    this.notify(Comment.WATCH_COMMENT_CHANGE)
-  }
   showCommentPopup(index: number, e: MouseEvent) {
     this.notify(Comment.SHOW_COMMENT_POPUP, index, e);
   }

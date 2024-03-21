@@ -269,27 +269,6 @@ function commentUpdate(t?: number, p?: number) {
             }
             clearTimeout(timeout)
         }, 10)
-    } else if (t === Comment.UPDATE_COMMENT_CHILD) {
-        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-        commentPosition()
-        nextTick(() => {
-            if (textareaEl.value) {
-                const text = inputPopup.value.$refs.textarea
-                if (text) {
-                    text.style.height = "auto"; // 重置高度，避免高度叠加
-                    text.style.height = text.scrollHeight + "px";
-                    const lineHeight = parseInt(getComputedStyle(text).lineHeight)
-                    const textareaHeight = text.clientHeight
-                    const numberOfLines = Math.ceil(textareaHeight / lineHeight)
-                    scrollVisible.value = numberOfLines > 10 ? true : false
-                }
-            }
-            setTimeout(() => {
-                scrollMaxHeight.value = (props.rootHeight - 55 - (height.value as number) - 30) * 0.7;
-                scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight);
-                scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight);
-            }, 10)
-        })
     }
 }
 
@@ -330,9 +309,11 @@ const commentShow = () => {
     })
     handleInput();
 }
-
+const cur_id = ref<string>('')
 const addComment = () => {
     const timestamp = getCurrentTime();
+    const id = v4();
+    cur_id.value = id;
     commentData.value.record_created_at = timestamp;
     commentData.value.content = textarea.value;
     commentData.value.doc_id = props.commentInfo.doc_id;
@@ -343,15 +324,14 @@ const addComment = () => {
     commentData.value.parent_id = props.commentInfo.id;
     commentData.value.root_id = props.commentInfo.id;
     const data = commentData.value;
-    const info = { ...data, status: 0, user: props.commentInfo.user, id: '1' };
-    createComment(data).then(() => {
-        emit('addComment', info);
-    });
+    const info = { ...data, status: 0, user: props.context.comment.isUserInfo, id };
+    createComment(data)
+    emit('addComment', info);
     // scrollMaxHeight.value = (props.rootHeight - 58 - 100) * 0.7
-    // commentHtight();
-    // nextTick(() => {
-    //     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-    // })
+    // commentHtight(); 
+    nextTick(() => {
+        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight);
+    })
     textarea.value = '';
 }
 
@@ -392,7 +372,12 @@ function padNumber(number: number, length = 2) {
 
 const createComment = async (d: any) => {
     try {
-        await comment_api.createCommentAPI(d)
+        await comment_api.createCommentAPI(d);
+        const text = inputPopup.value.$refs.textarea
+        if (text) {
+            text.style.height = "auto"; // 重置高度，避免高度叠加
+            text.style.height = 30 + "px";
+        }
     } catch (err) {
         console.log(err);
     }
@@ -439,7 +424,7 @@ const closeComment = (e: KeyboardEvent) => {
 
 const moveCommentPopup = (e: MouseEvent) => {
     e.stopPropagation()
-    if(cur_perm.value === Perm.isRead) return;
+    if (cur_perm.value === Perm.isRead) return;
     emit('moveCommentPopup', e, props.index)
 }
 
