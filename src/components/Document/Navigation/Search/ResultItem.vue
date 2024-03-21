@@ -7,6 +7,8 @@ import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/sh
 import { is_state } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import { is_component_class } from "@/utils/listview";
+import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
 
 export interface ItemData {
     id: string
@@ -34,6 +36,9 @@ const reflush = ref<number>(0);
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
+const isEdit = ref(false)
+const isread = ref(false)
+const canComment = ref(false)
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
     (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -114,6 +119,7 @@ function unHoverShape(e: MouseEvent) {
 
 const onRename = () => {
     if (is_state(props.data.shape)
+        || !isEdit.value
         || props.data.context.tool.isLable
         || props.data.shape.isVirtualShape) return;
     isInput.value = true
@@ -172,6 +178,26 @@ const selectedChild = () => {
         }
     }
     return child
+}
+//获取文档权限
+const handlePerm = () => {
+    const perm = props.data.context.workspace.documentPerm
+    if (perm === Perm.isRead) {
+        isread.value = true
+    } else if (perm === Perm.isComment) {
+        isread.value = false
+        canComment.value = true
+    } else {
+        isread.value = false
+        canComment.value = false
+        isEdit.value = true
+    }
+}
+const isLable = ref(props.data.context.tool.isLable);
+const tool_watcher = (t?: number) => {
+    if (t === Tool.LABLE_CHANGE) {
+        isLable.value = props.data.context.tool.isLable;
+    }
 }
 const mousedown = (e: MouseEvent) => {
     if (!is_valid_data(props.data.context, props.data.shape)) return;
@@ -282,9 +308,11 @@ onMounted(() => {
     updater();
     update_slice();
     props.data.context.navi.watch(navi_watcher);
+    props.data.context.tool.watch(tool_watcher);
     props.data.context.selection.watch(selectedWatcher);
 })
 onUnmounted(() => {
+    props.data.context.tool.unwatch(tool_watcher);
     props.data.context.navi.unwatch(navi_watcher);
     props.data.context.selection.unwatch(selectedWatcher);
     stop()
@@ -304,12 +332,13 @@ onUnmounted(() => {
             <div class="txt" @dblclick="onRename">
                 <span v-for="(item, index) in name_display" :key="index" :class="{ active: item.isKeywords }"
                     :reflush="reflush">{{
-                        item.content
-                    }}</span>
+            item.content
+        }}</span>
             </div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
-                <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)">
+                <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
+                    v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                     <div class="dot" v-else-if="lock_status === 2"></div>
@@ -317,7 +346,8 @@ onUnmounted(() => {
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)">
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }"
+                    @click="(e: MouseEvent) => setVisible(e)" v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                     <div class="dot" v-else-if="visible_status === 2"></div>
@@ -508,4 +538,5 @@ div .rename {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}</style>
+}
+</style>

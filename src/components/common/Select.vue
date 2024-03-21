@@ -160,7 +160,8 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
-            <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{ curValue?.content }}
+            <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
+            curValue?.content }}
             </div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
@@ -197,6 +198,7 @@ onMounted(render)
 
 <style scoped lang="scss">
 .select-container {
+    height: 32px;
     position: relative;
 
 

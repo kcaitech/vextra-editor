@@ -2,7 +2,7 @@
 import { Context } from "@/context";
 import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
 import { nextTick, ref } from "vue";
-import { SymbolShape, Variable, VariableType } from "@kcdesign/data";
+import { SymbolShape, SymbolView, Variable, VariableType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 
 interface Props {
@@ -17,10 +17,12 @@ const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
+const edit_symbol = ref<SymbolView>();
 const { t } = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
+    edit_symbol.value = props.context.selection.symbolshape;
 }
 
 function closeInput() {
@@ -46,7 +48,7 @@ const blur = () => {
 
 const validate = () => {
     const len = attrInput.value.trim().length > 0;
-    const shape = props.context.selection.symbolshape;
+    const shape = edit_symbol.value || props.context.selection.symbolshape;
     if (!shape) return false;
     if (attrInput.value === props.variable.name) return closeInput();
     const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
@@ -76,7 +78,9 @@ function rename() {
 }
 
 function save_name(v: string) {
-    const shape = props.context.selection.symbolshape;
+    const shape = edit_symbol.value || props.context.selection.symbolshape;
+    console.log(shape, 'shape');
+    
     if (!shape) return;
     const editor = props.context.editor4Shape(shape);
     editor.modifyVariableName(props.variable, v);
