@@ -1,9 +1,17 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PageView, PathShapeView, ShapeType, ShapeView, SymbolRefView, adapt2Shape } from "@kcdesign/data";
+import {
+    BorderPosition,
+    GroupShapeView,
+    Matrix,
+    PathShapeView,
+    ShapeType,
+    ShapeView,
+    SymbolRefView
+} from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
-import { debounce, throttle } from "lodash";
+import { throttle } from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -13,6 +21,7 @@ export interface Scout {
     isPointInStroke: (d: string, point: PageXY) => boolean
     isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
+
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
@@ -34,11 +43,40 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        if (shape instanceof PathShapeView) {
-            return for_path_shape(shape, path);
+        const scale = context.workspace.matrix.m00;
+
+        let stroke = 14 / scale;
+
+        const isClosed = shape.isClosed;
+
+        const borders = shape.getBorders();
+        if (!borders.length) {
+            path.setAttributeNS(null, 'stroke', 'none');
         } else {
-            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+            for (let i = 0; i < borders.length; i++) {
+                const border = borders[i];
+
+                let t = border.thickness;
+                if (border.position === BorderPosition.Outer) {
+                    t *= 2;
+                }
+                if (border.position === BorderPosition.Inner) {
+                    t = 0;
+                }
+                if (t > stroke) {
+                    stroke = t;
+                }
+            }
+            path.setAttributeNS(null, 'stroke-width', `${stroke}`);
         }
+
+        const result = (isClosed && (path as SVGGeometryElement).isPointInFill(SVGPoint)) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+
+        if (result) {
+            context.selection.setHoverStroke(stroke * scale);
+        }
+
+        return result;
     }
 
     function for_path_shape(shape: PathShapeView, path: SVGGeometryElement) {
@@ -138,12 +176,13 @@ export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
 function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
+
 /**
  * @deprecated
  * @description 扁平化一个图层树 tree -> list
- * @param groupshape 
- * @param flat 
- * @returns 
+ * @param groupshape
+ * @param flat
+ * @returns
  */
 export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
@@ -167,9 +206,9 @@ export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView
 
 /**
  * @description 扁平化一个图层树 tree -> list
- * @param groupshape 
- * @param flat 
- * @returns 
+ * @param groupshape
+ * @param flat
+ * @returns
  */
 export function delayering2(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
@@ -356,9 +395,11 @@ function finder_symbol(context: Context, scout: Scout, symbol: ShapeView, positi
         if (canBeTarget(b) && isTarget(scout, b, position)) return b;
     }
 }
+
 export function canNotBeApex(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
     return shape.isVirtualShape || !shape.isVisible || shape.isLocked || shape.type === ShapeType.Contact;
 }
+
 export function finder_contact(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) {
@@ -538,6 +579,7 @@ function get_max_thickness_border(shape: ShapeView) {
     }
     return max_thickness;
 }
+
 /**
  * @description 图形检索规则以及实现 2
  * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
@@ -627,8 +669,7 @@ function for_env(context: Context, scout: Scout, hot: PageXY) {
             if (for_hollow(context, scout, shape, hot)) {
                 return shape;
             }
-        }
-        else if (isTarget(scout, shape, hot)) {
+        } else if (isTarget(scout, shape, hot)) {
             return shape;
         }
     }
@@ -667,11 +708,9 @@ function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: P
             }
 
             break;
-        }
-        else if (is_hollow(item)) {
+        } else if (is_hollow(item)) {
             result = for_hollow(context, scout, item, hot);
-        }
-        else {
+        } else {
             result = item;
         }
 
@@ -704,8 +743,7 @@ function for_fixed(context: Context, scout: Scout, fixed: ShapeView, hot: PageXY
             if (for_hollow(context, scout, item, hot)) {
                 return item;
             }
-        }
-        else if (isTarget(scout, item, hot)) {
+        } else if (isTarget(scout, item, hot)) {
             return item;
         }
     }

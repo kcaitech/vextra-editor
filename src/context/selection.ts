@@ -132,6 +132,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_label_fixed_group: ShapeView[] = [];
     private m_label_living_group: ShapeView[] = [];
 
+    private m_hover_stroke: number = 14;
+
     constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
@@ -785,5 +787,13 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     setLabelLivingGroup(shapes: ShapeView[]) {
         this.m_label_living_group = shapes;
+    }
+
+    get hoverStroke() {
+        return this.m_hover_stroke;
+    }
+
+    setHoverStroke(val: number) {
+        this.m_hover_stroke = val;
     }
 }
