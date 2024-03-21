@@ -57,14 +57,12 @@ function init_matrix() {
 }
 
 function down_background_path(index: number, segment: number) {
-    // const seg = segments[index];
-    // if (!seg) {
-    //     console.log('!seg');
-    //     return;
-    // }
     const editor = props.context.editor4Shape(shape);
-    editor.clipPathShape(index, segment);
+    const s = editor.clipPathShape(index, segment);
 
+    if (s.id !== shape.id) {
+        props.context.selection.resetSelectShapes();
+    }
     // after_clip(code);
 }
 

@@ -2,7 +2,7 @@ import {
     AsyncPathEditor,
     ShapeView,
     adapt2Shape,
-    PathShapeView,
+    PathShapeView, CurvePoint, PathType, PathShapeView2,
 } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
@@ -117,49 +117,62 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown_action_for_path_edit(event: KeyboardEvent) {
-        // const pathshape = context.selection.pathshape;
-        // if (!pathshape) {
-        //     return;
-        // }
+        const pathshape = context.selection.pathshape;
+        if (!pathshape) {
+            return;
+        }
         //
-        // const points = context.path.syntheticPoints;
-        // if (!points?.size) {
-        //     return;
-        // }
+        const selected = context.path.syntheticPoints;
+        if (!selected?.size) {
+            return;
+        }
         //
-        // if (!asyncPathEditor) {
-        //     directionCalc.reset();
-        //
-        //     asyncPathEditor = context.editor
-        //         .controller()
-        //         .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
-        // }
-        //
-        // if (!asyncPathEditor) {
-        //     return;
-        // }
-        //
-        // directionCalc.down(event);
-        //
-        // let { x, y } = directionCalc.calc();
-        //
-        // const firstPoint = (pathshape as PathShapeView).points[points[0]];
-        //
-        // if (!firstPoint) {
-        //     return;
-        // }
-        //
-        // const m = pathshape.matrix2Root();
-        // m.preScale(pathshape.frame.width, pathshape.frame.height);
-        //
-        // const _firstPoint = m.computeCoord3(firstPoint);
-        //
-        // _firstPoint.x += x;
-        // _firstPoint.y += y;
+        if (!asyncPathEditor) {
+            directionCalc.reset();
 
-        // const __firstPointTarget = m.inverseCoord(_firstPoint);
+            asyncPathEditor = context.editor
+                .controller()
+                .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
+        }
+        //
+        if (!asyncPathEditor) {
+            return;
+        }
+        //
+        directionCalc.down(event);
+        //
+        let { x, y } = directionCalc.calc();
 
-        // asyncPathEditor.execute2(points, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y); // todo 键盘对象编辑
+        const keys = Array.from(selected.keys());
+        const values = Array.from(selected.values());
+        //
+        let firstPoint: CurvePoint | undefined = undefined;
+
+        if (pathshape.pathType === PathType.Editable) {
+            firstPoint = (pathshape as PathShapeView).points[values[0][0]];
+        } else if (pathshape.pathType === PathType.Multi) {
+            const __points = (pathshape as PathShapeView2)?.segments[keys[0]]?.points;
+            if (!__points) {
+                return;
+            }
+            firstPoint = __points[values[0][0]] as CurvePoint;
+        }
+        //
+        if (!firstPoint) {
+            return;
+        }
+        //
+        const m = pathshape.matrix2Root();
+        m.preScale(pathshape.frame.width, pathshape.frame.height);
+
+        const _firstPoint = m.computeCoord3(firstPoint);
+
+        _firstPoint.x += x;
+        _firstPoint.y += y;
+
+        const __firstPointTarget = m.inverseCoord(_firstPoint);
+
+        asyncPathEditor.execute2(selected, __firstPointTarget.x - firstPoint.x, __firstPointTarget.y - firstPoint.y);
     }
 
     function keydown_action_for_trans(event: KeyboardEvent) {

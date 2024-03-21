@@ -398,16 +398,16 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
     const result_segments: Segment[][] = [];
 
     if (shape.pathType === PathType.Editable) {
-        result_segments.push(_gen(0, (shape as PathShapeView).points))
+        result_segments.push(_gen(0, (shape as PathShapeView).points, shape.isClosed))
     } else if (shape.pathType === PathType.Multi) {
         (shape as PathShapeView2).segments.forEach((seg, index) => {
-            result_segments.push(_gen(index, seg.points as CurvePoint[]));
+            result_segments.push(_gen(index, seg.points as CurvePoint[], seg.isClosed));
         })
     }
 
     return result_segments;
 
-    function _gen(segment: number, points: CurvePoint[]) {
+    function _gen(segment: number, points: CurvePoint[], isClosed: boolean) {
         if (!points?.length) {
             console.error('get_segments:!points?.length');
             return [];
@@ -420,7 +420,7 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
         m.preScale(shape.frame.width, shape.frame.height);
         for (let index = 0, l = points.length; index < l; index++) {
             const point = points[index];
-            const next = __next_points(points, index, shape.isClosed);
+            const next = __next_points(points, index, isClosed);
             if (!next) {
                 break;
             }
