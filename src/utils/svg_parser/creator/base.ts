@@ -211,7 +211,9 @@ export class BaseCreator extends BaseTreeNode {
         if (opacity) this.attributes.opacity = parseFloat(opacity);
 
         // 解析fill、stroke
-        const parseFillColor = (content: string, fillOpacity: number): FillColor | undefined => {
+        const parseFillColor = (content: string | undefined, fillOpacity: number = 1): FillColor | undefined | null => {
+            if (!content) return;
+
             let colorType: "color" | "linearGradient" | "radialGradient" | undefined
             let color: MyColor | undefined
             let linearGradient: LinearGradient | undefined
@@ -274,6 +276,8 @@ export class BaseCreator extends BaseTreeNode {
                         colorType = "radialGradient"
                     }
                 }
+            } else if (content === "none") {
+                return null
             } else { // 纯色
                 color = parseColor(content)
                 if (color) {
@@ -296,25 +300,32 @@ export class BaseCreator extends BaseTreeNode {
             fill = this.attributes.styleAttributes.fill
         }
         if (!fill) fill = this.localAttributes["fill"];
-        if (!fill) fill = "black"; // 默认填充黑色
+
+        const fillAttrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
+        if (!fill && this.attributes[fillAttrName] === undefined) fill = "black"; // 默认填充黑色
+
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
         let fillColor = parseFillColor(fill, fillOpacity)
+
+        let fillAttrValue
         if (fillColor) {
-            const attrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
-            const attrValue = {
+            fillAttrValue = {
                 colorType: fillColor.colorType,
                 linearGradient: fillColor.linearGradient,
                 radialGradient: fillColor.radialGradient,
                 color: fillColor.color,
             }
-            // svg、g元素没有填充，而是继承给子元素
-            if (this.htmlElement?.tagName === "svg" || this.htmlElement?.tagName === "g") {
-                for (const child of this.children) {
-                    child.attributes[attrName] = attrValue
-                }
-            } else {
-                this.attributes[attrName] = attrValue
+        } else if (fillColor === null) {
+            fillAttrValue = null
+        }
+
+        // svg、g元素没有填充，而是继承给子元素
+        if (this.htmlElement?.tagName === "svg" || this.htmlElement?.tagName === "g") {
+            for (const child of this.children) {
+                child.attributes[fillAttrName] = fillAttrValue
             }
+        } else if (fillColor) {
+            this.attributes[fillAttrName] = fillAttrValue
         }
 
         // stroke

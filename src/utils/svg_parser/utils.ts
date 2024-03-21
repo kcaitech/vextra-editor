@@ -427,8 +427,8 @@ export type Attributes = { // 保存元素的一些属性
     styleTransform?: string,
 
     opacity?: number,
-    fill?: FillColor,
-    textFill?: FillColor,
+    fill?: FillColor | null,
+    textFill?: FillColor | null,
     stroke?: FillColor & {
         width?: number,
         dashArray: number[], // 虚线的length、gap参数，实线则为[0, 0]
