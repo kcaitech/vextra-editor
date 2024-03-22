@@ -8,7 +8,17 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository, IStorage, PageView, Cmd, PageListItem } from '@kcdesign/data';
+import {
+    Document,
+    importDocument,
+    Repository,
+    Page,
+    CoopRepository,
+    IStorage,
+    PageView,
+    Cmd,
+    PageListItem
+} from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
@@ -40,11 +50,9 @@ import HelpEntrance from '../Help/HelpEntrance.vue';
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
 let context: Context | undefined;
-const middleWidth = ref<number>(0.8);
-const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
+const rightWidth = ref(250);
+const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -66,7 +74,8 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
-let uninstall_keyboard_units: () => void = () => { };
+let uninstall_keyboard_units: () => void = () => {
+};
 
 function screenSetting() {
     const element = document.documentElement;
@@ -152,16 +161,10 @@ function selectionWatcher(t: number) {
 const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
     if (showRight.value || (!isEdit.value && !isLable.value)) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
+        rightWidth.value = 0
         showRight.value = false
     } else {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = showLeft.value ? 0.9 - 0.1 : 1 - 0.1;
+        rightWidth.value = 250
         showRight.value = true
     }
 }
@@ -172,13 +175,11 @@ const showHiddenLeft = () => {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
         Left.value.leftMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
         showLeft.value = false
     } else {
         Left.value.leftMin = 250
-        Left.value.leftWidth = 0.1
-        Left.value.leftMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        Left.value.leftWidth = 250
+        Left.value.leftMinWidth = 250
         showLeft.value = true
     }
     w.notify(WorkSpace.CHANGE_NAVI);
@@ -225,20 +226,11 @@ const tool_watcher = (t: number) => {
 }
 const not_perm_hidden_right = () => {
     if (!isEdit.value && !isLable.value) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
+        rightWidth.value = 0
     } else if (isLable.value && !isEdit.value) {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        rightWidth.value = 250
     } else if (!isLable.value && isEdit.value && !showRight.value) {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
+        rightWidth.value = 250
     }
 }
 enum PermissionChange {
@@ -565,7 +557,9 @@ const networkMessage = (status: NetworkStatusType) => {
 const networkDebounce = (() => {
     const df = debounce(networkMessage, 1000)
     return (status: NetworkStatusType) => {
-        df(status).catch((e) => { console.log(e) });
+        df(status).catch((e) => {
+            console.log(e)
+        });
     }
 })();
 
@@ -655,6 +649,10 @@ const closeLoading = () => {
     loading.value = false;
 }
 
+const changeLeftWidth = (width: number) => {
+    Left.value.leftWidth = width;
+}
+
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
@@ -669,6 +667,7 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
         }
     }
 }
+
 function component_watcher(t: number) {
     if (!context) {
         return;
@@ -729,26 +728,25 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="screenSetting" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context" />
+            <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context"
-            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                            @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
+                            @showNavigation="showHiddenLeft"
+                            :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)" @closeLoading="closeLoading">
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                    @closeLoading="closeLoading">
                 </ContentView>
             </template>
             <template #slot3>
@@ -756,6 +754,7 @@ onUnmounted(() => {
                     @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                     :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
+<!--                @@@-->
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>
@@ -764,7 +763,7 @@ onUnmounted(() => {
         </div>
         <div v-if="showHint" class="notification">
             <el-icon :size="13">
-                <Warning />
+                <Warning/>
             </el-icon>
             <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
             <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
@@ -772,7 +771,7 @@ onUnmounted(() => {
             <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
         </div>
         <Bridge v-if="bridge" :context="context!"></Bridge>
-        <HelpEntrance v-if="!null_context" :context="context!" />
+        <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
 <style>
@@ -793,11 +792,11 @@ onUnmounted(() => {
 </style>
 <style scoped lang="scss">
 .main {
-    min-width: 1080px;
+    min-width: 460px;
     width: 100%;
     overflow-x: auto;
 
-    @media (max-width: 1080px) {
+    @media (max-width: 460px) {
         overflow-x: scroll;
     }
 
@@ -909,7 +908,7 @@ onUnmounted(() => {
         border-radius: 4px;
 
         .loading-spinner {
-            >svg {
+            > svg {
                 width: 15px;
                 height: 15px;
                 color: #000;

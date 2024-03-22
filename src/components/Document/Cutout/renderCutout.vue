@@ -21,7 +21,7 @@ const isSelected = ref(false);
 const getCutoutPath = (args?: any) => {
     cutoutPath.value = '';
     const points: { x: number, y: number }[] = [];
-    if (!props.data.isVisible()) return;
+    if (!props.data.isVisible) return;
     const shape = adapt2Shape(props.data);
     matrix.reset(props.matrix);
     const m = shape.matrix2Root();

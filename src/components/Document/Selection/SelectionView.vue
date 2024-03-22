@@ -83,6 +83,7 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 function shapesWatcher(...args: any) {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
         update_by_shapes();
     }
@@ -439,8 +440,8 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         style="transform: translate(0px, 0px); position: absolute;">
-        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent"
-            stroke-width="14" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        <path :d="tracingFrame.path" fill="none" stroke="transparent"
+            :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
         <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
             stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">

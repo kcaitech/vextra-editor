@@ -475,8 +475,11 @@ const changeColor = (color: Color) => {
         if (!props.gradient) return;
         let id = props.context.color.selected_stop;
         const _id = props.gradient.stops[0].id;
-        if (id === undefined) id = _id;
-        const index = props.gradient.stops.findIndex(v => v.id === id);
+        let index = props.gradient.stops.findIndex(v => v.id === id);
+        if (id === undefined || index === -1) {
+            id = _id;
+            index = 0
+        }
         emit('gradient-color-change', color, index);
         nextTick(() => {
             update_gradient(props.gradient);
@@ -812,7 +815,7 @@ function update_stops(selected: string | undefined) {
         return;
     }
     let index = props.gradient.stops.findIndex((v) => v.id === selected);
-    if (selected === undefined) index = 0;
+    if (selected === undefined || index === -1) index = 0;
     stop_els.value = stops_generator(props.gradient, 152, index); // 条条的宽度 减去 一个圆的宽度
     const c = stop_els.value[index]?.stop.color;
     if (!c) {
@@ -1070,11 +1073,21 @@ const is_gradient_selected = () => {
 
 watch(() => props.gradient, () => watch_picker(), { deep: true })
 
-watch(() => props.color, () => watch_picker(), { deep: true })
+watch(() => props.color, (v) => {
+    if (picker_visible.value) {
+        const { red, green, blue, alpha } = v;
+        update_rgb(red, green, blue);
+        rgba.alpha = alpha;
+        update_dot_indicator_position(v);
+        update_alpha_indicator(v);
+        get_gradient_type();
+    }
+}, { deep: true })
 
 const watch_picker = () => {
     if (picker_visible.value) {
         update();
+
         get_gradient_type();
     }
 }
@@ -1138,8 +1151,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="color-block" :style="block_style_generator(color, gradient, fillType)"
-        ref="block" @click="triggle">
+    <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">

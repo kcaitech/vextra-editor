@@ -418,7 +418,6 @@ const docComment = (comment: DocCommentOpData) => {
         }
     }
     props.context.comment.setCommentList(documentCommentList.value);
-    props.context.comment.onUpdateComment();
 }
 onMounted(() => {
     const updateComment = props.context.communication.docCommentOp

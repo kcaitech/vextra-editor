@@ -142,45 +142,6 @@ export class Asssit extends WatchableObject {
         this.m_current_pg = pg;
     }
 
-    set_points_map() {
-        this.clear();
-
-        const path_shape = this.m_context.selection.pathshape;
-        if (!path_shape) {
-            return;
-        }
-
-        const points = path_shape.points;
-
-        const f = path_shape.frame;
-        const m = new Matrix(path_shape.matrix2Root());
-        m.preScale(f.width, f.height);
-
-        for (let i = 0, l = points.length; i < l; i++) {
-            const __p = points[i];
-            const p = m.computeCoord2(__p.x, __p.y);
-
-            const item = { id: __p.id, p };
-            this.m_path_pg.set(i, item);
-
-            const xs = this.m_x_axis.get(p.x);
-            if (xs) {
-                xs.push(item);
-            } else {
-                this.m_x_axis.set(p.x, [item]);
-            }
-
-            const ys = this.m_y_axis.get(p.y);
-            if (ys) {
-                ys.push(item);
-            } else {
-                this.m_y_axis.set(p.y, [item]);
-            }
-        }
-
-        // console.log('assit map:', this.m_path_pg);
-    }
-
     get except() {
         return this.m_except;
     }
@@ -222,30 +183,6 @@ export class Asssit extends WatchableObject {
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
         this.m_y_axis.clear();
-    }
-
-    // private update_collect() {
-    //     this.m_collect_target = [];
-    //     const shapes = this.m_context.selection.selectedShapes;
-    //     if (shapes.length === 1) {
-    //         const container = getClosestContainer((shapes[0]));
-    //         this.m_collect_target = container ? [container] : [];
-    //     } else {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    // private selection_watcher(t?: any) {
-    //     if (t === Selection.CHANGE_SHAPE) {
-    //         this.update_collect();
-    //     } else if (t === Selection.CHANGE_PAGE) {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    init() {
-        // this.m_context.selection.watch(this.selection_watcher.bind(this));
-        // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
     }
 
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {

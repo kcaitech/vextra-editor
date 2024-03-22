@@ -184,8 +184,8 @@ const recover = (id?: string) => {
 }
 const addComment = (info: any) => {
     emit('recover');
-    documentCommentList.value.push(info);
-    getDocumentComment();
+    documentCommentList.value = [...documentCommentList.value, info];
+    // getDocumentComment();
 }
 
 const editComment = (index: number, text: string) => {
@@ -283,14 +283,8 @@ const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === Comment.VISIBLE_COMMENT) {
         visibleComment.value = props.context.comment.isVisibleComment
     }
-    if (t === Comment.WATCH_COMMENT_CHANGE) {
-        docComment();
-    }
 }
 
-const docComment = () => {
-    props.context.comment.notify(Comment.UPDATE_COMMENT_CHILD);
-}
 
 const pageSkipComment = () => {
     const workspace = props.context.workspace;

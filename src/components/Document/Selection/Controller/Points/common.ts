@@ -1,8 +1,15 @@
 import { getHorizontalAngle } from "@/utils/common"
-import { ContactLineView, PathShapeView, ShapeView } from "@kcdesign/data"
-import { CurveMode } from "@kcdesign/data"
-
-import { ContactShape, CtrlElementType, Matrix, PathShape, Point2D, Shape } from "@kcdesign/data"
+import {
+    ContactLineView,
+    CtrlElementType, CurvePoint,
+    Matrix,
+    PathShape,
+    PathShapeView, PathShapeView2,
+    PathType,
+    Point2D,
+    ShapeView
+} from "@kcdesign/data"
+import { XY } from "@/context/selection";
 
 interface Dot {
     point: { x: number, y: number }
@@ -158,6 +165,7 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
     };
     return [path_obj_1, path_obj_3];
 }
+
 function get_r_path(ps: { x: number, y: number }) {
     const bit_v_r = 18;
     return `M${ps.x} ${ps.y} h${bit_v_r} a${bit_v_r} ${bit_v_r} 0 0 1 ${-bit_v_r} ${bit_v_r} z`;
@@ -167,19 +175,39 @@ function get_r_path2(ps: { x: number, y: number }) {
     const bit_v_r = 18, r = Math.PI * 0.25, sx = bit_v_r * Math.cos(r), sy = bit_v_r * Math.sin(r);
     return `M${ps.x} ${ps.y} l${sx} ${-sy} a${bit_v_r},${bit_v_r} 0 0 1 0,${2 * sy} z`;
 }
-export function get_path_by_point(s: PathShapeView, matrix: Matrix, set: Set<number>) {
-    const points = [];
-    const raw_p = (s).points;
-    const m = new Matrix(matrix);
-    if (!raw_p?.length) {
-        return [];
+
+export function get_path_by_point(s: ShapeView, matrix: Matrix, map: Map<number, number[]>) {
+    const points: { segment: number, index: number, point: XY, selected: boolean }[] = [];
+
+    if (s.pathType === PathType.Editable) {
+        const raw_p = (s as PathShapeView).points;
+        __exe(0, raw_p);
+
+    } else if (s.pathType === PathType.Multi) {
+        const segments = (s as PathShapeView2).segments;
+        segments.forEach((segment, index) => {
+            __exe(index, segment.points as CurvePoint[]);
+        })
     }
-    m.preScale(s.frame.width, s.frame.height);
-    for (let i = 0, l = raw_p.length; i < l; i++) {
-        const p = raw_p[i];
-        points.push({ point: m.computeCoord2(p.x, p.y), index: i, selected: set.has(i) });
-    }
+
     return points;
+
+    function __exe(segment: number, _points: CurvePoint[]) {
+        if (!_points?.length) {
+            return [];
+        }
+
+        const set = new Set(map.get(segment) || []);
+
+        const m = new Matrix(matrix);
+        m.preScale(s.frame.width, s.frame.height);
+
+        for (let i = 0, l = _points.length; i < l; i++) {
+            const p = _points[i];
+            points.push({ point: m.computeCoord2(p.x, p.y), segment, index: i, selected: set.has(i) });
+        }
+    }
+
 }
 
 export function get_conact_by_point(s: PathShape, matrix: Matrix) {
@@ -222,6 +250,7 @@ export function get_apexs(s: ContactLineView, matrix: Matrix) {
     } = { point: m.computeCoord(raw_p[raw_p.length - 1]), type: 'to' };
     return { apex1, apex2 };
 }
+
 export function get_transform(shape: ShapeView) {
     const __r = shape.rotation || 0;
     const result = {
@@ -273,6 +302,7 @@ export function get_transform(shape: ShapeView) {
 
     return result
 }
+
 export function get_real_rotation(shape: ShapeView) {
     const t = get_transform(shape);
     let rotate = t.rotate;

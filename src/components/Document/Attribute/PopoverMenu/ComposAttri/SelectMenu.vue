@@ -1,4 +1,4 @@
-<script  setup lang="ts">
+<script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -51,9 +51,9 @@ onUnmounted(() => {
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span v-if="item !== 'add_new_value' || index !== menuItems.length - 1">{{ item }}</span>
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
-            <div class="choose" v-if="props.menuIndex === index" >
-<!--                 :style="{ borderColor: isActive === index ? '#fff' : '' }"-->
-                <svg-icon icon-class="choose"></svg-icon>
+            <div class="choose" v-if="props.menuIndex === index">
+                <!--                 :style="{ borderColor: isActive === index ? '#fff' : '' }"-->
+                <svg-icon :icon-class="isActive !== index ? 'choose' : 'white-select'"></svg-icon>
             </div>
         </div>
     </div>
