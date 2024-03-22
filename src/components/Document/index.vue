@@ -426,6 +426,7 @@ async function upload(projectId: string) {
     }
     let result;
     try {
+        console.log("开始上传文档")
         result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
         // todo 上传失败处理
@@ -438,6 +439,7 @@ async function upload(projectId: string) {
         return;
     }
     const doc_id = result!.data.doc_id;
+    console.log("文档上传成功", doc_id)
     router.replace({
         path: '/document',
         query: { id: doc_id },
