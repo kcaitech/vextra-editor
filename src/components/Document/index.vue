@@ -429,6 +429,7 @@ async function upload(projectId: string) {
     if (!await getToken() || !context || !context.data) return;
     if (!await context.communication.docUpload.start(getToken, projectId)) {
         // todo 上传通道开启失败处理
+        console.log("文档上传通道开启失败")
         return;
     }
     let result;
@@ -436,10 +437,12 @@ async function upload(projectId: string) {
         result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
         // todo 上传失败处理
+        console.log("文档上传失败", e)
         return;
     }
     if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
         // todo 上传失败处理
+        console.log("文档上传失败", result)
         return;
     }
     const doc_id = result!.data.doc_id;
@@ -448,6 +451,7 @@ async function upload(projectId: string) {
         query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+        console.log("文档操作通道开启失败")
         // todo 文档操作通道开启失败处理
     }
     getDocumentAuthority().then(async () => {
