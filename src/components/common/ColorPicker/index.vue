@@ -6,14 +6,12 @@ import {
     FillType,
     Gradient,
     GradientType,
-    GroupShapeView,
     ShapeType,
     TableView,
     TextShapeView,
 } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
 import { ClientXY } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
@@ -34,7 +32,7 @@ import {
     gradient_channel_generator,
     StopEl,
     stops_generator,
-    hexToX,
+    hexToX, RGB2SB,
 } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
@@ -123,12 +121,6 @@ interface Indicator {
     x: number
 }
 
-interface LineAttribute {
-    length: 196,
-    begin: number,
-    end: number
-}
-
 interface DotPosition {
     left: number
     top: number
@@ -141,13 +133,9 @@ interface Bounding {
     bottom: number
 }
 
-const INDICATOR_WIDTH = 13;
-const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
-const DOT_WIDTH = 12;
-const HUE_WIDTH = 250;
-const HUE_HEIGHT = 200;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
 const { t } = useI18n();
 const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
@@ -156,14 +144,12 @@ const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
-const mousedownPositon: ClientXY = { x: 0, y: 0 };
+const downXY: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
-const reflush = ref<number>(1);
 const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
@@ -175,55 +161,92 @@ const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
 const gradient_channel_style = ref<any>({});
 const gradient_type = ref<GradientType | 'solid'>();
+const stop_els = ref<StopEl[]>([]);
+
+const LINE_LENGTH = 196;
+const DOT_SIZE = 12;
+const HALF_DOT_SIZE = DOT_SIZE / 2;
+const HUE_WIDTH = 250;
+const HUE_HEIGHT = 200;
+
+const DOT_SIZE_CSS = `${DOT_SIZE}px`;
+const HUE_WIDTH_CSS = `${HUE_WIDTH}px`;
+const HUE_HEIGHT_CSS = `${HUE_HEIGHT}px`;
+const LINE_LENGTH_CSS = `${LINE_LENGTH}px`;
+
 const data = reactive<Data>({
     rgba: { R: 255, G: 0, B: 0, alpha: 1 },
     hueIndicatorAttr: { x: 0 },
-    alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
-    dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
+    alphaIndicatorAttr: { x: LINE_LENGTH - DOT_SIZE },
+    dotPosition: { left: HUE_WIDTH - DOT_SIZE / 2, top: -DOT_SIZE / 2 }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
-const stop_els = ref<StopEl[]>([]);
+
+// 色相
+const hue = computed<number>(() => {
+    return Math.floor((hueIndicatorAttr.x / (LINE_LENGTH - DOT_SIZE)) * 360);
+})
+
+// 饱和度
+const saturation = computed<number>(() => {
+    return (dotPosition.left + HALF_DOT_SIZE) / HUE_WIDTH;
+})
+
+// 亮度
+const brightness = computed<number>(() => {
+    return (1 - (dotPosition.top + HALF_DOT_SIZE) / HUE_HEIGHT);
+})
+
 const h_rgb = computed<HRGB>(() => {
     const color = new Color(1, rgba.R, rgba.G, rgba.B);
-    return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
+    return getHRGB(RGB2H(color, hue.value));
 })
+
 const hsba = computed<HSBA>(() => {
     const { R, G, B, alpha } = rgba;
     const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
     return { H: h, S: s, V: b, alpha };
 })
+
 const hsla = computed<HSLA>(() => {
     const { R, G, B, alpha } = rgba;
     const { h, s, l } = RGB2HSL(new Color(alpha, R, G, B));
     return { H: h, S: s, L: l, alpha };
 })
+
 const labels = computed(() => {
     return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
+
 const values = computed<number[]>(() => {
-    if (reflush.value) {
-        if (model.value.value === 'RGB') {
-            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-        } else if (model.value.value === 'HSB') {
-            return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
-        } else if (model.value.value === 'HSL') {
-            return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
-        } else {
-            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-        }
+    if (model.value.value === 'RGB') {
+        return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+    } else if (model.value.value === 'HSB') {
+        return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
+    } else if (model.value.value === 'HSL') {
+        return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
     } else {
         return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     }
 });
-const hue = computed<number>(() => {
-    return Math.floor(((hueIndicatorAttr.x) / (lineAttribute.length - INDICATOR_WIDTH)) * 360);
-})
-const saturation = computed<number>(() => {
-    return (dotPosition.left + DOT_WIDTH / 2) / HUE_WIDTH;
-})
-const brightness = computed<number>(() => {
-    return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
-})
+
+let sleep = false;
+let sleepTime = 600;
+let bed: any = null;
+
+function passive() {
+    if (bed) {
+        clearTimeout(bed);
+    }
+
+    bed = setTimeout(() => {
+        sleep = false;
+        clearTimeout(sleepTime);
+        bed = null;
+    }, sleepTime);
+
+    sleep = true;
+}
 
 /**
  * @description 调色板定位
@@ -272,7 +295,9 @@ function locate() {
     }
 }
 
-
+/**
+ * @description 退出调色板
+ */
 function quit(e: MouseEvent) {
     const need_quit = props.fillType === FillType.Gradient && props.gradient
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
@@ -286,45 +311,53 @@ function quit(e: MouseEvent) {
 }
 
 function setMousedownPosition(e: MouseEvent) {
-    mousedownPositon.x = e.clientX;
-    mousedownPositon.y = e.clientY;
+    downXY.x = e.clientX;
+    downXY.y = e.clientY;
 }
 
 function is_drag(e: MouseEvent) {
-    return Math.hypot(e.clientX - mousedownPositon.x, e.clientY - mousedownPositon.y) > 9;
+    return Math.hypot(e.clientX - downXY.x, e.clientY - downXY.y) > 4;
 }
 
 // 设置色相
 function setHueIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const { x, right } = sliders.value.getBoundingClientRect();
-        lineAttribute.begin = x;
-        lineAttribute.end = right;
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        hueIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setRGB(hueIndicatorAttr.x);
+
         document.addEventListener('mousemove', mousemove4Hue);
         document.addEventListener('mouseup', mouseup);
+
         need_update_recent.value = true;
+
+        passive();
     }
 }
 
 function mousemove4Hue(e: MouseEvent) {
     if (isDrag) {
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value!.getBoundingClientRect().x;
+        let placement = e.x - x;
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        hueIndicatorAttr.x = placement - HALF_DOT_SIZE;
         setRGB(hueIndicatorAttr.x);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -338,16 +371,20 @@ function wheel(e: WheelEvent) {
         // todo
     } else {
         const delta = deltaY > 0 ? wheel_step : -wheel_step;
-        const critical_len = lineAttribute.length - INDICATOR_WIDTH
+        const critical_len = LINE_LENGTH - DOT_SIZE
         if (delta > 0) {
-            const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
-            hueIndicatorAttr.x = val;
+            hueIndicatorAttr.x = (hueIndicatorAttr.x + delta) > critical_len
+                ? hueIndicatorAttr.x + delta - critical_len
+                : hueIndicatorAttr.x + delta;
             setRGB(hueIndicatorAttr.x);
         } else {
-            const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
-            hueIndicatorAttr.x = val;
+            hueIndicatorAttr.x = (hueIndicatorAttr.x + delta) < 0
+                ? hueIndicatorAttr.x + delta + critical_len
+                : hueIndicatorAttr.x + delta;
             setRGB(hueIndicatorAttr.x);
         }
+
+        passive();
     }
 }
 
@@ -355,34 +392,45 @@ function wheel(e: WheelEvent) {
 function setAlphaIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const { x, right } = sliders.value.getBoundingClientRect();
-        lineAttribute.begin = x;
-        lineAttribute.end = right;
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+
+        const x = sliders.value.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        alphaIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setAlpha(alphaIndicatorAttr.x);
+
         document.addEventListener('mousemove', mousemove4Alpha);
         document.addEventListener('mouseup', mouseup);
+
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+
+        passive();
     }
 }
 
 function mousemove4Alpha(e: MouseEvent) {
     if (isDrag) {
-        let placement = e.x - lineAttribute.begin;
-        if (placement < HALF_INDICATOR_WIDTH) {
-            placement = HALF_INDICATOR_WIDTH;
-        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        const x = sliders.value!.getBoundingClientRect().x;
+        let placement = e.x - x;
+
+        if (placement < HALF_DOT_SIZE) {
+            placement = HALF_DOT_SIZE;
+        } else if (placement > LINE_LENGTH - HALF_DOT_SIZE) {
+            placement = LINE_LENGTH - HALF_DOT_SIZE;
         }
-        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+
+        alphaIndicatorAttr.x = placement - HALF_DOT_SIZE;
+
         setAlpha(alphaIndicatorAttr.x);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -405,7 +453,8 @@ function setDotPosition(e: MouseEvent) {
         changeColor(color);
         document.addEventListener('mousemove', mousemove4Dot);
         document.addEventListener('mouseup', mouseup);
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+
+        passive();
     }
 }
 
@@ -413,26 +462,29 @@ function mousemove4Dot(e: MouseEvent) {
     if (isDrag) {
         const { x, y } = e;
         const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
-        if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (x < saturationX && y <= bottom && y >= saturationY) {
-            dotPosition.left = -(DOT_WIDTH / 2);
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (x > right && y <= bottom && y >= saturationY) {
-            dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
-            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-        } else if (y < saturationY && x >= saturationX && x <= right) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = -(DOT_WIDTH / 2);
-        } else if (y > bottom && x >= saturationX && x <= right) {
-            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-            dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+
+        if (x >= saturationX && x <= right) {
+            dotPosition.left = x - saturationX - DOT_SIZE / 2;
+        } else if (x < saturationX) {
+            dotPosition.left = -(DOT_SIZE / 2);
+        } else {
+            dotPosition.left = HUE_WIDTH - (DOT_SIZE / 2);
         }
+
+        if (y >= saturationY && y <= bottom) {
+            dotPosition.top = y - saturationY - DOT_SIZE / 2;
+        } else if (y < saturationY) {
+            dotPosition.top = -(DOT_SIZE / 2);
+        } else {
+            dotPosition.top =  HUE_HEIGHT - (DOT_SIZE / 2)
+        }
+
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
         update_rgb(R, G, B);
         changeColor(color);
+
+        passive();
     } else {
         isDrag = is_drag(e);
     }
@@ -440,7 +492,7 @@ function mousemove4Dot(e: MouseEvent) {
 
 // set color
 function setRGB(indicator: number) {
-    const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
+    const h = (indicator / (LINE_LENGTH - DOT_SIZE)) * 360;
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
     const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
     changeColor(color);
@@ -449,23 +501,22 @@ function setRGB(indicator: number) {
 }
 
 function setAlpha(indicator: number) {
-    rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
+    rgba.alpha = Number((indicator / (LINE_LENGTH - DOT_SIZE)).toFixed(2));
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
     changeColor(color);
     need_update_recent.value = true;
 }
 
 function setColor(color: Color) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     rgba.R = color.red;
     rgba.G = color.green;
     rgba.B = color.blue;
     rgba.alpha = color.alpha;
     changeColor(color);
+    update_hue_indicator_position(color);
     update_dot_indicator_position(color);
     update_alpha_indicator(color);
     need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 
 const changeColor = (color: Color) => {
@@ -494,7 +545,6 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Hue);
     document.removeEventListener('mouseup', mouseup)
     need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     isDrag = false;
 }
 
@@ -519,6 +569,7 @@ function systemEyeDropper() {
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         changeColor(c);
+        update_hue_indicator_position(c);
         update_dot_indicator_position(c);
     }).catch((e: any) => {
         console.log("failed:", e);
@@ -542,6 +593,7 @@ function eyeDropperInit(): Eyedropper {
                 rgba.B = rgb[2];
                 const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
                 changeColor(c);
+                update_hue_indicator_position(c);
                 update_dot_indicator_position(c);
             }
         }
@@ -563,13 +615,14 @@ function inputClick(e: MouseEvent, hidx: number) {
 function keyboardWatcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         enter();
+
+        passive();
     } else if (e.code === 'ArrowUp') {
         let v: string | number = inputTarget.value;
         v = Number(v);
         let _v = v + 1;
         const valid = validate(model.value.value as any, handleIndex, _v);
         if (valid) {
-            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
             if (handleIndex === 0) {
                 rgba.R = Number(v) + 1;
             } else if (handleIndex === 1) {
@@ -579,9 +632,11 @@ function keyboardWatcher(e: KeyboardEvent) {
             }
             const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
             changeColor(color);
+            update_hue_indicator_position(color);
             update_dot_indicator_position(color);
             need_update_recent.value = true;
-            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+
+            passive();
         }
     } else if (e.code === 'ArrowDown') {
         let v: string | number = inputTarget.value;
@@ -589,7 +644,6 @@ function keyboardWatcher(e: KeyboardEvent) {
         let _v = v - 1;
         const valid = validate(model.value.value as any, handleIndex, _v);
         if (valid) {
-            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
             if (handleIndex === 0) {
                 rgba.R = Number(v) - 1;
             } else if (handleIndex === 1) {
@@ -600,8 +654,10 @@ function keyboardWatcher(e: KeyboardEvent) {
             const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
             changeColor(color);
             update_dot_indicator_position(color);
+            update_hue_indicator_position(color);
             need_update_recent.value = true;
-            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+
+            passive();
         }
     }
 }
@@ -660,10 +716,9 @@ function enter() {
         const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
         changeColor(color);
         update_dot_indicator_position(color);
+        update_hue_indicator_position(color);
         update_alpha_indicator(color);
         need_update_recent.value = true;
-    } else {
-        reflush.value++;
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
@@ -688,20 +743,28 @@ function triggle() {
 function colorPickerMount() {
     picker_visible.value = true;
     props.context.menu.setupColorPicker(blockId);
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
-    update();
+
+    if (props.locat) {
+        props.context.color.gradinet_locat(props.locat);
+    }
+
+    init();
+
     init_document_colors();
+
     switch_editor_mode();
-    document.addEventListener('mousedown', quit);
+
     get_gradient_type();
-    if (props.locat && props.gradient && props.fillType === FillType.Gradient) props.context.color.switch_editor_mode(true, props.gradient);
+
+    document.addEventListener('mousedown', quit);
+
     nextTick(locate);
 }
 
 function blockUnmount() {
     const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit === blockId) {
+    const e = menu.isColorPickerMount;
+    if (e === blockId) {
         menu.clearColorPickerId();
     }
     props.context.color.clear_locat();
@@ -725,14 +788,13 @@ function removeCurColorPicker() {
 }
 
 function switch_editor_mode() {
-    if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
-        return;
+    if (props.locat && props.gradient && props.fillType === FillType.Gradient) {
+        props.context.color.switch_editor_mode(true, props.gradient);
     }
-    props.context.color.switch_editor_mode(true, props.gradient);
 }
 
 // init
-function init_rescent() {
+function init_recent() {
     let r = localStorage.getItem(key_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) {
@@ -748,21 +810,30 @@ function init_document_colors() {
     document_colors.value = getColorsFromDoc(props.context);
 }
 
-// update
-function update(color = props.color) {
-    init_rescent();
+// init
+function init(color = props.color) {
+    init_recent();
     const { red, green, blue, alpha } = color;
     rgba.alpha = alpha;
     update_rgb(red, green, blue);
     update_dot_indicator_position(color);
+    update_hue_indicator_position(color);
     update_alpha_indicator(color);
     update_gradient(props.gradient);
 }
 
-function update_rgb(R: number, G: number, B: number) {
-    rgba.R = R;
-    rgba.G = G;
-    rgba.B = B;
+function update(color = props.color) {
+    if (sleep) {
+        return;
+    }
+
+    const { red, green, blue, alpha } = color;
+    rgba.alpha = alpha;
+    update_rgb(red, green, blue);
+    update_dot_indicator_position(color);
+    update_hue_indicator_position(color, hue.value);
+    update_alpha_indicator(color);
+    get_gradient_type();
 }
 
 function update_recent_color() {
@@ -777,21 +848,35 @@ function update_recent_color() {
     }
 }
 
-function update_dot_indicator_position(color: Color) {
-    const { h, s, b } = RGB2HSB(color);
-    dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
-    dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
+function update_rgb(R: number, G: number, B: number) {
+    rgba.R = R;
+    rgba.G = G;
+    rgba.B = B;
+}
 
-    let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
+function update_alpha_indicator(color: Color) {
+    const { alpha } = color;
+    alphaIndicatorAttr.x = (LINE_LENGTH - DOT_SIZE) * alpha;
+}
+
+function update_dot_indicator_position(color: Color) {
+    const { s, b } = RGB2SB(color);
+    dotPosition.left = HUE_WIDTH * s - (DOT_SIZE / 2);
+    dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_SIZE / 2);
+}
+
+function update_hue_indicator_position(color: Color, sub?: number) {
+    const h = RGB2H(color, sub);
+    let hueIndicator = (LINE_LENGTH - DOT_SIZE) * (h / 360);
+
     if (hueIndicator < 0) {
         hueIndicator = 0;
     }
-    if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
-        hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+
+    if (hueIndicator > (LINE_LENGTH - DOT_SIZE)) {
+        hueIndicator = LINE_LENGTH - DOT_SIZE;
     }
-    if (hueIndicator === 0 && hueIndicatorAttr.x) {
-        return;
-    }
+
     hueIndicatorAttr.x = hueIndicator;
 }
 
@@ -821,9 +906,10 @@ function update_stops(selected: string | undefined) {
     if (!c) {
         return;
     }
-    update_rgb(c.red, c.green, c.blue);
     rgba.alpha = c.alpha;
+    update_rgb(c.red, c.green, c.blue);
     update_dot_indicator_position(c as Color);
+    update_hue_indicator_position(c as Color);
     update_alpha_indicator(c as Color);
 }
 
@@ -889,6 +975,7 @@ function move_stop_position(e: MouseEvent) {
         gradient_channel_style.value = gradient_channel_generator(props.gradient!);
         stop_els.value[index].left = stop_p * 152 + 16;
         gradientEditor.execute_stop_position(stop_p, stop_id.value);
+        passive();
     } else {
         if (Math.hypot(dx, dy) > 3) {
             isDrag = true;
@@ -935,6 +1022,8 @@ function move_stop_position(e: MouseEvent) {
                     }
                 }
             }
+
+            passive();
         }
     }
 }
@@ -959,7 +1048,7 @@ function color_type_change(val: GradientType | 'solid') {
     nextTick(() => {
         set_gradient(val);
         if (props.locat) props.context.color.gradinet_locat(props.locat);
-        update();
+        init();
         locate();
     })
 }
@@ -1007,7 +1096,10 @@ const get_gradient_type = () => {
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
     }
-    if (props.locat) props.context.color.gradinet_locat(props.locat);
+
+    if (props.locat) {
+        props.context.color.gradinet_locat(props.locat);
+    }
 }
 
 // 渐变翻转
@@ -1024,11 +1116,6 @@ function rotate() {
     nextTick(() => {
         update_gradient(props.gradient!);
     })
-}
-
-function update_alpha_indicator(color: Color) {
-    const { alpha } = color;
-    alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
 
 function menu_watcher(t: any, id: string) {
@@ -1073,22 +1160,11 @@ const is_gradient_selected = () => {
 
 watch(() => props.gradient, () => watch_picker(), { deep: true })
 
-watch(() => props.color, (v) => {
-    if (picker_visible.value) {
-        const { red, green, blue, alpha } = v;
-        update_rgb(red, green, blue);
-        rgba.alpha = alpha;
-        update_dot_indicator_position(v);
-        update_alpha_indicator(v);
-        get_gradient_type();
-    }
-}, { deep: true })
+watch(() => props.color, () => watch_picker(), { deep: true })
 
 const watch_picker = () => {
     if (picker_visible.value) {
         update();
-
-        get_gradient_type();
     }
 }
 
@@ -1133,7 +1209,7 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.color.watch(color_watch);
     window.addEventListener('blur', window_blur);
-    update();
+    init();
 })
 
 onUnmounted(() => {
@@ -1169,12 +1245,12 @@ onUnmounted(() => {
             </div>
             <!-- 渐变工具 -->
             <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
-                class="gradient-container">
+                 class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                        @mouseup.stop="_gradient_channel_down"></div>
+                         @mouseup.stop="_gradient_channel_down"></div>
                     <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                         @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
                         <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
                     </div>
                 </div>
@@ -1191,7 +1267,7 @@ onUnmounted(() => {
             </div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
                 <div class="white"></div>
                 <div class="black"></div>
                 <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
@@ -1199,7 +1275,7 @@ onUnmounted(() => {
             <!-- 常用色 -->
             <div class="typical-container">
                 <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
             </div>
             <div class="controller">
                 <div class="eyedropper">
@@ -1213,9 +1289,9 @@ onUnmounted(() => {
                     <!-- 透明度 -->
                     <div class="alpha-bacground">
                         <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                            :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
                             <div class="alphaIndicator" ref="alphaIndicator"
-                                :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">
                             </div>
                         </div>
                     </div>
@@ -1228,7 +1304,7 @@ onUnmounted(() => {
                     <div class="wrap">
                         <div class="value">
                             <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                    @click="(e) => inputClick(e, idx)" />
+                                                                                           @click="(e) => inputClick(e, idx)"/>
                             </div>
                         </div>
                         <div class="label">
@@ -1243,7 +1319,7 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.recently') }}</div>
                     <div class="typical-container">
                         <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1254,9 +1330,9 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
                         <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                            @click="() => setColor(c.color as any)"
-                            :title="t('color.times').replace('xx', c.times.toString())"
-                            :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                             @click="() => setColor(c.color as any)"
+                             :title="t('color.times').replace('xx', c.times.toString())"
+                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -1272,7 +1348,6 @@ onUnmounted(() => {
 
 .color-block {
     position: relative;
-    // z-index: 99;
     width: 16px;
     height: 16px;
     border-radius: 3px;
@@ -1285,7 +1360,6 @@ onUnmounted(() => {
 
     .popover {
         position: fixed;
-        width: 250px;
         background-color: #ffffff;
         box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
@@ -1293,7 +1367,9 @@ onUnmounted(() => {
         overflow: hidden;
         z-index: 99;
 
-        >.header {
+        width: v-bind('HUE_WIDTH_CSS');
+
+        > .header {
             width: 100%;
             height: 40px;
             position: relative;
@@ -1302,16 +1378,13 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 8px;
             box-sizing: border-box;
             border-width: 0px 0px 1px 0px;
             border-style: solid;
             border-color: #F5F5F5;
             padding: 14px 12px;
-            display: flex;
-            justify-content: space-between;
 
-            >.color-type-desc {
+            > .color-type-desc {
                 display: flex;
                 align-items: center;
                 cursor: pointer;
@@ -1320,19 +1393,19 @@ onUnmounted(() => {
                     user-select: none;
                 }
 
-                >svg {
+                > svg {
                     transition: 0.3s;
                     width: 10px;
                     height: 10px;
                     margin-left: 4px;
                 }
 
-                >svg:hover {
+                > svg:hover {
                     transform: translateY(2px);
                 }
             }
 
-            >.close {
+            > .close {
                 flex: 0 0 16px;
                 height: 16px;
                 text-align: center;
@@ -1342,7 +1415,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                >svg {
+                > svg {
                     width: 85%;
                     height: 85%;
                 }
@@ -1358,7 +1431,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        >.gradient-container {
+        > .gradient-container {
             display: flex;
             align-items: center;
             width: 100%;
@@ -1442,38 +1515,40 @@ onUnmounted(() => {
             }
         }
 
-        >.saturation {
+        > .saturation {
             width: 100%;
-            height: 200px;
             position: relative;
             cursor: pointer;
             overflow: hidden;
 
-            >.white {
+            height: v-bind('HUE_HEIGHT_CSS');
+
+            > .white {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
 
-            >.black {
+            > .black {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
             }
 
-            >.dot {
-                width: 8px;
-                height: 8px;
+            > .dot {
+                width: v-bind('DOT_SIZE_CSS');
+                height: v-bind('DOT_SIZE_CSS');
                 border-radius: 50%;
                 border: 2px solid #fff;
                 position: absolute;
                 box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                box-sizing: border-box;
             }
         }
 
-        >.typical-container {
+        > .typical-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1481,14 +1556,12 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             padding: 12px 6px;
-            padding-bottom: 6px;
             box-sizing: border-box;
 
-            >.block {
-                margin: 0 3px;
+            > .block {
+                margin: 0 3px 6px 3px;
                 width: 16px;
                 height: 16px;
-                margin-bottom: 6px;
                 border-radius: 3px;
                 border: 1px solid rgba(0, 0, 0, 0.1);
                 cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
@@ -1496,7 +1569,7 @@ onUnmounted(() => {
             }
         }
 
-        >.controller {
+        > .controller {
             width: 100%;
             height: 46px;
             display: flex;
@@ -1506,11 +1579,11 @@ onUnmounted(() => {
             box-sizing: border-box;
             justify-content: space-around;
 
-            >.sliders-container {
-                width: 196px;
+            > .sliders-container {
+                width: v-bind('LINE_LENGTH_CSS');
                 height: 32px;
 
-                >.hue {
+                > .hue {
                     position: relative;
                     width: 100%;
                     height: 8px;
@@ -1518,18 +1591,19 @@ onUnmounted(() => {
                     border-radius: 5px 5px 5px 5px;
                     cursor: pointer;
 
-                    >.hueIndicator {
+                    > .hueIndicator {
                         top: -2px;
-                        width: 8px;
-                        height: 8px;
+                        width: v-bind('DOT_SIZE_CSS');
+                        height: v-bind('DOT_SIZE_CSS');
                         border-radius: 50%;
                         border: 2px solid #fff;
                         position: absolute;
                         box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                        box-sizing: border-box;
                     }
                 }
 
-                >.alpha-bacground {
+                > .alpha-bacground {
                     margin-top: 8px;
                     width: 100%;
                     height: 8px;
@@ -1539,27 +1613,28 @@ onUnmounted(() => {
                     cursor: pointer;
                     box-sizing: border-box;
 
-                    >.alpha {
+                    > .alpha {
                         position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 5px 5px 5px 5px;
 
-                        >.alphaIndicator {
+                        > .alphaIndicator {
                             top: -2px;
-                            width: 8px;
-                            height: 8px;
+                            width: v-bind('DOT_SIZE_CSS');
+                            height: v-bind('DOT_SIZE_CSS');
                             border-radius: 50%;
                             border: 2px solid #fff;
                             position: absolute;
                             box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
+                            box-sizing: border-box;
                         }
                     }
 
                 }
             }
 
-            >.eyedropper {
+            > .eyedropper {
                 width: 30px;
                 height: 30px;
                 display: flex;
@@ -1570,16 +1645,12 @@ onUnmounted(() => {
                 padding: 6px;
                 box-sizing: border-box;
 
-                >svg {
+                > svg {
                     width: 18px;
                     height: 18px;
                     cursor: pointer;
                 }
             }
-
-            //.eyedropper:hover {
-            //    background-color: var(--grey-dark);
-            //}
         }
 
         .input-container {
@@ -1620,7 +1691,7 @@ onUnmounted(() => {
                             width: 25%;
                             text-align: center;
 
-                            >input {
+                            > input {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -1659,7 +1730,7 @@ onUnmounted(() => {
             }
         }
 
-        >.recently-container {
+        > .recently-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1685,14 +1756,14 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                >.typical-container {
+                > .typical-container {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     box-sizing: border-box;
 
-                    >.block {
+                    > .block {
                         width: 16px;
                         height: 16px;
                         border-radius: 3px;
@@ -1701,14 +1772,14 @@ onUnmounted(() => {
                         box-sizing: border-box;
                     }
 
-                    >.block:not(:first-child) {
+                    > .block:not(:first-child) {
                         margin-left: 6.2px;
                     }
                 }
             }
         }
 
-        >.dc-container {
+        > .dc-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1732,7 +1803,7 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                >.documentc-container {
+                > .documentc-container {
                     width: 100%;
                     max-height: 90px;
                     overflow: scroll;
@@ -1762,7 +1833,7 @@ onUnmounted(() => {
                         background-color: none;
                     }
 
-                    >.block {
+                    > .block {
                         display: inline-block;
                         width: 16px;
                         height: 16px;
