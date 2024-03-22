@@ -178,7 +178,7 @@ function down(e: MouseEvent) {
 
     startPosition = { x: e.x, y: e.y };
 
-    transporter = new TranslateHandler(props.context, [props.shape], e);
+    transporter = new TranslateHandler(props.context, e, [props.shape]);
 
     document.addEventListener('mousemove', mousemove4trans);
     document.addEventListener('mouseup', mouseup4trans);

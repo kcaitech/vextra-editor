@@ -24,7 +24,7 @@
     "electron:generate-icons": "electron-icon-builder --input=./src/assets/logo.png --output=build --flatten"
   },
   "dependencies": {
-    "@kcdesign/data": "^0.3.28",
+    "@kcdesign/data": "file:../kcdesign-data",
     "ali-oss": "^6.18.1",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",

@@ -668,10 +668,12 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
-        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" @closeLoading="closeLoading"/>
+         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+         @drop.prevent.stop="(e: DragEvent) => { drop(e, props.context, t as Function) }"
+         @dragover.prevent.stop
+         :style="{ 'background-color': background_color }">
+        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
+                     @closeLoading="closeLoading"/>
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
         <SelectionView :context="props.context" :matrix="matrix"/>
