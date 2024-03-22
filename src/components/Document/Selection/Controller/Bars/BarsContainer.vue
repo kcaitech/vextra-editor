@@ -1,13 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { adapt2Shape, AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
-import { ScaleHandler } from "@/transform/scale";
+
 interface Props {
     matrix: number[]
     context: Context
@@ -15,14 +15,19 @@ interface Props {
     cFrame: Point[]
     theme: SelectionTheme
 }
+
 interface Bar {
     path: string
     type: CtrlElementType
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
-const data: { paths: Bar[], dashes: string[] } = reactive({ paths: [], dashes: [] });
+const data: {
+    paths: Bar[],
+    dashes: string[]
+} = reactive({ paths: [], dashes: [] });
 const { paths, dashes } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
@@ -45,6 +50,7 @@ function update() {
     matrix.reset(props.matrix);
     update_dot_path();
 }
+
 function update_dot_path() {
     paths.length = 0;
     const frame = props.shape.frame;
@@ -70,13 +76,21 @@ function update_dot_path() {
     // }
     // dashes.push(...get_dashes(props.context, props.shape, apex as [XY, XY, XY, XY]));
 }
+
 function is_constrainted() {
     return props.shape.parent?.type === ShapeType.Artboard;
 }
 
-function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
+function get_bar_path(s: {
+    x: number,
+    y: number
+}, e: {
+    x: number,
+    y: number
+}): string {
     return `M ${s.x} ${s.y} L ${e.x} ${e.y}`;
 }
+
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
@@ -98,6 +112,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
+
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const mouseOnPage: ClientXY = props.context.workspace.getContentXY(event);
@@ -125,6 +140,7 @@ function bar_mousemove(event: MouseEvent) {
         isDragging = true;
     }
 }
+
 function bar_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
@@ -134,38 +150,49 @@ function bar_mouseup(event: MouseEvent) {
 }
 
 let pre_target_x: number, pre_target_y: number;
+
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     if (props.shape.rotation) {
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     } else {
         const stickness = props.context.assist.stickness;
-        const target = props.context.assist.point_match(p2);
-        if (!target) return;
-        if (stickedX) {
-            if (Math.abs(p2.x - sticked_x_v) >= stickness) {
-                stickedX = false;
-            } else {
-                if (pre_target_x === target.x) {
-                    p2.x = sticked_x_v;
+        if (cur_ctrl_type === CtrlElementType.RectTop || cur_ctrl_type === CtrlElementType.RectBottom) {
+            const x1 = submatrix.computeCoord2(props.cFrame[0].x, 0).x;
+            const x2 = submatrix.computeCoord2(props.cFrame[2].x, 0).x;
+            const target = props.context.assist.alignY(p2, [{ x: x1, y: 0 }, { x: x2, y: 0 }]);
+            if (!target) return;
+
+            if (stickedY) {
+                if (Math.abs(p2.y - sticked_y_v) >= stickness) {
+                    stickedY = false;
                 } else {
-                    modify_fix_x(p2, target.x);
+                    if (pre_target_y === target.y) {
+                        p2.y = sticked_y_v;
+                    } else {
+                        modify_fix_y(p2, target.y);
+                    }
                 }
+            } else if (target.sticked_by_y) {
+                modify_fix_y(p2, target.y);
             }
-        } else if (target.sticked_by_x) {
-            modify_fix_x(p2, target.x);
-        }
-        if (stickedY) {
-            if (Math.abs(p2.y - sticked_y_v) >= stickness) {
-                stickedY = false;
-            } else {
-                if (pre_target_y === target.y) {
-                    p2.y = sticked_y_v;
+        } else if (cur_ctrl_type === CtrlElementType.RectLeft || cur_ctrl_type === CtrlElementType.RectRight) {
+            const y1 = submatrix.computeCoord2(0, props.cFrame[0].y).y;
+            const y2 = submatrix.computeCoord2(0, props.cFrame[3].y).y;
+            const target = props.context.assist.alignX(p2, [{ x: 0, y: y1 }, { x: 0, y: y2 }]);
+            if (!target) return;
+            if (stickedX) {
+                if (Math.abs(p2.x - sticked_x_v) >= stickness) {
+                    stickedX = false;
                 } else {
-                    modify_fix_y(p2, target.y);
+                    if (pre_target_x === target.x) {
+                        p2.x = sticked_x_v;
+                    } else {
+                        modify_fix_x(p2, target.x);
+                    }
                 }
+            } else if (target.sticked_by_x) {
+                modify_fix_x(p2, target.x);
             }
-        } else if (target.sticked_by_y) {
-            modify_fix_y(p2, target.y);
         }
         const align = props.context.user.isPixelAlignMent;
         if (align) {
@@ -175,18 +202,21 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     }
 }
+
 function modify_fix_x(p2: PageXY, fix: number) {
     p2.x = fix;
     sticked_x_v = p2.x;
     stickedX = true;
     pre_target_x = fix;
 }
+
 function modify_fix_y(p2: PageXY, fix: number) {
     p2.y = fix;
     sticked_y_v = p2.y;
     stickedY = true;
     pre_target_y = fix;
 }
+
 function getScale(type: CtrlElementType, shape: ShapeView, start: ClientXY, end: ClientXY): number {
     const m = new Matrix(shape.matrix2Root().inverse);
     const f = shape.frame;
@@ -224,14 +254,17 @@ function setCursor(t: CtrlElementType) {
 
     cursor.setType('scale', deg);
 }
+
 function bar_mouseenter(type: CtrlElementType) {
     need_reset_cursor_after_transform = false;
     setCursor(type);
 }
+
 function bar_mouseleave() {
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
+
 function window_blur() {
     clear_status();
 }
@@ -273,6 +306,7 @@ function clear_status() {
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
 }
+
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -291,7 +325,7 @@ onUnmounted(() => {
 </script>
 <template>
     <g v-for="(b, i) in paths" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-        @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+       @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
         <path :d="b.path" class="main-path" :stroke="theme">
         </path>
         <path :d="b.path" class="assist-path">

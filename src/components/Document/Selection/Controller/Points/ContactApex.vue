@@ -104,6 +104,10 @@ function point_mousedown(event: MouseEvent, type: 'from' | 'to') {
         return;
     }
 
+    if (props.shape.isLocked) {
+        return;
+    }
+
     event.stopPropagation();
 
     props.context.menu.menuMount();

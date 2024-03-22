@@ -53,6 +53,7 @@ const watchedShapes = new Map();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
 const theme = ref<SelectionTheme>(SelectionTheme.Normol);
 const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normol);
+const updateTrigger = ref<number>(0);
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -86,6 +87,7 @@ function shapesWatcher(...args: any) {
     // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
         update_by_shapes();
+        updateTrigger.value++;
     }
 }
 
@@ -455,7 +457,7 @@ onUnmounted(() => {
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
     <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix" :update-trigger="updateTrigger"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>
