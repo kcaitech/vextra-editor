@@ -75,6 +75,7 @@ function update_triangle() {
         const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(shape);
 
         transform = `translate(${rb.x}px, ${rb.y}px) `;
+        transform += `scale(${m.m00})`;
         if (isFlippedHorizontal) transform += 'rotateY(180deg) ';
         if (isFlippedVertical) transform += 'rotateX(180deg) ';
         if (rotate) transform += `rotate(${rotate}deg) `;

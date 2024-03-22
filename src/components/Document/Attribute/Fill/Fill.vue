@@ -606,7 +606,7 @@ onUnmounted(() => {
                            @input="alphaInput"
                            :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                 </div>
-                <div class="temporary"></div>
+<!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
