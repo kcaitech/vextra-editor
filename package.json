@@ -24,7 +24,7 @@
     "electron:generate-icons": "electron-icon-builder --input=./src/assets/logo.png --output=build --flatten"
   },
   "dependencies": {
-    "@kcdesign/data": "^0.3.26",
+    "@kcdesign/data": "^0.3.28",
     "ali-oss": "^6.18.1",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",
@@ -64,6 +64,7 @@
     "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "@vue/babel-plugin-jsx": "^1.2.2",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.8",
