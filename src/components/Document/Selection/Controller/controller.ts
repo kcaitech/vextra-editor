@@ -104,6 +104,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+        if (event.altKey) {
+            event.preventDefault();
+            context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        }
+
         keydown_action(event);
     }
 

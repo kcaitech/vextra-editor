@@ -68,19 +68,16 @@ function modify_can_be_rect() {
     const selected = props.context.selection.selectedShapes;
 
     for (let i = 0, l = selected.length; i < l; i++) {
-        const s = selected[i];
-        
-        if (!is_rect(s) && s.type !== ShapeType.Image) {
+        if (!is_rect(selected[i])) {
             return
         }
     }
+
     if (need_reset) {
         rect.value = true;
     }
 
     can_be_rect.value = true;
-
-    
 }
 
 function reset_radius_value() {
@@ -90,17 +87,10 @@ function reset_radius_value() {
     radius.lb = 0;
 }
 function get_radius_for_shape(shape: ShapeView) {
-    if (shape instanceof ArtboradView) {
-        return shape.fixedRadius || 0;
-    }
-    
-    if (!(shape instanceof PathShapeView) && shape.type !== ShapeType.Image) {
-        return 0;
-    }
-    const s = shape.type === ShapeType.Image ? shape.data as ImageShape : shape as PathShapeView;
+    const s = shape as PathShapeView;
     const points = s.points;
     
-    if (!points.length) {
+    if (!points?.length) {
         return 0;
     }
     let _r = points[0].radius || s.fixedRadius || 0;

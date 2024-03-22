@@ -189,8 +189,8 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '上移一层', keys: '+' },
-                { name: '下移一层', keys: '-' },
+                { name: '上移一层', keys: 'Ctrl + ]' },
+                { name: '下移一层', keys: 'Ctrl + [' },
                 { name: '移到顶层', keys: ']' },
                 { name: '移到底层', keys: '[' },
                 { name: '大步进移动图层', keys: 'Shift + Direction' },
