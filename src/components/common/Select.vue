@@ -24,6 +24,7 @@ interface Props {
     index?: number;
     valueView?: any;
     itemView?: any;
+    mixed?: boolean;
     shapes?: ShapeView[];
 }
 
@@ -93,7 +94,7 @@ function options() {
     if (top > TOP) {
         top = top - PADDING;
     }
-
+    if (props.mixed) top = 0;
     oe.style.top = `${-(top + PADDING_TOP)}px`;
 
     oe.addEventListener('keydown', esc);
@@ -137,7 +138,7 @@ function render() {
     }
     if (props.selected && source.value.length) {
         const index = source.value.findIndex(i => i.data.value === props.selected!.value);
-        if (index > -1) {
+        if (index > -1 || props.mixed) {
             curValueIndex.value = index;
             curValue.value = props.selected;
         }
@@ -159,7 +160,8 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
-            <div v-if="!props.valueView" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{ curValue?.content }}
+            <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
+            curValue?.content }}
             </div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
@@ -170,6 +172,11 @@ onMounted(render)
         </div>
 
         <div v-if="optionsContainerVisible" @click.stop class="options-container" ref="optionsContainer" tabindex="-1">
+            <div v-if="mixed">
+                <div class="item-default disabled">
+                    <div class="content-wrap"> {{ t('attr.mixed') }}</div>
+                </div>
+            </div>
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
@@ -191,6 +198,7 @@ onMounted(render)
 
 <style scoped lang="scss">
 .select-container {
+    height: 32px;
     position: relative;
 
 
@@ -203,7 +211,7 @@ onMounted(render)
         justify-content: space-between;
         background-color: #F5F5F5;
         border-radius: var(--default-radius);
-        padding: 8px 7px 8px 12px;
+        padding: 0 9px;
         box-sizing: border-box;
 
         .value-wrap {
@@ -280,6 +288,16 @@ onMounted(render)
             >svg {
                 flex: 0 0 12px;
                 height: 12px;
+            }
+        }
+
+        .disabled {
+            border-bottom: 1px solid #efefef;
+            pointer-events: none;
+
+            >div {
+                color: #787878;
+                pointer-events: none;
             }
         }
 

@@ -19,7 +19,7 @@ import {
     ArrayOpSelection,
     isDiffStringArr,
     SNumber,
-    TableCellType
+    TableCellType, PathShapeView2
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -131,6 +131,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     private m_label_fixed_group: ShapeView[] = [];
     private m_label_living_group: ShapeView[] = [];
+
+    private m_hover_stroke: number = 14;
 
     constructor(document: Document, context: Context) {
         super();
@@ -683,8 +685,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     get pathshape() {
         const selected = this.selectedShapes;
-        if (selected.length === 1 && selected[0] instanceof PathShapeView) {
-            return (this.selectedShapes[0]) as PathShapeView;
+        if (selected.length === 1 && selected[0].pathType) {
+            return (this.selectedShapes[0]) as ShapeView;
         }
     }
 
@@ -785,5 +787,13 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     setLabelLivingGroup(shapes: ShapeView[]) {
         this.m_label_living_group = shapes;
+    }
+
+    get hoverStroke() {
+        return this.m_hover_stroke;
+    }
+
+    setHoverStroke(val: number) {
+        this.m_hover_stroke = val;
     }
 }

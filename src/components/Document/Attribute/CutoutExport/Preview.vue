@@ -88,12 +88,12 @@ const _getCanvasShape = () => {
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
         const item = parentIsArtboard(shape);
         getPosition(shape);
-        if (shape.isVisible() && item) {
+        if (shape.isVisible && item) {
             renderItems = toRaw(Array(adapt2Shape(item)).filter(s => s.type !== ShapeType.Cutout));
         } else {
             selectedShapes.clear();
             getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-            if (shape.isVisible()) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
+            if (shape.isVisible) renderItems = toRaw(Array.from(selectedShapes.values()).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     } else if (shapes.length === 1) {
         getPosition(shape);
@@ -148,10 +148,15 @@ const getPosition = (shape: ShapeView) => {
     const p = shape.boundingBox()
     const p_artboard = parentIsArtboard(shape);
     if (p_artboard && shape.type === ShapeType.Cutout) {
-        const frame = shape.frame2Root();
         const page = props.context.selection.selectedPage!;
+        let frame = shape.frame2Root();
         xy.value.x = frame.x - page.frame.x;
         xy.value.y = frame.y - page.frame.y;
+        if (p_artboard.parent && p_artboard.parent.type !== ShapeType.Page) {
+            frame = p_artboard.frame2Parent();
+            xy.value.x = frame.x + shape.frame.x;
+            xy.value.y = frame.y + shape.frame.y;
+        }
         width.value = shape.frame.width;
         height.value = shape.frame.height;
     } else if (shape.type === ShapeType.Cutout) {
@@ -239,7 +244,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
             let bgc = 'transparent';
             if (shape.type === ShapeType.Cutout) {
                 const item = parentIsArtboard(shape);
-                if (shape.isVisible() && item) {
+                if (shape.isVisible && item) {
                     shapeItem = Array(item).map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout);
                 } else {
                     selectedShapes.clear();
@@ -331,15 +336,14 @@ onUnmounted(() => {
         <!--                       :key="c.id" :data="c"/>-->
         <!--        </svg>-->
         <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-                  :shapes="renderItems"
-                  :width="width" :height="height"></PageCard>
+            :shapes="renderItems" :width="width" :height="height"></PageCard>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
             <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
             </div>
         </div>
         <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-             :reflush="reflush !== 0 ? reflush : undefined">
+            :reflush="reflush !== 0 ? reflush : undefined">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
@@ -356,7 +360,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        > .triangle {
+        >.triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -364,7 +368,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            > .triangle-right {
+            >.triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -375,7 +379,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            > .triangle-down {
+            >.triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -392,7 +396,7 @@ onUnmounted(() => {
         }
     }
 
-    > svg {
+    >svg {
         position: fixed;
         left: 100000px;
         top: 100000px;
@@ -423,7 +427,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            > img {
+            >img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -441,7 +445,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        > img {
+        >img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;

@@ -4,7 +4,7 @@ import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
 import { Context } from "@/context";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { genRectPath } from "../Selection/common";
 import {
     CenterPoint,
@@ -18,6 +18,7 @@ import {
 interface Props {
     context: Context
     matrix: Matrix
+    updateTrigger: number
 }
 
 const props = defineProps<Props>();
@@ -158,6 +159,8 @@ const filterAlpha = (a: number) => {
     }
 }
 
+const stop = watch(() => props.updateTrigger, contour);
+
 onMounted(() => {
     contour();
     props.context.workspace.watch(workspaceUpdate);
@@ -167,6 +170,7 @@ onUnmounted(() => {
     clearPoint();
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.selection.unwatch(selectionWatcher);
+    stop();
 })
 </script>
 

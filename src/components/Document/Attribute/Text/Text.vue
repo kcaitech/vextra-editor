@@ -337,6 +337,7 @@ const _textFormat = () => {
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
             formats.push(format)
         }
+
         const referenceKeys = Object.keys(formats[0]);
         for (const key of referenceKeys) {
             const referenceValue = formats[0][key];
@@ -827,6 +828,8 @@ const selectSizeValue = () => {
     if (textSize.value) {
         executed.value = true;
         getTextShapes();
+        const value = textSize.value.value;
+        sizeValue.value = value;
         textSize.value.select();
     }
 }
@@ -1526,6 +1529,7 @@ onUnmounted(() => {
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
 }
+
 .overlay {
     position: fixed;
     top: 0;

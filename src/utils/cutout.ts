@@ -107,11 +107,8 @@ export const parentIsArtboard = (shape: ShapeView) => {
     let result: ShapeView | undefined = undefined;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.type === ShapeType.Artboard) {
-            result = p;
-            break;
-        }
-        p = p.parent;
+        result = p;
+        break;
     }
     return result;
 }
@@ -221,6 +218,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
     return bounds_points;
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return shapes; @@@
     return shapes.reduce((result: any, item: ShapeView) => {
         if (item.type === ShapeType.Group) {
             const childs = (item).childs as ShapeView[];

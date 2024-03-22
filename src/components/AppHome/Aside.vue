@@ -620,7 +620,7 @@ onUnmounted(() => {
                     </div>
                     <div class="right" @click.stop="showteamcard">
                         <Tooltip :content="'创建团队'" :offset="10">
-                            <svg-icon icon-class="add-icon"></svg-icon>
+                            <svg-icon icon-class="add"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
@@ -669,7 +669,7 @@ onUnmounted(() => {
                                                 <Tooltip :content="'新建文件'" :offset="10">
                                                     <div v-if="item.self_perm_type > 2" class="newfile"
                                                         @click.stop="newProjectFile(item.project.id)">
-                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                        <svg-icon icon-class="add"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                             </div>
@@ -701,7 +701,7 @@ onUnmounted(() => {
                                         </div>
                                         <div class="right" v-if="data.self_perm_type > 0">
                                             <div class="newproject" @click.stop="showprojectcard(data.team.id)">
-                                                <svg-icon icon-class="add-icon" />
+                                                <svg-icon icon-class="add" />
                                             </div>
                                         </div>
                                     </div>
@@ -724,7 +724,7 @@ onUnmounted(() => {
                                                 <Tooltip :content="'新建文件'" :offset="10">
                                                     <div v-if="item.self_perm_type > 2" class="newfile"
                                                         @click.stop="newProjectFile(item.project.id)">
-                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                        <svg-icon icon-class="add"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                             </div>
@@ -742,7 +742,7 @@ onUnmounted(() => {
                                                 <Tooltip :content="'新建文件'" :offset="10">
                                                     <div v-if="target.self_perm_type > 2" class="newfile"
                                                         @click.stop="newProjectFile(target.project.id)">
-                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                        <svg-icon icon-class="add"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                             </div>
@@ -867,9 +867,8 @@ a {
         svg {
             outline: none;
             color: rgba(51, 51, 51, 1);
-            padding: 1px;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
         }
     }
 }
@@ -1018,9 +1017,9 @@ a {
                             justify-content: center;
 
                             svg {
-                                width: 14px;
-                                min-width: 14px;
-                                height: 14px;
+                                width: 16px;
+                                min-width: 16px;
+                                height: 16px;
                                 color: rgba(51, 51, 51, 1);
                             }
 
@@ -1060,7 +1059,7 @@ a {
                         width: 100%;
                         height: 36px;
                         border-radius: 6px;
-                        padding-left: 46px;
+                        padding-left: 44px;
                         box-sizing: border-box;
 
                         .right {
@@ -1077,9 +1076,9 @@ a {
                                 border-radius: 6px;
 
                                 svg {
-                                    width: 14px;
-                                    min-width: 14px;
-                                    height: 14px;
+                                    width: 16px;
+                                    min-width: 16px;
+                                    height: 16px;
                                     color: rgba(51, 51, 51, 1);
                                 }
 

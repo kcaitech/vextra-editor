@@ -11,32 +11,6 @@ interface Point {
     y: number
 }
 
-export enum KeyboardKeys {
-    Space = 'Space',
-    A = 'KeyA',
-    R = 'KeyR',
-    V = 'KeyV',
-    L = 'KeyL',
-    Z = 'KeyZ',
-    Up = 'ArrowUp',
-    Down = 'ArrowDown',
-    Left = 'ArrowLeft',
-    Right = 'ArrowRight',
-    K = 'KeyK',
-    O = 'KeyO',
-    F = 'KeyF',
-    Digit0 = 'Digit0',
-    G = 'KeyG',
-    T = 'KeyT',
-    C = 'KeyC',
-    B = 'KeyB',
-    I = 'KeyI',
-    X = 'KeyX',
-    U = 'KeyU',
-    Digit1 = 'Digit1',
-    Backspace = 'Backspace',
-}
-
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
     RectRight = 'rect-right',
@@ -110,6 +84,7 @@ export class WorkSpace extends WatchableObject {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_round: boolean = false;
+    private m_font_name_list: {zh: string[], en: string[]} = { zh: [], en: [] };
 
     private m_root: Root = {
         init: false,
@@ -221,9 +196,6 @@ export class WorkSpace extends WatchableObject {
         return this.m_should_selection_view_update;
     }
 
-    get isFreeze() {
-        return this.m_freeze;
-    }
 
     get ctrlPath() {
         return this.m_controller_path;
@@ -408,5 +380,15 @@ export class WorkSpace extends WatchableObject {
 
     setRoundMode(v: boolean) {
         this.m_round = v;
+    }
+
+    setFontNameListZh(zh: string[]) {
+        this.m_font_name_list.zh = zh;
+    }
+    setFontNameListEn(en: string[]) {
+        this.m_font_name_list.en = en;
+    }
+    get fontNameList() {
+        return this.m_font_name_list;
     }
 }

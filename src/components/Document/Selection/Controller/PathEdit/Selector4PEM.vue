@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Matrix, PathShape, Shape } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView, PathShapeView2, PathType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch } from 'vue';
 import { XY } from "@/context/selection";
 import { Segment } from '@/utils/pathedit';
+
 export interface SelectorFrame {
     top: number
     left: number
@@ -18,11 +19,13 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const selected_points: Set<number> = new Set();
-const selected_segs: Set<number> = new Set();
+
+const selected_points = new Map<number, Set<number>>();
+const selected_segs = new Map<number, Set<number>>();
+
 let p_changed: boolean = false;
 let s_changed: boolean = false;
-let path_shape: Shape | undefined;
+let path_shape: ShapeView | undefined;
 let path_string: string = '';
 let m42Dp: Matrix | undefined; // 2D点到页面的转换矩阵
 function select() {
@@ -30,15 +33,20 @@ function select() {
     if (!path_shape) {
         return;
     }
+
     p_changed = false;
     s_changed = false;
+
     modify_select_path();
+
     remove_points();
     remove_segs();
+
     finder_points();
     finder_segs();
+
     if (p_changed || s_changed) {
-        props.context.path.select(Array.from(selected_points.values()), Array.from(selected_segs.values()));
+        props.context.path.select(selected_points, selected_segs);
     }
 }
 
@@ -63,55 +71,114 @@ function modify_select_path() {
 
 // 加入
 function finder_points() {
-    if (!path_shape) return;
-    if (!m42Dp) {
-        m42Dp = new Matrix();
-        m42Dp.preScale(path_shape.frame.width, path_shape.frame.height);
-        m42Dp.multiAtLeft(path_shape.matrix2Root());
+    if (!path_shape) {
+        return;
     }
-    const points = (path_shape as PathShape).points;
-    for (let i = 0, l = points.length; i < l; i++) {
-        if (selected_points.has(i)) continue;
-        const __cp = points[i];
-        const p = m42Dp.computeCoord2(__cp.x, __cp.y);
-        if (point_is_target(p)) {
-            selected_points.add(i);
-            p_changed = true;
+    if (!m42Dp) {
+        m42Dp = path_shape.matrix2Root();
+        m42Dp.preScale(path_shape.frame.width, path_shape.frame.height);
+    }
+
+    if (path_shape.pathType === PathType.Editable) {
+        const points = (path_shape as PathShapeView).points;
+
+        __exe(0, points, m42Dp);
+
+    } else if (path_shape.pathType === PathType.Multi) {
+        const segments = (path_shape as PathShapeView2).segments;
+        segments.forEach((segment, k) => {
+            __exe(k, segment.points as CurvePoint[], m42Dp!);
+        })
+    }
+
+    function __exe(segment: number, points: CurvePoint[], matrix: Matrix) {
+        let __indexes = selected_points.get(segment);
+
+        if (!__indexes) {
+            const s = new Set<number>();
+            selected_points.set(segment, s);
+            __indexes = s;
+        }
+
+        for (let i = 0, l = points.length; i < l; i++) {
+            if (__indexes.has(i)) {
+                continue;
+            }
+
+            const __cp = points[i];
+            const p = matrix.computeCoord2(__cp.x, __cp.y);
+            if (point_is_target(p)) {
+                __indexes.add(i);
+                p_changed = true;
+            }
         }
     }
 }
+
 function finder_segs() {
     if (!path_shape) {
         return;
     }
+
     const segments = props.context.path.segments;
-    for (let i = 0, l = segments.length; i < l; i++) {
-        if (selected_segs.has(i)) {
-            continue;
+
+    segments.forEach((seg, index) => {
+        let __selected = selected_segs.get(index);
+        if (!__selected) {
+            const s = new Set<number>();
+            selected_segs.set(index, s);
+            __selected = s;
         }
-        if (is_target_segs(segments[i])) {
-            selected_segs.add(i);
-            s_changed = true;
+        for (let i = 0, l = seg.length; i < l; i++) {
+            if (__selected.has(i)) {
+                continue;
+            }
+            if (is_target_segs(seg[i])) {
+                __selected.add(i);
+                s_changed = true;
+            }
         }
-    }
+    })
 }
+
 // 剔除
 function remove_points() {
-    if (!selected_points.size || !path_shape) return;
+    if (!selected_points.size || !path_shape) {
+        return;
+    }
+
     if (!m42Dp) {
         m42Dp = new Matrix();
         m42Dp.preScale(path_shape.frame.width, path_shape.frame.height);
         m42Dp.multiAtLeft(path_shape.matrix2Root());
     }
-    const points = (path_shape as PathShape).points;
-    selected_points.forEach(i => {
-        const __cp = points[i];
-        const p = m42Dp!.computeCoord2(__cp.x, __cp.y);
-        if (!point_is_target(p)) {
-            selected_points.delete(i);
-            p_changed = true;
+
+    if (path_shape.pathType === PathType.Editable) {
+        const points = (path_shape as PathShapeView).points;
+        __exe(0, points, m42Dp);
+    } else if (path_shape.pathType === PathType.Multi) {
+        const segments = (path_shape as PathShapeView2).segments;
+        segments.forEach((segment, index) => {
+            __exe(index, segment.points as CurvePoint[], m42Dp!);
+        });
+    }
+
+    function __exe(segment: number, points: CurvePoint[], matrix: Matrix) {
+        const __points = selected_points.get(segment);
+
+        if (!__points) {
+            return;
         }
-    })
+
+        __points.forEach(i => {
+            const __cp = points[i];
+            const p = matrix.computeCoord2(__cp.x, __cp.y);
+            if (!point_is_target(p)) {
+                selected_points.delete(i);
+                p_changed = true;
+            }
+        })
+    }
 }
 
 function remove_segs() {
@@ -119,11 +186,16 @@ function remove_segs() {
         return;
     }
     const segments = props.context.path.segments;
-    selected_segs.forEach(i => {
-        if (!is_target_segs(segments[i])) {
-            selected_segs.delete(i);
-            s_changed = true;
-        }
+
+    selected_segs.forEach((segment, index) => {
+        const __segments = segments[index];
+
+        segment.forEach(i => {
+            if (__segments[i] && !is_target_segs(__segments[i])) {
+                selected_segs.delete(i);
+                s_changed = true;
+            }
+        })
     })
 }
 
@@ -164,6 +236,7 @@ function is_bezise_inside_rect(segs: Segment) { // 内包
     }
     return true;
 }
+
 function is_bezise_intersect_rect(segs: Segment) { // 相交
     const { start, from, to, end } = segs;
     const step = 0.01;
@@ -175,17 +248,13 @@ function is_bezise_intersect_rect(segs: Segment) { // 相交
     }
     return false;
 }
+
 function reset() {
     selected_points.clear();
     selected_segs.clear();
 }
 
 watch(() => props.selectorFrame, select, { deep: true });
-// hooks
-onMounted(() => {
-});
-onUnmounted(() => {
-});
 </script>
 <template>
     <div class="selector" :style="{

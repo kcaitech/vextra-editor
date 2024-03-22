@@ -52,7 +52,7 @@ const setPosition = () => {
         titles.length = 0;
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
-            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible()) { // 只给页面的直接子元素上标题
+            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible) { // 只给页面的直接子元素上标题
                 const selecte = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
                 let selected = false

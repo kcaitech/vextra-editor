@@ -16,6 +16,7 @@ interface Props {
     frame: Point[]
     axle: { x: number, y: number }
 }
+
 interface Dot {
     point: { x: number, y: number }
     extra: { x: number, y: number }
@@ -23,6 +24,7 @@ interface Dot {
     type: CtrlElementType
     type2: CtrlElementType
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
@@ -45,6 +47,7 @@ function update() {
     update_dot_path();
     // console.log('绘制控点用时(ms):', Date.now() - s);
 }
+
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
@@ -53,11 +56,13 @@ function update_dot_path() {
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
 }
+
 function passive_update() {
     matrix.reset(props.matrix);
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
 }
+
 // #endregion
 
 // #region main flow
@@ -78,12 +83,12 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     startPosition = props.context.workspace.getContentXY(event);
 
     if (cur_ctrl_type.endsWith('rotate')) {
-        rotator = new RotateHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+        rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
         // console.log('rotator:', rotator);
         isRotateElement = true;
 
     } else {
-        scaler = new ScaleHandler(props.context, props.context.selection.selectedShapes, event, cur_ctrl_type);
+        scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
         // console.log('scaler:', scaler);
         isRotateElement = false;
     }
@@ -91,6 +96,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
+
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const { x: sx, y: sy } = startPosition;
@@ -116,14 +122,14 @@ function point_mousemove(event: MouseEvent) {
 
         if (isRotateElement) {
             rotator?.createApiCaller();
-        }
-        else {
+        } else {
             scaler?.createApiCaller();
         }
 
         isDragging = true;
     }
 }
+
 function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
@@ -131,6 +137,7 @@ function point_mouseup(event: MouseEvent) {
 
     clear_status();
 }
+
 // #endregion
 
 // #region utils
@@ -158,6 +165,7 @@ function setCursor(t: CtrlElementType) {
 
     cursor.setType(type, deg);
 }
+
 function clear_status() {
     isDragging = false;
 
@@ -174,22 +182,27 @@ function clear_status() {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
+
 function point_mouseenter(t: CtrlElementType) {
     need_reset_cursor_after_transform = false;
     setCursor(t);
 }
+
 function point_mouseleave() {
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
+
 function frame_watcher() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         passive_update();
     }
 }
+
 function window_blur() {
     clear_status();
 }
+
 // #endregion
 
 // #region lifecycle hooks
@@ -207,10 +220,10 @@ onUnmounted(() => {
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
         <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
         <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave">
+           @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
         </g>

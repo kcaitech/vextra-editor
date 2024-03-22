@@ -267,8 +267,8 @@ function updater(...args: any[]) {
     const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
     showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
-    lock_status.value = shape.isLocked() ? 1 : 0;
-    visible_status.value = shape.isVisible() ? 0 : 1;
+    lock_status.value = shape.isLocked ? 1 : 0;
+    visible_status.value = shape.isVisible ? 0 : 1;
 }
 
 let oldshape: Shape | undefined;
@@ -351,7 +351,7 @@ onMounted(() => {
     props.data.context.selection.watch(selectedWatcher);
 })
 onUnmounted(() => {
-    props.data.context.tool.watch(tool_watcher);
+    props.data.context.tool.unwatch(tool_watcher);
     oldshape && oldshape.unwatch(updater);
     props.data.context.selection.unwatch(selectedWatcher);
     stop();
@@ -387,8 +387,8 @@ onUnmounted(() => {
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
-                    v-if="isEdit && !isLable">
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }"
+                    @click="(e: MouseEvent) => setVisible(e)" v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                 </div>

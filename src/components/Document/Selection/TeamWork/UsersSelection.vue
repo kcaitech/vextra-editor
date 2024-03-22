@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue'
 import { Context } from '@/context'
 import { Matrix, Shape, ShapeView, TextShape } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
@@ -9,6 +9,7 @@ import ShapeAvatar from './ShapeAvatar.vue';
 import { DocSelectionData } from "@/communication/modules/doc_selection_op"
 import { TeamWork } from "@/context/teamwork";
 import { Selection } from '@/context/selection';
+import { getRandomColor } from '@/utils/color';
 interface Props {
     context: Context
     matrix: Matrix
@@ -31,12 +32,12 @@ const usersSelectionList = ref<DocSelectionData[]>(props.context.teamwork.getUse
 const matrix = new Matrix();
 const shapes = ref<ShapeView[]>([]);
 const submatrix = reactive(new Matrix());
+
 const createShapeTracing = () => { // 描边 
-    tracingPath.value = [];
-    selectPath.value = [];
-    multiSelect.value = [];
+    clear();
     const page = props.context.selection.selectedPage;
     if (!page) return;
+    addSelectionColor(usersSelectionList.value.length);
     for (let i = 0; i < usersSelectionList.value.length; i++) {
         const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
         const selection: ShapeView[] = props.context.selection.selectedShapes;
@@ -53,6 +54,7 @@ const createShapeTracing = () => { // 描边
             const s = selection.find(v => v.id === shapes[0].id);
             if (s) continue;
             const b = shapes[0].frame;
+            console.log(shapes[0], 'shape');
             let framePoint = [{ x: 0, y: 0 }, { x: b.width, y: 0 }, { x: b.width, y: b.height }, { x: 0, y: b.height }];
             const m = shapes[0].matrix2Root();
             m.multiAtLeft(matrix);
@@ -81,7 +83,7 @@ const createShapeTracing = () => { // 描边
                 points.push(...ps);
                 const path = s.getPath().clone();
                 path.transform(m);
-                const borPath = {path: path.toString(), color: userSelectColor[i]}
+                const borPath = { path: path.toString(), color: userSelectColor[i] }
                 multiSelect.value.push(borPath);
             }
             const b = XYsBounding(points);
@@ -90,6 +92,12 @@ const createShapeTracing = () => { // 描边
             tracingPath.value.push(borPath);
         }
     }
+}
+
+const clear = () => {
+    tracingPath.value = [];
+    selectPath.value = [];
+    multiSelect.value = [];
 }
 
 function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
@@ -118,9 +126,10 @@ const teamworkWatcher = (t?: any) => {
                 const shape = page!.shapes.get(item.select_shape_id_list[i]);
                 if (shape) shapes.value.push(shape);
             }
-        update_by_shapes();
-        createShapeTracing();
-        watchShapes();
+            shapes.value = Array.from(new Set(shapes.value));
+            update_by_shapes();
+            createShapeTracing();
+            watchShapes();
         })
     }
 }
@@ -138,7 +147,7 @@ const workspaceUpdate = (t: number) => {
 const selectionWatcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         createShapeTracing();
-    }else if (t === Selection.CHANGE_PAGE) {
+    } else if (t === Selection.CHANGE_PAGE) {
         watchShapes();
     }
 }
@@ -147,8 +156,11 @@ let timer: any = null;
 const watcher = () => {
     if (throttle) {
         throttle = false;
-        update_by_shapes();
-        createShapeTracing();
+        clear();
+        setTimeout(() => {
+            update_by_shapes();
+            createShapeTracing();
+        }, 10)
         timer = setTimeout(() => {
             throttle = true;
             clearTimeout(timer);
@@ -176,6 +188,13 @@ function watchShapes() { // 监听相关shape的变化
     })
 }
 
+const addSelectionColor = (length: number) => {
+    if (length < 11) return;
+    for (let i = 10; i < length; i++) {
+        userSelectColor.push(getRandomColor());
+    }
+}
+
 onMounted(() => {
     watchShapes();
     update_by_shapes();
@@ -196,8 +215,8 @@ onUnmounted(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="position: absolute">
-        <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1.5px"
-            opacity="0.8"></path>
+        <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color"
+            stroke-width="1.5px" opacity="0.8"></path>
         <path v-for="(p, i) in multiSelect" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1px"
             opacity="0.5"></path>
         <!-- <path v-for="(p, i) in selectPath" :key="i" :d="p.path" :fill="p.color" fill-opacity="0.5" stroke='none'></path> -->

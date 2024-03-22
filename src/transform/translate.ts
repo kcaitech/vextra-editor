@@ -31,6 +31,8 @@ type BaseFrame4Trans = {
 }
 
 export class TranslateHandler extends TransformHandler {
+    shapes: ShapeView[];
+
     livingPoint: XY;
     fixedPoint: XY;
 
@@ -57,8 +59,10 @@ export class TranslateHandler extends TransformHandler {
     shapesBackup: ShapeView[] = [];
     coping: boolean = false;
 
-    constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
-        super(context, shapes, event);
+    constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
+        super(context, event);
+
+        this.shapes = shapes;
 
         this.livingPoint = this.workspace.getRootXY(event);
 
@@ -458,6 +462,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __migrate() {
+        // if (this.workspace.transforming && this.shapes.length > 50) return; @@@
         const t = this.asyncApiCaller as Transporter;
         if (!t) {
             return;
@@ -465,6 +470,11 @@ export class TranslateHandler extends TransformHandler {
 
         const pe = this.livingPoint;
         const target_parent = this.context.selection.getEnvForMigrate(pe);
+
+        if (target_parent.id === t.current_env_id) {
+            return;
+        }
+
         const except = t.getExceptEnvs();
 
         const o_env = except.find(v => v.id === target_parent.id);
@@ -520,6 +530,9 @@ export class TranslateHandler extends TransformHandler {
                 this.passiveExecute();
                 this.context.selection.notify(Selection.PASSIVE_CONTOUR);
             }
+        }
+        if (event.ctrlKey) {
+            console.log("livingBox:", this.livingBox)
         }
     }
 

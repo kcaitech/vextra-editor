@@ -32,6 +32,7 @@ const matrix = reactive(props.context.workspace.matrix); // 一切图形可视�
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
+const aboutMeList = ref<any[]>([])
 type commentListMenu = {
     text: string
     status_p: boolean
@@ -204,7 +205,6 @@ const editMoveCommentPosition = async (data: any) => {
     props.context.comment.setCommentList(documentCommentList.value)
     try {
         await comment_api.editCommentAPI(data)
-        // getDocumentComment()
     } catch (err) {
         console.log(err);
     }
@@ -276,8 +276,7 @@ const aboutMe = () => {
             }
         }
     })
-    const myComment = Array.from(new Set(aboutMeArr))
-    return myComment
+    aboutMeList.value = Array.from(new Set(aboutMeArr))
 }
 
 // 删除评论
@@ -294,7 +293,6 @@ const resolve = (status: number, index: number) => {
 
 //回复评论
 const recover = () => {
-    props.context.comment.sendComment()
     props.context.comment.setCommentList(documentCommentList.value)
 }
 
@@ -332,12 +330,7 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
         saveShapeCommentXY();
     }
     //更新评论
-    if (type === Comment.EDIT_COMMENT) {
-        const timer = setTimeout(() => {
-            getDocumentComment()
-            clearTimeout(timer)
-        }, 100);
-    } else if (type === Comment.TOGGLE_COMMENT_PAGE) {
+    if (type === Comment.TOGGLE_COMMENT_PAGE) {
         documentCommentList.value = []
         const timer = setTimeout(() => {
             getDocumentComment()
@@ -350,6 +343,9 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
     if (type === Comment.UPDATE_COMMENT) {
         props.context.comment.updateCommentList(props.pageId)
         documentCommentList.value = props.context.comment.pageCommentList
+    }
+    if (type === Comment.SEND_COMMENT) {
+        aboutMe();
     }
 }
 
@@ -366,15 +362,13 @@ const docComment = (comment: DocCommentOpData) => {
             }
         } else {
             documentCommentList.value.forEach((item, i) => {
-                if(item.children && item.children.length) {
+                if (item.children && item.children.length) {
                     const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
                     if (_index !== -1) {
                         documentCommentList.value[i].children = {
                             ...documentCommentList.value[i].children,
                             ...comment.comment
                         }
-                        props.context.comment.setCommentList(documentCommentList.value);
-                        props.context.comment.onUpdateComment();
                     }
                 }
             })
@@ -384,19 +378,34 @@ const docComment = (comment: DocCommentOpData) => {
             documentCommentList.value.splice(index, 1)
         } else {
             documentCommentList.value.forEach((item, i) => {
-                if(item.children && item.children.length) {
+                if (item.children && item.children.length) {
                     const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
                     if (_index !== -1) {
-                        documentCommentList.value[i].children.splice(index, 1);
-                        props.context.comment.setCommentList(documentCommentList.value);
-                        props.context.comment.onUpdateComment();
+                        documentCommentList.value[i].children.splice(_index, 1);
                     }
                 }
             })
         }
     } else if (comment.type === DocCommentOpType.Add) {
         if (!comment.comment.root_id) {
-            documentCommentList.value.unshift(comment.comment)
+            const c = props.context.comment;
+            const cur_id = c.currentId;
+            const index2 = c.not2treeComment.findIndex((item) => item.id === cur_id);
+            if (index2 !== -1) {
+                const comment_list = [...c.not2treeComment];
+                comment_list[index2] = comment.comment;
+                c.setNot2TreeComment(comment_list)
+            } else {
+                c.setNot2TreeComment([comment.comment, ...c.not2treeComment]);
+            }
+            if (index === -1) {
+                const i = documentCommentList.value.findIndex((item) => item.id === cur_id);
+                if (i === -1) {
+                    documentCommentList.value.unshift(comment.comment);
+                } else {
+                    documentCommentList.value[i] = comment.comment;
+                }
+            }
         } else {
             const _index = documentCommentList.value.findIndex(item => item.id === comment.comment.root_id);
             if (_index !== -1) {
@@ -405,10 +414,10 @@ const docComment = (comment: DocCommentOpData) => {
                     documentCommentList.value[_index].commentMenu = commentMenuItems.value
                 }
                 documentCommentList.value[_index].children.unshift(comment.comment);
-                props.context.comment.onUpdateComment();
             }
         }
     }
+    props.context.comment.setCommentList(documentCommentList.value);
 }
 onMounted(() => {
     const updateComment = props.context.communication.docCommentOp
@@ -427,8 +436,9 @@ onUnmounted(() => {
 <template>
     <PageCommentItem ref="commentItem" :context="props.context" @moveCommentPopup="downMoveCommentPopup"
         :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
-        v-for="(item, index) in documentCommentList" :key="item.id" :commentInfo="item" :index="index" @recover="recover"
-        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()" :docList="documentCommentList" >
+        v-for="(item, index) in documentCommentList" :key="item.id" :commentInfo="item" :index="index"
+        @recover="recover" @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMeList"
+        :docList="documentCommentList">
     </PageCommentItem>
 </template>
 

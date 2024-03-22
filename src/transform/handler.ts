@@ -15,7 +15,6 @@ export class TransformHandler {
     context: Context;
     workspace: WorkSpace;
 
-    shapes: ShapeView[];
     page: PageView;
 
     shiftStatus: boolean;
@@ -24,10 +23,9 @@ export class TransformHandler {
 
     asyncApiCaller: AsyncApiCaller | undefined;
 
-    constructor(context: Context, shapes: ShapeView[], event: MouseEvent) {
+    constructor(context: Context, event: MouseEvent) {
         this.context = context;
         this.workspace = context.workspace;
-        this.shapes = shapes;
         this.page = context.selection.selectedPage!;
 
         this.shiftStatus = event.shiftKey;

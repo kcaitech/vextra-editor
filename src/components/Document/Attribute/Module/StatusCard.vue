@@ -7,7 +7,7 @@ import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { StatusValueItem, get_tag_value } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { SymbolShape } from "@kcdesign/data";
+import { SymbolShape, SymbolView } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -22,6 +22,7 @@ const revalueInput = ref();
 const top = ref<number>(0);
 const statusValue = ref();
 const menuIndex = ref();
+const edit_symbol = ref<SymbolView>();
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
@@ -38,6 +39,7 @@ const selectText = () => {
     nextTick(() => {
         if (revalueInput.value) {
             revalueInput.value.select();
+            edit_symbol.value = props.context.selection.symbolstate;
         }
     })
 }
@@ -115,7 +117,7 @@ function selcet(index: number) {
 }
 
 function save_change(v: string) {
-    const state = props.context.selection.symbolstate;
+    const state = edit_symbol.value || props.context.selection.symbolstate;
     if (!v || !state) return;
     const editor = props.context.editor4Shape(state);
     if (v === t('compos.dlt')) {
@@ -216,7 +218,7 @@ onUnmounted(() => {
                 width: 100%;
                 height: 30px;
                 border-radius: 4px;
-                padding-left: 11px;
+                padding-left: 9px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
@@ -227,12 +229,12 @@ onUnmounted(() => {
                 }
 
                 .status-icon-down {
-                    width: 19px;
-                    height: 26px;
+                    width: 24px;
+                    height: 24px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-right: 3px;
+                    margin-right: 4px;
                     border-radius: 4px;
 
                     >svg {
@@ -251,7 +253,7 @@ onUnmounted(() => {
     .module_input {
         display: flex;
         align-items: center;
-        padding-left: 10px;
+        padding-left: 9px;
         box-sizing: border-box;
         width: calc(100% - 58px);
         height: 30px;

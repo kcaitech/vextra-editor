@@ -43,8 +43,8 @@ interface BorderItem {
 interface Props {
     context: Context
     shapes: ShapeView[]
-    trigger: any[]
     cellsTrigger: any[]
+    trigger: any[]
 }
 
 const { t } = useI18n();
@@ -58,7 +58,7 @@ const mixed_cell = ref(false);
 const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
-const shapes = ref<ShapeView[]>([]);
+const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
 let table: TableShape;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
@@ -111,10 +111,11 @@ function watcher(...args: any[]) {
 }
 
 function updateData() {
-    borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const selecteds = getShapesForStyle(props.context.selection.selectedShapes);
+    const selecteds = props.context.selection.selectedShapes;
+    if (selecteds.length < 1) return;
+    borders.length = 0;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -157,7 +158,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -297,6 +298,8 @@ function onAlphaChange(b: Border, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
+            console.log(borders, 'borders');
+            
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -313,7 +316,7 @@ function onAlphaChange(b: Border, idx: number) {
 }
 
 function setColor(idx: number, color: Color) {
-    const selected = props.context.selection.selectedShapes;
+    const selected = shapes.value || props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const s = selected[0] as ShapeView;
     const _idx = borders.length - idx - 1;
@@ -550,9 +553,12 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 
 function layout() {
     show_apex.value = false;
-    if (props.shapes.length === 1) {
-        const type = props.shapes[0].type;
+    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
+    if (shapes.length === 1) {
+        const type = shapes[0].type;
         show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
+    }else if (shapes.length > 1) {
+        show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
     }
 }
 
@@ -636,6 +642,9 @@ const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 const stop2 = watch(() => props.cellsTrigger, v => { // 监听选区单元格变化
     if (v.length > 0 && (v.includes('borders'))) updateData();
 })
+const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
+    if (v.length > 0 && (v.includes('layout'))) updateData();
+});
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -644,6 +653,7 @@ onMounted(() => {
 onUnmounted(() => {
     stop();
     stop2();
+    stop3();
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => {

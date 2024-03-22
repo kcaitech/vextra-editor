@@ -20,7 +20,7 @@ import {
     SymbolShape,
     TableView,
     TextShape,
-    adapt2Shape
+    adapt2Shape, PathType, PathShapeView, PathShapeView2
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
@@ -34,6 +34,7 @@ import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/sym
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/utils/svg_parser";
+import { sort_by_layer } from "@/utils/group_ungroup";
 
 export interface Media {
     name: string
@@ -393,7 +394,7 @@ export function insert_imgs(context: Context, t: Function, media: Media[], uploa
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
-        const xy = adjust_content_xy(context, media[0] as any);
+        const xy = adjust_content_xy(context, media[0].frame as any);
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);
@@ -574,6 +575,7 @@ export const list2Tree = (list: any, rootValue: string) => {
 }
 
 export function flattenShapes(shapes: ShapeView[]) {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return shapes; @@@
     return shapes.reduce((result: ShapeView[], item: ShapeView) => {
         if (Array.isArray((item as GroupShapeView).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
@@ -705,7 +707,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         }
     } else if (area === 'controller') { // 点击在选区上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container', 'forward', 'back', 'top', 'bottom'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -734,10 +736,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
         }
         const shapes = context.selection.selectedShapes;
-        if (shapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-            if (permIsEdit(context) && !context.tool.isLable) {
-                contextMenuItems.push('forward', 'back', 'top', 'bottom');
-            }
+        if (shapes.length <= 1) {
             if ((e.target as Element).closest('[data-title="symbol-title"]') || shapes[0].type === ShapeType.Symbol || shapes[0].type === ShapeType.SymbolUnion) { // 点在了组件上
                 const index = contextMenuItems.findIndex((item) => item === 'component');
                 if (index > -1) contextMenuItems.splice(index, 1);
@@ -1102,9 +1101,17 @@ function select_all_for_path_edit(context: Context) {
         console.log('select_all_for_path_edit: !path_shape');
         return;
     }
-    const indexes = path_shape.points.map((_, idx) => idx);
-    context.path.select_points(indexes);
-    context.path.select_sides(indexes);
+    if (path_shape.pathType === PathType.Editable) {
+        const indexes = (path_shape as PathShapeView).points.map((_, idx) => idx);
+        context.path.select_points(0, indexes);
+        context.path.select_sides(0, indexes);
+    } else if (path_shape.pathType === PathType.Multi) {
+        (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+            const indexes = segment.points.map((_, idx) => idx);
+            context.path.select_points(index, indexes);
+            context.path.select_sides(index, indexes);
+        })
+    }
 }
 
 /**
@@ -1159,43 +1166,32 @@ export function component(context: Context) {
 
 export function lower_layer(context: Context, layer?: number) {
     const selection = context.selection;
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
-
-    const page = selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
+    const page = selection.selectedPage!;
 
     const editor = context.editor4Page(page);
-    const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+
+    const result = editor.lowerLayer(sort_by_layer(context, selection.selectedShapes, -1), layer);
 
     if (!result) {
         message('info', context.workspace.t('homerightmenu.unable_lower'));
     }
+
+    return result;
 }
 
-export function uppper_layer(context: Context, layer?: number) {
+export function upper_layer(context: Context, layer?: number) {
     const selection = context.selection;
-
-    if (selection.selectedShapes.length !== 1) {
-        return;
-    }
-
-    const page = selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
+    const page = selection.selectedPage!;
 
     const editor = context.editor4Page(page);
-    const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), layer);
+
+    const result = editor.upperLayer(sort_by_layer(context, selection.selectedShapes), layer);
 
     if (!result) {
         message('info', context.workspace.t('homerightmenu.unable_upper'));
     }
+
+    return result;
 }
 
 export function scale_0(context: Context) {
@@ -1309,5 +1305,9 @@ export const is_editing = (table: TableSelection) => {
 }
 
 export function hidden_selection(context: Context) {
+    if (context.workspace.is_path_edit_mode) {
+        return;
+    }
+
     context.selection.notify(Selection.SELECTION_HIDDEN);
 }

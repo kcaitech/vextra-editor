@@ -42,6 +42,9 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+const partVisible = computed(() => {
+    return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
+})
 
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
@@ -172,9 +175,9 @@ watchEffect(updateControllerView);
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
         :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+        <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :c-frame="props.controllerFrame"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+        <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
             :c-frame="props.controllerFrame">
         </PointsContainer>
         <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"

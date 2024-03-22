@@ -50,6 +50,10 @@ interface Props {
     page: PageView
 }
 
+const emit = defineEmits<{
+    (e: 'closeLoading'): void;
+}>();
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<Props>();
@@ -58,7 +62,6 @@ const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
-const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
@@ -80,7 +83,7 @@ const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
 const rootId = ref<string>('content');
-let isMouseLeftPress: boolean = false; // 针对在contentview里面
+let isMouseLeftPress: boolean = false;
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>(color2string(Page.defaultBGColor));
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
@@ -95,10 +98,11 @@ const overview = ref<boolean>(false);
 
 function page_watcher(...args: any) {
     if (args.includes('backgroundColor')) {
-        const f = props.page.data.backgroundColor;
-        if (f) background_color.value = color2string(f);
+        const backgroundColor = props.page.backgroundColor;
+        if (backgroundColor) {
+            background_color.value = color2string(backgroundColor);
+        }
     }
-    reflush.value++
 }
 
 function rootRegister(mount: boolean) {
@@ -227,6 +231,7 @@ function pageViewDragEnd() {
  * @description 打开右键菜单
  */
 const menu_over_left = ref(0);
+
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
@@ -482,6 +487,13 @@ const closeModal = () => {
     cellSetting.value = false
 }
 
+function updateBackground(page?: PageView) {
+    const pageBackground = (page || props.page)?.backgroundColor;
+    if (pageBackground) {
+        background_color.value = color2string(pageBackground);
+    }
+}
+
 function comment_watcher(type?: number) {
     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
     else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
@@ -572,6 +584,7 @@ function color_watcher(t: number) {
         color_edit_mode.value = mode && !!gradient && selected.length === 1;
     }
 }
+
 // hooks
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
@@ -590,11 +603,13 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     initMatrix(cur);
-    const f = cur.data.backgroundColor;
-    if (f) {
-        background_color.value = color2string(f);
-    }
+    updateBackground(cur);
 })
+
+const closeLoading = () => {
+    emit('closeLoading');
+}
+
 watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -611,6 +626,7 @@ onMounted(() => {
     // props.context.assist.init();
     props.context.user.updateUserConfig();
     rootRegister(true);
+    updateBackground();
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     document.addEventListener('copy', copy_watcher);
@@ -655,16 +671,18 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" />
+        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" @closeLoading="closeLoading"/>
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <SelectionView :context="props.context" :matrix="matrix" />
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
+        <SelectionView :context="props.context" :matrix="matrix"/>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
-            :site="site" ref="contextMenuEl">
+                     :site="site"
+                     ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
+                                      :context="props.context" @close="contextMenuUnmount" :site="site"
+                                      :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
@@ -672,10 +690,8 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <Creator v-if="creatorMode" :context="props.context" />
+        <Creator v-if="creatorMode" :context="props.context"/>
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
-        <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
-        <!-- <MessageBoxBeta :context="props.context"></MessageBoxBeta> -->
     </div>
 </template>

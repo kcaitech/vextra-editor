@@ -44,6 +44,7 @@ function selection_watcher(t?: number) {
     }
 }
 function update_paths() {
+    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     const shapes = props.context.selection.selectedShapes;
     const workspace = props.context.workspace;
     if (!workspace.shouldSelectionViewUpdate) {

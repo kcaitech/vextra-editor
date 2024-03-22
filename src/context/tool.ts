@@ -260,7 +260,7 @@ export class Tool extends WatchableObject {
     }
 
     resetContactApex() {
-        const needNotify = this.m_contact_apex ? true : false;
+        const needNotify = !!this.m_contact_apex;
         this.m_contact_apex = undefined;
         if (needNotify) {
             this.notify(Tool.CHANGE_CONTACT_APEX);

@@ -142,45 +142,6 @@ export class Asssit extends WatchableObject {
         this.m_current_pg = pg;
     }
 
-    set_points_map() {
-        this.clear();
-
-        const path_shape = this.m_context.selection.pathshape;
-        if (!path_shape) {
-            return;
-        }
-
-        const points = path_shape.points;
-
-        const f = path_shape.frame;
-        const m = new Matrix(path_shape.matrix2Root());
-        m.preScale(f.width, f.height);
-
-        for (let i = 0, l = points.length; i < l; i++) {
-            const __p = points[i];
-            const p = m.computeCoord2(__p.x, __p.y);
-
-            const item = { id: __p.id, p };
-            this.m_path_pg.set(i, item);
-
-            const xs = this.m_x_axis.get(p.x);
-            if (xs) {
-                xs.push(item);
-            } else {
-                this.m_x_axis.set(p.x, [item]);
-            }
-
-            const ys = this.m_y_axis.get(p.y);
-            if (ys) {
-                ys.push(item);
-            } else {
-                this.m_y_axis.set(p.y, [item]);
-            }
-        }
-
-        // console.log('assit map:', this.m_path_pg);
-    }
-
     get except() {
         return this.m_except;
     }
@@ -224,38 +185,19 @@ export class Asssit extends WatchableObject {
         this.m_y_axis.clear();
     }
 
-    // private update_collect() {
-    //     this.m_collect_target = [];
-    //     const shapes = this.m_context.selection.selectedShapes;
-    //     if (shapes.length === 1) {
-    //         const container = getClosestContainer((shapes[0]));
-    //         this.m_collect_target = container ? [container] : [];
-    //     } else {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    // private selection_watcher(t?: any) {
-    //     if (t === Selection.CHANGE_SHAPE) {
-    //         this.update_collect();
-    //     } else if (t === Selection.CHANGE_PAGE) {
-    //         this.m_collect_target = [];
-    //     }
-    // }
-
-    init() {
-        // this.m_context.selection.watch(this.selection_watcher.bind(this));
-        // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
-    }
-
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
+        const page = this.m_context.selection.selectedPage!;
+
+        if (!shapes.length) {
+            this.m_collect_target = [page];
+        }
+
         const parents: Map<string, ShapeView> = new Map();
         for (let i = 0; i < shapes.length; i++) {
             const parent = shapes[i].parent!;
             parents.set(parent.id, parent);
         }
 
-        const page = this.m_context.selection.selectedPage!;
         if (parents.has(page.id)) {
             this.m_collect_target = [page];
         }
@@ -591,6 +533,52 @@ export class Asssit extends WatchableObject {
         this.notify(Asssit.UPDATE_ASSIST);
         return target;
     }
+    alignXY2(point: XY) {
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
+            const shape = this.m_shape_inner[i];
+            if (this.m_except.get(shape.id)) {
+                continue;
+            }
+
+            const c_pg = this.m_pg_inner.get(shape.id);
+            if (!c_pg) {
+                continue;
+            }
+
+            modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
+            modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
+        }
+
+        const _self = { id: 'self', p: { x: point.x, y: point.y } };
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x;
+            target.sticked_by_x = true;
+
+            _self.p.x = target.x;
+
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([_self]);
+        }
+
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y;
+            target.sticked_by_y = true;
+
+            _self.p.y = target.y;
+
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
+        }
+
+        return target;
+    }
+
 
     alignPoints(livingXs: number[], livingYs: number[]) {
         if (!this.m_except.size) {

@@ -25,7 +25,7 @@ import { format_value as format } from '@/utils/common';
 interface Props {
     context: Context
     selectionChange: number
-    triggle: any[]
+    trigger: any[]
 }
 interface LayoutOptions {
     s_adapt: boolean
@@ -357,7 +357,7 @@ function selection_change() {
     calc_attri();
 }
 const stop1 = watch(() => props.selectionChange, selection_change);
-const stop3 = watch(() => props.triggle, v => {
+const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
         calc_attri();
     }
@@ -389,10 +389,10 @@ onUnmounted(() => {
             <IconText class="td frame" ticon="H" :text="format(h)" @onchange="onChangeH"
                 :disabled="model_disable_state.height" :context="context" />
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
             </div>
             <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
-                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
             </div>
         </div>
         <div class="tr" :reflush="reflush">

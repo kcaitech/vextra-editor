@@ -95,6 +95,8 @@ function point_mousedown(event: MouseEvent) {
         return;
     }
 
+    props.context.cursor.cursor_freeze(true);
+
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');
@@ -145,8 +147,8 @@ function point_mouseup(event: MouseEvent) {
     document.removeEventListener('mouseup', up);
     const workspace = props.context.workspace;
     workspace.scaling(false);
-    workspace.rotating(false);
     workspace.setCtrl('page');
+    props.context.cursor.cursor_freeze(false);
     props.context.cursor.reset();
 }
 
@@ -292,8 +294,11 @@ function window_blur() {
     }
 
     transporter?.fulfil();
+
     workspace.scaling(false);
     workspace.setCtrl('page');
+
+    props.context.cursor.cursor_freeze(false);
     props.context.cursor.reset();
 
     document.removeEventListener('mousemove', move);
