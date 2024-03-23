@@ -1,4 +1,3 @@
-
 <template>
     <div class="team">
         <div class="left">
@@ -138,20 +137,37 @@ watch(teamName, (newvalue) => {
     window.document.title = newvalue + ' - ' + t('product.name')
 })
 
-onMounted(() => {
-    const x = sessionStorage.getItem('activateitem')
-    if (x) {
-        itemid.value = parseInt(x)
-    }
+function resizechange() {
     const items = document.querySelectorAll('.item')
     const rect = items[itemid.value].getBoundingClientRect()
     elwidth.value = rect.width
     elleft.value = rect.x
+}
 
+
+
+window.onresize = () => {
+    resizechange()
+}
+
+const overel = new ResizeObserver((entries) => {
+    resizechange()
+})
+
+onMounted(() => {
+    const x = sessionStorage.getItem('activateitem')
+    const el = document.querySelector('.el-aside')!
+    if (x) {
+        itemid.value = parseInt(x)
+    }
+    resizechange()
     window.document.title = teamName.value + ' - ' + t('product.name')
 })
 
 onUnmounted(() => {
+    window.onresize = null
+    const el = document.querySelector('.el-aside')!
+    overel.unobserve(el)
     sessionStorage.setItem('activateitem', '0')
 })
 </script>
