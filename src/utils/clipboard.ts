@@ -347,7 +347,6 @@ export class Clipboard {
             if (!data) {
                 throw new Error('No valid data on clipboard.');
             }
-
             this.paste_clipboard_items(data, t, xy);
         } catch (error) {
             console.log('paste_async error:', error);
@@ -400,8 +399,14 @@ export class Clipboard {
 
         const type = (function () {
             const types = d.types; // 剪切板内的数据类型
+
+            if (types.length > 1) {
+
+            }
+
             for (let i = 0; i < types.length; i++) {
                 const type = types[i];
+
                 if (/image/.test(type)) {
                     return 'image';
                 } else if (type === 'text/plain') {
@@ -1034,7 +1039,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
-    if (!r) {
+    if (!r || !r.length) {
         return;
     }
 
@@ -1267,24 +1272,18 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
 
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
-        let _s = s;
-        let p = s.parent;
-        if (!p) {
-            continue;
-        }
+        // let _s = s;
+        let p = s.parent!;
 
-        if (p.type === ShapeType.SymbolUnion) {
-            _s = p;
-            p = p.parent;
-        }
-
-        if (!p) {
-            continue;
-        }
+        //
+        // if (p.type === ShapeType.SymbolUnion) {
+        //     _s = p;
+        //     p = p.parent!;
+        // }
 
         const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (_s.id === childs[j].id) {
+            if (s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;
