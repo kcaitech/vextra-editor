@@ -3,8 +3,6 @@ import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 
-const lists = ref<any[]>([])
-
 //获取服务器最近列表
 export async function getRecentlydata() {
     try {

@@ -71,6 +71,16 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
                 loginshow.value = false
+            } else if (linfo.code === -1) {
+                isLoading.value = false
+                ElMessage.error({ duration: 1500, message: '服务异常，请稍后再试' })
+                nextTick(() => {
+                    wxcode()
+                    const login: any = document.querySelector('iframe')
+                    login.addEventListener('load', function () {
+                        isLoading.value = false
+                    })
+                })
             }
         }
     }).catch((linfo: any) => {
@@ -85,7 +95,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     isLoading.value = false
                 })
             })
-
         }
 
     })
@@ -146,7 +155,7 @@ function wxcode() {
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         state: "STATE",
         style: "",
-        href:'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
+        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
     })
 }
 
@@ -158,7 +167,6 @@ const handleOpenNewWindow = (routeName: string) => {
 }
 
 watchEffect(() => {
-    // if (isMobileDevice()) return
     if (loginshow.value) {
         setTimeout(() => {
             isLoading.value = true

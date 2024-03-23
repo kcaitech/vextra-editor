@@ -25,7 +25,7 @@ const joinTeam = () => import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
-const mHome = () => import('@/components/Mobile/mHome.vue')
+const MobileHome = () => import('@/components/Mobile/index.vue')
 
 let _t: any = i18n.global
 
@@ -146,8 +146,8 @@ const routes = [
     },
     {
         path: "/files",
-        name: isMobileDevice() ? "mHome" : "apphome",
-        component: isMobileDevice() ? mHome : Apphome,
+        name: isMobileDevice() ? "MobileHome" : "apphome",
+        component: isMobileDevice() ? MobileHome : Apphome,
         redirect: '/files/recently',
         children: children
     },

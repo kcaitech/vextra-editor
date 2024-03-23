@@ -1,13 +1,12 @@
 <template>
     <div class="list">
-        <div class="list-item" v-for=" item  in lists" :key="item.document.id">
-            {{ item.document.name }}
-        </div>
+        <FilesItem :data="lists"></FilesItem>
     </div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { getDoucment } from './files'
+import FilesItem from './FilesItem.vue';
 
 const lists = ref<any[]>([])
 
@@ -19,5 +18,6 @@ onMounted(async () => {
 .list {
     height: 100%;
     overflow-y: scroll;
+    padding: 0 14px;
 }
 </style>

@@ -19,9 +19,7 @@
                 </div>
             </div>
             <div class="content">
-                <KeepAlive>
-                    <component :is="tabs.get(activebnt) || Home" class="tab"></component>
-                </KeepAlive>
+                <component :is="tabs.get(activebnt)||Home"></component>
             </div>
         </div>
         <div class="footer">
@@ -35,13 +33,13 @@
         </div>
     </div>
 </template>
+
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { RouterView } from 'vue-router';
-import Home from './Home.vue';
-import MyFiles from './MyFiles.vue';
+import Home from './HomePage.vue';
+import MyFile from './MyFile.vue';
 import Team from './Team.vue';
 import About from './About.vue';
+import { ref } from 'vue';
 
 const bntdata = [
     { label: '首页', value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
@@ -50,16 +48,15 @@ const bntdata = [
     { label: '我的', value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
 ]
 
-const activebnt = ref<string>('Home')
+const activebnt = ref('Home')
 const inputvalue = ref<string>('')
 
 const tabs = new Map([
     ['Home', Home],
-    ['MyFiles', MyFiles],
+    ['MyFiles', MyFile],
     ['Team', Team],
     ['About', About],
-])
-
+]);
 
 </script>
 
@@ -74,23 +71,30 @@ const tabs = new Map([
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    background-color: #F5F5F5;
+    background-color: #FAFAFA;
     overflow: hidden;
 
     .header {
         display: flex;
+        align-items: center;
+        padding: 0 14px;
         width: 100%;
         min-height: 44px;
         position: sticky;
         top: 0;
-        background-color: #F5F5F5;
+        background-color: #FAFAFA;
+        box-sizing: border-box;
         z-index: 1;
+
+        img {
+            width: 165px;
+            height: 24px;
+        }
     }
 
     .main {
         flex: 1;
         overflow: hidden;
-        padding: 0 14px;
         position: relative;
 
         .search {
@@ -98,10 +102,12 @@ const tabs = new Map([
             align-items: center;
             justify-content: space-between;
             gap: 14px;
+            padding: 0 14px;
             position: sticky;
             width: 100%;
             height: 54px;
-            background-color: #F5F5F5;
+            background-color: #FAFAFA;
+            box-sizing: border-box;
             z-index: 1;
 
             .search-input {
@@ -176,6 +182,7 @@ const tabs = new Map([
         min-height: 58px;
         font-size: 10px;
         font-weight: 500;
+        background-color: #FFFFFF;
         color: #BFBFBF;
         border-width: 1px 0px 0px 0px;
         border-style: solid;
@@ -186,7 +193,7 @@ const tabs = new Map([
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
 
             .icon {
                 width: 24px;
