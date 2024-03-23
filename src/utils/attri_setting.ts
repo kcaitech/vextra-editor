@@ -277,10 +277,9 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     return result;
 }
 export function is_rect(shape: ShapeView) {
-    return (shape instanceof PathShapeView)
-        && shape.isClosed
-        && shape.points.length === 4
-        && [ShapeType.Rectangle, ShapeType.Artboard].includes(shape.type);
+    return shape.isClosed
+        && (shape as any)?.points?.length === 4
+        && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
 }
 export function get_box(shape: ShapeView) {
     const parent = shape.parent!;

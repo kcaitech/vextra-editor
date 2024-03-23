@@ -127,33 +127,43 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     } else {
         const stickness = props.context.assist.stickness;
-        const target = props.context.assist.point_match(p2);
-        if (!target) return;
-        if (stickedX) {
-            if (Math.abs(p2.x - sticked_x_v) >= stickness) {
-                stickedX = false;
-            } else {
-                if (pre_target_x === target.x) {
-                    p2.x = sticked_x_v;
+        if (cur_ctrl_type === CtrlElementType.RectTop || cur_ctrl_type === CtrlElementType.RectBottom) {
+            const x1 = submatrix.computeCoord2(props.cFrame[0].x, 0).x;
+            const x2 = submatrix.computeCoord2(props.cFrame[2].x, 0).x;
+            const target = props.context.assist.alignY(p2, [{ x: x1, y: 0 }, { x: x2, y: 0 }]);
+            if (!target) return;
+
+            if (stickedY) {
+                if (Math.abs(p2.y - sticked_y_v) >= stickness) {
+                    stickedY = false;
                 } else {
-                    modify_fix_x(p2, target.x);
+                    if (pre_target_y === target.y) {
+                        p2.y = sticked_y_v;
+                    } else {
+                        modify_fix_y(p2, target.y);
+                    }
                 }
+            } else if (target.sticked_by_y) {
+                modify_fix_y(p2, target.y);
             }
-        } else if (target.sticked_by_x) {
-            modify_fix_x(p2, target.x);
-        }
-        if (stickedY) {
-            if (Math.abs(p2.y - sticked_y_v) >= stickness) {
-                stickedY = false;
-            } else {
-                if (pre_target_y === target.y) {
-                    p2.y = sticked_y_v;
+        } else if (cur_ctrl_type === CtrlElementType.RectLeft || cur_ctrl_type === CtrlElementType.RectRight) {
+            const y1 = submatrix.computeCoord2(0, props.cFrame[0].y).y;
+            const y2 = submatrix.computeCoord2(0, props.cFrame[3].y).y;
+            const target = props.context.assist.alignX(p2, [{ x: 0, y: y1 }, { x: 0, y: y2 }]);
+            if (!target) return;
+            if (stickedX) {
+                if (Math.abs(p2.x - sticked_x_v) >= stickness) {
+                    stickedX = false;
                 } else {
-                    modify_fix_y(p2, target.y);
+                    if (pre_target_x === target.x) {
+                        p2.x = sticked_x_v;
+                    } else {
+                        modify_fix_x(p2, target.x);
+                    }
                 }
+            } else if (target.sticked_by_x) {
+                modify_fix_x(p2, target.x);
             }
-        } else if (target.sticked_by_y) {
-            modify_fix_y(p2, target.y);
         }
         const align = props.context.user.isPixelAlignMent;
         if (align) {

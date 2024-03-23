@@ -1059,7 +1059,7 @@ a {
                         width: 100%;
                         height: 36px;
                         border-radius: 6px;
-                        padding-left: 46px;
+                        padding-left: 44px;
                         box-sizing: border-box;
 
                         .right {

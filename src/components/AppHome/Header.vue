@@ -254,7 +254,8 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                         <Loading :size="18" :color="'#1878F5'" />
                     </el-icon>
                     <el-icon v-else size="18">
-                        <svg-icon icon-class="search-icon" :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
+                        <svg-icon icon-class="search-icon"
+                            :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>
@@ -268,7 +269,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showinform(bell!, 320)">
-                    <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
+                    <svg-icon :icon-class="showInForm ? 'bell-select' : 'bell'"></svg-icon>
                     <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
                     </div>
                 </div>
@@ -284,12 +285,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
         <Teleport to="body">
             <div v-if="menuUser" class="userinfo" :style="{ top: rect_y + 'px', left: rect_x + 'px' }">
-                <div @click="userinfo"><el-icon size="20">
-                        <User />
-                    </el-icon>{{ t('system.personal_center') }}</div>
-                <div @click="loginout"><el-icon size="20">
-                        <SwitchButton />
-                    </el-icon>{{ t('system.login_out') }}</div>
+                <div @click="userinfo">
+                    <svg-icon icon-class="user"></svg-icon>
+                    {{ t('system.personal_center') }}
+                </div>
+                <div @click="loginout">
+                    <svg-icon icon-class="exit"></svg-icon>
+                    {{ t('system.login_out') }}
+                </div>
             </div>
         </Teleport>
     </div>
@@ -297,6 +300,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 <style lang="scss" scoped>
 .menu-select {
     background-color: rgba(24, 120, 245, 0.1);
+    color: #1878F5 !important;
 }
 
 .menu-hover:hover {
@@ -436,6 +440,11 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 
         &:hover {
             background-color: rgba(243, 243, 245, 1);
+        }
+
+        svg{
+            width: 16px;
+            height: 16px;
         }
     }
 

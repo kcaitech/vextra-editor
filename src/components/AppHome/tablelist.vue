@@ -556,7 +556,8 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__header-cell) {
-    font-weight: 500 !important;
+    font-weight: 400 !important;
+    color:#A8A8A8 !important;
 }
 
 :deep(.el-table-v2__row) {
@@ -596,7 +597,9 @@ watchEffect(() => {
 
 :deep(.selected) {
     background-color: rgba(24, 120, 245, 0.1) !important;
-
+    .el-icon:hover{
+        background: rgba(24, 120, 245, 0.1) !important;
+    }
 }
 
 :deep(span) {

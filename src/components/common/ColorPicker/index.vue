@@ -1099,6 +1099,7 @@ let elpy: any
 let mx: any
 let my: any
 
+
 function startDrag(e: MouseEvent) {
     if (!props.cell) return
     isDragging = true
@@ -1111,6 +1112,7 @@ function startDrag(e: MouseEvent) {
     mx = e.offsetX
     my = e.offsetY
     document.addEventListener('mousemove', onDrag)
+
 }
 
 function onDrag(e: MouseEvent) {
@@ -1159,7 +1161,7 @@ onUnmounted(() => {
                     <div class="color-type">{{ t(`attr.fill`) }}</div>
                     <!-- <svg-icon icon-class="down"></svg-icon> -->
                 </div>
-                <div @click="removeCurColorPicker" class="close">
+                <div @click.stop="removeCurColorPicker" @mousedown.stop class="close">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
