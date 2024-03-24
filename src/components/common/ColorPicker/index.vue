@@ -826,7 +826,6 @@ function update(color = props.color) {
     if (sleep) {
         return;
     }
-
     const { red, green, blue, alpha } = color;
     rgba.alpha = alpha;
     update_rgb(red, green, blue);
