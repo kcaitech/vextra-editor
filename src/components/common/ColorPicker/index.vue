@@ -826,7 +826,6 @@ function update(color = props.color) {
     if (sleep) {
         return;
     }
-
     const { red, green, blue, alpha } = color;
     rgba.alpha = alpha;
     update_rgb(red, green, blue);
@@ -895,6 +894,7 @@ const gradient_line = ref<HTMLDivElement>();
 
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
+    if(sleep) return;
     stop_els.value.length = 0;
     if (!props.gradient || props.fillType !== FillType.Gradient) {
         return;
@@ -1126,6 +1126,7 @@ function menu_watcher(t: any, id: string) {
 
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
+        gradient_channel_style.value = gradient_channel_generator(props.gradient);
         update_stops(props.context.color.selected_stop);
     } else if (t === ColorCtx.STOP_DELETE) {
         delete_gradient_stop();

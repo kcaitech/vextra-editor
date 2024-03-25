@@ -1,4 +1,4 @@
-import { Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView } from "@kcdesign/data";
+import { Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView, TextAttr } from "@kcdesign/data";
 import { Selection } from "./selection"
 
 export interface TextLocate {
@@ -13,6 +13,7 @@ export class TextSelectionLite extends WatchableObject {
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
     private m_selection: Selection;
+    private m_textAttr: TextAttr | undefined;
 
     constructor(selection: Selection) {
         super();
@@ -114,5 +115,13 @@ export class TextSelectionLite extends WatchableObject {
             this.m_cursorAtBefore = false;
             this.notify(Selection.CHANGE_TEXT);
         }
+    }
+
+    setTextAttr(attr: TextAttr) {
+        this.m_textAttr = attr;
+    }
+
+    get getTextAttr () {
+        return this.m_textAttr || new TextAttr();
     }
 }

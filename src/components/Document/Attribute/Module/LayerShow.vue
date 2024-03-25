@@ -45,6 +45,8 @@ function edit_visible() {
 const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolView>();
 const shape = ref<ShapeView>();
+const dlt_value = ref<any>(true);
+
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
@@ -53,13 +55,13 @@ const isBind = () => {
         selectId.value = [shapes[0].id];
         is_bind.value = vari;
         if (vari) {
+            dlt_value.value = vari.value;
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
         }
     }
 }
-const dlt_value = ref<any>(true);
 
 //默认值
 function dlt_change(v: number) {

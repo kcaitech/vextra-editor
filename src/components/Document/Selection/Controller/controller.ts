@@ -8,7 +8,6 @@ import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
-import { fourWayWheel, Wheel } from "@/utils/wheel";
 import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
@@ -16,18 +15,12 @@ import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import {
-    PointsOffset, get_apex, pre_render_assist_line
-} from '@/utils/assist';
-import { Asssit } from '@/context/assist';
-import {
     add_blur_for_window,
     check_drag_action,
     down_while_is_text_editing,
-    gen_assist_target,
     gen_offset_points_map,
     is_ctrl_element,
     is_mouse_on_content,
-    is_rid_stick,
     modify_down_position,
     remove_blur_from_window,
     remove_move_and_up_from_document,
@@ -36,7 +29,6 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
-import { migrate_once } from "@/utils/migrate";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 
@@ -47,13 +39,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
-    let wheel: Wheel | undefined = undefined;
     let shapes: ShapeView[] = [];
     let need_update_comment: boolean = false;
-    let speed: number = 0;
     const selection = context.selection;
     const workspace = context.workspace;
-    let offset_map: PointsOffset | undefined;
     const directionCalc: DirectionCalc = new DirectionCalc();
 
     let asyncTransfer: AsyncTransfer | undefined = undefined;
@@ -299,7 +288,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         shapes = selection.selectedShapes;
 
-        wheel = fourWayWheel(context, undefined, startPositionOnPage);
+        // wheel = fourWayWheel(context, undefined, startPositionOnPage);
         // workspace.setCtrl('controller');
     }
 
@@ -362,160 +351,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             isDragging = true;
         }
-    }
-
-    function update_assist_by_workspace_change(event: MouseEvent) {
-        matrix.reset(workspace.matrix.inverse);
-
-        context.assist.set_trans_target(shapes);
-
-        const root = context.workspace.root;
-
-        const xy = matrix.computeCoord2(event.clientX - root.x, event.clientY - root.y);
-
-        offset_map = gen_offset_points_map(shapes, xy);
-    }
-
-    function transform(start: ClientXY, end: ClientXY, assit = true) {
-        const ps: PageXY = matrix.computeCoord3(start);
-        const pe: PageXY = matrix.computeCoord3(end);
-        let update_type = 0;
-
-        if (!asyncTransfer) {
-            return update_type;
-        }
-
-        if (!assit) {
-            asyncTransfer.trans(ps, pe);
-            context.assist.notify(Asssit.CLEAR);
-            update_type = 3;
-            return update_type;
-        }
-
-        update_type = trans_assistant(asyncTransfer, ps, pe);
-
-        migrate_once(context, asyncTransfer, shapes, end);
-
-        return update_type;
-    }
-
-    let pre_target_x: number;
-    let pre_target_y: number;
-    let stickedX: boolean = false;
-    let stickedY: boolean = false;
-
-    // let count: number = 0, times: number = 0; // 性能测试
-    function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
-        // const s1 = Date.now();
-        let update_type = 3;
-
-        if (speed > 5) { // 如果速度过快，不进行移动辅助
-            asyncTransfer.trans(ps, pe);
-            context.assist.notify(Asssit.CLEAR);
-            return update_type;
-        }
-
-        if (!offset_map) {
-            return update_type;
-        }
-
-        let need_multi = 0;
-        const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-        const len = shapes.length;
-        const shape = shapes[0];
-
-        const target = gen_assist_target(context, shapes, len > 1, offset_map, pe);
-        if (!target) {
-            return update_type;
-        }
-
-        if (stickedX) {
-            if (is_rid_stick(context, ps.x, pe.x)) { // 挣脱吸附
-                stickedX = false;
-            } else {
-                if (pre_target_x === target.x) { // 还是原先的吸附点
-                    pe.x = ps.x;
-                    update_type -= 1;
-                    need_multi += 1;
-                } else if (target.sticked_by_x) { // 需要转移到另一个吸附点
-                    modify_fix_x(target);
-                }
-            }
-        } else if (target.sticked_by_x) { // 吸附
-            modify_fix_x(target);
-        }
-
-        if (stickedY) {
-            if (is_rid_stick(context, ps.y, pe.y)) {
-                stickedY = false;
-            } else {
-                if (pre_target_y === target.y) {
-                    pe.y = ps.y;
-                    stick.dy = 0;
-                    update_type -= 2;
-                    need_multi += 2;
-                } else if (target.sticked_by_y) {
-                    modify_fix_y(target);
-                }
-            }
-        } else if (target.sticked_by_y) {
-            modify_fix_y(target);
-        }
-
-        if (stick.sticked_x || stick.sticked_y) {
-            asyncTransfer.stick(stick.dx, stick.dy);
-        } else {
-            asyncTransfer.trans(ps, pe);
-        }
-
-        if (need_multi) {
-            pre_render_assist_line(context, len > 1, shape, shapes);
-        }
-        // times++; // 性能测试
-        // count += Date.now() - s1;
-        // if (times >= 20) {
-        //     console.log('一次辅助线从计算到渲染总共用时', count / times); // 大于10ms 则能感觉明显卡顿
-        //     count = 0;
-        //     times = 0;
-        // }
-        return update_type;
-
-        function modify_fix_x(target: any) {
-            pre_target_x = target.x;
-            const apex = get_apex(context, shape, len > 1, target.alignX); // 确定吸附点位置
-            const trans_x = target.x - apex; // 计算到达吸附点需要的距离
-            stick.dx = trans_x;
-            stick.sticked_x = true;
-            stick.dy = pe.y - ps.y;
-            pe.x = ps.x + trans_x;
-            const t = workspace.matrix.computeCoord3(pe);
-            startPosition.x = t.x;
-            update_type -= 1;
-            stickedX = true;
-            need_multi += 1;
-        }
-
-        function modify_fix_y(target: any) {
-            pre_target_y = target.y;
-            const apex = get_apex(context, shape, len > 1, target.alignY);
-            const trans_y = target.y - apex;
-            stick.dy = trans_y;
-            stick.sticked_y = true;
-            pe.y = ps.y + trans_y;
-            if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-            const t = workspace.matrix.computeCoord3(pe);
-            startPosition.y = t.y;
-            update_type -= 2;
-            stickedY = true;
-            need_multi += 2;
-        }
-    }
-
-    function reset_sticked() {
-        pre_target_x = Infinity;
-        pre_target_y = Infinity;
-        stickedX = false;
-        stickedY = false;
     }
 
     function mouseup(e: MouseEvent) {
@@ -599,8 +434,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function workspace_watcher(t: number, param1: MouseEvent) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
-        } else if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
-            update_assist_by_workspace_change(param1);
         }
     }
 
@@ -614,6 +447,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             isDragging = false;
             transporter?.fulfil();
+            transporter = undefined;
 
             remove_move_and_up_from_document(mousemove, mouseup);
         }
