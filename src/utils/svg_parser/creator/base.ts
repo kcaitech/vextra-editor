@@ -90,7 +90,7 @@ export class BaseCreator extends BaseTreeNode {
         }
         if (!(name in shapeNameCountMap)) shapeNameCountMap[name] = 0;
         const number = ++shapeNameCountMap[name]
-        return name + (number > 1 ? number : "")
+        return `${name} ${number > 1 ? number : ""}`
     }
 
     /**
