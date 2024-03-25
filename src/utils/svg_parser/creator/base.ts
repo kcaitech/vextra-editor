@@ -303,7 +303,12 @@ export class BaseCreator extends BaseTreeNode {
         if (!fill) fill = this.localAttributes["fill"];
 
         const fillAttrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
-        if (!fill && this.attributes[fillAttrName] === undefined) fill = "black"; // 默认填充黑色
+        // 默认填充黑色
+        if (!fill && this.attributes[fillAttrName] === undefined
+            && this.htmlElement?.tagName !== "svg" && this.htmlElement?.tagName !== "g"
+        ) {
+            fill = "black"
+        }
 
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
         let fillColor = parseFillColor(fill, fillOpacity)
