@@ -4,7 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { SymbolView } from '@kcdesign/data';
+import { SymbolView, TextShapeView } from '@kcdesign/data';
 import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
@@ -166,7 +166,10 @@ function list_change(data: string[]) {
     const page = props.context.selection.selectedPage;
     if (page) {
         const shape = page.getShape(data[0]);
-        if (shape) default_value.value = shape.name;
+        if(shape) {
+            const value = shape instanceof TextShapeView ? shape.text.getText(0, Number.MAX_VALUE) : shape.name;
+           default_value.value = value;
+        }
     }
 }
 

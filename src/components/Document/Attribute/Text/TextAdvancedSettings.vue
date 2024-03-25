@@ -68,6 +68,9 @@ const onSelectText = (icon: TextBehaviour) => {
   } else {
     editor.setTextBehaviourMulti(props.textShapes, icon);
   }
+  const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.textBehaviour = icon;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon;
@@ -83,6 +86,9 @@ const onSelectCase = (icon: TextTransformType) => {
   } else {
     editor.setTextTransformMulti(props.textShapes, icon);
   }
+  const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.transform = icon;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const setRowHeight = () => {
@@ -109,6 +115,10 @@ const setRowHeight = () => {
       textFormat()
     }
   }
+  const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.maximumLineHeight = Number(rowHeight.value);
+    textAttr.minimumLineHeight = Number(rowHeight.value);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const setWordSpace = () => {
@@ -138,6 +148,9 @@ const setWordSpace = () => {
       textFormat()
     }
   }
+  const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.kerning = Number(wordSpace.value);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const setParagraphSpace = () => {
@@ -161,6 +174,9 @@ const setParagraphSpace = () => {
       textFormat()
     }
   }
+  const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.paraSpacing = Number(paragraphSpace.value);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 //判断是否选择文本框还是光标聚焦了

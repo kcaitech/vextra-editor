@@ -4,6 +4,7 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import renderCutout from './renderCutout.vue';
 import { Selection } from '@/context/selection';
+import { throttle } from 'lodash';
 
 const props = defineProps<{
     context: Context
@@ -14,7 +15,7 @@ const props = defineProps<{
 const cutoutShapes = ref<CutoutShapeView[]>([]);
 const reflush = ref(0);
 
-const getCutoutShape = () => {
+const _getCutoutShape = () => {
     const page = props.context.selection.selectedPage;
     if (page) {
         cutoutShapes.value = Array.from(page.cutoutList);
@@ -23,6 +24,7 @@ const getCutoutShape = () => {
         })
     }
 }
+const getCutoutShape = throttle(_getCutoutShape, 200);
 const watcher = (...args: any[]) => {
     if (args.includes('shape-frame')) return;
     getCutoutShape();
@@ -33,9 +35,12 @@ const stopWatch = watch(() => props.data, (value, old) => {
 })
 
 const selected_watcher = (t: number) => {
-if (t === Selection.CHANGE_SHAPE) {
-        getCutoutShape();
+    if (t === Selection.CHANGE_SHAPE) {
         watch_shapes();
+        props.context.nextTick(props.data, () => {
+            _getCutoutShape();
+        })
+        getCutoutShape();
     }
 }
 

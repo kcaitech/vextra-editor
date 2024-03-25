@@ -36,7 +36,7 @@ const getCutoutPath = (args?: any) => {
     const borPath = genRectPath(framePoint);
     cutoutPath.value = borPath;
 }
-const _getCutoutPath = throttle(getCutoutPath, 50);
+const _getCutoutPath = throttle(getCutoutPath, 20);
 
 const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
