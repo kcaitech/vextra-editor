@@ -347,7 +347,6 @@ export class Clipboard {
             if (!data) {
                 throw new Error('No valid data on clipboard.');
             }
-
             this.paste_clipboard_items(data, t, xy);
         } catch (error) {
             console.log('paste_async error:', error);
@@ -356,6 +355,43 @@ export class Clipboard {
     }
 
     paste_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
+        if (data.length > 1) {
+            let h: any = undefined;
+            let p: any = undefined;
+
+            for (let i = 0; i < data.length; i++) {
+                const d = data[i];
+                if (d.type === 'text/html') {
+                    h = d;
+                } else if (d.type === 'text/plain') {
+                    p = d;
+                }
+            }
+
+            if (h && p) {
+                let successFirst = false;
+
+                h.getAsString((val: any) => {
+                    const html = decode_html(val);
+                    this.modify_cache('inner-html', val);
+                    successFirst =  handle_text_html_string(this.context, html);
+                    if (!successFirst) {
+                        return;
+                    }
+
+                    const plain = get_plain(data);
+                    if (!plain) {
+                        return;
+                    }
+                    plain.getAsString(text => {
+                        this.modify_cache('plain-text', text);
+                        clipboard_text_plain2(this.context, text, xy);
+                    });
+                });
+
+                return;
+            }
+        }
         if (is_html(data)) {
             const html = get_html(data);
             if (!html) {
@@ -398,10 +434,19 @@ export class Clipboard {
 
         const d = data[0]; // 剪切板内的数据
 
+        const __this = this;
+
         const type = (function () {
             const types = d.types; // 剪切板内的数据类型
+
+            if (types.length > 1 && types.includes('text/plain') && types.includes('text/html')) {
+                __this.couple(__this.context, d, xy);
+                return;
+            }
+
             for (let i = 0; i < types.length; i++) {
                 const type = types[i];
+
                 if (/image/.test(type)) {
                     return 'image';
                 } else if (type === 'text/plain') {
@@ -418,6 +463,32 @@ export class Clipboard {
             clipboard_text_plain(this.context, d, xy);
         } else if (type === 'text/html') {
             clipboard_text_html(this.context, d, xy);
+        }
+    }
+
+    async couple(context: Context, data: any, xy?: PageXY) {
+        try {
+            // 解析data
+            const val = await data.getType('text/html');
+
+            if (!val) {
+                throw new Error('invalid value');
+            }
+
+            let text_html = await val.text();
+            text_html = decode_html(text_html);
+
+            if (!(text_html && typeof text_html === 'string')) {
+                throw new Error('read failure');
+            }
+
+           const successFirst = handle_text_html_string(context, text_html, xy);
+            if (!successFirst) {
+                clipboard_text_plain(this.context, data, xy);
+            }
+        } catch (error) {
+            console.log(error);
+            message('info', context.workspace.t('clipboard.invalid_data'));
         }
     }
 
@@ -904,10 +975,8 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             throw new Error('invalid source');
         }
 
-        const page = context.selection.selectedPage;
-        if (!page) {
-            return;
-        }
+        const page = context.selection.selectedPage!;
+
         const page_data = adapt2Shape(page) as Page;
 
         let insert_result: { shapes: Shape[] } | false = false;
@@ -960,7 +1029,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         } else {
             insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
             if (!insert_result) {
-                return;
+                return false;
             }
         }
 
@@ -980,7 +1049,10 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         after_import(context, medias);
     } else {
         message('info', context.workspace.t('clipboard.invalid_data'));
+        return false;
     }
+
+    return true;
 }
 
 function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
@@ -1034,7 +1106,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
-    if (!r) {
+    if (!r || !r.length) {
         return;
     }
 
@@ -1267,24 +1339,18 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
 
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
-        let _s = s;
-        let p = s.parent;
-        if (!p) {
-            continue;
-        }
+        // let _s = s;
+        let p = s.parent!;
 
-        if (p.type === ShapeType.SymbolUnion) {
-            _s = p;
-            p = p.parent;
-        }
-
-        if (!p) {
-            continue;
-        }
+        //
+        // if (p.type === ShapeType.SymbolUnion) {
+        //     _s = p;
+        //     p = p.parent!;
+        // }
 
         const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (_s.id === childs[j].id) {
+            if (s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;

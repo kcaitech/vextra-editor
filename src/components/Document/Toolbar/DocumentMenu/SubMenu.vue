@@ -132,7 +132,7 @@ onMounted(() => {
 .subMenu {
   position: absolute;
   z-index: 999;
-  left: 138px;
+  left: 136px;
   top: -2px;
   color: var(--theme-color-anti);
   width: 157px;
@@ -143,6 +143,7 @@ onMounted(() => {
   background-color: #262626;
   overflow: hidden;
   padding: 4px 0;
+  border-left: 2px solid;
 
   .line {
     width: 100%;
