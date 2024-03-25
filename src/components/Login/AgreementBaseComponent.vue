@@ -1,7 +1,8 @@
 <template>
+    <div style="height: 100%;width: 100%;">
     <div class="header-container">
         <div class="kc-header">
-            <div class="logo" @click="$router.push({ path: '/' })">
+            <div class="logo" @click="$router.go(-1)">
                 <img class="logo-img" :src=avatar alt="ProtoDesign">
             </div>
             <button class="loginbnt" v-if="!isMobile" type="button" @click.stop="router.push({ name: 'login' })">
@@ -16,6 +17,7 @@
     <div class="footer-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
         <Footer />
     </div>
+</div>
 </template>
 <script setup lang="ts">
 import avatar from '@/assets/pd-logo-svg.svg'

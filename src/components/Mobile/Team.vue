@@ -13,8 +13,6 @@ const teamlist = ref<any[]>([])
 
 onMounted(async () => {
    teamlist.value = await GetteamList()
-   console.log(teamlist.value);
-
 })
 </script>
 <style lang="scss" scoped>

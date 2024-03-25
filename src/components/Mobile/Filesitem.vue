@@ -1,5 +1,5 @@
 <template>
-    <div class="list-item" v-for=" item  in props.data" :key="item.document.id">
+    <div class="list-item" v-for=" item in props.data" :key="item.document.id" @click="emits('openfile',item.document.id)">
         <div class="image">
             <svg-icon icon-class="file-default-icon"></svg-icon>
         </div>
@@ -8,12 +8,13 @@
                 <span class="name"> {{ item.document.name }}</span>
                 <span class="time">{{ item.document_access_record.last_access_time }}</span>
             </div>
-            <div class="right">
+            <div class="right" @click.stop>
                 <div class="share">
                     <svg-icon icon-class="mShare"></svg-icon>
                 </div>
-                <div class="star">
-                    <svg-icon icon-class="mStar"></svg-icon>
+                <div class="star" @click="emits('changeStar', item.document.id, item.document_favorites.is_favorite)">
+                    <svg-icon :style="{ padding: item.document_favorites.is_favorite ? '3.67px 3.27px' : '' }"
+                        :icon-class="item.document_favorites.is_favorite ? 'mStar-select' : 'mStar'"></svg-icon>
                 </div>
             </div>
         </div>
@@ -21,16 +22,19 @@
     <Loading v-if="loading" :size="20"></Loading>
     <div v-if="showtips" class="null"><span>当前列表没有文件</span></div>
 </template>
+
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { onMounted } from 'vue';
 import Loading from '../common/Loading.vue';
-import { onBeforeMount } from 'vue';
-
 
 const props = defineProps<{
     data: any[],
 }>();
+
+const emits = defineEmits<{
+    (e: 'changeStar', docID: number, b: boolean): void;
+    (e:'openfile',docID:number):void;
+}>()
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
@@ -43,12 +47,13 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
-onBeforeMount(() => {
+const test=()=>{
     console.log('111');
-
-})
+    
+}
 
 </script>
+
 <style lang="scss" scoped>
 .null {
     display: flex;
@@ -108,8 +113,8 @@ onBeforeMount(() => {
                 font-weight: 400;
                 color: #8C8C8C;
                 overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+                white-space: nowrap;
+                text-overflow: ellipsis;
             }
         }
 
@@ -129,6 +134,7 @@ onBeforeMount(() => {
                 svg {
                     width: 24px;
                     height: 24px;
+                    box-sizing: border-box;
                 }
             }
 

@@ -24,7 +24,7 @@
         </div>
         <div class="footer">
             <div class="bnt" :class="{ 'bnt-selct': activebnt === item.value }" v-for="(item, index) in bntdata"
-                :key=index @click="activebnt = item.value">
+                :key=index @click="changetab(item.value)">
                 <div class="icon">
                     <svg-icon :icon-class="activebnt === item.value ? item.icon.select : item.icon.normal"></svg-icon>
                 </div>
@@ -48,7 +48,7 @@ const bntdata = [
     { label: '我的', value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
 ]
 
-const activebnt = ref('Home')
+const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
 const inputvalue = ref<string>('')
 
 const tabs = new Map([
@@ -57,6 +57,11 @@ const tabs = new Map([
     ['Team', Team],
     ['About', About],
 ]);
+
+const changetab = (tab: string) => {
+    activebnt.value = tab
+    sessionStorage.setItem('selectTab',tab)
+}
 
 </script>
 

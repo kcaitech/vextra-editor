@@ -83,6 +83,25 @@ export async function getDoucment() {
     }
 }
 
+
+//更改标星状态
+export async function changeStar(id: number, b: boolean) {
+    try {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: !b })
+        if (code === 0) {
+            return true
+        } else {
+            return false
+        }
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            ElMessage.closeAll('error')
+        }
+    }
+}
+
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {
         size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"

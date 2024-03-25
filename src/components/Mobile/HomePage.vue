@@ -2,26 +2,36 @@
     <div class="test">
         <div class="tab">
             <div :class="{ 'tab-item': true, 'item-select': activeTab === index }" v-for="(item, index) in  bntdata "
-                :key="index" @click="activeTab = index">
+                :key="index" @click="changetab(index)">
                 {{ item }}
                 <div class="choose" :style="{ visibility: activeTab === index ? 'visible' : 'hidden' }"></div>
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :data="lists"></FilesItem>
+            <FilesItem :data="lists" @changeStar="changeStar" @openfile="openfile"></FilesItem>
         </div>
     </div>
 </template>
-<script setup lang="ts">
-import { onMounted, ref, watch, watchEffect } from 'vue';
-import { useI18n } from 'vue-i18n'
-import { getRecentlydata, getSharedata, getStardata } from './files'
-import FilesItem from './FilesItem.vue'
 
+<script setup lang="ts">
+import { nextTick, onMounted, ref, watch, watchEffect,onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n'
+import { getRecentlydata, getSharedata, getStardata, changeStar as change } from './files'
+import FilesItem from './FilesItem.vue'
+import { ElMessage } from 'element-plus'
+import { router } from '@/router';
+
+const { t } = useI18n()
 const bntdata = ['最近', '收到的共享', '标星']
-const activeTab = ref<number>(0)
+const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
+
+const changetab = (id: number) => {
+    activeTab.value = id
+    sessionStorage.setItem('activeTab', id.toLocaleString())
+}
+
 watchEffect(async () => {
     switch (activeTab.value) {
         case 0:
@@ -37,17 +47,50 @@ watchEffect(async () => {
             break;
     }
     if (ellist.value) {
-        ellist.value.scrollTo(0,0);
+        setTimeout(() => {
+            const value = Number(sessionStorage.getItem('scrolltop'))
+            if (ellist.value) {
+                ellist.value.scrollTop = value
+            }
+        }, 0)
+
+
+
     }
 })
 
-
-
-onMounted(() => {
-
+watch(activeTab, () => {
+    sessionStorage.setItem('scrolltop', 0)
 })
 
+const changeStar = async (id: number, b: boolean) => {
+    if (await change(id, b)) {
+        if (activeTab.value === 2) {
+            lists.value = lists.value.filter(item => item.document.id !== id)
+        } else {
+            lists.value = lists.value.map((item) => {
+                if (item.document.id === id) {
+                    item.document_favorites.is_favorite = !b
+                }
+                return item
+            }
+            )
+        }
+        ElMessage.closeAll('success')
+        ElMessage.success({ duration: 1500, message: !b ? t('home.star_ok') : t('home.star_cancel') })
+    }
+}
+
+const openfile = (id: number) => {
+    sessionStorage.setItem('scrolltop', ellist.value.scrollTop.toString())
+    router.push(({ name: 'document', query: { id: id } }))
+
+
+}
+
+
 </script>
+
 <style lang="scss" scoped>
 .test {
     width: 100%;
