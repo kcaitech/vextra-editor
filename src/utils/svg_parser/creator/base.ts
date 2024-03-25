@@ -315,8 +315,8 @@ export class BaseCreator extends BaseTreeNode {
                 radialGradient: fillColor.radialGradient,
                 color: fillColor.color,
             }
-        } else if (fillColor === null) {
-            fillAttrValue = null
+        } else {
+            fillAttrValue = fillColor
         }
 
         // svg、g元素没有填充，而是继承给子元素
@@ -324,7 +324,7 @@ export class BaseCreator extends BaseTreeNode {
             for (const child of this.children) {
                 child.attributes[fillAttrName] = fillAttrValue
             }
-        } else if (fillColor) {
+        } else if (fillColor !== undefined) {
             this.attributes[fillAttrName] = fillAttrValue
         }
 
