@@ -20,6 +20,7 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
+const pageItem = ref<HTMLDivElement>();
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
     if (e.button === MOUSE_LEFT) {
@@ -89,7 +90,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="pageItem"
+    <div class="pageItem" ref="pageItem"
         :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, select: isInput }"
         @mousedown="onMouseDown">
         <div class="ph">
