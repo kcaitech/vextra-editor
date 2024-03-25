@@ -18,7 +18,6 @@ export const API_URL = `${BASE_PATH}${API_PATH}`;
 // export const STORAGE_URL = "https://oss-cn-hangzhou.aliyuncs.com";
 export const COMMUNICATION_URL = `wss://${BASE_HOST}${API_PATH}/communication`;
 
-
 // 屏蔽掉普通log输出
 if (production) {
     const _log = console.log;
