@@ -11,12 +11,17 @@ export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     // 合并transform
     child.transform = parent.transform.clone().addTransform(child.transform)
     child.updateShapeAttrByTransform()
-
     // 合并透明度
     if (parent.attributes.opacity) {
         if (child.attributes.opacity) child.attributes.opacity *= parent.attributes.opacity;
         else child.attributes.opacity = parent.attributes.opacity;
     }
+    // 合并id
+    if (parent.localAttributes.id) {
+        if (child.localAttributes.id) child.localAttributes.id = parent.localAttributes.id + child.localAttributes.id;
+        else child.localAttributes.id = parent.localAttributes.id;
+    }
+
     child.updateShapeStyle()
 }
 

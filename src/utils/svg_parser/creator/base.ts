@@ -141,7 +141,8 @@ export class BaseCreator extends BaseTreeNode {
     }
 
     afterAllCreateShape() {
-        if (this.shape) this.shape.name = this.getShapeNumberName(this.shape.name);
+        if (!this.shape) return;
+        this.shape.name = this.getShapeNumberName(this.localAttributes.id || this.shape.name)
     }
 
     parseAttributes() {
