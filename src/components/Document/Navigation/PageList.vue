@@ -163,16 +163,7 @@ function toggle() {
         if (list_body.value) {
             ListH.value = list_body.value.clientHeight
         }
-        if (pagelist.value && index >= 0) {
-            const itemScrollH = index * 32
-            if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
-                if ((itemScrollH) + pagelist.value.scroll.y >= ListH.value) {
-                    pagelist.value.clampScroll(0, -(itemScrollH - ListH.value))
-                }
-            } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
-                pagelist.value.clampScroll(0, -itemScrollH)
-            }
-        }
+        scrollList(index);
     })
     if (!fold.value) {
         const timer = setTimeout(() => {
@@ -303,6 +294,29 @@ const tool_watcher = (t?: number) => {
 const allow_to_drag = () => {
     return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
 }
+const scrollList = (index: number) => {
+    if (pagelist.value && index >= 0) {
+        const itemScrollH = index * 32
+        if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
+            if ((itemScrollH) + pagelist.value.scroll.y >= ListH.value) {
+                pagelist.value.clampScroll(0, -(itemScrollH - ListH.value))
+            }
+        } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
+            pagelist.value.clampScroll(0, -itemScrollH)
+        }
+    }
+}
+
+const setSelectedPageVisible = () => {
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const index = props.context.data.pagesList.findIndex((item) => item.id === page.id);
+    scrollList(index);
+    setTimeout(() => {
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+    }, 200)
+}
+
 onMounted(() => {
     getPageName();
     props.context.selection.watch(selectionWatcher);
@@ -312,6 +326,7 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     if (list_body.value) {
         pageH.value = list_body.value.clientHeight; //list可视高度
+        setSelectedPageVisible();
     }
 });
 
@@ -333,7 +348,8 @@ onUnmounted(() => {
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <svg-icon icon-class="down"
+                        :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
@@ -438,4 +454,3 @@ onUnmounted(() => {
     color: grey;
 }
 </style>
-    

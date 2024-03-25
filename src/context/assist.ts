@@ -12,7 +12,7 @@ import {
     modify_pt_y4create,
     modify_pt_y4p,
     gen_match_points_by_map,
-    PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit, alignXFromPointGroup, alignYFromPointGroup
+    PointsOffset, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit, alignXFromPointGroup, alignYFromPointGroup
 } from "@/utils/assist";
 
 export interface PointGroup1 {

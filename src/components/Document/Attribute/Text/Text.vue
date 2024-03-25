@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, BasicArray, Fill, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient, gradient_equals } from "@kcdesign/data";
+import { AttrGetter, BasicArray, Fill, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,7 +15,7 @@ import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import { throttle } from 'lodash';
 import { watch } from 'vue';
-import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
+import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
 
@@ -121,6 +121,9 @@ const onBold = (weight: number) => {
     } else {
         editor.setTextBoldMulti(props.textShapes, weight);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.bold = weight;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置文本倾斜
 const onTilt = (italic: boolean) => {
@@ -136,6 +139,9 @@ const onTilt = (italic: boolean) => {
     } else {
         editor.setTextItalicMulti(props.textShapes, italic);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.italic = italic;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 const setFontWeight = (weight: number, italic: boolean) => {
     fontWeight.value = fontWeightConvert(weight, italic);
@@ -157,6 +163,9 @@ const onUnderlint = () => {
     } else {
         editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.underline = isUnderline.value ? UnderlineType.Single : undefined;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置删除线
 const onDeleteline = () => {
@@ -173,6 +182,9 @@ const onDeleteline = () => {
     } else {
         editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.strikethrough = isDeleteline.value ? StrikethroughType.Single : undefined;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
@@ -189,6 +201,9 @@ const onSelectLevel = (icon: TextHorAlign) => {
     } else {
         editor.setTextHorAlignMulti(props.textShapes, icon);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.alignment = icon;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
@@ -200,6 +215,9 @@ const onSelectVertical = (icon: TextVerAlign) => {
     } else {
         editor.setTextVerAlignMulti(props.textShapes, icon);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.verAlign = icon;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
@@ -217,6 +235,9 @@ const changeTextSize = (size: number) => {
     } else {
         editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.fontSize = size;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 //设置字体
 const setFont = (font: string) => {
@@ -233,6 +254,9 @@ const setFont = (font: string) => {
     } else {
         editor.setTextFontNameMulti(props.textShapes, font);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.fontName = font;
+    props.context.textSelection.setTextAttr(textAttr);
     textFormat()
 }
 
@@ -567,6 +591,9 @@ function getColorFromPicker(color: Color, type: string) {
             editor.setTextHighlightColorMulti(props.textShapes, color)
         }
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    type === 'color' ? textAttr.color = color : textAttr.highlight = color;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 function setColor(clr: string, alpha: number, type: string) {
@@ -602,6 +629,9 @@ function setColor(clr: string, alpha: number, type: string) {
             editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         }
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    type === 'color' ? textAttr.color = new Color(alpha, r, g, b) : textAttr.highlight = new Color(alpha, r, g, b);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const deleteHighlight = () => {
@@ -617,6 +647,9 @@ const deleteHighlight = () => {
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.highlight = undefined;
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const addHighlight = () => {
@@ -633,6 +666,9 @@ const addHighlight = () => {
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.highlight = new Color(1, 216, 216, 216);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 const higAlphaInput = () => {
     if (higlighAlpha.value && higlightColor.value) {
@@ -661,6 +697,9 @@ const addTextColor = () => {
     } else {
         editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.highlight = new Color(1, 6, 6, 6);
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const setMixedTextColor = () => {
@@ -668,23 +707,31 @@ const setMixedTextColor = () => {
     const editor = props.context.editor4TextShape(props.shape)
     let format: AttrGetter
     const __text = props.shape.getText();
+    const textAttr = props.context.textSelection.getTextAttr;
     if (length.value) {
         format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
+        textAttr.color = new Color(alpha, red, green, blue);
+        textAttr.fillType = format.fillType || FillType.SolidColor;
         editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
         editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
         if (format.gradient) {
+            textAttr.gradient = format.gradient;
             editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
+        textAttr.color = new Color(alpha, red, green, blue);
+        textAttr.fillType = format.fillType || FillType.SolidColor;
         editor.setTextColorMulti(props.textShapes, new Color(alpha, red, green, blue));
         editor.setTextFillTypeMulti(props.textShapes, format.fillType || FillType.SolidColor);
         if (format.gradient) {
+            textAttr.gradient = format.gradient;
             editor.setTextGradientMulti(props.textShapes, format.gradient);
         }
     }
+    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const togger_gradient_type = (type: GradientType | 'solid') => {

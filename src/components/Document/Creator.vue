@@ -76,7 +76,6 @@ function down(e: MouseEvent) {
     const action = props.context.tool.action;
     modify_page_xy_1(e);
     modify_client_xy_1(e);
-    // wheelSetup();
     if (action !== Action.AddComment) {
         commentInput.value = false;
     }
@@ -94,6 +93,9 @@ function move(e: MouseEvent) {
         } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
             const __xy2 = props.context.workspace.getContentXY(e);
             page_xy_2 = matrix1.computeCoord(__xy2);
+            if (Math.abs(page_xy_2.y - page_xy_1.y) < 1 || Math.abs(page_xy_2.x - page_xy_1.x) < 1) {
+                return;
+            }
             gen_new_shape(e);
             isDrag = true;
         }
@@ -250,7 +252,7 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     ac.contact_to(p);
     const points = (newShape as ContactLineView).getPoints();
-    const environment = get_contact_environment(props.context, newShape!, points);
+    const environment = get_contact_environment(props.context, newShape!, points)!;
     if (newShape!.parent?.id !== environment.id) {
         m(ac, environment);
     }
@@ -337,10 +339,24 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
         }
+
+        const align = props.context.user.isPixelAlignMent;
+        if (align) {
+            p2.x = Math.round(p2.x);
+            p2.y = Math.round(p2.y);
+        }
+
         asyncCreator.setFrame({ x: p2.x, y: p2.y });
     } else {
         const del = x - page_xy_1.x;
         y = page_xy_1.y + del;
+
+        const align = props.context.user.isPixelAlignMent;
+        if (align) {
+            x = Math.round(x);
+            y = Math.round(y);
+        }
+
         asyncCreator.setFrame({ x, y });
     }
 }
@@ -385,9 +401,6 @@ function modify_new_shape_frame(e: MouseEvent) {
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
     if (asyncCreator) {
-        // if (wheel && asyncCreator) {
-        // const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
-        // if (isOut) return;
         if (newShape && newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
         } else {

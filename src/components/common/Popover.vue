@@ -145,14 +145,12 @@ onUnmounted(() => {
 .__popover-container {
     position: relative;
     outline: none;
-    z-index: 99;
 
     >.popover {
         position: fixed;
         outline: none;
         box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
         background-color: #FFFFFF;
-        z-index: 1;
         border-radius: 8px;
         border: 1px solid #F0F0F0;
 

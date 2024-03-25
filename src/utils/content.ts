@@ -20,7 +20,7 @@ import {
     SymbolShape,
     TableView,
     TextShape,
-    adapt2Shape, PathType, PathShapeView, PathShapeView2
+    adapt2Shape, PathType, PathShapeView, PathShapeView2, TextAttr
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
@@ -160,7 +160,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
 
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
-
+    
     if (page && parent && type) {
         const editor = context.editor.controller();
         const name = getName(type, (parent).childs, t);
@@ -172,7 +172,8 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
         } else if (action === Action.AddCutout) {
             new_shape = asyncCreator.init_cutout(page.data, (adapt2Shape(parent) as GroupShape), name, frame);
         } else {
-            new_shape = asyncCreator.init(page.data, (adapt2Shape(parent) as GroupShape), type, name, frame);
+            const text_attr = action === Action.AddText ? context.textSelection.getTextAttr || new TextAttr() : undefined;
+            new_shape = asyncCreator.init(page.data, (adapt2Shape(parent) as GroupShape), type, name, frame, text_attr);
         }
     }
 
@@ -341,7 +342,8 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
     if (page && parent) {
         const editor = context.editor.controller();
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        new_shape = asyncCreator.init_text(page.data, adapt2Shape(parent) as GroupShape, frame, content);
+        const text_attr = context.textSelection.getTextAttr || new TextAttr();
+        new_shape = asyncCreator.init_text(page.data, adapt2Shape(parent) as GroupShape, frame, content, text_attr);
     }
     if (asyncCreator && new_shape) {
         asyncCreator.close();

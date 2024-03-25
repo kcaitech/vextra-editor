@@ -180,7 +180,7 @@ const newProjectFile = (id: string) => {
 const GetteamList = async () => {
     try {
         const { code, data, message } = await user_api.GetteamList()
-        if (code === 0) {
+        if (code === 0 && data) {
             upDateTeamData(data)
             teamDataList.value = teamData.value
             teamList.value = mergeArrays(data, projectDataList.value);

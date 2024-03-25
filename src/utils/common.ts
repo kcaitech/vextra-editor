@@ -1,7 +1,17 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, Matrix, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import {
+    ContactShape,
+    Matrix,
+    PathShape,
+    PathShapeView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    adapt2Shape,
+    ContactLineView
+} from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
@@ -274,7 +284,7 @@ export function get_points_from_shape(shape: ShapeView) {
     const m = shape.matrix2Root();
     const { width, height } = shape.frame;
 
-    if (shape instanceof ContactShape) {
+    if (shape instanceof ContactLineView) {
         m.preScale(width, height);
         return shape.getPoints().map(i => m.computeCoord2(i.x, i.y));
     }

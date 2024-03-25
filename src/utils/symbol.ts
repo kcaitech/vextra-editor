@@ -16,7 +16,6 @@ import {
     VariableType,
     adapt2Shape
 } from "@kcdesign/data";
-import { getName } from "./content";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
 import { v4 } from "uuid";
@@ -69,7 +68,7 @@ export function classification_level_page(pages: { page: Page, desc: string }[])
 
 function get_symbol_level_under(group: GroupShape) {
     const symbols: (SymbolShape | SymbolUnionShape)[] = [];
-    const childs = group.childs;
+    const childs = flattenArtboard(group.childs).filter(s => s.type !== ShapeType.Group);
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
@@ -100,7 +99,7 @@ export function classification_level_artboard(page: Page) {
     const artboard_map: Map<string, SymbolListItem> = new Map();
     for (let i = 0, len = artboards.length; i < len; i++) {
         const artboard = artboards[i];
-        if (artboard.parent?.type !== ShapeType.Page) continue;
+        if (parentHasArtboard(artboard)) continue;
         const symbols = check_symbol_level_artboard(artboard);
         if (!symbols.length) continue;
         const already = artboard_map.get(artboard.name);
@@ -109,7 +108,7 @@ export function classification_level_artboard(page: Page) {
             continue;
         }
         const item: SymbolListItem = {
-            id: artboard.name,
+            id: artboard.id,
             title: artboard.name,
             isFolder: true,
             extend: false,
@@ -128,14 +127,14 @@ export function classification_level_artboard(page: Page) {
         }
         item.childs.push(child);
         result.push(item);
-        artboard_map.set(item.id, item);
+        artboard_map.set(item.title, item);
     }
     return result;
 }
 
 function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape | SymbolUnionShape)[]) {
     const symbols: (SymbolShape | SymbolUnionShape)[] = init || [];
-    const childs = artboard.childs;
+    const childs = flattenArtboard(artboard.childs).filter(s => s.type !== ShapeType.Group);
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
@@ -146,6 +145,31 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape |
         if (item.type === ShapeType.Artboard) check_symbol_level_artboard(item as Artboard, symbols);
     }
     return symbols;
+}
+
+export function flattenArtboard(shapes: Shape[]): Shape[] {
+    return shapes.reduce((result: any, item: Shape) => {
+        if (item.type === ShapeType.Group) {
+            const childs = (item as GroupShape).childs as Shape[];
+            if (Array.isArray(childs)) {
+                result = result.concat(flattenArtboard(childs));
+            }
+        }
+        return result.concat(item);
+    }, []);
+}
+
+const parentHasArtboard = (shape: Shape) => {
+    let result = false;
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (p.type === ShapeType.Artboard) {
+            result = true;
+            break;
+        }
+        p = p.parent;
+    }
+    return result;
 }
 
 /**
@@ -173,7 +197,7 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     for (let i = 0, len = list.length; i < len; i++) {
         const item = list[i];
         result.push(item);
-        if (extend_set.has(item.id)) {
+        if (extend_set.has(item.title)) {
             list_layout(item.childs, extend_set, result);
         }
     }
@@ -220,7 +244,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
     if (!item) return false;
     let p = item.parent;
     while (p) {
-        status_set.add(p.id);
+        status_set.add(p.title);
         p = p.parent;
     }
 
@@ -404,7 +428,11 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     const editor = context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
+    // const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
+    let name = t(`shape.${ShapeType.Symbol}`);
+    const repeats: number = context.data.stylesMgr.size;
+    name = repeats ? `${name} ${repeats + 1}` : name;
+
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
 }

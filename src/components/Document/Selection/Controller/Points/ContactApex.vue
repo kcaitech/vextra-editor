@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import {
+    adapt2Shape,
     AsyncContactEditor,
     ContactForm,
     ContactLineView,
@@ -9,9 +10,10 @@ import {
     GroupShape,
     Matrix,
     Shape,
-    adapt2Shape
+    ShapeType,
+    ShapeView
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { get_apexs } from './common';
@@ -39,7 +41,10 @@ const props = defineProps<Props>();
 const matrix = new Matrix();
 const apex = ref<boolean>(false);
 const contact = ref<boolean>(false);
-const data: { apex1: Apex, apex2: Apex } = reactive({ apex1: { point: { x: 0, y: 0 }, type: 'from' }, apex2: { point: { x: 0, y: 0 }, type: 'to' } });
+const data: { apex1: Apex, apex2: Apex } = reactive({
+    apex1: { point: { x: 0, y: 0 }, type: 'from' },
+    apex2: { point: { x: 0, y: 0 }, type: 'to' }
+});
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
 const fromOrTo = ref<FAT>()
 
@@ -156,8 +161,27 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function migrate(shape: ContactLineView) {
+    let existSliceShape = false;
+    let __s: ShapeView | undefined = shape;
+
+    while (__s) {
+        if (__s.type === ShapeType.Artboard) {
+            existSliceShape = true;
+            break;
+        }
+        __s = __s.parent;
+    }
+
+    if (!existSliceShape) {
+        return;
+    }
+
     const points = shape.getPoints();
     const environment = get_contact_environment(props.context, shape, points);
+    if (!environment) {
+        return;
+    }
+
     if (shape.parent?.id !== environment.id && contactEditor) {
         contactEditor.migrate(adapt2Shape(environment) as GroupShape);
     }

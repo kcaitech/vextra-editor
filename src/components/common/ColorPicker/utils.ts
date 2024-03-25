@@ -341,7 +341,7 @@ export function RGB2H(color: Color, sub?: number) {
   const min = Math.min(red, green, blue);
   let h = 0;
   if (max === min) {
-    h = sub ? sub * 360 : 0;
+    h = sub ? sub : 0;
   } else if (max === red && green >= blue) {
     h = 60 * ((green - blue) / (max - min)) + 0;
   } else if (max === red && green < blue) {
@@ -391,6 +391,19 @@ export function RGB2HSB(color: Color): HSB {
   }
   b = max / 255;
   return { h: h / 360, s, b };
+}
+export function RGB2SB(color: Color): { s: number, b: number } {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let  s = 0, b = 0;
+  if (max === min && min === 0) {
+    s = 0;
+  } else {
+    s = (max - min) / max;
+  }
+  b = max / 255;
+  return {  s, b };
 }
 export function validate(model: Model, field: number, value: number): boolean {
   if (isNaN(value)) return false;
@@ -618,8 +631,7 @@ export function gradient_channel_generator(gradient: Gradient) {
   lg = lg.slice(0, lg.length - 2);
   lg += ')';
   if (stops.length === 1) {
-    const c = toRGBA(stops[0].color!);
-    lg = c
+    lg = toRGBA(stops[0].color!);
   }
   style['background'] = lg;
   return style;
