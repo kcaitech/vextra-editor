@@ -11,15 +11,12 @@ export async function getRecentlydata() {
             data[i].project_perm = undefined;
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
             data[i].document.size = sizeTostr(size)
+            data[i].last = true
             data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
         }
         return data
     } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
-        }
+        return error.message
     }
 }
 
@@ -29,17 +26,14 @@ export async function getSharedata() {
         const { data } = await user_api.ShareLists()
         for (let i = 0; i < data.length; i++) {
             data[i].project_perm = undefined;
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            let { document: { size, created_at } } = data[i]
+            data[i].last = false
             data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            data[i].document.created_at = created_at.slice(0, 19)
         }
         return data
     } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
-        }
+        return error.message
     }
 }
 
@@ -50,16 +44,13 @@ export async function getStardata() {
         for (let i = 0; i < data.length; i++) {
             data[i].project_perm = undefined;
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            data[i].last = true
             data[i].document.size = sizeTostr(size)
             data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
         }
-        return data
+        return { state: 'success', data:data }
     } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
-        }
+        return { state: 'failed', data:error }
     }
 }
 
@@ -69,17 +60,14 @@ export async function getDoucment() {
     try {
         const { data } = await user_api.getDoucmentListAPI() as any
         for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            let { document: { size, created_at } } = data[i]
+            data[i].last = false
             data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            data[i].document.created_at = created_at.slice(0, 19)
         }
         return data
     } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
-        }
+        return error.message
     }
 }
 

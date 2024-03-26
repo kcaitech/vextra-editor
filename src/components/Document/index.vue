@@ -344,7 +344,7 @@ const getDocumentInfo = async () => {
                 return;
             } else {
                 router.push("/files");
-                ElMessage.error({ duration: 3000, message: docKeyRes.message })
+                ElMessage.error({ duration: 3000, message: docInfoRes.message })
                 return;
             }
         }

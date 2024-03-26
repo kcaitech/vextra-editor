@@ -1,12 +1,14 @@
 <template>
-    <div class="list-item" v-for=" item in props.data" :key="item.document.id" @click="emits('openfile',item.document.id)">
+    <div class="list-item" v-for=" item in props.data" :key="item.document.id"
+        @click="emits('openfile', item.document.id)">
         <div class="image">
             <svg-icon icon-class="file-default-icon"></svg-icon>
         </div>
         <div class="content">
             <div class="left">
                 <span class="name"> {{ item.document.name }}</span>
-                <span class="time">{{ item.document_access_record.last_access_time }}</span>
+                <span class="time">{{ !item.last ? item.document.created_at :
+        item.document_access_record.last_access_time }}</span>
             </div>
             <div class="right" @click.stop>
                 <div class="share">
@@ -29,27 +31,32 @@ import Loading from '../common/Loading.vue';
 
 const props = defineProps<{
     data: any[],
+    errNetwork?: boolean;
 }>();
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
-    (e:'openfile',docID:number):void;
+    (e: 'openfile', docID: number): void;
+    (e: 'refresh'): void;
 }>()
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
-watch(() => props.data, () => {
+watch([() => props.data, () => props.errNetwork], () => {
     if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
     }
+    if (props.errNetwork) {
+        loading.value = false
+    }
     loading.value = false
 })
 
-const test=()=>{
+const test = () => {
     console.log('111');
-    
+
 }
 
 </script>

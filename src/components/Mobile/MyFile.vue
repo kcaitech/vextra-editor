@@ -1,19 +1,21 @@
 <template>
-    <div class="list">
-        <FilesItem :data="lists" @changeStar="changeStar"></FilesItem>
+    <div ref="ellist" class="list">
+        <FilesItem :data="lists" @changeStar="changeStar" @openfile="openfile"></FilesItem>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { getDoucment } from './files'
 import FilesItem from './FilesItem.vue';
 import { changeStar as change } from './files'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { router } from '@/router';
 
 const { t } = useI18n()
 const lists = ref<any[]>([])
+const ellist = ref<HTMLElement>()
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -29,8 +31,31 @@ const changeStar = async (id: number, b: boolean) => {
     }
 }
 
+const openfile = (id: number) => {
+    sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
+    router.push(({ name: 'pageviews', query: { id: id } }))
+}
+
+
+
 onMounted(async () => {
-    lists.value = await getDoucment()
+    try {
+        lists.value = await getDoucment()
+    } catch (error) {
+        console.log(error);
+        
+    }
+    
+    if (ellist.value) {
+        setTimeout(() => {
+            ellist.value!.scrollTop = Number(sessionStorage.getItem('scrolltop'))
+            sessionStorage.setItem('scrolltop', '0')
+        }, 0)
+    }
+})
+
+onUnmounted(() => {
+
 })
 </script>
 

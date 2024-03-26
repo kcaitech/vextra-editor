@@ -8,13 +8,17 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :data="lists" @changeStar="changeStar" @openfile="openfile"></FilesItem>
+            <FilesItem v-if="!errnetwork" :err-network="errnetwork" :data="lists" @changeStar="changeStar"
+                @openfile="openfile"></FilesItem>
+            <div v-else class="errnetwork">
+                刷新
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch, watchEffect,onUnmounted } from 'vue';
+import { nextTick, onMounted, ref, watch, watchEffect, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { getRecentlydata, getSharedata, getStardata, changeStar as change } from './files'
 import FilesItem from './FilesItem.vue'
@@ -26,13 +30,14 @@ const bntdata = ['最近', '收到的共享', '标星']
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
-
+const errnetwork = ref<boolean>(false)
 const changetab = (id: number) => {
     activeTab.value = id
     sessionStorage.setItem('activeTab', id.toLocaleString())
 }
 
 watchEffect(async () => {
+    let data: any
     switch (activeTab.value) {
         case 0:
             lists.value = await getRecentlydata()
@@ -41,7 +46,13 @@ watchEffect(async () => {
             lists.value = await getSharedata()
             break;
         case 2:
-            lists.value = await getStardata()
+            data = await getStardata()
+            if (data.state === 'success') {
+                lists.value = data.data
+            } else {
+                errnetwork.value = true
+                ElMessage.error({ duration: 3000, message: data.data.message })
+            }
             break;
         default:
             break;
@@ -60,7 +71,7 @@ watchEffect(async () => {
 })
 
 watch(activeTab, () => {
-    sessionStorage.setItem('scrolltop', 0)
+    sessionStorage.setItem('scrolltop', '0')
 })
 
 const changeStar = async (id: number, b: boolean) => {
@@ -82,16 +93,21 @@ const changeStar = async (id: number, b: boolean) => {
 }
 
 const openfile = (id: number) => {
-    sessionStorage.setItem('scrolltop', ellist.value.scrollTop.toString())
-    router.push(({ name: 'document', query: { id: id } }))
-
-
+    sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
+    router.push(({ name: 'pageviews', query: { id: id } }))
 }
 
 
 </script>
 
 <style lang="scss" scoped>
+.errnetwork {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    margin: auto;
+}
+
 .test {
     width: 100%;
     height: 100%;

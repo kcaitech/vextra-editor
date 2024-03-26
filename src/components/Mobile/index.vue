@@ -19,7 +19,8 @@
                 </div>
             </div>
             <div class="content">
-                <component :is="tabs.get(activebnt)||Home"></component>
+                <component v-if="!inputvalue" :is="tabs.get(activebnt)||Home"></component>
+                <div v-else class="search-list"></div>
             </div>
         </div>
         <div class="footer">
@@ -60,12 +61,18 @@ const tabs = new Map([
 
 const changetab = (tab: string) => {
     activebnt.value = tab
-    sessionStorage.setItem('selectTab',tab)
+    sessionStorage.setItem('selectTab', tab)
 }
 
 </script>
 
 <style lang="scss" scoped>
+.search-list {
+    width: 100%;
+    height: 100%;
+    background-color: #262626;
+}
+
 .bnt-selct {
     color: #262626 !important;
 }

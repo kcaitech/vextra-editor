@@ -190,6 +190,7 @@ declare module '@vue/runtime-core' {
     PageList: typeof import('./src/components/Document/Navigation/PageList.vue')['default']
     PageView: typeof import('./src/components/Document/Content/PageView.vue')['default']
     PageViewContextMenuItems: typeof import('./src/components/Document/Menu/PageViewContextMenuItems.vue')['default']
+    PageViews: typeof import('./src/components/Mobile/PageViews.vue')['default']
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
     PathAssist: typeof import('./src/components/Document/Assist/PathAssist.vue')['default']
     PathClip: typeof import('./src/components/Document/Toolbar/PathEdit/PathClip.vue')['default']
