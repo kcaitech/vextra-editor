@@ -308,7 +308,7 @@ const showNotification = (type?: number) => {
 }
 const getUserInfo = async () => {
     const { data } = await user_api.GetInfo()
-    if (context) {
+    if (data && context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)

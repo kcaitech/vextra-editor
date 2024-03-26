@@ -76,7 +76,7 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error: any) {
-        if (error.data.code === 401) {
+        if (error.data?.code === 401) {
             return
         } else {
             noNetwork.value = true

@@ -16,7 +16,6 @@ import {
     VariableType,
     adapt2Shape
 } from "@kcdesign/data";
-import { getName } from "./content";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
 import { v4 } from "uuid";
@@ -24,7 +23,6 @@ import { get_name } from "@/utils/shapelist";
 import { XY } from "@/context/selection";
 import { isTarget } from "@/utils/common";
 import { message } from "@/utils/message";
-import { flattenShapes } from "./cutout";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -165,7 +163,7 @@ const parentHasArtboard = (shape: Shape) => {
     let result = false;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if(p.type === ShapeType.Artboard) {
+        if (p.type === ShapeType.Artboard) {
             result = true;
             break;
         }
@@ -430,7 +428,11 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     const editor = context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
+    // const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
+    let name = t(`shape.${ShapeType.Symbol}`);
+    const repeats: number = context.data.stylesMgr.size;
+    name = repeats ? `${name} ${repeats + 1}` : name;
+
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
 }
