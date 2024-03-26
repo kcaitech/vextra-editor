@@ -16,7 +16,6 @@ import {
     CoopRepository,
     IStorage,
     PageView,
-    Cmd,
     PageListItem
 } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
@@ -28,7 +27,7 @@ import { useI18n } from 'vue-i18n';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { Perm, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
@@ -38,7 +37,6 @@ import { Comment } from '@/context/comment';
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
-import { _updateRoot } from '@/utils/content';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import { initpal } from './initpal';
