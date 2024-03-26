@@ -7,6 +7,7 @@ import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol'
 import { debounce } from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 import ShapeCard from "@/components/common/ShapeCard.vue";
+import { Navi } from '@/context/navigate';
 
 interface Props {
     data: GroupShape
@@ -26,6 +27,9 @@ const tip_name = ref('');
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         check_selected_status();
+    } else if (t === Selection.PAGE_RENAME) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") update_name();
     }
 }
 
@@ -151,13 +155,22 @@ function update_name() {
     }
 }
 
+const navi_watch = (t: number) => {
+    if (t === Navi.MODULE_CHANGE) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") update_name();
+    }
+}
+
 onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
     update_name();
+    props.context.navi.watch(navi_watch);
 })
 onUnmounted(() => {
     io.disconnect();
+    props.context.navi.unwatch(navi_watch);
     props.context.selection.unwatch(selection_watcher);
     props.data.unwatch(shape_watcher);
 })

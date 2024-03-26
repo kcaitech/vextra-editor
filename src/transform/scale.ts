@@ -404,7 +404,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4Right() {
@@ -428,7 +428,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4Top() {
@@ -453,7 +453,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4Bottom() {
@@ -478,7 +478,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4LeftTop() {
@@ -511,7 +511,7 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4RightTop() {
@@ -543,7 +543,7 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
 
     }
 
@@ -577,7 +577,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __executeSide4LeftBottom() {
@@ -609,6 +609,6 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(scaleX, scaleY, transformUnits);
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 }

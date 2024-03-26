@@ -21,20 +21,28 @@ const teamPermission = ref([`${t('share.readOnly')}`, `${t('share.editable')}`])
 const getApplyList = async (time?: number) => {
   try {
     const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
-    applyList.value = [...applyList.value, ...data]
+    if (data) applyList.value = [...applyList.value, ...data]
   } catch (e) {
     console.log(e)
   }
 }
 
 const getProjectApplyList = async (time?: number) => {
-  const { data } = await team_api.getTeamProjectApplyAPI({ start_time: time })
-  projectApplyList.value = [...projectApplyList.value, ...data]
+    try {
+        const { data } = await team_api.getTeamProjectApplyAPI({ start_time: time })
+        if (data) projectApplyList.value = [...projectApplyList.value, ...data]
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 const getTeamApply = async (time?: number) => {
-  const { data } = await team_api.getTeamApplyAPI({ start_time: time })
-  teamApplyList.value = [...teamApplyList.value, ...data]
+    try {
+        const { data } = await team_api.getTeamApplyAPI({ start_time: time })
+        if (data) teamApplyList.value = [...teamApplyList.value, ...data]
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 const consent = (id: string, index: number, action: string) => {

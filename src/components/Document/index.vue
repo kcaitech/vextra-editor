@@ -308,7 +308,7 @@ const showNotification = (type?: number) => {
 }
 const getUserInfo = async () => {
     const { data } = await user_api.GetInfo()
-    if (context) {
+    if (data && context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
@@ -401,7 +401,7 @@ const getDocumentInfo = async () => {
             perm < 3 && showHiddenRight();
             loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
-            if (perm >= 2) await context.communication.docCommentOp.start(getToken, docId);
+            await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
@@ -451,7 +451,7 @@ async function upload(projectId: string) {
     getDocumentAuthority().then(async () => {
         if (!context) return;
         if (permType.value === 3) context.communication.docResourceUpload.start(getToken, doc_id);
-        if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(getToken, doc_id);
+        context.communication.docCommentOp.start(getToken, doc_id);
         await context.communication.docSelectionOp.start(getToken, doc_id, context);
         context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
         context.workspace.notify(WorkSpace.INIT_DOC_NAME);

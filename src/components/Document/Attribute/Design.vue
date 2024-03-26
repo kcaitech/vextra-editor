@@ -191,7 +191,6 @@ function selection_watcher(t: number) {
     if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
-
     selection_change();
     watch_shapes();
 }

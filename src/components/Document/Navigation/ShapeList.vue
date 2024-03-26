@@ -142,6 +142,7 @@ function _notifySourceChange(t?: number | string, shape?: ShapeView) {
                 }
             }
         })
+        if(t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
     } else if (t === Selection.EXTEND) {
         if (shape) {
             toggleExpand(shape.id)
@@ -194,6 +195,7 @@ function unHovershape() {
 const rename = (value: string, shape: ShapeView) => {
     const editor = props.context.editor4Shape(shape);
     editor.setName(value)
+    props.context.selection.rename();
 }
 
 const modify_lock_status = (shape: ShapeView) => {
@@ -434,7 +436,6 @@ const stopWatch = watch(() => props.page, () => {
         source = new ShapeDirList(props.page);
         shapeListMap.set(props.page.id, source);
     }
-
     if (shapeDirList) {
         shapeDirList.unwatch(notifySourceChange);
     }
