@@ -4,14 +4,14 @@
   "productName": "ProtoDesign",
   "version": "0.1.0",
   "private": true,
-  "author": "protodesign.cn",
+  "author": "moss.design",
   "main": "background.js",
   "publishConfig": {
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
   "scripts": {
     "build-worker": "cd ./src/communication && npm install && npm run build",
-    "dev:web": "npm run build-worker && vue-cli-service --public=protodesign.cn serve",
+    "dev:web": "npm run build-worker && vue-cli-service --public=moss.design serve",
     "build:web": "cross-env NODE_ENV=production && npm run build-worker && vue-cli-service build",
     "install-electron-deps": "electron-builder install-app-deps",
     "dev:electron": "npm run build-worker && vue-cli-service electron:serve",

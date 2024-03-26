@@ -128,7 +128,7 @@ const Getteaminfo = async () => {
 }
 
 const teaminviteinfo = computed(() => {
-    return `https://protodesign.cn/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
+    return `https://moss.design/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
 })
 
 async function copyText() {
