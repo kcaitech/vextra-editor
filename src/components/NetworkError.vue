@@ -13,8 +13,8 @@ const props = defineProps<{
 const refreshDoc = () => {
     emit('refreshDoc')
 }
-
-onMounted(() => {  
+const avatar = localStorage.getItem('avatar') || ''
+onMounted(() => {
 
 })
 onUnmounted(() => {
@@ -24,18 +24,18 @@ onUnmounted(() => {
 
 <template>
     <div class="header" v-if="top">
-        <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
-            <svg-icon class="svg" icon-class="home_0508"></svg-icon>
+        <div class="svgBox" @click="() => { router.push({ name: 'recently' }) }">
+            <svg-icon class="svg" icon-class="home"></svg-icon>
         </div>
         <div class="user-avatar">
-            <img src="../assets/pd-logo-svg.svg">
+            <img :src="avatar">
         </div>
     </div>
     <div class="container">
         <div>
-            <span v-if="top">{{t('message.doc_notopen')}}</span>
-            <span v-else>{{t('message.list_for_failure')}}</span>
-            <button class="button" @click="refreshDoc">{{t('message.retry')}}</button>
+            <span v-if="top">{{ t('message.doc_notopen') }}</span>
+            <span v-else>{{ t('message.list_for_failure') }}</span>
+            <button class="button" @click="refreshDoc">{{ t('message.retry') }}</button>
         </div>
     </div>
 </template>
@@ -49,15 +49,17 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    
+
     >div {
         display: flex;
         flex-direction: column;
         align-items: center;
+
         span {
             color: rgba(0, 0, 0, .75);
         }
     }
+
     .button {
         margin-top: 20px;
         font-size: var(--font-default-fontsize);
@@ -70,6 +72,7 @@ onUnmounted(() => {
         border-radius: 4px;
     }
 }
+
 .header {
     position: absolute;
     width: 100%;
@@ -91,7 +94,7 @@ onUnmounted(() => {
         .svg {
             width: 80%;
             height: 80%;
-            color: #fff;
+            fill: #fff;
         }
     }
 
@@ -104,8 +107,9 @@ onUnmounted(() => {
         text-align: center;
 
         >img {
-            width: 90%;
-            height: 90%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
         }
     }
 }

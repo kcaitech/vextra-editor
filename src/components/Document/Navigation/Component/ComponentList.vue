@@ -144,7 +144,7 @@ const searching = debounce(_searching, 300);
     }
 
     .body {
-        height: calc(100% - 35px);
+        height: calc(100% - 50px);
         box-sizing: border-box;
     }
 }

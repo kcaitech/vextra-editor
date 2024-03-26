@@ -681,7 +681,6 @@ export function get_selected_types(context: Context): number {
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance", e: MouseEvent): string[] {
     const BASE_ITEM = ['all', 'copy'];
-
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context) && !context.tool.isLable) {
