@@ -41,6 +41,8 @@ const selected_watcher = (t: number) => {
             _getCutoutShape();
         })
         getCutoutShape();
+    }else if (t === Selection.CHANGE_PAGE) {
+        _getCutoutShape();
     }
 }
 
