@@ -16,6 +16,7 @@ import { router } from '@/router';
 const { t } = useI18n()
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
+const errnetwork = ref<boolean>(false)
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -39,13 +40,21 @@ const openfile = (id: number) => {
 
 
 onMounted(async () => {
+    let data: any
     try {
-        lists.value = await getDoucment()
+        data = await getDoucment()
+        if (data.state === 'success') {
+            errnetwork.value = false
+            lists.value = data.data
+        } else {
+            errnetwork.value = true
+            ElMessage.error({ duration: 3000, message: data.data.message })
+        }
     } catch (error) {
         console.log(error);
-        
+
     }
-    
+
     if (ellist.value) {
         setTimeout(() => {
             ellist.value!.scrollTop = Number(sessionStorage.getItem('scrolltop'))

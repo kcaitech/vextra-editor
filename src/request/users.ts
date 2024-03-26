@@ -49,7 +49,7 @@ export function DeleteList(params = {}, ops = {}) {
 // 获取收藏列表
 export function GetfavoritesList(params = {}, ops = {}) {
     return httpRequest({
-        url: 'documents/favorites',
+        url: 'documents/favoritess',
         method: 'get',
         params: params,
         ...ops

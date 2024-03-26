@@ -8,11 +8,9 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem v-if="!errnetwork" :err-network="errnetwork" :data="lists" @changeStar="changeStar"
+            <FilesItem v-if="!errnetwork" :data="lists" @changeStar="changeStar"
                 @openfile="openfile"></FilesItem>
-            <div v-else class="errnetwork">
-                刷新
-            </div>
+            <div v-else class="errnetwork" @click="activeTab=2">刷新</div>
         </div>
     </div>
 </template>
@@ -40,22 +38,23 @@ watchEffect(async () => {
     let data: any
     switch (activeTab.value) {
         case 0:
-            lists.value = await getRecentlydata()
+            data = await getRecentlydata()
             break;
         case 1:
-            lists.value = await getSharedata()
+            data = await getSharedata()
             break;
         case 2:
             data = await getStardata()
-            if (data.state === 'success') {
-                lists.value = data.data
-            } else {
-                errnetwork.value = true
-                ElMessage.error({ duration: 3000, message: data.data.message })
-            }
             break;
         default:
             break;
+    }
+    if (data.state === 'success') {
+        errnetwork.value = false
+        lists.value = data.data
+    } else {
+        errnetwork.value = true
+        ElMessage.error({ duration: 3000, message: data.data.message })
     }
     if (ellist.value) {
         setTimeout(() => {
@@ -102,9 +101,17 @@ const openfile = (id: number) => {
 
 <style lang="scss" scoped>
 .errnetwork {
-    width: 100%;
-    height: 100%;
+    width: 80px;
+    height: 32px;
+    background-color: #1878F5;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 5px #1878F5;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 400;
+    color: white;
     margin: auto;
 }
 

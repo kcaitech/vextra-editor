@@ -31,7 +31,6 @@ import Loading from '../common/Loading.vue';
 
 const props = defineProps<{
     data: any[],
-    errNetwork?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -42,17 +41,16 @@ const emits = defineEmits<{
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
-watch([() => props.data, () => props.errNetwork], () => {
+watch(() => props.data, () => {
+    console.log('111');
+    
     if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
     }
-    if (props.errNetwork) {
-        loading.value = false
-    }
     loading.value = false
-})
+},{deep:true})
 
 const test = () => {
     console.log('111');

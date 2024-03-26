@@ -14,9 +14,9 @@ export async function getRecentlydata() {
             data[i].last = true
             data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
         }
-        return data
+        return { state: 'success', data: data }
     } catch (error: any) {
-        return error.message
+        return { state: 'failed', data: error }
     }
 }
 
@@ -31,9 +31,9 @@ export async function getSharedata() {
             data[i].document.size = sizeTostr(size)
             data[i].document.created_at = created_at.slice(0, 19)
         }
-        return data
+        return { state: 'success', data: data }
     } catch (error: any) {
-        return error.message
+        return { state: 'failed', data: error }
     }
 }
 
@@ -48,9 +48,9 @@ export async function getStardata() {
             data[i].document.size = sizeTostr(size)
             data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
         }
-        return { state: 'success', data:data }
+        return { state: 'success', data: data }
     } catch (error: any) {
-        return { state: 'failed', data:error }
+        return { state: 'failed', data: error }
     }
 }
 
@@ -65,9 +65,9 @@ export async function getDoucment() {
             data[i].document.size = sizeTostr(size)
             data[i].document.created_at = created_at.slice(0, 19)
         }
-        return data
+        return { state: 'success', data: data }
     } catch (error: any) {
-        return error.message
+        return { state: 'failed', data: error }
     }
 }
 
