@@ -144,6 +144,7 @@ function wxcode() {
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
+        // redirect_uri: encodeURIComponent("https://moss.design/html/GetCode.html"),
         state: "STATE",
         style: "",
         href:'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
