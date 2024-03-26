@@ -45,7 +45,8 @@ export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
     shapes = shapes.filter(i => i instanceof RectShape);
     if (shapes.length === 1) {
         const s = shapes[0];
-        const rs = Object.values((s as RectShape).getRadius());
+        // const rs = Object.values((s as RectShape).getRadius());
+        const rs = s.radius;
         if (cor) {
             if (rs.every(v => v === rs[0])) return rs;
             else return 'mixed'
@@ -53,10 +54,12 @@ export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
             return rs;
         }
     } else if (shapes.length > 1) {
-        const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
+        // const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
+        const res: any[] = shapes[0].radius;
         for (let i = 1; i < shapes.length; i++) {
             const s = shapes[i];
-            const rs = Object.values((s as RectShape).getRadius());
+            // const rs = Object.values((s as RectShape).getRadius());
+            const rs = s.radius;
             if (cor) {
                 if (!rs.every(v => v === rs[0])) return 'mixed';
             } else {
