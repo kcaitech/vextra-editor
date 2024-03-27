@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, RectShape, PathShape, ImageShape, Artboard, adapt2Shape, ShapeView } from '@kcdesign/data';
+import { ShapeType, adapt2Shape, ShapeView } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { hasRadiusShape } from '@/utils/content'
 import Radius from './Radius.vue';
 import {
     get_actions_constrainer_proportions,
@@ -40,7 +39,7 @@ interface ModelState {
     height: boolean
     rotation: boolean
     flipHorizontal: boolean
-    filpVertical: boolean
+    flipVertical: boolean
     radius: boolean
 }
 const props = defineProps<Props>();
@@ -52,10 +51,9 @@ const h = ref<number | string>(0);
 const rotate = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
-const multiRadius = ref(false)
 const mixed = t('attr.mixed');
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
-const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
+const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, flipVertical: false, radius: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
 
@@ -221,7 +219,7 @@ function fliph() {
     }
 }
 function flipv() {
-    if (model_disable_state.filpVertical) {
+    if (model_disable_state.flipVertical) {
         return;
     }
     const selected = props.context.selection.selectedShapes;
@@ -266,48 +264,19 @@ function adapt() {
         .editor4Shape((props.context.selection.selectedShapes[0]))
         .adapt();
 }
-function modify_multi_radius(shape: ShapeView) {
-    multiRadius.value = false;
-    if (!(shape instanceof PathShape)) {
-        return;
-    }
-    if (!shape.isClosed) {
-        return;
-    }
-    const points = shape.points;
-    if (points.length !== 4) {
-        return;
-    }
-    multiRadius.value = true;
-}
-const RADIUS_SETTING = [
-    ShapeType.Rectangle, ShapeType.Artboard,
-    ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
-    ShapeType.BoolShape
-];
+
 function layout() {
     reset_layout();
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
-        s_radius = hasRadiusShape(shape, RADIUS_SETTING);
+        s_radius = !!shape.radiusType;
         s_adapt = shape.type === ShapeType.Artboard;
-
-        if (s_radius) {
-            modify_multi_radius(shape);
-        }
-
         if (shape.type === ShapeType.Cutout) {
             s_flip = false;
         }
-
         if (is_straight(shape) || shape.type === ShapeType.Contact) {
             s_length = true;
-        }
-    } else {
-        if (selected.find(i => i instanceof RectShape || i instanceof ImageShape || i instanceof Artboard)) {
-            s_radius = true;
         }
     }
     reflush.value++;
@@ -330,7 +299,7 @@ function check_model_state() {
         model_disable_state.x = true, model_disable_state.y = true;
         model_disable_state.width = true, model_disable_state.height = true;
         model_disable_state.rotation = true;
-        model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+        model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
     }
 
@@ -342,14 +311,14 @@ function reset_model_state() {
     model_disable_state.x = false, model_disable_state.y = false;
     model_disable_state.width = false, model_disable_state.height = false;
     model_disable_state.rotation = false;
-    model_disable_state.filpVertical = false, model_disable_state.flipHorizontal = false;
+    model_disable_state.flipVertical = false, model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
 }
 function all_disable() {
     model_disable_state.x = true, model_disable_state.y = true;
     model_disable_state.width = true, model_disable_state.height = true;
     model_disable_state.rotation = true;
-    model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+    model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
 }
 function selection_change() {
@@ -401,13 +370,13 @@ onUnmounted(() => {
                 :context="context" />
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <svg-icon icon-class="fliph"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <svg-icon icon-class="flipv"></svg-icon>
                     </div>
