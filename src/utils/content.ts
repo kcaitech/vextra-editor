@@ -681,7 +681,6 @@ export function get_selected_types(context: Context): number {
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance", e: MouseEvent): string[] {
     const BASE_ITEM = ['all', 'copy'];
-
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context) && !context.tool.isLable) {
@@ -815,16 +814,6 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
 export const permIsEdit = (context: Context) => {
     return Boolean(context.workspace.documentPerm === Perm.isEdit);
 }
-
-export const hasRadiusShape = (shape: ShapeView, type: ShapeType[]) => {
-    const shapeType = shape.type
-    if (shapeType === ShapeType.Group) {
-        return false;
-    }
-    if (!type.includes(shapeType)) return false;
-    return true;
-}
-
 export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     if (!shapes.length) return new Matrix();
     const matrix = context.workspace.matrix;
@@ -844,7 +833,6 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
         matrix.trans(del.x, del.y);
-        // context.workspace.matrixTransformation();
     }
 }
 
