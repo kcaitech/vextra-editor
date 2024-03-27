@@ -168,7 +168,7 @@ onUnmounted(() => {
     .body {
         border-top: 1px solid #F0F0F0;
         width: 100%;
-        height: calc(100% - 32px);
+        height: calc(100% - 40px);
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;
