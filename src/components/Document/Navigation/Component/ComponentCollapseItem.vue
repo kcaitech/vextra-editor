@@ -25,11 +25,11 @@ const emits = defineEmits<Emits>();
 const fold = ref<boolean>(true);
 function toggle() {
     fold.value = !fold.value;
-    emits("change-status", props.data.title);
+    emits("change-status", props.data.id);
 }
 function init() {
     if (!props.data.isFolder) return;
-    fold.value = !props.status_set.has(props.data.title);
+    fold.value = !props.status_set.has(props.data.id);
 }
 onMounted(init);
 </script>
