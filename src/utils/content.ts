@@ -608,7 +608,8 @@ export function page_scale(context: Context, scale: number) {
  */
 export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     const is_edting = context.workspace.isEditing;
-    const area_0 = finder(context, p);
+    // const area_0 = finder(context, p);
+    const area_0 = context.selection.getLayers(p);
     if (area_0.length && area_0[0].type === ShapeType.Table) {
         const table = context.tableSelection;
         if (table.editingCell) {

@@ -69,12 +69,16 @@ export function scout(context: Context): Scout {
         //     }
         //     path.setAttributeNS(null, 'stroke-width', `${stroke}`);
         // }
-        path.setAttributeNS(null, 'stroke-width', '1');
+        if (!(shape instanceof PathShapeView && !isClosed)) {
+            stroke = 1;
+        }
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+
         const result = (isClosed && (path as SVGGeometryElement).isPointInFill(SVGPoint)) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
 
         if (result) {
-            // context.selection.setHoverStroke(stroke * scale);
-            context.selection.setHoverStroke(1);
+            context.selection.setHoverStroke(stroke * scale);
+            // context.selection.setHoverStroke(1);
         }
 
         return result;

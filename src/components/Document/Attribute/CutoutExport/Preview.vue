@@ -24,6 +24,7 @@ import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import PageCard from "@/components/common/PageCard.vue";
+
 type PCard = InstanceType<typeof PageCard>
 
 const { t } = useI18n();
@@ -50,9 +51,9 @@ const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
 }>();
 const DEFAULT_COLOR = () => {
-    const f = props.context.selection.selectedPage?.getFills()[0];
-    if (f) {
-        return color2string(f.color);
+    const backgroundColor = props.context.selection.selectedPage?.backgroundColor;
+    if (backgroundColor) {
+        return color2string(backgroundColor);
     } else {
         return 'rgba(239,239,239,1)';
     }
@@ -336,14 +337,14 @@ onUnmounted(() => {
         <!--                       :key="c.id" :data="c"/>-->
         <!--        </svg>-->
         <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-            :shapes="renderItems" :width="width" :height="height"></PageCard>
+                  :shapes="renderItems" :width="width" :height="height"></PageCard>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
             <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
             </div>
         </div>
         <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-            :reflush="reflush !== 0 ? reflush : undefined">
+             :reflush="reflush !== 0 ? reflush : undefined">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
@@ -360,7 +361,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        >.triangle {
+        > .triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -368,7 +369,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            >.triangle-right {
+            > .triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -379,7 +380,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            >.triangle-down {
+            > .triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -396,7 +397,7 @@ onUnmounted(() => {
         }
     }
 
-    >svg {
+    > svg {
         position: fixed;
         left: 100000px;
         top: 100000px;
@@ -427,7 +428,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >img {
+            > img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -445,7 +446,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        >img {
+        > img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;
