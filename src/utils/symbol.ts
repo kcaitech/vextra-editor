@@ -430,8 +430,8 @@ export function make_symbol(context: Context, t: Function) {
     const editor = context.editor4Page(page);
     // const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
     let name = t(`shape.${ShapeType.Symbol}`);
-    const repeats: number = context.data.stylesMgr.size;
-    name = repeats ? `${name} ${repeats + 1}` : name;
+    const repeats: number = context.data.symbolsMgr.size;
+    name = repeats ? `${name} ${repeats}` : name;
 
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
