@@ -167,7 +167,7 @@ function list_change(data: string[]) {
     if (page) {
         const shape = page.getShape(data[0]);
         if(shape) {
-            const value = shape instanceof TextShapeView ? shape.text.getText(0, Number.MAX_VALUE) : shape.name;
+            const value = shape instanceof TextShapeView ? shape.text.getText(0, Number.MAX_VALUE).slice(0, -1) : shape.name;
            default_value.value = value;
         }
     }

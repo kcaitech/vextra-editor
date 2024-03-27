@@ -49,7 +49,6 @@ const selectedWatcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes;
         isSelected.value = shapes.some(v => v.id === props.data.id);
-        // _getCutoutPath();
     }
 }
 
