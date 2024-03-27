@@ -508,7 +508,7 @@ onUnmounted(() => {
         </div>
         <div class="body" ref="listBody" @mousedown="reset_selection">
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
-                :shape-types="includes_type" :accurate="accurate">
+                :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
             </SearchPanel>
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
                 :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"

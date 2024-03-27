@@ -197,7 +197,9 @@ const selectedChild = () => {
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
     if (!is_valid_data(props.data.context, props.data.shape)) return;
-    emit('item-mousedown', e, props.data.shape)
+    if(e.button === 2) { 
+        emit('item-mousedown', e, props.data.shape)
+    }
     selectedChild();
 }
 
@@ -326,6 +328,7 @@ onUpdated(() => {
 onMounted(() => {
     updater();
     update_slice();
+    handlePerm();
     props.data.context.tool.watch(tool_watcher);
     props.data.context.navi.watch(navi_watcher);
     props.data.context.selection.watch(selectedWatcher);
