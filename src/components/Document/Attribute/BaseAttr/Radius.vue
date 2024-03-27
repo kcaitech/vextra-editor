@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
-import { onMounted } from 'vue';
-import { onUnmounted } from 'vue';
-import { ImageShape, PathShapeView, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
-import { reactive } from 'vue';
+import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 
 interface Props {
@@ -85,7 +82,7 @@ function modify_can_be_rect() {
     const selected = props.context.selection.selectedShapes;
 
     for (let i = 0, l = selected.length; i < l; i++) {
-        if (!selected[i].isRectFrame) {
+        if (!(selected[i].radiusType === RadiusType.Rect)) {
             return
         }
     }
@@ -105,7 +102,7 @@ function reset_radius_value() {
 }
 
 function get_radius_for_shape(shape: ShapeView) {
-    if (shape.isRectFrame) {
+    if (shape.radiusType === RadiusType.Rect) {
         const cornerRadius = (shape as SymbolView).cornerRadius;
         if (!cornerRadius) {
             return 0;
