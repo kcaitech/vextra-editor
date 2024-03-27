@@ -5,13 +5,24 @@ import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { ref, onUnmounted, onMounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Shape, ShapeView, SymbolRefShape, SymbolRefView, SymbolShape, SymbolView, Variable, adapt2Shape } from '@kcdesign/data';
+import {
+    OverrideType,
+    Shape,
+    ShapeView,
+    SymbolRefShape,
+    SymbolRefView,
+    SymbolShape,
+    SymbolView,
+    Variable,
+    adapt2Shape,
+    ShapeType
+} from '@kcdesign/data';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { VariableType } from '@kcdesign/data';
 import {
     create_var_by_type,
-    get_symbol_by_layer,
+    get_symbol_by_layer, get_x_type_option,
     is_bind_x_vari,
     modify_variable,
     reset_all_attr_for_ref
@@ -101,9 +112,21 @@ const isBind = () => {
     if (shapes.length === 1) {
         const vari = is_bind_x_vari(shapes[0], OverrideType.SymbolID);
         sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
@@ -120,7 +143,9 @@ function edit_instance() {
 function save_layer_show(type: VariableType, name: string) {    
     if (is_bind.value) {
         if (!sym_layer.value) return;
-        modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+        // modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+
+        modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, selectId.value);
     } else {
         if (!name.trim()) {
             message('info', t('compos.validate_info_2'));

@@ -103,16 +103,34 @@ function reset_radius_value() {
 
 function get_radius_for_shape(shape: ShapeView) {
     if (shape.radiusType === RadiusType.Rect) {
-        const cornerRadius = (shape as SymbolView).cornerRadius;
-        if (!cornerRadius) {
-            return 0;
+        if (shape instanceof PathShapeView) {
+            const s = shape as PathShapeView;
+            const points = s.points;
+
+            if (!points?.length) {
+                return 0;
+            }
+
+            let _r = points[0].radius || s.fixedRadius || 0;
+
+            for (let i = 1, l = points.length; i < l; i++) {
+                if ((points[i].radius || s.fixedRadius || 0) !== _r) {
+                    return mixed;
+                }
+            }
+            return _r;
+        } else {
+            const cornerRadius = (shape as SymbolView).cornerRadius;
+            if (!cornerRadius) {
+                return 0;
+            }
+            if (cornerRadius.lt === cornerRadius.rt
+                && cornerRadius.rt === cornerRadius.rb
+                && cornerRadius.rb === cornerRadius.lb) {
+                return cornerRadius.lt;
+            }
+            return mixed;
         }
-        if (cornerRadius.lt === cornerRadius.rt
-            && cornerRadius.rt === cornerRadius.rb
-            && cornerRadius.rb === cornerRadius.lb) {
-            return cornerRadius.lt;
-        }
-        return mixed;
     }
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;

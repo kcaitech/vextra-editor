@@ -441,8 +441,8 @@ export function enter_path_edit_mode(context: Context) {
 
     const shape = selected[0];
 
-    if (!shape.pathType) {
-        console.log('enter_path_edit_mode: !(shape instanceof PathShape)');
+    if (!shape.pathType || shape.isVirtualShape) {
+        console.log('!shape.pathType || shape.isVirtualShape');
         return;
     }
 
