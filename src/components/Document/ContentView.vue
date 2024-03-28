@@ -95,6 +95,7 @@ const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 const overview = ref<boolean>(false);
+let firstTime = false;
 
 function page_watcher(...args: any) {
     if (args.includes('backgroundColor')) {
@@ -118,8 +119,10 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y; //页面坐标系上的点
-    mousedownOnClientXY.x = clientX - x
+    mousedownOnClientXY.x = clientX - x;
     mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
+    mouseOnClient.x = clientX;
+    mouseOnClient.y = clientY;
 }
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件    
@@ -313,13 +316,20 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 }
 
 function updateMouse(e: MouseEvent) {
-    const { clientX, clientY } = e;
-    mouseOnClient.x = clientX;
-    mouseOnClient.y = clientY;
+    mouseOnClient.x = e.clientX;
+    mouseOnClient.y = e.clientY;
 }
 
 // mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
+    if (firstTime) {
+        search(e);
+        if (props.context.selection.hoveredShape) {
+            props.context.selection.selectShape(props.context.selection.hoveredShape);
+            e.stopPropagation();
+        }
+        firstTime = false;
+    }
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === 0) { // 左键按下
         const action = props.context.tool.action;
@@ -585,6 +595,11 @@ function color_watcher(t: number) {
     }
 }
 
+function windowFocus() {
+    firstTime = true;
+    window.removeEventListener('blur', windowFocus);
+}
+
 // hooks
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
@@ -632,6 +647,7 @@ onMounted(() => {
     document.addEventListener('cut', cut_watcher);
     document.addEventListener('paste', paster_watcher);
     window.addEventListener('blur', windowBlur);
+    window.addEventListener('focus', windowFocus);
 
     nextTick(() => {
         if (!root.value) {
@@ -662,6 +678,7 @@ onUnmounted(() => {
     document.removeEventListener('cut', cut_watcher);
     document.removeEventListener('paste', paster_watcher);
     window.removeEventListener('blur', windowBlur);
+    window.removeEventListener('focus', windowFocus);
     stopWatch();
 })
 </script>
