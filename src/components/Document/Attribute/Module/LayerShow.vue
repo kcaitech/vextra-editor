@@ -161,7 +161,7 @@ onUnmounted(() => {
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind.name }}</span>
-                        <span style="width: 60%;"> {{ is_bind.value ? '显示' : '隐藏' }}</span>
+                        <span style="width: 60%;"> {{ dlt_value ? '显示' : '隐藏' }}</span>
                     </div>
                 </div>
             </div>
