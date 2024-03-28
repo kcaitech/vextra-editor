@@ -25,8 +25,10 @@ export interface Scout {
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
-    const scoutId = (uuid().split('-').at(-1)) || 'scout';
-    const pathId = (uuid().split('-').at(-1)) || 'path';
+    let temp = uuid().split('-');
+    const scoutId = temp[temp.length - 1] || 'scout';
+    temp = uuid().split('-');
+    const pathId = temp[temp.length - 1] || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
     const path = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
     ele.appendChild(path);

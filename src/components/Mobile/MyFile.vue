@@ -1,6 +1,7 @@
 <template>
     <div ref="ellist" class="list">
-        <FilesItem :data="lists" @changeStar="changeStar" @openfile="openfile"></FilesItem>
+        <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
+            @refresh="getdocument" @sharefile="data"></FilesItem>
     </div>
 </template>
 
@@ -17,6 +18,14 @@ const { t } = useI18n()
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
 const errnetwork = ref<boolean>(false)
+
+const emits = defineEmits<{
+    testevnt: [data: object]
+}>()
+
+const data = (data: object) => {
+    emits('testevnt', data)
+}
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -37,9 +46,7 @@ const openfile = (id: number) => {
     router.push(({ name: 'pageviews', query: { id: id } }))
 }
 
-
-
-onMounted(async () => {
+async function getdocument() {
     let data: any
     try {
         data = await getDoucment()
@@ -48,16 +55,27 @@ onMounted(async () => {
             lists.value = data.data
         } else {
             errnetwork.value = true
+            lists.value = []
             ElMessage.error({ duration: 3000, message: data.data.message })
         }
     } catch (error) {
         console.log(error);
 
     }
+}
 
-    if (ellist.value) {
+
+onMounted(async () => {
+    const value = Number(sessionStorage.getItem('scrolltop'))
+    await getdocument()
+    if (ellist.value !== undefined) {
         setTimeout(() => {
-            ellist.value!.scrollTop = Number(sessionStorage.getItem('scrolltop'))
+            if (ellist.value !== undefined) {
+                if (ellist.value.scrollTop === null) {
+                    return
+                }
+                ellist.value.scrollTop = value
+            }
             sessionStorage.setItem('scrolltop', '0')
         }, 0)
     }

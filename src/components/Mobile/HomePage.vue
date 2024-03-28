@@ -8,9 +8,9 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem v-if="!errnetwork" :data="lists" @changeStar="changeStar"
-                @openfile="openfile"></FilesItem>
-            <div v-else class="errnetwork" @click="activeTab=2">刷新</div>
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
+                @refresh="refreshTab" @sharefile="data">
+            </FilesItem>
         </div>
     </div>
 </template>
@@ -34,6 +34,39 @@ const changetab = (id: number) => {
     sessionStorage.setItem('activeTab', id.toLocaleString())
 }
 
+const emits = defineEmits<{
+    testevnt: [data: object]
+}>()
+
+const data = (data: object) => {
+    emits('testevnt', data)
+}
+
+const refreshTab = async (tab?: number): Promise<void> => {
+    let data: any
+    switch (tab) {
+        case 0:
+            data = await getRecentlydata()
+            break;
+        case 1:
+            data = await getSharedata()
+            break;
+        case 2:
+            data = await getStardata()
+            break;
+        default:
+            break;
+    }
+    if (data.state === 'success') {
+        errnetwork.value = false
+        lists.value = data.data
+    } else {
+        errnetwork.value = true
+        lists.value = []
+        ElMessage.error({ duration: 3000, message: data.data.message })
+    }
+}
+
 watchEffect(async () => {
     let data: any
     switch (activeTab.value) {
@@ -54,6 +87,7 @@ watchEffect(async () => {
         lists.value = data.data
     } else {
         errnetwork.value = true
+        lists.value = []
         ElMessage.error({ duration: 3000, message: data.data.message })
     }
     if (ellist.value) {
@@ -63,9 +97,6 @@ watchEffect(async () => {
                 ellist.value.scrollTop = value
             }
         }, 0)
-
-
-
     }
 })
 
@@ -100,21 +131,6 @@ const openfile = (id: number) => {
 </script>
 
 <style lang="scss" scoped>
-.errnetwork {
-    width: 80px;
-    height: 32px;
-    background-color: #1878F5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 5px #1878F5;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 400;
-    color: white;
-    margin: auto;
-}
-
 .test {
     width: 100%;
     height: 100%;

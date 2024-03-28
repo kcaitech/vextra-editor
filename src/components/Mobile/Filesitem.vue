@@ -11,7 +11,7 @@
         item.document_access_record.last_access_time }}</span>
             </div>
             <div class="right" @click.stop>
-                <div class="share">
+                <div class="share" @click="emits('sharefile',item)">
                     <svg-icon icon-class="mShare"></svg-icon>
                 </div>
                 <div class="star" @click="emits('changeStar', item.document.id, item.document_favorites.is_favorite)">
@@ -22,44 +22,70 @@
         </div>
     </div>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>当前列表没有文件</span></div>
+    <div v-if="showtips && !props.errNetwork" class="null"><span>当前列表没有文件</span></div>
+    <div v-if="props.errNetwork && !loading" class="errnetwork" @click="changeload">
+        <span>刷新</span>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, watchEffect } from 'vue';
 import Loading from '../common/Loading.vue';
+
+const showtips = ref<boolean>(false)
+const loading = ref<boolean>(true)
 
 const props = defineProps<{
     data: any[],
+    errNetwork: boolean,
 }>();
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
     (e: 'openfile', docID: number): void;
-    (e: 'refresh'): void;
+    (e: 'refresh', tab?: number): void;
+    (e: 'sharefile', data: object): void;
 }>()
 
-const showtips = ref<boolean>(false)
-const loading = ref<boolean>(true)
-watch(() => props.data, () => {
-    console.log('111');
-    
+
+watch([() => props.data, () => props.errNetwork], () => {
     if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
     }
     loading.value = false
-},{deep:true})
+})
 
-const test = () => {
-    console.log('111');
-
+const changeload = () => {
+    loading.value = true
+    emits('refresh', Number(sessionStorage.getItem('activeTab')))
 }
+
 
 </script>
 
 <style lang="scss" scoped>
+.errnetwork {
+    height: 100%;
+    display: flex;
+
+    span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 32px;
+        background-color: #1878F5;
+        box-shadow: 0 0 5px #1878F5;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 400;
+        color: white;
+        margin: auto;
+    }
+}
+
 .null {
     display: flex;
     height: 100%;
