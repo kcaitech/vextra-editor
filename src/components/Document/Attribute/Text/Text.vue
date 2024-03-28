@@ -163,9 +163,6 @@ const onUnderlint = () => {
     } else {
         editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.underline = isUnderline.value ? UnderlineType.Single : undefined;
-    props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置删除线
 const onDeleteline = () => {
@@ -182,9 +179,6 @@ const onDeleteline = () => {
     } else {
         editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.strikethrough = isDeleteline.value ? StrikethroughType.Single : undefined;
-    props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
@@ -591,9 +585,6 @@ function getColorFromPicker(color: Color, type: string) {
             editor.setTextHighlightColorMulti(props.textShapes, color)
         }
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    type === 'color' ? textAttr.color = color : textAttr.highlight = color;
-    props.context.textSelection.setTextAttr(textAttr);
 }
 
 function setColor(clr: string, alpha: number, type: string) {
@@ -629,9 +620,6 @@ function setColor(clr: string, alpha: number, type: string) {
             editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]), new Color(alpha, r, g, b))
         }
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    type === 'color' ? textAttr.color = new Color(alpha, r, g, b) : textAttr.highlight = new Color(alpha, r, g, b);
-    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const deleteHighlight = () => {
@@ -647,9 +635,6 @@ const deleteHighlight = () => {
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.highlight = undefined;
-    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const addHighlight = () => {
@@ -666,9 +651,6 @@ const addHighlight = () => {
     } else {
         editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.highlight = new Color(1, 216, 216, 216);
-    props.context.textSelection.setTextAttr(textAttr);
 }
 const higAlphaInput = () => {
     if (higlighAlpha.value && higlightColor.value) {
@@ -697,9 +679,6 @@ const addTextColor = () => {
     } else {
         editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
-    const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.highlight = new Color(1, 6, 6, 6);
-    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const setMixedTextColor = () => {
@@ -707,31 +686,23 @@ const setMixedTextColor = () => {
     const editor = props.context.editor4TextShape(props.shape)
     let format: AttrGetter
     const __text = props.shape.getText();
-    const textAttr = props.context.textSelection.getTextAttr;
     if (length.value) {
         format = __text.getTextFormat(textIndex, 1, editor.getCachedSpanAttr())
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
-        textAttr.color = new Color(alpha, red, green, blue);
-        textAttr.fillType = format.fillType || FillType.SolidColor;
         editor.setTextColor(textIndex, selectLength, new Color(alpha, red, green, blue));
         editor.setTextFillType(format.fillType || FillType.SolidColor, textIndex, selectLength);
         if (format.gradient) {
-            textAttr.gradient = format.gradient;
             editor.setTextGradient(format.gradient, textIndex, selectLength);
         }
     } else {
         format = __text.getTextFormat(0, 1, editor.getCachedSpanAttr());
         const { alpha, red, green, blue } = format.color || new Color(1, 6, 6, 6);
-        textAttr.color = new Color(alpha, red, green, blue);
-        textAttr.fillType = format.fillType || FillType.SolidColor;
         editor.setTextColorMulti(props.textShapes, new Color(alpha, red, green, blue));
         editor.setTextFillTypeMulti(props.textShapes, format.fillType || FillType.SolidColor);
         if (format.gradient) {
-            textAttr.gradient = format.gradient;
             editor.setTextGradientMulti(props.textShapes, format.gradient);
         }
     }
-    props.context.textSelection.setTextAttr(textAttr);
 }
 
 const togger_gradient_type = (type: GradientType | 'solid') => {

@@ -492,31 +492,12 @@ const textFormat = () => {
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
-        if (formats.length === 0) {
-            getTableFormat();
-        }
     }
     reflush.value++;
 }
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-const getTableFormat = () => {
-    const textAttr = props.shape.data.textAttr;
-    if (!textAttr) return;
-    isBold.value = textAttr.bold || 400;
-    isTilt.value = textAttr.italic || false;
-    fontName.value = textAttr.fontName || 'PingFangSC-Regular';
-    fonstSize.value = textAttr.fontSize || 14;
-    isUnderline.value = textAttr.underline && textAttr.underline !== UnderlineType.None || false;
-    isDeleteline.value = textAttr.strikethrough && textAttr.strikethrough !== StrikethroughType.None || false;
-    selectLevel.value = textAttr.alignment || 'left';
-    selectVertical.value = textAttr.verAlign || 'top';
-    textColor.value = textAttr.color;
-    highlight.value = textAttr.highlight;
-    fillType.value = textAttr.fillType || FillType.SolidColor;
-    gradient.value = textAttr.gradient;
-}
 
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
@@ -837,8 +818,6 @@ const setMixedTextColor = () => {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextColor(new Color(alpha, red, green, blue), cell_selection);
             editor.setTextFillType(forma.fillType || FillType.SolidColor, cell_selection);
-            console.log(forma, 'forma');
-
             if (forma.gradient) {
                 editor.setTextGradient(forma.gradient, cell_selection);
             }
