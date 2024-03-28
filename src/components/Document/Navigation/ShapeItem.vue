@@ -90,11 +90,17 @@ const fitToggleContainer = (e: MouseEvent) => {
 }
 
 function hoverShape(e: MouseEvent) {
+    if (e.buttons !== 0) {
+        return;
+    }
     emits("hovershape", props.data.shapeview());
     is_tool_visible.value = true;
 }
 
 function unHoverShape(e: MouseEvent) {
+    if (e.buttons !== 0) {
+        return;
+    }
     e.stopPropagation();
     emits("unhovershape");
     is_tool_visible.value = false

@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, GroupShapeView, ShapeType, ShapeView, TableView } from "@kcdesign/data";
+import { Border, BorderStyle, ShapeType, ShapeView, TableView } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
-import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
+import {
+    get_actions_border_style
+} from '@/utils/shape_style';
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
-import { getShapesForStyle } from '@/utils/style';
+import { Menu } from "@/context/menu";
 
 interface Props {
     context: Context
@@ -33,6 +35,8 @@ const borderStyleOptionsSource: SelectSource[] = genOptions([
 ]);
 
 function showMenu() {
+    console.log('click')
+    props.context.menu.notify(Menu.SHUTDOWN_MENU);
     updater();
     layout();
     popover.value.show();
@@ -112,7 +116,7 @@ onUnmounted(() => {
 <template>
     <div class="border-detail-container" @mousedown.stop>
         <Popover :context="props.context" class="popover" ref="popover" :width="200" :auto_to_right_line="true"
-            :title="t('attr.advanced_stroke')">
+                 :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" :class="{ actived: props.context.menu.ispopover }" @click="showMenu">
@@ -125,8 +129,8 @@ onUnmounted(() => {
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
-                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                            @select="borderStyleSelect"></Select>
+                                :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
+                                @select="borderStyleSelect"></Select>
                     </div>
                 </div>
             </template>
@@ -140,7 +144,7 @@ onUnmounted(() => {
 }
 
 .border-detail-container {
-    >.popover {
+    > .popover {
         width: 28px;
         height: 32px;
 
@@ -159,7 +163,7 @@ onUnmounted(() => {
                 justify-content: center;
                 border-radius: var(--default-radius);
 
-                >svg {
+                > svg {
                     width: 16px;
                     height: 16px;
                 }
@@ -178,17 +182,17 @@ onUnmounted(() => {
             box-sizing: border-box;
             height: 100%;
 
-            >div {
+            > div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                >.select {
+                > .select {
                     width: 128px;
                     height: 32px;
                 }
 
-                >label {
+                > label {
                     flex: 0 0 24px;
                     box-sizing: border-box;
                     width: 24px;
@@ -199,7 +203,7 @@ onUnmounted(() => {
                     margin-right: 24px;
                 }
 
-                >.thickness-container {
+                > .thickness-container {
                     box-sizing: border-box;
                     padding: 3px;
                     background-color: var(--input-background);
@@ -209,14 +213,14 @@ onUnmounted(() => {
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    > svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                         margin-left: 9px;
                     }
 
-                    >input {
+                    > input {
                         outline: none;
                         border: none;
                         width: calc(100% - 68px);
@@ -244,7 +248,7 @@ onUnmounted(() => {
                         justify-content: space-around;
                         border-radius: 4px;
 
-                        >svg {
+                        > svg {
                             width: 12px;
                             height: 12px;
                         }

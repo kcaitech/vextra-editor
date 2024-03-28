@@ -423,9 +423,9 @@ onMounted(() => {
 
                     span:nth-child(n + 2) {
                         cursor: pointer;
-                        color: rgb(0, 0, 238);
+                        color: #1878f5;
                         font-weight: 500;
-                        opacity: 0.5;
+                        opacity: 0.6;
                     }
                 }
             }
