@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import LableType from './LableType.vue'
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import { get_height, get_rotation, get_width, get_xy } from '@/utils/attri_setting';
-import { GroupShapeView, RectShapeView, PathShapeView, PathShapeView2, ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'
@@ -17,7 +17,7 @@ const name = ref('');
 const xy = ref({ x: 0, y: 0 });
 const size = ref({ w: 0, h: 0 });
 const rotate = ref(0);
-const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
+let radius = reactive<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
 const watchedShapes = new Map();
 const unit = ['pt', 'px', 'dp', 'rpx'];
 const copy_text = ref(false);
@@ -54,21 +54,19 @@ const getShapeInfo = () => {
 }
 
 const getRadius = (shape: ShapeView) => {
-    if (shape.type === ShapeType.Rectangle) {
-        const { lb, lt, rb, rt } = (shape as RectShapeView).getRectRadius();
-        radius.value.lb = lb * multiple.value;
-        radius.value.lt = lt * multiple.value;
-        radius.value.rb = rb * multiple.value;
-        radius.value.rt = rt * multiple.value;
-    } else if (shape instanceof GroupShapeView ||
-        shape instanceof PathShapeView ||
-        shape instanceof PathShapeView2 ||
-        shape instanceof TextShapeView) {
-        const fixedRadius = shape.fixedRadius ?? 0;
-        radius.value.lt = fixedRadius * multiple.value;
-        radius.value.lb = fixedRadius * multiple.value;
-        radius.value.rt = fixedRadius * multiple.value;
-        radius.value.rb = fixedRadius * multiple.value;
+    const r = shape.radius;
+    if (r.length === 4) {
+        radius.lt = r[0] * multiple.value;
+        radius.rt = r[1] * multiple.value;
+        radius.rb = r[2] * multiple.value;
+        radius.lb = r[3] * multiple.value;
+    } else {
+        const mixed = r.every((v: number) => v === r[0]);
+        if(!mixed) return radius = { lt: 0, rt: 0, rb: 0, lb: 0 };
+        radius.lt = r[0] * multiple.value;
+        radius.rt = r[0] * multiple.value;
+        radius.rb = r[0] * multiple.value;
+        radius.lb = r[0] * multiple.value;
     }
 }
 function selection_wather(t: any) {

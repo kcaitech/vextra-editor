@@ -197,7 +197,7 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     for (let i = 0, len = list.length; i < len; i++) {
         const item = list[i];
         result.push(item);
-        if (extend_set.has(item.title)) {
+        if (extend_set.has(item.id)) {
             list_layout(item.childs, extend_set, result);
         }
     }
@@ -244,7 +244,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
     if (!item) return false;
     let p = item.parent;
     while (p) {
-        status_set.add(p.title);
+        status_set.add(p.id);
         p = p.parent;
     }
 

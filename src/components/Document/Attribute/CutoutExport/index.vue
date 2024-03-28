@@ -323,7 +323,6 @@ const deleteArgus = (idx: number) => {
     const len = selected.length;
     if (len === 1) {
         const shape = selected[0];
-        if (shape.type === ShapeType.Cutout && preinstallArgus.length === 1) return;
         const editor = props.context.editor4Shape(shape);
         editor.deleteExportFormat(_idx);
     } else if (len > 1) {
@@ -526,11 +525,11 @@ onUnmounted(() => {
                                  @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
-            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="trim_bg" @change="trimBackground"
                              :label="t('cutoutExport.trim_transparent_pixels')"/>
             </div>
-            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground"
                              :label="t('cutoutExport.canvas_background_color')"/>
             </div>
