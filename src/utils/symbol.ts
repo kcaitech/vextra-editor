@@ -710,7 +710,7 @@ function get_ot_by_vt(vt: VariableType) {
     if (vt === VariableType.Text) return OverrideType.Text;
 }
 
-function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
+export function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
     let shapes: ShapeView[] = [];
     const childs = (group).childs;
     if (!childs?.length) return shapes;

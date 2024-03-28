@@ -69,6 +69,9 @@ function update() {
 function change_a(e: Event) {
     let value = (e.currentTarget as any)['value'];
     value = Number(value) / 100;
+    if (isNaN(value)) {
+        return;
+    }
     if (1 >= value && value >= 0) {
         setColor("#" + clr_v.value, value);
         alpha_v.value = value * 100;
@@ -120,8 +123,9 @@ onUnmounted(() => {
             </ColorPicker>
             <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele" @click="clr_click"
                 :spellcheck="false">
-            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"
-                @click="alpha_click" :step="1" ref="alpha_ele">
+<!--            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"-->
+<!--                @click="alpha_click" :step="1" ref="alpha_ele">-->
+            <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha"  @click="alpha_click" ref="alpha_ele">
         </div>
     </div>
 </template>

@@ -1,7 +1,8 @@
-import { debounce, throttle } from "lodash";
+import { debounce } from "lodash";
 import { Context } from "@/context";
-import { ClientXY, PageXY, XY } from "@/context/selection";
+import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
+    adapt2Shape,
     AsyncCreator,
     Color,
     ContactForm,
@@ -10,7 +11,9 @@ import {
     ImageShape,
     Matrix,
     Page,
-    PageView,
+    PathShapeView,
+    PathShapeView2,
+    PathType,
     Shape,
     ShapeFrame,
     ShapeType,
@@ -19,12 +22,11 @@ import {
     SymbolRefView,
     SymbolShape,
     TableView,
-    TextShape,
-    adapt2Shape, PathType, PathShapeView, PathShapeView2, TextAttr
+    TextAttr,
+    TextShape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { adjust_content_xy, after_import, paster_image } from "./clipboard";
@@ -606,7 +608,8 @@ export function page_scale(context: Context, scale: number) {
  */
 export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     const is_edting = context.workspace.isEditing;
-    const area_0 = finder(context, p);
+    // const area_0 = finder(context, p);
+    const area_0 = context.selection.getLayers(p);
     if (area_0.length && area_0[0].type === ShapeType.Table) {
         const table = context.tableSelection;
         if (table.editingCell) {
@@ -624,7 +627,7 @@ export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     const selection = context.selection;
     const area_1 = context.selection.getShapesByXY(p, false);
     if (area_1) {
-        if (area_1.type === ShapeType.Group) {
+        if (area_1.type === ShapeType.Group || area_1.type === ShapeType.BoolShape) {
             selection.selectShape(area_1);
             return 'group';
         } else if (area_1.type === ShapeType.Symbol) {
@@ -660,7 +663,7 @@ export function get_selected_types(context: Context): number {
         const type = shape.type;
         if (type === ShapeType.Artboard) {
             result = result | 1;
-        } else if (type === ShapeType.Group) {
+        } else if (type === ShapeType.Group || type === ShapeType.BoolShape) {
             result = result | 2;
         } else if (type === ShapeType.SymbolRef) {
             result = result | 4;
@@ -939,8 +942,8 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         const editor = context.editor4Page(page);
         // const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
-        frame.x = position.x - state.frame.width / 2;
-        frame.y = position.y - state.frame.height / 2;
+        frame.x = position.x - state.frame.width / 2 - page.frame.x;
+        frame.y = position.y - state.frame.height / 2 - page.frame.y;
         const childs = (page).childs;
         let id = symbol.id;
         let name = symbol.name;
@@ -954,7 +957,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
             if ((item as SymbolRefView)?.refId === id) count++;
         }
         let ref: Shape | false = editor.refSymbol(context.data, `${name} ${count}`, frame, id);
-        ref = editor.insert(page.data, shapes.length, ref);
+        ref = editor.insert(page.data, shapes.length, ref, true);
 
         if (ref) {
             context.nextTick(page, () => {
@@ -970,6 +973,11 @@ const MIN = 2;
 
 export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
+
+    if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
+        scale_delta = 1.02;
+    }
+
     let scale_delta_ = 1 / scale_delta;
     const scale = Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0));
     if (scale <= MIN) {

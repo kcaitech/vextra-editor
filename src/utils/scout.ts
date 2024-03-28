@@ -50,30 +50,35 @@ export function scout(context: Context): Scout {
         const isClosed = shape.isClosed;
 
         const borders = shape.getBorders();
-        if (!borders.length) {
-            path.setAttributeNS(null, 'stroke', 'none');
-        } else {
-            for (let i = 0; i < borders.length; i++) {
-                const border = borders[i];
-
-                let t = border.thickness;
-                if (border.position === BorderPosition.Outer) {
-                    t *= 2;
-                }
-                if (border.position === BorderPosition.Inner) {
-                    t = 0;
-                }
-                if (t > stroke) {
-                    stroke = t;
-                }
-            }
-            path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+        // if (!borders.length) {
+        //     path.setAttributeNS(null, 'stroke', 'none');
+        // } else {
+        //     for (let i = 0; i < borders.length; i++) {
+        //         const border = borders[i];
+        //
+        //         let t = border.thickness;
+        //         if (border.position === BorderPosition.Outer) {
+        //             t *= 2;
+        //         }
+        //         if (border.position === BorderPosition.Inner) {
+        //             t = 0;
+        //         }
+        //         if (t > stroke) {
+        //             stroke = t;
+        //         }
+        //     }
+        //     path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+        // }
+        if (!(shape instanceof PathShapeView && !isClosed)) {
+            stroke = 1;
         }
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
 
         const result = (isClosed && (path as SVGGeometryElement).isPointInFill(SVGPoint)) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
 
         if (result) {
             context.selection.setHoverStroke(stroke * scale);
+            // context.selection.setHoverStroke(1);
         }
 
         return result;
