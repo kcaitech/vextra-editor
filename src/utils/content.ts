@@ -973,6 +973,11 @@ const MIN = 2;
 
 export function root_scale(context: Context, e: WheelEvent) {
     let scale_delta = 1.2;
+
+    if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
+        scale_delta = 1.02;
+    }
+
     let scale_delta_ = 1 / scale_delta;
     const scale = Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0));
     if (scale <= MIN) {
