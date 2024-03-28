@@ -164,4 +164,4 @@
 
 邮编：519000  
 
-邮箱：<bd@kcaisoft.com>
+邮箱：<contact@kcaitech.com>
