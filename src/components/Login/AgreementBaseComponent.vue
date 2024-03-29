@@ -1,4 +1,5 @@
 <template>
+    <div style="height: 100%;width: 100%;">
     <div class="header-container">
         <div class="kc-header">
             <div class="logo" @click="$router.push({ path: '/' })">
@@ -16,9 +17,10 @@
     <div class="footer-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
         <Footer />
     </div>
+</div>
 </template>
 <script setup lang="ts">
-import avatar from '@/assets/pd-logo-svg.svg'
+import avatar from '@/assets/h-logo.svg'
 import { router } from '@/router'
 import Footer from './Footer.vue'
 import isMobileDevice from '@/utils/mobileDeviceChecker'
@@ -81,7 +83,7 @@ onUnmounted(() => {
             cursor: pointer;
 
             .logo-img {
-                width: 160px;
+                width: 200px;
                 height: 56px;
             }
 
