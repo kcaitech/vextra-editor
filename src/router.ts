@@ -216,11 +216,11 @@ const routes = [
         name: "per_center",
         component: per_center
     },
-    // {
-    //     path: '//:catchAll(.*)',
-    //     redirect: '/',
+    {
+        path: '/catchAll(.*)/:catchAll(.*)',
+        redirect: '/',
 
-    // },
+    },
 ]
 
 export const router = createRouter({
