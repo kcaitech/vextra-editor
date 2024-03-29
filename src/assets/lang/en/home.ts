@@ -1,7 +1,7 @@
 import { BorderPosition } from "@kcdesign/data";
 
 export const product = {
-    name: 'ProtoDesign'
+    name: 'MossDesign'
 }
 
 export const system = {
@@ -45,7 +45,7 @@ export const system = {
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
     'read_Privacy': 'Privacy Agreement',
-    'product_name': 'ProtoDesign',
+    'product_name': 'MossDesign',
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
     'login_footer': 'Zhuhai Kuangcai Technology Co., Ltd',
     'placeholder': 'Search file',

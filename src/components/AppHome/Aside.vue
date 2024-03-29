@@ -567,8 +567,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="logo">
-        <img class="logo-image" :src="logo" alt="ProtoDesign" />
-        <img class="mini_logo-image" :src="min_logo" alt="ProtoDesign" style="display: none;" />
+        <img class="logo-image" :src="logo" alt="MossDesign" />
+        <img class="mini_logo-image" :src="min_logo" alt="MossDesign" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>

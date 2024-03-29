@@ -13,7 +13,7 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 }
 
 onMounted(() => {
-    document.title = 'ProtoDesign';
+    document.title = 'MossDesign';
     startRefreshTokenTask();
 })
 
