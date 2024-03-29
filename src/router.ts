@@ -26,7 +26,8 @@ const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
 const MobileHome = () => import('@/components/Mobile/index.vue')
-const PageViews=()=>import('@/components/Mobile/PageViews.vue')
+const PageViews = () => import('@/components/Mobile/PageViews.vue')
+const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 
 let _t: any = i18n.global
 
@@ -168,10 +169,23 @@ const routes = [
     },
     {
         path: "/files",
-        name: isMobileDevice() ? "MobileHome" : "apphome",
-        component: isMobileDevice() ? MobileHome : Apphome,
+        name: "apphome",
+        component: Apphome,
         redirect: '/files/recently',
         children: children
+    },
+    {
+        path: "/m",
+        name: "mobilehome",
+        component: MobileHome,
+    },
+    {
+        path: "/team/:id",
+        name: 'projectview',
+        component: ProjectView,
+        meta: {
+            requireAuth: true
+        }
     },
     {
         path: "/join",
@@ -202,11 +216,11 @@ const routes = [
         name: "per_center",
         component: per_center
     },
-    {
-        path: '/:catchAll(.*)',
-        redirect: '/',
+    // {
+    //     path: '/:catchAll(.*)',
+    //     redirect: '/',
 
-    },
+    // },
 ]
 
 export const router = createRouter({

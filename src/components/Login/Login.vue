@@ -66,7 +66,12 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     localStorage.removeItem('perRoute')
                 }
                 else {
-                    router.push({ name: 'apphome' })
+                    if (isMobileDevice()) {
+                        router.push({ name: 'mobilehome' })
+                    } else {
+                        router.push({ name: 'apphome' })
+                    }
+
                 }
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
@@ -121,7 +126,12 @@ function clickaffirm() {
                         query
                     })
                 } else {
-                    router.push({ name: 'apphome' })
+                    if (isMobileDevice()) {
+                        router.push({ name: 'mobilehome' })
+                    } else {
+                        router.push({ name: 'apphome' })
+                    }
+
                 }
             } else if (result.code === 400) {
                 codeerror.value = true

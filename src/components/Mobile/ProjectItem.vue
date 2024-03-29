@@ -1,5 +1,5 @@
 <template>
-    <div class="list-item" v-for=" team  in props.data" :key="team.team.id" @click="toteamproject(team.team.id)">
+    <div class="list-item" v-for=" team  in props.data" :key="team.team.id">
         <div class="image">
             <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
             <span v-else>{{ team.team.name.slice(0, 1) }}</span>
@@ -27,12 +27,10 @@
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { urlencoded } from 'express';
-import { router } from '@/router';
 
 const props = defineProps<{
     data: any,
 }>();
-
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
@@ -46,9 +44,6 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
-const toteamproject = (id: number) => {
-    router.push({ path: '/team/' + id });
-}
 
 
 </script>

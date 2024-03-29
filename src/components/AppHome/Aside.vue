@@ -14,8 +14,8 @@ import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
-import logo from '@/assets/pd-logo-svg.svg';
-import min_logo from '@/assets/logo.png';
+import logo from '@/assets/h-logo.svg';
+import min_logo from '@/assets/favicon.svg';
 
 const { t } = useI18n();
 const route = useRoute();
