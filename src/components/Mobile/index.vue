@@ -14,12 +14,15 @@
                         <svg-icon icon-class="close"></svg-icon>
                     </div>
                 </div>
-                <div class="notice">
+                <div class="notice" @click="showInForm = !showInForm">
                     <svg-icon icon-class="m-notice"></svg-icon>
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
+                    </div>
                 </div>
             </div>
             <div class="content">
-                <component :is="tabs.get(activebnt)||Home"></component>
+                <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
+                <div v-if="inputvalue" class="search-list"></div>
             </div>
         </div>
         <div class="footer">
@@ -31,15 +34,23 @@
                 <div class="label">{{ item.label }}</div>
             </div>
         </div>
+        <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
+        <!-- <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
+            @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform> -->
+        <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList" :teamApplyList="totalList"></Inform>
     </div>
 </template>
 
 <script setup lang="ts">
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import Home from './HomePage.vue';
 import MyFile from './MyFile.vue';
 import Team from './Team.vue';
 import About from './About.vue';
-import { ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import ShareFile from './ShareFile.vue';
+import Inform from './MessageInfo.vue';
 
 const bntdata = [
     { label: '首页', value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
@@ -51,8 +62,26 @@ const bntdata = [
 const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
 const inputvalue = ref<string>('')
 
+const projectApplyList = ref<any>([]);
+const notifyPApplyList = ref<any>([]);
+const notifyTApplyList = ref<any>([]);
+const applynum = ref(0);
+const teamnum = ref(0);
+const applyList = ref<any[]>([]);
+const teamApplyList = ref<any>([]);
+const totalList = ref<any[]>([])
+const showInForm = ref(false);
+const closeInForm = () => {
+    showInForm.value = false;
+}
+const docid = ref<string>()
+const total = computed(() => {
+    return applynum.value + teamnum.value ?? 99;
+})
+
+
 const tabs = new Map([
-    ['Home', Home],
+    ['Home', Home,],
     ['MyFiles', MyFile],
     ['Team', Team],
     ['About', About],
@@ -60,17 +89,170 @@ const tabs = new Map([
 
 const changetab = (tab: string) => {
     activebnt.value = tab
-    sessionStorage.setItem('selectTab',tab)
+    sessionStorage.setItem('selectTab', tab)
 }
+
+const testevent = (data: any) => {
+    console.log(data);
+    docid.value = data.document.id
+}
+
+const getApplyList = async () => {
+    try {
+        const { data } = await share_api.getApplyListAPI();
+        if (data) {
+            applyList.value = data;
+            applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const getProjectApplyList = async () => {
+    try {
+        const { data } = await team_api.getTeamProjectApplyAPI();
+        if (data) {
+            projectApplyList.value = data;
+            totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const getTeamApply = async () => {
+    try {
+        const { data } = await team_api.getTeamApplyAPI();
+        if (data) {
+            teamApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+            getProjectApplyList();
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+const getProjectNotice = async () => {
+    try {
+        const { data } = await team_api.getProjectNoticeAPI();
+        if (data) {
+            notifyPApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+const getTeamNotice = async () => {
+    try {
+        const { data } = await team_api.getTeamNoticeAPI();
+        if (data) {
+            notifyTApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+watch(totalList, () => {
+    teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+}, { deep: true })
+watch(applyList, () => {
+    applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
+}, { deep: true })
+
+getApplyList();
+getTeamApply();
+getProjectNotice();
+getTeamNotice();
+getProjectApplyList();
+let timer: any = null
+onMounted(() => {
+    timer = setInterval(() => {
+        getApplyList();
+        getTeamApply();
+        getProjectNotice();
+        getTeamNotice();
+        getProjectApplyList();
+    }, 60000)
+})
+
+onUnmounted(() => {
+
+    clearInterval(timer)
+
+})
 
 </script>
 
 <style lang="scss" scoped>
+.num {
+    position: relative;
+    font-size: 10px;
+    top: -4px;
+    left: 10px;
+    min-width: 14px;
+    min-height: 14px;
+    background-color: red;
+    color: #fff;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.after::after {
+    content: '+';
+    position: absolute;
+    display: block;
+    top: -4px;
+    left: 16px;
+    color: #fff;
+}
+
+.search-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #262626;
+}
+
 .bnt-selct {
     color: #262626 !important;
 }
 
 .container {
+    position: relative;
     height: 100%;
     width: 100%;
     display: flex;
@@ -157,6 +339,7 @@ const changetab = (tab: string) => {
             }
 
             .notice {
+                position: relative;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -173,6 +356,7 @@ const changetab = (tab: string) => {
 
 
         .content {
+            position: relative;
             height: calc(100% - 54px)
         }
     }

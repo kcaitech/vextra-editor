@@ -36,7 +36,7 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
-import { maySvgText, parse as SVGParse } from "@/utils/svg_parser";
+import { parse as SVGParse } from "@/utils/svg_parser";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -51,8 +51,8 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-export const identity = 'cn.protodesign';
-export const paras = 'cn.protodesign/paras'; // 文字段落
+export const identity = 'design.moss';
+export const paras = 'design.moss/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
     private cache: { type: CacheType, data: any } | undefined;
@@ -1186,6 +1186,14 @@ function image_reader(context: Context, val: any, contentType: string, t: Functi
         fr.readAsDataURL(val);
     }
     img.src = URL.createObjectURL(val);
+}
+
+function maySvgText(content: string) {
+    if (content.length < 11) {
+        return false;
+    }
+
+    return (content.search(/<svg|<?xml/) > -1) && (new RegExp('</svg>').test(content.slice(content.length - 6).toLowerCase()));
 }
 
 /**

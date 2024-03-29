@@ -55,7 +55,7 @@ function get_value() {
 }
 
 function component_watcher(type: number, val: Shape) {
-    if (type !== Component.SELECTED_VAL) {
+    if (type !== Component.SELECTED_VAL || !showCompsDialog.value) {
         return;
     }
 

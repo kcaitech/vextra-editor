@@ -74,7 +74,9 @@ class TIter implements IDataIter<TItemData> {
         return item;
     }
 }
-
+const emit = defineEmits<{
+    (e: "item-mousedown", event: MouseEvent, shape: ShapeView): void;
+}>()
 const props = defineProps<Props>();
 const { t } = useI18n();
 let result_by_shape: ShapeView[] = [];
@@ -351,40 +353,13 @@ function isLock(lock: boolean, shape: ShapeView) {
     source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
-function selectshape_right(shape: ShapeView, shiftKey: boolean) {
-    const selection = props.context.selection;
-    if (is_shape_in_selection(selection.selectedShapes, shape)) return;
-    if (shiftKey) {
-        selectShapeWhenShiftIsPressed(shape);
-    } else {
-        selection.selectShape(shape);
-    }
-}
-
 function list_mousedown(e: MouseEvent, shape: ShapeView) {
     const menu = props.context.menu;
     menu.menuMount();
     chartMenu.value = false;
     if (e.button === 2) {
-        e.stopPropagation(); // 右键事件到这就不上去了
-        menu.menuMount();
-        if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
-        selectshape_right(shape, e.shiftKey);
-        const selected = props.context.selection.selectedShapes;
-        chartMenuItems = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container'];
-        if (selected.length === 1) {
-            chartMenuItems.push('forward', 'back', 'top', 'bottom');
-        }
-        const types = selection_types(selected);
-        if (types & 1) chartMenuItems.push('un_group');
-        if (types & 2) chartMenuItems.push('dissolution');
-        chartMenuMount(e);
+       emit('item-mousedown', e, shape);
     }
-}
-
-function chartMenuMount(e: MouseEvent) {
-    e.stopPropagation()
-    //  todo
 }
 
 function isRead(read: boolean, shape: ShapeView) {

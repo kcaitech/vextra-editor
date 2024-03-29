@@ -38,8 +38,8 @@ function onChange(e: Event) {
     }
     let value = String(saveValue.value)
     try {
-        if (props.svgicon == 'angle' && value.slice(-1) === '°') {
-            const raduis = value.slice(0, -1)
+        if (props.svgicon == 'angle') {
+            const raduis = value.replace("°", "");
             value = String(eval(raduis));
         } else {
             value = String(eval(value));

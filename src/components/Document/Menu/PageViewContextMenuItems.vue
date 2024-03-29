@@ -367,27 +367,7 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
-    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
-    if (groups.length === 0) return;
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        const shapes = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
-        if (shapes) {
-            const selectShapes = [...saveSelectShape, ...shapes]
-            props.context.nextTick(page, () => {
-                const select = selectShapes.reduce((pre, cur) => {
-                    const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
-                    if (s) {
-                        pre.push(s);
-                    }
-                    return pre;
-                }, [] as ShapeView[])
-                props.context.selection.rangeSelectShape(select);
-            })
-        }
-    }
+    props.context.tool.notify(Tool.UNGROUP);
     emit('close');
 }
 

@@ -9,10 +9,12 @@
                 </div>
                 <transition name="el-zoom-in-top">
                     <ul class="filterlist2" v-if="item.type === 1 && fold" ref="menu">
-                        <li class="item" :style="{ fontWeight: item.type == fontName ? 500 : '',color: item.type == fontName ? '#262626' : '' }"
+                        <li class="item"
+                            :style="{ fontWeight: item.type == fontName ? 500 : '', color: item.type == fontName ? '#262626' : '' }"
                             v-for="item in  filteritems " :key="item.type" @click.stop="filterEvent(item.type)">
                             {{ item.label }}
-                            <div class="choose" :style="{ visibility: item.type == fontName ? 'visible' : 'hidden' }"></div>
+                            <div class="choose" :style="{ visibility: item.type == fontName ? 'visible' : 'hidden' }">
+                            </div>
                         </li>
                     </ul>
                 </transition>
@@ -79,6 +81,7 @@
         :confirm-btn="t('home.rename_ok')" @clode-dialog="closeChangeName" @confirm="confirm_to_modify_name"
         @updateinputvalue="changeinputvalue"></ProjectDialog>
 </template>
+
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
@@ -263,7 +266,7 @@ const SearchList = computed(() => {
         if (el.user.id === userID.value) {
             usertype2.value = el.perm_type
         }
-        return PinyinMatch.match(el.team_member.nickname.toLowerCase(), props.searchvalue.toLowerCase())
+        return PinyinMatch.match(el.team_member.nickname.toLowerCase() ? el.team_member.nickname.toLowerCase() : el.user.nickname.toLowerCase(), props.searchvalue.toLowerCase())
     }) : ListData.value.filter((el: any) => {
         if (el.user.id === userID.value) {
             usertype2.value = el.perm_type
@@ -479,6 +482,7 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside)
 })
 </script>
+
 <style lang="scss" scoped>
 .container {
     margin: 0 8px 0px 8px;

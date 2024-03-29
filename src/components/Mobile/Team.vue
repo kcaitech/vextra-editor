@@ -11,6 +11,10 @@ import { onMounted } from 'vue';
 
 const teamlist = ref<any[]>([])
 
+const emits = defineEmits<{
+    testevnt: [data: object]
+}>()
+
 onMounted(async () => {
    teamlist.value = await GetteamList()
 })

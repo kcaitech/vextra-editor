@@ -37,6 +37,7 @@ import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 import { router } from "@/router";
+import isMobileDevice from "@/utils/mobileDeviceChecker";
 
 interface Saved {
     page: Page | undefined,
@@ -239,7 +240,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
         if (p) {
             router.replace({
-                path: '/document',
+                path: isMobileDevice() ? '/pageviews' : '/document',
                 query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
             });
         }

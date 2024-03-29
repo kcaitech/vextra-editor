@@ -5,9 +5,15 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { OverrideType, ShapeView, SymbolView, Variable, VariableType } from '@kcdesign/data';
+import { OverrideType, ShapeType, ShapeView, SymbolView, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
+import {
+    create_var_by_type,
+    get_symbol_by_layer,
+    get_x_type_option,
+    is_bind_x_vari,
+    modify_variable
+} from '@/utils/symbol';
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 
@@ -51,10 +57,26 @@ const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
         const vari = is_bind_x_vari(shapes[0], OverrideType.Visible);
-        sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        sym_layer.value = get_symbol_by_layer(shapes[0])!;
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
             dlt_value.value = vari.value;
             default_name.value = vari.name;
         } else {
@@ -142,7 +164,7 @@ onUnmounted(() => {
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind.name }}</span>
-                        <span style="width: 60%;"> {{ is_bind.value ? '显示' : '隐藏' }}</span>
+                        <span style="width: 60%;"> {{ dlt_value ? '显示' : '隐藏' }}</span>
                     </div>
                 </div>
             </div>
@@ -151,17 +173,20 @@ onUnmounted(() => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
-            :symbol="sym_layer">
+                       :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
+                       :dialog_posi="dialog_posi"
+                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+                       @save-layer-show="save_layer_show"
+                       :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                    :context="props.context" :placeholder="t('compos.place_select_layer')" :selectId="selectId">
+                                  :context="props.context" :placeholder="t('compos.place_select_layer')"
+                                  :selectId="selectId">
                 </SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
-                    :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
+                                     :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -181,7 +206,7 @@ onUnmounted(() => {
         justify-content: center;
         border-radius: var(--default-radius);
 
-        >svg {
+        > svg {
             width: 16px;
             height: 16px;
         }
@@ -215,7 +240,7 @@ onUnmounted(() => {
         align-items: center;
         width: 84px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
         }
@@ -238,7 +263,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
             }
@@ -249,7 +274,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -275,7 +300,7 @@ onUnmounted(() => {
     width: 28px;
     height: 28px;
 
-    >svg {
+    > svg {
         width: 16px;
         height: 16px;
     }

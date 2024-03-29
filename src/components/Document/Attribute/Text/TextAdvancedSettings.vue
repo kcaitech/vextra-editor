@@ -58,6 +58,7 @@ const onSelectId = (icon: BulletNumbersType) => {
   } else {
     editor.setTextBulletNumbersMulti(props.textShapes, icon);
   }
+  textFormat()
 }
 
 const onSelectText = (icon: TextBehaviour) => {
@@ -68,9 +69,6 @@ const onSelectText = (icon: TextBehaviour) => {
   } else {
     editor.setTextBehaviourMulti(props.textShapes, icon);
   }
-  const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.textBehaviour = icon;
-    props.context.textSelection.setTextAttr(textAttr);
 }
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon;

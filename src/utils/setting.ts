@@ -9,7 +9,7 @@ export const SKIP_LOGIN = false; // 跳过登录过程，直接进入个人首�
 
 const production = false;
 export const BASE_SCHEME = production ? "https" : "https";
-export const BASE_HOST = production ? "protodesign.cn" : "protodesign.cn";
+export const BASE_HOST = production ? "moss.design" : "moss.design";
 export const BASE_PATH = `${BASE_SCHEME}://${BASE_HOST}`;
 export const API_PATH = production ? "/api/v1" : "/api_test/v1";
 // export const API_PATH = production ? "/api/v1" : "/api_test_czf/v1";
@@ -17,7 +17,6 @@ export const API_URL = `${BASE_PATH}${API_PATH}`;
 // export const STORAGE_URL = `${BASE_SCHEME}://storage.${BASE_HOST}`;
 // export const STORAGE_URL = "https://oss-cn-hangzhou.aliyuncs.com";
 export const COMMUNICATION_URL = `wss://${BASE_HOST}${API_PATH}/communication`;
-
 
 // 屏蔽掉普通log输出
 // if (production) {

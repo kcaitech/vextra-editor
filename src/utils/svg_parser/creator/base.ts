@@ -90,7 +90,7 @@ export class BaseCreator extends BaseTreeNode {
         }
         if (!(name in shapeNameCountMap)) shapeNameCountMap[name] = 0;
         const number = ++shapeNameCountMap[name]
-        return name + (number > 1 ? number : "")
+        return `${name} ${number > 1 ? number : ""}`
     }
 
     /**
@@ -141,7 +141,8 @@ export class BaseCreator extends BaseTreeNode {
     }
 
     afterAllCreateShape() {
-        if (this.shape) this.shape.name = this.getShapeNumberName(this.shape.name);
+        if (!this.shape) return;
+        this.shape.name = this.getShapeNumberName(this.localAttributes.id || this.shape.name)
     }
 
     parseAttributes() {
@@ -302,7 +303,12 @@ export class BaseCreator extends BaseTreeNode {
         if (!fill) fill = this.localAttributes["fill"];
 
         const fillAttrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
-        if (!fill && this.attributes[fillAttrName] === undefined) fill = "black"; // 默认填充黑色
+        // 默认填充黑色
+        if (!fill && this.attributes[fillAttrName] === undefined
+            && this.htmlElement?.tagName !== "svg" && this.htmlElement?.tagName !== "g"
+        ) {
+            fill = "black"
+        }
 
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
         let fillColor = parseFillColor(fill, fillOpacity)
@@ -315,8 +321,8 @@ export class BaseCreator extends BaseTreeNode {
                 radialGradient: fillColor.radialGradient,
                 color: fillColor.color,
             }
-        } else if (fillColor === null) {
-            fillAttrValue = null
+        } else {
+            fillAttrValue = fillColor
         }
 
         // svg、g元素没有填充，而是继承给子元素
@@ -324,7 +330,7 @@ export class BaseCreator extends BaseTreeNode {
             for (const child of this.children) {
                 child.attributes[fillAttrName] = fillAttrValue
             }
-        } else if (fillColor) {
+        } else if (fillColor !== undefined) {
             this.attributes[fillAttrName] = fillAttrValue
         }
 

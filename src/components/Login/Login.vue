@@ -66,7 +66,12 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     localStorage.removeItem('perRoute')
                 }
                 else {
-                    router.push({ name: 'apphome' })
+                    if (isMobileDevice()) {
+                        router.push({ name: 'mobilehome' })
+                    } else {
+                        router.push({ name: 'apphome' })
+                    }
+
                 }
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
@@ -121,7 +126,12 @@ function clickaffirm() {
                         query
                     })
                 } else {
-                    router.push({ name: 'apphome' })
+                    if (isMobileDevice()) {
+                        router.push({ name: 'mobilehome' })
+                    } else {
+                        router.push({ name: 'apphome' })
+                    }
+
                 }
             } else if (result.code === 400) {
                 codeerror.value = true
@@ -153,6 +163,7 @@ function wxcode() {
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
+        // redirect_uri: encodeURIComponent("https://moss.design/html/GetCode.html"),
         state: "STATE",
         style: "",
         href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
@@ -430,9 +441,9 @@ onMounted(() => {
 
                     span:nth-child(n + 2) {
                         cursor: pointer;
-                        color: rgb(0, 0, 238);
+                        color: #1878f5;
                         font-weight: 500;
-                        opacity: 0.5;
+                        opacity: 0.6;
                     }
                 }
             }

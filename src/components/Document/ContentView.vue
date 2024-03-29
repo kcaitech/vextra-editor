@@ -55,7 +55,7 @@ const emit = defineEmits<{
 }>();
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<Props>();
 const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
@@ -64,23 +64,23 @@ const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
-const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
+const contextMenuPosition: ClientXY = reactive({x: 0, y: 0});
 let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
-const prePt: { x: number, y: number } = { x: 0, y: 0 };
+const prePt: { x: number, y: number } = {x: 0, y: 0};
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
-const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
-const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
-const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
+const mousedownOnClientXY: ClientXY = {x: 0, y: 0}; // 鼠标在可视区中的坐标
+const mousedownOnPageXY: PageXY = {x: 0, y: 0}; // 鼠标在page中的坐标
+const mouseOnClient: ClientXYRaw = {x: 0, y: 0}; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 const contextMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
-const site: { x: number, y: number } = { x: 0, y: 0 };
+const site: { x: number, y: number } = {x: 0, y: 0};
 const selector_mount = ref<boolean>(false);
-const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
+const selectorFrame = reactive<SelectorFrame>({top: 0, left: 0, width: 0, height: 0, includes: false});
 const cursor = ref<string>('');
 const rootId = ref<string>('content');
 let isMouseLeftPress: boolean = false;
@@ -95,6 +95,7 @@ const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 const overview = ref<boolean>(false);
+let firstTime = false;
 
 function page_watcher(...args: any) {
     if (args.includes('backgroundColor')) {
@@ -107,25 +108,28 @@ function page_watcher(...args: any) {
 
 function rootRegister(mount: boolean) {
     if (mount) {
-        rootId.value = (v4().split('-').at(-1)) || 'content';
+        const temp = v4().split('-');
+        rootId.value = temp[temp.length - 1] || 'content';
     }
     workspace.value.setRootId(rootId.value);
 }
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
-    const { clientX, clientY } = e;
-    const { x, y } = workspace.value.root;
+    const {clientX, clientY} = e;
+    const {x, y} = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y; //页面坐标系上的点
-    mousedownOnClientXY.x = clientX - x
+    mousedownOnClientXY.x = clientX - x;
     mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
+    mouseOnClient.x = clientX;
+    mouseOnClient.y = clientY;
 }
 
-function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件    
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const { ctrlKey, metaKey } = e;
+    const {ctrlKey, metaKey} = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
@@ -133,7 +137,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     }
 
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    search_once(e) // 滚动过程进行常规图形检索
+    // search_once(e) // 滚动过程进行常规图形检索
 }
 
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
@@ -178,8 +182,8 @@ function insertFrame() {
 }
 
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
-    const { x, y } = workspace.value.root;
-    const { x: mx, y: my } = mouseOnClient;
+    const {x, y} = workspace.value.root;
+    const {x: mx, y: my} = mouseOnClient;
     const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(props.context, shapes);
@@ -187,8 +191,8 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
 
 function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
-    const { clientX, clientY, metaKey, ctrlKey } = e;
-    const { x, y } = workspace.value.root;
+    const {clientX, clientY, metaKey, ctrlKey} = e;
+    const {x, y} = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
@@ -294,17 +298,17 @@ function select(e: MouseEvent) {
 }
 
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
-    const { clientX, clientY, altKey } = e;
-    const { x: rx, y: ry } = workspace.value.root;
+    const {clientX, clientY, altKey} = e;
+    const {x: rx, y: ry} = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
-    const { x: mx, y: my } = { x: xy.x, y: xy.y };
-    const { x: sx, y: sy } = mousedownOnPageXY;
+    const {x: mx, y: my} = {x: xy.x, y: xy.y};
+    const {x: sx, y: sy} = mousedownOnPageXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({ x: left, y: top })
-    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
+    const p = matrix_inverse.inverseCoord({x: left, y: top})
+    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
     selectorFrame.top = Math.min(p.y, s.y);
     selectorFrame.left = Math.min(p.x, s.x);
     selectorFrame.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
@@ -313,13 +317,20 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 }
 
 function updateMouse(e: MouseEvent) {
-    const { clientX, clientY } = e;
-    mouseOnClient.x = clientX;
-    mouseOnClient.y = clientY;
+    mouseOnClient.x = e.clientX;
+    mouseOnClient.y = e.clientY;
 }
 
 // mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
+    if (firstTime) {
+        search(e);
+        if (props.context.selection.hoveredShape) {
+            props.context.selection.selectShape(props.context.selection.hoveredShape);
+            e.stopPropagation();
+        }
+        firstTime = false;
+    }
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === 0) { // 左键按下
         const action = props.context.tool.action;
@@ -426,7 +437,7 @@ const saveShapeCommentXY = () => {
     sleectShapes.forEach((item: ShapeView) => {
         commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
-                const { x, y } = item.frame2Root()
+                const {x, y} = item.frame2Root()
                 const x1 = comment.shape_frame.x2 + x;
                 const y1 = comment.shape_frame.y2 + y;
                 editShapeComment(i, x1, y1);
@@ -467,11 +478,11 @@ const editShapeComment = (index: number, x: number, y: number) => {
     const comment = documentCommentList.value[index]
     const id = comment.id
     const shapeId = comment.target_shape_id
-    const { x2, y2 } = comment.shape_frame
+    const {x2, y2} = comment.shape_frame
     const data = {
         id: id,
         target_shape_id: shapeId,
-        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
+        shape_frame: {x1: x, y1: y, x2: x2, y2: y2}
     }
     editCommentShapePosition(data)
 }
@@ -585,12 +596,16 @@ function color_watcher(t: number) {
     }
 }
 
+function windowFocus() {
+    firstTime = true;
+}
+
 // hooks
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix(adapt_page(props.context, true));
-        info = { m, x: cur.frame.x, y: cur.frame.y };
+        info = {m, x: cur.frame.x, y: cur.frame.y};
         matrixMap.set(cur.id, info);
     }
     matrix.reset(info.m.toArray());
@@ -609,8 +624,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 const closeLoading = () => {
     emit('closeLoading');
 }
-
-watch(() => matrix, matrix_watcher, { deep: true });
+watch(() => matrix, matrix_watcher, {deep: true});
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -632,14 +646,15 @@ onMounted(() => {
     document.addEventListener('cut', cut_watcher);
     document.addEventListener('paste', paster_watcher);
     window.addEventListener('blur', windowBlur);
+    window.addEventListener('focus', windowFocus);
 
     nextTick(() => {
         if (!root.value) {
             return;
         }
         resizeObserver.observe(root.value);
-        _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
-        initMatrix(props.page); // 初始化页面视图
+        _updateRoot(props.context, root.value);
+        initMatrix(props.page);
     });
     props.context.workspace.setFreezeStatus(false)
 
@@ -662,14 +677,15 @@ onUnmounted(() => {
     document.removeEventListener('cut', cut_watcher);
     document.removeEventListener('paste', paster_watcher);
     window.removeEventListener('blur', windowBlur);
+    window.removeEventListener('focus', windowFocus);
     stopWatch();
 })
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
          @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-         @drop.prevent.stop.capture.self="(e: DragEvent) => { drop(e, props.context, t as Function) }"
-         @dragover.prevent.stop
+         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }"
+         @dragover.prevent
          :style="{ 'background-color': background_color }">
         <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
                      @closeLoading="closeLoading"/>

@@ -11,6 +11,7 @@ import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
+import { Menu } from "@/context/menu";
 
 const { t } = useI18n();
 interface Props {
@@ -211,6 +212,7 @@ const selectColor = () => {
     }
 }
 function showMenu() {
+    props.context.menu.notify(Menu.SHUTDOWN_MENU);
     disable();
     popover.value.show();
 }

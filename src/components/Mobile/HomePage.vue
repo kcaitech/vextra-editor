@@ -8,16 +8,18 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :data="lists" @changeStar="changeStar" @openfile="openfile"></FilesItem>
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
+                @refresh="refreshTab" @sharefile="data">
+            </FilesItem>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch, watchEffect,onUnmounted } from 'vue';
+import { nextTick, onMounted, ref, watch, watchEffect, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { getRecentlydata, getSharedata, getStardata, changeStar as change } from './files'
-import FilesItem from './Filesitem.vue'
+import FilesItem from './FilesItem.vue'
 import { ElMessage } from 'element-plus'
 import { router } from '@/router';
 
@@ -26,25 +28,67 @@ const bntdata = ['最近', '收到的共享', '标星']
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
-
+const errnetwork = ref<boolean>(false)
 const changetab = (id: number) => {
     activeTab.value = id
     sessionStorage.setItem('activeTab', id.toLocaleString())
 }
 
-watchEffect(async () => {
-    switch (activeTab.value) {
+const emits = defineEmits<{
+    testevnt: [data: object]
+}>()
+
+const data = (data: object) => {
+    emits('testevnt', data)
+}
+
+const refreshTab = async (tab?: number): Promise<void> => {
+    let data: any
+    switch (tab) {
         case 0:
-            lists.value = await getRecentlydata()
+            data = await getRecentlydata()
             break;
         case 1:
-            lists.value = await getSharedata()
+            data = await getSharedata()
             break;
         case 2:
-            lists.value = await getStardata()
+            data = await getStardata()
             break;
         default:
             break;
+    }
+    if (data.state === 'success') {
+        errnetwork.value = false
+        lists.value = data.data
+    } else {
+        errnetwork.value = true
+        lists.value = []
+        ElMessage.error({ duration: 3000, message: data.data.message })
+    }
+}
+
+watchEffect(async () => {
+    let data: any
+    switch (activeTab.value) {
+        case 0:
+            data = await getRecentlydata()
+            break;
+        case 1:
+            data = await getSharedata()
+            break;
+        case 2:
+            data = await getStardata()
+            break;
+        default:
+            break;
+    }
+    if (data.state === 'success') {
+        errnetwork.value = false
+        lists.value = data.data
+    } else {
+        errnetwork.value = true
+        lists.value = []
+        ElMessage.error({ duration: 3000, message: data.data.message })
     }
     if (ellist.value) {
         setTimeout(() => {
@@ -53,9 +97,6 @@ watchEffect(async () => {
                 ellist.value.scrollTop = value
             }
         }, 0)
-
-
-
     }
 })
 
@@ -83,9 +124,7 @@ const changeStar = async (id: number, b: boolean) => {
 
 const openfile = (id: number) => {
     sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
-    router.push(({ name: 'document', query: { id: id } }))
-
-
+    router.push(({ name: 'pageviews', query: { id: id } }))
 }
 
 

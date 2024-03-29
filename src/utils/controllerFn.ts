@@ -303,11 +303,11 @@ export class DirectionCalc {
     }
 }
 
-export function is_symbol_class(shape: ShapeView) {
+export function is_symbol_class(shape: Shape) {
     return shape.isVirtualShape
         || [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type)
-        || (function (shape: ShapeView) {
-            let p: ShapeView | undefined = shape;
+        || (function (shape: Shape) {
+            let p: Shape | undefined = shape;
             while (p) {
                 if (ShapeType.Symbol === p.type) {
                     return true;

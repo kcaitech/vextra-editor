@@ -1,42 +1,55 @@
 <template>
-    <div class="list-item" v-for=" team  in props.data" :key="team.team.id">
+    <div class="list-item" v-for=" item in props.data" :key="item.document.id"
+        @click="emits('openfile', item.document.id)">
         <div class="image">
-            <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
-            <span v-else>{{ team.team.name.slice(0, 1) }}</span>
+            <svg-icon icon-class="file-default-icon"></svg-icon>
         </div>
         <div class="content">
             <div class="left">
-                <span class="name"> {{ team.team.name }}</span>
-                <span class="time">{{ team.team.description }}</span>
+                <span class="name"> {{ item.document.name }}</span>
+                <span class="time">{{ !item.last ? item.document.created_at :
+        item.document_access_record.last_access_time }}</span>
             </div>
-            <!-- <div class="right">
-                <div class="share">
+            <div class="right" @click.stop>
+                <div class="share" @click="emits('sharefile',item)">
                     <svg-icon icon-class="mShare"></svg-icon>
                 </div>
-                <div class="star">
-                    <svg-icon icon-class="mStar"></svg-icon>
+                <div class="star" @click="emits('changeStar', item.document.id, item.document_favorites.is_favorite)">
+                    <svg-icon :style="{ padding: item.document_favorites.is_favorite ? '3.67px 3.27px' : '' }"
+                        :icon-class="item.document_favorites.is_favorite ? 'mStar-select' : 'mStar'"></svg-icon>
                 </div>
-            </div> -->
+            </div>
         </div>
     </div>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>还未加入团队</span></div>
+    <div v-if="showtips && !props.errNetwork" class="null"><span>当前列表没有文件</span></div>
+    <div v-if="props.errNetwork && !loading" class="errnetwork" @click="changeload">
+        <span>刷新</span>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, watchEffect } from 'vue';
 import Loading from '../common/Loading.vue';
-import { urlencoded } from 'express';
-
-const props = defineProps<{
-    data: any,
-}>();
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
 
-watch(() => props.data, () => {
-    if (props.data.length === 0) {
+const props = defineProps<{
+    data: any[],
+    errNetwork: boolean,
+}>();
+
+const emits = defineEmits<{
+    (e: 'changeStar', docID: number, b: boolean): void;
+    (e: 'openfile', docID: number): void;
+    (e: 'refresh', tab?: number): void;
+    (e: 'sharefile', data: object): void;
+}>()
+
+
+watch([() => props.data, () => props.errNetwork], () => {
+    if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
@@ -44,11 +57,35 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
+const changeload = () => {
+    loading.value = true
+    emits('refresh', Number(sessionStorage.getItem('activeTab')))
+}
 
 
 </script>
 
 <style lang="scss" scoped>
+.errnetwork {
+    height: 100%;
+    display: flex;
+
+    span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 32px;
+        background-color: #1878F5;
+        box-shadow: 0 0 5px #1878F5;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 400;
+        color: white;
+        margin: auto;
+    }
+}
+
 .null {
     display: flex;
     height: 100%;
@@ -73,23 +110,9 @@ watch(() => props.data, () => {
         width: 40px;
         height: 40px;
 
-        img {
+        svg {
             width: 100%;
             height: 100%;
-            border-radius: 100%;
-        }
-
-        span {
-            background-color: #1878F5;
-            color: white;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 100%;
-            font-size: 18px;
-            font-weight: 500;
         }
     }
 
@@ -142,6 +165,7 @@ watch(() => props.data, () => {
                 svg {
                     width: 24px;
                     height: 24px;
+                    box-sizing: border-box;
                 }
             }
 

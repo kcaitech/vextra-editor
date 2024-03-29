@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView, GroupShapeView, BoolShapeView, BoolShape } from '@kcdesign/data';
+import {
+    adapt2Shape,
+    Artboard,
+    BoolOp,
+    BoolShape,
+    BoolShapeView,
+    GroupShape,
+    GroupShapeView,
+    Shape,
+    ShapeType,
+    ShapeView
+} from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -41,7 +52,7 @@ function _updater(t?: number) {
                 isUngroup.value = true;
             }
             isGroup.value = true;
-            if (type === ShapeType.Group || type === ShapeType.Artboard) {
+            if (type === ShapeType.Group || type === ShapeType.Artboard || type === ShapeType.BoolShape) {
                 state.value = state.value ^ UNGROUP ^ GROUP;
             } else {
                 state.value = state.value ^ GROUP;
@@ -49,7 +60,7 @@ function _updater(t?: number) {
         } else {
             isBoolGroup.value = true;
             isGroup.value = true;
-            const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard);
+            const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard || s.type === ShapeType.BoolShape);
             if (groups.length) {
                 state.value = state.value ^ UNGROUP ^ GROUP;
                 isUngroup.value = true;
@@ -66,8 +77,12 @@ function _updater(t?: number) {
 const updater = debounce(_updater, 50);
 
 function tool_watcher(t?: number, alt?: boolean) {
-    if (t === Tool.GROUP) groupClick(alt);
-    else if (t === Tool.UNGROUP) ungroupClick();
+    if (t === Tool.GROUP) {
+        groupClick(alt);
+    }
+    else if (t === Tool.UNGROUP) {
+        ungroupClick();
+    }
 }
 
 onMounted(() => {
@@ -111,15 +126,19 @@ const groupClick = (alt?: boolean) => {
     props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
 }
 const ungroupClick = () => {
-    if (!(state.value & UNGROUP)) return;
+    if (!(state.value & UNGROUP)) {
+        return;
+    }
     const selection = props.selection;
     const shapes = selection.selectedShapes;
-    if (!shapes.length) return;
-    const groups = shapes.filter(i => i.type === ShapeType.Group);
+    if (!shapes.length) {
+        return;
+    }
+    const groups = shapes.filter(i => (i.type === ShapeType.Group || i.type === ShapeType.BoolShape));
     const artboards = shapes.filter(i => i.type === ShapeType.Artboard);
-    const others: (ShapeView | Shape)[] = shapes.filter(i => i.type !== ShapeType.Group && i.type !== ShapeType.Artboard);
-    const page = selection.selectedPage;
-    if (!page) return;
+    const others: (ShapeView | Shape)[] = shapes.filter(i => i.type !== ShapeType.Group && i.type !== ShapeType.Artboard && i.type !== ShapeType.BoolShape);
+    const page = selection.selectedPage!;
+
     const editor = props.context.editor4Page(page);
     if (artboards.length) {
         const a = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
@@ -162,7 +181,7 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
                 editor.setBoolOp(type, name)
             } else if (shapes[0] instanceof GroupShapeView) {
                 const editor = props.context.editor4Page(page);
-                editor.boolgroup2(adapt2Shape(shapes[0]), name, type)
+                editor.boolgroup2(adapt2Shape(shapes[0]) as GroupShape, name, type)
             }
             // props.context.selection.notify(Selection.CHANGE_SHAPE)
         } else if (shapes.length > 1) {

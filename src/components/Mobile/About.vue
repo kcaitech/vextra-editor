@@ -42,6 +42,10 @@ const goto = (name: string) => {
     router.push({ name: name })
 }
 
+const emits = defineEmits<{
+    testevnt: [data: object]
+}>()
+
 </script>
 
 <style lang="scss" scoped>

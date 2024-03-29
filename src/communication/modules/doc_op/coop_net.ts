@@ -1,4 +1,5 @@
 import { Cmd, ICoopNet, serialCmds, parseCmds, cloneCmds, RadixConvert } from "@kcdesign/data"
+import * as timing_util from "@/utils/timing_util"
 
 export class CoopNet implements ICoopNet {
 
@@ -25,7 +26,7 @@ export class CoopNet implements ICoopNet {
         return this.isConnected
     }
 
-    async pullCmds(from?: string, to?: string): Promise<Cmd[]> {
+    async _pullCmds(from?: string, to?: string): Promise<Cmd[]> {
         if (!this.isConnected) return [];
         from = from ? this.radixRevert.to(from).toString(10) : ""
         to = to ? this.radixRevert.to(to).toString(10) : ""
@@ -37,13 +38,15 @@ export class CoopNet implements ICoopNet {
         })
         return new Promise<Cmd[]>((resolve, reject) => {
             const key = `${from}-${to}`
-            const promiseList = this.pullCmdsPromiseList[key]
-            if (!promiseList) this.pullCmdsPromiseList[key] = [];
+            let promiseList = this.pullCmdsPromiseList[key]
+            if (!promiseList) promiseList = this.pullCmdsPromiseList[key] = [];
             promiseList.push({ resolve: resolve, reject: reject })
         })
     }
 
-    async postCmds(cmds: Cmd[]): Promise<boolean> {
+    pullCmds = timing_util.throttle(this._pullCmds.bind(this), 1000)
+
+    async _postCmds(cmds: Cmd[]): Promise<boolean> {
         if (!this.isConnected) return false;
         console.log("postCmds", cloneCmds(cmds))
         return this.send?.({
@@ -51,6 +54,8 @@ export class CoopNet implements ICoopNet {
             cmds: serialCmds(cmds),
         }) ?? false
     }
+
+    postCmds = timing_util.throttle(this._postCmds.bind(this), 1000)
 
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
         this.watcherList.push(watcher)
@@ -61,18 +66,14 @@ export class CoopNet implements ICoopNet {
         let cmds: Cmd[] | undefined
         let cmds1: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
-            cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
+            const data = cmdsData.map(item => {
                 item.cmd.id = item.cmd_id
                 item.cmd.version = this.radixRevert.from(item.id)
                 item.cmd.previousVersion = this.radixRevert.from(item.previous_id)
                 return item.cmd
-            })))
-            cmds1 = parseCmds(JSON.stringify(cmdsData.map(item => {
-                item.cmd.id = item.cmd_id
-                item.cmd.version = this.radixRevert.from(item.id)
-                item.cmd.previousVersion = this.radixRevert.from(item.previous_id)
-                return item.cmd
-            })))
+            })
+            cmds = parseCmds(data)
+            cmds1 = parseCmds(data)
         }
         // pullCmdsResult update errorInvalidParams errorNoPermission errorInsertFailed errorPullCmdsFailed
         if (data.type === "pullCmdsResult" || data.type === "errorPullCmdsFailed") {

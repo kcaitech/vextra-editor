@@ -14,8 +14,8 @@ import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
-import logo from '@/assets/pd-logo-svg.svg';
-import min_logo from '@/assets/logo.png';
+import logo from '@/assets/h-logo.svg';
+import min_logo from '@/assets/favicon.svg';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -567,8 +567,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="logo">
-        <img class="logo-image" :src="logo" alt="ProtoDesign" />
-        <img class="mini_logo-image" :src="min_logo" alt="ProtoDesign" style="display: none;" />
+        <img class="logo-image" :src="logo" alt="MossDesign" />
+        <img class="mini_logo-image" :src="min_logo" alt="MossDesign" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>
@@ -783,7 +783,7 @@ onUnmounted(() => {
     justify-content: center;
 
     .logo-image {
-        margin: 16px 0;
+        margin: 0 0 16px 0;
     }
 
     .mini_logo-image {

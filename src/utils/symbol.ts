@@ -197,7 +197,7 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     for (let i = 0, len = list.length; i < len; i++) {
         const item = list[i];
         result.push(item);
-        if (extend_set.has(item.title)) {
+        if (extend_set.has(item.id)) {
             list_layout(item.childs, extend_set, result);
         }
     }
@@ -244,7 +244,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
     if (!item) return false;
     let p = item.parent;
     while (p) {
-        status_set.add(p.title);
+        status_set.add(p.id);
         p = p.parent;
     }
 
@@ -430,8 +430,8 @@ export function make_symbol(context: Context, t: Function) {
     const editor = context.editor4Page(page);
     // const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource.map(arr => arr[0]), t);
     let name = t(`shape.${ShapeType.Symbol}`);
-    const repeats: number = context.data.stylesMgr.size;
-    name = repeats ? `${name} ${repeats + 1}` : name;
+    const repeats: number = context.data.symbolsMgr.size;
+    name = repeats ? `${name} ${repeats}` : name;
 
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
@@ -710,7 +710,7 @@ function get_ot_by_vt(vt: VariableType) {
     if (vt === VariableType.Text) return OverrideType.Text;
 }
 
-function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
+export function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
     let shapes: ShapeView[] = [];
     const childs = (group).childs;
     if (!childs?.length) return shapes;
