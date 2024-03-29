@@ -120,6 +120,10 @@ declare module '@vue/runtime-core' {
     FilePickButton: typeof import('./src/components/common/FilePickButton.vue')['default']
     FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
     Filesitem: typeof import('./src/components/Mobile/Filesitem.vue')['default']
+<<<<<<< HEAD
+=======
+    FilesItem: typeof import('./src/components/Mobile/FilesItem.vue')['default']
+>>>>>>> 52e9dc6e96bccbd3381c8adc7fc8e7e603930606
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
     FontWeightSelected: typeof import('./src/components/Document/Attribute/Text/FontWeightSelected.vue')['default']
     Footer: typeof import('./src/components/Login/Footer.vue')['default']
@@ -305,6 +309,10 @@ declare module '@vue/runtime-core' {
     TableTextSetting: typeof import('./src/components/Document/Attribute/Table/TableTextSetting.vue')['default']
     Team: typeof import('./src/components/Mobile/Team.vue')['default']
     Teamitem: typeof import('./src/components/Mobile/Teamitem.vue')['default']
+<<<<<<< HEAD
+=======
+    TeamItem: typeof import('./src/components/Mobile/TeamItem.vue')['default']
+>>>>>>> 52e9dc6e96bccbd3381c8adc7fc8e7e603930606
     TeamMember: typeof import('./src/components/TeamProject/TeamMember.vue')['default']
     TeamPage: typeof import('./src/components/TeamProject/TeamPage.vue')['default']
     TeamProjectMenu: typeof import('./src/components/TeamProject/TeamProjectMenu.vue')['default']
