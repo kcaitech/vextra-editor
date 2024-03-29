@@ -140,8 +140,6 @@ export class PathEditor extends TransformHandler {
     }
 
     private __execute() {
-        console.log('__living:', this.livingPoint);
-
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
