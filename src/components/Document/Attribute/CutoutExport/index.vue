@@ -390,60 +390,71 @@ const exportFill = () => {
         renderSvgs = toRaw(preview.value.renderSvgs);
         reflush.value++;
     }
-    nextTick(() => {
-        for (let i = 0; i < selected.length; i++) {
-            if (selected.length === 0) break;
-            const shape = selected[i];
-            if (pageCard.value) {
-                const svg = pageCard.value[i].pageSvg!;
-                (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
-                    const id = shape.id + format.id;
-                    const { width, height } = svg.viewBox.baseVal
-                    svg.setAttribute("width", `${width * format.scale}`);
-                    svg.setAttribute("height", `${height * format.scale}`);
-                    if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                        getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                    } else if (format.fileFormat === ExportFileFormat.Svg) {
-                        getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                    }
-                });
-            }
-        }
+    nextTick(async () => {
         if (selected.length === 0) {
-            exportPageImage();
+            await Promise.resolve(exportPageImage());
         }
-        setTimeout(() => {
-            const page = props.context.selection.selectedPage;
-            if (!page) return;
-            const shape = selected.length > 0 ? selected[0] : page;
-            const options = shape.exportOptions;
-            const formats = options!.exportFormats;
-            if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
-                const id = shape.id + formats[0].id;
-                const url = pngImageUrls.get(id);
-                if (url) {
-                    let fileName;
-                    if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
-                        fileName = formats[0].name + shape.name;
-                    } else {
-                        fileName = shape.name + formats[0].name;
-                    }
-                    exportSingleImage(url, formats[0].fileFormat, fileName);
+        else {
+            await Promise.resolve(getExportUrl());
+        }
+        const page = props.context.selection.selectedPage;
+        if (!page) return;
+        const shape = selected.length > 0 ? selected[0] : page;
+        const options = shape.exportOptions;
+        const formats = options!.exportFormats;
+        if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
+            const id = shape.id + formats[0].id;
+            const url = pngImageUrls.get(id);
+            if (url) {
+                let fileName;
+                if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
+                    fileName = formats[0].name + shape.name;
+                } else {
+                    fileName = shape.name + formats[0].name;
                 }
-            } else {
-                const shapes = selected.length > 0 ? selected : [page];
-                const imageUrls = getExportFillUrl(shapes, pngImageUrls);
-                downloadImages(imageUrls);
+                exportSingleImage(url, formats[0].fileFormat, fileName);
             }
-        }, 100)
+        } else {
+            const shapes = selected.length > 0 ? selected : [page];
+            const imageUrls = getExportFillUrl(shapes, pngImageUrls);
+            downloadImages(imageUrls);
+        }
     })
 }
 
-const exportPageImage = () => {
+const getExportUrl = async () => {
+    const selected = props.context.selection.selectedShapes;
+    const promises: Array<Promise<void>> = [];
+    for (let i = 0; i < selected.length; i++) {
+        if (selected.length === 0) break;
+        const shape = selected[i];
+        if (pageCard.value) {
+            const svg = pageCard.value[i].pageSvg!;
+            (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
+                const id = shape.id + format.id;
+                const { width, height } = svg.viewBox.baseVal
+                console.log(width, height);
+                
+                svg.setAttribute("width", `${width * format.scale}`);
+                svg.setAttribute("height", `${height * format.scale}`);
+                let promise: Promise<void> = Promise.resolve();
+                if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
+                    promise = getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                } else if (format.fileFormat === ExportFileFormat.Svg) {
+                    promise = getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                }
+                promises.push(promise);
+            });
+        }
+    }
+    await Promise.all(promises);
+}
+
+const exportPageImage = async () => {
     const page = props.context.selection.selectedPage;
     if (!page || !page.exportOptions) return;
     const options = page.exportOptions as ExportOptions;
-
+    const promises: Array<Promise<void>> = [];
     if (pageCard.value) {
         const svg = pageCard.value[0].pageSvg!;
         options.exportFormats.forEach((format, idx) => {
@@ -451,13 +462,16 @@ const exportPageImage = () => {
             const { width, height } = svg.viewBox.baseVal
             svg.setAttribute("width", `${width * format.scale}`);
             svg.setAttribute("height", `${height * format.scale}`);
+            let promise: Promise<void> = Promise.resolve();
             if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                getPngImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+                promise = getPngImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
             } else if (format.fileFormat === ExportFileFormat.Svg) {
-                getSvgImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+                promise = getSvgImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
             }
+            promises.push(promise);
         });
     }
+    await Promise.all(promises);
 }
 
 
@@ -503,7 +517,7 @@ onUnmounted(() => {
             <div class="name" :class="{ 'checked': preinstallArgus.length > 0 }">{{ t('cutoutExport.export') }}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
-                     @click.stop="showPreinstall">
+                    @click.stop="showPreinstall">
                     <svg-icon icon-class="export-menu"></svg-icon>
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')">
@@ -519,31 +533,30 @@ onUnmounted(() => {
         <div v-else-if="!mixed">
             <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
                 <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
-                                 :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                                 :length="preinstallArgus.length" :formatItems="formatItems"
-                                 @changePerfix="changePerfix"
-                                 @change-format="changeFormat" @delete="deleteArgus">
+                    :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
+                    :length="preinstallArgus.length" :formatItems="formatItems" @changePerfix="changePerfix"
+                    @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="trim_bg" @change="trimBackground"
-                             :label="t('cutoutExport.trim_transparent_pixels')"/>
+                    :label="t('cutoutExport.trim_transparent_pixels')" />
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption && preinstallArgus.length > 0">
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground"
-                             :label="t('cutoutExport.canvas_background_color')"/>
+                    :label="t('cutoutExport.canvas_background_color')" />
             </div>
             <div class="export-box" v-if="preinstallArgus.length > 0">
                 <div @click="exportFill"><span>{{ t('cutoutExport.export') }}</span></div>
             </div>
             <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
-                     :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
-                     :trim_bg="trim_bg">
+                :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
+                :trim_bg="trim_bg">
             </Preview>
         </div>
         <div class="exportsvg" :reflush="reflush">
             <template v-for="(svg) in renderSvgs" :key="svg.id">
-<!--                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"-->
+                <!--                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"-->
                 <!--                     xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"-->
                 <!--                     preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"-->
                 <!--                     :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"-->
@@ -551,8 +564,9 @@ onUnmounted(() => {
                 <!--                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "-->
                 <!--                               :key="c.id" :data="c"/>-->
                 <!--                </svg>-->
-                <PageCard ref="pageCard" :background-color="svg.background" :view-box="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
-                          :shapes="svg.shapes" :width="svg.width" :height="svg.height"></PageCard>
+                <PageCard ref="pageCard" :background-color="svg.background"
+                    :view-box="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`" :shapes="svg.shapes" :width="svg.width"
+                    :height="svg.height"></PageCard>
             </template>
         </div>
     </div>
@@ -607,7 +621,7 @@ onUnmounted(() => {
                     background-color: #F5F5F5;
                 }
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }

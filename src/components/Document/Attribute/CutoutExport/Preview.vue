@@ -24,6 +24,7 @@ import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import PageCard from "@/components/common/PageCard.vue";
+import { nextTick } from 'vue';
 
 type PCard = InstanceType<typeof PageCard>
 
@@ -80,6 +81,7 @@ const toggleExpand = () => {
     getCanvasShape();
 }
 const _getCanvasShape = () => {
+    if(!isTriangle.value) return;
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
     if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {
@@ -110,38 +112,40 @@ const _getCanvasShape = () => {
             renderItems = toRaw(page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     }
-    setTimeout(() => {
-        if (pageCard.value?.pageSvg) {
-            let format: ExportFormat;
-            let id = '';
-            let shape: ShapeView;
-            if (shapes.length === 1) {
-                shape = shapes[0];
-                format = shape.exportOptions!.exportFormats[0];
-                id = shape.id + format.id;
-            } else {
-                const page = props.context.selection.selectedPage;
-                if (!page || page.exportOptions!.exportFormats.length === 0) return;
-                shape = page;
-                format = page && page.exportOptions!.exportFormats[0];
-                id = page.id + format.id;
-            }
-            const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
-            pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
-            pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
-            if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
-                getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-            } else if (format.fileFormat === ExportFileFormat.Svg) {
-                getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-            }
-            setTimeout(() => {
-                pngImage.value = ImageUrls.get(id);
-                reflush.value++;
-            }, 100)
-        }
-    }, 10);
+    nextTick(() => {
+        getImageUrl();
+    });
 }
 
+const getImageUrl = async () => {
+    const shapes = props.context.selection.selectedShapes;
+    if (pageCard.value?.pageSvg) {
+        let format: ExportFormat;
+        let id = '';
+        let shape: ShapeView;
+        if (shapes.length === 1) {
+            shape = shapes[0];
+            format = shape.exportOptions!.exportFormats[0];
+            id = shape.id + format.id;
+        } else {
+            const page = props.context.selection.selectedPage;
+            if (!page || page.exportOptions!.exportFormats.length === 0) return;
+            shape = page;
+            format = page && page.exportOptions!.exportFormats[0];
+            id = page.id + format.id;
+        }
+        const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
+        pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
+        pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
+        if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
+            await getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
+        } else if (format.fileFormat === ExportFileFormat.Svg) {
+            await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
+        }        
+        pngImage.value = ImageUrls.get(id);
+        reflush.value++;
+    }
+}
 
 const getCanvasShape = debounce(_getCanvasShape, 250, { leading: true });
 
@@ -337,14 +341,14 @@ onUnmounted(() => {
         <!--                       :key="c.id" :data="c"/>-->
         <!--        </svg>-->
         <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-                  :shapes="renderItems" :width="width" :height="height"></PageCard>
+            :shapes="renderItems" :width="width" :height="height"></PageCard>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
             <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
             </div>
         </div>
         <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-             :reflush="reflush !== 0 ? reflush : undefined">
+            :reflush="reflush !== 0 ? reflush : undefined">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
@@ -361,7 +365,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        > .triangle {
+        >.triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -369,7 +373,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            > .triangle-right {
+            >.triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -380,7 +384,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            > .triangle-down {
+            >.triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -397,7 +401,7 @@ onUnmounted(() => {
         }
     }
 
-    > svg {
+    >svg {
         position: fixed;
         left: 100000px;
         top: 100000px;
@@ -428,7 +432,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            > img {
+            >img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -446,7 +450,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        > img {
+        >img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;

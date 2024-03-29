@@ -402,7 +402,6 @@ const textFormat = () => {
         }
         shape.value = undefined
         const formats: any[] = [];
-
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (cell && cell.cellType === TableCellType.Text && cell.data.text) {
