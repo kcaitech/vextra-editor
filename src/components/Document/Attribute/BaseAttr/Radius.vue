@@ -5,6 +5,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
+import { hidden_selection } from "@/utils/content";
 
 interface Props {
     context: Context
@@ -39,7 +40,9 @@ function change(val: any, shapes: ShapeView[], type: string) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     // editor.shapesModifyFixedRadius(shapes.map(s => adapt2Shape(s)), val);
-    editor.shapesModifyRadius(shapes, [val])
+    editor.shapesModifyRadius(shapes, [val]);
+
+    hidden_selection(props.context);
 }
 
 function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {

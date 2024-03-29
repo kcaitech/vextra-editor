@@ -38,6 +38,9 @@ export class PathEditor extends TransformHandler {
     baseMatrix: Matrix;
     baseMatrixInverse: Matrix;
 
+    isHandleAction: boolean = false;
+    handleInfo: { index: number, segment: number, side: 'from' | 'to' } | undefined = undefined;
+
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
         this.path = context.path;
@@ -129,10 +132,16 @@ export class PathEditor extends TransformHandler {
     }
 
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
+        this.isHandleAction = true;
+        if (!this.handleInfo) {
+            this.handleInfo = { index, segment, side };
+        }
         (this.asyncApiCaller as PathModifier).execute4handle(index, side, from, to, segment);
     }
 
     private __execute() {
+        console.log('__living:', this.livingPoint);
+
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
@@ -207,6 +216,10 @@ export class PathEditor extends TransformHandler {
     }
 
     fulfil() {
+        if (this.isHandleAction && this.handleInfo) {
+            // 矫正
+        }
+
         this.path.editing(false);
 
         super.fulfil();

@@ -97,7 +97,7 @@ function point_mousemove(event: MouseEvent) {
     if (isDragging && asyncBaseAction) {
         if (cur_ctrl_type.endsWith('rotate')) {
             const d = getHorizontalAngle(props.axle, mouseOnClient)
-            let deg =  d - initDeg;
+            let deg = d - initDeg;
             initDeg = d;
 
             if (props.shape.isFlippedHorizontal) {
@@ -363,7 +363,8 @@ onUnmounted(() => {
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>
     </g>
-    <rect :x="axle.x - 4" :y="axle.y - 4" width="8" height="8" fill="pink" rx="4" ry="4"></rect>
+    <!--    旋转中心-->
+    <!--    <rect :x="axle.x - 4" :y="axle.y - 4" width="8" height="8" fill="pink" rx="4" ry="4"></rect>-->
 </template>
 <style lang='scss' scoped>
 .r-path {
