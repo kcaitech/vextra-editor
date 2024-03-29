@@ -17,7 +17,7 @@
 import { nextTick, onMounted, ref, watch, watchEffect,onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { getRecentlydata, getSharedata, getStardata, changeStar as change } from './files'
-import FilesItem from './FilesItem.vue'
+import FilesItem from './Filesitem.vue'
 import { ElMessage } from 'element-plus'
 import { router } from '@/router';
 
@@ -60,7 +60,7 @@ watchEffect(async () => {
 })
 
 watch(activeTab, () => {
-    sessionStorage.setItem('scrolltop', 0)
+    sessionStorage.setItem('scrolltop', '0')
 })
 
 const changeStar = async (id: number, b: boolean) => {
@@ -82,7 +82,7 @@ const changeStar = async (id: number, b: boolean) => {
 }
 
 const openfile = (id: number) => {
-    sessionStorage.setItem('scrolltop', ellist.value.scrollTop.toString())
+    sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
     router.push(({ name: 'document', query: { id: id } }))
 
 

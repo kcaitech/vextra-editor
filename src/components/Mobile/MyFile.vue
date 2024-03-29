@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { getDoucment } from './files'
-import FilesItem from './FilesItem.vue';
+import FilesItem from './Filesitem.vue';
 import { changeStar as change } from './files'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'

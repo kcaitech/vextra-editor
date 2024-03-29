@@ -5,7 +5,7 @@
 </template>
 <script setup lang="ts">
 import { GetteamList, GetprojectLists } from './team'
-import TeamItem from './TeamItem.vue';
+import TeamItem from './Teamitem.vue';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 
