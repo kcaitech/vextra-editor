@@ -383,7 +383,7 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
@@ -684,7 +684,7 @@ const stop = watch(() => null_context.value, (v) => {
         const _name = context?.data.name || '';
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
             clearTimeout(timer);
         }, 500)
     }

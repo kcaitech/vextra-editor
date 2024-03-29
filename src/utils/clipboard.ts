@@ -51,8 +51,8 @@ class ExfContext {
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
-export const identity = 'cn.protodesign';
-export const paras = 'cn.protodesign/paras'; // 文字段落
+export const identity = 'design.moss';
+export const paras = 'design.moss/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
     private cache: { type: CacheType, data: any } | undefined;
