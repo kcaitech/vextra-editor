@@ -1,5 +1,5 @@
 <template>
-    <div class="list-item" v-for=" team  in props.data" :key="team.team.id">
+    <div class="list-item" v-for=" project  in props.data" :key="project.team.id">
         <div class="image">
             <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
             <span v-else>{{ team.team.name.slice(0, 1) }}</span>
@@ -20,7 +20,7 @@
         </div>
     </div>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>还未加入团队</span></div>
+    <div v-if="showtips" class="null"><span>还未加入项目</span></div>
 </template>
 
 <script setup lang="ts">

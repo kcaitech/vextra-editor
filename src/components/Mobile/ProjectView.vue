@@ -22,11 +22,10 @@ const route = useRoute()
 
 
 onMounted(async () => {
-    console.log(route);
-
-    // if (route) {
-    //     projectlist.value = await GetprojectLists()
-    // }
+    if (route.query.id)
+        if (route) {
+            projectlist.value = await GetprojectLists(Number(route.query.id))
+        }
 })
 </script>
 
@@ -34,7 +33,7 @@ onMounted(async () => {
 .project {
     height: 100%;
     width: 100%;
-    background-color: #EFEFEF;
+    background-color: #fff;
 
 
     .header {

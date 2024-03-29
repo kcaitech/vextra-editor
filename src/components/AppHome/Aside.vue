@@ -783,7 +783,7 @@ onUnmounted(() => {
     justify-content: center;
 
     .logo-image {
-        margin: 16px 0;
+        margin: 0 0 16px 0;
     }
 
     .mini_logo-image {
