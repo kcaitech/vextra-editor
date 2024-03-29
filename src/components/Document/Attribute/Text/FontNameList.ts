@@ -140,41 +140,36 @@ export function fontWeightList(fontName: string, italic: boolean) {
     ]
     if (!context) return;
     const text = 'abcdefghijklmnopqrSTUVWXYZ0123456789!@#$%^&*(中文字体';
-    context.font = 'normal 72px monospace';
-    const baselineSize = context.measureText(text).width;
-
-    context.font = 'normal 72px ' + fontName + ', monospace';
+    context.font = '72px' + fontName + ', monospace';
     const newSize = context.measureText(text).width;
     let result: any = [];
-    if (baselineSize !== newSize) {
-        for (let i = 0; i < fontWeight.length; i++) {
-            const weight = fontWeight[i].weight;
-            context.font = `${weight} 72px ${fontName}, monospace`;
-            const newSizeWeight = context.measureText(text).width;
-            fontWeight[i].value = newSizeWeight;
-        }
-        const r = fontWeight.reduce((dict, item) => {
-            const key = item.value;
-            if (!dict[key]) {
-                dict[key] = item;
-            }
-            return dict;
-        }, {} as any);
-        result = Object.values(r);
-        result.sort((a: any, b: any) => {
-            if (a.weight > b.weight) {
-                return 1;
-            } else if (a.weight < b.weight) {
-                return -1;
-            } else {
-                return 0;
-            }
-        })
+    for (let i = 0; i < fontWeight.length; i++) {
+        const weight = fontWeight[i].weight;
+        context.font = `${weight} 72px ${fontName}, monospace`;
+        const newSizeWeight = context.measureText(text).width;
+        fontWeight[i].value = newSizeWeight;
     }
+    const r = fontWeight.reduce((dict, item) => {
+        const key = item.value;
+        if (!dict[key]) {
+            dict[key] = item;
+        }
+        return dict;
+    }, {} as any);
+    result = Object.values(r);
+    result.sort((a: any, b: any) => {
+        if (a.weight > b.weight) {
+            return 1;
+        } else if (a.weight < b.weight) {
+            return -1;
+        } else {
+            return 0;
+        }
+    })
     if (italic) {
-        context.font = 'Italic 72px ' + fontName + ', monospace';
+        context.font = `Italic 72px ${fontName}, monospace`;
         const newSize2 = context.measureText(text).width;
-        if (baselineSize !== newSize2) {
+        if (newSize !== newSize2) {
             for (let i = 0; i < fontItalic.length; i++) {
                 const style = fontItalic[i].key;
                 context.font = `${style} 72px ${fontName}, monospace`;

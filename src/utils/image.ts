@@ -85,176 +85,182 @@ export const exportSingleImage = (imageUrl: string, type: string, name: string) 
   document.body.removeChild(a);
 }
 
-export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>, shape: ShapeView) => {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  const pcloneSvg = svg.cloneNode(true) as SVGSVGElement;
-  document.body.appendChild(pcloneSvg);
-  if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
-    const el = pcloneSvg.children[0] as SVGSVGElement;
-    let rotate = shape.rotation || 0;
-    if (el) {
-      const { width, height } = pcloneSvg.viewBox.baseVal
-      const { left, top, right, bottom } = getShadowMax(shape);
-      let g_x = 0;
-      let g_y = 0;
-      const max_border = getShapeBorderMax(shape);
-      if(shape.type === ShapeType.Group) {
-        const { x, y, width, height } = getGroupChildBounds(shape);
-        g_x = shape.frame.x - x;
-        g_y = shape.frame.y - y;
+export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>, shape: ShapeView): Promise<void> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const pcloneSvg = svg.cloneNode(true) as SVGSVGElement;
+    document.body.appendChild(pcloneSvg);
+    if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
+      const el = pcloneSvg.children[0] as SVGSVGElement;
+      let rotate = shape.rotation || 0;
+      if (el) {
+        const { width, height } = pcloneSvg.viewBox.baseVal
+        const { left, top, right, bottom } = getShadowMax(shape);
+        let g_x = 0;
+        let g_y = 0;
+        const max_border = getShapeBorderMax(shape);
+        if (shape.type === ShapeType.Group) {
+          const { x, y, width, height } = getGroupChildBounds(shape);
+          g_x = shape.frame.x - x;
+          g_y = shape.frame.y - y;
+        }
+        const x = left + max_border + g_x;
+        const y = top + max_border + g_y;
+        el.style.transform = `rotate(0deg)`;
+        let rotateY = 0;
+        let rotateX = 0;
+        shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
+        shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
+        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+        const radian = rotate * Math.PI / 180;
+        const sin = Math.sin(radian);
+        const cos = Math.cos(radian);
+        const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
+        const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
+        pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+        pcloneSvg.setAttribute("height", `${newHeight * format.scale}`);
+        pcloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+        el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
       }
-      const x = left + max_border + g_x;
-      const y = top + max_border + g_y;
-      el.style.transform = `rotate(0deg)`;
-      let rotateY = 0;
-      let rotateX = 0;
-      shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-      shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
-      rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-      const radian = rotate * Math.PI / 180;
-      const sin = Math.sin(radian);
-      const cos = Math.cos(radian);
-      const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-      const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-      pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
-      pcloneSvg.setAttribute("height", `${newHeight * format.scale}`);
-      pcloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
-      el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
+      const { width, height } = pcloneSvg.getBoundingClientRect();
+      canvas.width = width;
+      canvas.height = height;
+    } else {
+      const { width, height } = pcloneSvg.viewBox.baseVal
+      canvas.width = width * format.scale;
+      canvas.height = height * format.scale;
     }
-    const { width, height } = pcloneSvg.getBoundingClientRect();
-    canvas.width = width;
-    canvas.height = height;
-  } else {
-    const { width, height } = pcloneSvg.viewBox.baseVal
-    canvas.width = width * format.scale;
-    canvas.height = height * format.scale;
-  }
-  const svgString = new XMLSerializer().serializeToString(pcloneSvg);
-  const img = new Image();
-  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-  let imageUrl;
-  img.onload = () => {
-    context && context.drawImage(img, 0, 0);
-    const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
-    imageUrl = dataURL;
-    if (context && trim) {
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
-          if (alpha > 0) {
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y);
-            left = Math.min(left, x);
-            right = Math.max(right, x);
+    const svgString = new XMLSerializer().serializeToString(pcloneSvg);
+    const img = new Image();
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    let imageUrl;    
+    img.onload = () => {
+      context && context.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
+      imageUrl = dataURL;
+      if (context && trim) {
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
+            if (alpha > 0) {
+              top = Math.min(top, y);
+              bottom = Math.max(bottom, y);
+              left = Math.min(left, x);
+              right = Math.max(right, x);
+            }
           }
         }
+        const width = (right - left) + 2;
+        const height = (bottom - top) + 2;
+        // 创建一个新Canvas元素，用于存储裁剪后的图像
+        const newCanvas = document.createElement("canvas");
+        const outputCtx = newCanvas.getContext("2d");
+        newCanvas.width = width;
+        newCanvas.height = height;
+        // 在新Canvas上绘制裁剪后的图像
+        outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
+        const newDataURL = newCanvas.toDataURL(`image/${format.fileFormat}`);
+        imageUrl = newDataURL;
       }
-      const width = (right - left) + 2;
-      const height = (bottom - top) + 2;
-      // 创建一个新Canvas元素，用于存储裁剪后的图像
-      const newCanvas = document.createElement("canvas");
-      const outputCtx = newCanvas.getContext("2d");
-      newCanvas.width = width;
-      newCanvas.height = height;
-      // 在新Canvas上绘制裁剪后的图像
-      outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
-      const newDataURL = newCanvas.toDataURL(`image/${format.fileFormat}`);
-      imageUrl = newDataURL;
-    }
-    pngImageUrls.set(id, imageUrl);
-    document.body.removeChild(pcloneSvg);
-  };
+      pngImageUrls.set(id, imageUrl);
+      document.body.removeChild(pcloneSvg);
+      resolve();
+    };
+  });
 }
 
-export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: ShapeView) => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
-  document.body.appendChild(cloneSvg);
-  if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
-    const el = cloneSvg.children[0] as SVGSVGElement;
-    let rotate = shape.rotation || 0;
-    if (el) {
-      const { width, height } = cloneSvg.viewBox.baseVal
-      const { left, top, right, bottom } = getShadowMax(shape);
-      let g_x = 0;
-      let g_y = 0;
-      const max_border = getShapeBorderMax(shape);
-      if(shape.type === ShapeType.Group) {
-        const { x, y, width, height } = getGroupChildBounds(shape);
-        g_x = shape.frame.x - x;
-        g_y = shape.frame.y - y;
+export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: ShapeView): Promise<void> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
+    document.body.appendChild(cloneSvg);
+    if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
+      const el = cloneSvg.children[0] as SVGSVGElement;
+      let rotate = shape.rotation || 0;
+      if (el) {
+        const { width, height } = cloneSvg.viewBox.baseVal
+        const { left, top, right, bottom } = getShadowMax(shape);
+        let g_x = 0;
+        let g_y = 0;
+        const max_border = getShapeBorderMax(shape);
+        if (shape.type === ShapeType.Group) {
+          const { x, y, width, height } = getGroupChildBounds(shape);
+          g_x = shape.frame.x - x;
+          g_y = shape.frame.y - y;
+        }
+        const x = left + max_border + g_x;
+        const y = top + max_border + g_y;
+        el.style.transform = `rotate(0deg)`;
+        let rotateY = 0;
+        let rotateX = 0;
+        shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
+        shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
+        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+        const radian = rotate * Math.PI / 180;
+        const sin = Math.sin(radian);
+        const cos = Math.cos(radian);
+        const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
+        const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
+        cloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+        cloneSvg.setAttribute("height", `${newHeight * format.scale}`);
+        cloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+        el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
       }
-      const x = left + max_border + g_x;
-      const y = top + max_border + g_y;
-      el.style.transform = `rotate(0deg)`;
-      let rotateY = 0;
-      let rotateX = 0;
-      shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-      shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
-      rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-      const radian = rotate * Math.PI / 180;
-      const sin = Math.sin(radian);
-      const cos = Math.cos(radian);
-      const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-      const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-      cloneSvg.setAttribute("width", `${newWidth * format.scale}`);
-      cloneSvg.setAttribute("height", `${newHeight * format.scale}`);
-      cloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
-      el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
+      const { width, height } = cloneSvg.getBoundingClientRect();
+      canvas.width = width;
+      canvas.height = height;
+      if (ctx) {
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((rotate * Math.PI) / 180);
+        ctx.translate(-width / 2, -height / 2);
+      }
+    } else {
+      const { width, height } = cloneSvg.viewBox.baseVal
+      canvas.width = width;
+      canvas.height = height;
     }
-    const { width, height } = cloneSvg.getBoundingClientRect();
-    canvas.width = width;
-    canvas.height = height;
-    if (ctx) {
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotate * Math.PI) / 180);
-      ctx.translate(-width / 2, -height / 2);
-    }
-  } else {
-    const { width, height } = cloneSvg.viewBox.baseVal
-    canvas.width = width;
-    canvas.height = height;
-  }
-  let imageUrl = '';
-  const img = new Image();
-  const svgString = new XMLSerializer().serializeToString(cloneSvg);
-  const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-  imageUrl = imgUrl;
-  img.src = imgUrl;
-  img.onload = () => {
-    if (ctx && trim) {
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
-          if (alpha > 0) {
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y);
-            left = Math.min(left, x);
-            right = Math.max(right, x);
+    let imageUrl = '';
+    const img = new Image();
+    const svgString = new XMLSerializer().serializeToString(cloneSvg);
+    const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    imageUrl = imgUrl;
+    img.src = imgUrl;
+    img.onload = () => {
+      if (ctx && trim) {
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
+            if (alpha > 0) {
+              top = Math.min(top, y);
+              bottom = Math.max(bottom, y);
+              left = Math.min(left, x);
+              right = Math.max(right, x);
+            }
           }
         }
+        const { x, y } = cloneSvg.viewBox.baseVal
+        const w = (right - left) + 2;
+        const h = (bottom - top) + 2;
+        cloneSvg.setAttribute("width", `${w}`);
+        cloneSvg.setAttribute("height", `${h}`);
+        cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);
+        // 创建一个新Canvas元素，用于存储裁剪后的图像
+        const newSvgString = new XMLSerializer().serializeToString(cloneSvg);
+        const newImgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(newSvgString)));
+        imageUrl = newImgUrl;
       }
-      const { x, y } = cloneSvg.viewBox.baseVal
-      const w = (right - left) + 2;
-      const h = (bottom - top) + 2;
-      cloneSvg.setAttribute("width", `${w}`);
-      cloneSvg.setAttribute("height", `${h}`);
-      cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);
-      // 创建一个新Canvas元素，用于存储裁剪后的图像
-      const newSvgString = new XMLSerializer().serializeToString(cloneSvg);
-      const newImgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(newSvgString)));
-      imageUrl = newImgUrl;
+      svgImageUrls.set(id, imageUrl);
+      document.body.removeChild(cloneSvg);
+      resolve();
     }
-    svgImageUrls.set(id, imageUrl);
-    document.body.removeChild(cloneSvg);
-  }
+  })
 }
