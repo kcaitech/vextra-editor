@@ -1121,6 +1121,8 @@ function rotate() {
 function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
+    } else if (t === Menu.SHUTDOWN_MENU) {
+        removeCurColorPicker();
     }
 }
 

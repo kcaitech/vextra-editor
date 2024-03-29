@@ -10,7 +10,7 @@ import {
     GroupShapeView,
     ShapeType,
     ShapeView,
-    Stop,
+    Stop, SymbolView,
     TableView
 } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
@@ -136,7 +136,7 @@ function addFill(): void {
             editor.addFill4Cell(fill, range, false);
         }
     } else if (selected.length === 1
-        && shape.type === ShapeType.Artboard
+        && (shape.type === ShapeType.Artboard || shape instanceof SymbolView)
         && !shape.style.fills.length) {
         const page = props.context.selection.selectedPage!;
         const color = new Color(1, 255, 255, 255);
@@ -594,9 +594,10 @@ onUnmounted(() => {
                                  @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
-                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)" @input="colorInput($event)"
-                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                           :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                           @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)"
+                           @input="colorInput($event)"
+                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                     <span class="colorFill" style="line-height: 14px;"
                           v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
                             t(`color.${f.fill.gradient.gradientType}`)
@@ -606,7 +607,7 @@ onUnmounted(() => {
                            @input="alphaInput"
                            :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                 </div>
-<!--                <div class="temporary"></div>-->
+                <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>

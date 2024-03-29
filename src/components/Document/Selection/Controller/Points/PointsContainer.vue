@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
-import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
+import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
 import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
@@ -63,6 +63,8 @@ function update_dot_path() {
     dots.push(...update_dot([lt, rt, rb, lb], props.shape));
 }
 
+let initDeg: number = 0;
+
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
@@ -79,6 +81,8 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     startPosition = props.context.workspace.getContentXY(event);
     cur_ctrl_type = ele;
 
+    initDeg = getHorizontalAngle(props.axle, startPosition);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
@@ -92,10 +96,10 @@ function point_mousemove(event: MouseEvent) {
 
     if (isDragging && asyncBaseAction) {
         if (cur_ctrl_type.endsWith('rotate')) {
-            let deg = 0;
-            const { x: ax, y: ay } = props.axle;
+            const d = getHorizontalAngle(props.axle, mouseOnClient)
+            let deg = d - initDeg;
+            initDeg = d;
 
-            deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
             if (props.shape.isFlippedHorizontal) {
                 deg = -deg;
             }
@@ -216,7 +220,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     } else if (target.sticked_by_y) {
         modify_fix_y(p2, target.y);
     }
-    
+
     const align = props.context.user.isPixelAlignMent;
     if (align) {
         p2.x = Math.round(p2.x);
@@ -350,15 +354,17 @@ onUnmounted(() => {
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
         <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
 
         <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave">
+           @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>
     </g>
+    <!--    旋转中心-->
+    <!--    <rect :x="axle.x - 4" :y="axle.y - 4" width="8" height="8" fill="pink" rx="4" ry="4"></rect>-->
 </template>
 <style lang='scss' scoped>
 .r-path {

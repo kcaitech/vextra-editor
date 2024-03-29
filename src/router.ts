@@ -217,7 +217,7 @@ const routes = [
         component: per_center
     },
     // {
-    //     path: '/:catchAll(.*)',
+    //     path: '//:catchAll(.*)',
     //     redirect: '/',
 
     // },

@@ -2,8 +2,8 @@
     <div style="height: 100%;width: 100%;">
     <div class="header-container">
         <div class="kc-header">
-            <div class="logo" @click="$router.go(-1)">
-                <img class="logo-img" :src=avatar alt="ProtoDesign">
+            <div class="logo" @click="$router.push({ path: '/' })">
+                <img class="logo-img" :src=avatar alt="MossDesign">
             </div>
             <button class="loginbnt" v-if="!isMobile" type="button" @click.stop="router.push({ name: 'login' })">
                 {{ t('system.btn_login') }}

@@ -24,6 +24,8 @@ import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import PageCard from "@/components/common/PageCard.vue";
+import { nextTick } from 'vue';
+
 type PCard = InstanceType<typeof PageCard>
 
 const { t } = useI18n();
@@ -50,9 +52,9 @@ const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
 }>();
 const DEFAULT_COLOR = () => {
-    const f = props.context.selection.selectedPage?.getFills()[0];
-    if (f) {
-        return color2string(f.color);
+    const backgroundColor = props.context.selection.selectedPage?.backgroundColor;
+    if (backgroundColor) {
+        return color2string(backgroundColor);
     } else {
         return 'rgba(239,239,239,1)';
     }
@@ -79,6 +81,7 @@ const toggleExpand = () => {
     getCanvasShape();
 }
 const _getCanvasShape = () => {
+    if(!isTriangle.value) return;
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
     if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {
@@ -109,38 +112,40 @@ const _getCanvasShape = () => {
             renderItems = toRaw(page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout));
         }
     }
-    setTimeout(() => {
-        if (pageCard.value?.pageSvg) {
-            let format: ExportFormat;
-            let id = '';
-            let shape: ShapeView;
-            if (shapes.length === 1) {
-                shape = shapes[0];
-                format = shape.exportOptions!.exportFormats[0];
-                id = shape.id + format.id;
-            } else {
-                const page = props.context.selection.selectedPage;
-                if (!page || page.exportOptions!.exportFormats.length === 0) return;
-                shape = page;
-                format = page && page.exportOptions!.exportFormats[0];
-                id = page.id + format.id;
-            }
-            const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
-            pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
-            pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
-            if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
-                getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-            } else if (format.fileFormat === ExportFileFormat.Svg) {
-                getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-            }
-            setTimeout(() => {
-                pngImage.value = ImageUrls.get(id);
-                reflush.value++;
-            }, 100)
-        }
-    }, 10);
+    nextTick(() => {
+        getImageUrl();
+    });
 }
 
+const getImageUrl = async () => {
+    const shapes = props.context.selection.selectedShapes;
+    if (pageCard.value?.pageSvg) {
+        let format: ExportFormat;
+        let id = '';
+        let shape: ShapeView;
+        if (shapes.length === 1) {
+            shape = shapes[0];
+            format = shape.exportOptions!.exportFormats[0];
+            id = shape.id + format.id;
+        } else {
+            const page = props.context.selection.selectedPage;
+            if (!page || page.exportOptions!.exportFormats.length === 0) return;
+            shape = page;
+            format = page && page.exportOptions!.exportFormats[0];
+            id = page.id + format.id;
+        }
+        const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
+        pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
+        pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
+        if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
+            await getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
+        } else if (format.fileFormat === ExportFileFormat.Svg) {
+            await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
+        }        
+        pngImage.value = ImageUrls.get(id);
+        reflush.value++;
+    }
+}
 
 const getCanvasShape = debounce(_getCanvasShape, 250, { leading: true });
 

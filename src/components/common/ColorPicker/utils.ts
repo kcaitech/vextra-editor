@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop, GradientType, FillType } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -588,8 +588,10 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
       if (r) r.push(c);
       else result.set(c2s(c), [c]);
     }
-    if (s instanceof GroupShape && s.childs.length) finder(context, s, result);
-    else if (s instanceof TableShape) finder(context, s, result);
+    if (s instanceof GroupShapeView && s.childs.length) {
+      finder(context, s, result)
+    }
+    else if (s instanceof TableView) finder(context, s, result);
   }
   return result;
 }

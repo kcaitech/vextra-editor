@@ -54,7 +54,6 @@ const createShapeTracing = () => { // 描边
             const s = selection.find(v => v.id === shapes[0].id);
             if (s) continue;
             const b = shapes[0].frame;
-            console.log(shapes[0], 'shape');
             let framePoint = [{ x: 0, y: 0 }, { x: b.width, y: 0 }, { x: b.width, y: b.height }, { x: 0, y: b.height }];
             const m = shapes[0].matrix2Root();
             m.multiAtLeft(matrix);

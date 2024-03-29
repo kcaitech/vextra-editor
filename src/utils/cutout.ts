@@ -46,17 +46,15 @@ function private_set(key: string, value: ShapeView, selectedShapes: Map<string, 
 export const getShapeBorderMax = (shape: ShapeView) => {
     const borders = shape.getBorders();
     if (!borders.length) return 0;
-    const max_b = [0];
+    let max = 0;
     for (let i = 0; i < borders.length; i++) {
         const border = borders[i];
-        if (border.position === BorderPosition.Outer) {
-            max_b.push(border.thickness / 2);
-        } else if (border.position === BorderPosition.Inner) {
-            continue;
+        if (!border.isEnabled || border.position === BorderPosition.Inner) continue;
+        if (border.thickness > max) {
+            max = border.position === BorderPosition.Center ? border.thickness / 2 : border.thickness;
         }
-        max_b.push(border.thickness);
     }
-    return Math.max(...max_b);
+    return max;
 }
 
 export const getShadowMax = (shape: ShapeView) => {

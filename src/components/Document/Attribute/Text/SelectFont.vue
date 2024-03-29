@@ -131,8 +131,8 @@ const get_top_posi = () => {
 watch(() => props.showFont, (v) => {
     if (v) {
         const { zh, en } = props.context.workspace.fontNameList;
-        fontList.ch.push(...zh);
-        fontList.en.push(...en);
+        fontList.ch = [...zh];
+        fontList.en = [...en];
         nextTick(() => {
             get_top_posi();
         })

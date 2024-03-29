@@ -4,11 +4,11 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Variable, VariableType, Text, SymbolView } from '@kcdesign/data';
+import { OverrideType, Variable, VariableType, Text, SymbolView, ShapeType, ShapeView } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,
-    get_symbol_by_layer,
+    get_symbol_by_layer, get_x_type_option,
     is_bind_x_vari,
     modify_variable
 } from '@/utils/symbol';
@@ -56,11 +56,28 @@ const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
         get_text();
+
         const vari = is_bind_x_vari(shapes[0], OverrideType.Text);
+
         sym_layer.value = get_symbol_by_layer(shapes[0]);
+
+        let __sym = sym_layer.value!;
+        let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
+        if (__sym.parent?.type === ShapeType.SymbolUnion) {
+            union = __sym.parent! as SymbolView;
+        }
+
         selectId.value = [shapes[0].id];
+
         is_bind.value = vari;
         if (vari) {
+            const _temp: ShapeView[] = [];
+            get_x_type_option(union, __sym, vari.type, vari, _temp);
+            selectId.value = _temp.map(i => i.id);
+
             default_name.value = vari.name;
         } else {
             default_name.value = shapes[0].name;
