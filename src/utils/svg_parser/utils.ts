@@ -108,14 +108,14 @@ export function parseTransform(transformContent: string, transformParams?: Trans
         })
 
         if (name === "matrix") {
-            // const matrix = new Matrix([
-            //     [numArgList[0], numArgList[2], 0, numArgList[4]],
-            //     [numArgList[1], numArgList[3], 0, numArgList[5]],
-            //     [0, 0, 1, 0],
-            //     [0, 0, 0, 1],
-            // ], true)
-            // transform.addTransform(new Transform3D({ matrix: matrix }))
-            console.log("不支持的变换函数", name, args)
+            const matrix = new Matrix([
+                [numArgList[0], numArgList[2], 0, numArgList[4]],
+                [numArgList[1], numArgList[3], 0, numArgList[5]],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ], true)
+            transform.addTransform(new Transform3D({ matrix: matrix }))
+            // console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
                 if (numArgList.length === 1) transform.rotateZ(numArgList[0], transformParams);
