@@ -1,22 +1,14 @@
 <template>
-    <div class="list-item" v-for=" project  in props.data" :key="project.team.id">
+    <div class="list-item" v-for="project in props.data" :key="project.project.id"
+        @click="skipprojectfile(project.project.id,project.project.name)">
         <div class="image">
-            <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
-            <span v-else>{{ team.team.name.slice(0, 1) }}</span>
+            <img src="@/assets/favicon.svg" alt="team-icon">
         </div>
         <div class="content">
             <div class="left">
-                <span class="name"> {{ team.team.name }}</span>
-                <span class="time">{{ team.team.description }}</span>
+                <span class="name"> {{ project.project.name }}</span>
+                <span class="time">{{ project.project.description }}</span>
             </div>
-            <!-- <div class="right">
-                <div class="share">
-                    <svg-icon icon-class="mShare"></svg-icon>
-                </div>
-                <div class="star">
-                    <svg-icon icon-class="mStar"></svg-icon>
-                </div>
-            </div> -->
         </div>
     </div>
     <Loading v-if="loading" :size="20"></Loading>
@@ -27,6 +19,7 @@
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { urlencoded } from 'express';
+import { router } from '@/router';
 
 const props = defineProps<{
     data: any,
@@ -34,6 +27,10 @@ const props = defineProps<{
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
+
+const skipprojectfile = (id: number,name:string) => {
+    router.push({ name: 'projectfileview', query: { id: id,name:name } })
+}
 
 watch(() => props.data, () => {
     if (props.data.length === 0) {

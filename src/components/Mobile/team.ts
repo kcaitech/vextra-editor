@@ -15,9 +15,9 @@ export const GetteamList = async () => {
     }
 }
 
-export const GetprojectLists = async (teamid: number) => {
+export const GetprojectLists = async () => {
     try {
-        const { data } = await user_api.GetprojectLists({ team_id: teamid })
+        const { data } = await user_api.GetprojectLists()
         return data
     } catch (error: any) {
         if (error.data.code === 401) {

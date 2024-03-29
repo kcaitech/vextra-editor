@@ -7,7 +7,7 @@
             </div>
         </div>
         <div class="botton">
-            <div class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
+            <div class="ms-botton-item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
                 @click.stop="clickEvent(index, $event)">
                 {{ item }}
             </div>
@@ -210,7 +210,7 @@ const clickEvent = (index: number, e: MouseEvent) => {
 
 //获取item位置及宽度
 function resizechange() {
-    const items = document.querySelectorAll('.item')
+    const items = document.querySelectorAll('.ms-botton-item')
     const rect = items[itemid.value].getBoundingClientRect()
     elwidth.value = rect.width
     elleft.value = rect.x

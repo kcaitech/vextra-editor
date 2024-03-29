@@ -1,5 +1,5 @@
 <template>
-    <div class="list-item" v-for=" team  in props.data" :key="team.team.id">
+    <div class="list-item" v-for=" team  in props.data" :key="team.team.id" @click="skipproject(team.team.id,team.team.name)">
         <div class="image">
             <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
             <span v-else>{{ team.team.name.slice(0, 1) }}</span>
@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
-import { urlencoded } from 'express';
+import { router } from '@/router';
 
 const props = defineProps<{
     data: any,
@@ -44,7 +44,15 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
-
+const skipproject=(id:number,name:string)=>{
+    router.push({
+        name: 'projectview',
+        query: {
+            id: id,
+            name:name
+        }
+    })
+}
 
 </script>
 

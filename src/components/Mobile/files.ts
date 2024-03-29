@@ -56,9 +56,9 @@ export async function getStardata() {
 
 //
 //获取服务器我的文件列表
-export async function getDoucment() {
+export async function getDoucment(projectid?: string) {
     try {
-        const { data } = await user_api.getDoucmentListAPI() as any
+        const { data } = await user_api.getDoucmentListAPI(projectid ? { project_id: projectid } : '') as any
         for (let i = 0; i < data.length; i++) {
             let { document: { size, created_at } } = data[i]
             data[i].last = false

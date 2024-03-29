@@ -340,10 +340,12 @@ export function RefreshToken(params = {}, ops = {}) {
 }
 
 //获取文档列表
-export function getDoucmentListAPI() {
+export function getDoucmentListAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/',
-        method: 'get'
+        method: 'get',
+        params: params,
+        ...opts
     })
 }
 
