@@ -683,6 +683,7 @@ const rotate = ref<boolean>()
 
 async function onMouseDown(e: MouseEvent, index: number) {
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
     const table = props.context.tableSelection;
     pointX.value = e.clientX
@@ -696,13 +697,13 @@ async function onMouseDown(e: MouseEvent, index: number) {
         });
     }
     e.stopPropagation()
-    if (selected.length === 1 && selected[0].type === ShapeType.Table && is_editing(table)) {
+    if (shapes.length === 1 && shapes[0].type === ShapeType.Table && is_editing(table)) {
         const table = props.context.tableSelection;
         const range = get_table_range(table);
-        bordercellthickness_editor = props.context.editor4Table(selected[0] as TableView).asyncBorderThickness4Cell(range);
+        bordercellthickness_editor = props.context.editor4Table(shapes[0] as TableView).asyncBorderThickness4Cell(range);
         bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     } else {
-        borderthickness_editor = props.context.editor.controller().asyncBorderThickness(selected, page!)
+        borderthickness_editor = props.context.editor.controller().asyncBorderThickness(shapes, page!)
         borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     }
     document.addEventListener('mouseup', onMouseUp);
@@ -746,17 +747,17 @@ function onMouseMove(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY, isRotating)
     const index = testidx.value
     const id = borders.length - index - 1
-    const selecteds = props.context.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
-    if (!page || selecteds.length < 1) return;
-    const shape = selecteds[0];
+    if (!page || shapes.length < 1) return;
+    const shape = shapes[0];
     const table = props.context.tableSelection;
     if (borderThickness.value?.length) {
         const thickness = Number(borders[index].border.thickness) + e.movementX;
-        if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
+        if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
             bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
             if (actions && actions.length && borderthickness_editor) {
                 borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);

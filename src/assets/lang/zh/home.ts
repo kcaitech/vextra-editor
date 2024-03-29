@@ -1,7 +1,7 @@
 import { BorderPosition } from "@kcdesign/data"
 
 export const product = {
-    name: 'ProtoDesign'
+    name: 'MossDesign'
 }
 
 export const system = {
@@ -45,7 +45,7 @@ export const system = {
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',
     'read_Privacy': '隐私协议',
-    'product_name': 'ProtoDesign',
+    'product_name': 'MossDesign',
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
     'login_footer': '©2024 珠海市旷才科技有限公司',
     'placeholder': '搜索文件',

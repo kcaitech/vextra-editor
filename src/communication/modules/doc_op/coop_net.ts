@@ -38,8 +38,8 @@ export class CoopNet implements ICoopNet {
         })
         return new Promise<Cmd[]>((resolve, reject) => {
             const key = `${from}-${to}`
-            const promiseList = this.pullCmdsPromiseList[key]
-            if (!promiseList) this.pullCmdsPromiseList[key] = [];
+            let promiseList = this.pullCmdsPromiseList[key]
+            if (!promiseList) promiseList = this.pullCmdsPromiseList[key] = [];
             promiseList.push({ resolve: resolve, reject: reject })
         })
     }

@@ -43,7 +43,8 @@ export function styleSheetController(): StyleSheetController {
     async function appendStyleSheetForCursor() {
         style = document.createElement('style');
         style.type = 'text/css';
-        styleSheetId = (uuid().split('-').at(-1)) || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
+        const temp = uuid().split('-');
+        styleSheetId = temp[temp.length - 1] || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
         style.id = styleSheetId;
         // 预设一个auto
         style.innerHTML += await getClassString('auto', 0, styleSheetId);

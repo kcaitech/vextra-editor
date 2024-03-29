@@ -339,5 +339,13 @@ export function RefreshToken(params = {}, ops = {}) {
 
 }
 
+//获取文档列表
+export function getDoucmentListAPI() {
+    return httpRequest({
+        url: '/documents/',
+        method: 'get'
+    })
+}
+
 
 
