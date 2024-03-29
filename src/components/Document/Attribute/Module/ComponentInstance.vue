@@ -115,6 +115,9 @@ const isBind = () => {
 
         let __sym = sym_layer.value!;
         let union = sym_layer.value!;
+        if (!__sym) {
+            return;
+        }
         if (__sym.parent?.type === ShapeType.SymbolUnion) {
             union = __sym.parent! as SymbolView;
         }

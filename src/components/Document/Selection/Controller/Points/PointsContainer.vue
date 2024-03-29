@@ -103,6 +103,12 @@ function point_mousemove(event: MouseEvent) {
                 deg = -deg;
             }
 
+
+
+            if (Math.abs(deg) > 24) {
+                deg = 0;
+            }
+
             asyncBaseAction.executeRotate(deg);
 
             setCursor(cur_ctrl_type, true);

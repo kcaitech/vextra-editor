@@ -5,6 +5,7 @@ import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
 import { is_symbol_class } from '@/utils/controllerFn';
+import { adapt2Shape } from "@kcdesign/data";
 
 const watchedShapes = new Map();
 
@@ -43,6 +44,7 @@ function selection_watcher(t?: number) {
         update_paths();
     }
 }
+
 function update_paths() {
     // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     const shapes = props.context.selection.selectedShapes;
@@ -54,7 +56,7 @@ function update_paths() {
     const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
+        const shape = adapt2Shape(shapes[i]);
         const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
@@ -70,7 +72,7 @@ function update_themes() {
     const shapes = props.context.selection.selectedShapes;
     theme_map.clear();
     for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
+        const shape = adapt2Shape(shapes[i]);
         const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normol;
         theme_map.set(shape.id, theme);
     }

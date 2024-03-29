@@ -652,8 +652,8 @@ onMounted(() => {
             return;
         }
         resizeObserver.observe(root.value);
-        _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
-        initMatrix(props.page); // 初始化页面视图
+        _updateRoot(props.context, root.value);
+        initMatrix(props.page);
     });
     props.context.workspace.setFreezeStatus(false)
 
