@@ -40,8 +40,10 @@ export function genOptions(items: string[][]) {
 
 // 获取两条直线的夹角
 export function getAngle(line1: [number, number, number, number], line2: [number, number, number, number]): number {
-    const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
-    const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
+    // const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
+    // const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
+    const slope1 = (line1[3] - line1[1]) / (line1[2] - line1[0]);
+    const slope2 = (line2[3] - line2[1]) / (line2[2] - line2[0]);
     const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
     return angleRad * (180 / Math.PI);
 }
@@ -468,7 +470,7 @@ export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView
     const shapes = _shapes || context.selection.selectedShapes;
     const editor = context.editor4Page(page);
     console.log(shapes, 'val');
-    
+
     editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
     hidden_selection(context);
 }

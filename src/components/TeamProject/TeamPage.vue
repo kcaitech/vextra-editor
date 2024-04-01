@@ -152,6 +152,8 @@ window.onresize = () => {
 
 const overel = new ResizeObserver((entries) => {
     resizechange()
+    const el = document.querySelector('.el-aside')!
+    overel.unobserve(el)
 })
 
 onMounted(() => {
@@ -166,8 +168,6 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.onresize = null
-    const el = document.querySelector('.el-aside')!
-    overel.unobserve(el)
     sessionStorage.setItem('activateitem', '0')
 })
 </script>

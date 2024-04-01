@@ -5,6 +5,7 @@ export class CoopNet implements ICoopNet {
 
     private send?: (data: any, isListened?: boolean, timeout?: number) => Promise<boolean>
     private watcherList: ((cmds: Cmd[]) => void)[] = []
+    private errorWatcherList: ((errorInfo: any) => void)[] = []
     private onClose?: () => void
     private isConnected = false
     private pullCmdsPromiseList: Record<string, {
@@ -38,8 +39,8 @@ export class CoopNet implements ICoopNet {
         })
         return new Promise<Cmd[]>((resolve, reject) => {
             const key = `${from}-${to}`
-            const promiseList = this.pullCmdsPromiseList[key]
-            if (!promiseList) this.pullCmdsPromiseList[key] = [];
+            let promiseList = this.pullCmdsPromiseList[key]
+            if (!promiseList) promiseList = this.pullCmdsPromiseList[key] = [];
             promiseList.push({ resolve: resolve, reject: reject })
         })
     }
@@ -59,6 +60,10 @@ export class CoopNet implements ICoopNet {
 
     watchCmds(watcher: (cmds: Cmd[]) => void): void {
         this.watcherList.push(watcher)
+    }
+
+    watchError(watcher: (errorInfo: any) => void): void {
+        this.errorWatcherList.push(watcher)
     }
 
     onMessage(data: any): void {
@@ -117,6 +122,24 @@ export class CoopNet implements ICoopNet {
             if (!Array.isArray(data.cmd_id_list)) {
                 console.log("返回数据格式错误")
                 return
+            }
+            if (data.data?.type === "duplicate") {
+                console.log("数据重复", data.data?.duplicateCmd)
+                if (!data.data?.duplicateCmd) {
+                    console.log("返回数据格式错误")
+                    return
+                }
+                const duplicateCmd = data.data.duplicateCmd
+                duplicateCmd.cmd.id = duplicateCmd.cmd_id
+                duplicateCmd.cmd.version = this.radixRevert.from(duplicateCmd.id)
+                duplicateCmd.cmd.previousVersion = this.radixRevert.from(duplicateCmd.previous_id)
+                const duplicateCmd1 = parseCmds([duplicateCmd.cmd])[0]
+                for (const watcher of this.errorWatcherList) {
+                    watcher({
+                        type: "duplicate",
+                        duplicateCmd: duplicateCmd1,
+                    })
+                }
             }
         } else {
             console.log("未知的数据类型", data.type)

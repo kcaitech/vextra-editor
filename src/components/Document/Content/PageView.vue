@@ -30,7 +30,8 @@ const emit = defineEmits<{
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
-        const id = (v4().split('-').at(-1)) || 'pageview';
+        const temp = v4().split('-');
+        const id = temp[temp.length - 1] || 'pageview';
         rootId.value = id;
     } else {
         rootId.value = 'pageview';

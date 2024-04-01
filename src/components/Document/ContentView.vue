@@ -108,7 +108,8 @@ function page_watcher(...args: any) {
 
 function rootRegister(mount: boolean) {
     if (mount) {
-        rootId.value = (v4().split('-').at(-1)) || 'content';
+        const temp = v4().split('-');
+        rootId.value = temp[temp.length - 1] || 'content';
     }
     workspace.value.setRootId(rootId.value);
 }
