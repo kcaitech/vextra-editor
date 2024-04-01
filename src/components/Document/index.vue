@@ -359,7 +359,6 @@ const getDocumentInfo = async () => {
             });
             return;
         }
-
         docInfo.value = docInfoData;
         permType.value = perm;
         const repo = new Repository();
@@ -439,7 +438,8 @@ async function upload(projectId: string) {
         return;
     }
     const doc_id = result!.data.doc_id;
-    console.log("文档上传成功", doc_id)
+    console.log("文档上传成功", doc_id);
+    if(route.name !== 'document') return;
     router.replace({
         path: '/document',
         query: { id: doc_id },
