@@ -1,7 +1,7 @@
 {
-  "name": "protodesign",
+  "name": "mossdesign",
   "description": "A design system for rapidly building web applications",
-  "productName": "ProtoDesign",
+  "productName": "MossDesign",
   "version": "0.1.0",
   "private": true,
   "author": "moss.design",
