@@ -27,6 +27,7 @@ import { Selection } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
+import e from 'express';
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
@@ -457,6 +458,11 @@ onUnmounted(() => {
     stop();
     stop2();
 })
+
+const test=(e:TouchEvent,str:string)=>{
+    console.log(e,str);
+    
+}
 </script>
 
 <template>
@@ -467,7 +473,7 @@ onUnmounted(() => {
 
         <span>{{ fileName }}</span>
     </div>
-    <div class="pageview">
+    <div class="pageview" @touchstart="test($event,'开始')" @touchend="test($event,'结束')" @touchmove="test($event,'移动')">
         <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)" :matrix="matrix"
                      @closeLoading="closeLoading"/>
     </div>
