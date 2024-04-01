@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { urlencoded } from 'express';
 
@@ -44,8 +44,10 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
+watch(() => props.data, () => {
+    console.log(props.data);
 
-
+})
 </script>
 
 <style lang="scss" scoped>

@@ -47,7 +47,7 @@ watch(() => props.data, () => {
 })
 
 const toteamproject = (id: number) => {
-    router.push({ path: '/team/' + id });
+    router.push({ path: '/team/', query: { id: id } });
 }
 
 

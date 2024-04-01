@@ -12,20 +12,27 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { GetteamList, GetprojectLists } from './team'
-import { router } from '@/router'
 import { useRoute } from 'vue-router'
 const projectlist = ref<any[]>([])
 
 const route = useRoute()
 
 
+
+
 onMounted(async () => {
-    if (route.query.id)
-        if (route) {
-            projectlist.value = await GetprojectLists(Number(route.query.id))
-        }
+    console.log(route);
+    console.log(route);
+    if (route.query.id){
+       
+        
+        projectlist.value = await GetprojectLists(Number(route.query.id))
+    }
+       
+    console.log(projectlist.value);
+
 })
 </script>
 
