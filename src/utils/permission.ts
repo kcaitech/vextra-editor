@@ -1,7 +1,7 @@
 import { router } from "@/router";
 import { Context } from "@/context";
 import { Perm } from "@/context/workspace";
-import isMobileDevice from "./mobileDeviceChecker";
+
 //守卫白名单
 const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
@@ -9,16 +9,6 @@ router.beforeEach((to, from, next) => {
     if (to.meta.title) {
         document.title = to.meta.title as string;
     }
-
-
-//   if(isMobileDevice()){
-//     console.log('11111');
-    
-//     router.push({name:'mobilehome'})
-//   }else{
-//     next()
-//   }
-
 
     //判断是否存在token且有效
     if (token) {

@@ -12,9 +12,14 @@
             </div>
         </Teleport>
         <Teleport to="body">
-            <div v-if="qrcode" class="qq-grop-code">
-                <div class="qr-code">
-                    <img class="code-image" :src="QRCode" alt="QRCode">
+            <div v-if="qrcode" class="grop-code">
+                <div v-if="!showwx" class="qq-code" @click.stop="showwx=!showwx">
+                    <img class="code-image" :src="QQCode" alt="QRCode">
+                    <span>点击切换微信群</span>
+                </div>
+                <div v-if="showwx" class="wx-code" @click.stop="showwx=!showwx">
+                    <img class="code-image" :src="WXCode" alt="QRCode">
+                    <span>点击切换QQ群</span>
                 </div>
             </div>
             <div v-if="report" class="overlay">
@@ -27,7 +32,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import QRCode from '@/assets/qr-code.png';
+import QQCode from '@/assets/qq-code.png';
+import WXCode from '@/assets/wx-code.png';
 import ShortCut from './ShortCut.vue';
 import Report from './Report.vue'
 import { Context } from '@/context';
@@ -37,7 +43,7 @@ import { Menu } from '@/context/menu';
 const props = defineProps<{
     context?: Context
 }>();
-
+const showwx=ref<boolean>(true)
 const route = useRoute()
 const showitem = ref(false)
 const qrcode = ref(false)
@@ -189,7 +195,7 @@ onUnmounted(() => {
 }
 
 
-.qq-grop-code {
+.grop-code {
     position: fixed;
     bottom: 66px;
     right: 20px;
@@ -199,16 +205,21 @@ onUnmounted(() => {
     box-sizing: border-box;
     z-index: 9999;
 
-    .qr-code {
+    .qq-code,.wx-code {
         width: 200px;
         height: 200px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
 
         .code-image {
             width: 80%;
+        }
+        span{
+            color: #c8c8c8;
+            font-size: 14px;
         }
     }
 }
