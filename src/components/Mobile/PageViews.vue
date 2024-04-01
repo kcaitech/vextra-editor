@@ -27,7 +27,9 @@ import { Selection, XY } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
-import e from 'express';
+// import VConsole from 'vconsole'
+// const vConsole = new VConsole();
+
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
@@ -47,6 +49,7 @@ const curPage = shallowRef<PageView | undefined>(undefined);
 
 const HEAD_HEIGHT = 44;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
+
 
 const fileName = ref<string>('MossDesign');
 
