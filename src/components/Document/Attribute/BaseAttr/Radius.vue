@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
-import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
+import { PathShapeView, RadiusType, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
 

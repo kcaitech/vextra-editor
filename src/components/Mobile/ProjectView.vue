@@ -1,11 +1,11 @@
 <template>
     <div class="project">
         <div class="header">
-            <svg-icon icon-class="back-icon"></svg-icon>
-            <span>分享</span>
+            <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
+            <span>{{ teamname }}</span>
         </div>
         <div class="list">
-            <TeamItem :data="projectlist"></TeamItem>
+            <ProjectItem :data="projectlist"></ProjectItem>
         </div>
     </div>
 
@@ -15,24 +15,21 @@
 import { onMounted, ref, watch } from 'vue';
 import { GetteamList, GetprojectLists } from './team'
 import { useRoute } from 'vue-router'
+import ProjectItem from './ProjectItem.vue';
+import { router } from '@/router';
+
 const projectlist = ref<any[]>([])
 
 const route = useRoute()
+const teamname = ref<string>(route.query.name as string)
 
+const getlist = async () => {
+    const data = await GetprojectLists()
+    projectlist.value = data.filter((item: any) => item.project.team_id === route.query.id)
+}
 
-
-
-onMounted(async () => {
-    console.log(route);
-    console.log(route);
-    if (route.query.id){
-       
-        
-        projectlist.value = await GetprojectLists(Number(route.query.id))
-    }
-       
-    console.log(projectlist.value);
-
+onMounted(() => {
+    getlist()
 })
 </script>
 

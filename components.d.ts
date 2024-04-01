@@ -218,6 +218,7 @@ declare module '@vue/runtime-core' {
     ProjectAccessSetting: typeof import('./src/components/TeamProject/ProjectFill/ProjectAccessSetting.vue')['default']
     ProjectApply: typeof import('./src/components/TeamProject/ProjectFill/ProjectApply.vue')['default']
     ProjectDialog: typeof import('./src/components/TeamProject/ProjectDialog.vue')['default']
+    ProjectFileView: typeof import('./src/components/Mobile/ProjectFileView.vue')['default']
     ProjectFillList: typeof import('./src/components/TeamProject/ProjectFill/ProjectFillList.vue')['default']
     ProjectItem: typeof import('./src/components/Mobile/ProjectItem.vue')['default']
     ProjectList: typeof import('./src/components/TeamProject/ProjectList.vue')['default']

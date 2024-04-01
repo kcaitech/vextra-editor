@@ -28,6 +28,7 @@ const ProjectShare = () => import('@/components/TeamProject/ProjectShare/Project
 const MobileHome = () => import('@/components/Mobile/index.vue')
 const PageViews = () => import('@/components/Mobile/PageViews.vue')
 const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
+const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
 
 let _t: any = i18n.global
 
@@ -180,9 +181,17 @@ const routes = [
         component: MobileHome,
     },
     {
-        path: "/team/:id",
+        path: "/team",
         name: 'projectview',
         component: ProjectView,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
+        path: "/project",
+        name: 'projectfileview',
+        component: ProjectFileView,
         meta: {
             requireAuth: true
         }

@@ -54,7 +54,7 @@ type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'design.moss';
 export const paras = 'design.moss/paras'; // 文字段落
 export class Clipboard {
-    private context: Context;
+    context: Context;
     private cache: { type: CacheType, data: any } | undefined;
     private m_envs: Set<string> = new Set();
 
@@ -321,7 +321,8 @@ export class Clipboard {
 
     async paste(t: Function, event?: ClipboardEvent, xy?: PageXY) {
         try {
-            if (!event) { // 粘贴由鼠标事件触发，只能去读取 '异步剪切板'
+            // @ts-ignore
+            if (navigator.clipboard.read || !event) {
                 return this.paste_async(t, xy);
             }
 
@@ -354,10 +355,10 @@ export class Clipboard {
         }
     }
 
-    paste_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
+    async paste_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
         if (data.length > 1) {
-            let h: any = undefined;
-            let p: any = undefined;
+            let h: DataTransferItem | undefined = undefined;
+            let p: DataTransferItem | undefined = undefined;
 
             for (let i = 0; i < data.length; i++) {
                 const d = data[i];
@@ -369,26 +370,16 @@ export class Clipboard {
             }
 
             if (h && p) {
-                let successFirst = false;
-
-                h.getAsString((val: any) => {
-                    const html = decode_html(val);
-                    this.modify_cache('inner-html', val);
-                    successFirst =  handle_text_html_string(this.context, html);
-                    if (!successFirst) {
-                        return;
-                    }
-
-                    const plain = get_plain(data);
-                    if (!plain) {
-                        return;
-                    }
-                    plain.getAsString(text => {
-                        this.modify_cache('plain-text', text);
-                        clipboard_text_plain2(this.context, text, xy);
-                    });
-                });
-
+                console.log('来了哥')
+                let html = await getHtmlAsync(h);
+                let text = await getTextAsync(p);
+                const firstSuccess = handle_text_html_string(this.context, html);
+                if (firstSuccess) {
+                    this.modify_cache('inner-html', html);
+                    return;
+                }
+                this.modify_cache('plain-text', text);
+                clipboard_text_plain2(this.context, text, xy);
                 return;
             }
         }
@@ -478,11 +469,12 @@ export class Clipboard {
             let text_html = await val.text();
             text_html = decode_html(text_html);
 
-            if (!(text_html && typeof text_html === 'string')) {
-                throw new Error('read failure');
+            let successFirst = false;
+
+            if (text_html && typeof text_html === 'string') {
+                successFirst = handle_text_html_string(context, text_html, xy);
             }
 
-           const successFirst = handle_text_html_string(context, text_html, xy);
             if (!successFirst) {
                 clipboard_text_plain(this.context, data, xy);
             }
@@ -1048,7 +1040,8 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         // 6. 上传图层内嵌的静态资源到服务端
         after_import(context, medias);
     } else {
-        message('info', context.workspace.t('clipboard.invalid_data'));
+        console.log('handle_text_html_string:', context.workspace.t('clipboard.invalid_data'));
+        // message('info', context.workspace.t('clipboard.invalid_data'));
         return false;
     }
 
@@ -1646,4 +1639,27 @@ function get_xys_for_selection_envs(envs: GroupShape[], xys: XY[], source: Shape
         }
     }
     return __xys;
+}
+
+function handleHtmlAsync(data: DataTransferItem, ctx: Clipboard) {
+    return new Promise(resolve => {
+        data.getAsString(val => {
+            const html = decode_html(val);
+            ctx.modify_cache('inner-html', val);
+            const successFirst: boolean = handle_text_html_string(ctx.context, html);
+            resolve(successFirst);
+        })
+    });
+}
+
+function getHtmlAsync(data: DataTransferItem): Promise<string> {
+    return new Promise((resolve, reject) => {
+        data.getAsString(val => resolve(decode_html(val)));
+    });
+}
+
+function getTextAsync(data: DataTransferItem): Promise<string> {
+    return new Promise((resolve, reject) => {
+        data.getAsString(val => resolve(val));
+    });
 }
