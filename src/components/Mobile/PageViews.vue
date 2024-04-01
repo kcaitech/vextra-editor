@@ -23,7 +23,7 @@ import * as user_api from "@/request/users";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { WorkSpace } from "@/context/workspace";
-import { Selection } from "@/context/selection";
+import { Selection, XY } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
@@ -31,7 +31,7 @@ import e from 'express';
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
-const {t} = useI18n();
+const { t } = useI18n();
 let context: Context | undefined;
 const permType = ref<number>();
 const docInfo: any = ref({});
@@ -92,7 +92,7 @@ const startCountdown = (type?: number) => {
 }
 const getDocumentAuthority = async () => {
     try {
-        const data = await share_api.getDocumentAuthorityAPI({doc_id: route.query.id})
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         if (data.code === 400) {
             permissionChange.value = PermissionChange.delete
             showNotification(0)
@@ -132,7 +132,7 @@ const getDocumentAuthority = async () => {
     }
 }
 const getUserInfo = async () => {
-    const {data} = await user_api.GetInfo()
+    const { data } = await user_api.GetInfo()
     if (data && context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
@@ -144,21 +144,21 @@ const getDocumentInfo = async () => {
     try {
         loading.value = true;
         noNetwork.value = false;
-        const docInfoPromise = share_api.getDocumentInfoAPI({doc_id: route.query.id});
-        const docKeyPromise = share_api.getDocumentKeyAPI({doc_id: route.query.id});
+        const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+        const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
         if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
             if (docKeyRes.code === 403) {
                 if (docKeyRes.message === "审核不通过") {
                     router.push("/files");
-                    ElMessage.error({duration: 3000, message: t('system.sensitive_reminder3')})
+                    ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
                     return;
                 }
                 if (docKeyRes.message === "无访问权限") {
                     const query = route.query.page_id ? {
                         id: route.query.id,
                         page_id: route.query.page_id.slice(0, 8)
-                    } : {id: route.query.id};
+                    } : { id: route.query.id };
                     router.push({
                         name: "apply",
                         query: query,
@@ -166,11 +166,11 @@ const getDocumentInfo = async () => {
                     return;
                 }
                 router.push("/files");
-                ElMessage.error({duration: 3000, message: docKeyRes.message})
+                ElMessage.error({ duration: 3000, message: docKeyRes.message })
                 return;
             } else {
                 router.push("/files");
-                ElMessage.error({duration: 3000, message: docInfoRes.message})
+                ElMessage.error({ duration: 3000, message: docInfoRes.message })
                 return;
             }
         }
@@ -181,7 +181,7 @@ const getDocumentInfo = async () => {
             const query = route.query.page_id ? {
                 id: route.query.id,
                 page_id: route.query.page_id.slice(0, 8)
-            } : {id: route.query.id};
+            } : { id: route.query.id };
             router.push({
                 name: "apply",
                 query: query,
@@ -284,7 +284,7 @@ async function upload(projectId: string) {
     console.log("文档上传成功", doc_id)
     router.replace({
         path: '/document',
-        query: {id: doc_id},
+        query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         console.log("文档操作通道开启失败")
@@ -415,7 +415,7 @@ function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix(adapt_page2(context, document.documentElement.clientWidth, document.documentElement.clientHeight - HEAD_HEIGHT));
-        info = {m, x: cur.frame.x, y: cur.frame.y};
+        info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
     matrix.reset(info.m.toArray());
@@ -459,9 +459,126 @@ onUnmounted(() => {
     stop2();
 })
 
-const test=(e:TouchEvent,str:string)=>{
-    console.log(e,str);
-    
+const ORIGIN = { x: 0, y: HEAD_HEIGHT };
+let downTouchesLength = 1;
+
+let preGap = 0;
+let preAnchor = { x: 0, y: 0 };
+let preScale = 1;
+
+const __box = (event: TouchEvent) => {
+    const touches = event.touches;
+    const len = touches.length;
+
+    const xys: XY[] = [];
+
+    for (let i = 0; i < len; i++) {
+        const t = touches.item(i);
+
+        if (!t) {
+            continue;
+        }
+
+        xys.push({ x: t.clientX - ORIGIN.x, y: t.clientY - ORIGIN.y });
+    }
+
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+
+    xys.forEach(i => {
+        if (i.x < left) {
+            left = i.x;
+        }
+        if (i.x > right) {
+            right = i.x;
+        }
+
+        if (i.y < top) {
+            top = i.y;
+        }
+        if (i.y > bottom) {
+            bottom = i.y;
+        }
+    });
+
+    return { left, top, right, bottom };
+}
+const __gap = (event: TouchEvent) => {
+    const { left, top, right, bottom } = __box(event);
+
+    return Math.hypot(right - left, bottom - top);
+}
+
+const __anchor = (event: TouchEvent) => {
+    let a = event.touches[0]!;
+
+    return { x: a.clientX - ORIGIN.x, y: a.clientY - ORIGIN.y };
+}
+
+function start(e: TouchEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    downTouchesLength = e.touches.length;
+
+    if (downTouchesLength > 1) { // 只有多根手指才可能触发缩放
+        preGap = __gap(e);
+        preScale = matrix.m00;
+    }
+
+    preAnchor = __anchor(e);
+}
+
+const MAX = 25600;
+const MIN = 2;
+
+function move(e: TouchEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const anchor = __anchor(e);
+
+    const dx = anchor.x - preAnchor.x;
+    const dy = anchor.y - preAnchor.y;
+
+    matrix.trans(dx, dy);
+
+    preAnchor = { ...anchor };
+
+    if (downTouchesLength < 2) {
+        return;
+    }
+
+    const currentGap = __gap(e);
+
+    if (!(currentGap > 0)) {
+        return;
+    }
+
+    let scale = currentGap / preGap;
+
+    const _scale = Number((matrix.toArray()[0] * 100).toFixed(0)) * scale;
+    if (_scale <= MIN) {
+        scale = 1;
+    } else if (_scale >= MAX) {
+        scale = MAX / scale;
+    }
+
+    const offsetX = preAnchor.x - ORIGIN.x;
+    const offsetY = preAnchor.y - ORIGIN.y;
+
+    matrix.trans(-offsetX, -offsetY);
+    matrix.scale(scale);
+    matrix.trans(offsetX, offsetY);
+
+    preGap = currentGap;
+}
+
+function end(e: TouchEvent) {
+    if (e.touches.length) {
+        preAnchor = __anchor(e);
+    }
 }
 </script>
 
@@ -473,7 +590,7 @@ const test=(e:TouchEvent,str:string)=>{
 
         <span>{{ fileName }}</span>
     </div>
-    <div class="pageview" @touchstart="test($event,'开始')" @touchend="test($event,'结束')" @touchmove="test($event,'移动')">
+    <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
         <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)" :matrix="matrix"
                      @closeLoading="closeLoading"/>
     </div>
@@ -508,5 +625,17 @@ const test=(e:TouchEvent,str:string)=>{
     width: 100%;
     height: calc(100% - v-bind('HEAD_HEIGHT_CSS'));
     background-color: #EFEFEF;
+
+    overflow: hidden;
+
+    position: relative;
+}
+
+.tips {
+    position: absolute;
+    width: 72px;
+    height: 30px;
+    top: 50px;
+    margin: 0 auto;
 }
 </style>
