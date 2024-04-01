@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
 import { onBeforeUnmount, onMounted } from "vue";
 import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
+import { PROJECT_NAME } from "@/const";
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
@@ -13,7 +14,7 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 }
 
 onMounted(() => {
-    document.title = 'MossDesign';
+    document.title = PROJECT_NAME;
     startRefreshTokenTask();
 })
 

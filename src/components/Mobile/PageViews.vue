@@ -27,6 +27,7 @@ import { Selection } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
+import { PROJECT_NAME } from "@/const";
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
@@ -47,7 +48,7 @@ const curPage = shallowRef<PageView | undefined>(undefined);
 const HEAD_HEIGHT = 44;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
 
-const fileName = ref<string>('MossDesign');
+const fileName = ref<string>(PROJECT_NAME);
 
 const emit = defineEmits<{
     (e: 'closeLoading'): void;
@@ -212,7 +213,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             fileName.value = file_name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
