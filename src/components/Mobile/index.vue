@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="header">
-            <img src="../../assets/h-logo.svg" alt="logo">
+            <img src="@/assets/h-logo2.svg" alt="logo">
         </div>
         <div class="main">
             <div class="search">
@@ -16,7 +16,7 @@
                 </div>
                 <div class="notice" @click="showInForm = !showInForm">
                     <svg-icon icon-class="m-notice"></svg-icon>
-                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 :total }}
                     </div>
                 </div>
             </div>
@@ -217,8 +217,8 @@ onUnmounted(() => {
 .num {
     position: relative;
     font-size: 10px;
-    top: -4px;
-    left: 10px;
+    top: -8px;
+    left: 8px;
     min-width: 14px;
     min-height: 14px;
     background-color: red;
@@ -273,7 +273,8 @@ onUnmounted(() => {
         z-index: 1;
 
         img {
-            height: 44px;
+            margin-left: 14px;
+            height: 34px;
         }
     }
 
@@ -341,14 +342,13 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 24px;
-                height: 24px;
-                min-width: 24px;
-                min-height: 24px;
+                width: 32px;
+                height: 32px;
 
                 svg {
-                    width: 100%;
-                    height: 100%;
+                    position: absolute;
+                    width: 24px;
+                    height: 24px;
                 }
             }
 
