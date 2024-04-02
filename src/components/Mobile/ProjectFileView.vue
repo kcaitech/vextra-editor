@@ -33,7 +33,7 @@ const filename = ref<string>(route.query.name as string)
 const docid = ref<string>('')
 
 const data = (data: any) => {
-    docid.value = data.document.id
+    docid.value = data.data.document.id
 }
 
 const changeStar = async (id: number, b: boolean) => {

@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="header">
-            <img src="../../assets/mlogo.svg" alt="logo">
+            <img src="../../assets/h-logo.svg" alt="logo">
         </div>
         <div class="main">
             <div class="search">
@@ -37,7 +37,8 @@
         <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
         <!-- <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
             @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform> -->
-        <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList" :teamApplyList="totalList"></Inform>
+        <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList" :teamApplyList="totalList">
+        </Inform>
     </div>
 </template>
 
@@ -93,8 +94,7 @@ const changetab = (tab: string) => {
 }
 
 const testevent = (data: any) => {
-    console.log(data);
-    docid.value = data.document.id
+    docid.value = data.data.document.id
 }
 
 const getApplyList = async () => {
@@ -116,8 +116,8 @@ const getProjectApplyList = async () => {
             projectApplyList.value = data;
             totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
+                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -135,8 +135,8 @@ const getTeamApply = async () => {
             teamApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
+                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -154,8 +154,8 @@ const getProjectNotice = async () => {
             notifyPApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
+                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -171,8 +171,8 @@ const getTeamNotice = async () => {
             notifyTApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
+                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -264,7 +264,6 @@ onUnmounted(() => {
     .header {
         display: flex;
         align-items: center;
-        padding: 0 14px;
         width: 100%;
         min-height: 44px;
         position: sticky;
@@ -274,8 +273,7 @@ onUnmounted(() => {
         z-index: 1;
 
         img {
-            width: 165px;
-            height: 24px;
+            height: 44px;
         }
     }
 
@@ -345,6 +343,8 @@ onUnmounted(() => {
                 justify-content: center;
                 width: 24px;
                 height: 24px;
+                min-width: 24px;
+                min-height: 24px;
 
                 svg {
                     width: 100%;

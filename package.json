@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@kcdesign/data": "^0.3.69",
+    "@vueuse/core": "^10.9.0",
     "ali-oss": "^6.18.1",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",

@@ -153,7 +153,7 @@ const getDocumentInfo = async () => {
         if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
             if (docKeyRes.code === 403) {
                 if (docKeyRes.message === "审核不通过") {
-                    router.push("/files");
+                    router.push("/m");
                     ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
                     return;
                 }
@@ -168,11 +168,11 @@ const getDocumentInfo = async () => {
                     });
                     return;
                 }
-                router.push("/files");
+                router.push("/m");
                 ElMessage.error({ duration: 3000, message: docKeyRes.message })
                 return;
             } else {
-                router.push("/files");
+                router.push("/m");
                 ElMessage.error({ duration: 3000, message: docInfoRes.message })
                 return;
             }
@@ -227,7 +227,7 @@ const getDocumentInfo = async () => {
             const docId = route.query.id as string;
             const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
             if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
-                router.push("/files");
+                router.push("/m");
                 return;
             }
             loading.value = false;
@@ -286,7 +286,7 @@ async function upload(projectId: string) {
     const doc_id = result!.data.doc_id;
     console.log("文档上传成功", doc_id)
     router.replace({
-        path: '/document',
+        path: '/pageviews',
         query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
@@ -344,7 +344,7 @@ function init_doc() {
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     } else {
-        router.push('/files');
+        router.push('/m');
     }
 }
 
