@@ -21,17 +21,21 @@ import {
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
+import MdNumberInput from "@/components/common/MdNumberInput.vue";
+
 interface Props {
     context: Context
     selectionChange: number
     trigger: any[]
 }
+
 interface LayoutOptions {
     s_adapt: boolean
     s_flip: boolean
     s_radius: boolean
     s_length: boolean
 }
+
 interface ModelState {
     x: boolean
     y: boolean
@@ -42,6 +46,7 @@ interface ModelState {
     flipVertical: boolean
     radius: boolean
 }
+
 const props = defineProps<Props>();
 const { t } = useI18n();
 const x = ref<number | string>(0);
@@ -101,6 +106,7 @@ const parentSymbolRef = () => {
     }
     return is_dis;
 }
+
 function _update_view() {
     if (props.context.selection.selectedShapes.length) {
         layout();
@@ -113,29 +119,28 @@ function _update_view() {
         check_model_state();
     }
 }
+
 const update_view = debounce(_update_view, 200, { leading: true });
 
-function onChangeX(value: string, shapes: ShapeView[]) {
-    value = Number
-        .parseFloat(value)
-        .toFixed(fix);
+function changeX(value: string) {
+    value = Number.parseFloat(value).toFixed(fix);
 
     const _x: number = Number.parseFloat(value);
     if (isNaN(_x)) {
         return;
     }
 
+    const shapes = props.context.selection.selectedShapes;
+
     const actions = get_actions_frame_x(shapes, _x);
 
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesX(actions);
 }
-function onChangeY(value: string, shapes: ShapeView[]) {
+
+function changeY(value: string) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -144,6 +149,8 @@ function onChangeY(value: string, shapes: ShapeView[]) {
     if (isNaN(_y)) {
         return;
     }
+
+    const shapes = props.context.selection.selectedShapes;
 
     const actions = get_actions_frame_y(shapes, _y);
     const page = props.context.selection.selectedPage;
@@ -154,7 +161,8 @@ function onChangeY(value: string, shapes: ShapeView[]) {
     const editor = props.context.editor4Page(page);
     editor.modifyShapesY(actions);
 }
-function onChangeW(value: string, shapes: ShapeView[]) {
+
+function changeW(value: string) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -164,13 +172,16 @@ function onChangeW(value: string, shapes: ShapeView[]) {
         return;
     }
 
+    const shapes = props.context.selection.selectedShapes;
+
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
     editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
 }
-function onChangeH(value: string, shapes: ShapeView[]) {
+
+function changeH(value: string) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -180,12 +191,15 @@ function onChangeH(value: string, shapes: ShapeView[]) {
         return;
     }
 
+    const shapes = props.context.selection.selectedShapes;
+
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
     editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
 }
+
 function lockToggle() {
     if (s_length) {
         return;
@@ -201,6 +215,7 @@ function lockToggle() {
     const editor = props.context.editor4Page(page);
     editor.setShapesConstrainerProportions(actions);
 }
+
 function fliph() {
     if (model_disable_state.flipHorizontal) {
         return;
@@ -218,6 +233,7 @@ function fliph() {
         }
     }
 }
+
 function flipv() {
     if (model_disable_state.flipVertical) {
         return;
@@ -235,6 +251,7 @@ function flipv() {
         }
     }
 }
+
 function onChangeRotate(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
@@ -259,6 +276,7 @@ function onChangeRotate(value: string, shapes: ShapeView[]) {
 
     editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
 }
+
 function adapt() {
     props.context
         .editor4Shape((props.context.selection.selectedShapes[0]))
@@ -281,12 +299,14 @@ function layout() {
     }
     reflush.value++;
 }
+
 function reset_layout() {
     s_adapt = false;
     s_flip = true;
     s_radius = false;
     s_length = false;
 }
+
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
@@ -307,6 +327,7 @@ function check_model_state() {
         model_disable_state.height = true;
     }
 }
+
 function reset_model_state() {
     model_disable_state.x = false, model_disable_state.y = false;
     model_disable_state.width = false, model_disable_state.height = false;
@@ -314,6 +335,7 @@ function reset_model_state() {
     model_disable_state.flipVertical = false, model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
 }
+
 function all_disable() {
     model_disable_state.x = true, model_disable_state.y = true;
     model_disable_state.width = true, model_disable_state.height = true;
@@ -321,10 +343,103 @@ function all_disable() {
     model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
 }
+
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+async function modifyTelDown(e: MouseEvent) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+}
+
+function modifyTelUp() {
+    tel.value = false;
+    document.exitPointerLock();
+}
+
+function dragstartX(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+}
+
+function dragendX() {
+    modifyTelUp();
+}
+
+function dragstartY(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+}
+
+function dragendY() {
+    modifyTelUp();
+}
+
+function dragstartW(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingW(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+}
+
+function dragendW() {
+    modifyTelUp();
+}
+
+function dragstartH(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingH(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+}
+
+function dragendH() {
+    modifyTelUp();
+}
+
+function dragstartRotate(e: MouseEvent) {
+    modifyTelDown(e);
+}
+
+function draggingRotate(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+}
+
+function dragendRotate() {
+    modifyTelUp();
+}
+
 function selection_change() {
     update_view();
     calc_attri();
 }
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
@@ -342,21 +457,49 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr" :reflush="reflush">
-            <IconText class="td positon" ticon="X" :text="format(x)" @onchange="onChangeX" :disabled="model_disable_state.x"
-                :context="context" />
-            <IconText class="td positon" ticon="Y" :text="format(y)" @onchange="onChangeY" :disabled="model_disable_state.y"
-                :context="context" />
+            <MdNumberInput icon="X"
+                           draggable
+                           :value="format(x)"
+                           :disabled="model_disable_state.x"
+                           @change="changeX"
+                           @dragstart="dragstartX"
+                           @dragging="draggingX"
+                           @dragend="dragendX"
+            ></MdNumberInput>
+            <MdNumberInput icon="Y"
+                           draggable
+                           :value="format(y)"
+                           @change="changeY"
+                           :disabled="model_disable_state.y"
+                           @dragstart="dragstartY"
+                           @dragging="draggingY"
+                           @dragend="dragendY"
+            ></MdNumberInput>
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="format(w)" @onchange="onChangeW"
-                :disabled="model_disable_state.width" :context="context" />
+            <MdNumberInput icon="W"
+                           draggable
+                           :value="format(w)"
+                           @change="changeW"
+                           :disabled="model_disable_state.width"
+                           @dragstart="dragstartW"
+                           @dragging="draggingW"
+                           @dragend="dragendW"
+            ></MdNumberInput>
+            <MdNumberInput icon="H"
+                           draggable
+                           :value="format(h)"
+                           @change="changeH"
+                           :disabled="model_disable_state.height"
+                           @dragstart="dragstartH"
+                           @dragging="draggingH"
+                           @dragend="dragendH"
+            ></MdNumberInput>
 
-            <IconText class="td frame" ticon="H" :text="format(h)" @onchange="onChangeH"
-                :disabled="model_disable_state.height" :context="context" />
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
             </div>
@@ -366,17 +509,20 @@ onUnmounted(() => {
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
-                @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"
-                :context="context" />
+                      @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }"
+                      :disabled="model_disable_state.rotation"
+                      :context="context"/>
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div
+                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <svg-icon icon-class="fliph"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div
+                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <svg-icon icon-class="flipv"></svg-icon>
                     </div>
@@ -386,6 +532,10 @@ onUnmounted(() => {
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
     </div>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -414,7 +564,7 @@ onUnmounted(() => {
         margin-bottom: 8px;
 
 
-        >.icontext {
+        > .icontext {
             background-color: var(--input-background);
         }
 
@@ -443,13 +593,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            > svg {
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            >svg.active {
+            > svg.active {
                 color: #FFFFFF;
             }
         }
@@ -475,7 +625,7 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            > svg {
                 transition: 0.3s;
                 width: 14px;
                 height: 14px;
@@ -492,7 +642,7 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            >svg {
+            > svg {
                 width: 12px;
                 height: 12px;
             }
@@ -517,7 +667,7 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                >svg {
+                > svg {
                     color: var(--coco-grey);
                     width: 14px;
                     height: 14px;
@@ -538,7 +688,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                >svg {
+                > svg {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -563,14 +713,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            >svg {
+            > svg {
                 transition: 0.3s;
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            >svg.active {
+            > svg.active {
                 color: #FFFFFF;
             }
         }
@@ -584,5 +734,16 @@ onUnmounted(() => {
             border: 1px solid #1878F5;
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>
