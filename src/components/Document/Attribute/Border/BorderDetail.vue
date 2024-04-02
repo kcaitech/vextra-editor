@@ -6,15 +6,17 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderStyle, ShapeType, ShapeView, TableView } from "@kcdesign/data";
+import { Border, BorderStyle, CornerType, ShapeType, ShapeView, TableView } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import {
-    get_actions_border_style
+    get_actions_border,
+    get_actions_border_style, get_borders_corner
 } from '@/utils/shape_style';
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
+import BorderSideSelected from './BorderSideSelected.vue';
 
 interface Props {
     context: Context
@@ -26,19 +28,19 @@ interface Props {
 const props = defineProps<Props>();
 const { t } = useI18n();
 const popover = ref();
-const showStartStyle = ref<boolean>(true)
-const showEndStyle = ref<boolean>(true)
 const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
     ['solid', t('attr.solid')],
     ['dash', t('attr.dash')]
 ]);
+const selected = ref<CornerType>();
+const is_corner = ref(true);
+const is_border_custom = ref(false);
 
 function showMenu() {
-    console.log('click')
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
     updater();
-    layout();
+    update_corner();
     popover.value.show();
 }
 
@@ -73,40 +75,58 @@ function borderStyleSelect(selected: SelectItem) {
     hidden_selection(props.context);
 }
 
+const setCornerType = (type: CornerType) => {
+    if (selected.value === type) return;
+    selected.value = type;
+    const selecteds = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page || selecteds.length < 1) return;
+    const shape = selecteds[0];
+    const table = props.context.tableSelection;
+    if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(shape as TableView);
+        const range = get_table_range(table);
+    } else {
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_border(shapes, props.index, type);
+        if (actions && actions.length) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderCornerType(actions);
+        }
+    }
+    popover.value.focus();
+    hidden_selection(props.context);
+}
 
 watch(() => props.border, () => {
     updater();
 }, { deep: true })
 
-
-function layout() {
-    showStartStyle.value = false;
-    showEndStyle.value = false;
-    if (props.shapes.length === 1) {
-        const shape = props.shapes[0];
-        if (shape.type === ShapeType.Line) {
-            if (props.index === 0) {
-                showStartStyle.value = true;
-                showEndStyle.value = true;
-            }
-        }
-    } else if (props.shapes.length > 1) {
-        const _idx = props.shapes.findIndex(i => i.type === ShapeType.Line);
-        if (_idx > -1 && props.index === 0) {
-            showStartStyle.value = true;
-            showEndStyle.value = true;
-        }
+const update_corner = () => {
+    const s = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
+    if(!s.length) return;
+    is_corner.value = s.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
+    if (is_corner.value) return;
+    is_border_custom.value = s.some(s => {
+        return s.type === ShapeType.Rectangle || s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef
+    });
+    const actions = get_borders_corner(s, props.index);
+    if (actions) {
+        selected.value = actions;
+    } else {
+        selected.value = undefined;
     }
 }
 
 function selection_wather(t?: any) {
-    if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) layout();
+    if (t === Selection.CHANGE_SHAPE) {
+        update_corner();
+    }
 }
 
 
 onMounted(() => {
     props.context.selection.watch(selection_wather);
-    layout();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
@@ -115,8 +135,8 @@ onUnmounted(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="200" :auto_to_right_line="true"
-                 :title="t('attr.advanced_stroke')">
+        <Popover :context="props.context" class="popover" ref="popover" :width="244" :auto_to_right_line="true"
+            :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
                     <div class="bg" :class="{ actived: props.context.menu.ispopover }" @click="showMenu">
@@ -129,10 +149,29 @@ onUnmounted(() => {
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
-                                :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                                @select="borderStyleSelect"></Select>
+                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
+                            @select="borderStyleSelect"></Select>
+                    </div>
+                    <BorderSideSelected v-if="is_border_custom" :border="props.border" :index="props.index" :context="context"></BorderSideSelected>
+                    <div class="corner-style" v-if="!is_corner">
+                        <div class="corner">边角</div>
+                        <div class="corner-select">
+                            <div class="miter" :class="{ selected: selected === CornerType.Miter }"
+                                @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">
+                                <svg-icon icon-class="corner-miter"></svg-icon>
+                            </div>
+                            <div class="bevel" :class="{ selected: selected === CornerType.Bevel }"
+                                @click="setCornerType(CornerType.Bevel)">
+                                <svg-icon icon-class="corner-bevel"></svg-icon>
+                            </div>
+                            <div class="round" :class="{ selected: selected === CornerType.Round }"
+                                @click="setCornerType(CornerType.Round)" style="margin-left: 5px;">
+                                <svg-icon icon-class="corner-round"></svg-icon>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </template>
         </Popover>
     </div>
@@ -144,7 +183,7 @@ onUnmounted(() => {
 }
 
 .border-detail-container {
-    > .popover {
+    >.popover {
         width: 28px;
         height: 32px;
 
@@ -163,7 +202,7 @@ onUnmounted(() => {
                 justify-content: center;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }
@@ -182,17 +221,17 @@ onUnmounted(() => {
             box-sizing: border-box;
             height: 100%;
 
-            > div {
+            >div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                > .select {
-                    width: 128px;
+                >.select {
+                    flex: 1;
                     height: 32px;
                 }
 
-                > label {
+                >label {
                     flex: 0 0 24px;
                     box-sizing: border-box;
                     width: 24px;
@@ -203,7 +242,7 @@ onUnmounted(() => {
                     margin-right: 24px;
                 }
 
-                > .thickness-container {
+                >.thickness-container {
                     box-sizing: border-box;
                     padding: 3px;
                     background-color: var(--input-background);
@@ -213,14 +252,14 @@ onUnmounted(() => {
                     display: flex;
                     align-items: center;
 
-                    > svg {
+                    >svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                         margin-left: 9px;
                     }
 
-                    > input {
+                    >input {
                         outline: none;
                         border: none;
                         width: calc(100% - 68px);
@@ -248,7 +287,7 @@ onUnmounted(() => {
                         justify-content: space-around;
                         border-radius: 4px;
 
-                        > svg {
+                        >svg {
                             width: 12px;
                             height: 12px;
                         }
@@ -269,6 +308,54 @@ onUnmounted(() => {
 
             }
         }
+
+        .corner-style {
+            width: 100%;
+            height: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .corner {
+                flex: 0 0 24px;
+                box-sizing: border-box;
+                width: 24px;
+                font-family: HarmonyOS Sans;
+                font-size: 12px;
+                color: #737373;
+                margin-right: 24px;
+            }
+
+            .corner-select {
+                flex: 1;
+                height: 32px;
+                border-radius: var(--default-radius);
+                background-color: #F5F5F5;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 2px;
+                box-sizing: border-box;
+
+                >div {
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    height: 28px;
+
+                    >svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
+        }
     }
+}
+
+.selected {
+    background-color: #FFFFFF;
 }
 </style>

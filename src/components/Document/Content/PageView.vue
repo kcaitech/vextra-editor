@@ -124,7 +124,7 @@ onMounted(() => {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
         dom.ctx.loop(window.requestAnimationFrame);
-        props.context.nextTick(props.data ,() => {
+        props.context.nextTick(props.data, () => {
             emit('closeLoading');
         })
     }

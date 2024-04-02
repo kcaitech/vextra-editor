@@ -171,9 +171,10 @@ onUnmounted(() => {
             }
 
             >.close {
-                width: 12px;
-                height: 12px;
+                width: 28px;
+                height: 28px;
                 position: absolute;
+                border-radius: 4px;
                 right: 11px;
                 display: flex;
                 align-items: center;
@@ -182,6 +183,9 @@ onUnmounted(() => {
                 >svg {
                     width: 12px;
                     height: 12px;
+                }
+                &:hover {
+                    background-color: #F5F5F5;
                 }
             }
         }

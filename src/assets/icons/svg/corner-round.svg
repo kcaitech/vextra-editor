@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
+    version="1.1" width="16" height="16" viewBox="0 0 16 16">
+    <g>
+        <g transform="matrix(0,-1,1,0,-10,16)">
+            <path
+                d="M3,22.5L9,22.5Q10.44975,22.5,11.47487,21.47487Q12.5,20.44975,12.5,19L12.5,13L13.5,13L13.5,19Q13.5,20.86396,12.18198,22.18198Q10.863959999999999,23.5,9,23.5L3,23.5L3,22.5Z"
+                fill-rule="evenodd" fill="#434343" fill-opacity="1" />
+        </g>
+        <g transform="matrix(0,-1,1,0,-10,16)">
+            <path d="M3,18L8,18L8,13L9,13L9,19L3,19L3,18Z" fill-rule="evenodd" fill="#434343"
+                fill-opacity="1" />
+        </g>
+        <g>
+            <ellipse cx="8.5" cy="7.5" rx="1.5" ry="1.5" fill="#434343" fill-opacity="1" />
+        </g>
+    </g>
+</svg>
