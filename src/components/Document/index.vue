@@ -18,7 +18,7 @@ import {
     PageView,
     PageListItem
 } from '@kcdesign/data';
-import { SCREEN_SIZE } from '@/utils/setting';
+import { SCREEN_SIZE } from '@/settings';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
 import { useRoute } from 'vue-router';

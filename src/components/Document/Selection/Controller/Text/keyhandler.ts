@@ -298,6 +298,46 @@ const Bold = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCe
     }
 }
 
+const home = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
+    e.preventDefault();
+    const selection = context.textSelection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const cursorAtBefore = start === end && selection.cursorAtBefore;
+    const cursor = shape.locateCursor(end, cursorAtBefore);
+    if (!cursor || cursor.cursorPoints.length !== 2) return;
+    // const x = cursor.cursorPoints[0].x;
+    const y = cursor.lineY;
+    const locate = shape.locateText(-Number.MAX_SAFE_INTEGER, y);
+    if (e.shiftKey) {
+        selection.selectText(start, locate.index);
+    }
+    else {
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
+    }
+}
+
+const end = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
+    e.preventDefault();
+    const selection = context.textSelection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const cursorAtBefore = start === end && selection.cursorAtBefore;
+    const cursor = shape.locateCursor(end, cursorAtBefore);
+    if (!cursor || cursor.cursorPoints.length !== 2) return;
+    // const x = cursor.cursorPoints[0].x;
+    const y = cursor.lineY;
+    const locate = shape.locateText(Number.MAX_SAFE_INTEGER, y);
+    if (e.shiftKey) {
+        selection.selectText(start, locate.index);
+    }
+    else {
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
+    }
+}
+
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -317,7 +357,8 @@ handler['tab'] = enterTab;
 handler['u'] = Underline;
 handler['i'] = Italic;
 handler['b'] = Bold;
-// todo end home
+handler['home'] = home;
+handler['end'] = end;
 
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
