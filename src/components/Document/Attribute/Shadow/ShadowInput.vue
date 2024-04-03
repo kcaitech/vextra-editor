@@ -159,7 +159,7 @@ function blur2() {
 
     .icon {
         flex-shrink: 0;
-        cursor: ew-resize;
+        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
         text-align: center;
         width: 8px;
         height: 16px;

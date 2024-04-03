@@ -318,19 +318,90 @@ async function dragStart(e: MouseEvent) {
 }
 
 function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.shadow.offsetX + e.movementX;
 
+    if (val < -3000) {
+        val = -3000;
+    } else if (val > 3000) {
+        val = 300;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowX(props.idx, val);
 }
 
 function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
 
+    let val = props.shadow.offsetY + e.movementX;
+
+    if (val < -3000) {
+        val = -3000;
+    } else if (val > 3000) {
+        val = 300;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowY(props.idx, val);
 }
 
 function draggingB(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
 
+    let val = props.shadow.blurRadius + e.movementX;
+
+    if (val < 0) {
+        val = 0;
+    } else if (val > 200) {
+        val = 200;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowB(props.idx, val);
 }
 
 function draggingS(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
 
+    let val = props.shadow.spread + e.movementX;
+
+    if (val < 0) {
+        val = 0;
+    } else if (val > 200) {
+        val = 200;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowS(props.idx, val);
 }
 
 function dragEnd() {
@@ -418,11 +489,11 @@ function dragEnd() {
                 </div>
             </template>
         </Popover>
+        <teleport to="body">
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+            </div>
+        </teleport>
     </div>
-    <teleport to="body">
-        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
-        </div>
-    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -590,5 +661,16 @@ function dragEnd() {
         border: 1px solid #d8d8d8;
         box-sizing: border-box;
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>
