@@ -53,4 +53,21 @@ export class LockMouse extends TransformHandler {
     executeRadius(values: number[]) {
         (this.asyncApiCaller as LockMouseHandler).executeRadius(this.shapes, values);
     }
+
+    executeShadowX(idx: number, x: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowX(this.shapes, idx, x);
+    }
+
+    executeShadowY(idx: number, y: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowY(this.shapes, idx, y);
+    }
+
+    executeShadowB(idx: number, b: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowB(this.shapes, idx, b);
+    }
+
+    executeShadowS(idx: number, s: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
+    }
+
 }

@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { useI18n } from 'vue-i18n';
+
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -12,6 +13,9 @@ const props = defineProps<{
 }>();
 const emits = defineEmits<{
     (e: 'onChange', value: number): void;
+    (e: 'dragstart', event: MouseEvent): void;
+    (e: 'dragging', event: MouseEvent): void;
+    (e: 'dragend'): void;
 }>();
 const input = ref<HTMLInputElement>();
 const isActived = ref(false)
@@ -53,41 +57,63 @@ const decrease = () => {
         emits('onChange', result);
     }
 }
-const curpt: { x: number } = { x: 0 };
-const _curpt: { x: number } = { x: 0 };
-const isDrag = ref(false);
+
+let isDown = false;
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
-    if (props.disabled) return;
-    curpt.x = e.screenX;
-    _curpt.x = e.screenX;
-    isDrag.value = true;
+
+    if (props.disabled || e.button !== 0 || isDown) {
+        return;
+    }
+
+    isDown = true;
+
+    emits('dragstart', e);
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('blur', windowBlur);
 }
 const onMouseMove = (e: MouseEvent) => {
-    let mx = e.screenX - curpt.x;
-    const diff = e.screenX - _curpt.x;
-    if ((diff > 3 || diff < 3) && input.value) {
-        curpt.x = e.screenX
-        let value = input.value.value;
-        if (mx > 0) {
-            if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
-            const result = +value + 1;
-            emits('onChange', result);
-        } else if (mx < 0) {
-            if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
-            const result = +value - 1;
-            emits('onChange', result);
-        }
-    }
+    // let mx = e.screenX - curpt.x;
+    // const diff = e.screenX - _curpt.x;
+    // if ((diff > 3 || diff < 3) && input.value) {
+    //     curpt.x = e.screenX
+    //     let value = input.value.value;
+    //     if (mx > 0) {
+    //         if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
+    //         const result = +value + 1;
+    //         emits('onChange', result);
+    //     } else if (mx < 0) {
+    //         if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
+    //         const result = +value - 1;
+    //         emits('onChange', result);
+    //     }
+    // }
+
+    emits('dragging', e);
 }
 const onMouseUp = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return
+    }
     e.stopPropagation();
-    isDrag.value = false;
+
+    clearStatus();
+}
+
+function clearStatus() {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+    window.removeEventListener('blur', windowBlur);
+    isDown = false;
+    emits('dragend');
 }
+
+function windowBlur() {
+    clearStatus();
+}
+
 function blur2() {
     isActived.value = false
 }
@@ -99,18 +125,18 @@ function blur2() {
             <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
         <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
-            :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
+              :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
         <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-                :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
+                   :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
+               :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
-                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
+                      :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
             <svg-icon icon-class="down" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
-                @click="decrease"></svg-icon>
+                      @click="decrease"></svg-icon>
         </div>
     </div>
 </template>
@@ -179,7 +205,7 @@ function blur2() {
         box-sizing: border-box;
         border-radius: 4px;
 
-        >svg {
+        > svg {
             cursor: pointer;
             width: 12px;
             height: 12px;
@@ -203,6 +229,7 @@ function blur2() {
 .disabled {
     opacity: 0.4;
 }
+
 .actived {
     border: 1px solid #1878F5;
 }
