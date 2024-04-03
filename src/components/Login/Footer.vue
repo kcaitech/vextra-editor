@@ -22,12 +22,12 @@ const { t } = useI18n();
         <a class="icp" href="https://beian.miit.gov.cn/" target="_blank">
             <span>{{ t('system.license_key') }}</span>
         </a>
-        <!-- <span class="lines">|</span>
+        <span class="lines">|</span>
         <a class="gongan" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44049102496973"
             target="_blank">
             <img :src="gongan" alt="gongan">
             <span>粤公网安备44049102496973号</span>
-        </a> -->
+        </a>
 
     </div>
 </template>
