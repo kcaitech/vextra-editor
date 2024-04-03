@@ -6,7 +6,7 @@ import { Context } from "@/context";
 import {
     CoopRepository,
     Document,
-    importDocument,
+    importRemote,
     IStorage, Matrix,
     Page,
     PageListItem,
@@ -207,7 +207,7 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const document = await importDocument(storage, path, "", versionId, repo)
+        const document = await importRemote(storage, path, "", versionId, repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;

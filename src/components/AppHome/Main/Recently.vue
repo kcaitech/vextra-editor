@@ -80,7 +80,7 @@
                             </svg>
                             <div class="text">
                                 {{ t('home.open_local_file') }}
-                                <span>(.sketch)</span>
+                                <span>(.sketch,.fig)</span>
                             </div>
                         </div>
                         <div class="right">
