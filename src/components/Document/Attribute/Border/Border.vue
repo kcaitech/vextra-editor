@@ -21,7 +21,9 @@ import {
     get_actions_border_delete,
     get_aciton_gradient,
     get_aciton_gradient_stop,
-    get_actions_filltype
+    get_actions_filltype,
+    get_actions_border,
+    get_borders_side
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -63,7 +65,7 @@ const apex_view = ref<number>(0);
 let table: TableShape;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
-
+const reflush_side = ref(0);
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -300,7 +302,7 @@ function onAlphaChange(b: Border, idx: number) {
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
             console.log(borders, 'borders');
-            
+
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -558,7 +560,7 @@ function layout() {
     if (shapes.length === 1) {
         const type = shapes[0].type;
         show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
-    }else if (shapes.length > 1) {
+    } else if (shapes.length > 1) {
         show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
     }
 }
@@ -764,8 +766,8 @@ function onMouseMove(e: MouseEvent) {
                 borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
             }
         }
+        reflush_side.value++;
     }
-
 }
 
 function onMouseUp(e: MouseEvent) {
@@ -794,13 +796,21 @@ function setThickness(e: Event, id: number) {
         e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
     } else {
         const shapes = getShapesForStyle(selecteds);
-        const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+        const t = thickness < 0 ? 0 : thickness;
+        const actions = get_actions_border(shapes, id, t);
+        const sideType = get_borders_side(shapes, id);
+
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderThickness(actions);
+            if (sideType) {
+                const data = new BorderSideSetting(sideType, t, t, t, t);
+                const _actions = get_actions_border(shapes, id, data);
+                editor.setShapesBorderSide(_actions);
+            }
         }
     }
-
+    reflush_side.value++;
 }
 
 </script>
@@ -873,7 +883,7 @@ function setThickness(e: Event, id: number) {
                             @focus="selectBorderThicknes($event, idx)">
                     </div>
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1">
+                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
                     </BorderDetail>
                 </div>
 

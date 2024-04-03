@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 
 const props = defineProps<{
     ticon: string
-    shadowV: number
+    shadowV: number | string
     disabled?: boolean
 }>();
 const emits = defineEmits<{
@@ -24,27 +24,23 @@ const onChange = () => {
         if (isNaN(Number(value)) || !value.trim().length) {
             return input.value.value = String(props.shadowV);
         }
-        if (Number(value) > 3000) value = '3000';
-        if (Number(value) < -3000) value = '-3000';
-        if (props.ticon === 'B') {
-            if (Number(value) > 200) value = '200';
-            if (Number(value) < 0) value = '0';
-        }
+        if (Number(value) > 300) value = '300';
+        if (Number(value) < 0) value = '0';
         emits('onChange', Number(value));
     }
 }
 const augment = () => {
-    if (input.value && !props.disabled) {
+    if (input.value) {
         let value = input.value.value;
-        if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
+        if (Number(value) === 300) return;
         const result = +value + 1;
         emits('onChange', result);
     }
 }
 const decrease = () => {
-    if (input.value && !props.disabled) {
+    if (input.value) {
         let value = input.value.value;
-        if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
+        if (Number(value) === 0) return;
         const result = +value - 1;
         emits('onChange', result);
     }
@@ -54,7 +50,6 @@ const _curpt: { x: number } = { x: 0 };
 const isDrag = ref(false);
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
-    if (props.disabled) return;
     curpt.x = e.screenX;
     _curpt.x = e.screenX;
     isDrag.value = true;
@@ -68,11 +63,11 @@ const onMouseMove = (e: MouseEvent) => {
         curpt.x = e.screenX
         let value = input.value.value;
         if (mx > 0) {
-            if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
+            if (Number(value) === 300) return;
             const result = +value + 1;
             emits('onChange', result);
         } else if (mx < 0) {
-            if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
+            if (Number(value) === 0) return;
             const result = +value - 1;
             emits('onChange', result);
         }

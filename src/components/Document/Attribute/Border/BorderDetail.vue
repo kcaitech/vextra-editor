@@ -23,6 +23,7 @@ interface Props {
     shapes: ShapeView[]
     border: Border
     index: number
+    reflush_side: number
 }
 
 const props = defineProps<Props>();
@@ -152,7 +153,7 @@ onUnmounted(() => {
                             :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
                             @select="borderStyleSelect"></Select>
                     </div>
-                    <BorderSideSelected v-if="is_border_custom" :border="props.border" :index="props.index" :context="context"></BorderSideSelected>
+                    <BorderSideSelected v-if="is_border_custom" :border="props.border" :index="props.index" :context="context" :reflush_side="reflush_side"></BorderSideSelected>
                     <div class="corner-style" v-if="!is_corner">
                         <div class="corner">边角</div>
                         <div class="corner-select">

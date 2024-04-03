@@ -6,7 +6,7 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -640,6 +640,24 @@ export function get_borders_side(shapes: ShapeView[], index: number): false | Si
     const mixed = shapes.every(shape => {
         const borders = shape.getBorders() || [];
         return borders[index].sideSetting.sideType === side;
+    });
+    if (mixed) {
+        return side;
+    } else {
+        return false;
+    }
+}
+
+export function get_borders_side_thickness(shapes: ShapeView[], index: number): false | BorderSideSetting {
+    const shape = shapes[0];
+    const styleborders = shape.getBorders() || [];
+    const side = styleborders[index].sideSetting;
+    const compare_str = [side.thicknessTop, side.thicknessRight, side.thicknessBottom, side.thicknessLeft].join('');
+    const mixed = shapes.every(shape => {
+        const borders = shape.getBorders() || [];
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders[index].sideSetting;
+        const str = [thicknessTop, thicknessRight, thicknessBottom, thicknessLeft].join('');
+        return compare_str === str;
     });
     if (mixed) {
         return side;
