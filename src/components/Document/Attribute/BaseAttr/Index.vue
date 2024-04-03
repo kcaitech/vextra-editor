@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
 import { ShapeType, adapt2Shape, ShapeView } from '@kcdesign/data';
-import IconText from '@/components/common/IconText.vue';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -22,6 +21,7 @@ import {
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import { LockMouse } from "@/transform/lockMouse";
 
 interface Props {
     context: Context
@@ -58,7 +58,16 @@ const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
-const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, flipVertical: false, radius: false });
+const model_disable_state: ModelState = reactive({
+    x: false,
+    y: false,
+    width: false,
+    height: false,
+    rotation: false,
+    flipHorizontal: false,
+    flipVertical: false,
+    radius: false
+});
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
 
@@ -347,6 +356,7 @@ function all_disable() {
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
 const telY = ref<number>(0);
+let lockMouseHandler: LockMouse | undefined = undefined;
 
 function updatePosition(movementX: number, movementY: number) {
     const clientHeight = document.documentElement.clientHeight;
@@ -368,11 +378,16 @@ async function modifyTelDown(e: MouseEvent) {
             unadjustedMovement: true,
         });
     }
+
+    lockMouseHandler = new LockMouse(props.context, e);
 }
 
 function modifyTelUp() {
     tel.value = false;
     document.exitPointerLock();
+
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
 }
 
 function dragstartX(e: MouseEvent) {
@@ -381,6 +396,16 @@ function dragstartX(e: MouseEvent) {
 
 function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeX(e.movementX);
 }
 
 function dragendX() {
@@ -393,6 +418,16 @@ function dragstartY(e: MouseEvent) {
 
 function draggingY(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeY(e.movementX);
 }
 
 function dragendY() {
@@ -405,6 +440,16 @@ function dragstartW(e: MouseEvent) {
 
 function draggingW(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('scaling');
+    }
+
+    lockMouseHandler.executeW(e.movementX);
 }
 
 function dragendW() {
@@ -417,6 +462,16 @@ function dragstartH(e: MouseEvent) {
 
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('scaling');
+    }
+
+    lockMouseHandler.executeH(e.movementX);
 }
 
 function dragendH() {
@@ -429,6 +484,16 @@ function dragstartRotate(e: MouseEvent) {
 
 function draggingRotate(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+
+    lockMouseHandler.executeRotate(e.movementX);
 }
 
 function dragendRotate() {
@@ -508,10 +573,19 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
-                      @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }"
-                      :disabled="model_disable_state.rotation"
-                      :context="context"/>
+            <!--            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"-->
+            <!--                      @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }"-->
+            <!--                      :disabled="model_disable_state.rotation"-->
+            <!--                      :context="context"/>-->
+            <MdNumberInput icon="angle"
+                           draggable
+                           :value="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
+                           @change="changeH"
+                           :disabled="model_disable_state.rotation"
+                           @dragstart="dragstartRotate"
+                           @dragging="draggingRotate"
+                           @dragend="dragendRotate"
+            ></MdNumberInput>
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
                     <div

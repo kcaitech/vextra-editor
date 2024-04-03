@@ -730,6 +730,8 @@ async function onMouseDown(e: MouseEvent, index: number) {
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
     // document.addEventListener("pointerlockchange", lockChangeAlert, false);
+
+    showpoint.value = true
 }
 
 function lockChangeAlert() {
