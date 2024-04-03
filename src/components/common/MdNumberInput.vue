@@ -2,7 +2,7 @@
 // 取代IconText, 一个输入框要做的就两个事情：展示值、修改值
 // 为什么IconText各种可选属性在里面，独立功能相关的逻辑也写在了里面
 // 杂乱的Dom结构让人看了头要爆炸，这样的代码会让人丧失写代码的欲望😣
-//                                    -- 来自一个靓仔👦的吐槽
+//                                -- 来自一个靓仔👦的自我反省
 
 import { ref } from "vue";
 
@@ -19,7 +19,7 @@ interface Emits {
 
     (e: "dragstart", event: MouseEvent): void;
 
-    (e: "dragging", event: MouseEvent): void; // 只把偏差值发送出去，具体怎么处理这个值应该看引用本组件的具体场景
+    (e: "dragging", event: MouseEvent): void;
 
     (e: "dragend"): void;
 }
@@ -30,7 +30,6 @@ const emits = defineEmits<Emits>();
 const inputEl = ref<HTMLInputElement>();
 const active = ref<boolean>();
 let isDown = false;
-
 
 function down(e: MouseEvent) {
     if (!props.draggable || props.disabled || isDown || e.button !== 0) {

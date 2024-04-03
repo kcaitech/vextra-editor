@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, adapt2Shape, ShapeView } from '@kcdesign/data';
+import { ShapeType, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -261,9 +261,13 @@ function flipv() {
     }
 }
 
-function onChangeRotate(value: string, shapes: ShapeView[]) {
+function changeR(value: string) {
+    const matchResult = value.match(/^(-?\d+)(\.\d+)?/);
+    if (!matchResult) {
+        return;
+    }
     value = Number
-        .parseFloat(value)
+        .parseFloat(matchResult[0])
         .toFixed(fix);
 
     const newRotate: number = Number.parseFloat(value);
@@ -272,14 +276,8 @@ function onChangeRotate(value: string, shapes: ShapeView[]) {
         return;
     }
 
-    if (!shapes.length) {
-        return;
-    }
-
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
 
@@ -390,7 +388,7 @@ function modifyTelUp() {
     lockMouseHandler = undefined;
 }
 
-function dragstartX(e: MouseEvent) {
+function dragstart(e: MouseEvent) {
     modifyTelDown(e);
 }
 
@@ -408,14 +406,6 @@ function draggingX(e: MouseEvent) {
     lockMouseHandler.executeX(e.movementX);
 }
 
-function dragendX() {
-    modifyTelUp();
-}
-
-function dragstartY(e: MouseEvent) {
-    modifyTelDown(e);
-}
-
 function draggingY(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
@@ -428,14 +418,6 @@ function draggingY(e: MouseEvent) {
     }
 
     lockMouseHandler.executeY(e.movementX);
-}
-
-function dragendY() {
-    modifyTelUp();
-}
-
-function dragstartW(e: MouseEvent) {
-    modifyTelDown(e);
 }
 
 function draggingW(e: MouseEvent) {
@@ -452,13 +434,6 @@ function draggingW(e: MouseEvent) {
     lockMouseHandler.executeW(e.movementX);
 }
 
-function dragendW() {
-    modifyTelUp();
-}
-
-function dragstartH(e: MouseEvent) {
-    modifyTelDown(e);
-}
 
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
@@ -472,14 +447,6 @@ function draggingH(e: MouseEvent) {
     }
 
     lockMouseHandler.executeH(e.movementX);
-}
-
-function dragendH() {
-    modifyTelUp();
-}
-
-function dragstartRotate(e: MouseEvent) {
-    modifyTelDown(e);
 }
 
 function draggingRotate(e: MouseEvent) {
@@ -496,8 +463,12 @@ function draggingRotate(e: MouseEvent) {
     lockMouseHandler.executeRotate(e.movementX);
 }
 
-function dragendRotate() {
+function dragend() {
     modifyTelUp();
+}
+
+function formatRotate(rotate: number | string) {
+    return rotate + `${rotate === mixed ? '' : '°'}`;
 }
 
 function selection_change() {
@@ -527,18 +498,18 @@ onUnmounted(() => {
                            :value="format(x)"
                            :disabled="model_disable_state.x"
                            @change="changeX"
-                           @dragstart="dragstartX"
+                           @dragstart="dragstart"
                            @dragging="draggingX"
-                           @dragend="dragendX"
+                           @dragend="dragend"
             ></MdNumberInput>
             <MdNumberInput icon="Y"
                            draggable
                            :value="format(y)"
                            @change="changeY"
                            :disabled="model_disable_state.y"
-                           @dragstart="dragstartY"
+                           @dragstart="dragstart"
                            @dragging="draggingY"
-                           @dragend="dragendY"
+                           @dragend="dragend"
             ></MdNumberInput>
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
@@ -551,18 +522,18 @@ onUnmounted(() => {
                            :value="format(w)"
                            @change="changeW"
                            :disabled="model_disable_state.width"
-                           @dragstart="dragstartW"
+                           @dragstart="dragstart"
                            @dragging="draggingW"
-                           @dragend="dragendW"
+                           @dragend="dragend"
             ></MdNumberInput>
             <MdNumberInput icon="H"
                            draggable
                            :value="format(h)"
                            @change="changeH"
                            :disabled="model_disable_state.height"
-                           @dragstart="dragstartH"
+                           @dragstart="dragstart"
                            @dragging="draggingH"
-                           @dragend="dragendH"
+                           @dragend="dragend"
             ></MdNumberInput>
 
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
@@ -573,18 +544,14 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr" :reflush="reflush">
-            <!--            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + `${rotate === mixed ? '' : '°'}`"-->
-            <!--                      @onchange="onChangeRotate" :frame="{ width: 14, height: 14 }"-->
-            <!--                      :disabled="model_disable_state.rotation"-->
-            <!--                      :context="context"/>-->
             <MdNumberInput icon="angle"
                            draggable
-                           :value="`${rotate}` + `${rotate === mixed ? '' : '°'}`"
-                           @change="changeH"
+                           :value="formatRotate(rotate)"
+                           @change="changeR"
                            :disabled="model_disable_state.rotation"
-                           @dragstart="dragstartRotate"
+                           @dragstart="dragstart"
                            @dragging="draggingRotate"
-                           @dragend="dragendRotate"
+                           @dragend="dragend"
             ></MdNumberInput>
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">

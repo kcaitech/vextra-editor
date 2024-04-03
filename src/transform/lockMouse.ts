@@ -1,7 +1,6 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
 import { LockMouseHandler, ShapeView } from "@kcdesign/data";
-import { hidden_selection } from "@/utils/content";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
@@ -19,7 +18,7 @@ export class LockMouse extends TransformHandler {
         this.workspace.setSelectionViewUpdater(false);
 
         this.transType = transType;
-        this.workspace.translating(true);
+        this.workspace.translating(true); // 借用一下translating的特性
     }
 
     fulfil() {
@@ -38,6 +37,7 @@ export class LockMouse extends TransformHandler {
     executeY(dy: number) {
         (this.asyncApiCaller as LockMouseHandler).executeY(this.shapes, dy);
     }
+
     executeW(dw: number) {
         (this.asyncApiCaller as LockMouseHandler).executeW(this.shapes, dw);
     }
@@ -48,7 +48,9 @@ export class LockMouse extends TransformHandler {
 
     executeRotate(deg: number) {
         (this.asyncApiCaller as LockMouseHandler).executeRotate(this.shapes, deg);
+    }
 
-        hidden_selection(this.context);
+    executeRadius(values: number[]) {
+        (this.asyncApiCaller as LockMouseHandler).executeRadius(this.shapes, values);
     }
 }
