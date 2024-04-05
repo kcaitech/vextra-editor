@@ -15,6 +15,7 @@ export const system = {
     'paste_here': '粘贴在这里',
     'only_text': '只粘贴文本',
     copy: '复制',
+    copyAs: '复制/粘贴为',
     cut: '剪切',
     replace: '替换',
     failed: '操作失败',
