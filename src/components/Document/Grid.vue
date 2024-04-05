@@ -102,7 +102,7 @@ svg {
     pointer-events: none;
 
     line {
-        stroke: rgba(127, 127, 127, 0.4);
+        stroke: rgba(127, 127, 127, 0.4); // 颜色待考究
         stroke-width: 0.3px;
     }
 }
