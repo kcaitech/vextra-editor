@@ -18,9 +18,7 @@ import {
     PathShape,
     adapt2Shape,
     ShapeView,
-    BasicArray,
     TableCellType,
-    TableShape,
     Matrix,
     Page,
     Transporter
@@ -266,6 +264,30 @@ export class Clipboard {
         this.modify_cache('inner-html', h);
 
         return true;
+    }
+
+    write_png(url: string) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const bytes = atob(url);
+                const ab = new ArrayBuffer(bytes.length)
+                const ua = new Uint8Array(ab)
+
+                for (let i = 0; i < bytes.length; i++) {
+                    ua[i] = bytes.charCodeAt(i)
+                }
+
+                const blob = new Blob([ab], { type: 'image/png' });
+
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                return true;
+            } else {
+                throw new Error('navigator.clipboard.write is not supported');
+            }
+        } catch (e) {
+            console.log('write_png error:', e);
+            return false;
+        }
     }
 
     cut(event: ClipboardEvent) {
@@ -836,9 +858,7 @@ function encode_html(identity: string, data: any, text?: string): string {
     // btoa 作为html标签的属性，不可以有一些干扰字符，采用base64封装干扰字符
     const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
 
-    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
-
-    return html;
+    return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
 }
 
 /**

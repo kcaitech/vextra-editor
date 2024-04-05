@@ -38,6 +38,7 @@ import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { string_by_sys } from '@/utils/common';
+import { copyAsPNG as _copyAsPNG } from "@/utils/content"
 
 const { t } = useI18n();
 
@@ -60,6 +61,8 @@ const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
+
+const copyAs = ref<boolean>(false);
 
 function showLayerSubMenu(e: MouseEvent, type: string) {
     layerSubMenuVisiable.value = true;
@@ -472,6 +475,11 @@ function toggle_title() {
     emit('close');
 }
 
+function copyAsPNG() {
+    _copyAsPNG(props.context);
+    emit('close');
+}
+
 function menu_watcher() {
     // check();
 }
@@ -483,11 +491,10 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
-        <div v-if="props.items.includes('layers')" class="item layer-select"
+        <div v-if="props.items.includes('layers')" class="item"
              @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
-                      style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
+            <svg-icon icon-class="down"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site"
                          :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -506,6 +513,20 @@ onUnmounted(() => {
             <span class="shortkey">
                 <Key code="Ctrl C"></Key>
             </span>
+        </div>
+        <div
+            class="item"
+            v-if="props.items.includes('copyAs')"
+            @mouseenter="() => {copyAs = true}"
+            @mouseleave="() => {copyAs = false}"
+        >
+            <span>{{ t('system.copyAs') }}</span>
+            <svg-icon icon-class="down"></svg-icon>
+            <div v-if="copyAs" class="copyAs">
+                <div class="sub-item" @click="copyAsPNG">
+                    复制PNG图片
+                </div>
+            </div>
         </div>
         <div class="item" v-if="props.items.includes('cut')" @click="cut">
             <span>{{ t('system.cut') }}</span>
@@ -709,10 +730,39 @@ onUnmounted(() => {
         > svg {
             width: 12px;
             height: 12px;
+            transform: rotate(-90deg);
+            position: absolute;
+            right: 24px;
         }
 
         > .shortkey {
             margin-left: auto;
+        }
+
+        .copyAs {
+            position: absolute;
+            width: 174px;
+            padding: 6px 0;
+            background-color: #fff;
+            left: 174px;
+            top: -6px;
+            box-sizing: border-box;
+            border-radius: var(--default-radius);
+            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+        }
+
+        .sub-item {
+            padding: 0 8px;
+            width: 100%;
+            height: 32px;
+            line-height: 32px;
+            box-sizing: border-box;
+            color: #000000;
+        }
+
+        .sub-item:hover {
+            background-color: #1878F5;
+            color: #fff;
         }
     }
 
@@ -720,7 +770,6 @@ onUnmounted(() => {
         width: 100%;
         height: 4px;
         border-bottom: 1px solid #EBEBEB;
-        //margin-bottom: 8px;
         box-sizing: border-box;
     }
 
@@ -729,6 +778,7 @@ onUnmounted(() => {
         color: #fff;
 
         > svg {
+            fill: #fff;
             transform: rotate(0deg);
         }
     }

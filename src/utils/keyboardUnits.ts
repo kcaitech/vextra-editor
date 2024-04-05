@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component,
+    component, copyAsPNG,
     lower_layer,
     redo,
     scale_0,
@@ -91,7 +91,13 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
     const { metaKey, ctrlKey, shiftKey } = event;
-    if ((ctrlKey || metaKey) && !shiftKey) {
+    const isCtrl = ctrlKey || metaKey;
+    if (isCtrl && shiftKey) {
+        event.preventDefault();
+        copyAsPNG(context);
+        return;
+    }
+    if (isCtrl && !shiftKey) {
         // context.workspace.notify(WorkSpace.COPY); // 拷贝
         return
     }

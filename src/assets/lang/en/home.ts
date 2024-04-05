@@ -14,6 +14,7 @@ export const system = {
     'paste_here': 'Paste Here',
     'only_text': 'Paste text',
     copy: 'Copy',
+    copyAs: 'Copy/Paste as',
     cut: 'Cut',
     replace: 'Replace',
     failed: 'Failed',
