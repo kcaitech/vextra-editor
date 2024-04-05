@@ -66,7 +66,8 @@ export const system = {
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
-    piexl: 'Pixel Round'
+    piexl: 'Pixel Round',
+    grid: 'Pixel grid',
 }
 
 export const home = {
