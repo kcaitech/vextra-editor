@@ -99,6 +99,12 @@ function modifyPixelAlgin() {
     emit('close');
 }
 
+function modifyPixelGrid() {
+    const status = props.context.user.isPixelGrid;
+    props.context.user.modifyPixelGrid(!status);
+    emit('close');
+}
+
 onMounted(() => {
     if (props.site) {
         surplusX.value = document.documentElement.clientWidth - props.site.x
@@ -132,7 +138,7 @@ onMounted(() => {
             </div>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
         </div>
-        <div class="item" v-if="items.includes('grid')" @click="modifyPixelAlgin">
+        <div class="item" v-if="items.includes('grid')" @click="modifyPixelGrid">
             <div class="choose">
                 <svg-icon icon-class="white-select" v-show="isGrid"></svg-icon>
             </div>
