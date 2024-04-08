@@ -18,7 +18,7 @@ import { ElMessage } from "element-plus";
 import { OssStorage, S3Storage, StorageOptions } from "@/utils/storage";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { insertNetworkInfo } from "@/utils/message";
+import { insertNetworkInfo, message } from "@/utils/message";
 import * as user_api from "@/request/users";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
@@ -271,12 +271,14 @@ async function upload(projectId: string) {
         console.log("开始上传文档")
         result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
-        // todo 上传失败处理
+        // todo 上传失败处理√
+        message('danger', '文档上传失败');
         console.log("文档上传失败", e)
         return;
     }
     if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
-        // todo 上传失败处理
+        // todo 上传失败处理√
+        message('danger', '文档上传失败');
         console.log("文档上传失败", result)
         return;
     }

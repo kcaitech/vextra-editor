@@ -1317,7 +1317,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media);
     }
     if (asyncCreator && new_shape) {
-        asyncCreator = asyncCreator.close();
+        asyncCreator.close();
         page && context.nextTick(page, () => {
             new_shape && selection.selectShape(page.shapes.get(new_shape.id));
         })
