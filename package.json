@@ -1,7 +1,7 @@
 {
-  "name": "protodesign",
+  "name": "mossdesign",
   "description": "A design system for rapidly building web applications",
-  "productName": "ProtoDesign",
+  "productName": "MossDesign",
   "version": "0.1.0",
   "private": true,
   "author": "moss.design",
@@ -24,7 +24,7 @@
     "electron:generate-icons": "electron-icon-builder --input=./src/assets/logo.png --output=build --flatten"
   },
   "dependencies": {
-    "@kcdesign/data": "^0.3.69",
+    "@kcdesign/data": "0.3.68-release.1",
     "ali-oss": "^6.18.1",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",
