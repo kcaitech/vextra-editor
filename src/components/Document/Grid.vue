@@ -64,7 +64,7 @@ function render() {
 }
 
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
         render();
     }
 }
@@ -102,7 +102,7 @@ svg {
     pointer-events: none;
 
     line {
-        stroke: rgba(127, 127, 127, 0.4); // 颜色待考究
+        stroke: rgba(127, 127, 127, 0.4); // 网格线条颜色还需研究
         stroke-width: 0.3px;
     }
 }

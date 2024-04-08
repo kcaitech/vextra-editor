@@ -514,20 +514,20 @@ onUnmounted(() => {
                 <Key code="Ctrl C"></Key>
             </span>
         </div>
-        <div
-            class="item"
-            v-if="props.items.includes('copyAs')"
-            @mouseenter="() => {copyAs = true}"
-            @mouseleave="() => {copyAs = false}"
-        >
-            <span>{{ t('system.copyAs') }}</span>
-            <svg-icon icon-class="down"></svg-icon>
-            <div v-if="copyAs" class="copyAs">
-                <div class="sub-item" @click="copyAsPNG">
-                    复制PNG图片
-                </div>
-            </div>
-        </div>
+<!--        <div-->
+<!--            class="item"-->
+<!--            v-if="props.items.includes('copyAs')"-->
+<!--            @mouseenter="() => {copyAs = true}"-->
+<!--            @mouseleave="() => {copyAs = false}"-->
+<!--        >-->
+<!--            <span>{{ t('system.copyAs') }}</span>-->
+<!--            <svg-icon icon-class="down"></svg-icon>-->
+<!--            <div v-if="copyAs" class="copyAs">-->
+<!--                <div class="sub-item" @click="copyAsPNG">-->
+<!--                    复制PNG图片-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
         <div class="item" v-if="props.items.includes('cut')" @click="cut">
             <span>{{ t('system.cut') }}</span>
             <span class="shortkey">
