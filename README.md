@@ -1,47 +1,12 @@
-# kcdesign
+# Release-1.0.2
 
-## 安装nodejs 16.x
+当前版本做以下更新：
+1. fix.文本编号引起的编辑问题；
+2. fix.图片保存丢失；
+3. refactor.部分界面图标以及阴影效果；
+4. refactor.取消邀请码机制、分享人数限制；
+5. feat.复制图层为指定格式(svg、png)的图片到剪切板；
+6. feat.像素网格；
+7. refactor.消息通知受文档id限制
 
-## 修改npm源
-npm config set registry https://registry.npmmirror.com
---> restore: https://registry.npmjs.com
-
-## 开始, 是否不用-g也行？
-sudo npm install -g @vue/cli@5.0.8
-
-npm install
-npm run install-electron-deps
---> 如遇到electron-builder找不到：sudo npm i -g electron-builder
-
-npm run electron:serve
-网页：npm run serve
-
-</br>
-
-## 生成文档
-npx typedoc --tsconfig typedoc.tsconfig.json
-
-
-
-</br></br></br>
----
-# 坑
-mac 升级之后 electron 打包报错 Exit code: ENOENT. spawn /usr/bin/python ENOENT
-重新下载python2.7 下载地址
-找到安装的位置
-which python
-然后你会得到一个地址
-vim ~/.zshrc
-## 在最后面加上 你刚才获取的地址 
-export PYTHON_PATH=/Users/badwin/Documents/****/****/python2-bin/python
-## 重启
-source ~/.zshrc
-再去打包就 ok了
-链接：https://www.jianshu.com/p/496d016ddefb
-
-
-## 服务端
-npm run build-server
-node dist_server/main.js --path ~/Documents/symbol.sketch
-### docker
---> docker run -d -v ~/Documents/:/usr/share/docs -p 8000:8000  kcdesign/server /usr/share/docs/symbol.sketch
+_版本上线日期：2024.04.11_
