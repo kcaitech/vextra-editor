@@ -334,7 +334,10 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data',
     'not_supported1': 'The current browser does not support it, please use Ctrl C to copy',
-    'not_supported2': 'The current browser does not support it, please use ctrl X to cut'
+    'not_supported2': 'The current browser does not support it, please use ctrl X to cut',
+    'copyAsPNGSuccess': 'copied as PNG',
+    'copyAsPNGFailed': 'Failed',
+    'copyAsPNG': 'copy as PNG'
 }
 export const opacity = {
     normal: 'Normal',

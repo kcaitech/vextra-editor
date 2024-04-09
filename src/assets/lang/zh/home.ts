@@ -334,7 +334,11 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析',
     'not_supported1': '当前浏览器不支持，请使用Ctrl C复制',
-    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切'
+    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切',
+    'copyAsPNGSuccess': '复制成功',
+    'copyAsPNGFailed': '复制失败',
+    'copyAsPNG': '复制PNG图片'
+
 }
 export const opacity = {
     normal: '正常',

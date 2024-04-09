@@ -1,22 +1,16 @@
 <script setup lang='ts'>
-import { nextTick, onUnmounted, reactive, ref, watch } from 'vue';
+import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
-import { XY } from '@/context/selection';
 import {
     Artboard,
-    GroupShape,
-    Shape,
     ShapeType,
     SymbolRefShape,
     TableCellType,
-    TextShape,
-    Text,
     ShapeView,
     TextShapeView,
     adapt2Shape,
-    GroupShapeView,
     SymbolRefView,
     TableCellView
 } from "@kcdesign/data";
@@ -38,7 +32,6 @@ import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { string_by_sys } from '@/utils/common';
-import { copyAsPNG as _copyAsPNG } from "@/utils/content"
 
 const { t } = useI18n();
 
@@ -476,7 +469,8 @@ function toggle_title() {
 }
 
 function copyAsPNG() {
-    _copyAsPNG(props.context);
+    // _copyAsPNG(props.context);
+    props.context.menu.notify(Menu.WRITE_MEDIA);
     emit('close');
 }
 
@@ -523,8 +517,14 @@ onUnmounted(() => {
             <span>{{ t('system.copyAs') }}</span>
             <svg-icon icon-class="down"></svg-icon>
             <div v-if="copyAs" class="copyAs">
+                <!--                <div class="sub-item" @click="copyAsPNG">-->
+                <!--                    复制SVG代码-->
+                <!--                </div>-->
                 <div class="sub-item" @click="copyAsPNG">
-                    复制PNG图片
+                    <span>{{ t('clipboard.copyAsPNG') }}</span>
+                    <span class="shortkey">
+                        <Key code="Shift Ctrl C"></Key>
+                    </span>
                 </div>
             </div>
         </div>
@@ -758,6 +758,9 @@ onUnmounted(() => {
             line-height: 32px;
             box-sizing: border-box;
             color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sub-item:hover {
