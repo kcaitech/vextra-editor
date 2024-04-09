@@ -24,6 +24,8 @@ import avatar from '@/assets/h-logo.svg'
 import { router } from '@/router'
 import Footer from './Footer.vue'
 import { useI18n } from 'vue-i18n'
+import { PROJECT_NAME } from "@/const";
+
 const { t } = useI18n();
 
 

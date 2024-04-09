@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
-import { forbidden_to_modify_frame } from '@/utils/common';
+import { forbidden_to_modify_frame, modifyXYByAlignSetting } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 
 interface Props {
@@ -118,11 +118,11 @@ function bar_mousemove(event: MouseEvent) {
     const mouseOnPage: ClientXY = props.context.workspace.getContentXY(event);
     const s = props.shape;
     if (isDragging && asyncBaseAction) {
-        const action = props.context.tool.action;
         matrix.reset(workspace.matrix);
         const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
         const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
-        if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
+
+        if (event.shiftKey) {
             asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, s, p1OnPage, p2Onpage));
         } else {
             scale(asyncBaseAction, p2Onpage);

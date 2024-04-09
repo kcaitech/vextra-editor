@@ -1,4 +1,5 @@
 import { BorderPosition } from "@kcdesign/data";
+import { PROJECT_NAME } from "@/const";
 
 export const product = {
     name: 'MossDesign'
@@ -14,6 +15,7 @@ export const system = {
     'paste_here': 'Paste Here',
     'only_text': 'Paste text',
     copy: 'Copy',
+    copyAs: 'Copy/Paste as',
     cut: 'Cut',
     replace: 'Replace',
     failed: 'Failed',
@@ -45,7 +47,7 @@ export const system = {
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
     'read_Privacy': 'Privacy Agreement',
-    'product_name': 'MossDesign',
+    'product_name': PROJECT_NAME,
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
     'login_footer': 'Zhuhai Kuangcai Technology Co., Ltd',
     'placeholder': 'Search file',
@@ -66,7 +68,8 @@ export const system = {
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
-    piexl: 'Pixel Round'
+    piexl: 'Pixel Round',
+    grid: 'Pixel grid',
 }
 
 export const home = {

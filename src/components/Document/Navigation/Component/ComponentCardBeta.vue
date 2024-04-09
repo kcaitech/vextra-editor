@@ -194,6 +194,7 @@ onUnmounted(() => {
     // border: 2px solid var(--grey-dark);
     box-sizing: border-box;
     position: relative;
+    //cursor: grab;
 
     .render-wrap {
         margin-top: 2px;
