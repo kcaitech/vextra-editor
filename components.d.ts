@@ -177,6 +177,8 @@ declare module '@vue/runtime-core' {
     MessageBoxBeta: typeof import('./src/components/common/MessageBoxBeta.vue')['default']
     MessageInfo: typeof import('./src/components/Mobile/MessageInfo.vue')['default']
     Mobile: typeof import('./src/components/Mobile/index.vue')['default']
+    MobliePrivacyolicy: typeof import('./src/components/Mobile/MobliePrivacyolicy.vue')['default']
+    MoblieServiceagreement: typeof import('./src/components/Mobile/MoblieServiceagreement.vue')['default']
     Module: typeof import('./src/components/Document/Attribute/Module/Module.vue')['default']
     MoveProjectFill: typeof import('./src/components/TeamProject/MoveProjectFill.vue')['default']
     MyFile: typeof import('./src/components/Mobile/MyFile.vue')['default']

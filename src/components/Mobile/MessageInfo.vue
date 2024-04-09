@@ -7,8 +7,8 @@
             </div>
         </div>
         <div class="botton">
-            <div class="ms-botton-item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                @click.stop="clickEvent(index, $event)">
+            <div class="ms-botton-item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items"
+                :key="index" @click.stop="clickEvent(index, $event)">
                 {{ item }}
             </div>
             <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
@@ -120,7 +120,7 @@ const { t } = useI18n()
 const elwidth = ref()
 const elleft = ref()
 const items = [t('apply.fill'), t('apply.team')]
-const itemid = ref<number>(0 || Number(sessionStorage.getItem('message-tab')))
+const itemid = ref<number>(Number(sessionStorage.getItem('message-tab')) || 0)
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const permissionTeam = ref([`${t('share.readOnly')}`, `${t('share.editable')}`])
 enum Audit {
@@ -137,6 +137,7 @@ const emits = defineEmits<{
 const props = defineProps<{
     applyList: any,
     teamApplyList: any,
+    done?: boolean,
 }>()
 
 //同意文件申请
@@ -241,11 +242,13 @@ const getName = (item: any) => {
     }
 }
 
+watch(() => props.done, (b) => {
+    if (b) resizechange()
+})
+
 onMounted(() => {
     resizechange()
 })
-
-
 
 </script>
 

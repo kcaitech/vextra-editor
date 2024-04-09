@@ -16,6 +16,7 @@ const emits = defineEmits<{
 }>()
 
 onMounted(async () => {
+   window.document.title = '团队'
    teamlist.value = await GetteamList()
 })
 </script>

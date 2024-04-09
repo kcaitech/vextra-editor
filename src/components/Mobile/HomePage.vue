@@ -122,11 +122,14 @@ const changeStar = async (id: number, b: boolean) => {
     }
 }
 
-const openfile = (id: number) => {
-    sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
+const openfile = (id: number,index:number) => {
+    sessionStorage.setItem('scrolltop',index.toString())
     router.push(({ name: 'pageviews', query: { id: id } }))
 }
 
+onMounted(()=>{
+    window.document.title = '首页'
+})
 
 </script>
 
@@ -154,6 +157,7 @@ const openfile = (id: number) => {
             font-size: 14px;
             font-weight: 400;
             gap: 2px;
+            transition: all 0.25s ease-in;
 
             .choose {
                 width: 12px;

@@ -66,6 +66,7 @@ async function getdocument() {
 
 
 onMounted(async () => {
+    window.document.title = '我的文件'
     const value = Number(sessionStorage.getItem('scrolltop'))
     await getdocument()
     if (ellist.value !== undefined) {

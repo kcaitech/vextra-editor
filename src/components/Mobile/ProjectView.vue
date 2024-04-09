@@ -28,6 +28,11 @@ const getlist = async () => {
     projectlist.value = data.filter((item: any) => item.project.team_id === route.query.id)
 }
 
+window.addEventListener('popstate', function(event) {
+    event.stopPropagation()
+    console.log("Location: " + document.location + ", State: " + JSON.stringify(event.state));
+});
+
 onMounted(() => {
     getlist()
 })

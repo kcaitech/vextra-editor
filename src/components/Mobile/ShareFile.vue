@@ -5,6 +5,11 @@ import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
+import { useAttrs } from 'vue'
+
+const attrs = useAttrs()
+
+console.log(attrs.abc);
 
 enum permissions {
     noAuthority,
@@ -46,6 +51,7 @@ const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const shareList = ref<any[]>([])
 const selectValue = ref<number>(-1)
+const userlist = ref<boolean>(false)
 const DocType = reactive([
     `${t('share.shareable')}`,
     `${t('share.need_to_apply_for_confirmation')}`,
@@ -59,6 +65,8 @@ const permission = reactive([
     `${t('share.reviewable')}`,
     `${t('share.editable')}`
 ])
+
+
 
 const options = [
     {
@@ -87,6 +95,10 @@ const documentShareURL = computed(() => {
         location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })
 
+const listuser = computed(() => {
+    return shareList.value.length
+})
+
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -101,6 +113,16 @@ const getDocumentInfo = async () => {
         }
     } catch (err) {
         console.log(err);
+    }
+}
+
+
+const close = () => {
+    if (userlist.value) {
+        userlist.value = false
+        return
+    } else {
+        emit('close')
     }
 }
 
@@ -142,6 +164,8 @@ const getShareList = async () => {
         const { data } = await share_api.getShareListAPI({ doc_id: docID })
         if (data) {
             shareList.value = data
+            console.log(shareList.value);
+
         }
     } catch (err) {
         console.log(err);
@@ -264,7 +288,7 @@ watchEffect(() => {
 <template>
     <div class="share" v-if="docInfo">
         <div class="header">
-            <svg-icon icon-class="back-icon" @click.stop="emit('close')"></svg-icon>
+            <svg-icon icon-class="back-icon" @click.stop="close"></svg-icon>
             <span>分享</span>
         </div>
         <div class="content">
@@ -307,20 +331,25 @@ watchEffect(() => {
                     </div>
                 </div>
                 <div class="application" @click="selectValue = 1">
-                    <div class="select" :style="{ visibility: [1].includes(selectValue) ? 'visible' : 'hidden' }"></div>
+                    <div class="select" :style="{ visibility: [1].includes(selectValue) ? 'visible' : 'hidden' }">
+                    </div>
                     <span>需要确认</span>
                 </div>
                 <div class="private" @click="selectValue = 0">
-                    <div class="select" :style="{ visibility: [0].includes(selectValue) ? 'visible' : 'hidden' }"></div>
+                    <div class="select" :style="{ visibility: [0].includes(selectValue) ? 'visible' : 'hidden' }">
+                    </div>
                     <span>仅自己</span>
                 </div>
             </div>
             <!-- 已加入分享的人 -->
-            <div v-if="!founder" class="share-user">
+            <div v-if="!founder" class="share-user" @click="userlist = true">
                 <span>已加入分享的人</span>
-                <svg-icon icon-class="back-icon"></svg-icon>
-            </div>
+                <div class="left-info">
+                    <span style="color: #c8c8c8;">{{ listuser }}人</span>
+                    <svg-icon icon-class="back-icon"></svg-icon>
+                </div>
 
+            </div>
             <!-- 分享到 -->
             <div class="share-to">
                 <div class="title">分享到</div>
@@ -331,11 +360,99 @@ watchEffect(() => {
                     </div>
                 </div>
             </div>
+            <!-- 分享的人员列表 -->
+            <Transition name="fade">
+                <div v-if="userlist" class="share-user-list">
+                    <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
+                        <div class="item-left">
+                            <div class="avatar"><img :src="item.user.avatar"></div>
+                            <div class="name">{{ item.user.nickname }}</div>
+                        </div>
+                        <div class="item-right">
+                            <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(500px);
+    opacity: 0.5;
+}
+
+.share-user-list {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    background-color: #fff;
+
+    .scrollbar-demo-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 44px;
+        gap: 8px;
+        padding: 0 14px;
+        margin-top: 8px;
+
+        .item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+
+            .avatar {
+                height: 32px;
+                width: 32px;
+                min-width: 32px;
+                border-radius: 50%;
+                overflow: hidden;
+
+                img {
+                    height: 100%;
+                    width: 100%;
+                }
+            }
+
+            .name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 14px;
+                font-weight: 500;
+                color: rgba(0, 0, 0, 1);
+            }
+        }
+
+        .item-right {
+            position: relative;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+
+            .founder,
+            .authority {
+                font-size: 14px;
+                font-weight: 400;
+                color: #c8c8c8;
+            }
+        }
+    }
+}
+
 .share-user {
     display: flex;
     height: 44px;
@@ -348,13 +465,24 @@ watchEffect(() => {
         margin-left: 14px;
     }
 
-    svg {
-        width: 24px;
-        height: 24px;
-        margin-top: 2px;
-        transform: rotate(180deg);
-        margin-right: 14px;
+    .left-info {
+        display: flex;
+        align-items: center;
+
+        span {
+            color: #c8c8c8;
+            font-size: 14px;
+        }
+
+        svg {
+            width: 24px;
+            height: 24px;
+            margin-top: 2px;
+            transform: rotate(180deg);
+            margin-right: 14px;
+        }
     }
+
 }
 
 .share-to {
@@ -417,11 +545,12 @@ watchEffect(() => {
             height: 28px;
             left: 14px;
         }
-
-        span {}
     }
 
     .content {
+        position: relative;
+        height: calc(100% - 44px);
+
         .creator-view {
             display: flex;
             flex-direction: column;

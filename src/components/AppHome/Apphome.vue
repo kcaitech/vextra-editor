@@ -204,9 +204,9 @@ const closeNetMsg = () => {
 
 let timer: any
 onMounted(() => {
-  if(isMobileDevice()){
-    router.push({name:'mobilehome'})
-  }
+  // if(isMobileDevice()){
+  //   router.push({name:'mobilehome'})
+  // }
   GetprojectLists();
   if (timer) {
     clearInterval(timer)

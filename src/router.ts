@@ -1,9 +1,15 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHashHistory} from "vue-router";
 import { SKIP_LOGIN } from '@/settings';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
+
+declare module 'vue-router'{
+    interface RouteMeta{
+        transition?:string,
+    }
+}
 
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
@@ -29,6 +35,8 @@ const MobileHome = () => import('@/components/Mobile/index.vue')
 const PageViews = () => import('@/components/Mobile/PageViews.vue')
 const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
+const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
+const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
 
 let _t: any = i18n.global
 
@@ -103,7 +111,7 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name') },
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name')},
 
             },
             {
@@ -118,7 +126,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true },
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true},
     },
     {
         path: "/home",
@@ -152,20 +160,7 @@ const routes = [
         name: "pageviews",
         component: PageViews,
         meta: {
-            requireAuth: true
-        },
-        beforeEnter: (to: any, from: any, next: any) => {
-            if (to.name === 'pageviews' && to.query.id) {
-                const id = to.query.id
-                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
-                if (newid !== id) {
-                    next({ ...to, query: { ...to.query, id: newid } });
-                } else {
-                    next();
-                }
-            } else {
-                next();
-            }
+            requireAuth: true,
         },
     },
     {
@@ -179,13 +174,16 @@ const routes = [
         path: "/m",
         name: "mobilehome",
         component: MobileHome,
+        meta: {
+            requireAuth: true,
+        }
     },
     {
         path: "/team",
         name: 'projectview',
         component: ProjectView,
         meta: {
-            requireAuth: true
+            requireAuth: true,
         }
     },
     {
@@ -193,8 +191,18 @@ const routes = [
         name: 'projectfileview',
         component: ProjectFileView,
         meta: {
-            requireAuth: true
+            requireAuth: true,
         }
+    },
+    {
+        path: "/privacy",
+        name: 'privacy',
+        component: Privacy,
+    },
+    {
+        path: "/agreements",
+        name: 'agreements',
+        component: Agreements,
     },
     {
         path: "/join",

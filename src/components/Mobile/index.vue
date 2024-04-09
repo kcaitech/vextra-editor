@@ -4,7 +4,7 @@
             <img src="@/assets/h-logo2.svg" alt="logo">
         </div>
         <div class="main">
-            <div class="search">
+            <div v-if="activebnt!=='About'" class="search">
                 <div class="search-input">
                     <div class="s-header">
                         <svg-icon icon-class="search-icon2"></svg-icon>
@@ -16,13 +16,15 @@
                 </div>
                 <div class="notice" @click="showInForm = !showInForm">
                     <svg-icon icon-class="m-notice"></svg-icon>
-                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 :total }}
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
                     </div>
                 </div>
             </div>
-            <div class="content">
+            <div class="content" :style="{height:activebnt!=='About'?'calc(100% - 54px)':'100%'}">
                 <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
-                <div v-if="inputvalue" class="search-list"></div>
+                <Transition name="fade">
+                    <div v-if="inputvalue" class="search-list"></div>
+                </Transition>
             </div>
         </div>
         <div class="footer">
@@ -34,11 +36,14 @@
                 <div class="label">{{ item.label }}</div>
             </div>
         </div>
-        <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
-        <!-- <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
-            @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform> -->
-        <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList" :teamApplyList="totalList">
-        </Inform>
+        <Transition name="fade">
+            <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
+        </Transition>
+        <Transition @after-enter="tsDone = true" name="fade">
+            <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList"
+                :teamApplyList="totalList" :done="tsDone">
+            </Inform>
+        </Transition>
     </div>
 </template>
 
@@ -72,9 +77,13 @@ const applyList = ref<any[]>([]);
 const teamApplyList = ref<any>([]);
 const totalList = ref<any[]>([])
 const showInForm = ref(false);
+const tsDone = ref(false)
+
 const closeInForm = () => {
     showInForm.value = false;
+    tsDone.value = false
 }
+
 const docid = ref<string>()
 const total = computed(() => {
     return applynum.value + teamnum.value ?? 99;
@@ -182,6 +191,7 @@ const getTeamNotice = async () => {
     }
 }
 
+
 watch(totalList, () => {
     teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
 }, { deep: true })
@@ -214,6 +224,17 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(500px);
+    opacity: 0.5;
+}
+
 .num {
     position: relative;
     font-size: 10px;
@@ -365,6 +386,7 @@ onUnmounted(() => {
 
     .footer {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
         position: sticky;
         bottom: 0;
@@ -376,6 +398,8 @@ onUnmounted(() => {
         border-width: 1px 0px 0px 0px;
         border-style: solid;
         border-color: #F1F2F2;
+        padding: 6px 0 0 0;
+        box-sizing: border-box;
 
         .bnt {
             flex: 1;

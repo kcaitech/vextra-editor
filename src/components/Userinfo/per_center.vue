@@ -89,11 +89,11 @@ async function handleFileSelected(event: any,) {
         if (file && file.size <= maxSizeInBytes && allowedFormats.includes(fileExtension)) {
             const formData = new FormData()
             formData.append('file', file)
-            const { code, data: { avatar }, message } = await user_api.Setusericon(formData) as any;
+            const { code, data, message } = await user_api.Setusericon(formData) as any;
             if (code == 0) {
-                circleUrl.value = avatar
+                circleUrl.value = data.avatar
                 ElMessage.success(t('percenter.successtips'))
-                localStorage.setItem('avatar', avatar)
+                localStorage.setItem('avatar', data.avatar)
             } else {
                 ElMessage.error(message)
             }
@@ -102,6 +102,8 @@ async function handleFileSelected(event: any,) {
             ElMessage.error(t('percenter.errortips'))
         }
     } catch (error) {
+        console.log(error);
+        
         ElMessage.error(t('home.other_tips'))
     }
 

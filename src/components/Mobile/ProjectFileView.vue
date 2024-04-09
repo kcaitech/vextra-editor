@@ -8,7 +8,9 @@
             <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
                 @refresh="getdocument" @sharefile="data"></FilesItem>
         </div>
-        <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
+        <transition name="fade">
+            <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
+        </transition>
     </div>
 
 </template>
@@ -96,6 +98,17 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(500px);
+    opacity: 0.5;
+}
+
 .projectfile {
     height: 100%;
     width: 100%;

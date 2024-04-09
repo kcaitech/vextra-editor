@@ -1,8 +1,8 @@
 <template>
     <div v-bind="containerProps" style="height: 100%">
         <div v-bind="wrapperProps">
-            <div class="list-item" v-for=" item in list" :key="item.data.document.id" style="height: 84px;"
-                @click="emits('openfile', item.data.document.id)">
+            <div class="list-item" v-for=" (item,index) in list" :key="item.data.document.id" style="height: 84px;"
+                @click="emits('openfile', item.data.document.id,index)">
                 <div class="image">
                     <img src="@/assets/file-default-icon.png" alt="file-icon">
                 </div>
@@ -36,9 +36,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, ref, watch, watchEffect,nextTick } from 'vue';
 import Loading from '../common/Loading.vue';
-import { useVirtualList, useToggle } from '@vueuse/core'
+import { useVirtualList, UseVirtualListReturn } from '@vueuse/core'
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
@@ -49,7 +49,7 @@ const props = defineProps<{
 
 const filteredList = computed(() => props.data.filter(item => item))
 
-const { list, containerProps, wrapperProps } = useVirtualList(
+const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
     filteredList,
     {
         itemHeight: 84,
@@ -58,7 +58,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
-    (e: 'openfile', docID: number): void;
+    (e: 'openfile', docID: number,index:number): void;
     (e: 'refresh', tab?: number): void;
     (e: 'sharefile', data: object): void;
 }>()
@@ -71,6 +71,9 @@ watch([() => props.data, () => props.errNetwork], () => {
         showtips.value = false
     }
     loading.value = false
+    nextTick(()=>{
+        scrollTo(100)
+    })
 })
 
 const changeload = () => {

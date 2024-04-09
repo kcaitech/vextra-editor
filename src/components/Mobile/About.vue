@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, toRefs } from 'vue'
+import { onMounted, reactive, ref, toRefs } from 'vue'
 import { router } from '@/router'
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
@@ -34,8 +34,8 @@ const state = reactive({
 })
 const { circleUrl, uname, id } = toRefs(state)
 const data = ref([
-    { id: 1, value: '隐私政策', icon: 'ys-icon', name: 'privacypolicy' },
-    { id: 2, value: '在线服务协议', icon: 'fw-icon', name: 'serviceagreement' }
+    { id: 1, value: '隐私政策', icon: 'ys-icon', name: 'privacy' },
+    { id: 2, value: '在线服务协议', icon: 'fw-icon', name: 'agreements' }
 ])
 
 const goto = (name: string) => {
@@ -45,6 +45,10 @@ const goto = (name: string) => {
 const emits = defineEmits<{
     testevnt: [data: object]
 }>()
+
+onMounted(()=>{
+    window.document.title = '关于'
+})
 
 </script>
 

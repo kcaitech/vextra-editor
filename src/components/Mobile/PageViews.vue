@@ -78,7 +78,7 @@ const hideNotification = (type?: number) => {
     showHint.value = false;
     countdown.value = 10;
     if (type === 0) {
-        router.push('/files')
+        router.push('/m')
     } else {
         window.location.reload();
     }
@@ -447,6 +447,8 @@ onMounted(() => {
     })
 })
 onUnmounted(() => {
+    console.log(route);
+
     closeNetMsg();
     onUnloadForCommunication();
     context?.selection.unwatch(selectionWatcher);
@@ -586,21 +588,28 @@ function end(e: TouchEvent) {
 </script>
 
 <template>
-    <div class="status-bar">
-        <div class="back" @click="router.go(-1)">
-            <svg-icon icon-class="back-icon"></svg-icon>
-        </div>
+    <div class="container">
+        <div class="status-bar">
+            <div class="back" @click="router.go(-1)">
+                <svg-icon icon-class="back-icon"></svg-icon>
+            </div>
 
-        <span>{{ fileName }}</span>
-    </div>
-    <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
-        <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)" :matrix="matrix"
-                     @closeLoading="closeLoading"/>
+            <span>{{ fileName }}</span>
+        </div>
+        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
+            <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
+                :matrix="matrix" @closeLoading="closeLoading" />
+        </div>
     </div>
 </template>
 
 
 <style scoped lang="scss">
+.container {
+    width: 100%;
+    height: 100%;
+}
+
 .status-bar {
     display: flex;
     align-items: center;
