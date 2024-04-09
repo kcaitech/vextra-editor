@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component, copyAsPNG,
+    component,
     lower_layer,
     redo,
     scale_0,

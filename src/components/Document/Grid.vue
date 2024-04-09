@@ -88,10 +88,16 @@ onUnmounted(() => {
 <template>
     <svg v-if="view" :width="mWidth" :height="mHeight">
         <g>
-            <line v-for="(y, idx) in rows" :key="idx" :x1="0" :y1="y" :x2="mWidth" :y2="y"></line>
+            <line class="white-line" v-for="(y, idx) in rows" :key="idx" :x1="0" :y1="y" :x2="mWidth" :y2="y"></line>
         </g>
         <g>
-            <line v-for="(x, idx) in cols" :key="idx" :x1="x" :y1="0" :x2="x" :y2="mHeight"></line>
+            <line class="white-line" v-for="(x, idx) in cols" :key="idx" :x1="x" :y1="0" :x2="x" :y2="mHeight"></line>
+        </g>
+        <g>
+            <line class="black-line" v-for="(y, idx) in rows" :key="idx" :x1="0" :y1="y" :x2="mWidth" :y2="y"></line>
+        </g>
+        <g>
+            <line class="black-line" v-for="(x, idx) in cols" :key="idx" :x1="x" :y1="0" :x2="x" :y2="mHeight"></line>
         </g>
     </svg>
 </template>
@@ -101,9 +107,14 @@ svg {
     position: fixed;
     pointer-events: none;
 
-    line {
-        stroke: rgba(127, 127, 127, 0.4); // 颜色待考究
-        stroke-width: 0.3px;
+    .white-line {
+        stroke: rgba(255, 255, 255, 0.9);
+        stroke-width: 0.1px;
+    }
+
+    .black-line {
+        stroke: rgba(0, 0, 0, 0.6);
+        stroke-width: 0.1px;
     }
 }
 </style>

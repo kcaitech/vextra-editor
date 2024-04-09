@@ -92,11 +92,13 @@ function getBase64(): Promise<Blob | null> {
         }
 
         const _svg = svg.cloneNode(true) as SVGSVGElement;
+        // _svg.setAttribute('style', "transform: matrix(2, 0, 0, 2, 0, 0); 'transform-origin': left top;")
         document.body.appendChild(_svg);
         const { width, height } = _svg.viewBox.baseVal;
         canvas.width = width;
         canvas.height = height;
         const svgString = new XMLSerializer().serializeToString(_svg);
+        document.body.removeChild(_svg);
         const img = new Image();
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
         img.onload = () => {
