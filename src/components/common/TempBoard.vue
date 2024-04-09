@@ -126,8 +126,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="pedal">
-        <PageCard v-if="pedal" ref="pageCard" :background-color="background_color"
+    <div v-if="pedal" class="pedal">
+        <PageCard ref="pageCard" :background-color="background_color"
                   :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
                   :shapes="renderItems" :width="width" :height="height"></PageCard>
     </div>
