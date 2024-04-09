@@ -64,7 +64,7 @@ function render() {
 }
 
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
         render();
     }
 }
