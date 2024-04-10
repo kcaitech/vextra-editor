@@ -323,6 +323,7 @@ export const comment = {
     show_resolved_comments: 'Show resolved comments',
     comment_area: 'Comment section',
     input_comments: 'Input comments',
+    reply_comment: 'Reply to comment',
     check: 'check',
     a_few_reply: 'reply',
     month: 'month',

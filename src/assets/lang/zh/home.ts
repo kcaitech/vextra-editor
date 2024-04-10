@@ -323,6 +323,7 @@ export const comment = {
     show_resolved_comments: '显示已解决评论',
     comment_area: '评论区',
     input_comments: '输入评论',
+    reply_comment: '回复评论',
     check: '查看',
     a_few_reply: '条回复',
     month: '月',

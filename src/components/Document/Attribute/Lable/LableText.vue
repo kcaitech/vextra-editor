@@ -217,7 +217,7 @@ onUnmounted(() => {
                     <div class="named">{{ t('lable.content') }}</div>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'content'">
                         <div class="name" style="flex: 1;">
-                            <span style="width: 100%; cursor: pointer;font-weight: 500"
+                            <span style="width: 100%; cursor: pointer;font-weight: 500" class="hovered"
                                 @click="(e) => copyLable(e, 'content')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ text }}</span>
                         </div>
@@ -229,7 +229,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.font') }}</span>
                         <div class="name" style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'font' + index">
-                                <span @click="(e) => copyLable(e, 'font' + index)"
+                                <span @click="(e) => copyLable(e, 'font' + index)" class="hovered"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.fontName
                                     }}</span>
@@ -240,7 +240,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.type_size') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'size' + index">
-                                <span @click="(e) => copyLable(e, 'size' + index)"
+                                <span @click="(e) => copyLable(e, 'size' + index)" class="hovered"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.fontSize
                                     }}</span>
@@ -251,7 +251,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.word_weight') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'weight' + index">
-                                <span @click="(e) => copyLable(e, 'weight' + index)"
+                                <span @click="(e) => copyLable(e, 'weight' + index)" class="hovered"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.bold || 400
                                     }}</span>
@@ -262,7 +262,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.word_space') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'ker' + index">
-                                <span @click="(e) => copyLable(e, 'ker' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'ker' + index)" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.kerning ?
             item.kerning :
             0 }}</span>
@@ -273,7 +273,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.line_height') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'line' + index">
-                                <span @click="(e) => copyLable(e, 'line' + index)"
+                                <span @click="(e) => copyLable(e, 'line' + index)" class="hovered"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.line_height ?
             item.line_height : 0 }}</span>
@@ -284,7 +284,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.para_spacing') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'para' + index">
-                                <span @click="(e) => copyLable(e, 'para' + index)"
+                                <span @click="(e) => copyLable(e, 'para' + index)" class="hovered"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.paraSpacing ?
             item.paraSpacing : 0 }}</span>
@@ -302,14 +302,14 @@ onUnmounted(() => {
                                 :style="{ backgroundColor: toRGB(item.color.red, item.color.green, item.color.blue) }">
                             </div>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'color' + index">
-                                <span class="name" @click="(e) => copyLable(e, 'color' + index)"
+                                <span class="name hovered" @click="(e) => copyLable(e, 'color' + index)"
                                     style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(item.color,
             textMenuItems[text_i]) }}</span>
                             </LableTootip>
                             <LableTootip v-if="textMenuItems[text_i] === 'HEX'" :copy_text="copy_text"
                                 :visible="_visible === 'alpha' + index">
-                                <span style="margin-left: 15px; cursor: pointer;font-weight: 500"
+                                <span style="margin-left: 15px; cursor: pointer;font-weight: 500" class="hovered"
                                     @click="(e) => copyLable(e, 'alpha' + index)" v-if="textMenuItems[text_i] === 'HEX'"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
             filterAlpha(item.color.alpha * 100) + '%' }}</span>
@@ -321,7 +321,7 @@ onUnmounted(() => {
                                 <div class="color" :style="{ backgroundColor: toRGB(stop.red, stop.green, stop.blue) }">
                                 </div>
                                 <LableTootip :copy_text="copy_text" :visible="_visible === 'color' + (index + si)">
-                                    <span class="name" @click="(e) => copyLable(e, 'color' + (index + si))"
+                                    <span class="name hovered" @click="(e) => copyLable(e, 'color' + (index + si))"
                                         style="cursor: pointer;font-weight: 500"
                                         @mouseleave.stop="_visible = undefined, copy_text = false">{{
             toColor(stop,
@@ -329,7 +329,7 @@ onUnmounted(() => {
                                 </LableTootip>
                                 <LableTootip v-if="textMenuItems[text_i] === 'HEX'" :copy_text="copy_text"
                                     :visible="_visible === 'alpha' + (index + si)">
-                                    <span style="margin-left: 15px; cursor: pointer;font-weight: 500"
+                                    <span style="margin-left: 15px; cursor: pointer;font-weight: 500" class="hovered"
                                         @click="(e) => copyLable(e, 'alpha' + (index + si))"
                                         v-if="textMenuItems[text_i] === 'HEX'"
                                         @mouseleave.stop="_visible = undefined, copy_text = false">{{
@@ -422,5 +422,11 @@ onUnmounted(() => {
     border-color: transparent;
     border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
     margin: 5px 0;
+}
+.hovered {
+    &:hover {
+        border-radius: 2px;
+        background-color: #EBEBEB;
+    }
 }
 </style>
