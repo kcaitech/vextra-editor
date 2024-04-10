@@ -1,12 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
-import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
+import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
-import { Action } from '@/context/tool';
 
 interface Props {
     matrix: number[]
@@ -114,8 +113,7 @@ function point_mousemove(event: MouseEvent) {
             const p1: PageXY = submatrix.computeCoord3(startPosition);
             let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
 
-            const action = props.context.tool.action;
-            if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+            if (event.shiftKey) {
                 p2 = get_t(cur_ctrl_type, p1, p2);
                 asyncBaseAction.executeScale(cur_ctrl_type, p2);
             } else {

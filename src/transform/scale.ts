@@ -42,7 +42,12 @@ export class ScaleHandler extends TransformHandler {
     // cache
     __baseFramesCache: BaseFrames = new Map();
 
+    // extra params for single action
     tMatrix: Matrix = new Matrix();
+    parent2root: Matrix = new Matrix();
+    toParent: Matrix = new Matrix();
+    toRoot: Matrix = new Matrix();
+    rotation: number = 0;
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
         super(context, event);
@@ -179,6 +184,11 @@ export class ScaleHandler extends TransformHandler {
         __m.multiAtLeft(shape.parent!.matrix2Root());
         this.tMatrix = new Matrix(__m.inverse);
 
+        this.toParent = shape.matrix2Parent();
+        this.parent2root = shape.parent!.matrix2Root();
+
+        this.toRoot = this.toParent;
+        this.toRoot.multiAtLeft(this.parent2root);
     }
 
     private isFixedRatio() {
@@ -334,47 +344,123 @@ export class ScaleHandler extends TransformHandler {
     private __execute4singleBottom() {
     }
 
-    private __execute4singleLT() { // 本方案可行，优先考虑
-        const point = this.tMatrix.computeCoord3(this.livingPoint);
+    private __execute4singleLT() {
+        const { x, y } = this.tMatrix.computeCoord3(this.livingPoint);
+        const shape = this.shapes[0];
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            console.error('!base');
+            return;
+        }
+
+        const matrix_parent2page = this.parent2root;
+        const matrix2parent = this.toParent;
+
+        const target = matrix_parent2page.inverseCoord(x, y);
+        const current = matrix2parent.computeCoord2(0, 0);
+
+        const saverb = matrix2parent.computeCoord2(base.baseWidth, base.baseHeight);
+        const matrixarr = matrix2parent.toArray();
+        matrixarr[4] = target.x;
+        matrixarr[5] = target.y;
+
+        const m2 = new Matrix(matrixarr);
+
+        const wh = m2.inverseCoord(saverb.x, saverb.y);
+        let w = wh.x;
+        let h = wh.y;
+
+        const minimum_WH = 0.01; // 用户可设置最小宽高值。以防止宽高在缩放后为0
+
+        let needFlipH = false;
+        let needFlipV = false;
+        let targetRotation = this.rotation;
+        if (w < 0) {
+            if (!this.relativeFlip.fh) {
+                needFlipH = true;
+                this.relativeFlip.fh = true;
+            }
+            w = -w;
+        } else {
+            if (this.relativeFlip.fh) {
+                this.relativeFlip.fh = false;
+                needFlipH = true;
+            }
+        }
+
+        if (h < 0) {
+            if (!this.relativeFlip.fv) {
+                needFlipV = true;
+                this.relativeFlip.fv = true;
+            }
+            h = -h;
+        } else {
+            if (this.relativeFlip.fv) {
+                needFlipV = true;
+                this.relativeFlip.fv = false;
+            }
+        }
+
+        if (this.rotation) {
+            if (needFlipH) {
+                this.rotation = 360 - this.rotation;
+            }
+            if (needFlipV) {
+                this.rotation = 360 - this.rotation;
+            }
+        }
+
+        if (w < minimum_WH) {
+            w = minimum_WH;
+        }
+
+        if (h < minimum_WH) {
+            h = minimum_WH;
+        }
+
+        if (this.alignPixel) {
+            w = Math.round(w);
+            h = Math.round(h);
+            if (w === 0) {
+                w = 1;
+            }
+            if (h === 0) {
+                h = 1;
+            }
+        }
+
+        targetRotation = this.rotation;
+        const targetFlipH = !!shape.isFlippedHorizontal || needFlipH;
+        const targetFlipV = !!shape.isFlippedVertical || needFlipV;
+
+        const cx1 = w / 2;
+        const cy1 = h / 2;
+
+        const m1 = new Matrix();
+        m1.trans(-cx1, -cy1);
+        if (targetRotation) {
+            m1.rotate(targetRotation / 180 * Math.PI);
+        }
+        if (targetFlipH) {
+            m1.flipHoriz();
+        }
+        if (targetFlipV) {
+            m1.flipVert();
+        }
+        m1.trans(cx1, cy1);
+        m1.trans(base.baseX, base.baseY);
+
+        const xy1 = m1.computeCoord(w, h);
+        const dx = target.x - xy1.x;
+        const dy = target.y - xy1.y;
     }
 
     private __execute4singleRT() {
 
     }
 
-    private __execute4singleRB() { // 备选方案，代码一致性好，但是需要解决一些计算问题
-        const t = this.tMatrix.computeCoord3(this.livingPoint);
+    private __execute4singleRB() {
 
-        let scaleX = t.x;
-        let scaleY = t.y;
-
-        const isFixedRatio = this.isFixedRatio();
-
-        if (isFixedRatio) {
-            if (scaleX > scaleY) {
-                scaleY = scaleX;
-            } else {
-                scaleX = scaleY;
-            }
-        }
-
-        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
-        if (needFlipH) {
-            this.relativeFlip.fh = !this.relativeFlip.fh;
-        }
-        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
-        if (needFlipV) {
-            this.relativeFlip.fv = !this.relativeFlip.fv;
-        }
-
-        const first = this.baseFrames.get(this.shapes[0].id)!
-
-        const referencePoint1 = first.origin;
-        const referencePoint2 = first.origin;
-
-        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
-
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
     }
 
     private __execute4singleLB() {
