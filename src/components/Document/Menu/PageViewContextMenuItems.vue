@@ -469,7 +469,6 @@ function toggle_title() {
 }
 
 function copyAsPNG() {
-    // _copyAsPNG(props.context);
     props.context.menu.notify(Menu.WRITE_MEDIA);
     emit('close');
 }

@@ -11,7 +11,7 @@ import {
     undo,
     upper_layer,
 } from "./content";
-import { Perm, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";

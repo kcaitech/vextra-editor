@@ -8,6 +8,7 @@ import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
 import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
+import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
 
 interface Props {
     context: Context;
@@ -43,12 +44,21 @@ function write() {
     for (let i = 0; i < renderItems.length; i++) {
         const shape = renderItems[i];
         const frame = shape.frame;
+
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const max_border = getShapeBorderMax(shape);
+
+        const x = -left - max_border;
+        const y = -top - max_border;
+        const _right = frame.width + (right + max_border);
+        const _bottom = frame.height + (bottom + max_border);
+        console.log(x, y, width, height);
         points.push(
             ...[
-                { x: 0, y: 0 },
-                { x: frame.width, y: 0 },
-                { x: frame.width, y: frame.height },
-                { x: 0, y: frame.height }
+                { x, y },
+                { x: _right, y },
+                { x: _right, y: _bottom },
+                { x, y: _bottom }
             ].map(p => shape.matrix2Root().computeCoord3(p))
         )
     }
@@ -92,11 +102,13 @@ function getBase64(): Promise<Blob | null> {
         }
 
         const _svg = svg.cloneNode(true) as SVGSVGElement;
-        // _svg.setAttribute('style', "transform: matrix(2, 0, 0, 2, 0, 0); 'transform-origin': left top;")
+
         document.body.appendChild(_svg);
         const { width, height } = _svg.viewBox.baseVal;
-        canvas.width = width;
-        canvas.height = height;
+        _svg.setAttribute('width', `${width * 2}`);
+        _svg.setAttribute('height', `${height * 2}`);
+        canvas.width = width * 2;
+        canvas.height = height * 2;
         const svgString = new XMLSerializer().serializeToString(_svg);
         document.body.removeChild(_svg);
         const img = new Image();
