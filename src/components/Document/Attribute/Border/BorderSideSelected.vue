@@ -59,35 +59,15 @@ const getSideInfo = (border: Border, type: SideType) => {
     const max_thickness = Math.max(thicknessTop, thicknessLeft, thicknessBottom, thicknessRight)
     switch (type) {
         case SideType.Normal:
-            if (sideType === SideType.Custom) {
-                return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
-            } else {
-                return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-            }
+            return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
         case SideType.Top:
-            if (sideType === SideType.Custom) {
-                return new BorderSideSetting(type, thicknessTop, thicknessTop, thicknessTop, thicknessTop);
-            } else {
-                return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-            }
+            return new BorderSideSetting(type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
         case SideType.Left:
-            if (sideType === SideType.Custom) {
-                return new BorderSideSetting(type, thicknessLeft, thicknessLeft, thicknessLeft, thicknessLeft);
-            } else {
-                return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-            }
+            return new BorderSideSetting(type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
         case SideType.Right:
-            if (sideType === SideType.Custom) {
-                return new BorderSideSetting(type, thicknessRight, thicknessRight, thicknessRight, thicknessRight);
-            } else {
-                return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-            }
+            return new BorderSideSetting(type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
         case SideType.Bottom:
-            if (sideType === SideType.Custom) {
-                return new BorderSideSetting(type, thicknessBottom, thicknessBottom, thicknessBottom, thicknessBottom);
-            } else {
-                return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-            }
+            return new BorderSideSetting(type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
         case SideType.Custom:
             switch (sideType) {
                 case SideType.Top:
@@ -100,13 +80,38 @@ const getSideInfo = (border: Border, type: SideType) => {
                     return new BorderSideSetting(type, 0, 0, thicknessBottom, 0);
                 case SideType.Normal:
                     return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
+                default:
+                    return new BorderSideSetting(type, 0, 0, 0, 0);
             }
+        default:
+            return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
     }
 }
 
-const setSideThickness = (thickness: number) => {
-    console.log('setSideThickness', thickness);
-
+const setSideThickness = (thickness: number, type: SideType) => {
+    if (!shapes.value) return;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const actions = get_actions_border(shapes.value, props.index, thickness);
+    if (actions && actions.length) {
+        const editor = props.context.editor4Page(page);
+        switch (type) {
+            case SideType.Top:
+                editor.setShapeBorderThicknessTop(actions);
+                break;
+            case SideType.Left:
+                editor.setShapeBorderThicknessLeft(actions);
+                break;
+            case SideType.Right:
+                editor.setShapeBorderThicknessRight(actions);
+                break;
+            case SideType.Bottom:
+                editor.setShapeBorderThicknessBottom(actions);
+                break;
+        }
+    }
+    hidden_selection(props.context);
+    getSideThickness();
 }
 
 
@@ -180,17 +185,21 @@ onUnmounted(() => {
         <div class="border-style" style="margin-bottom: 6px;" v-if="select_side === SideType.Custom">
             <div class="border"></div>
             <div class="border-custom">
-                <BorderCustomInput ticon="top" :shadowV="thickness_top" @onChange=setSideThickness></BorderCustomInput>
-                <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom" @onChange=setSideThickness>
+                <BorderCustomInput ticon="top" :shadowV="thickness_top"
+                    @onChange="(v) => setSideThickness(v, SideType.Top)"></BorderCustomInput>
+                <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom"
+                    @onChange="(v) => setSideThickness(v, SideType.Bottom)">
                 </BorderCustomInput>
             </div>
         </div>
         <div class="border-style" v-if="select_side === SideType.Custom">
             <div class="border"></div>
             <div class="border-custom">
-                <BorderCustomInput ticon="left" :shadowV="thickness_left" @onChange=setSideThickness>
+                <BorderCustomInput ticon="left" :shadowV="thickness_left"
+                    @onChange="(v) => setSideThickness(v, SideType.Left)">
                 </BorderCustomInput>
-                <BorderCustomInput ticon="right" :shadowV="thickness_right" @onChange=setSideThickness>
+                <BorderCustomInput ticon="right" :shadowV="thickness_right"
+                    @onChange="(v) => setSideThickness(v, SideType.Right)">
                 </BorderCustomInput>
             </div>
         </div>

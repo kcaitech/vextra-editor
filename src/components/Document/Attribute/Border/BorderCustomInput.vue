@@ -27,6 +27,7 @@ const onChange = () => {
         if (Number(value) > 300) value = '300';
         if (Number(value) < 0) value = '0';
         emits('onChange', Number(value));
+        input.value.blur();
     }
 }
 const augment = () => {

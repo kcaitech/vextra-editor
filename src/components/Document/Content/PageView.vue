@@ -158,8 +158,14 @@ svg {
 }
 
 .text {
+    position: fixed;
+    left: 300px;
+    top: 200px;
     width: 600px;
     height: 600px;
     background-color: #fff;
+    border-right: 30px solid;
+    border-bottom: 50px solid;
+    border-radius: 30px;
 }
 </style>
