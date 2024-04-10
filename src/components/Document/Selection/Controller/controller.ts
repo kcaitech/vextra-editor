@@ -31,6 +31,7 @@ import {
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
+import { permIsEdit } from "@/utils/permission";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -71,7 +72,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         if (shape.pathType) {
-            if (forbidden_to_modify_frame(shape)) {
+            if (forbidden_to_modify_frame(shape) || !permIsEdit(context)) {
                 return;
             }
 
