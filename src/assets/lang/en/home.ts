@@ -69,6 +69,7 @@ export const system = {
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
     piexl: 'Pixel Round',
     grid: 'Pixel grid',
+    uploadMediaFail: 'Image upload failed'
 }
 
 export const home = {

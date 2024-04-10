@@ -1305,39 +1305,20 @@ export function redo(context: Context) {
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
     try {
         const __buff = new Uint8Array(buff);
-        return await context.communication.docResourceUpload.upload(ref, __buff.buffer)
-            .then(res => {
-                if (!res) {
-                    message('danger', `上传结果：${res}`);
-                }
-            });
+        let count = 0;
+        while (count < 3 && !(await context.communication.docResourceUpload.upload(ref, __buff.buffer))) {
+            count++;
+        }
+        if (count >= 3) {
+            throw new Error('fail');
+        }
+        return true;
     } catch (error) {
         message('danger', '上传失败');
         console.log('upload_image:', error);
         return false;
     }
 }
-
-export function detectZoom() {
-    let ratio = 0,
-        screen = window.screen as any,
-        ua = navigator.userAgent.toLowerCase();
-
-    if (window.devicePixelRatio !== undefined) {
-        ratio = window.devicePixelRatio;
-    } else if (~ua.indexOf('msie')) {
-        if (screen.deviceXDPI && screen.logicalXDPI) {
-            ratio = screen.deviceXDPI / screen.logicalXDPI;
-        }
-    } else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
-        ratio = window.outerWidth / window.innerWidth;
-    }
-
-    if (ratio) {
-        ratio = Math.round(ratio * 100);
-    }
-}
-
 
 export const get_table_range = (table: TableSelection) => {
     const is_edting = table.editingCell;
