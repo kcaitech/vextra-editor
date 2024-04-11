@@ -167,8 +167,7 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
 }
 
 function get_r_path(ps: { x: number, y: number }) {
-    const bit_v_r = 18;
-    return `M${ps.x} ${ps.y} h${bit_v_r} a${bit_v_r} ${bit_v_r} 0 0 1 ${-bit_v_r} ${bit_v_r} z`;
+    return `M${ps.x} ${ps.y} h18 a18 18 0 0 1 -18 18 z`;
 }
 
 function get_r_path2(ps: { x: number, y: number }) {

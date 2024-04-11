@@ -3,9 +3,8 @@ import { Context } from '@/context';
 import { adapt2Shape, AsyncBaseAction, CtrlElementType, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
-import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
-import { forbidden_to_modify_frame, modifyXYByAlignSetting } from '@/utils/common';
+import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 
 interface Props {
@@ -69,16 +68,6 @@ function update_dot_path() {
         const path = get_bar_path(apex[i], apex[i + 1]);
         paths.push({ path, type: types[i] });
     }
-
-    // dashes.length = 0;
-    // if (!is_constrainted()) {
-    //     return;
-    // }
-    // dashes.push(...get_dashes(props.context, props.shape, apex as [XY, XY, XY, XY]));
-}
-
-function is_constrainted() {
-    return props.shape.parent?.type === ShapeType.Artboard;
 }
 
 function get_bar_path(s: {

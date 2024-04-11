@@ -1,11 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
+import { ScaleHandler } from "@/transform/scale";
+import { WorkSpace } from "@/context/workspace";
 
 interface Props {
     matrix: number[]
@@ -42,16 +44,14 @@ let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 
 let need_reset_cursor_after_transform = true;
 
+let scaler: ScaleHandler | undefined = undefined;
+
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
 }
 
 function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
-
     dots.length = 0;
     const frame = props.shape.frame;
     let lt = matrix.computeCoord2(0, 0);
@@ -82,6 +82,8 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     initDeg = getHorizontalAngle(props.axle, startPosition);
 
+    scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
@@ -93,45 +95,52 @@ function point_mousemove(event: MouseEvent) {
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = mouseOnClient;
 
-    if (isDragging && asyncBaseAction) {
-        if (cur_ctrl_type.endsWith('rotate')) {
-            const d = getHorizontalAngle(props.axle, mouseOnClient)
-            let deg = d - initDeg;
-            initDeg = d;
-
-            if (props.shape.isFlippedHorizontal) {
-                deg = -deg;
-            }
-            if (props.shape.isFlippedVertical) {
-                deg = -deg;
-            }
-
-            asyncBaseAction.executeRotate(deg);
-
-            setCursor(cur_ctrl_type, true);
-        } else {
-            const p1: PageXY = submatrix.computeCoord3(startPosition);
-            let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
-
-            if (event.shiftKey) {
-                p2 = get_t(cur_ctrl_type, p1, p2);
-                asyncBaseAction.executeScale(cur_ctrl_type, p2);
-            } else {
-                scale(asyncBaseAction, p2);
-            }
-        }
-
-        startPosition = { ...mouseOnClient };
+    if (isDragging) {
+        // if (isDragging && asyncBaseAction) {
+        // if (cur_ctrl_type.endsWith('rotate')) {
+        //     const d = getHorizontalAngle(props.axle, mouseOnClient)
+        //     let deg = d - initDeg;
+        //     initDeg = d;
+        //
+        //     if (props.shape.isFlippedHorizontal) {
+        //         deg = -deg;
+        //     }
+        //     if (props.shape.isFlippedVertical) {
+        //         deg = -deg;
+        //     }
+        //
+        //     asyncBaseAction.executeRotate(deg);
+        //
+        //     setCursor(cur_ctrl_type, true);
+        //
+        // } else {
+        //     const p1: PageXY = submatrix.computeCoord3(startPosition);
+        //     let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
+        //
+        //     if (event.shiftKey) {
+        //         p2 = get_t(cur_ctrl_type, p1, p2);
+        //         asyncBaseAction.executeScale(cur_ctrl_type, p2);
+        //     } else {
+        //         scale(asyncBaseAction, p2);
+        //     }
+        // }
+        //
+        // startPosition = { ...mouseOnClient };
+        scaler?.execute(event);
+        props.context.nextTick(props.context.selection.selectedPage!, () => {
+            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+        });
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         set_status_before_action();
-
-        submatrix.reset(workspace.matrix.inverse);
-
-        asyncBaseAction = props.context.editor
-            .controller()
-            .asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
+        //
+        // submatrix.reset(workspace.matrix.inverse);
+        //
+        // asyncBaseAction = props.context.editor
+        //     .controller()
+        //     .asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
 
         isDragging = true;
+        scaler?.createApiCaller();
     }
 }
 
@@ -319,6 +328,9 @@ function clear_status() {
     workspace.scaling(false);
     workspace.rotating(false);
     workspace.setCtrl('page');
+
+    scaler?.fulfil();
+    scaler = undefined;
 
     props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
