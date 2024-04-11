@@ -1,38 +1,44 @@
 <template>
-    <div class="list-item" v-for="project in props.data" :key="project.project.id"
-        @click="skipprojectfile(project.project.id,project.project.name)">
-        <div class="image">
-            <img src="@/assets/favicon.svg" alt="team-icon">
-        </div>
-        <div class="content">
-            <div class="left">
-                <span class="name"> {{ project.project.name }}</span>
-                <span class="time">{{ project.project.description }}</span>
+    <template v-if="!loading">
+        <div class="list-item" v-for="project in list" :key="project.project.id"
+            @click="skipprojectfile(project.project.id, project.project.name)">
+            <div class="image">
+                <img src="@/assets/favicon.svg" alt="team-icon">
+            </div>
+            <div class="content">
+                <div class="left">
+                    <span class="name"> {{ project.project.name }}</span>
+                    <span class="time">{{ project.project.description }}</span>
+                </div>
             </div>
         </div>
-    </div>
+    </template>
     <Loading v-if="loading" :size="20"></Loading>
     <div v-if="showtips" class="null"><span>还未加入项目</span></div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import {ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
-import { urlencoded } from 'express';
 import { router } from '@/router';
+import { useRoute } from 'vue-router';
 
 const props = defineProps<{
     data: any,
 }>();
 
+
+const route = useRoute()
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
+let list: any
 
-const skipprojectfile = (id: number,name:string) => {
-    router.push({ name: 'projectfileview', query: { id: id,name:name } })
+const skipprojectfile = (id: number, name: string) => {
+    router.push({ name: 'projectfileview', query: { id: id, name: name } })
 }
 
 watch(() => props.data, () => {
+    list = props.data.filter((item: any) => item.project.team_id === route.query.id)
     if (props.data.length === 0) {
         showtips.value = true
     } else {
@@ -41,10 +47,6 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
-watch(() => props.data, () => {
-    console.log(props.data);
-
-})
 </script>
 
 <style lang="scss" scoped>

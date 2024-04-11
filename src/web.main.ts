@@ -8,7 +8,9 @@ import 'element-plus/dist/index.css'
 import '@/style/constant.scss'
 // import '@/style/app.scss'
 import { router } from "./router"
+import { createPinia } from 'pinia'
 import '@/utils/permission'
+const pinia = createPinia()
 const app = createApp(App)
 app.use(i18n)
 app.component('svg-icon', SvgIcon)
@@ -22,5 +24,5 @@ app.directive('focus', {
         })
     }
 })
-
+app.use(pinia)
 app.mount("#app")

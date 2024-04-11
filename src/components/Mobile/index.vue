@@ -4,13 +4,13 @@
             <img src="@/assets/h-logo2.svg" alt="logo">
         </div>
         <div class="main">
-            <div v-if="activebnt!=='About'" class="search">
+            <div v-if="activebnt !== 'About'" class="search">
                 <div class="search-input">
                     <div class="s-header">
                         <svg-icon icon-class="search-icon2"></svg-icon>
                     </div>
-                    <input type="text" placeholder="搜索文件" v-model="inputvalue">
-                    <div v-if="inputvalue.trim()" class="s-footer" @click="inputvalue = ''">
+                    <input type="text" placeholder="搜索文件" v-model="searchKey">
+                    <div v-if="searchKey.trim()" class="s-footer" @click="searchKey = ''">
                         <svg-icon icon-class="close"></svg-icon>
                     </div>
                 </div>
@@ -20,10 +20,14 @@
                     </div>
                 </div>
             </div>
-            <div class="content" :style="{height:activebnt!=='About'?'calc(100% - 54px)':'100%'}">
+            <div class="content" :style="{ height: activebnt !== 'About' ? 'calc(100% - 54px)' : '100%' }">
                 <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
                 <Transition name="fade">
-                    <div v-if="inputvalue" class="search-list"></div>
+                    <div v-if="searchKey" class="search-list">
+                        <FilesItem :err-network="errnetwork" :data="searchData" @changeStar="changeStar" @openfile="openfile"
+                            @refresh="refreshTab" @sharefile="data" :index=listindex>
+                        </FilesItem>
+                    </div>
                 </Transition>
             </div>
         </div>
@@ -36,9 +40,6 @@
                 <div class="label">{{ item.label }}</div>
             </div>
         </div>
-        <Transition name="fade">
-            <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
-        </Transition>
         <Transition @after-enter="tsDone = true" name="fade">
             <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList"
                 :teamApplyList="totalList" :done="tsDone">
@@ -50,13 +51,20 @@
 <script setup lang="ts">
 import * as share_api from '@/request/share';
 import * as team_api from '@/request/team';
+import FilesItem from './FilesItem.vue'
 import Home from './HomePage.vue';
 import MyFile from './MyFile.vue';
 import Team from './Team.vue';
 import About from './About.vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import ShareFile from './ShareFile.vue';
 import Inform from './MessageInfo.vue';
+import { useSearchData } from './search'
+import { storeToRefs } from 'pinia';
+import { router } from '@/router';
+
+const Data = useSearchData()
+const { searchKey, searchData } = storeToRefs(Data)
+
 
 const bntdata = [
     { label: '首页', value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
@@ -66,7 +74,6 @@ const bntdata = [
 ]
 
 const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
-const inputvalue = ref<string>('')
 
 const projectApplyList = ref<any>([]);
 const notifyPApplyList = ref<any>([]);
@@ -96,6 +103,12 @@ const tabs = new Map([
     ['Team', Team],
     ['About', About],
 ]);
+
+const openfile = (id: number, index: number) => {
+    sessionStorage.setItem('scrolltop', index.toString())
+    router.push(({ name: 'pageviews', query: { id: id } }))
+}
+
 
 const changetab = (tab: string) => {
     activebnt.value = tab
@@ -265,7 +278,9 @@ onUnmounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #262626;
+    padding: 0 14px;
+    box-sizing: border-box;
+    background-color: #FAFAFA;
 }
 
 .bnt-selct {

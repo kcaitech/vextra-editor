@@ -2,40 +2,32 @@
     <div class="project">
         <div class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
-            <span>{{ teamname }}</span>
+            <span>{{ route.query.name }}</span>
         </div>
         <div class="list">
-            <ProjectItem :data="projectlist"></ProjectItem>
+            <ProjectItem :data="list"></ProjectItem>
         </div>
     </div>
 
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
-import { GetteamList, GetprojectLists } from './team'
+import { onMounted } from 'vue';
 import { useRoute } from 'vue-router'
 import ProjectItem from './ProjectItem.vue';
 import { router } from '@/router';
+import { useCounterStore } from './team'
+import { storeToRefs } from 'pinia'
 
-const projectlist = ref<any[]>([])
-
+const store = useCounterStore()
+const { list } = storeToRefs(store)
+const { GetprojectLists } = store
 const route = useRoute()
-const teamname = ref<string>(route.query.name as string)
-
-const getlist = async () => {
-    const data = await GetprojectLists()
-    projectlist.value = data.filter((item: any) => item.project.team_id === route.query.id)
-}
-
-window.addEventListener('popstate', function(event) {
-    event.stopPropagation()
-    console.log("Location: " + document.location + ", State: " + JSON.stringify(event.state));
-});
 
 onMounted(() => {
-    getlist()
+    GetprojectLists()
 })
+
 </script>
 
 <style lang="scss" scoped>

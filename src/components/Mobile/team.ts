@@ -1,29 +1,38 @@
 import * as user_api from '@/request/users'
-import { ElMessage } from 'element-plus'
-import { ref } from 'vue';
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
-export const GetteamList = async () => {
-    try {
-        const { data } = await user_api.GetteamList()
-        return data
-    } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
+export const useCounterStore = defineStore('team', () => {
+    const list = ref<any[] | string>('')
+
+    
+
+    async function GetteamList() {
+        try {
+            const { code, data, message } = await user_api.GetteamList()
+            if (code === 0) {
+                list.value = data
+            } else {
+                list.value = message
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
-}
 
-export const GetprojectLists = async () => {
-    try {
-        const { data } = await user_api.GetprojectLists()
-        return data
-    } catch (error: any) {
-        if (error.data.code === 401) {
-            return
-        } else {
-            ElMessage.closeAll('error')
+    async function GetprojectLists() {
+        try {
+            const { code, data, message } = await user_api.GetprojectLists()
+            if (code === 0) {
+                list.value = data
+            } else {
+                list.value = message
+            }
+            return data
+        } catch (error) {
+            console.log(error);
         }
     }
-}
+    return { list, GetteamList, GetprojectLists }
+})
+

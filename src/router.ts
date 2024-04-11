@@ -37,6 +37,7 @@ const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
 const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
 const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
+const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
 
 let _t: any = i18n.global
 
@@ -190,6 +191,14 @@ const routes = [
         path: "/project",
         name: 'projectfileview',
         component: ProjectFileView,
+        meta: {
+            requireAuth: true,
+        }
+    },
+    {
+        path: "/share",
+        name: 'share',
+        component: Sharefile,
         meta: {
             requireAuth: true,
         }

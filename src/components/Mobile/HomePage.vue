@@ -9,7 +9,7 @@
         </div>
         <div ref="ellist" class="list">
             <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
-                @refresh="refreshTab" @sharefile="data">
+                @refresh="refreshTab" @sharefile="data" :index=listindex>
             </FilesItem>
         </div>
     </div>
@@ -27,7 +27,7 @@ const { t } = useI18n()
 const bntdata = ['最近', '收到的共享', '标星']
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
-const ellist = ref<HTMLElement>()
+const listindex = ref<number>(0)
 const errnetwork = ref<boolean>(false)
 const changetab = (id: number) => {
     activeTab.value = id
@@ -90,14 +90,9 @@ watchEffect(async () => {
         lists.value = []
         ElMessage.error({ duration: 3000, message: data.data.message })
     }
-    if (ellist.value) {
-        setTimeout(() => {
-            const value = Number(sessionStorage.getItem('scrolltop'))
-            if (ellist.value) {
-                ellist.value.scrollTop = value
-            }
-        }, 0)
-    }
+
+    listindex.value = Number(sessionStorage.getItem('scrolltop'))
+
 })
 
 watch(activeTab, () => {
@@ -122,12 +117,12 @@ const changeStar = async (id: number, b: boolean) => {
     }
 }
 
-const openfile = (id: number,index:number) => {
-    sessionStorage.setItem('scrolltop',index.toString())
+const openfile = (id: number, index: number) => {
+    sessionStorage.setItem('scrolltop', index.toString())
     router.push(({ name: 'pageviews', query: { id: id } }))
 }
 
-onMounted(()=>{
+onMounted(() => {
     window.document.title = '首页'
 })
 

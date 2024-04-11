@@ -6,6 +6,8 @@ import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
 import { useAttrs } from 'vue'
+import { router } from '@/router';
+import Loading from '../common/Loading.vue';
 
 const attrs = useAttrs()
 
@@ -52,6 +54,9 @@ const founder = ref(false)
 const shareList = ref<any[]>([])
 const selectValue = ref<number>(-1)
 const userlist = ref<boolean>(false)
+const loading = ref<boolean>(false)
+const errormessage = ref<string>()
+
 const DocType = reactive([
     `${t('share.shareable')}`,
     `${t('share.need_to_apply_for_confirmation')}`,
@@ -101,19 +106,21 @@ const listuser = computed(() => {
 
 //获取文档信息
 const getDocumentInfo = async () => {
+    loading.value = true
     try {
         const { code, data, message } = await share_api.getDocumentInfoAPI({ doc_id: docID })
+        loading.value = false
         if (code === 0) {
             docInfo.value = data as DocInfo
             value1.value = docInfo.value.document.doc_type === 0 ? false : true
             selectValue.value = docInfo.value.document.doc_type
         } else {
-            emit('close')
-            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder2') : message)
+            errormessage.value = message
         }
     } catch (err) {
         console.log(err);
     }
+
 }
 
 
@@ -160,12 +167,14 @@ const onRemove = (id: string, i: number) => {
 
 //获取当前文件分享列表
 const getShareList = async () => {
+    loading.value = true
     try {
-        const { data } = await share_api.getShareListAPI({ doc_id: docID })
-        if (data) {
+        const { code, data, message } = await share_api.getShareListAPI({ doc_id: docID })
+        loading.value = false
+        if (code === 0) {
             shareList.value = data
-            console.log(shareList.value);
-
+        } else {
+            console.log(message);
         }
     } catch (err) {
         console.log(err);
@@ -288,7 +297,7 @@ watchEffect(() => {
 <template>
     <div class="share" v-if="docInfo">
         <div class="header">
-            <svg-icon icon-class="back-icon" @click.stop="close"></svg-icon>
+            <svg-icon icon-class="back-icon" @click.stop="userlist ? userlist = false : router.go(-1)"></svg-icon>
             <span>分享</span>
         </div>
         <div class="content">
@@ -372,9 +381,21 @@ watchEffect(() => {
                             <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
                         </div>
                     </div>
+                    <div v-if="!shareList.length" class="null">
+                        <span>没有加入的成员</span>
+                    </div>
+                    <div v-if="loading" class="loading">
+                        <Loading :size="20"></Loading>
+                    </div>
                 </div>
             </Transition>
         </div>
+    </div>
+    <div v-if="errormessage" class="failed">
+        <span class="message"> {{ errormessage }}</span>
+    </div>
+    <div v-if="loading" class="loading">
+        <Loading :size="20"></Loading>
     </div>
 </template>
 
@@ -391,6 +412,7 @@ watchEffect(() => {
 }
 
 .share-user-list {
+    display: flex;
     position: absolute;
     height: 100%;
     width: 100%;
@@ -450,6 +472,11 @@ watchEffect(() => {
                 color: #c8c8c8;
             }
         }
+    }
+
+    .null {
+        margin: auto;
+        color: #8c8c8c;
     }
 }
 
@@ -524,7 +551,11 @@ watchEffect(() => {
     }
 }
 
-.share {
+.share,
+.failed,
+.loading {
+    display: flex;
+    flex-direction: column;
     position: absolute;
     top: 0;
     width: 100%;
@@ -612,6 +643,11 @@ watchEffect(() => {
         }
 
 
+    }
+
+    .message {
+        margin: auto;
+        color: #8c8c8c;
     }
 }
 </style>
