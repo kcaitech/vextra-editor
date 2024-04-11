@@ -532,7 +532,7 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
-    padding-bottom: 8px;
+    //padding-bottom: 8px;
     box-sizing: border-box;
 
     .header {

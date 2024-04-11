@@ -9,7 +9,7 @@ import {
     ServerCmd,
     ServerCmdType
 } from "@/communication/types"
-import { COMMUNICATION_URL } from "@/utils/setting"
+import { COMMUNICATION_URL } from "@/settings"
 import { Tunnel } from "@/communication/tunnel"
 
 function sleep(ms: number) {

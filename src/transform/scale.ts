@@ -42,6 +42,8 @@ export class ScaleHandler extends TransformHandler {
     // cache
     __baseFramesCache: BaseFrames = new Map();
 
+    tMatrix: Matrix = new Matrix();
+
     constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
         super(context, event);
         this.shapes = selected;
@@ -154,6 +156,29 @@ export class ScaleHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
+
+        const shape = this.shapes[0];
+        const f = shape.frame;
+
+        const __m = new Matrix();
+        const cx = f.width / 2;
+        const cy = f.height / 2;
+
+        __m.trans(-cx, -cy);
+        if (shape.rotation) {
+            __m.rotate((shape.rotation || 0) / 180 * Math.PI);
+        }
+        if (shape.isFlippedHorizontal) {
+            __m.flipHoriz();
+        }
+        if (shape.isFlippedVertical) {
+            __m.flipVert();
+        }
+        __m.trans(cx, cy);
+        __m.trans(f.x, f.y);
+        __m.multiAtLeft(shape.parent!.matrix2Root());
+        this.tMatrix = new Matrix(__m.inverse);
+
     }
 
     private isFixedRatio() {
@@ -269,11 +294,90 @@ export class ScaleHandler extends TransformHandler {
         }
 
         if (this.shapes.length === 1) {
-
+            this.__execute4single();
         } else {
             this.__execute4multi();
-            this.updateCtrlView();
         }
+        this.updateCtrlView();
+    }
+
+    private __execute4single() {
+        if (this.ctrlElementType === CtrlElementType.RectLeft) {
+            this.__execute4singleLeft();
+        } else if (this.ctrlElementType === CtrlElementType.RectRight) {
+            this.__execute4singleRight();
+        } else if (this.ctrlElementType === CtrlElementType.RectTop) {
+            this.__execute4singleTop();
+        } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+            this.__execute4singleBottom();
+        } else if (this.ctrlElementType === CtrlElementType.RectLT) {
+            this.__execute4singleLT();
+        } else if (this.ctrlElementType === CtrlElementType.RectRT) {
+            this.__execute4singleRT();
+        } else if (this.ctrlElementType === CtrlElementType.RectRB) {
+            this.__execute4singleRB();
+        } else if (this.ctrlElementType === CtrlElementType.RectLB) {
+            this.__execute4singleLB();
+        }
+    }
+
+    private __execute4singleLeft() {
+
+    }
+
+    private __execute4singleRight() {
+    }
+
+    private __execute4singleTop() {
+    }
+
+    private __execute4singleBottom() {
+    }
+
+    private __execute4singleLT() { // 本方案可行，优先考虑
+        const point = this.tMatrix.computeCoord3(this.livingPoint);
+    }
+
+    private __execute4singleRT() {
+
+    }
+
+    private __execute4singleRB() { // 备选方案，代码一致性好，但是需要解决一些计算问题
+        const t = this.tMatrix.computeCoord3(this.livingPoint);
+
+        let scaleX = t.x;
+        let scaleY = t.y;
+
+        const isFixedRatio = this.isFixedRatio();
+
+        if (isFixedRatio) {
+            if (scaleX > scaleY) {
+                scaleY = scaleX;
+            } else {
+                scaleX = scaleY;
+            }
+        }
+
+        const needFlipH = (scaleX < 0) !== this.relativeFlip.fh
+        if (needFlipH) {
+            this.relativeFlip.fh = !this.relativeFlip.fh;
+        }
+        const needFlipV = (scaleY < 0) !== this.relativeFlip.fv;
+        if (needFlipV) {
+            this.relativeFlip.fv = !this.relativeFlip.fv;
+        }
+
+        const first = this.baseFrames.get(this.shapes[0].id)!
+
+        const referencePoint1 = first.origin;
+        const referencePoint2 = first.origin;
+
+        const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
+
+        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+    }
+
+    private __execute4singleLB() {
     }
 
     private __execute4multi() {

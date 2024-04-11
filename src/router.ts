@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import { SKIP_LOGIN } from '@/utils/setting';
+import { SKIP_LOGIN } from '@/settings';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
 import _ from "lodash";

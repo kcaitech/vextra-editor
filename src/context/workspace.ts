@@ -66,6 +66,7 @@ export class WorkSpace extends WatchableObject {
     static PATH_EDIT_MODE = 26;
     static NEW_ENV_MATRIX_CHANGE = 27;
     static TABLE_TEXT_GRADIENT_UPDATE = 28;
+    static ROOT_UPDATE = 29;
 
     private context: Context;
     private m_matrix: Matrix = new Matrix();
@@ -293,6 +294,7 @@ export class WorkSpace extends WatchableObject {
 
     updateRoot(root: Root) {
         this.m_root = root;
+        this.notify(WorkSpace.ROOT_UPDATE);
     }
 
     contentEdit(v: boolean) {

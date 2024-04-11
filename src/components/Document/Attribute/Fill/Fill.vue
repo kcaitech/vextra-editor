@@ -582,16 +582,21 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                                 :locat="{ index: fills.length - idx - 1, type: 'fills' }"
-                                 @change="c => getColorFromPicker(idx, c)"
-                                 @gradient-reverse="() => gradient_reverse(idx)"
-                                 :gradient="f.fill.gradient" :fillType="f.fill.fillType"
-                                 @gradient-rotate="() => gradient_rotate(idx)"
-                                 @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                                 @gradient-type="(type) => togger_gradient_type(idx, type)"
-                                 @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                                 @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
+                    <ColorPicker
+                        :color="f.fill.color"
+                        :context="props.context"
+                        :auto_to_right_line="true"
+                        :locat="{ index: fills.length - idx - 1, type: 'fills' }"
+                        :gradient="f.fill.gradient"
+                        :fillType="f.fill.fillType"
+                        @change="c => getColorFromPicker(idx, c)"
+                        @gradient-reverse="() => gradient_reverse(idx)"
+                        @gradient-rotate="() => gradient_rotate(idx)"
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                        @gradient-type="(type) => togger_gradient_type(idx, type)"
+                        @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
+                    >
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
                            :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"

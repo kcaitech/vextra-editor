@@ -1,5 +1,18 @@
 import { XY, PageXY } from '@/context/selection';
-import { Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView, Color, Fill, BasicArray, FillType } from '@kcdesign/data';
+import {
+    Matrix,
+    ShapeFrame,
+    Shape,
+    ShapeType,
+    GroupShape,
+    Artboard,
+    ShapeView,
+    GroupShapeView,
+    Color,
+    Fill,
+    BasicArray,
+    FillType
+} from '@kcdesign/data';
 import { isTarget, isTarget2 } from './common';
 import { Context } from '@/context';
 import { Action, Tool } from '@/context/tool';
@@ -40,6 +53,12 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
     if (max === 100000) {
         throw new Error('overflow');
     }
+
+    if (context.user.isPixelAlignMent) {
+        start.x = Math.ceil(start.x);
+        start.y = Math.ceil(start.y);
+    }
+
     return start;
 }
 
