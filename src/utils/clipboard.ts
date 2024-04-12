@@ -265,6 +265,19 @@ export class Clipboard {
 
         return true;
     }
+    writeBlob(blob: Blob) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.write) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                return true;
+            } else {
+                throw new Error('navigator.clipboard.write is not supported');
+            }
+        } catch (e) {
+            console.log('write_png error:', e);
+            return false;
+        }
+    }
 
     write_png(url: string) {
         try {
@@ -392,7 +405,6 @@ export class Clipboard {
             }
 
             if (h && p) {
-                console.log('来了哥')
                 let html = await getHtmlAsync(h);
                 let text = await getTextAsync(p);
                 const firstSuccess = handle_text_html_string(this.context, html);
@@ -1206,7 +1218,7 @@ function maySvgText(content: string) {
         return false;
     }
 
-    return (content.search(/<svg|<?xml/) > -1) && (new RegExp('</svg>').test(content.slice(content.length - 6).toLowerCase()));
+    return (content.search(/<svg|<?xml/img) > -1) && (new RegExp('</svg>', "img").test(content.slice(content.length - 10).toLowerCase()));
 }
 
 /**
@@ -1237,6 +1249,7 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
 }
 
 function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
+    console.log('..', maySvgText(data));
     if (maySvgText(data)) {
         return handleSvgText(context, data, _xy);
     }
