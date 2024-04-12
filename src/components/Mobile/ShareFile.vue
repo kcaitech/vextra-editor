@@ -413,6 +413,7 @@ watchEffect(() => {
 
 .share-user-list {
     display: flex;
+    flex-direction: column;
     position: absolute;
     height: 100%;
     width: 100%;

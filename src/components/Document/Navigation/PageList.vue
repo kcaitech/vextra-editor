@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick, watchEffect } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -317,6 +317,9 @@ const setSelectedPageVisible = () => {
     }, 200)
 }
 
+watchEffect(() => {
+    console.log(Attr);
+});
 onMounted(() => {
     getPageName();
     props.context.selection.watch(selectionWatcher);
@@ -338,6 +341,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 });
 </script>
+
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">

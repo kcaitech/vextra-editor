@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@/router';
-import { onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
@@ -28,6 +28,9 @@ import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import { PROJECT_NAME } from "@/const";
+import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
+import { genOptions } from '@/utils/common';
+
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
@@ -44,7 +47,7 @@ const permissionChange = ref(-1);
 const showHint = ref(false);
 const canComment = ref(false);
 const curPage = shallowRef<PageView | undefined>(undefined);
-
+const showpagelist = ref<boolean>(false)
 const HEAD_HEIGHT = 44;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
 
@@ -65,6 +68,7 @@ const link_success = t('message.link_success');
 const network_anomaly = t('message.network_anomaly');
 const network_error = t('message.network_error');
 const countdown = ref(10);
+
 
 const showNotification = (type?: number) => {
     insertNetworkInfo('networkError', false, network_error);
@@ -140,6 +144,8 @@ const getUserInfo = async () => {
         localStorage.setItem('userId', data.id)
     }
 }
+
+let arr = ref<Array<SelectSource>>([])
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -235,6 +241,14 @@ const getDocumentInfo = async () => {
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
             switchPage(page?.id || context!.data.pagesList[0]?.id);
+
+            if (context?.data) {
+                for (let index = 0; index < context!.data.pagesList.length; index++) {
+                    let a: SelectSource = { id: index, data: { value: context!.data.pagesList[index].id, content: context!.data.pagesList[index].name } }
+                    arr.value.push(a)
+                }
+            }
+
         }
     } catch (err) {
         loading.value = false;
@@ -302,8 +316,11 @@ async function upload(projectId: string) {
     })
 }
 
+
+
 function switchPage(id?: string) {
     if (!id) return
+    if (showpagelist.value) showpagelist.value = !showpagelist.value
     if (context) {
         const ctx: Context = context;
         const pagesMgr = ctx.data.pagesMgr;
@@ -322,6 +339,8 @@ function switchPage(id?: string) {
         })
     }
 }
+
+
 
 
 let timer: any = null;
@@ -434,6 +453,7 @@ const stop2 = watch(() => curPage.value, (page, old) => {
         initMatrix(page);
     }
 })
+
 
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload);
@@ -580,21 +600,37 @@ function move(e: TouchEvent) {
 }
 
 function end(e: TouchEvent) {
+    showpagelist.value = false
     if (e.touches.length) {
         preAnchor = __anchor(e);
     }
 }
+
+
+
 </script>
 
 <template>
     <div class="container">
         <div class="status-bar">
-            <div class="back" @click="router.go(-1)">
+            <div class="back" @click="showpagelist = !showpagelist">
                 <svg-icon icon-class="back-icon"></svg-icon>
             </div>
-
             <span>{{ fileName }}</span>
+            <div class="list" @click="router.go(-1)">
+                <svg-icon icon-class="back-icon"></svg-icon>
+            </div>
         </div>
+        <transition name="fade">
+            <div v-if="showpagelist" class="pagelist">
+                <div class="list-item" v-for="page in arr" :key="page.id"
+                    @click.stop="switchPage(page.data.value as string)">
+                    <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                    </div>
+                    <div class="pagename">{{ page.data.content }}</div>
+                </div>
+            </div>
+        </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
                 :matrix="matrix" @closeLoading="closeLoading" />
@@ -604,18 +640,31 @@ function end(e: TouchEvent) {
 
 
 <style scoped lang="scss">
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.25s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(-300px);
+}
+
 .container {
     width: 100%;
     height: 100%;
 }
 
 .status-bar {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     height: v-bind('HEAD_HEIGHT_CSS');
     background-color: #fff;
     box-sizing: border-box;
+    box-shadow: 0 0 5px silver;
+    z-index: 999;
 
     .back {
         width: 28px;
@@ -630,6 +679,54 @@ function end(e: TouchEvent) {
         }
     }
 
+    .list {
+        width: 28px;
+        height: 28px;
+        position: absolute;
+        right: 8px;
+
+        svg {
+            width: 100%;
+            height: 100%;
+
+        }
+    }
+
+}
+
+.pagelist {
+    position: absolute;
+    left: 0;
+    width: 40%;
+    height: calc(100% - 44px);
+    background-color: #fff;
+    z-index: 1;
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        height: 44px;
+        font-size: 14px;
+        justify-content: center;
+
+        .choose {
+            box-sizing: border-box;
+            width: 10px;
+            height: 6px;
+            margin-right: 10px;
+            margin-left: 2px;
+            border-width: 0 0 2px 2px;
+            border-style: solid;
+            border-color: rgb(0, 0, 0, .75);
+            transform: rotate(-45deg) translateY(-30%);
+        }
+
+        .pagename {
+            flex: 0.8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
 }
 
 .pageview {
