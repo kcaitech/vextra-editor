@@ -1,8 +1,7 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { CtrlElementType, Matrix, ScaleUnit, Scaler, ShapeView } from "@kcdesign/data";
+import { CtrlElementType, Matrix, Scaler, ScaleUnit, ShapeType, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
-import { Action } from "@/context/tool";
 import { boundingBox2Root } from "@/utils/common";
 
 type Box = {
@@ -23,33 +22,33 @@ type Box = {
 type BaseFrames = Map<string, Box>;
 
 export class ScaleHandler extends TransformHandler {
-    shapes: ShapeView[];
+    private shapes: ShapeView[];
 
-    ctrlElementType: CtrlElementType;
-    fixedPoint: XY;
-    livingPoint: XY;
-    relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
-    fixedRatioWhileScaling: boolean = false;
+    private ctrlElementType: CtrlElementType;
+    private fixedPoint: XY;
+    private livingPoint: XY;
+    private relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
+    private fixedRatioWhileScaling: boolean = false;
 
     // base frame
-    originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
-    baseFrames: BaseFrames = new Map();
+    private originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
+    private baseFrames: BaseFrames = new Map();
 
     // align
-    horFixedStatus: boolean = false;
-    horFixedValue: number = 0;
-    verFixedStatus: boolean = false;
-    verFixedValue: number = 0;
+    private horFixedStatus: boolean = false;
+    private horFixedValue: number = 0;
+    private verFixedStatus: boolean = false;
+    private verFixedValue: number = 0;
 
     // cache
-    __baseFramesCache: BaseFrames = new Map();
+    private __baseFramesCache: BaseFrames = new Map();
 
     // extra params for single action
-    tMatrix: Matrix = new Matrix();
-    parent2root: Matrix = new Matrix();
-    toParent: Matrix = new Matrix();
-    toRoot: Matrix = new Matrix();
-    rotation: number = 0;
+    private tMatrix: Matrix = new Matrix();
+    private parent2root: Matrix = new Matrix();
+    private toParent: Matrix = new Matrix();
+    private toRoot: Matrix = new Matrix();
+    private rotation: number = 0;
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
         super(context, event);
@@ -336,17 +335,251 @@ export class ScaleHandler extends TransformHandler {
         }
     }
 
-    private __execute4singleLeft() {
+    private __modifyOffset(targetXY: XY, transformedXY: XY, baseX: number, baseY: number) {
+        const alignPixel = this.alignPixel;
+        targetXY.x = alignPixel ? Math.round(targetXY.x) : targetXY.x;
+        targetXY.y = alignPixel ? Math.round(targetXY.y) : targetXY.y;
 
+        transformedXY.x = baseX + (targetXY.x - transformedXY.x);
+        transformedXY.y = baseY + (targetXY.y - transformedXY.y);
+    }
+
+    /**
+     * @description 修正根部浮点数导致的上梁不正下梁歪
+     * 临时方案，还需要优化
+     */
+    private fixRefer(shape: ShapeView, refer: XY) {
+        if (!this.alignPixel) {
+            return;
+        }
+        const parent = shape.parent!;
+        if (parent.type !== ShapeType.Page) {
+            return;
+        }
+        const floatX = parent.frame.x % 1;
+        if (floatX) {
+            refer.x += floatX;
+        }
+        const floatY = parent.frame.y % 1;
+        if (floatY) {
+            refer.y += floatY;
+        }
+    }
+
+    private __execute4singleLeft() {
+        const shape = this.shapes[0];
+
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            console.error('!base');
+            return;
+        }
+
+        let __livingPoint = { ...this.livingPoint };
+
+        const { baseX, baseY, baseWidth, baseHeight } = base;
+
+        const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
+        let w = baseWidth - pointOnShape.x;
+        let h = baseHeight;
+        if (this.isFixedRatio()) {
+            const scale = Math.abs(w / baseWidth); // 等比缩放不会使另一个轴上的数变成复数
+            h = baseHeight * scale;
+            pointOnShape.y = -baseHeight * (scale - 1) / 2;
+        } else {
+            pointOnShape.y = 0;
+        }
+
+        let target = this.toRoot.computeCoord3(pointOnShape);
+
+        const {
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation,
+            transformedMatrix
+        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+        const targetXY = this.parent2root.inverseCoord(target);
+
+        this.fixRefer(shape, _targetXY);
+
+        this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
+
+        (this.asyncApiCaller as Scaler).execute4multi([{
+            shape,
+            targetXY: _targetXY,
+            baseWidth,
+            baseHeight,
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation
+        }]);
     }
 
     private __execute4singleRight() {
+        const shape = this.shapes[0];
+
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            console.error('!base');
+            return;
+        }
+
+        let __livingPoint = { ...this.livingPoint };
+
+        const { baseX, baseY, baseWidth, baseHeight } = base;
+
+        const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
+
+        let w = pointOnShape.x;
+        let h = baseHeight;
+
+        if (this.isFixedRatio()) {
+            const scale = Math.abs(w / baseWidth);
+            h = baseHeight * scale;
+            pointOnShape.y = -baseHeight * (scale - 1) / 2;
+        } else {
+            pointOnShape.y = 0;
+        }
+
+        const {
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation,
+            transformedMatrix
+        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+        const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(0, pointOnShape.y));
+
+        this.fixRefer(shape, _targetXY);
+
+        this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
+
+        (this.asyncApiCaller as Scaler).execute4multi([{
+            shape,
+            targetXY: _targetXY,
+            baseWidth,
+            baseHeight,
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation
+        }]);
     }
 
     private __execute4singleTop() {
+        const shape = this.shapes[0];
+
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            console.error('!base');
+            return;
+        }
+
+        const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
+
+        const { baseX, baseY, baseWidth, baseHeight } = base;
+
+        let w = baseWidth;
+        let h = baseHeight - pointOnShape.y;
+
+        if (this.isFixedRatio()) {
+            const scale = Math.abs(h / baseHeight);
+            w = baseWidth * scale;
+            pointOnShape.x = -baseWidth * (scale - 1) / 2;
+        } else {
+            pointOnShape.x = 0;
+        }
+
+        const {
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation,
+            transformedMatrix
+        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+        const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord3(pointOnShape));
+
+        this.fixRefer(shape, _targetXY);
+
+        this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
+
+        (this.asyncApiCaller as Scaler).execute4multi([{
+            shape,
+            targetXY: _targetXY,
+            baseWidth,
+            baseHeight,
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation
+        }]);
     }
 
     private __execute4singleBottom() {
+        const shape = this.shapes[0];
+
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            console.error('!base');
+            return;
+        }
+
+        const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
+
+        const { baseX, baseY, baseWidth, baseHeight } = base;
+
+        let w = baseWidth;
+        let h = pointOnShape.y;
+
+        if (this.isFixedRatio()) {
+            const scale = Math.abs(h / baseHeight);
+            w = baseWidth * scale;
+            pointOnShape.x = -baseWidth * (scale - 1) / 2;
+        } else {
+            pointOnShape.x = 0;
+        }
+
+        const {
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation,
+            transformedMatrix
+        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+        const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(pointOnShape.x, 0));
+
+        this.fixRefer(shape, _targetXY);
+
+        this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
+
+        (this.asyncApiCaller as Scaler).execute4multi([{
+            shape,
+            targetXY: _targetXY,
+            baseWidth,
+            baseHeight,
+            targetWidth,
+            targetHeight,
+            needFlipH,
+            needFlipV,
+            targetRotation
+        }]);
     }
 
     private __modifyTransform(shape: ShapeView, baseXY: XY, width: number, height: number) {
@@ -431,7 +664,14 @@ export class ScaleHandler extends TransformHandler {
         m1.trans(cx1, cy1);
         m1.trans(baseXY.x, baseXY.y);
 
-        return { targetWidth: width, targetHeight: height, needFlipH, needFlipV, targetRotation, transformedMatrix: m1 };
+        return {
+            targetWidth: width,
+            targetHeight: height,
+            needFlipH,
+            needFlipV,
+            targetRotation,
+            transformedMatrix: m1
+        };
     }
 
     private __getTargetXY(target: XY, refer: XY, base: Box) {
@@ -510,6 +750,8 @@ export class ScaleHandler extends TransformHandler {
 
         const xy1 = transformedMatrix.computeCoord(0, 0);
 
+        this.fixRefer(shape, xy1);
+
         const targetXY = this.__getTargetXY(target, xy1, base);
 
         const transformUnits: ScaleUnit[] = [];
@@ -584,6 +826,8 @@ export class ScaleHandler extends TransformHandler {
 
         const xy1 = transformedMatrix.computeCoord(targetWidth, 0);
 
+        this.fixRefer(shape, xy1);
+
         const targetXY = this.__getTargetXY(target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute4multi([{
@@ -648,6 +892,8 @@ export class ScaleHandler extends TransformHandler {
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
         const xy1 = transformedMatrix.computeCoord(targetWidth, targetHeight);
+
+        this.fixRefer(shape, xy1);
 
         const targetXY = this.__getTargetXY(target, xy1, base);
 
@@ -715,6 +961,8 @@ export class ScaleHandler extends TransformHandler {
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
         const xy1 = transformedMatrix.computeCoord(0, targetHeight);
+
+        this.fixRefer(shape, xy1);
 
         const targetXY = this.__getTargetXY(target, xy1, base);
 
@@ -886,7 +1134,7 @@ export class ScaleHandler extends TransformHandler {
         const referencePoint1 = { x: box.x, y: box.y };
         const referencePoint2 = { x: box.x, y: box.y };
         if (isFixedRatio) {
-            const _height = Math.abs(box.height * scaleY) - box.height;
+            const _height = box.height * (Math.abs(scaleY) - 1);
             referencePoint2.y -= _height / 2;
         }
 
