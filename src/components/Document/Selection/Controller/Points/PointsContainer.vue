@@ -8,6 +8,7 @@ import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
+import { RotateHandler } from "@/transform/rotate";
 
 interface Props {
     matrix: number[]
@@ -39,6 +40,8 @@ let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 let need_reset_cursor_after_transform = true;
 
 let scaler: ScaleHandler | undefined = undefined;
+let rotator: RotateHandler | undefined = undefined;
+
 let downXY: XY = { x: 0, y: 0 };
 let initDeg: number = 0;
 
@@ -59,7 +62,7 @@ function update_dot_path() {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) {
+    if (event.button !== 0 || scaler || rotator) {
         return;
     }
 
@@ -73,7 +76,13 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     cur_ctrl_type = ele;
 
     initDeg = getHorizontalAngle(props.axle, startPosition);
-    scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
+
+    if (cur_ctrl_type.endsWith('rotate')) {
+        rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes);
+    } else {
+        scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
+    }
+
     downXY = event;
 
     document.addEventListener('mousemove', point_mousemove);
@@ -84,31 +93,23 @@ function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
 
     if (isDragging) {
-        // if (cur_ctrl_type.endsWith('rotate')) {
-        //     const d = getHorizontalAngle(props.axle, mouseOnClient)
-        //     let deg = d - initDeg;
-        //     initDeg = d;
-        //
-        //     if (props.shape.isFlippedHorizontal) {
-        //         deg = -deg;
-        //     }
-        //     if (props.shape.isFlippedVertical) {
-        //         deg = -deg;
-        //     }
-        //
-        //     asyncBaseAction.executeRotate(deg);
-        //
-        //     setCursor(cur_ctrl_type, true);
-        // }
-
-        scaler?.execute(event);
+        if (cur_ctrl_type.endsWith('rotate')) {
+            setCursor(cur_ctrl_type, true);
+            rotator?.execute(event);
+        } else {
+            scaler?.execute(event);
+        }
 
         props.context.nextTick(props.context.selection.selectedPage!, () => {
             workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
         });
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
-        scaler?.createApiCaller();
+        if (cur_ctrl_type.endsWith('rotate')) {
+            rotator?.createApiCaller();
+        } else {
+            scaler?.createApiCaller();
+        }
     }
 }
 
@@ -167,6 +168,9 @@ function clear_status() {
 
     scaler?.fulfil();
     scaler = undefined;
+
+    rotator?.fulfil();
+    rotator = undefined;
 
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();

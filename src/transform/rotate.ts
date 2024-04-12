@@ -1,4 +1,4 @@
-import { CtrlElementType, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
+import { adapt2Shape, Matrix, RotateUnit, Rotator, ShapeType, ShapeView } from "@kcdesign/data";
 import { FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
@@ -22,19 +22,19 @@ type Base4Rotation = {
 type BaseData4Rotate = Map<string, Base4Rotation>;
 
 export class RotateHandler extends TransformHandler {
-    shapes: ShapeView[];
+    readonly shapes: ShapeView[];
+    readonly referencePoint: XY;
+    readonly centerXY: XY;
 
-    ctrlElementType: CtrlElementType;
-    referencePoint: XY;
-    livingPoint: XY;
-    centerXY: XY;
+    private livingPoint: XY;
+
+    private initDeg: number = 0;
 
     originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     baseData: BaseData4Rotate = new Map();
 
-    constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
+    constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
         super(context, event);
-        this.ctrlElementType = ctrlElementType;
         this.referencePoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.referencePoint };
 
@@ -45,6 +45,10 @@ export class RotateHandler extends TransformHandler {
         this.centerXY = {
             x: (this.originSelectionBox.x + this.originSelectionBox.right) / 2,
             y: (this.originSelectionBox.y + this.originSelectionBox.bottom) / 2
+        }
+
+        if (this.shapes.length === 1) {
+            this.initDeg = getHorizontalAngle(this.centerXY, this.livingPoint);
         }
     }
 
@@ -64,6 +68,10 @@ export class RotateHandler extends TransformHandler {
 
     // 执行主体
     execute(event: MouseEvent) {
+        if (!this.asyncApiCaller) {
+            console.error('!asyncApiCaller');
+            return;
+        }
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.__execute();
@@ -201,10 +209,43 @@ export class RotateHandler extends TransformHandler {
         }
 
         if (this.shapes.length === 1) {
-
+            this.__execute4single();
         } else {
             this.__execute4multi();
         }
+    }
+
+    /**
+     * todo 这个函数可优化，必要性小
+     * @private
+     */
+    private __execute4single() {
+        const d = getHorizontalAngle(this.centerXY, this.livingPoint);
+
+        let deg = d - this.initDeg;
+
+        this.initDeg = d;
+
+        const shape = this.shapes[0];
+
+        if (shape.isFlippedHorizontal) {
+            deg = -deg;
+        }
+        if (shape.isFlippedVertical) {
+            deg = -deg;
+        }
+
+        const base = this.baseData.get(shape.id);
+        if (!base) {
+            return;
+        }
+
+        (this.asyncApiCaller as Rotator).execute4multi([{
+            shape,
+            x: base.x,
+            y: base.y,
+            targetRotate: (adapt2Shape(shape).rotation || 0) + deg,
+        }]);
     }
 
     private __execute4multi() {
