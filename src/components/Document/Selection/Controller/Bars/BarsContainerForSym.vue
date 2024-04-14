@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
