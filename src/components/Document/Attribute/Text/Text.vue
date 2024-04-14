@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, BasicArray, Fill, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
+import { AttrGetter, BasicArray, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -69,8 +69,17 @@ function toHex(r: number, g: number, b: number) {
 
 const onShowFont = () => {
     props.context.workspace.focusText()
-    if (showFont.value) return showFont.value = false
+    if (showFont.value) {
+        return showFont.value = false
+    }
     showFont.value = true
+
+    props.context.esctask.save('onShowFont', () => {
+        const achieve = showFont.value;
+        showFont.value = false;
+        return achieve;
+    })
+
     document.addEventListener('click', onShowFontBlur);
 }
 
@@ -88,10 +97,19 @@ const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
 const sizeSelectIndex = ref(2);
 const onShowSize = () => {
     props.context.workspace.focusText()
-    if (showSize.value) return showSize.value = false
+    if (showSize.value) {
+        return showSize.value = false
+    }
     const index = textSizes.value.findIndex(item => item === fonstSize.value);
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
+
+    props.context.esctask.save('onShowSize', () => {
+        const isAchieve = showSize.value;
+        showSize.value = false;
+        return isAchieve
+    })
+
     document.addEventListener('click', onShowSizeBlur);
 }
 

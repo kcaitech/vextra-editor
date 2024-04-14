@@ -42,6 +42,12 @@ const showMenu = () => {
         return
     }
     commentMenu.value = true
+
+    props.context.esctask.save('showMenu', () => {
+        const achieve = commentMenu.value;
+        commentMenu.value = false;
+        return achieve;
+    })
 }
 const closeMenu = () => {
     commentMenu.value = false

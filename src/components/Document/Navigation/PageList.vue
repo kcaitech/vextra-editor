@@ -226,7 +226,11 @@ const chartMenuMount = (e: MouseEvent) => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
             menu_locate2(e, el, pageList.value);
-            props.context.esctask.save(v4(), close);
+            props.context.esctask.save(v4(), () => {
+                const achieve = pageMenu.value;
+                pageMenu.value = false;
+                return achieve;
+            });
         }
     })
 }
