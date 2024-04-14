@@ -435,6 +435,10 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
+    if (!permIsEdit(context) || context.tool.isLable) {
+        return;
+    }
+
     e.preventDefault();
     const data = e?.dataTransfer?.files;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) {
