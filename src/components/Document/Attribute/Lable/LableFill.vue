@@ -193,13 +193,13 @@ onUnmounted(() => {
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
                         </div>
                         <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'color'">
-                            <span class="name" @click="(e) => copyLable(e, f.id + 'color')"
+                            <span class="name hovered" @click="(e) => copyLable(e, f.id + 'color')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(f.fill.color,
             fillMenuItems[fill_i]) }}</span>
                         </LableTootip>
                         <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'alpha'"
                             v-if="fillMenuItems[fill_i] === 'HEX'">
-                            <span style="margin-left: 16px; cursor: pointer;"
+                            <span style="margin-left: 16px; cursor: pointer;" class="hovered"
                                 @click="(e) => copyLable(e, f.id + 'alpha')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{
             filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
@@ -212,14 +212,14 @@ onUnmounted(() => {
                                 :style="{ backgroundColor: toRGB(stop.color.red, stop.color.green, stop.color.blue) }">
                             </div>
                             <LableTootip :copy_text="copy_text" :visible="_visible === stop.id + 'color'">
-                                <span class="name" @click="(e) => copyLable(e, stop.id + 'color')"
+                                <span class="name hovered" @click="(e) => copyLable(e, stop.id + 'color')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
             toColor(stop.color as Color,
                 fillMenuItems[fill_i]) }}</span>
                             </LableTootip>
                             <LableTootip :copy_text="copy_text" :visible="_visible === stop.id + 'alpha'"
                                 v-if="fillMenuItems[fill_i] === 'HEX'">
-                                <span style="margin-left: 16px; cursor: pointer;"
+                                <span style="margin-left: 16px; cursor: pointer;" class="hovered"
                                     @click="(e) => copyLable(e, stop.id + 'alpha')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                     filterAlpha(stop.color.alpha * 100) + '%' }}</span>
@@ -290,5 +290,11 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.hovered {
+    &:hover {
+        border-radius: 2px;
+        background-color: #EBEBEB;
+    }
 }
 </style>

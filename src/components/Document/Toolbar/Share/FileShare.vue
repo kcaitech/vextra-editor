@@ -373,7 +373,8 @@ const shareSwitch = () => {
     </div>
     <!-- 分享人 -->
     <div class="share_user">
-      <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>
+<!--      <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>-->
+        <span class="type">{{ t('share.people_who_have_joined_the_share') }}</span>
       <el-scrollbar height="300px" class="shared-by">
         <div class="scrollbar-demo-item">
           <div class="item-left">
@@ -467,7 +468,7 @@ const shareSwitch = () => {
     </div>
   </el-card>
 </template>
-  
+
 <style scoped lang="scss">
 :deep(.is-horizontal) {
   display: none !important;
