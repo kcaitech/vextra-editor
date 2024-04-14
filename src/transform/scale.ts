@@ -408,7 +408,7 @@ export class ScaleHandler extends TransformHandler {
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY: _targetXY,
             baseWidth,
@@ -463,7 +463,7 @@ export class ScaleHandler extends TransformHandler {
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY: _targetXY,
             baseWidth,
@@ -516,7 +516,7 @@ export class ScaleHandler extends TransformHandler {
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY: _targetXY,
             baseWidth,
@@ -569,7 +569,7 @@ export class ScaleHandler extends TransformHandler {
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY: _targetXY,
             baseWidth,
@@ -767,7 +767,7 @@ export class ScaleHandler extends TransformHandler {
             targetRotation
         });
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __execute4singleRT() {
@@ -830,7 +830,7 @@ export class ScaleHandler extends TransformHandler {
 
         const targetXY = this.__getTargetXY(target, xy1, base);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY,
             targetWidth,
@@ -897,7 +897,7 @@ export class ScaleHandler extends TransformHandler {
 
         const targetXY = this.__getTargetXY(target, xy1, base);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY,
             targetWidth,
@@ -966,7 +966,7 @@ export class ScaleHandler extends TransformHandler {
 
         const targetXY = this.__getTargetXY(target, xy1, base);
 
-        (this.asyncApiCaller as Scaler).execute4multi([{
+        (this.asyncApiCaller as Scaler).execute([{
             shape,
             targetXY,
             targetWidth,
@@ -1116,7 +1116,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4Right() {
@@ -1140,7 +1140,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, false);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4Top() {
@@ -1165,7 +1165,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4Bottom() {
@@ -1190,7 +1190,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, false, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4LeftTop() {
@@ -1223,7 +1223,7 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4RightTop() {
@@ -1255,7 +1255,7 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
 
     }
 
@@ -1289,7 +1289,7 @@ export class ScaleHandler extends TransformHandler {
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 
     private __executeSide4LeftBottom() {
@@ -1321,6 +1321,6 @@ export class ScaleHandler extends TransformHandler {
         }
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
-        (this.asyncApiCaller as Scaler).execute4multi(transformUnits);
+        (this.asyncApiCaller as Scaler).execute(transformUnits);
     }
 }
