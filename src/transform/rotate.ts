@@ -240,7 +240,6 @@ export class RotateHandler extends TransformHandler {
                 }
             }
 
-            console.log(d, this.initDeg);
         }
 
         let deg = d - this.initDeg;
