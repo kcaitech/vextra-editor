@@ -44,6 +44,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import VersionDesc from "@/components/common/VersionDesc.vue";
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);

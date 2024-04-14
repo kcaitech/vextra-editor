@@ -14,6 +14,7 @@
       </el-container>
     </el-container>
     <HelpEntrance />
+<!--      <version-desc></version-desc>-->
   </div>
 </template>
 
@@ -28,6 +29,7 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/request/users';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import VersionDesc from "@/components/common/VersionDesc.vue";
 
 const { t } = useI18n();
 const searchtitle = ref('')
