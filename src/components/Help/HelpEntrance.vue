@@ -57,7 +57,15 @@ const handleClickShowhelp = () => {
         shortcut.value = false
         return
     }
-    showitem.value = !showitem.value
+
+    showitem.value = !showitem.value;
+    if (showitem.value) {
+        props.context?.esctask.save('handleClickShowhelp', () => {
+            const achieve = showitem.value;
+            showitem.value = false;
+            return achieve;
+        })
+    }
 }
 
 const handleClickOutside = (e: MouseEvent) => {
