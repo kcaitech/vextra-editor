@@ -220,7 +220,28 @@ export class RotateHandler extends TransformHandler {
      * @private
      */
     private __execute4single() {
-        const d = getHorizontalAngle(this.centerXY, this.livingPoint);
+        let d = getHorizontalAngle(this.centerXY, this.livingPoint);
+
+        if (this.shiftStatus) {
+            const exD = d % 15;
+            if (exD) {
+                if (exD < 7.5) {
+                    d -= exD;
+                } else {
+                    d += 15 - exD;
+                }
+            }
+            const exInit = this.initDeg % 15;
+            if (exInit) {
+                if (exInit < 7.5) {
+                    this.initDeg -= exInit;
+                } else {
+                    this.initDeg += 15 - exInit;
+                }
+            }
+
+            console.log(d, this.initDeg);
+        }
 
         let deg = d - this.initDeg;
 
@@ -240,11 +261,14 @@ export class RotateHandler extends TransformHandler {
             return;
         }
 
+        const currentRotate = (adapt2Shape(shape).rotation || 0);
+        const targetRotate = currentRotate + deg;
+
         (this.asyncApiCaller as Rotator).execute4multi([{
             shape,
             x: base.x,
             y: base.y,
-            targetRotate: (adapt2Shape(shape).rotation || 0) + deg,
+            targetRotate
         }]);
     }
 
