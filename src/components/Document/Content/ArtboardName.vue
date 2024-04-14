@@ -191,7 +191,7 @@ function windowBlur() {
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
                ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
-        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
+        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0;" ref="inputSpan"></span>
     </div>
 </template>
 
@@ -199,6 +199,8 @@ function windowBlur() {
 .container-name {
     .name {
         width: 100%;
+        height: 22px;
+        line-height: 22px;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
@@ -213,6 +215,7 @@ function windowBlur() {
         border: 1px solid var(--active-color);
         padding: 0 1px;
         margin-right: 1px;
+        margin-bottom: 4px;
         box-sizing: border-box;
     }
 
