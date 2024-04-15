@@ -1359,7 +1359,7 @@ onUnmounted(() => {
     font-weight: 500;
     font-size: var(--font-default-fontsize);
     opacity: 1;
-    border: 1px solid #bcbcbc;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     flex: 0 0 16px;
 

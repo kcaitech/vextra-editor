@@ -311,6 +311,7 @@ declare module '@vue/runtime-core' {
     TeamPage: typeof import('./src/components/TeamProject/TeamPage.vue')['default']
     TeamProjectMenu: typeof import('./src/components/TeamProject/TeamProjectMenu.vue')['default']
     TeamSetting: typeof import('./src/components/TeamProject/TeamSetting.vue')['default']
+    TempBoard: typeof import('./src/components/common/TempBoard.vue')['default']
     TemporaryStop: typeof import('./src/components/Document/Selection/Controller/ColorEdit/TemporaryStop.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextAdvancedSettings: typeof import('./src/components/Document/Attribute/Text/TextAdvancedSettings.vue')['default']
