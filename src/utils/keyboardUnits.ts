@@ -22,6 +22,9 @@ import { modifyOpacity } from "./common";
 import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
+import { hexToX } from "@/components/common/ColorPicker/utils";
+import { Color } from "../../../kcdesign-data/src";
+import { lowerFirst } from "lodash";
 
 // todo 键盘事件的权限处理
 
@@ -182,6 +185,24 @@ keydownHandler['KeyI'] = function (event: KeyboardEvent, context: Context) {
     if (event.shiftKey) {
         event.preventDefault();
         context.tool.notify(Tool.COMPONENT); // 组件工具
+        return;
+    }
+    if (!(window as any).EyeDropper) {
+        message('info', '当前浏览器不支持取色工具');
+    } else {
+        const System_EyeDropper = (window as any).EyeDropper;
+        const s_eye_dropper = new System_EyeDropper();
+        s_eye_dropper.open().then((result: any) => {
+            const rgb = hexToX(result.sRGBHex);
+            if (!context.selection.selectedShapes.length) {
+                return;
+            }
+            const page = context.selection.selectedPage!;
+            const editor = context.editor4Page(page);
+            editor.modifyStyleByEyeDropper(context.selection.selectedShapes, new Color(1, rgb[0], rgb[1], rgb[2]));
+        }).catch((e: any) => {
+            console.log("failed:", e);
+        });
     }
 }
 
