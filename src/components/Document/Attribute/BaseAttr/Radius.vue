@@ -7,6 +7,9 @@ import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
+import Tooltip from "@/components/common/Tooltip.vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -429,10 +432,12 @@ onUnmounted(() => {
             @dragging="draggingRT"
             @dragend="dragend"
         ></MdNumberInput>
-        <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
-            <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
-                      :class="{ 'active': rect }"></svg-icon>
-        </div>
+        <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
+            <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
+                <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
+                          :class="{ 'active': rect }"></svg-icon>
+            </div>
+        </Tooltip>
     </div>
     <div class="tr" v-if="rect">
         <MdNumberInput

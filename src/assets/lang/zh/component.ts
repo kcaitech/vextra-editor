@@ -46,5 +46,6 @@ export const compos: any = {
     conflict_2: '此可变组件存在相同状态，需要修改状态以解决冲突',
     confirm: '确认',
     circle_warning: '存在循环引用',
-    invalid_compos: '无效组件'
+    invalid_compos: '无效组件',
+    toggle_list_style: '切换列表'
 }

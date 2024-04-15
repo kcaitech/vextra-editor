@@ -512,8 +512,10 @@ onUnmounted(() => {
                            @dragging="draggingY"
                            @dragend="dragend"
             ></MdNumberInput>
-            <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
-                <svg-icon icon-class="adapt"></svg-icon>
+            <div class="adapt" v-if="s_adapt" @click="adapt">
+                <Tooltip :content="t('attr.adapt')">
+                    <svg-icon icon-class="adapt"></svg-icon>
+                </Tooltip>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
@@ -536,13 +538,14 @@ onUnmounted(() => {
                            @dragging="draggingH"
                            @dragend="dragend"
             ></MdNumberInput>
-
-            <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
-            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
+            <Tooltip :content="t('attr.constrainProportions')">
+                <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
+                </div>
+                <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
+                </div>
+            </Tooltip>
         </div>
         <div class="tr" :reflush="reflush">
             <MdNumberInput icon="angle"

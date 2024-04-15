@@ -157,6 +157,7 @@ const isDisabled: any = computed(() => {
         align-items: center;
         justify-content: center;
         flex: 0 0 32px;
+        cursor: pointer;
 
         > svg {
             width: 18px;

@@ -15,6 +15,7 @@ import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";
 import { v4 } from "uuid";
 import { menu_locate2 } from "@/utils/common";
+import Tooltip from "@/components/common/Tooltip.vue";
 
 type List = InstanceType<typeof ListView>;
 
@@ -347,10 +348,11 @@ onUnmounted(() => {
         <div class="header">
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
-                    v-if="context.workspace.documentPerm === Perm.isEdit && !isLable">
-                    <svg-icon icon-class="add"></svg-icon>
-                </div>
+                <Tooltip v-if="context.workspace.documentPerm === Perm.isEdit && !isLable" :content="t('navi.add_page')">
+                    <div class="add" @click.stop="addPage">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </Tooltip>
                 <div class="shrink" @click="toggle">
                     <svg-icon icon-class="down"
                         :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>

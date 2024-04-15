@@ -304,7 +304,9 @@ export const attr: any = {
     completely_symmetrical: "Completely Symmetrical",
     angular_symmetry: "Angular Symmetry",
     asymmetric: "Asymmetric",
-    path: 'Path'
+    path: 'Path',
+    independentCorners: 'Independent corners',
+    constrainProportions: 'Constrain proportions',
 }
 
 export const login = {

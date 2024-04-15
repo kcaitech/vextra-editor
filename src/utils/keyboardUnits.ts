@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component, copyAsPNG,
+    component,
     lower_layer,
     redo,
     scale_0,
@@ -62,7 +62,7 @@ keydownHandler[''] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
-    if (event.shiftKey && event.altKey && permIsEdit(context)) {
+    if (event.altKey && permIsEdit(context)) {
         event.preventDefault();
         context.arrange.notify(Arrange.FLEX_START); // 图层左对齐
         return;
@@ -255,7 +255,7 @@ keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
     if (!permIsEdit(context)) return;
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (event.altKey) {
-        context.arrange.notify(Arrange.FLEX_END_COL); // 图层右侧对齐
+        context.arrange.notify(Arrange.FLEX_END_COL); // 图层底部对齐
         return;
     }
     if (is_ctrl || event.shiftKey) return;

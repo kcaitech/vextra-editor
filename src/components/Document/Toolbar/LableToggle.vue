@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n'
 import { Action } from '@/context/tool';
+import Cursor from "@/components/Document/Toolbar/Buttons/Cursor.vue";
 
 const { t } = useI18n();
 interface Props {
@@ -86,6 +87,7 @@ const toggleSwitch = () => {
         width: 100%;
         height: 100%;
         opacity: 0;
+        cursor: pointer;
     }
 
     .d-switch_action {
