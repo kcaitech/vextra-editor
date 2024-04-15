@@ -10,6 +10,7 @@ import '@/style/constant.scss'
 import { router } from "./router"
 import { createPinia } from 'pinia'
 import '@/utils/permission'
+
 const pinia = createPinia()
 const app = createApp(App)
 app.use(i18n)

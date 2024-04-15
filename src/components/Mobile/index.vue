@@ -24,8 +24,8 @@
                 <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
                 <Transition name="fade">
                     <div v-if="searchKey" class="search-list">
-                        <FilesItem :err-network="errnetwork" :data="searchData" @changeStar="changeStar" @openfile="openfile"
-                            @refresh="refreshTab" @sharefile="data" :index=listindex>
+                        <FilesItem :err-network="errnetwork" :data="searchData" @changeStar="changeStar"
+                            @openfile="openfile" @refresh="refreshTab" @sharefile="data" :index=listindex>
                         </FilesItem>
                     </div>
                 </Transition>
@@ -61,6 +61,7 @@ import Inform from './MessageInfo.vue';
 import { useSearchData } from './search'
 import { storeToRefs } from 'pinia';
 import { router } from '@/router';
+
 
 const Data = useSearchData()
 const { searchKey, searchData } = storeToRefs(Data)
@@ -111,8 +112,10 @@ const openfile = (id: number, index: number) => {
 
 
 const changetab = (tab: string) => {
-    activebnt.value = tab
-    sessionStorage.setItem('selectTab', tab)
+    activebnt.value = tab;
+    sessionStorage.setItem('selectTab', tab);
+    (window as any).wx.miniProgram.postMessage({data:{index:1,title:'哈哈'}});
+    (window as any).wx.miniProgram.navigateBack({delta: 1})
 }
 
 const testevent = (data: any) => {
