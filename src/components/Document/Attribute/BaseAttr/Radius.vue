@@ -2,10 +2,11 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import IconText from '@/components/common/IconText.vue';
-import { PathShapeView, RadiusType, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
+import { PathShapeView, PathShapeView2, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
+import MdNumberInput from "@/components/common/MdNumberInput.vue";
+import { LockMouse } from "@/transform/lockMouse";
 
 interface Props {
     context: Context
@@ -15,7 +16,6 @@ interface Props {
 const props = defineProps<Props>();
 const rect = ref<boolean>(false);
 const can_be_rect = ref<boolean>(false);
-const is_multi_values = ref<boolean>(true);
 const radius = reactive<{ lt: number | string, rt: number | string, rb: number | string, lb: number | string }>({
     lt: 0,
     rt: 0,
@@ -30,7 +30,8 @@ function get_value_from_input(val: any) {
     return Number(value.toFixed(0));
 }
 
-function change(val: any, shapes: ShapeView[], type: string) {
+function change(val: any, type: string) {
+    const shapes = props.context.selection.selectedShapes;
     val = get_value_from_input(val);
 
     if (rect.value) {
@@ -39,7 +40,7 @@ function change(val: any, shapes: ShapeView[], type: string) {
     }
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    // editor.shapesModifyFixedRadius(shapes.map(s => adapt2Shape(s)), val);
+
     editor.shapesModifyRadius(shapes, [val]);
 
     hidden_selection(props.context);
@@ -50,7 +51,6 @@ function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
-    // editor.shapesModifyPointRadius(shapes.map(s => adapt2Shape(s)), indexes, val);
 
     const values = [-1, -1, -1, -1];
     values[indexes[0]] = val;
@@ -255,6 +255,146 @@ function watch_shapes() {
     }
 }
 
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let lockMouseHandler: LockMouse | undefined = undefined;
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+async function dragstart(e: MouseEvent) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+
+    lockMouseHandler = new LockMouse(props.context, e);
+}
+
+function draggingLT(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    if (isNaN(radius.lt as number)) {
+        return;
+    }
+
+    let values = [radius.lt as number, -1, -1, -1];
+    values[0] += e.movementX;
+
+    if (values[0] < 0) {
+        return;
+    }
+
+    if (!rect.value) {
+        values = [values[0]]
+    }
+
+    lockMouseHandler.executeRadius(values);
+}
+
+function draggingRT(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    if (isNaN(radius.rt as number)) {
+        return;
+    }
+
+    const values = [-1, radius.rt as number, -1, -1];
+    values[1] += e.movementX;
+
+    if (values[1] < 0) {
+        return;
+    }
+
+    lockMouseHandler.executeRadius(values);
+}
+
+function draggingRB(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    if (isNaN(radius.rb as number)) {
+        return;
+    }
+
+    const values = [-1, -1, radius.rb as number, -1];
+    values[2] += e.movementX;
+
+    if (values[2] < 0) {
+        return;
+    }
+
+    lockMouseHandler.executeRadius(values);
+}
+
+function draggingLB(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    if (isNaN(radius.lb as number)) {
+        return;
+    }
+
+    const values = [-1, -1, -1, radius.lb as number];
+    values[3] += e.movementX;
+
+    if (values[3] < 0) {
+        return;
+    }
+
+    lockMouseHandler.executeRadius(values);
+}
+
+function dragend() {
+    tel.value = false;
+    document.exitPointerLock();
+
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     update();
@@ -266,27 +406,63 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="tr">
-        <IconText class="frame" svgicon="radius" :multipleValues="is_multi_values" :text="radius.lt"
-                  :frame="{ width: 12, height: 12 }" @onchange="(value, shapes) => change(value, shapes, 'lt')"
-                  :disabled="disabled" :context="context"/>
-        <div class="frame" v-if="!rect"></div>
-        <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt" :disabled="disabled"
-                  :frame="{ width: 12, height: 12, rotate: 90 }"
-                  @onchange="(value, shapes) => change(value, shapes, 'rt')" :context="context"/>
+        <MdNumberInput
+            icon="radius"
+            :draggable="radius.lt !== mixed"
+            :value="radius.lt"
+            :disabled="disabled"
+            @change="value => change(value, 'lt')"
+            @dragstart="dragstart"
+            @dragging="draggingLT"
+            @dragend="dragend"
+        ></MdNumberInput>
+        <div class="space" v-if="!rect"></div>
+        <MdNumberInput
+            v-if="rect"
+            class="r-90"
+            icon="radius"
+            :draggable="radius.rt !== mixed"
+            :value="radius.rt"
+            :disabled="disabled"
+            @change="value => change(value, 'rt')"
+            @dragstart="dragstart"
+            @dragging="draggingRT"
+            @dragend="dragend"
+        ></MdNumberInput>
         <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
             <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
                       :class="{ 'active': rect }"></svg-icon>
         </div>
     </div>
     <div class="tr" v-if="rect">
-        <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }"
-                  :disabled="disabled"
-                  @onchange="(value, shapes) => change(value, shapes, 'lb')" :context="context"/>
-        <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }"
-                  :disabled="disabled"
-                  @onchange="(value, shapes) => change(value, shapes, 'rb')" :context="context"/>
+        <MdNumberInput
+            class="r-270"
+            icon="radius"
+            :draggable="radius.lb !== mixed"
+            :value="radius.lb"
+            :disabled="disabled"
+            @change="value => change(value, 'lb')"
+            @dragstart="dragstart"
+            @dragging="draggingLB"
+            @dragend="dragend"
+        ></MdNumberInput>
+        <MdNumberInput
+            class="r-180"
+            icon="radius"
+            :draggable="radius.rb !== mixed"
+            :value="radius.rb"
+            :disabled="disabled"
+            @change="value => change(value, 'rb')"
+            @dragstart="dragstart"
+            @dragging="draggingRB"
+            @dragend="dragend"
+        ></MdNumberInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+        </div>
+    </teleport>
 </template>
 <style scoped lang="scss">
 .tr {
@@ -299,17 +475,10 @@ onUnmounted(() => {
     flex-direction: row;
     margin-bottom: 8px;
 
-    > .icontext {
-        background-color: var(--input-background);
-    }
-
-    .frame {
+    .space {
         width: 88px;
         height: 32px;
-        margin: 0 0;
-        border-radius: var(--default-radius);
     }
-
 
     .more-for-radius {
         width: 32px;
@@ -343,5 +512,34 @@ onUnmounted(() => {
         background-color: var(--active-color);
         border: 1px solid var(--active-color);
     }
+
+    .r-90 {
+        :deep(svg) {
+            transform: rotate(90deg);
+        }
+    }
+
+    .r-180 {
+        :deep(svg) {
+            transform: rotate(180deg);
+        }
+    }
+
+    .r-270 {
+        :deep(svg) {
+            transform: rotate(270deg);
+        }
+    }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

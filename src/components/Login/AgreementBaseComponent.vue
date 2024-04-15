@@ -3,7 +3,7 @@
     <div class="header-container">
         <div class="kc-header">
             <div class="logo" @click="$router.push({ path: '/' })">
-                <img class="logo-img" :src=avatar alt="MossDesign">
+                <img class="logo-img" :src=avatar :alt="PROJECT_NAME">
             </div>
             <button class="loginbnt" v-if="!isMobile" type="button" @click.stop="router.push({ name: 'login' })">
                 {{ t('system.btn_login') }}
@@ -26,6 +26,7 @@ import Footer from './Footer.vue'
 import isMobileDevice from '@/utils/mobileDeviceChecker'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
 const isMobile = ref(isMobileDevice())

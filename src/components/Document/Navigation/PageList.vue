@@ -434,6 +434,10 @@ onUnmounted(() => {
             height: 100%;
         }
     }
+
+    :deep(.port) {
+        transform: translateX(-6px);
+    }
 }
 
 .items-wrap {

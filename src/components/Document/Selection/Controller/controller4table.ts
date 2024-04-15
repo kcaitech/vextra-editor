@@ -11,13 +11,14 @@ import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
 import { TextSelectionLite as TextSelection } from '@/context/textselectionlite';
+import { DBL_CLICK } from "@/const";
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const workspace_matrix = ref<Matrix>(context.workspace.matrix);
     const matrix = new Matrix();
     const dragActiveDis = 3;
-    const TIMER = 300; // 连续点击最大间隔时间
+    const TIMER = DBL_CLICK; // 连续点击最大间隔时间
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let root: ClientXY = { x: 0, y: 0 };

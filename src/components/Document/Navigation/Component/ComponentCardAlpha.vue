@@ -176,6 +176,7 @@ onUnmounted(() => {
     width: 100%;
     height: 36px;
     position: relative;
+    //cursor: grab;
 
     .card-wrap {
         width: 100%;

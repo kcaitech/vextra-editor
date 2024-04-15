@@ -279,6 +279,30 @@ export class Clipboard {
         }
     }
 
+    write_png(url: string) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const bytes = atob(url);
+                const ab = new ArrayBuffer(bytes.length)
+                const ua = new Uint8Array(ab)
+
+                for (let i = 0; i < bytes.length; i++) {
+                    ua[i] = bytes.charCodeAt(i)
+                }
+
+                const blob = new Blob([ab], { type: 'image/png' });
+
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                return true;
+            } else {
+                throw new Error('navigator.clipboard.write is not supported');
+            }
+        } catch (e) {
+            console.log('write_png error:', e);
+            return false;
+        }
+    }
+
     cut(event: ClipboardEvent) {
         try {
             const res = this.write(event);
@@ -1306,7 +1330,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media);
     }
     if (asyncCreator && new_shape) {
-        asyncCreator = asyncCreator.close();
+        asyncCreator.close();
         page && context.nextTick(page, () => {
             new_shape && selection.selectShape(page.shapes.get(new_shape.id));
         })

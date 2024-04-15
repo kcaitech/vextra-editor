@@ -174,6 +174,7 @@ declare module '@vue/runtime-core' {
     Locate: typeof import('./src/components/Document/Attribute/BaseAttr/Locate.vue')['default']
     Login: typeof import('./src/components/Login/Login.vue')['default']
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
+    MdNumberInput: typeof import('./src/components/common/MdNumberInput.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     MessageBoxBeta: typeof import('./src/components/common/MessageBoxBeta.vue')['default']
     MessageInfo: typeof import('./src/components/Mobile/MessageInfo.vue')['default']

@@ -33,7 +33,7 @@ interface Props {
     itemHeight: number
     firstIndex: number
     orientation: "horizontal" | "vertical"
-    location?: string
+
     allowDrag?: boolean
 }
 
@@ -63,6 +63,9 @@ const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
+
+const ITEM_HEIGHT_CSS = `${props.itemHeight}px`;
+
 defineExpose({ container, clampScroll, scroll });
 
 const relayout: { [key: string]: Function } = {};
@@ -478,6 +481,7 @@ const destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, 
 const destinationMount = ref<boolean>(false);
 const port_a_visible = ref<boolean>(false);
 const port_i_visible = ref<boolean>(false);
+
 let drag_result_detail: DragDetail | undefined = undefined;
 
 function mouseDownOnItem(index: number, e: MouseEvent) {
@@ -541,8 +545,8 @@ function mouseMove(event: MouseEvent) {
 
     // 计算终点位置
     const position = get_part_of_target1(currentHoverTarget.value, event);
-    // console.log('position:', position);
-    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 32 === 0 ? scroll.y : scroll.y - scroll.y % 32);
+    const itemHeight = props.itemHeight;
+    const start_y = toIndex.value * itemHeight - 1 - (scroll.y % itemHeight === 0 ? scroll.y : scroll.y - scroll.y % itemHeight);
     const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
     if (_destination.type === "insert") {
         port_i_visible.value = true;
@@ -636,7 +640,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave" ref="container">
+    <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave"
+         ref="container">
         <!-- items container -->
         <div :class="orientation" :style="{
             transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
@@ -644,8 +649,9 @@ onUnmounted(() => {
             height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
         }" ref="contents">
             <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
-                v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
-                @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)" :style="{ left: c.x + 'px', top: c.y + 'px' }" />
+                       v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
+                       @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)"
+                       :style="{ left: c.x + 'px', top: c.y + 'px' }"/>
             <div class="port" v-if="port_a_visible" :style="{
                 top: destination.y + 'px', left: destination.x + 'px'
             }"></div>
@@ -674,13 +680,13 @@ onUnmounted(() => {
     outline: none;
     box-sizing: border-box;
 
-    >.horizontal,
+    > .horizontal,
     .vertical {
-        >.list-item {
+        > .list-item {
             position: absolute;
         }
 
-        >.port {
+        > .port {
             position: absolute;
             background-color: var(--active-color);
             height: 2px;
@@ -688,7 +694,7 @@ onUnmounted(() => {
         }
 
 
-        >.port::before {
+        > .port::before {
             content: "";
             width: 2px;
             height: 14px;
@@ -698,25 +704,13 @@ onUnmounted(() => {
             background-color: var(--active-color);
         }
 
-        >.port-2 {
+        > .port-2 {
             position: absolute;
             border: 2px solid var(--active-color);
             width: calc(100% - 6px);
             height: 32px;
             box-sizing: border-box;
             border-radius: 2px;
-        }
-
-        >.substitute {
-            position: absolute;
-            height: 32px;
-            min-width: 40px;
-            color: rgba($color: #000000, $alpha: 0.25);
-            font-size: var(--font-default-fontsize);
-            width: 100%;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
         }
     }
 
@@ -734,7 +728,7 @@ onUnmounted(() => {
         box-sizing: border-box;
     }
 
-    .vertical+.scroll-track {
+    .vertical + .scroll-track {
         width: 6px;
         height: 100%;
         position: absolute;
@@ -742,14 +736,14 @@ onUnmounted(() => {
         right: 0;
         overflow: hidden;
 
-        >.scroll-bar {
+        > .scroll-bar {
             width: 100%;
             position: relative;
             background-color: #dddddd;
             border-radius: 6px;
         }
 
-        >.scroll-bar:hover {
+        > .scroll-bar:hover {
             background-color: #bbbbbb;
         }
     }

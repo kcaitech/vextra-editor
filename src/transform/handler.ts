@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncApiCaller, PageView, ShapeView } from "@kcdesign/data";
+import { AsyncApiCaller, PageView } from "@kcdesign/data";
 
 export type FrameLike = {
     x: number;

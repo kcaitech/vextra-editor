@@ -32,6 +32,7 @@ import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { string_by_sys } from '@/utils/common';
+import { copyAsPNG as _copyAsPNG } from "@/utils/content"
 
 const { t } = useI18n();
 

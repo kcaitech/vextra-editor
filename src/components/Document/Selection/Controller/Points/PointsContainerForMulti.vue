@@ -78,18 +78,14 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     cur_ctrl_type = ele;
 
-    // set_status_on_down();
-
     startPosition = props.context.workspace.getContentXY(event);
 
     if (cur_ctrl_type.endsWith('rotate')) {
-        rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
-        // console.log('rotator:', rotator);
+        rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes);
         isRotateElement = true;
 
     } else {
         scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
-        // console.log('scaler:', scaler);
         isRotateElement = false;
     }
 
