@@ -582,7 +582,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -635,7 +635,7 @@ onUnmounted(() => {
 
     .argus {
         width: 100%;
-        margin: 3px 0;
+        padding: 6px 0;
     }
 
     .canvas-bgc {
