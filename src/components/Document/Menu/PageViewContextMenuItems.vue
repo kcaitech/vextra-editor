@@ -1,22 +1,16 @@
 <script setup lang='ts'>
-import { nextTick, onUnmounted, reactive, ref, watch } from 'vue';
+import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
-import { XY } from '@/context/selection';
 import {
     Artboard,
-    GroupShape,
-    Shape,
     ShapeType,
     SymbolRefShape,
     TableCellType,
-    TextShape,
-    Text,
     ShapeView,
     TextShapeView,
     adapt2Shape,
-    GroupShapeView,
     SymbolRefView,
     TableCellView
 } from "@kcdesign/data";
@@ -476,7 +470,7 @@ function toggle_title() {
 }
 
 function copyAsPNG() {
-    _copyAsPNG(props.context);
+    props.context.menu.notify(Menu.WRITE_MEDIA);
     emit('close');
 }
 
@@ -514,20 +508,26 @@ onUnmounted(() => {
                 <Key code="Ctrl C"></Key>
             </span>
         </div>
-<!--        <div-->
-<!--            class="item"-->
-<!--            v-if="props.items.includes('copyAs')"-->
-<!--            @mouseenter="() => {copyAs = true}"-->
-<!--            @mouseleave="() => {copyAs = false}"-->
-<!--        >-->
-<!--            <span>{{ t('system.copyAs') }}</span>-->
-<!--            <svg-icon icon-class="down"></svg-icon>-->
-<!--            <div v-if="copyAs" class="copyAs">-->
-<!--                <div class="sub-item" @click="copyAsPNG">-->
-<!--                    复制PNG图片-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
+        <div
+            class="item"
+            v-if="props.items.includes('copyAs')"
+            @mouseenter="() => {copyAs = true}"
+            @mouseleave="() => {copyAs = false}"
+        >
+            <span>{{ t('system.copyAs') }}</span>
+            <svg-icon icon-class="down"></svg-icon>
+            <div v-if="copyAs" class="copyAs">
+                <!--                <div class="sub-item" @click="copyAsPNG">-->
+                <!--                    复制SVG代码-->
+                <!--                </div>-->
+                <div class="sub-item" @click="copyAsPNG">
+                    <span>{{ t('clipboard.copyAsPNG') }}</span>
+                    <span class="shortkey">
+                        <Key code="Shift Ctrl C"></Key>
+                    </span>
+                </div>
+            </div>
+        </div>
         <div class="item" v-if="props.items.includes('cut')" @click="cut">
             <span>{{ t('system.cut') }}</span>
             <span class="shortkey">
@@ -758,6 +758,9 @@ onUnmounted(() => {
             line-height: 32px;
             box-sizing: border-box;
             color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sub-item:hover {

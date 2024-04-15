@@ -11,6 +11,8 @@ import { router } from "./router"
 import { createPinia } from 'pinia'
 import '@/utils/permission'
 const pinia = createPinia()
+import * as settings from "@/settings"
+
 const app = createApp(App)
 app.use(i18n)
 app.component('svg-icon', SvgIcon)
@@ -26,3 +28,24 @@ app.directive('focus', {
 })
 app.use(pinia)
 app.mount("#app")
+
+// 屏蔽掉普通log输出
+if (settings.production) {
+
+    const _commonlog = console.log;
+    const _silentlog = (...args: any[]) => {
+        // 把异常打印出来
+        for (let i = 0; i < args.length; ++i) {
+            if (args[i] instanceof Error) return _commonlog(...args);
+        }
+    };
+    const switchlog = () => {
+        const href = window.location.href || '';
+        const idx = href.indexOf('?debug');
+        if (idx < 0) console.log = _silentlog;
+        else console.log = _commonlog;
+    }
+
+    window.addEventListener('hashchange', switchlog);
+    switchlog();
+}

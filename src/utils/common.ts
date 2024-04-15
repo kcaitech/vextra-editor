@@ -16,15 +16,19 @@ import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
 import { permIsEdit } from './permission';
+
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
 }
+
 export const debounceLog = debounce(_debounceLog, 300);
+
 // 简易id
 export function simpleId(): string {
     return uuid().split('-')[3];
 }
+
 // 获取Select的options
 export function genOptions(items: string[][]) {
     return items.map((item: string[], index: number) => {
@@ -47,6 +51,7 @@ export function getAngle(line1: [number, number, number, number], line2: [number
     const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
     return angleRad * (180 / Math.PI);
 }
+
 // 根据四个点生成一个矩形
 // p1 p2
 // p4 p3
@@ -71,6 +76,7 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
         `height: ${height}px; ` +
         transform;
 }
+
 // 根据四个点生成一条线
 // p1 p2
 // p4 p3
@@ -156,6 +162,7 @@ export function XYsBounding(points: XY[]) {
     const right = Math.max(...xs);
     return { top, bottom, left, right };
 }
+
 // 寻找群体shape在屏幕坐标系上的边界
 export function XYsBounding2(shapes: Shape[], context: Context) {
     if (!shapes.length) return false;
@@ -164,7 +171,8 @@ export function XYsBounding2(shapes: Shape[], context: Context) {
     if (!fsp) return false;
     const fspm2r = fsp.matrix2Root();
     fspm2r.multiAtLeft(wm);
-    const xy1 = fspm2r.computeCoord2(fbox.x, fbox.y), xy2 = fspm2r.computeCoord2(fbox.x + fbox.width, fbox.y + fbox.height);
+    const xy1 = fspm2r.computeCoord2(fbox.x, fbox.y),
+        xy2 = fspm2r.computeCoord2(fbox.x + fbox.width, fbox.y + fbox.height);
     let top = xy1.y, bottom = xy2.y, left = xy1.y, right = xy2.x;
     if (shapes.length < 2) return { top, bottom, left, right };
     for (let i = 1, len = shapes.length; i < len; i++) {
@@ -179,10 +187,12 @@ export function XYsBounding2(shapes: Shape[], context: Context) {
     }
     return { top, bottom, left, right };
 }
+
 export function is_box_outer_view(box: { top: number, bottom: number, left: number, right: number }, context: Context) {
     const { x, right, y, bottom } = context.workspace.root;
     return (box.right > right - x) || (box.left < 0) || (box.top < 0) || (box.bottom > bottom - y);
 }
+
 export function is_box_outer_view2(shapes: Shape[], context: Context) {
     const wm = context.workspace.matrix
     const { x, right, y, bottom } = context.workspace.root;
@@ -196,7 +206,6 @@ export function is_box_outer_view2(shapes: Shape[], context: Context) {
     }
     return false;
 }
-
 
 
 // 判断线段p1q1与线段p2q2是否🍌
@@ -218,6 +227,7 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
         if (val === 0) return 0;
         return (val > 0) ? 1 : 2;
     }
+
     function isOnSegment(p: XY, q: XY, r: XY) {
         return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
     }
@@ -225,7 +235,8 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
 
 // 判断形状是否被包涵
 export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]): boolean {
-    const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x, bottom = selectorPoints[2].y;
+    const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x,
+        bottom = selectorPoints[2].y;
 
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
@@ -248,10 +259,12 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
     }
     return false;
 }
+
 interface Side {
     start: XY
     end: XY
 }
+
 export function get_side_by_points(points: XY[]) {
     if (points.length <= 1) {
         return [];
@@ -264,6 +277,7 @@ export function get_side_by_points(points: XY[]) {
     }
     return sides;
 }
+
 export function get_points_for_straight(shape: PathShapeView) {
     const start = shape.points[0];
     const end = shape.points[1];
@@ -278,6 +292,7 @@ export function get_points_for_straight(shape: PathShapeView) {
 
     return [m.computeCoord2(start.x, start.y), m.computeCoord2(end.x, end.y)];
 }
+
 export function get_points_from_shape(shape: ShapeView) {
     if (is_straight(shape)) {
         return get_points_for_straight(shape as PathShapeView);
@@ -298,11 +313,13 @@ export function get_points_from_shape(shape: ShapeView) {
     }
     return ps;
 }
+
 export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     const { left, top, right, bottom } = XYsBounding(selectorPoints);
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
 }
+
 /**
  * @param includes 需要全包含
  */
@@ -346,9 +363,11 @@ export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView
     }
     return false;
 }
+
 export function is_mac() {
     return /macintosh|mac os x/i.test(navigator.userAgent);
 }
+
 export function string_by_sys(str: string): string {
     if (is_mac()) {
         return str.replace(/ctrl|Ctrl/g, "⌘").replace(/shift|Shift/g, "⇧").replace(/alt|Alt/g, "⌥");
@@ -440,7 +459,7 @@ export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_p
     }
 
     if (top * -1 > box.y - 46 - 4) {
-        top = - (box.y - 46 - 4);
+        top = -(box.y - 46 - 4);
     }
 
     el.style.left = left + 'px';
@@ -465,7 +484,7 @@ export function format_value(val: number | string, fix = 2) {
 }
 
 export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView[]) {
-    if(!permIsEdit(context)) return;
+    if (!permIsEdit(context)) return;
     const page = context.selection.selectedPage!;
     const shapes = _shapes || context.selection.selectedShapes;
     const editor = context.editor4Page(page);
@@ -557,6 +576,7 @@ export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<s
         baseY,
         baseWidth,
         baseHeight,
+        baseRotation: shape.rotation || 0,
 
         boxX: left,
         boxY: top,

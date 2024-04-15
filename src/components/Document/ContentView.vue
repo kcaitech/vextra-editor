@@ -45,6 +45,7 @@ import { ColorCtx } from '@/context/color';
 import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
 import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
+import TempBoard from "@/components/common/TempBoard.vue";
 
 interface Props {
     context: Context
@@ -712,5 +713,6 @@ onUnmounted(() => {
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
         <Grid :context="props.context"></Grid>
+        <TempBoard :context="props.context"></TempBoard>
     </div>
 </template>

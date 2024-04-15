@@ -24,6 +24,7 @@ const top_wrapper = ref<Element | null>(null);
 const scroll_container = ref<Element | null>(null);
 const dlt_set = new Set<string>();
 const null_data: SymbolListItem[] = [];
+
 function register_container() {
     const el = props.root || top_wrapper.value;
     if (!el) return;
@@ -113,11 +114,11 @@ onUnmounted(() => {
             <ComponentLocalData v-if="scroll_container" :context="props.context" :container="scroll_container"
                 :is-attri="props.isAttri" :card-type="props.cardType">
             </ComponentLocalData>
-
-            <!--      <ComponentRootCollapse v-if="scroll_container" :context="props.context" :extend="false"
-                                   :container="scroll_container" :title="t('compos.lib_line')" :data="null_data"
-                                   :status_set="dlt_set" :is-attri="props.isAttri" :card-type="props.cardType">
-            </ComponentRootCollapse>-->
+            <!--            线框图-->
+            <!--            <ComponentRootCollapse v-if="scroll_container" :context="props.context" :extend="false"-->
+            <!--                                   :container="scroll_container" :title="t('compos.lib_line')" :data="null_data"-->
+            <!--                                   :status_set="dlt_set" :is-attri="props.isAttri" :card-type="props.cardType">-->
+            <!--            </ComponentRootCollapse>-->
         </el-scrollbar>
         <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"
             :context="props.context" @close="compMenuUnmount">
