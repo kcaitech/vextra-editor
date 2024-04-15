@@ -59,12 +59,12 @@ const weightMixed = ref<boolean>(false);
 const shapes = ref<TextShapeView[]>(props.textShapes);
 const disableWeight = ref(false);
 
-function toHex(r: number, g: number, b: number) {
+function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16)
         .toUpperCase().length === 1
         ? `0${n.toString(16).toUpperCase()}`
         : n.toString(16).toUpperCase();
-    return '#' + hex(r) + hex(g) + hex(b);
+    return  (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
 }
 
 const onShowFont = () => {
@@ -1078,7 +1078,7 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor"
                         @focus="selectColorValue" :spellcheck="false"
-                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
             gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
@@ -1086,7 +1086,7 @@ onUnmounted(() => {
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @input="sizeAlphaInput" />
                 </div>
-                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
+<!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
@@ -1116,7 +1116,7 @@ onUnmounted(() => {
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
                         @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
                         :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"
