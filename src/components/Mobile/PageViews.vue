@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@/router';
-import { nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
+import { onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
@@ -221,6 +221,7 @@ const getDocumentInfo = async () => {
             fileName.value = file_name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
             context = new Context(document, coopRepo);
+            matrix.value = context.workspace.matrix;
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
             getUserInfo();
@@ -244,7 +245,10 @@ const getDocumentInfo = async () => {
 
             if (context?.data) {
                 for (let index = 0; index < context!.data.pagesList.length; index++) {
-                    let a: SelectSource = { id: index, data: { value: context!.data.pagesList[index].id, content: context!.data.pagesList[index].name } }
+                    let a: SelectSource = {
+                        id: index,
+                        data: { value: context!.data.pagesList[index].id, content: context!.data.pagesList[index].name }
+                    }
                     arr.value.push(a)
                 }
             }
@@ -317,7 +321,6 @@ async function upload(projectId: string) {
 }
 
 
-
 function switchPage(id?: string) {
     if (!id) return
     if (showpagelist.value) showpagelist.value = !showpagelist.value
@@ -334,13 +337,10 @@ function switchPage(id?: string) {
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.selection.selectPage(pagedom);
                 curPage.value = pagedom;
-                console.log('success:', pagedom);
             }
         })
     }
 }
-
-
 
 
 let timer: any = null;
@@ -354,6 +354,7 @@ function init_doc() {
     } else if ((window as any).sketchDocument) {
         loading.value = true;
         context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+        matrix.value = context.workspace.matrix;
         null_context.value = false;
         getUserInfo();
         init_watcher();
@@ -376,7 +377,7 @@ function selectionWatcher(t: number) {
 
 function workspace_watcher(type?: number) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION && context) {
-        matrix.reset(context.workspace.matrix);
+        matrix.value.reset(context.workspace.matrix);
     }
 }
 
@@ -426,7 +427,7 @@ const closeLoading = () => {
     emit('closeLoading');
 }
 
-const matrix: Matrix = reactive((context?.workspace.matrix || new Matrix()) as any);
+const matrix = ref<Matrix>(new Matrix() as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 
 function initMatrix(cur: PageView) {
@@ -435,11 +436,18 @@ function initMatrix(cur: PageView) {
     }
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page2(context, document.documentElement.clientWidth, document.documentElement.clientHeight - HEAD_HEIGHT));
-        info = { m, x: cur.frame.x, y: cur.frame.y };
+        const __m = adapt_page2(
+            context,
+            document.documentElement.clientWidth,
+            document.documentElement.clientHeight - HEAD_HEIGHT
+        );
+
+        info = { m: new Matrix(__m), x: cur.frame.x, y: cur.frame.y };
+
         matrixMap.set(cur.id, info);
     }
-    matrix.reset(info.m.toArray());
+
+    matrix.value.reset(info.m.toArray());
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
@@ -447,7 +455,7 @@ const stop2 = watch(() => curPage.value, (page, old) => {
     if (page) {
         if (old) {
             let info = matrixMap.get(old.id);
-            info!.m.reset(matrix.toArray())
+            info!.m.reset(matrix.value.toArray());
         }
 
         initMatrix(page);
@@ -548,7 +556,7 @@ function start(e: TouchEvent) {
 
     if (downTouchesLength > 1) { // 只有多根手指才可能触发缩放
         preGap = __gap(e);
-        preScale = matrix.m00;
+        preScale = matrix.value.m00;
     }
 
     preAnchor = __anchor(e);
@@ -566,7 +574,7 @@ function move(e: TouchEvent) {
     const dx = anchor.x - preAnchor.x;
     const dy = anchor.y - preAnchor.y;
 
-    matrix.trans(dx, dy);
+    matrix.value.trans(dx, dy);
 
     preAnchor = { ...anchor };
 
@@ -582,7 +590,7 @@ function move(e: TouchEvent) {
 
     let scale = currentGap / preGap;
 
-    const _scale = Number((matrix.toArray()[0] * 100).toFixed(0)) * scale;
+    const _scale = Number((matrix.value.toArray()[0] * 100).toFixed(0)) * scale;
     if (_scale <= MIN) {
         scale = 1;
     } else if (_scale >= MAX) {
@@ -592,9 +600,9 @@ function move(e: TouchEvent) {
     const offsetX = preAnchor.x - ORIGIN.x;
     const offsetY = preAnchor.y - ORIGIN.y;
 
-    matrix.trans(-offsetX, -offsetY);
-    matrix.scale(scale);
-    matrix.trans(offsetX, offsetY);
+    matrix.value.trans(-offsetX, -offsetY);
+    matrix.value.scale(scale);
+    matrix.value.trans(offsetX, offsetY);
 
     preGap = currentGap;
 }
@@ -605,7 +613,6 @@ function end(e: TouchEvent) {
         preAnchor = __anchor(e);
     }
 }
-
 
 
 </script>
@@ -624,7 +631,7 @@ function end(e: TouchEvent) {
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist">
                 <div class="list-item" v-for="page in arr" :key="page.id"
-                    @click.stop="switchPage(page.data.value as string)">
+                     @click.stop="switchPage(page.data.value as string)">
                     <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
                     </div>
                     <div class="pagename">{{ page.data.content }}</div>
@@ -633,7 +640,7 @@ function end(e: TouchEvent) {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                :matrix="matrix" @closeLoading="closeLoading" />
+                         :matrix="matrix" @closeLoading="closeLoading"/>
         </div>
     </div>
 </template>
