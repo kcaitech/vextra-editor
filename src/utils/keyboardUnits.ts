@@ -199,7 +199,10 @@ keydownHandler['KeyI'] = function (event: KeyboardEvent, context: Context) {
             }
             const page = context.selection.selectedPage!;
             const editor = context.editor4Page(page);
-            editor.modifyStyleByEyeDropper(context.selection.selectedShapes, new Color(1, rgb[0], rgb[1], rgb[2]));
+            editor.modifyStyleByEyeDropper(
+                context.selection.selectedShapes,
+                new Color(1, rgb[0], rgb[1], rgb[2]) as any
+            );
         }).catch((e: any) => {
             console.log("failed:", e);
         });
