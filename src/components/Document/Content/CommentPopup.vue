@@ -533,7 +533,7 @@ onUnmounted(() => {
             <div class="textarea" ref="textareaEl">
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 0, maxRows: 10 }"
                     type="textarea"
-                    :placeholder="cur_perm === Perm.isRead ? t('comment.input_no_perm') : t('comment.input_comments')"
+                    :placeholder="cur_perm === Perm.isRead ? t('comment.input_no_perm') : t('comment.reply_comment')"
                     resize="none" size="small" :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }"
                     @keydown="carriageReturn" @input="handleInput" @focus="inputFocus" />
                 <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
@@ -549,7 +549,7 @@ onUnmounted(() => {
     position: absolute;
     width: 330px;
     // max-height: 664px;
-    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
+    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.07);
     z-index: 99;
     font-size: var(--font-default-fontsize);
     cursor: default;

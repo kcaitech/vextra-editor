@@ -1,7 +1,8 @@
 import { BorderPosition } from "@kcdesign/data"
+import { PROJECT_NAME } from "@/const";
 
 export const product = {
-    name: 'MossDesign'
+    name: PROJECT_NAME
 }
 
 export const system = {
@@ -14,6 +15,7 @@ export const system = {
     'paste_here': '粘贴在这里',
     'only_text': '只粘贴文本',
     copy: '复制',
+    copyAs: '复制/粘贴为',
     cut: '剪切',
     replace: '替换',
     failed: '操作失败',
@@ -45,7 +47,7 @@ export const system = {
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',
     'read_Privacy': '隐私协议',
-    'product_name': 'MossDesign',
+    'product_name': PROJECT_NAME,
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
     'login_footer': '©2024 珠海市旷才科技有限公司',
     'placeholder': '搜索文件',
@@ -66,7 +68,9 @@ export const system = {
     sensitive_reminder: '含有敏感信息，请重新输入。',
     sensitive_reminder2: '含有敏感信息，无法分享。',
     sensitive_reminder3: '含有敏感信息，无法访问。',
-    pixel: '对齐像素'
+    pixel: '对齐像素',
+    grid: '像素网格',
+    uploadMediaFail: '图片资源上传失败'
 }
 
 export const home = {
@@ -320,6 +324,7 @@ export const comment = {
     show_resolved_comments: '显示已解决评论',
     comment_area: '评论区',
     input_comments: '输入评论',
+    reply_comment: '回复评论',
     check: '查看',
     a_few_reply: '条回复',
     month: '月',
@@ -332,7 +337,11 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析',
     'not_supported1': '当前浏览器不支持，请使用Ctrl C复制',
-    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切'
+    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切',
+    'copyAsPNGSuccess': '复制成功',
+    'copyAsPNGFailed': '复制失败',
+    'copyAsPNG': '复制PNG图片'
+
 }
 export const opacity = {
     normal: '正常',

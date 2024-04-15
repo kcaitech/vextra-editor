@@ -16,6 +16,7 @@ import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSettin
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 import logo from '@/assets/h-logo.svg';
 import min_logo from '@/assets/favicon.svg';
+import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -567,8 +568,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="logo">
-        <img class="logo-image" :src="logo" alt="MossDesign" />
-        <img class="mini_logo-image" :src="min_logo" alt="MossDesign" style="display: none;" />
+        <img class="logo-image" :src="logo" :alt="PROJECT_NAME" />
+        <img class="mini_logo-image" :src="min_logo" :alt="PROJECT_NAME" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>

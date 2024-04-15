@@ -46,7 +46,7 @@ export class DocResourceUpload extends WatchableObject {
         while (count++ < 3 && !await this.docResourceUpload.uploadResource(name, data)) {
             await new Promise(resolve => setTimeout(resolve, 1000))
         }
-        return true
+        return count < 3;
     }
 
     public close() {

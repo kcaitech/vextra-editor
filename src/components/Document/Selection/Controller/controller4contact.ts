@@ -10,10 +10,11 @@ import {
 } from "@/utils/mouse";
 import { TranslateHandler } from "@/transform/translate";
 import { ContactLineView } from "@kcdesign/data";
+import { DBL_CLICK } from "@/const";
 
 function useControllerCustom(context: Context, i18nT: Function) {
     let timer: any;
-    const duration: number = 250; // 双击判定时长 ms 
+    const duration: number = DBL_CLICK; // 双击判定时长 ms
     let isDragging = false;
     let editing: boolean = false;
     let transporter: TranslateHandler | undefined = undefined;

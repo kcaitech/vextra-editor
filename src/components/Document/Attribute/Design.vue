@@ -229,6 +229,10 @@ const need_instance_attr_show = () => {
     return v;
 }
 
+const shadowLimit = () => {
+    return shapes.value.length < 6;
+}
+
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
@@ -327,7 +331,7 @@ onUnmounted(() => {
                     :context="props.context" :trigger="reflush_trigger"></Text>
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
-                <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
+                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes" :context="props.context">
                 </Shadow>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>

@@ -87,20 +87,16 @@ class ShortcutsService {
             title: '',
             shortcutKey: [
                 { name: '显示/隐藏评论', keys: 'Shift + C' },
-
+                { name: '显示/隐藏像素网格', keys: "Ctrl + '" },
             ],
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static zoom = [
@@ -113,15 +109,11 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static text = [
@@ -136,15 +128,11 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static vector = [
@@ -156,15 +144,11 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static layer = [
@@ -212,9 +196,7 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static edit = [
@@ -222,6 +204,7 @@ class ShortcutsService {
             title: '',
             shortcutKey: [
                 { name: '复制', keys: 'Ctrl + C' },
+                { name: '复制PNG图片', keys: 'Shift + Ctrl + C' },
                 { name: '剪切', keys: 'Ctrl + X' },
                 { name: '粘贴', keys: 'Ctrl + V' },
                 { name: '粘贴并替换', keys: 'Shift + Ctrl + R' },
@@ -235,9 +218,7 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-
-            ],
+            shortcutKey: [],
         },
     ];
     static arrangement = [
