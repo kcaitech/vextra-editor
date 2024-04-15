@@ -11,7 +11,7 @@ import {
     undo,
     upper_layer,
 } from "./content";
-import { Perm, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
@@ -21,6 +21,7 @@ import { untie_instance } from "./symbol";
 import { modifyOpacity } from "./common";
 import { message } from "./message";
 import { permIsEdit } from "./permission";
+import { Menu } from "@/context/menu";
 
 // todo 键盘事件的权限处理
 
@@ -94,7 +95,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
     const isCtrl = ctrlKey || metaKey;
     if (isCtrl && shiftKey) {
         event.preventDefault();
-        copyAsPNG(context);
+        context.menu.notify(Menu.WRITE_MEDIA);
         return;
     }
     if (isCtrl && !shiftKey) {
