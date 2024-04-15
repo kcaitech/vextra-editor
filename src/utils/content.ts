@@ -1369,3 +1369,15 @@ export function copyAsPNG(context: Context) {
         message('info', '复制失败');
     }
 }
+
+/**
+ * @description 以字符串的格式传入运算表达式，返回运算结果,用于替代高危函数eval,eval可以用于任意的代码注入到程序内，并拥有开发者的权限
+ * @param str
+ */
+export function computeString(str: string) {
+    try {
+        return Function('"use strict";return (' + str + ")")();
+    } catch (e) {
+        return NaN;
+    }
+}

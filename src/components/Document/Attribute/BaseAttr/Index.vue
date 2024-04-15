@@ -22,6 +22,7 @@ import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
+import { computeString } from "@/utils/content";
 
 interface Props {
     context: Context
@@ -132,7 +133,9 @@ function _update_view() {
 const update_view = debounce(_update_view, 200, { leading: true });
 
 function changeX(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
 
     const _x: number = Number.parseFloat(value);
     if (isNaN(_x)) {
@@ -151,7 +154,7 @@ function changeX(value: string) {
 
 function changeY(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _y: number = Number.parseFloat(value);
@@ -173,7 +176,7 @@ function changeY(value: string) {
 
 function changeW(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _w: number = Number.parseFloat(value);
@@ -192,7 +195,7 @@ function changeW(value: string) {
 
 function changeH(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _h: number = Number.parseFloat(value);
@@ -262,12 +265,10 @@ function flipv() {
 }
 
 function changeR(value: string) {
-    const matchResult = value.match(/^(-?\d+)(\.\d+)?/);
-    if (!matchResult) {
-        return;
-    }
+    value = value.split('°').join(''); // 去掉单位
+
     value = Number
-        .parseFloat(matchResult[0])
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const newRotate: number = Number.parseFloat(value);
