@@ -22,6 +22,8 @@ interface Emits {
     (e: "dragging", event: MouseEvent): void;
 
     (e: "dragend"): void;
+
+    (e: "wheel", event: WheelEvent): void;
 }
 
 const props = defineProps<Props>();
@@ -88,10 +90,19 @@ function blur() {
     active.value = false;
 }
 
+function wheel(event: WheelEvent) {
+    if (!active.value) {
+        return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+
+    emits('wheel', event);
+}
 </script>
 
 <template>
-    <div :class="{'md-number-input': true, disabled, active}">
+    <div :class="{'md-number-input': true, disabled, active}" @wheel="wheel">
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }"
                   @mousedown="down"></svg-icon>
         <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"/>

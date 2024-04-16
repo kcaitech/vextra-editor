@@ -472,6 +472,47 @@ function formatRotate(rotate: number | string) {
     return rotate + `${rotate === mixed ? '' : '°'}`;
 }
 
+let handlerHolder: any = null;
+const holderTime = 520;
+
+function initHdl(event: MouseEvent, type: 'rotating' | 'translating' | 'scaling') {
+    if (lockMouseHandler || handlerHolder) {
+        return;
+    }
+
+    lockMouseHandler = new LockMouse(props.context, event);
+    lockMouseHandler.createApiCaller(type);
+}
+
+function updateHdl() {
+    if (!lockMouseHandler) {
+        return;
+    }
+
+    if (handlerHolder) {
+        clearTimeout(handlerHolder);
+    }
+
+    handlerHolder = setTimeout(() => {
+        lockMouseHandler?.fulfil();
+        lockMouseHandler = undefined;
+        handlerHolder = null;
+    }, holderTime);
+}
+
+function wheelX(event: WheelEvent) {
+    // 暂缓
+    // initHdl(event as MouseEvent, 'translating');
+    //
+    // let step = event.deltaY > 0 ? 1 : -1;
+    // if (event.shiftKey) {
+    //     step *= 10;
+    // }
+    // lockMouseHandler?.executeX(step);
+    //
+    // updateHdl();
+}
+
 function selection_change() {
     update_view();
     calc_attri();
@@ -502,6 +543,7 @@ onUnmounted(() => {
                            @dragstart="dragstart"
                            @dragging="draggingX"
                            @dragend="dragend"
+                           @wheel="wheelX"
             ></MdNumberInput>
             <MdNumberInput icon="Y"
                            draggable
