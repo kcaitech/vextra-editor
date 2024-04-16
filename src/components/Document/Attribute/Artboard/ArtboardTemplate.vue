@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { templates, TL } from "@/components/Document/Attribute/Artboard/template";
 import Folder from "@/components/Document/Attribute/Artboard/Folder.vue";
-import { ref } from "vue";
+import { onBeforeMount, onMounted, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 
@@ -13,24 +13,31 @@ const props = defineProps<Props>();
 const t = useI18n().t;
 
 const extendStatus = ref<boolean[]>([]);
-for (let i = 0; i < templates.length; i++) {
-    extendStatus.value.push(false);
-}
-extendStatus.value[0] = true;
 
 function modify(index: number) {
     extendStatus.value[index] = !extendStatus.value[index];
+    localStorage.setItem('templateStatus', JSON.stringify(extendStatus.value));
 }
 
 function action(template: TL) {
     props.context.tool.setArtboardTemp(template.width, template.height, template.name);
 }
-
+onBeforeMount(() => {
+    const templateStatus = JSON.parse(localStorage.getItem('templateStatus') || '[]') as boolean[];
+    if (templateStatus.length === templates.length) {
+        extendStatus.value = templateStatus.map(i => i);
+    } else {
+        for (let i = 0; i < templates.length; i++) {
+            extendStatus.value.push(false);
+        }
+        extendStatus.value[0] = true;
+    }
+})
 </script>
 <template>
     <div class="board-template">
         <div class="header">
-            {{ t('attr.frameSize')}}
+            {{ t('attr.frameSize') }}
         </div>
         <el-scrollbar style="height: calc(100% - 40px)">
             <Folder
