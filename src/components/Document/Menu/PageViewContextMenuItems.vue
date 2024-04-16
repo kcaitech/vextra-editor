@@ -763,10 +763,10 @@ onUnmounted(() => {
 
         .copyAs {
             position: absolute;
-            width: 174px;
+            width: 196px;
             padding: 6px 0;
             background-color: #fff;
-            left: 174px;
+            left: 194px;
             top: -6px;
             box-sizing: border-box;
             border-radius: var(--default-radius);
