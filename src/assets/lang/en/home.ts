@@ -14,6 +14,7 @@ export const system = {
     'paste_here': 'Paste Here',
     'only_text': 'Paste text',
     copy: 'Copy',
+    copyAs: 'Copy/Paste as',
     cut: 'Cut',
     replace: 'Replace',
     failed: 'Failed',
@@ -66,7 +67,9 @@ export const system = {
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
-    piexl: 'Pixel Round'
+    piexl: 'Pixel Round',
+    grid: 'Pixel grid',
+    uploadMediaFail: 'Image upload failed'
 }
 
 export const home = {
@@ -320,6 +323,7 @@ export const comment = {
     show_resolved_comments: 'Show resolved comments',
     comment_area: 'Comment section',
     input_comments: 'Input comments',
+    reply_comment: 'Reply to comment',
     check: 'check',
     a_few_reply: 'reply',
     month: 'month',
@@ -332,7 +336,10 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data',
     'not_supported1': 'The current browser does not support it, please use Ctrl C to copy',
-    'not_supported2': 'The current browser does not support it, please use ctrl X to cut'
+    'not_supported2': 'The current browser does not support it, please use ctrl X to cut',
+    'copyAsPNGSuccess': 'copied as PNG',
+    'copyAsPNGFailed': 'Failed',
+    'copyAsPNG': 'copy as PNG'
 }
 export const opacity = {
     normal: 'Normal',

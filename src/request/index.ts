@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { API_URL } from '@/utils/setting';
+import { API_URL } from '@/settings';
 import { router } from '@/router'
 import { ElMessage } from 'element-plus'
 

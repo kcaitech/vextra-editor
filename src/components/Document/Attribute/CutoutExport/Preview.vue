@@ -332,14 +332,6 @@ onUnmounted(() => {
             </div>
             <span>{{ t('cutoutExport.preview') }}</span>
         </div>
-        <!--        <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg"-->
-        <!--             xmlns:xlink="http://www.w3.org/1999/xlink"-->
-        <!--             xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width"-->
-        <!--             :height="height"-->
-        <!--             :viewBox="`${xy.x} ${xy.y} ${width} ${height}`" :style="{ 'background-color': background_color }">-->
-        <!--            <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "-->
-        <!--                       :key="c.id" :data="c"/>-->
-        <!--        </svg>-->
         <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
             :shapes="renderItems" :width="width" :height="height"></PageCard>
         <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">

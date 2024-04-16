@@ -18,9 +18,7 @@ import {
     PathShape,
     adapt2Shape,
     ShapeView,
-    BasicArray,
     TableCellType,
-    TableShape,
     Matrix,
     Page,
     Transporter
@@ -267,6 +265,19 @@ export class Clipboard {
 
         return true;
     }
+    writeBlob(blob: Blob) {
+        try {
+            if (navigator.clipboard && navigator.clipboard.write) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                return true;
+            } else {
+                throw new Error('navigator.clipboard.write is not supported');
+            }
+        } catch (e) {
+            console.log('write_png error:', e);
+            return false;
+        }
+    }
 
     cut(event: ClipboardEvent) {
         try {
@@ -370,7 +381,6 @@ export class Clipboard {
             }
 
             if (h && p) {
-                console.log('来了哥')
                 let html = await getHtmlAsync(h);
                 let text = await getTextAsync(p);
                 const firstSuccess = handle_text_html_string(this.context, html);
@@ -836,9 +846,7 @@ function encode_html(identity: string, data: any, text?: string): string {
     // btoa 作为html标签的属性，不可以有一些干扰字符，采用base64封装干扰字符
     const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
 
-    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
-
-    return html;
+    return `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
 }
 
 /**
@@ -1186,7 +1194,7 @@ function maySvgText(content: string) {
         return false;
     }
 
-    return (content.search(/<svg|<?xml/) > -1) && (new RegExp('</svg>').test(content.slice(content.length - 6).toLowerCase()));
+    return (content.search(/<svg|<?xml/img) > -1) && (new RegExp('</svg>', "img").test(content.slice(content.length - 10).toLowerCase()));
 }
 
 /**
@@ -1217,6 +1225,7 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
 }
 
 function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
+    console.log('..', maySvgText(data));
     if (maySvgText(data)) {
         return handleSvgText(context, data, _xy);
     }
