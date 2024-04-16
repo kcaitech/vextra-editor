@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import BorderCustomInput from './BorderCustomInput.vue';
-import { Border, BorderSideSetting, ShapeType, ShapeView, SideType, TableView } from '@kcdesign/data';
+import { AsyncBorderThickness, Border, BorderSideSetting, ShapeType, ShapeView, SideType, TableView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
 import { get_actions_border, get_borders_side, get_borders_side_thickness } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
+import { getSideInfo } from "./index"
 const { t } = useI18n();
 
 interface Props {
@@ -52,40 +53,7 @@ const setSideType = (type: SideType) => {
         editor.setShapesBorderSide(actions);
     }
     hidden_selection(props.context);
-}
-
-const getSideInfo = (border: Border, type: SideType) => {
-    const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
-    const max_thickness = Math.max(thicknessTop, thicknessLeft, thicknessBottom, thicknessRight)
-    switch (type) {
-        case SideType.Normal:
-            return new BorderSideSetting(type, max_thickness, max_thickness, max_thickness, max_thickness);
-        case SideType.Top:
-            return new BorderSideSetting(type, thicknessTop === 0 ? max_thickness : thicknessTop, 0, 0, 0);
-        case SideType.Left:
-            return new BorderSideSetting(type, 0, thicknessLeft === 0 ? max_thickness : thicknessLeft, 0, 0);
-        case SideType.Right:
-            return new BorderSideSetting(type, 0, 0, 0, thicknessRight === 0 ? max_thickness : thicknessRight);
-        case SideType.Bottom:
-            return new BorderSideSetting(type, 0, 0, thicknessBottom === 0 ? max_thickness : thicknessBottom, 0);
-        case SideType.Custom:
-            switch (sideType) {
-                case SideType.Top:
-                    return new BorderSideSetting(type, thicknessTop, 0, 0, 0);
-                case SideType.Left:
-                    return new BorderSideSetting(type, 0, thicknessLeft, 0, 0);
-                case SideType.Right:
-                    return new BorderSideSetting(type, 0, 0, 0, thicknessRight);
-                case SideType.Bottom:
-                    return new BorderSideSetting(type, 0, 0, thicknessBottom, 0);
-                case SideType.Normal:
-                    return new BorderSideSetting(type, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
-                default:
-                    return new BorderSideSetting(type, 0, 0, 0, 0);
-            }
-        default:
-            return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
-    }
+    getSideThickness();
 }
 
 const setSideThickness = (thickness: number, type: SideType) => {
@@ -141,6 +109,59 @@ const getSideThickness = () => {
         thickness_right.value = t('attr.more_value');
     }
 }
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+async function dragStart(e: MouseEvent, type: SideType) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement;
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true
+        })
+    }
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+    const page = props.context.selection.selectedPage;
+    borderthickness_editor = props.context.editor.controller().asyncBorderSideThickness(shapes, page!, type);
+}
+
+const dragging = (e: MouseEvent, thickness: number | string) => {
+    if (typeof thickness === 'string') return;
+    updatePosition(e.movementX, e.movementY);
+    let val = thickness + e.movementX;
+    if (val < 0) {
+        val = 0;
+    } else if (val > 300) {
+        val = 300;
+    }
+    if (borderthickness_editor) {
+        borderthickness_editor.execute(val, props.index);
+    }
+    getSideThickness();
+}
+
+const dragEnd = () => {
+    tel.value = false;
+    document.exitPointerLock();
+    if (borderthickness_editor) {
+        borderthickness_editor.close();
+        borderthickness_editor = undefined;
+    }
+}
 
 onMounted(() => {
     update_side();
@@ -186,9 +207,12 @@ onUnmounted(() => {
             <div class="border"></div>
             <div class="border-custom">
                 <BorderCustomInput ticon="top" :shadowV="thickness_top"
-                    @onChange="(v) => setSideThickness(v, SideType.Top)"></BorderCustomInput>
+                    @onChange="(v) => setSideThickness(v, SideType.Top)" @dragstart="(e) => dragStart(e, SideType.Top)"
+                    @dragging="(e) => dragging(e, thickness_top)" @dragend="dragEnd"></BorderCustomInput>
                 <BorderCustomInput ticon="bottom" :shadowV="thickness_bottom"
-                    @onChange="(v) => setSideThickness(v, SideType.Bottom)">
+                    @onChange="(v) => setSideThickness(v, SideType.Bottom)"
+                    @dragstart="(e) => dragStart(e, SideType.Bottom)" @dragging="(e) => dragging(e, thickness_bottom)"
+                    @dragend="dragEnd">
                 </BorderCustomInput>
             </div>
         </div>
@@ -196,13 +220,21 @@ onUnmounted(() => {
             <div class="border"></div>
             <div class="border-custom">
                 <BorderCustomInput ticon="left" :shadowV="thickness_left"
-                    @onChange="(v) => setSideThickness(v, SideType.Left)">
+                    @onChange="(v) => setSideThickness(v, SideType.Left)"
+                    @dragstart="(e) => dragStart(e, SideType.Left)" @dragging="(e) => dragging(e, thickness_left)"
+                    @dragend="dragEnd">
                 </BorderCustomInput>
                 <BorderCustomInput ticon="right" :shadowV="thickness_right"
-                    @onChange="(v) => setSideThickness(v, SideType.Right)">
+                    @onChange="(v) => setSideThickness(v, SideType.Right)"
+                    @dragstart="(e) => dragStart(e, SideType.Right)" @dragging="(e) => dragging(e, thickness_right)"
+                    @dragend="dragEnd">
                 </BorderCustomInput>
             </div>
         </div>
+        <teleport to="body">
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+            </div>
+        </teleport>
     </div>
 </template>
 
@@ -274,5 +306,16 @@ onUnmounted(() => {
 
 .selected {
     background-color: #FFFFFF;
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

@@ -8,6 +8,9 @@ const props = defineProps<{
 }>();
 const emits = defineEmits<{
     (e: 'onChange', value: number): void;
+    (e: 'dragstart', event: MouseEvent): void;
+    (e: 'dragging', event: MouseEvent): void;
+    (e: 'dragend'): void;
 }>();
 const input = ref<HTMLInputElement>();
 const isActived = ref(false)
@@ -46,52 +49,63 @@ const decrease = () => {
         emits('onChange', result);
     }
 }
-const curpt: { x: number } = { x: 0 };
-const _curpt: { x: number } = { x: 0 };
-const isDrag = ref(false);
+
+let isDown = false;
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
-    curpt.x = e.screenX;
-    _curpt.x = e.screenX;
-    isDrag.value = true;
+    if (input.value && isNaN(Number(input.value.value))) return;
+    if (props.disabled || e.button !== 0 || isDown) {
+        return;
+    }
+
+    isDown = true;
+    emits('dragstart', e);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('blur', windowBlur);
 }
 const onMouseMove = (e: MouseEvent) => {
-    let mx = e.screenX - curpt.x;
-    const diff = e.screenX - _curpt.x;
-    if ((diff > 3 || diff < 3) && input.value) {
-        curpt.x = e.screenX
-        let value = input.value.value;
-        if (mx > 0) {
-            if (Number(value) === 300) return;
-            const result = +value + 1;
-            emits('onChange', result);
-        } else if (mx < 0) {
-            if (Number(value) === 0) return;
-            const result = +value - 1;
-            emits('onChange', result);
-        }
-    }
+    emits('dragging', e);
 }
 const onMouseUp = (e: MouseEvent) => {
+    if (e.button !== 0) {
+        return;
+    }
     e.stopPropagation();
-    isDrag.value = false;
+    clearStatus();
+}
+
+const clearStatus = () => {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+    window.removeEventListener('blur', windowBlur);
+    isDown = false;
+    emits('dragend');
 }
+
+const windowBlur = () => {
+    clearStatus();
+}
+
 function blur2() {
     isActived.value = false
+}
+
+const getinput_value = () => {
+    if (input.value) {
+        return isNaN(Number(input.value.value)) ? true : false;
+    } else {
+        return true;
+    }
 }
 </script>
 
 <template>
     <div class="input-container" :class="{ actived: isActived }">
-        <div class="icon" ref="icon" @mousedown="onMouseDown">
+        <div class="icon" :class="{ cursor_pointer: getinput_value() }" ref="icon" @mousedown="onMouseDown">
             <svg-icon :icon-class="`border-${ticon}`"></svg-icon>
         </div>
-        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange"
-            @blur="blur2">
+        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
                 @click="augment"></svg-icon>
@@ -116,16 +130,22 @@ function blur2() {
     border-radius: var(--default-radius);
 
     .icon {
+        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
         flex-shrink: 0;
         width: 16px;
         height: 16px;
         font-family: HarmonyOS Sans;
         font-size: 12px;
         color: #8C8C8C;
+
         svg {
             width: 16px;
             height: 16px;
         }
+    }
+
+    .cursor_pointer {
+        cursor: default !important;
     }
 
     input {
