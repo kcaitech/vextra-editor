@@ -76,6 +76,11 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
         select_all(context);
         return;
     }
+    if (permIsEdit(context)) {
+        event.preventDefault();
+        context.tool.setAction(Action.AddFrame); // 容器工具
+        return;
+    }
 }
 
 keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {

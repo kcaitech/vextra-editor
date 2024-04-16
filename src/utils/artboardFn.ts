@@ -94,12 +94,14 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
                 m.trans(root.width / 2, root.height / 2);
             }
             workspace.matrix.reset(m);
-            const timer = setTimeout(() => {
-                selection.selectShape(shape);
-                context.tool.setTitleVisible(true);
-                pageViewEl.classList.remove('transition-400');
-                clearTimeout(timer);
-            }, 400);
+            selection.selectShape(shape);
+            context.tool.setTitleVisible(true);
+            // const timer = setTimeout(() => {
+            //     selection.selectShape(shape);
+            //     context.tool.setTitleVisible(true);
+            //     pageViewEl.classList.remove('transition-400');
+            //     clearTimeout(timer);
+            // }, 400);
         } else {
             workspace.matrix.trans(transX, transY);
         }

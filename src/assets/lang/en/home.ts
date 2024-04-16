@@ -307,6 +307,7 @@ export const attr: any = {
     path: 'Path',
     independentCorners: 'Independent corners',
     constrainProportions: 'Constrain proportions',
+    frameSize: 'Frame'
 }
 
 export const login = {

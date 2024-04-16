@@ -2,9 +2,8 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import { ShapeView, TextShapeView, TableView, SymbolRefView, TableCellView, PageView, GroupShapeView } from "@kcdesign/data"
-import { ShapeType } from "@kcdesign/data"
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -24,6 +23,8 @@ import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/ut
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
 import { flattenShapes } from '@/utils/cutout';
+import ArtboardTemplate from "@/components/Document/Attribute/Artboard/ArtboardTemplate.vue";
+import { Action, Tool } from "@/context/tool";
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -102,6 +103,8 @@ const reflush_by_shapes = ref<number>(0);
 const reflush = ref<number>(0);
 const reflush_trigger = ref<any[]>([]);
 const reflush_cells_trigger = ref<any[]>([]);
+
+const frame = ref<boolean>(false);
 
 // 图层选区变化
 function _selection_change() {
@@ -275,10 +278,16 @@ function watch_cells() {
     })
 }
 
+function toolWatcher(t: number) {
+    if (t === Tool.CHANGE_ACTION) {
+        frame.value = props.context.tool.action === Action.AddFrame;
+    }
+}
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
+    props.context.tool.watch(toolWatcher);
     _selection_change();
     table_selection_change();
     watch_shapes();
@@ -288,6 +297,7 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
+    props.context.tool.unwatch(toolWatcher);
     watchedShapes.forEach(v => {
         v.unwatch(update_by_shapes);
     });
@@ -336,6 +346,7 @@ onUnmounted(() => {
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
         </el-scrollbar>
+        <artboard-template v-if="frame" :context="props.context"></artboard-template>
     </section>
 </template>
 
