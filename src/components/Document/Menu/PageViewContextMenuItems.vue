@@ -489,7 +489,7 @@ onUnmounted(() => {
              @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon icon-class="down"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site"
+            <ContextMenu v-if="layerSubMenuVisiable" :width="196" ref="contextMenuEl" :site="site"
                          :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
