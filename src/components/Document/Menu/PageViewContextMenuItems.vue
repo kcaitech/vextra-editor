@@ -584,17 +584,17 @@ onUnmounted(() => {
         </div>
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
-        <div class="item" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
+        <div class="check" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
              @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'"
                       v-show="isCursor"></svg-icon>
-            <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
+            <span>{{ t('system.show_many_cursor') }}</span>
         </div>
-        <div class="item" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
+        <div class="check" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
              @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'"
                       v-show="isComment"></svg-icon>
-            <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
+            <span>{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
@@ -610,7 +610,7 @@ onUnmounted(() => {
             <span>{{ t('system.show_pixel_network') }}</span>
             <span></span>
         </div>
-        <div class="item" v-if="props.items.includes('operation')" @click="operation">
+        <div class="check" v-if="props.items.includes('operation')" @click="operation">
             <span>{{ t('system.hide_operation_interface') }}</span>
             <span class="shortkey">
                 <Key code="Ctrl(Shift) \"></Key>
@@ -700,10 +700,10 @@ onUnmounted(() => {
                 <Key code="Shift Ctrl L"></Key>
             </span>
         </div>
-        <div class="item" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
+        <div class="check" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
              @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
-            <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
+            <span>{{ t('system.artboart_title_visible') }}</span>
         </div>
         <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
     </div>
@@ -713,6 +713,28 @@ onUnmounted(() => {
     width: 100%;
     font-size: var(--font-default-fontsize);
 
+    .check {
+        position: relative;
+        width: 100%;
+        height: 32px;
+        padding: 9px 28px;
+        box-sizing: border-box;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        svg {
+            position: absolute;
+            left: 8px;
+            width: 12px;
+            height: 12px;
+        }
+    }
+    .check:hover {
+        background-color: #1878F5;
+        color: #fff;
+    }
     .item {
         position: relative;
         width: 100%;
