@@ -123,7 +123,7 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 }
 
 .level-aligning {
-    box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     padding: 0 5px;
 }
 

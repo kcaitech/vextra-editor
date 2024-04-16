@@ -79,7 +79,7 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
         context.tool.setTitleVisible(false);
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
+            // pageViewEl.classList.add('transition-400');
             const m = new Matrix(workspace.matrix);
             m.trans(transX, transY);
             const root = workspace.root;

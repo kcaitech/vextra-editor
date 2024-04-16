@@ -1366,7 +1366,7 @@ onUnmounted(() => {
     .popover {
         position: fixed;
         background-color: #ffffff;
-        box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
         overflow: hidden;

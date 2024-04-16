@@ -318,7 +318,7 @@ onUnmounted(() => {
     height: 32px;
     border-radius: 4px;
     background-color: #fff;
-    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     z-index: 10000;
 
     .tip {
