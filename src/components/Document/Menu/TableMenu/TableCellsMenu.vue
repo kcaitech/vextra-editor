@@ -10,6 +10,7 @@ import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
 import { get_fills } from '@/utils/shape_style';
 import { TableSelection } from '@/context/tableselection';
+import { hidden_selection } from "@/utils/content";
 interface Props {
     context: Context
     position: { x: number, y: number }
@@ -48,6 +49,7 @@ const getColorFromPicker = (c: Color) => {
         const editor = props.context.editor4Table(shape as TableView)
         const fill = new Fill(new BasicArray(), uuid(), true, FillType.SolidColor, c);
         editor.addFill4Cell(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }, true);
+        hidden_selection(props.context);
     }
     nextTick(() => {
         getCellsFormat();
