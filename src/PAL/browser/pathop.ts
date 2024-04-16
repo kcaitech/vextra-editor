@@ -182,10 +182,9 @@ export function noneZero2evenOdd(path: string): string {
     if (!_ck) throw Error("Not init");
     const p0: PathKitPath = _ck.FromSVGString(path);
     p0.setFillType(FillType.WINDING);
-    const p1 = p0.simplify();
+    const p1 = p0.simplify(); // return this
     const ret = p1 ? p1.toSVGString() : "";
     p0.delete();
-    p1?.delete();
     return ret;
 }
 
@@ -208,9 +207,9 @@ export class PalPath implements IPalPath {
         return this._path.op((path)._path, _ck.PathOp.UNION);
     }
     stroke(ops?: StrokeOpts) {
-        const path = this._path.stroke(ops);
-        if (path) return path.toSVGString();
-        return "";
+        const path = this._path.stroke(ops); // return this
+        const ret = path ? path.toSVGString() : "";
+        return ret;
     }
     addPath(path: PalPath): boolean {
         this._path.addPath(path._path);
