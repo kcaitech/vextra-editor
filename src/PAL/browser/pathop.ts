@@ -46,7 +46,29 @@ interface PathKit {
     FromSVGString(str: string): PathKitPath
 }
 
+// enum class SkPathFillType {
+//     /** Specifies that "inside" is computed by a non-zero sum of signed edge crossings */
+//     kWinding,
+//     /** Specifies that "inside" is computed by an odd number of edge crossings */
+//     kEvenOdd,
+//     /** Same as Winding, but draws outside of the path, rather than inside */
+//     kInverseWinding,
+//     /** Same as EvenOdd, but draws outside of the path, rather than inside */
+//     kInverseEvenOdd
+// };
 
+// enum_<SkPathFillType>("FillType")
+// .value("WINDING",            SkPathFillType::kWinding)
+// .value("EVENODD",            SkPathFillType::kEvenOdd)
+// .value("INVERSE_WINDING",    SkPathFillType::kInverseWinding)
+// .value("INVERSE_EVENODD",    SkPathFillType::kInverseEvenOdd);
+
+enum FillType {
+    "WINDING",
+    "EVENODD",
+    "INVERSE_WINDING",
+    "INVERSE_EVENODD"
+}
 
 interface StrokeOpts {
     // Default values are set in chaining.js which allows clients
@@ -65,6 +87,8 @@ interface PathKitPath {
     delete(): void;
     addPath(otherPath: PathKitPath): PathKitPath;
     stroke(ops?: StrokeOpts): PathKitPath | null;
+    setFillType(type: FillType): void;
+    simplify(): PathKitPath | null;
 }
 
 //     // Stroke
@@ -153,6 +177,16 @@ export function union(path0: string, path1: string): string {
 }
 export function stroke(ops?: StrokeOpts): string {
     throw new Error("not implemented")
+}
+export function noneZero2evenOdd(path: string): string {
+    if (!_ck) throw Error("Not init");
+    const p0: PathKitPath = _ck.FromSVGString(path);
+    p0.setFillType(FillType.WINDING);
+    const p1 = p0.simplify();
+    const ret = p1 ? p1.toSVGString() : "";
+    p0.delete();
+    p1?.delete();
+    return ret;
 }
 
 export class PalPath implements IPalPath {
