@@ -376,7 +376,7 @@ onUnmounted(() => {
     </g>
     <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)"
        @mousemove="cornerMove" @mouseenter="point_mouseenter" @mouseleave="point_mouseleave">
-        <rect x="0" y="0" width="12" height="12" rx="2" ry="2" fill="#1878f5" stroke="none">
+        <rect x="0" y="0" width="12" height="12" rx="2" ry="2" fill="transparent" stroke="none">
         </rect>
     </g>
 </template>
