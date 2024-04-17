@@ -15,7 +15,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { forbidden_to_modify_frame } from '@/utils/common';
-import { get_transform } from './common';
+import { get_transform, modify_rotate_before_set } from './common';
 import { TranslateHandler } from '@/transform/translate';
 
 interface Props {
@@ -67,11 +67,16 @@ function update_transform() {
     }
 
     let t1 = `translate(${lt.x}px, ${lt.y}px) `;
-    t1 += mt, t1 += `translate(${offest - 18}px, ${offest - 18}px) `;
-    let t2 = `translate(${rb.x}px, ${rb.y}px) `;
-    t2 += mt, t2 += `translate(${offest + 2}px, ${offest + 2}px) `;
+    t1 += mt;
+    t1 += `translate(${offest - 18}px, ${offest - 18}px) `;
 
-    transform.value = t1, transform2.value = t2;
+    let t2 = `translate(${rb.x}px, ${rb.y}px) `;
+    t2 += mt;
+    t2 += `translate(${offest - 4}px, ${offest - 4}px) `;
+
+    transform.value = t1;
+    transform2.value = t2;
+
     const root = props.context.workspace.root;
 
     props.context.selection.setArea([
@@ -281,6 +286,11 @@ function modify_fix_y(p2: PageXY, fix: number) {
     pre_target_y = fix;
 }
 
+function cornerMove(event: MouseEvent) {
+    if (event.buttons === 0) {
+        event.stopPropagation();
+    }
+}
 // #endregion
 
 function window_blur() {
@@ -312,6 +322,27 @@ function workspace_watcher(t: number, param1: MouseEvent) {
     }
 }
 
+let need_reset_cursor_after_transform = true;
+
+function point_mouseenter() {
+    setCursor();
+    need_reset_cursor_after_transform = false;
+}
+
+function point_mouseleave() {
+    need_reset_cursor_after_transform = true;
+    props.context.cursor.reset();
+}
+
+function setCursor() {
+    const cursor = props.context.cursor;
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
+    let deg = rotate;
+    deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
+
+    cursor.setType('scale', deg);
+}
+
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -334,22 +365,19 @@ onUnmounted(() => {
     <g :style="{ transform }" @mousedown.stop="(e: MouseEvent) => down(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#1878f5" fill-opacity="0.45" stroke="none">
         </rect>
-        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
-             y="3px">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M2 0H16C17.1046 0 18 0.89543 18 2V16C18 17.1046 17.1046 18 16 18H2C0.89543 18 0 17.1046 0 16V2C0 0.89543 0.89543 0 2 0Z"
+                  fill="#99BDF6"/>
             <path
-                d="M0 0h256v256H0V0z m384 0h256v256h-256V0zM768 0H1024v256h-256V0zM0 768h256V1024H0v-256z m384 0h256V1024h-256v-256z m384 0H1024V1024h-256v-256zM0 384h256v256H0v-256z m384 0h256v256h-256v-256z m384 0H1024v256h-256v-256z"
-                fill="#1878f5"></path>
+                d="M9 16C8.91684 15.999 8.83469 15.9817 8.75818 15.9491C8.68007 15.9188 8.6087 15.8734 8.54818 15.8155L6.63909 13.9064C6.38956 13.6568 6.38956 13.2523 6.63909 13.0027C6.88862 12.7532 7.2932 12.7532 7.54273 13.0027L8.36364 13.83V9.63636H4.17L4.99727 10.4573C5.2468 10.7068 5.2468 11.1114 4.99727 11.3609C4.74774 11.6104 4.34317 11.6104 4.09364 11.3609L2.18455 9.45182C2.12661 9.3913 2.0812 9.31993 2.05091 9.24182C2.0183 9.16531 2.00101 9.08316 2 9C2.00101 8.91684 2.0183 8.83469 2.05091 8.75818C2.0812 8.68007 2.12661 8.6087 2.18455 8.54818L4.09364 6.63909C4.34317 6.38956 4.74774 6.38956 4.99727 6.63909C5.2468 6.88862 5.2468 7.2932 4.99727 7.54273L4.17 8.36364H8.36364V4.17L7.54273 4.99727C7.2932 5.2468 6.88862 5.2468 6.63909 4.99727C6.38956 4.74774 6.38956 4.34317 6.63909 4.09364L8.54818 2.18455C8.6087 2.12661 8.68007 2.0812 8.75818 2.05091C8.83469 2.0183 8.91684 2.00101 9 2C9.08316 2.00101 9.16531 2.0183 9.24182 2.05091C9.31993 2.0812 9.3913 2.12661 9.45182 2.18455L11.3609 4.09364C11.6104 4.34317 11.6104 4.74774 11.3609 4.99727C11.1114 5.2468 10.7068 5.2468 10.4573 4.99727L9.63636 4.17V8.36364H13.83L13.0027 7.54273C12.7532 7.2932 12.7532 6.88862 13.0027 6.63909C13.2523 6.38956 13.6568 6.38956 13.9064 6.63909L15.8155 8.54818C15.8734 8.6087 15.9188 8.68007 15.9491 8.75818C15.9817 8.83469 15.999 8.91684 16 9C15.999 9.08316 15.9817 9.16531 15.9491 9.24182C15.9188 9.31993 15.8734 9.3913 15.8155 9.45182L13.9064 11.3609C13.6568 11.6104 13.2523 11.6104 13.0027 11.3609C12.7532 11.1114 12.7532 10.7068 13.0027 10.4573L13.83 9.63636H9.63636V13.83L10.4573 13.0027C10.7068 12.7532 11.1114 12.7532 11.3609 13.0027C11.6104 13.2523 11.6104 13.6568 11.3609 13.9064L9.45182 15.8155C9.3913 15.8734 9.31993 15.9188 9.24182 15.9491C9.16531 15.9817 9.08316 15.999 9 16Z"
+                fill="#1778F6"/>
         </svg>
     </g>
-    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)">
-        <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#1878f5" fill-opacity="0.45" stroke="none">
+    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)"
+       @mousemove="cornerMove" @mouseenter="point_mouseenter" @mouseleave="point_mouseleave">
+        <rect x="0" y="0" width="12" height="12" rx="2" ry="2" fill="#1878f5" stroke="none">
         </rect>
-        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3"
-             y="3">
-            <path fill="#1878f5"
-                  d="M927.232 689.664a25.6 25.6 0 0 0-29.184 5.888l-64.512 64.256-244.736-245.76 246.016-245.504L898.304 332.8c5.888 5.888 11.776 5.888 23.296 5.888h5.888c11.776 0 17.664-11.776 17.664-23.296l64.512-269.056a52.736 52.736 0 0 0-5.888-29.184C998.4 5.376 986.368 5.376 974.592 11.264l-269.056 64c-11.776 0-17.664 11.776-23.296 17.408a43.776 43.776 0 0 0 5.888 29.184l64.256 64.512-246.016 245.504-222.208-222.464 58.624-46.848a37.888 37.888 0 0 0 11.776-29.184c0-11.776-11.776-17.664-17.408-23.296L73.728 22.272c-11.776-5.888-17.664 0-29.184 5.888a44.8 44.8 0 0 0-11.776 29.184L73.472 332.8c0 11.776 5.888 17.664 17.408 23.296H102.4a21.504 21.504 0 0 0 17.664-5.888l76.8-64.256 227.84 228.352-222.976 221.696-46.592-58.624A44.8 44.8 0 0 0 125.696 665.6c-11.776 0-17.664 11.776-23.296 17.408L14.336 947.2c-5.888 11.776 0 17.664 5.888 29.184a30.464 30.464 0 0 0 23.296 11.776h5.888L324.352 947.2c11.776 0 17.664-5.888 23.296-17.408a25.6 25.6 0 0 0-5.888-29.184l-64.256-76.8 228.352-227.84 245.504 246.016-64.512 64.256a25.6 25.6 0 0 0-5.888 29.184c5.888 11.776 11.776 17.664 23.296 17.664L972.8 1017.344h5.888c5.888 0 17.664-5.888 23.296-5.888a25.6 25.6 0 0 0 5.888-29.184L944.64 713.216c0-11.776-11.776-17.664-17.408-23.296z">
-            </path>
-        </svg>
     </g>
 </template>
 <style lang='scss' scoped>
