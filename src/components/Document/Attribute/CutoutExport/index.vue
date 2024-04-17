@@ -433,8 +433,6 @@ const getExportUrl = async () => {
             (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                 const id = shape.id + format.id;
                 const { width, height } = svg.viewBox.baseVal
-                console.log(width, height);
-                
                 svg.setAttribute("width", `${width * format.scale}`);
                 svg.setAttribute("height", `${height * format.scale}`);
                 let promise: Promise<void> = Promise.resolve();

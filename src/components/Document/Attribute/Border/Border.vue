@@ -302,8 +302,6 @@ function onAlphaChange(b: Border, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
-            console.log(borders, 'borders');
-
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -824,8 +822,8 @@ function setThickness(e: Event, id: number) {
     reflush_side.value++;
 }
 
-const thickness_value = (index: number) => {
-    if (typeof getSideThickness(borders[index].border.sideSetting) === 'boolean') {
+const thickness_value = (index: number, idx: number) => {
+    if (typeof getSideThickness(borders[idx].border.sideSetting) === 'boolean') {
         return t('attr.mixed')
     } else {
         let result = [];
@@ -912,9 +910,9 @@ const thickness_value = (index: number) => {
                     <div class="thickness-container" style=" flex: calc(50% - 20px);"
                         :class="{ actived: isActived === idx }">
                         <svg-icon icon-class="thickness"
-                            :class="{ cursor_pointer: typeof thickness_value(idx) === 'string' }"
+                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
                             @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
-                        <input ref="borderThickness" type="text" :value="thickness_value(idx)"
+                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
                             @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
                             @focus="selectBorderThicknes($event, idx)">
                     </div>

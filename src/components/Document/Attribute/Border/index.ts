@@ -62,7 +62,7 @@ export function get_actions_border_side_info(shapes: ShapeView[], index: number,
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = info;
-        const data = new BorderSideSetting(sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop);
+        const data = new BorderSideSetting(sideType, thicknessTop, thicknessLeft, thicknessBottom, thicknessRight);
         actions.push({ target: (shapes[i]), index, value: data });
     }
     return actions;

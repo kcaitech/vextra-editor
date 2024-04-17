@@ -110,6 +110,8 @@ function popoverClose() {
 function menu_watcher(t: number) {
     if (t === Menu.SHUTDOWN_POPOVER) {
         popoverClose();
+    } else if(t === Menu.UPDATE_LOCATE) {
+        locate();
     }
 }
 
