@@ -36,6 +36,11 @@ export function union(path0: string, path1: string): string {
 export function stroke(ops?: StrokeOpts): string {
     throw new Error("not implemented")
 }
+export function noneZero2evenOdd(path: string): string {
+    const p0: Path2D = new Path2D(path);
+    p0.simplify("nonzero");
+    return p0.d;
+}
 
 export class PalPath implements IPalPath {
     private _path: Path2D;
@@ -59,7 +64,9 @@ export class PalPath implements IPalPath {
         return true;
     }
     stroke(ops?: StrokeOpts): string {
-        throw new Error("not implemented")
+        // todo
+        // throw new Error("not implemented")
+        return this.toSVGString();
     }
     addPath(path: PalPath): boolean {
         this._path.addPath(path._path);
