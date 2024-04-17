@@ -315,6 +315,9 @@ const getUserInfo = async () => {
     }
 }
 
+type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -377,7 +380,9 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const document = await importDocument(storage, path, "", versionId, repo)
+        const d = await importDocument(storage, path, "", versionId, repo);
+        const document = d.document;
+        documentLoader = d.loader;
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
@@ -405,6 +410,7 @@ const getDocumentInfo = async () => {
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
             switchPage(page?.id || context!.data.pagesList[0]?.id);
+            updateDocumentKeyTimer = setInterval(updateDocumentKey, 1000 * 60 * 30); // 30分钟更新一次文档密钥
         }
     } catch (err) {
         loading.value = false;
@@ -413,6 +419,30 @@ const getDocumentInfo = async () => {
         throw err;
     }
 }
+
+async function updateDocumentKey() {
+    if (!documentLoader) return;
+    const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    if (docKeyRes.code !== 0) return;
+    const docKeyData = docKeyRes.data;
+    const storageOptions: StorageOptions = {
+        endPoint: docKeyData.endpoint,
+        region: docKeyData.region,
+        accessKey: docKeyData.access_key,
+        secretKey: docKeyData.secret_access_key,
+        sessionToken: docKeyData.session_token,
+        bucketName: docKeyData.bucket_name,
+    }
+    let storage: IStorage;
+    if (docKeyData.provider === "oss") {
+        storage = new OssStorage(storageOptions);
+    } else {
+        storage = new S3Storage(storageOptions);
+    }
+    documentLoader.setStorage(storage);
+}
+
+let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
 
 async function upload(projectId: string) {
     const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
@@ -724,6 +754,7 @@ onUnmounted(() => {
     context?.component.unwatch(component_watcher);
     uninstall_keyboard_units();
     stop();
+    clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
 })
 </script>
 
