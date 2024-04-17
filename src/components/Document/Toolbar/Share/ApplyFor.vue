@@ -20,7 +20,7 @@ const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, 
 const teamPermission = ref([`${t('share.readOnly')}`, `${t('share.editable')}`]);
 const getApplyList = async (time?: number) => {
   try {
-    const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
+    const { data } = await share_api.getApplyListAPI({ start_time: time })
     if (data) applyList.value = [...applyList.value, ...data]
   } catch (e) {
     console.log(e)

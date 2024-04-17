@@ -768,7 +768,8 @@ function onMouseMove(e: MouseEvent) {
     const shape = shapes[0];
     const table = props.context.tableSelection;
     if (borderThickness.value?.length) {
-        const thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
+        let thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
+        if(thickness > 300) thickness = 300;
         if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
             bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
         } else {
@@ -799,11 +800,12 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function setThickness(e: Event, id: number) {
-    const thickness = Number((e.target as HTMLInputElement).value);
+    let thickness = Number((e.target as HTMLInputElement).value);
     if (isNaN(thickness)) return;
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
+    if(thickness > 300) thickness = 300;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {

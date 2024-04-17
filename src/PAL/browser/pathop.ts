@@ -23,6 +23,17 @@ enum PathKitOp {
     XOR,
     REVERSE_DIFFERENCE,
 }
+enum Join {
+    "MITER",
+    "ROUND",
+    "BEVEL"
+}
+
+enum Cap {
+    "BUTT",
+    "ROUND",
+    "SQUARE",
+}
 
 interface PathKit {
     PathOp: {
@@ -35,12 +46,46 @@ interface PathKit {
     FromSVGString(str: string): PathKitPath
 }
 
+
+
+interface StrokeOpts {
+    // Default values are set in chaining.js which allows clients
+    // to set any number of them. Otherwise, the binding code complains if
+    // any are omitted.
+    width?: number;
+    miter_limit?: number;
+    res_scale?: number;
+    join?: Join;
+    cap?: Cap;
+}
+
 interface PathKitPath {
     toSVGString(): string;
     op(path: PathKitPath, op: PathKitOp): boolean;
     delete(): void;
     addPath(otherPath: PathKitPath): PathKitPath;
+    stroke(ops?: StrokeOpts): PathKitPath | null;
 }
+
+//     // Stroke
+// enum_<SkPaint::Join>("StrokeJoin")
+//     .value("MITER", SkPaint::Join::kMiter_Join)
+//     .value("ROUND", SkPaint::Join::kRound_Join)
+//     .value("BEVEL", SkPaint::Join::kBevel_Join);
+
+// enum_<SkPaint::Cap>("StrokeCap")
+//     .value("BUTT",   SkPaint::Cap::kButt_Cap)
+//     .value("ROUND",  SkPaint::Cap::kRound_Cap)
+//     .value("SQUARE", SkPaint::Cap::kSquare_Cap);
+
+// value_object<StrokeOpts>("StrokeOpts")
+//     .field("width",       &StrokeOpts::width)
+//     .field("miter_limit", &StrokeOpts::miter_limit)
+//     .field("res_scale",   &StrokeOpts::res_scale)
+//     .field("join",        &StrokeOpts::join)
+//     .field("cap",         &StrokeOpts::cap);
+
+
 
 let _ck: PathKit;
 export async function init() {
@@ -106,6 +151,9 @@ export function union(path0: string, path1: string): string {
     console.log("union op failed")
     return "";
 }
+export function stroke(ops?: StrokeOpts): string {
+    throw new Error("not implemented")
+}
 
 export class PalPath implements IPalPath {
     private _path: PathKitPath;
@@ -124,6 +172,11 @@ export class PalPath implements IPalPath {
     }
     union(path: PalPath): boolean {
         return this._path.op((path)._path, _ck.PathOp.UNION);
+    }
+    stroke(ops?: StrokeOpts) {
+        const path = this._path.stroke(ops);
+        if (path) return path.toSVGString();
+        return "";
     }
     addPath(path: PalPath): boolean {
         this._path.addPath(path._path);

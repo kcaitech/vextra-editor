@@ -17,6 +17,7 @@ import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
 import BorderSideSelected from './BorderSideSelected.vue';
+import { can_custom } from "./index"
 
 interface Props {
     context: Context
@@ -109,7 +110,7 @@ const update_corner = () => {
     is_corner.value = s.every(s => s.type === ShapeType.Line || s.type === ShapeType.Contact);
     if (is_corner.value) return;
     is_border_custom.value = s.some(s => {
-        return s.type === ShapeType.Rectangle || s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef
+        return can_custom.includes(s.type) && !s.data.haveEdit;
     });
     const actions = get_borders_corner(s, props.index);
     if (actions) {
@@ -155,7 +156,7 @@ onUnmounted(() => {
                     </div>
                     <BorderSideSelected v-if="is_border_custom" :border="props.border" :index="props.index" :context="context" :reflush_side="reflush_side"></BorderSideSelected>
                     <div class="corner-style" v-if="!is_corner">
-                        <div class="corner">边角</div>
+                        <div class="corner">{{t('attr.corner')}}</div>
                         <div class="corner-select">
                             <div class="miter" :class="{ selected: selected === CornerType.Miter }"
                                 @click="setCornerType(CornerType.Miter)" style="margin-right: 5px;">

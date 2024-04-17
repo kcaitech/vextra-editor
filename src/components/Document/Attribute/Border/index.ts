@@ -1,5 +1,5 @@
-import { Border, BorderSideSetting, SideType } from "@kcdesign/data";
-
+import { BatchAction, Border, BorderSideSetting, ShapeType, ShapeView, SideType } from "@kcdesign/data";
+export const can_custom = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion];
 export const getSideThickness = (side: BorderSideSetting): number | false => {
     const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = side;
     switch (sideType) {
@@ -55,4 +55,30 @@ export const getSideInfo = (border: Border, type: SideType) => {
         default:
             return new BorderSideSetting(SideType.Normal, 0, 0, 0, 0);
     }
+}
+
+export function get_actions_border_side_info(shapes: ShapeView[], index: number, info: BorderSideSetting) {
+    const actions: BatchAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const { sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop } = info;
+        const data = new BorderSideSetting(sideType, thicknessBottom, thicknessLeft, thicknessRight, thicknessTop);
+        actions.push({ target: (shapes[i]), index, value: data });
+    }
+    return actions;
+}
+
+export function get_borders_side_thickness(shapes: ShapeView[], index: number) {
+    const styleborders = shapes[0].getBorders() || [];
+    const b = styleborders[index].sideSetting;
+    let side: (number | false)[] = [b.thicknessTop, b.thicknessRight, b.thicknessBottom, b.thicknessLeft];
+    for (let i = 1; i < shapes.length; i++) {
+        const borders = shapes[i].getBorders() || [];
+        const { thicknessTop, thicknessRight, thicknessBottom, thicknessLeft } = borders[index].sideSetting;
+        if (b.thicknessTop !== thicknessTop) side[0] = false;
+        if (b.thicknessRight !== thicknessRight) side[1] = false;
+        if (b.thicknessBottom !== thicknessBottom) side[2] = false;
+        if (b.thicknessLeft !== thicknessLeft) side[3] = false;
+    }
+    return side;
 }

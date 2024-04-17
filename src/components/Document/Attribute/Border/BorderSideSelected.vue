@@ -4,11 +4,11 @@ import BorderCustomInput from './BorderCustomInput.vue';
 import { AsyncBorderThickness, Border, BorderSideSetting, ShapeType, ShapeView, SideType, TableView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { flattenShapes } from '@/utils/cutout';
-import { get_actions_border, get_borders_side, get_borders_side_thickness } from '@/utils/shape_style';
+import { get_actions_border, get_borders_side } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { hidden_selection } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
-import { getSideInfo } from "./index"
+import { can_custom, getSideInfo, get_actions_border_side_info, get_borders_side_thickness } from "./index"
 const { t } = useI18n();
 
 interface Props {
@@ -28,7 +28,7 @@ const thickness_left = ref<number | string>(0);
 
 const update_side = () => {
     const selected = props.context.selection.selectedShapes;
-    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group && (s.type === ShapeType.Rectangle || s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef));
+    const s = flattenShapes(selected).filter(s => s.type !== ShapeType.Group && can_custom.includes(s.type) && !s.data.haveEdit);
     if (!s.length) return;
     shapes.value = s;
     const action = get_borders_side(s, props.index);
@@ -47,7 +47,7 @@ const setSideType = (type: SideType) => {
     const border = shapes.value[0].style.borders[props.index];
     const data = getSideInfo(border, type)
     if (!data) return;
-    const actions = get_actions_border(shapes.value, props.index, data);
+    const actions = get_actions_border_side_info(shapes.value, props.index, data);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
         editor.setShapesBorderSide(actions);
@@ -96,18 +96,10 @@ watch(() => props.reflush_side, () => {
 const getSideThickness = () => {
     if (!shapes.value) return;
     const side = get_borders_side_thickness(shapes.value, props.index)
-    if (side) {
-        const { thicknessTop, thicknessLeft, thicknessBottom, thicknessRight } = side;
-        thickness_bottom.value = thicknessBottom;
-        thickness_top.value = thicknessTop;
-        thickness_left.value = thicknessLeft;
-        thickness_right.value = thicknessRight;
-    } else {
-        thickness_bottom.value = t('attr.more_value');
-        thickness_top.value = t('attr.more_value');
-        thickness_left.value = t('attr.more_value');
-        thickness_right.value = t('attr.more_value');
-    }
+    thickness_top.value = side[0] ? side[0] : t('attr.more_value');
+    thickness_right.value = side[1] ? side[1] : t('attr.more_value');
+    thickness_bottom.value = side[2] ? side[2] : t('attr.more_value');
+    thickness_left.value = side[3] ? side[3] : t('attr.more_value');
 }
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
@@ -176,7 +168,7 @@ onUnmounted(() => {
 <template>
     <div class="container">
         <div class="border-style" style="margin-bottom: 6px;">
-            <div class="border">单边</div>
+            <div class="border">{{ t('attr.unilateral') }}</div>
             <div class="border-select">
                 <div class="all" :class="{ selected: select_side === SideType.Normal }"
                     @click="setSideType(SideType.Normal)">
