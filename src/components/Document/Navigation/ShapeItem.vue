@@ -124,7 +124,6 @@ const onRename = () => {
     if (is_state(props.data.shapeview())
         || !isEdit.value
         || props.data.context.tool.isLable
-        || props.data.shape().isVirtualShape
     ) {
         return;
     }

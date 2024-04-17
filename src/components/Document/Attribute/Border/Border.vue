@@ -1,7 +1,21 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import {
+    BasicArray,
+    AsyncBorderThickness,
+    GradientType,
+    GroupShapeView,
+    Shape,
+    ShapeType,
+    ShapeView,
+    Stop,
+    TableCell,
+    TableCellView,
+    TableShape,
+    TableView,
+    adapt2Shape
+} from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -32,7 +46,11 @@ import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
 import { genOptions } from '@/utils/common';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
-import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style'
+import {
+    get_actions_border_thickness,
+    get_actions_border_position,
+    get_actions_border_style
+} from '@/utils/shape_style'
 
 
 interface BorderItem {
@@ -73,6 +91,7 @@ const positonOptionsSource: SelectSource[] = genOptions([
 ]);
 const isActived = ref(-1)
 const borderThickness = ref<HTMLInputElement[] | undefined>();
+
 function watchShapes() {
     const needWatchShapes = new Map();
     const selectedShapes = props.context.selection.selectedShapes;
@@ -155,7 +174,6 @@ function updateData() {
 }
 
 function addBorder() {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle);
@@ -193,7 +211,6 @@ function first() {
 
 function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -215,7 +232,6 @@ function deleteBorder(idx: number) {
 }
 
 function toggleVisible(idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
     const _idx = borders.length - idx - 1;
@@ -238,6 +254,7 @@ function toggleVisible(idx: number) {
     }
     hidden_selection(props.context);
 }
+
 const colorValue = ref('');
 const alphaValue = ref('');
 const tableSelect = ref({
@@ -247,6 +264,7 @@ const tableSelect = ref({
     tableColStart: props.context.tableSelection.tableColStart,
     tableColEnd: props.context.tableSelection.tableColEnd
 });
+
 function onColorChange(e: Event, idx: number) {
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
@@ -267,12 +285,10 @@ function onColorChange(e: Event, idx: number) {
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
     setColor(idx, color);
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     hidden_selection(props.context);
 }
 
 function onAlphaChange(b: Border, idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let alpha: any = alphaValue.value;
     if (!alphaBorder.value) return;
     if (alpha.slice(-1) === '%') {
@@ -299,7 +315,7 @@ function onAlphaChange(b: Border, idx: number) {
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
             console.log(borders, 'borders');
-            
+
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -445,7 +461,7 @@ const filterAlpha = (border: Border) => {
 
 /**
  * @description 翻转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_reverse(idx: number) {
     const _idx = borders.length - idx - 1;
@@ -456,9 +472,10 @@ function gradient_reverse(idx: number) {
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
     editor.reverseShapesGradient(actions);
 }
+
 /**
  * @description 旋转渐变
- * @param idx 
+ * @param idx
  */
 function gradient_rotate(idx: number) {
     const _idx = borders.length - idx - 1;
@@ -469,11 +486,12 @@ function gradient_rotate(idx: number) {
     const actions = get_aciton_gradient(shapes, _idx, 'borders');
     editor.rotateShapesGradient(actions);
 }
+
 /**
  * @description 添加渐变节点
- * @param idx 
- * @param position 
- * @param color 
+ * @param idx
+ * @param position
+ * @param color
  */
 function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = borders.length - idx - 1;
@@ -485,9 +503,10 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
     const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'borders');
     editor.addShapesGradientStop(actions);
 }
+
 /**
  * @description 切换渐变类型
- * @param idx 
+ * @param idx
  */
 function togger_gradient_type(idx: number, type: GradientType | 'solid') {
     const _idx = borders.length - idx - 1;
@@ -502,10 +521,11 @@ function togger_gradient_type(idx: number, type: GradientType | 'solid') {
         editor.toggerShapeGradientType(actions);
     }
 }
+
 /**
  * @description 修改节点颜色
- * @param idx 
- * @param color 
+ * @param idx
+ * @param color
  */
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = borders.length - idx - 1;
@@ -516,10 +536,11 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'borders');
     editor.setShapesGradientStopColor(actions);
 }
+
 /**
  * @description 删除渐变节点
- * @param idx 
- * @param index 
+ * @param idx
+ * @param index
  */
 function gradient_stop_delete(idx: number, index: any) {
     const _idx = borders.length - idx - 1;
@@ -557,7 +578,7 @@ function layout() {
     if (shapes.length === 1) {
         const type = shapes[0].type;
         show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
-    }else if (shapes.length > 1) {
+    } else if (shapes.length > 1) {
         show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
     }
 }
@@ -707,7 +728,10 @@ async function onMouseDown(e: MouseEvent, index: number) {
         borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     }
     document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener("pointerlockchange", lockChangeAlert, false);
+    document.addEventListener("mousemove", onMouseMove, false);
+    // document.addEventListener("pointerlockchange", lockChangeAlert, false);
+
+    showpoint.value = true
 }
 
 function lockChangeAlert() {
@@ -770,6 +794,10 @@ function onMouseMove(e: MouseEvent) {
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation()
     document.exitPointerLock()
+    showpoint.value = false
+
+    document.removeEventListener("mousemove", onMouseMove, false);
+    document.removeEventListener('mouseup', onMouseUp);
     if (borderthickness_editor) {
         borderthickness_editor.close();
         borderthickness_editor = undefined;
@@ -799,7 +827,6 @@ function setThickness(e: Event, id: number) {
             editor.setShapesBorderThickness(actions);
         }
     }
-
 }
 
 </script>
@@ -827,25 +854,28 @@ function setThickness(e: Event, id: number) {
                     </div>
                     <div class="color">
                         <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
-                            @change="(c: Color) => getColorFromPicker(c, idx)"
-                            @gradient-reverse="() => gradient_reverse(idx)"
-                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
-                            @gradient-rotate="() => gradient_rotate(idx)"
-                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                            @gradient-type="(type) => togger_gradient_type(idx, type)"
-                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
+                                     :locat="{ index: borders.length - idx - 1, type: 'borders' }"
+                                     :op="b.border.isEnabled"
+                                     @change="(c: Color) => getColorFromPicker(c, idx)"
+                                     @gradient-reverse="() => gradient_reverse(idx)"
+                                     :gradient="isGradient() ? b.border.gradient : undefined"
+                                     :fillType="b.border.fillType"
+                                     @gradient-rotate="() => gradient_rotate(idx)"
+                                     @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                                     @gradient-type="(type) => togger_gradient_type(idx, type)"
+                                     @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                                     @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"/>
                         <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
-                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                            @focus="selectColor($event)" @input="colorInput($event)" />
+                               :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                               :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                               @focus="selectColor($event)" @input="colorInput($event)"/>
                         <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
-                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-            t(`color.${b.border.gradient.gradientType}`) }}</span>
+                              v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+                                t(`color.${b.border.gradient.gradientType}`)
+                            }}</span>
                         <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                            style="text-align: center;" :value="filterAlpha(b.border) + '%'"
-                            @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput" />
+                               style="text-align: center;" :value="filterAlpha(b.border) + '%'"
+                               @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput"/>
                     </div>
                     <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
                         :index="borders.length - idx - 1">
@@ -858,21 +888,21 @@ function setThickness(e: Event, id: number) {
                 <div class="bottom">
                     <!-- 边框位置 -->
                     <div style=" flex: calc(50% - 20px);"
-                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                         :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
                         <Select class="select" :context="props.context" :shapes="props.shapes"
-                            :source="positonOptionsSource"
-                            :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
-                            @select="positionSelect" :index="borders.length - idx - 1"></Select>
+                                :source="positonOptionsSource"
+                                :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
+                                @select="positionSelect" :index="borders.length - idx - 1"></Select>
                     </div>
                     <div class="thickness-container" style=" flex: calc(50% - 20px);"
-                        :class="{ actived: isActived === idx }">
+                         :class="{ actived: isActived === idx }">
                         <svg-icon icon-class="thickness" @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
                         <input ref="borderThickness" type="text" :value="b.border.thickness"
-                            @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
-                            @focus="selectBorderThicknes($event, idx)">
+                               @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
+                               @focus="selectBorderThicknes($event, idx)">
                     </div>
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1">
+                                  :index="borders.length - idx - 1">
                     </BorderDetail>
                 </div>
 
@@ -880,14 +910,12 @@ function setThickness(e: Event, id: number) {
             <!--                </div>-->
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-            :trigger="props.trigger">
+              :trigger="props.trigger">
         </Apex>
     </div>
     <teleport to="body">
-        <Transition name="bounce">
-            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 11) + 'px', left: (pointX! - 11) + 'px'}">
-            </div>
-        </Transition>
+        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px'}">
+        </div>
     </teleport>
 </template>
 
@@ -926,7 +954,6 @@ function setThickness(e: Event, id: number) {
     background-repeat: no-repeat;
     background-position: center;
     background-size: 32px;
-    filter: drop-shadow(1px 0px 4px black);
     z-index: 10000;
 }
 
@@ -953,7 +980,7 @@ function setThickness(e: Event, id: number) {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        > svg {
             width: 16px;
             height: 16px;
         }
@@ -1004,7 +1031,7 @@ function setThickness(e: Event, id: number) {
                     border-radius: 4px;
                     margin-right: 5px;
 
-                    >svg {
+                    > svg {
                         width: 60%;
                         height: 60%;
                     }
@@ -1056,7 +1083,7 @@ function setThickness(e: Event, id: number) {
                         box-sizing: border-box;
                     }
 
-                    input+input {
+                    input + input {
                         width: 45px;
                     }
 
@@ -1079,15 +1106,14 @@ function setThickness(e: Event, id: number) {
                     transition: 0.2s;
                     border-radius: var(--default-radius);
 
-                    >svg {
+                    > svg {
                         width: 16px;
                         height: 16px;
                     }
                 }
 
                 .delete:hover {
-                    background-color: #F5F5F5;
-                    ;
+                    background-color: #F5F5F5;;
                 }
 
                 //}
@@ -1101,7 +1127,7 @@ function setThickness(e: Event, id: number) {
                 gap: 6px;
                 margin-left: 19px;
 
-                >.select {
+                > .select {
                     height: 100%;
                     width: 100px;
                 }
@@ -1118,13 +1144,13 @@ function setThickness(e: Event, id: number) {
                     gap: 8px;
                     overflow: hidden;
 
-                    >svg {
-                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 13 13, auto !important;
+                    > svg {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         flex: 0 0 16px;
                         height: 16px;
                     }
 
-                    >input {
+                    > input {
                         outline: none;
                         border: none;
                         padding: 0;

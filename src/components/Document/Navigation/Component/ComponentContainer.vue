@@ -112,7 +112,7 @@ onUnmounted(() => {
     <div class="component-container-level-1" ref="top_wrapper">
         <el-scrollbar :always="true">
             <ComponentLocalData v-if="scroll_container" :context="props.context" :container="scroll_container"
-                                :is-attri="props.isAttri" :card-type="props.cardType">
+                :is-attri="props.isAttri" :card-type="props.cardType">
             </ComponentLocalData>
             <!--            线框图-->
             <!--            <ComponentRootCollapse v-if="scroll_container" :context="props.context" :extend="false"-->
@@ -121,9 +121,9 @@ onUnmounted(() => {
             <!--            </ComponentRootCollapse>-->
         </el-scrollbar>
         <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"
-                     :context="props.context" @close="compMenuUnmount">
+            :context="props.context" @close="compMenuUnmount">
             <div class="items-wrap" v-for="(item, index) in compMenuItems" :key="index"
-                 @click="(e: any) => compMenuUnmount(e, item.name, item.shape)">
+                @click="(e: any) => compMenuUnmount(e, item.name, item.shape)">
                 <span>{{ t(`compos.${item.name}`) }}</span>
             </div>
         </ContextMenu>

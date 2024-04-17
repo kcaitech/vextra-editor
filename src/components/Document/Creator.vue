@@ -111,15 +111,13 @@ function move2(e: MouseEvent) {
 }
 
 function up(e: MouseEvent) {
-    // removeWheel();
-    // if (commentInput.value) commentInput.value = false;
     if (isDrag && newShape) {
         shapeCreateEnd();
     } else if (!isDrag && props.context.tool.action.startsWith('add')) {
         const action = props.context.tool.action;
         if (action === Action.AddComment) return addComment(e);
         if (action !== Action.AddContact && action !== Action.AddTable) {
-            init_insert_shape(props.context, page_xy_1, t);
+            init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
         }
     }
     isDrag = false;
@@ -384,7 +382,7 @@ function gen_new_shape(e: MouseEvent) {
             // newShape = result.new_shape;
         }
     } else {
-        const result = init_shape(props.context, shapeFrame, page_xy_1, t);
+        const result = init_shape(props.context, shapeFrame, page_xy_1, t, e.shiftKey);
         if (result) {
             asyncCreator = result.asyncCreator;
             const page = props.context.selection.selectedPage!;

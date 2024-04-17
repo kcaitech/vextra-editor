@@ -52,7 +52,6 @@ function update_paths() {
     if (!workspace.shouldSelectionViewUpdate) {
         return;
     }
-
     const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {

@@ -30,7 +30,7 @@ import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
-import { insertNetworkInfo } from "@/utils/message"
+import { insertNetworkInfo, message } from "@/utils/message"
 import { OssStorage, S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
@@ -44,6 +44,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -357,7 +358,6 @@ const getDocumentInfo = async () => {
             });
             return;
         }
-
         docInfo.value = docInfoData;
         permType.value = perm;
         const repo = new Repository();
@@ -381,7 +381,7 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
@@ -427,17 +427,20 @@ async function upload(projectId: string) {
         console.log("开始上传文档")
         result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
-        // todo 上传失败处理
+        // todo 上传失败处理√
+        message('danger', '文档上传失败');
         console.log("文档上传失败", e)
         return;
     }
     if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
-        // todo 上传失败处理
+        // todo 上传失败处理√
+        message('danger', '文档上传失败');
         console.log("文档上传失败", result)
         return;
     }
     const doc_id = result!.data.doc_id;
-    console.log("文档上传成功", doc_id)
+    console.log("文档上传成功", doc_id);
+    if(route.name !== 'document') return;
     router.replace({
         path: '/document',
         query: { id: doc_id },

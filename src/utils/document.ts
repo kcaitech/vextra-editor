@@ -3,6 +3,7 @@ import { CoopRepository, DocEditor, Repository, createDocument } from "@kcdesign
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { Document } from "@kcdesign/data";
 import * as user_api from '@/request/users'
+import { message } from "@/utils/message";
 
 /**
  * @description 文档内创建一个新的文档，并在跳转新标签页之后打开新文档
@@ -33,11 +34,13 @@ async function upload_file(context: Context, data: Document) {
   try {
     result = await context.communication.docUpload.upload(data);
   } catch (e) {
-    // todo 上传失败处理
+    // todo 上传失败处理√
+    message('danger', '资源上传失败');
     return false;
   }
   if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
-    // todo 上传失败处理
+    // todo 上传失败处理√
+    message('danger', '资源上传失败');
     return false;
   }
   return result!.data.doc_id;

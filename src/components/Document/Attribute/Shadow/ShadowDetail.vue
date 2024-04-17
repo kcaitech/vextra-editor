@@ -9,11 +9,19 @@ import { toHex } from "@/utils/color";
 import { Color, Shadow, ShapeView, ShapeType, Fill } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
-import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
+import {
+    get_actions_shadow_blur,
+    get_actions_shadow_color,
+    get_actions_shadow_offsetx,
+    get_actions_shadow_offsety,
+    get_actions_shadow_spread
+} from '@/utils/shape_style';
 import { hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
+import { LockMouse } from "@/transform/lockMouse";
 
 const { t } = useI18n();
+
 interface Props {
     context: Context
     shadow: Shadow
@@ -21,6 +29,7 @@ interface Props {
     length: number
     shapes: ShapeView[]
 }
+
 const props = defineProps<Props>();
 const popover = ref();
 const reflush = ref<number>(0);
@@ -126,6 +135,7 @@ function setColor(clr: string, alpha: number) {
     }
     hidden_selection(props.context);
 }
+
 function onColorChange(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') value = "#" + value;
@@ -138,6 +148,7 @@ function onColorChange(e: Event) {
         return (e.target as HTMLInputElement).value = toHex(props.shadow.color);
     }
 }
+
 function onAlphaChange(e: Event) {
     let value = (e.currentTarget as any)['value'];
     if (alphaShadow.value) {
@@ -172,6 +183,7 @@ function onAlphaChange(e: Event) {
         }
     }
 }
+
 function getColorFromPicker(color: Color) {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
@@ -211,11 +223,13 @@ const selectColor = () => {
         colorShadow.value.select()
     }
 }
+
 function showMenu() {
     props.context.menu.notify(Menu.SHUTDOWN_MENU);
     disable();
     popover.value.show();
 }
+
 onUpdated(() => {
     reflush.value++;
 })
@@ -275,12 +289,135 @@ const isFill = (fills: Fill[]) => {
     return false;
 }
 
+const tel = ref<boolean>(false);
+const telX = ref<number>(0);
+const telY = ref<number>(0);
+let lockMouseHandler: LockMouse | undefined = undefined;
+
+function updatePosition(movementX: number, movementY: number) {
+    const clientHeight = document.documentElement.clientHeight;
+    const clientWidth = document.documentElement.clientWidth;
+    telX.value += movementX;
+    telY.value += movementY;
+    telX.value = telX.value < 0 ? clientWidth : (telX.value > clientWidth ? 0 : telX.value);
+    telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
+}
+
+async function dragStart(e: MouseEvent) {
+    tel.value = true;
+    telX.value = e.clientX;
+    telY.value = e.clientY;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+
+    lockMouseHandler = new LockMouse(props.context, e);
+}
+
+function draggingX(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    let val = props.shadow.offsetX + e.movementX;
+
+    if (val < -3000) {
+        val = -3000;
+    } else if (val > 3000) {
+        val = 300;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowX(props.idx, val);
+}
+
+function draggingY(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    let val = props.shadow.offsetY + e.movementX;
+
+    if (val < -3000) {
+        val = -3000;
+    } else if (val > 3000) {
+        val = 300;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowY(props.idx, val);
+}
+
+function draggingB(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    let val = props.shadow.blurRadius + e.movementX;
+
+    if (val < 0) {
+        val = 0;
+    } else if (val > 200) {
+        val = 200;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowB(props.idx, val);
+}
+
+function draggingS(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    let val = props.shadow.spread + e.movementX;
+
+    if (val < 0) {
+        val = 0;
+    } else if (val > 200) {
+        val = 200;
+    }
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+
+    lockMouseHandler.executeShadowS(props.idx, val);
+}
+
+function dragEnd() {
+    tel.value = false;
+    document.exitPointerLock();
+
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
+}
+
 </script>
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
         <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
-            :title="`${t('shadow.shadow_setting')}`">
+                 :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
                     <svg-icon icon-class="gear"></svg-icon>
@@ -290,41 +427,78 @@ const isFill = (fills: Fill[]) => {
                 <div class="options-container">
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.position') }}</div>
-                        <ShadowInput ticon="X" :shadow-v="shadow.offsetX" @on-change="setOffsetX" :reflush="reflush">
+                        <ShadowInput
+                            ticon="X"
+                            :shadow-v="shadow.offsetX"
+                            :reflush="reflush"
+                            @on-change="setOffsetX"
+                            @dragstart="dragStart"
+                            @dragging="draggingX"
+                            @dragend="dragEnd"
+                        >
                         </ShadowInput>
-                        <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush">
+                        <ShadowInput
+                            ticon="Y"
+                            :shadow-v="shadow.offsetY"
+                            @on-change="setOffsetY"
+                            :reflush="reflush"
+                            @dragstart="dragStart"
+                            @dragging="draggingY"
+                            @dragend="dragEnd"
+                        >
                         </ShadowInput>
                     </div>
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.effect') }}</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
-                            :tootip="`${t('shadow.blur')}`" :reflush="reflush">
+                        <ShadowInput
+                            ticon="B"
+                            :shadow-v="shadow.blurRadius"
+                            @on-change="setBlurRadius"
+                            :tootip="`${t('shadow.blur')}`"
+                            :reflush="reflush"
+                            @dragstart="dragStart"
+                            @dragging="draggingB"
+                            @dragend="dragEnd"
+                        >
                         </ShadowInput>
-                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disabled"
-                            :tootip="spare_tip" :reflush="reflush">
+                        <ShadowInput
+                            ticon="S"
+                            :shadow-v="shadow.spread"
+                            @on-change="setSpread"
+                            :disabled="disabled"
+                            :tootip="spare_tip"
+                            :reflush="reflush"
+                            @dragstart="dragStart"
+                            @dragging="draggingS"
+                            @dragend="dragEnd"
+                        >
                         </ShadowInput>
                     </div>
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
                             <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
-                                @change="(c: Color) => getColorFromPicker(c)" />
+                                         @change="(c: Color) => getColorFromPicker(c)"/>
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
-                                @change="e => onColorChange(e)" @focus="selectColor" />
+                                   @change="e => onColorChange(e)" @focus="selectColor"/>
                             <input ref="alphaShadow" style="text-align: right;"
-                                :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
-                                @focus="selectAlpha" />
+                                   :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
+                                   @focus="selectAlpha"/>
                         </div>
                     </div>
                 </div>
             </template>
         </Popover>
+        <teleport to="body">
+            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+            </div>
+        </teleport>
     </div>
 </template>
 
 <style scoped lang="scss">
 .border-detail-container {
-    >.popover {
+    > .popover {
         width: 28px;
         height: 28px;
 
@@ -336,7 +510,7 @@ const isFill = (fills: Fill[]) => {
             align-items: center;
             border-radius: var(--default-radius);
 
-            >svg {
+            > svg {
                 width: 16px;
                 height: 16px;
             }
@@ -354,19 +528,19 @@ const isFill = (fills: Fill[]) => {
             box-sizing: border-box;
             height: 100%;
 
-            >div {
+            > div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                >label {
+                > label {
                     flex: 0 0 72px;
                     text-align: left;
                     box-sizing: border-box;
                     font-weight: var(--font-default-bold);
                 }
 
-                >.thickness-container {
+                > .thickness-container {
                     box-sizing: border-box;
                     padding: 0 14px;
                     background-color: var(--input-background);
@@ -376,13 +550,13 @@ const isFill = (fills: Fill[]) => {
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    > svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                     }
 
-                    >input {
+                    > input {
                         outline: none;
                         border: none;
                         width: calc(100% - 37px);
@@ -394,7 +568,7 @@ const isFill = (fills: Fill[]) => {
                         width: 10px;
                         height: 100%;
 
-                        >svg {
+                        > svg {
                             width: 10px;
                             height: 10px;
                         }
@@ -425,7 +599,7 @@ const isFill = (fills: Fill[]) => {
         margin-left: 8px;
     }
 
-    input+input {
+    input + input {
         width: 50px;
     }
 
@@ -472,7 +646,7 @@ const isFill = (fills: Fill[]) => {
         justify-content: center;
         align-items: center;
 
-        >svg {
+        > svg {
             width: 60%;
             height: 60%;
         }
@@ -487,5 +661,16 @@ const isFill = (fills: Fill[]) => {
         border: 1px solid #d8d8d8;
         box-sizing: border-box;
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>
