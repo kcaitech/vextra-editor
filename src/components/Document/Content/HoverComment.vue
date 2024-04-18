@@ -210,12 +210,12 @@ onUnmounted(() => {
     border-radius: calc(12px);
     border-bottom-left-radius: 0;
     font-size: var(--font-default-fontsize);
-    transition: 0.2s;
+    transition: 0.15s;
     transform-origin: left bottom;
     cursor: default;
     background: #FFFFFF;
     border: 1px solid #EBEBEB;
-    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.07);
+    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.18);
 
     .avatar {
         width: 24px;

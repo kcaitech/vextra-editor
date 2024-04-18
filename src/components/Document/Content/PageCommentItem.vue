@@ -428,7 +428,8 @@ watchEffect(watcher)
     height: 35px;
     border-radius: calc(14px);
     border-bottom-left-radius: 0;
-    z-index: 1;
+    z-index: 10;
+    cursor: default !important;
 
     .comment-mark {
         display: flex;
@@ -447,7 +448,7 @@ watchEffect(watcher)
         opacity: 1;
         background: #FFFFFF;
         border: 1px solid #EBEBEB;
-        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
+        box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
 
         >img {
             width: 80%;
@@ -468,6 +469,6 @@ watchEffect(watcher)
 }
 
 .hierarchy {
-    z-index: 2;
+    z-index: 12;
 }
 </style>

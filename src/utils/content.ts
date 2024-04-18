@@ -37,6 +37,7 @@ import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/utils/svg_parser";
 import { sort_by_layer } from "@/utils/group_ungroup";
+import { Navi } from "@/context/navigate";
 
 export interface Media {
     name: string
@@ -1219,6 +1220,7 @@ export function component(context: Context) {
             const s = symbol && page.getShape(symbol.id);
             s && context.selection.selectShape(s);
         })
+        context.navi.notify(Navi.COMP_LIST_CHANGED);
     }
 }
 

@@ -33,6 +33,7 @@ import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { string_by_sys } from '@/utils/common';
 import { copyAsPNG as _copyAsPNG } from "@/utils/content"
+import { Navi } from '@/context/navigate';
 
 const { t } = useI18n();
 
@@ -376,6 +377,7 @@ function component() {
             const select = page.getShape(symbol.id);
             props.context.selection.selectShape(select);
         })
+        props.context.navi.notify(Navi.COMP_LIST_CHANGED);
     }
     emit('close');
 }

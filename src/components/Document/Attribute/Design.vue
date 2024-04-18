@@ -244,7 +244,7 @@ function watch_shapes() {
     })
 
     const selectedShapes = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selectedShapes).filter(s => s.type !== ShapeType.Group);
+    const shapes = flattenShapes(selectedShapes);
     shapes.forEach((v) => {
         v.watch(update_by_shapes);
         watchedShapes.set(v.id, v)

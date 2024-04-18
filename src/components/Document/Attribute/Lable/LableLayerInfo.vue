@@ -152,7 +152,7 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.posi') }}</span>
                     <div style="display: flex;">
-                        <span style="display: flex; width: 50%;"><span class="name"
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
                                 style="color: #8C8C8C; font-weight: 500;width: 14px">X</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'x'">
                                 <span @click="(e) => copyLable(e, 'x')" style="cursor: pointer;font-weight: 500;" class="hovered"
@@ -161,7 +161,7 @@ onUnmounted(() => {
                                 </span>
                             </LableTootip>
                         </span>
-                        <span style="display: flex; width: 50%;"><span class="name"
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
                                 style="color: #8C8C8C; font-weight: 500;width: 14px">Y</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'y'">
                                 <span @click="(e) => copyLable(e, 'y')" style="cursor: pointer;font-weight: 500;" class="hovered"
@@ -175,7 +175,7 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.size') }}</span>
                     <div style="display: flex;">
-                        <span style="display: flex; width: 50%;"><span class="name"
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
                                 style="color: #8C8C8C; font-weight: 500; width: 14px; font-size: 10px;">W</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'w'">
                                 <span @click="(e) => copyLable(e, 'w')" style="cursor: pointer;font-weight: 500;" class="hovered"
@@ -184,7 +184,7 @@ onUnmounted(() => {
                                 </span>
                             </LableTootip>
                         </span>
-                        <span style="display: flex; width: 50%;"><span class="name"
+                        <span style="display: flex; width: 50%; align-items: center;"><span class="name"
                                 style="color: #8C8C8C; font-weight: 500;width: 14px">H</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'h'">
                                 <span @click="(e) => copyLable(e, 'h')" style="cursor: pointer;font-weight: 500;" class="hovered"
@@ -228,11 +228,15 @@ onUnmounted(() => {
 }
 
 .row {
+    height: 34px;
+    align-items: center;
     display: flex;
-    padding: 9px 0;
     color: #000;
 
     >div {
+        height: 100%;
+        display: flex;
+        align-items: center;
         width: calc(100% - 58px);
         flex: 1;
         overflow: hidden;
@@ -247,6 +251,8 @@ onUnmounted(() => {
     white-space: nowrap;
 }
 .hovered {
+    padding: 3px;
+    border-radius: 4px;
     &:hover {
         border-radius: 2px;
         background-color: #EBEBEB;
