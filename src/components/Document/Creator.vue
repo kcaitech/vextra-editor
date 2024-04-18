@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ClientXY, PageXY, XY } from '@/context/selection';
+import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle, modifyXYByAlignSetting } from '@/utils/common';
-import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
+import { init_contact_shape, init_insert_shape, init_shape } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
-import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
+import { Wheel, fourWayWheel } from '@/utils/wheel';
 import {
     Artboard,
     AsyncCreator,
@@ -26,7 +26,6 @@ import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
-import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
@@ -93,9 +92,6 @@ function move(e: MouseEvent) {
         } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
             const __xy2 = props.context.workspace.getContentXY(e);
             page_xy_2 = matrix1.computeCoord(__xy2);
-            if (Math.abs(page_xy_2.y - page_xy_1.y) < 1 || Math.abs(page_xy_2.x - page_xy_1.x) < 1) {
-                return;
-            }
             gen_new_shape(e);
             isDrag = true;
         }
@@ -367,11 +363,16 @@ function wheelSetup() {
 function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+    let width = Math.abs(x - page_xy_1.x);
+    let height = Math.abs(y - page_xy_1.y);
 
-    const shapeFrame = new ShapeFrame(page_xy_1.x, page_xy_1.y, Math.abs(x - page_xy_1.x), Math.abs(y - page_xy_1.y));
-    // fix bug. frame的width或height为零时，后续matrix计算错误
-    if (shapeFrame.width < 1) shapeFrame.width = 1;
-    if (shapeFrame.height < 1) shapeFrame.height = 1;
+    if (props.context.user.isPixelAlignMent) {
+        width = Math.max(1, width);
+        height = Math.max(1, height);
+    }
+
+    const shapeFrame = new ShapeFrame(page_xy_1.x, page_xy_1.y, width, height);
+
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {
@@ -380,7 +381,6 @@ function gen_new_shape(e: MouseEvent) {
             props.context.nextTick(page, () => {
                 newShape = page.getShape(result.new_shape.id);
             })
-            // newShape = result.new_shape;
         }
     } else {
         const result = init_shape(props.context, shapeFrame, page_xy_1, t, e.shiftKey);
