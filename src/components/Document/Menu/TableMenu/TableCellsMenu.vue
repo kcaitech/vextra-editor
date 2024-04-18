@@ -26,7 +26,7 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>()
 const isAlignMenu = ref('')
-const color = ref<Color>(new Color(1, 216, 216, 216));
+const color = ref<Color>(new Color(1, 255, 255, 255));
 const singleChoice = ref<boolean>(false);
 const showAlginMenu = (meun: string) => {
     if (isAlignMenu.value) return isAlignMenu.value = '';
@@ -173,12 +173,12 @@ const getCellsFormat = () => {
         if (style.fills[0]) {
             color.value = style.fills[0].color;
         } else {
-            color.value = new Color(1, 216, 216, 216);
+            color.value = new Color(1, 255, 255, 255);
         }
     } else if (cells.length > 1) {
         const _fs = get_fills(cells);
         if (_fs === 'mixed' || !_fs.length) {
-            color.value = new Color(1, 216, 216, 216);
+            color.value = new Color(1, 255, 255, 255);
         } else {
             color.value = _fs[0].fill.color;
         }
@@ -228,14 +228,22 @@ const getCellsFormat = () => {
     }
 }
 
+const table_watcher = (t: number) => {
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
+        handleCellMenu();
+    }
+}
+
 onMounted(() => {
     handleCellMenu();
     props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_watcher);
 })
 
 onUnmounted(() => {
     props.context.menu.setCellMenuType(undefined);
     props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_watcher);
 })
 </script>
 
@@ -253,6 +261,7 @@ onUnmounted(() => {
                     :selectIcon="horIcon" @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
+            <div class="divider"></div>
             <div class="ver" @click="showAlginMenu('ver')" :class="{ selected_bgc: isAlignMenu === 'ver' }">
                 <svg-icon :icon-class="verIcon"></svg-icon>
                 <div class="menu">
@@ -262,11 +271,12 @@ onUnmounted(() => {
                     :selectIcon="verIcon" @textAlginVer="textAlginVer">
                 </TableContextAlgin>
             </div>
-            <div style="display: flex; align-items: center; justify-content: center; padding: 2px;">
+            <div class="divider"></div>
+            <div style="display: flex; align-items: center; justify-content: center;">
                 <ColorPicker :context="props.context" :color="(color as Color)" :cell="true" :top="30"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice && !(props.context.selection.tableshape?.isVirtualShape)">
+            <div @click.stop="mergeCells" v-if="!singleChoice && !(props.context.selection.tableshape?.isVirtualShape)">
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M7.35355 11.3536C7.54882 11.1583 7.54882 10.8417 7.35355 10.6464L4.17157 7.46447C3.97631 7.2692 3.65973 7.2692 3.46447 7.46447C3.2692 7.65973 3.2692 7.97631 3.46447 8.17157L6.29289 11L3.46447 13.8284C3.2692 14.0237 3.2692 14.3403 3.46447 14.5355C3.65973 14.7308 3.97631 14.7308 4.17157 14.5355L7.35355 11.3536ZM0 11.5H7V10.5H0V11.5Z"
@@ -308,35 +318,24 @@ onUnmounted(() => {
                 <Delete style="width: 1em; height: 1em" />
             </div>
         </div>
-        <div class="tip"></div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .custom-popover {
     position: absolute;
-    height: 32px;
+    height: 36px;
     border-radius: 4px;
     background-color: #fff;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     z-index: 10000;
 
-    .tip {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        width: 8px;
-        height: 8px;
-        transform: translateX(-50%) translateY(50%) rotate(45deg);
-        background-color: white;
-        z-index: -1;
-    }
 }
 
 .popover-content {
     width: 100%;
     height: 100%;
-    padding: 0 5px;
+    padding: 6px;
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;
@@ -344,9 +343,11 @@ onUnmounted(() => {
 
     >div {
         display: flex;
-        border-radius: 2px;
-        padding: 4px;
-        margin: 2px;
+        justify-content: center;
+        align-items: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 3px;
 
         >svg {
             width: 16px;
@@ -357,38 +358,48 @@ onUnmounted(() => {
             height: 16px;
 
             >svg {
-                width: 8px;
-                height: 8px;
+                width: 10px;
+                height: 10px;
             }
         }
     }
 
-    >div:hover {
-        background-color: rgba($color: #1878f5, $alpha: 0.5);
-    }
-
     .hor {
+        width: 36px;
         position: relative;
     }
 
     .ver {
+        width: 36px;
         position: relative;
+    }
+    .divider {
+        width: 16px;
+        height: 100%;
+        box-sizing: border-box;
+        border-top: 4px solid #fff;
+        border-bottom: 4px solid #fff;
+        border-left: 7.5px solid #fff;
+        border-right: 7.5px solid #fff;
+        background-color: #EBEBEB;
     }
 
     .menu {
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-left: 4px;
         width: 10px;
         transition: 0.2s;
+        opacity: 0.4;
     }
 
     .menu:hover {
-        transform: translateY(4px);
+        transform: translateY(2px);
     }
 }
 
 .selected_bgc {
-    background-color: rgba($color: #1878f5, $alpha: 0.5);
+    background-color: #f5f5f5;
 }
 </style>

@@ -292,6 +292,8 @@ onUnmounted(() => {
     white-space: nowrap;
 }
 .hovered {
+    padding: 3px;
+    border-radius: 3px;
     &:hover {
         border-radius: 2px;
         background-color: #EBEBEB;

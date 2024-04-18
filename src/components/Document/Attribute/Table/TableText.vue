@@ -348,7 +348,8 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 })
 const reflush = ref(0);
 // 获取当前文字格式
-const textFormat = () => {
+const textFormat = (t?: any) => {
+    if(t && (t === 'frame' || t === 'colWidths' || t === 'rowHeights')) return;
     const table = props.context.tableSelection;
     shape.value = undefined;
     mixed.value = false;
@@ -1294,7 +1295,7 @@ onUnmounted(() => {
             .select-font {
                 padding: 9px 12px;
                 box-sizing: border-box;
-                width: calc(100% - 88px);
+                width: calc(100% - 80px);
                 height: 32px;
                 border-radius: 6px;
                 margin-right: 8px;
@@ -1312,7 +1313,7 @@ onUnmounted(() => {
 
             .text-size {
                 position: relative;
-                width: 80px;
+                width: 72px;
                 height: 32px;
                 border-radius: 6px;
                 padding: 9px 0;
@@ -1322,7 +1323,7 @@ onUnmounted(() => {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding-left: 8px;
+                    padding-left: 6px;
                     padding-right: 8px;
 
                     .down {
@@ -1342,7 +1343,7 @@ onUnmounted(() => {
                 }
 
                 .input {
-                    width: 40px;
+                    width: 32px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1447,7 +1448,7 @@ onUnmounted(() => {
             }
 
             .level-aligning {
-                width: 124px;
+                width: 130px;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
@@ -1455,11 +1456,11 @@ onUnmounted(() => {
             }
 
             .vertical-aligning {
-                width: 94px;
+                width: 96px;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 6px;
+                margin-left: 8px;
                 border-radius: var(--default-radius);
             }
 
