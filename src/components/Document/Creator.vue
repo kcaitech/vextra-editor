@@ -357,6 +357,7 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
 
         asyncCreator.setFrame({ x, y });
     }
+    props.context.assist.notify(Asssit.CLEAR);
 }
 
 function wheelSetup() {
