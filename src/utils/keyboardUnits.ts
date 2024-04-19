@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component, copyAsPNG,
+    component,
     lower_layer,
     redo,
     scale_0,
@@ -22,6 +22,9 @@ import { modifyOpacity } from "./common";
 import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
+import { hexToX } from "@/components/common/ColorPicker/utils";
+import { Color } from "../../../kcdesign-data/src";
+import { lowerFirst } from "lodash";
 
 // todo 键盘事件的权限处理
 
@@ -62,7 +65,7 @@ keydownHandler[''] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
-    if (event.shiftKey && event.altKey && permIsEdit(context)) {
+    if (event.altKey && permIsEdit(context)) {
         event.preventDefault();
         context.arrange.notify(Arrange.FLEX_START); // 图层左对齐
         return;
@@ -71,6 +74,11 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
     if (metaKey || ctrlKey) {
         event.preventDefault();
         select_all(context);
+        return;
+    }
+    if (permIsEdit(context)) {
+        event.preventDefault();
+        context.tool.setAction(Action.AddFrame); // 容器工具
         return;
     }
 }
@@ -182,6 +190,27 @@ keydownHandler['KeyI'] = function (event: KeyboardEvent, context: Context) {
     if (event.shiftKey) {
         event.preventDefault();
         context.tool.notify(Tool.COMPONENT); // 组件工具
+        return;
+    }
+    if (!(window as any).EyeDropper) {
+        message('info', '当前浏览器不支持取色工具');
+    } else {
+        const System_EyeDropper = (window as any).EyeDropper;
+        const s_eye_dropper = new System_EyeDropper();
+        s_eye_dropper.open().then((result: any) => {
+            const rgb = hexToX(result.sRGBHex);
+            if (!context.selection.selectedShapes.length) {
+                return;
+            }
+            const page = context.selection.selectedPage!;
+            const editor = context.editor4Page(page);
+            editor.modifyStyleByEyeDropper(
+                context.selection.selectedShapes,
+                new Color(1, rgb[0], rgb[1], rgb[2]) as any
+            );
+        }).catch((e: any) => {
+            console.log("failed:", e);
+        });
     }
 }
 
@@ -255,7 +284,7 @@ keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
     if (!permIsEdit(context)) return;
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (event.altKey) {
-        context.arrange.notify(Arrange.FLEX_END_COL); // 图层右侧对齐
+        context.arrange.notify(Arrange.FLEX_END_COL); // 图层底部对齐
         return;
     }
     if (is_ctrl || event.shiftKey) return;

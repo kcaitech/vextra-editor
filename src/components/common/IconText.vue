@@ -40,9 +40,9 @@ function onChange(e: Event) {
     try {
         if (props.svgicon == 'angle') {
             const raduis = value.replace("°", "");
-            value = String(eval(raduis));
+            value = String(eval(raduis)); // 危险！！！
         } else {
-            value = String(eval(value));
+            value = String(eval(value)); // 危险！！！
         }
     } catch (error) {
         return inputValue.value = String(props.text)

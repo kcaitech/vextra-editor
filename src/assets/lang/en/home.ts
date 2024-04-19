@@ -305,8 +305,9 @@ export const attr: any = {
     angular_symmetry: "Angular Symmetry",
     asymmetric: "Asymmetric",
     path: 'Path',
-    corner: 'corner',
-    unilateral: 'unilateral'
+    independentCorners: 'Independent corners',
+    constrainProportions: 'Constrain proportions',
+    frameSize: 'Frame'
 }
 
 export const login = {

@@ -44,6 +44,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import VersionDesc from "@/components/common/VersionDesc.vue";
 import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
@@ -157,6 +158,7 @@ function selectionWatcher(t: number) {
         }
     }
 }
+
 const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
     if (showRight.value || (!isEdit.value && !isLable.value)) {
@@ -232,6 +234,7 @@ const not_perm_hidden_right = () => {
         rightWidth.value = 250
     }
 }
+
 enum PermissionChange {
     update,
     close,
@@ -470,7 +473,7 @@ async function upload(projectId: string) {
     }
     const doc_id = result!.data.doc_id;
     console.log("文档上传成功", doc_id);
-    if(route.name !== 'document') return;
+    if (route.name !== 'document') return;
     router.replace({
         path: '/document',
         query: { id: doc_id },
@@ -768,8 +771,9 @@ onUnmounted(() => {
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
+                      v-if="inited && !null_context"
+                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+                      :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                             @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
@@ -779,16 +783,18 @@ onUnmounted(() => {
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                    @closeLoading="closeLoading">
+                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                             @closeLoading="closeLoading">
                 </ContentView>
             </template>
             <template #slot3>
+                <!--                @@@-->
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
-                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                           @mouseenter="(e: Event) => { mouseenter('right') }"
+                           @mouseleave="() => { mouseleave('right') }"
+                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
+                           @showAttrbute="showHiddenRight">
                 </Attribute>
-<!--                @@@-->
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>

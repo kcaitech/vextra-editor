@@ -113,7 +113,7 @@ svg {
     }
 
     .black-line {
-        stroke: rgba(0, 0, 0, 0.4);
+        stroke: rgba(0, 0, 0, 0.3);
         stroke-width: 0.1px;
     }
 }

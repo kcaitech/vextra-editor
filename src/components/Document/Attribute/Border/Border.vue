@@ -861,7 +861,7 @@ const thickness_value = (index: number, idx: number) => {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell">
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div class="top">
                     <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
@@ -980,7 +980,7 @@ const thickness_value = (index: number, idx: number) => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
@@ -1019,6 +1019,7 @@ const thickness_value = (index: number, idx: number) => {
     }
 
     .borders-container {
+        padding: 6px 0;
         .border {
             width: 100%;
             display: flex;

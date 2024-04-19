@@ -252,7 +252,7 @@ onUnmounted(() => {
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.thickness') }}</span>
-                        <div style="font-weight: 500">
+                        <div style="font-weight: 500" class="thickness">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'top'">
                                 <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;" class="hovered"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
@@ -277,7 +277,7 @@ onUnmounted(() => {
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.style') }}</span>
-                        <div style="display: flex;">
+                        <div style="display: flex;" class="thickness">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'line'">
                                 <span style="color: #000000; cursor: pointer;font-weight: 500"
                                     @click="(e) => copyLable(e, b.id + 'line')" class="hovered"
@@ -286,10 +286,10 @@ onUnmounted(() => {
                 `${t('lable.solid_line')}`
                                     }}</span>
                             </LableTootip>
-                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{
+                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;color: #000000;">{{
                                 b.border.borderStyle.gap
                                 }}</span>
-                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{
+                            <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;color: #000000;">{{
                                 b.border.borderStyle.length }}</span>
                         </div>
                     </div>
@@ -332,7 +332,13 @@ onUnmounted(() => {
 
 .row {
     display: flex;
-    padding: 9px 0;
+    align-items: center;
+    height: 34px;
+}
+.thickness {
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .color_row {
@@ -380,6 +386,8 @@ onUnmounted(() => {
 }
 
 .hovered {
+    padding: 3px;
+    border-radius: 4px;
     &:hover {
         border-radius: 2px;
         background-color: #EBEBEB;

@@ -25,6 +25,7 @@ declare module '@vue/runtime-core' {
     Arrange: typeof import('./src/components/Document/Attribute/Arrange.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardName: typeof import('./src/components/Document/Content/ArtboardName.vue')['default']
+    ArtboardTemplate: typeof import('./src/components/Document/Attribute/Artboard/ArtboardTemplate.vue')['default']
     Aside: typeof import('./src/components/AppHome/Aside.vue')['default']
     Assist: typeof import('./src/components/Document/Assist/index.vue')['default']
     Auto: typeof import('./src/components/Document/Toolbar/PathEdit/Auto.vue')['default']
@@ -123,6 +124,7 @@ declare module '@vue/runtime-core' {
     FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
     FilesItem: typeof import('./src/components/Mobile/FilesItem.vue')['default']
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
+    Folder: typeof import('./src/components/Document/Attribute/Artboard/Folder.vue')['default']
     FontWeightSelected: typeof import('./src/components/Document/Attribute/Text/FontWeightSelected.vue')['default']
     Footer: typeof import('./src/components/Login/Footer.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
@@ -330,5 +332,6 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
+    VersionDesc: typeof import('./src/components/common/VersionDesc.vue')['default']
   }
 }
