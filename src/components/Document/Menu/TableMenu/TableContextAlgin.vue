@@ -101,6 +101,7 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     border-radius: 6px;
     background: #ffffff;
     padding: 6px;
+    border: 1px solid #F0F0F0;
     box-sizing: border-box;
     box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.18);
 }
@@ -144,6 +145,7 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     width: 30px;
     height: 28px;
     border-radius: 3px;
+    
 
     >svg {
         fill: #000;
@@ -152,6 +154,8 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 }
 
 .selected_bgc {
+    border: 1px solid #F0F0F0;
+    box-sizing: border-box;
     background-color: #ffffff !important;
 }
 
