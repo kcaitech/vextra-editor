@@ -48,7 +48,7 @@ const height = computed(() => {
 let downIndex: { index: number, before: boolean };
 
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    // if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
