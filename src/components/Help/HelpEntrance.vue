@@ -63,7 +63,15 @@ const handleClickShowhelp = () => {
         shortcut.value = false
         return
     }
-    showitem.value = !showitem.value
+
+    showitem.value = !showitem.value;
+    if (showitem.value) {
+        props.context?.esctask.save('handleClickShowhelp', () => {
+            const achieve = showitem.value;
+            showitem.value = false;
+            return achieve;
+        })
+    }
 }
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -80,19 +88,57 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const handleClickShow = (index: number) => {
-    showitem.value = false
+    showitem.value = false;
+
+    qrcode.value = false;
+    shortcut.value = false;
+    report.value = false;
+
     if (index === 0) {
-        qrcode.value = true
-        shortcut.value = false
-        report.value = false
+        qrcode.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-0', () => {
+                const achieve = qrcode.value;
+                qrcode.value = false;
+                return achieve;
+            })
+        }
     } else if (index === 1) {
-        qrcode.value = false
-        shortcut.value = false
-        report.value = true
+        report.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-1', () => {
+                const achieve = report.value;
+                report.value = false;
+                return achieve;
+            })
+        }
     } else if (index === 2) {
-        report.value = false
-        qrcode.value = false
-        shortcut.value = true
+        shortcut.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-2', () => {
+                const achieve = shortcut.value;
+                shortcut.value = false;
+                return achieve;
+            })
+        }
+    }
+}
+
+function keyup(event: KeyboardEvent) {
+    if (event.code !== 'Escape' || event.target instanceof HTMLInputElement || props.context) {
+        return;
+    }
+    if (qrcode.value) {
+        qrcode.value = false;
+    }
+    if (report.value) {
+        report.value = false;
+    }
+    if (shortcut.value) {
+        shortcut.value = false;
     }
 }
 
@@ -106,19 +152,21 @@ watch([qrcode, showitem], ([newvalue1, newvalue2]) => {
     }
 })
 const menu_watcher = (t: number) => {
-    if(t === Menu.OPEN_SHORTCUTS) {
+    if (t === Menu.OPEN_SHORTCUTS) {
         handleClickShow(2);
     }
 }
 onMounted(() => {
-    if(props.context) {
+    if (props.context) {
         props.context.menu.watch(menu_watcher);
     }
+    document.addEventListener('keyup', keyup);
 })
 onUnmounted(() => {
-    if(props.context) {
+    if (props.context) {
         props.context.menu.unwatch(menu_watcher);
     }
+    document.removeEventListener('keyup', keyup);
 })
 
 </script>

@@ -377,13 +377,11 @@ onUnmounted(() => {
         transform: translateX(100%);
         opacity: 0.01;
     }
-
     50% {
 
         transform: translateX(50%);
         opacity: 0.25;
     }
-
     100% {
 
         transform: translateX(0%);
@@ -398,13 +396,11 @@ onUnmounted(() => {
         transform: translateX(200%);
         opacity: 0.01;
     }
-
     50% {
 
         transform: translateX(100%);
         opacity: 0.5;
     }
-
     100% {
 
         transform: translateX(0) ;

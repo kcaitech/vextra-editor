@@ -146,6 +146,9 @@ const getUserInfo = async () => {
 }
 
 let arr = ref<Array<SelectSource>>([])
+type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -214,7 +217,9 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const document = await importDocument(storage, path, "", versionId, repo)
+        const d = await importDocument(storage, path, "", versionId, repo)
+        const document = d.document;
+        documentLoader = d.loader;
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
@@ -253,6 +258,7 @@ const getDocumentInfo = async () => {
                 }
             }
 
+            updateDocumentKeyTimer = setInterval(updateDocumentKey, 1000 * 60 * 30); // 30分钟更新一次文档密钥
         }
     } catch (err) {
         loading.value = false;
@@ -261,6 +267,30 @@ const getDocumentInfo = async () => {
         throw err;
     }
 }
+
+async function updateDocumentKey() {
+  if (!documentLoader) return;
+  const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+  if (docKeyRes.code !== 0) return;
+  const docKeyData = docKeyRes.data;
+  const storageOptions: StorageOptions = {
+    endPoint: docKeyData.endpoint,
+    region: docKeyData.region,
+    accessKey: docKeyData.access_key,
+    secretKey: docKeyData.secret_access_key,
+    sessionToken: docKeyData.session_token,
+    bucketName: docKeyData.bucket_name,
+  }
+  let storage: IStorage;
+  if (docKeyData.provider === "oss") {
+    storage = new OssStorage(storageOptions);
+  } else {
+    storage = new S3Storage(storageOptions);
+  }
+  documentLoader.setStorage(storage);
+}
+
+let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
 
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
@@ -489,6 +519,7 @@ onUnmounted(() => {
     networkStatus.close();
     stop();
     stop2();
+    clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
 })
 
 const ORIGIN = { x: 0, y: HEAD_HEIGHT };

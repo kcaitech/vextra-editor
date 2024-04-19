@@ -101,7 +101,7 @@ const createTable = (row?: number, col?: number) => {
     padding: 4px 12px;
     background-color: #FFFFFF;
     border: 1px solid #F0F0F0;
-    box-shadow:  0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+    box-shadow:  0px 4px 16px 0px rgba(0, 0, 0, 0.18);
     box-sizing: border-box;
     font-size: var(--font-default-fontsize);
 

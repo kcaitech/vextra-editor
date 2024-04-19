@@ -18,6 +18,9 @@ import {
     creator as shapeCreator,
     ShapeFrame,
     Artboard,
+    CornerType,
+    BorderSideSetting,
+    SideType,
 } from "@kcdesign/data"
 import { v4 as uuid } from "uuid"
 import {
@@ -534,9 +537,18 @@ export class BaseCreator extends BaseTreeNode {
             if (stroke.position === "inside") position = BorderPosition.Inner;
             else if (stroke.position === "center") position = BorderPosition.Center;
             else position = BorderPosition.Outer;
-
+            let cornerType: CornerType
+            const corner = this.localAttributes["stroke-linejoin"];
+            if(corner) {
+                if (corner === "miter") cornerType = CornerType.Miter;
+                else if (corner === "round") cornerType = CornerType.Round;
+                else cornerType = CornerType.Bevel;
+            } else {
+                cornerType = CornerType.Miter;
+            }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
-            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color), position, strokeWidth, borderStyle)
+            const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
+            const border = new Border([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color), position, strokeWidth, borderStyle, cornerType, side)
             borders.push(border)
 
             if (stroke.colorType !== "color") {

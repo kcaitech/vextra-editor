@@ -25,6 +25,7 @@ declare module '@vue/runtime-core' {
     Arrange: typeof import('./src/components/Document/Attribute/Arrange.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardName: typeof import('./src/components/Document/Content/ArtboardName.vue')['default']
+    ArtboardTemplate: typeof import('./src/components/Document/Attribute/Artboard/ArtboardTemplate.vue')['default']
     Aside: typeof import('./src/components/AppHome/Aside.vue')['default']
     Assist: typeof import('./src/components/Document/Assist/index.vue')['default']
     Auto: typeof import('./src/components/Document/Toolbar/PathEdit/Auto.vue')['default']
@@ -39,7 +40,9 @@ declare module '@vue/runtime-core' {
     Border: typeof import('./src/components/Document/Attribute/Border/Border.vue')['default']
     BorderApexStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleItem.vue')['default']
     BorderApexStyleSelectedItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleSelectedItem.vue')['default']
+    BorderCustomInput: typeof import('./src/components/Document/Attribute/Border/BorderCustomInput.vue')['default']
     BorderDetail: typeof import('./src/components/Document/Attribute/Border/BorderDetail.vue')['default']
+    BorderSideSelected: typeof import('./src/components/Document/Attribute/Border/BorderSideSelected.vue')['default']
     BorderStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderStyleItem.vue')['default']
     BorderStyleSelected: typeof import('./src/components/Document/Attribute/Border/BorderStyleSelected.vue')['default']
     Bridge: typeof import('./src/components/Document/Bridge.vue')['default']
@@ -121,6 +124,7 @@ declare module '@vue/runtime-core' {
     FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
     FilesItem: typeof import('./src/components/Mobile/FilesItem.vue')['default']
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
+    Folder: typeof import('./src/components/Document/Attribute/Artboard/Folder.vue')['default']
     FontWeightSelected: typeof import('./src/components/Document/Attribute/Text/FontWeightSelected.vue')['default']
     Footer: typeof import('./src/components/Login/Footer.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
@@ -333,5 +337,6 @@ declare module '@vue/runtime-core' {
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
     WxLogin: typeof import('./src/components/Mobile/WxLogin.vue')['default']
+    VersionDesc: typeof import('./src/components/common/VersionDesc.vue')['default']
   }
 }

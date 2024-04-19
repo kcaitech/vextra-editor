@@ -174,7 +174,7 @@ onUnmounted(() => {
     <div class="tips-wrap" v-if="mixed">
       <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
     </div>
-    <div class="shadows-container" v-else-if="!mixed">
+    <div class="shadows-container" v-else-if="!mixed && shadows.length">
       <div class="shadow" v-for="(s, idx) in shadows" :key="s.id">
         <div :class="s.shadow.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
           <svg-icon v-if="s.shadow.isEnabled" icon-class="select"></svg-icon>
@@ -197,12 +197,12 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .shadow-panel {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 12px 8px 18px 8px;
-  box-sizing: border-box;
-  border-bottom: 1px solid #F0F0F0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
   .add {
     width: 28px;
@@ -230,6 +230,7 @@ onUnmounted(() => {
   //}
 
   .shadows-container {
+      padding: 6px 0;
     .shadow {
       height: 30px;
       width: 100%;

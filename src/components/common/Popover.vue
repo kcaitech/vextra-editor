@@ -110,6 +110,8 @@ function popoverClose() {
 function menu_watcher(t: number) {
     if (t === Menu.SHUTDOWN_POPOVER) {
         popoverClose();
+    } else if(t === Menu.UPDATE_LOCATE) {
+        locate();
     }
 }
 
@@ -149,7 +151,7 @@ onUnmounted(() => {
     >.popover {
         position: fixed;
         outline: none;
-        box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+        box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.18);
         background-color: #FFFFFF;
         border-radius: 8px;
         border: 1px solid #F0F0F0;
@@ -171,9 +173,10 @@ onUnmounted(() => {
             }
 
             >.close {
-                width: 12px;
-                height: 12px;
+                width: 28px;
+                height: 28px;
                 position: absolute;
+                border-radius: 4px;
                 right: 11px;
                 display: flex;
                 align-items: center;
@@ -182,6 +185,9 @@ onUnmounted(() => {
                 >svg {
                     width: 12px;
                     height: 12px;
+                }
+                &:hover {
+                    background-color: #F5F5F5;
                 }
             }
         }

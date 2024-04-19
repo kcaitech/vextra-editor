@@ -227,8 +227,9 @@ const onDeleteItem = (index: number, e: Event) => {
 }
 const onDeleteChild = (index: number, e: Event, id: string) => {
     e.stopPropagation()
+    emit('recover', id);
+    commentHtight();
     deleteComment(id).then(() => {
-        emit('recover', id)
     })
 }
 
@@ -311,6 +312,7 @@ const commentShow = () => {
 }
 const cur_id = ref<string>('')
 const addComment = () => {
+    if(textarea.value.trim().length < 1) return;
     const timestamp = getCurrentTime();
     const id = v4();
     cur_id.value = id;
@@ -549,7 +551,7 @@ onUnmounted(() => {
     position: absolute;
     width: 330px;
     // max-height: 664px;
-    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.07);
+    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.18);
     z-index: 99;
     font-size: var(--font-default-fontsize);
     cursor: default;

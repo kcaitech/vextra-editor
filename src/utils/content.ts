@@ -37,6 +37,7 @@ import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/utils/svg_parser";
 import { sort_by_layer } from "@/utils/group_ungroup";
+import { Navi } from "@/context/navigate";
 
 export interface Media {
     name: string
@@ -435,6 +436,10 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
+    if (!permIsEdit(context) || context.tool.isLable) {
+        return;
+    }
+
     e.preventDefault();
     const data = e?.dataTransfer?.files;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) {
@@ -1216,6 +1221,7 @@ export function component(context: Context) {
             const s = symbol && page.getShape(symbol.id);
             s && context.selection.selectShape(s);
         })
+        context.navi.notify(Navi.COMP_LIST_CHANGED);
     }
 }
 
@@ -1364,5 +1370,17 @@ export function copyAsPNG(context: Context) {
         message('info', '复制成功');
     } else {
         message('info', '复制失败');
+    }
+}
+
+/**
+ * @description 以字符串的格式传入运算表达式，返回运算结果,用于替代高危函数eval,eval可以用于任意的代码注入到程序内，并拥有开发者的权限
+ * @param str
+ */
+export function computeString(str: string) {
+    try {
+        return Function('"use strict";return (' + str + ")")();
+    } catch (e) {
+        return NaN;
     }
 }

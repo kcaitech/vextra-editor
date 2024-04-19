@@ -304,7 +304,12 @@ export const attr: any = {
     completely_symmetrical: "完全对称",
     angular_symmetry: "不对称",
     asymmetric: "角度对称",
-    path: '路径'
+    path: '路径',
+    corner: '边角',
+    unilateral: '单边',
+    independentCorners: '展开圆角',
+    constrainProportions: '锁定比例',
+    frameSize: '容器尺寸'
 }
 
 export const login = {

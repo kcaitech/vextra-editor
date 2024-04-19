@@ -14,6 +14,7 @@
       </el-container>
     </el-container>
     <HelpEntrance />
+<!--      <version-desc></version-desc>-->
   </div>
 </template>
 
@@ -30,6 +31,7 @@ import * as user_api from '@/request/users';
 import HelpEntrance from '../Help/HelpEntrance.vue';
 import isMobileDevice from '@/utils/mobileDeviceChecker';
 import { router } from '@/router';
+import VersionDesc from "@/components/common/VersionDesc.vue";
 
 const { t } = useI18n();
 const searchtitle = ref('')

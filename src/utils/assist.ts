@@ -262,7 +262,8 @@ export function getClosestContainer(shape: ShapeView) {
 
 export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
-    context.assist.set_stickness(Math.ceil(5 / new_matrix.m00));
+    // context.assist.set_stickness(Math.ceil(5 / new_matrix.m00));
+    context.assist.set_stickness(5 / new_matrix.m00);
 }
 
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup2, apexX: number[], stickness: number) {
