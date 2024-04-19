@@ -15,6 +15,7 @@ import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
+import { WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{
     context: Context,
@@ -102,9 +103,26 @@ const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
     cell_menu.value = false;
 }
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) return init();
     else if (t === Selection.CHANGE_PAGE) return init();
+    else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
 }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_EDITING_CELL) {
@@ -280,6 +298,14 @@ function get_y_by_row(row: number) {
 function leave() {
     props.context.cursor.reset();
 }
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
+
 function page_watcher() {
     const page = props.context.selection.selectedPage;
 
@@ -313,12 +339,13 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
     remove_page_watcher();
+    reset_hidden();
 })
 </script>
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :class="{ hidden: selection_hidden }" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
         @mousemove="move" @mousedown="down" @mouseleave="leave" data-area="controller">
         <!-- 表格选区 -->
@@ -357,6 +384,10 @@ onUnmounted(() => {
 </template>
 
 <style lang='scss' scoped>
+.hidden {
+    opacity: 0;
+}
+
 svg {
     position: absolute;
 }

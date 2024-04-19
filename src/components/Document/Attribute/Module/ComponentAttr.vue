@@ -239,7 +239,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <!--list container-->
-        <div class="module_container">
+        <div v-if="variables.length" class="module_container">
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
                 :context="props.context" :variable="item.variable" :item="item"></component>
         </div>
@@ -375,6 +375,7 @@ onUnmounted(() => {
 }
 
 .module_container {
+    padding: 6px 0;
     font-size: var(--font-default-fontsize);
 
     .module_attr_item {

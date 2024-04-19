@@ -216,8 +216,8 @@ onUnmounted(() => {
                 <div class="row">
                     <div class="named">{{ t('lable.content') }}</div>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'content'">
-                        <div class="name" style="flex: 1;">
-                            <span style="width: 100%; cursor: pointer;font-weight: 500" class="hovered"
+                        <div style="display: flex; width: calc(100% - 58px);">
+                            <span style="cursor: pointer;font-weight: 500;" class="hovered name"
                                 @click="(e) => copyLable(e, 'content')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ text }}</span>
                         </div>
@@ -227,14 +227,14 @@ onUnmounted(() => {
                 <template v-for="(item, index) in textFormat" :key="index">
                     <div class="row">
                         <span class="named">{{ t('lable.font') }}</span>
-                        <div class="name" style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'font' + index">
-                                <span @click="(e) => copyLable(e, 'font' + index)" class="hovered"
-                                    style="cursor: pointer;font-weight: 500"
+                                <div style="display: flex; width: calc(100% - 58px);">
+                                <span @click="(e) => copyLable(e, 'font' + index)" class="hovered name"
+                                    style="cursor: pointer;font-weight: 500;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.fontName
                                     }}</span>
+                                </div>
                             </LableTootip>
-                        </div>
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.type_size') }}</span>
@@ -392,7 +392,7 @@ onUnmounted(() => {
 .row {
     display: flex;
     align-items: center;
-    padding: 9px 0;
+    height: 34px;
 
     .color {
         margin-right: 8px;
@@ -424,6 +424,8 @@ onUnmounted(() => {
     margin: 5px 0;
 }
 .hovered {
+    padding: 3px;
+    border-radius: 4px;
     &:hover {
         border-radius: 2px;
         background-color: #EBEBEB;

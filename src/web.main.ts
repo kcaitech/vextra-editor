@@ -6,7 +6,7 @@ import "@/assets/icons/loadall"
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/style/constant.scss'
-// import '@/style/app.scss'
+import '@/style/app.scss'
 import { router } from "./router"
 import '@/utils/permission'
 import * as settings from "@/settings"

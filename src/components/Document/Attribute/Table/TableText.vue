@@ -56,9 +56,9 @@ const weightMixed = ref<boolean>(false);
 const disableWeight = ref(false);
 // const selection = ref(props.context.selection) 
 
-function toHex(r: number, g: number, b: number) {
+function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return '#' + hex(r) + hex(g) + hex(b);
+    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
 }
 
 const onShowFont = () => {
@@ -348,7 +348,8 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 })
 const reflush = ref(0);
 // 获取当前文字格式
-const textFormat = () => {
+const textFormat = (t?: any) => {
+    if(t && (t === 'frame' || t === 'colWidths' || t === 'rowHeights')) return;
     const table = props.context.tableSelection;
     shape.value = undefined;
     mixed.value = false;
@@ -1166,14 +1167,14 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor"
                         @focus="selectColorValue" :spellcheck="false"
-                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
                         @change="(e) => onColorChange(e, 'color')" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
             gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
-                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
+<!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
                 <div class="color-title">
@@ -1206,7 +1207,7 @@ onUnmounted(() => {
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
                         @change="(e) => onColorChange(e, 'highlight')" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
                         :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
@@ -1244,7 +1245,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -1294,7 +1295,7 @@ onUnmounted(() => {
             .select-font {
                 padding: 9px 12px;
                 box-sizing: border-box;
-                width: calc(100% - 88px);
+                width: calc(100% - 80px);
                 height: 32px;
                 border-radius: 6px;
                 margin-right: 8px;
@@ -1312,7 +1313,7 @@ onUnmounted(() => {
 
             .text-size {
                 position: relative;
-                width: 80px;
+                width: 72px;
                 height: 32px;
                 border-radius: 6px;
                 padding: 9px 0;
@@ -1322,7 +1323,7 @@ onUnmounted(() => {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding-left: 8px;
+                    padding-left: 6px;
                     padding-right: 8px;
 
                     .down {
@@ -1342,7 +1343,7 @@ onUnmounted(() => {
                 }
 
                 .input {
-                    width: 40px;
+                    width: 32px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1447,7 +1448,7 @@ onUnmounted(() => {
             }
 
             .level-aligning {
-                width: 124px;
+                width: 130px;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
@@ -1455,11 +1456,11 @@ onUnmounted(() => {
             }
 
             .vertical-aligning {
-                width: 94px;
+                width: 96px;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 6px;
+                margin-left: 8px;
                 border-radius: var(--default-radius);
             }
 

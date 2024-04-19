@@ -280,7 +280,7 @@ onUnmounted(() => {
 
 <template>
     <div ref="comment" class="comment-input" :reflush="reflush"
-        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 48 + 'px', top: -33 + 'px' }">
+        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 48 + 'px', top: -40 + 'px' }">
         <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon" @mousedown="mouseDownCommentInput">
             <svg-icon icon-class="comment-add"></svg-icon>
         </div>
@@ -307,11 +307,11 @@ onUnmounted(() => {
 
     .icon_left {
         position: absolute;
-        top: 3px;
+        top: 8px;
         left: -48px;
-        width: 32px;
-        height: 32px;
-        border-radius: 16px 16px 16px 0;
+        width: 34px;
+        height: 34px;
+        border-radius: 17px 17px 17px 0;
         background-color: #1878F5;
         box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.05);
         display: flex;
@@ -352,7 +352,7 @@ onUnmounted(() => {
     .textarea {
         display: flex;
         align-items: self-end;
-        padding: 10px 8px;
+        padding: 8px 8px;
         background-color: #FFFFFF;
         box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
         border-radius: var(--default-radius);

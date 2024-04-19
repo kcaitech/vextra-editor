@@ -306,7 +306,10 @@ export const attr: any = {
     asymmetric: "角度对称",
     path: '路径',
     corner: '边角',
-    unilateral: '单边'
+    unilateral: '单边',
+    independentCorners: '展开圆角',
+    constrainProportions: '锁定比例',
+    frameSize: '容器尺寸'
 }
 
 export const login = {

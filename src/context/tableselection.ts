@@ -1,4 +1,4 @@
-import { TableCell, TableGridItem, WatchableObject, ShapeType, TableView, TableCellView } from "@kcdesign/data";
+import { WatchableObject, ShapeType, TableView, TableCellView } from "@kcdesign/data";
 import { Context } from ".";
 
 export class TableSelection extends WatchableObject {
@@ -82,7 +82,14 @@ export class TableSelection extends WatchableObject {
             this.m_tableRowEnd = rowEnd;
             this.m_tableColStart = colStart;
             this.m_tableColEnd = colEnd;
+
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
+
+            this.m_context.esctask.save('table-selection', () => {
+                const achieve =  this.m_tableRowStart > -1 || this.m_tableColStart > -1;
+                this.resetSelection();
+                return achieve;
+            });
         }
     }
     selectTableCell(rowIdx: number, colIdx: number, gen_menu_posi = true) {
@@ -92,7 +99,14 @@ export class TableSelection extends WatchableObject {
             this.m_tableColStart !== colIdx) {
             this.m_tableRowStart = this.m_tableRowEnd = rowIdx;
             this.m_tableColStart = this.m_tableColEnd = colIdx;
+
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
+
+            this.m_context.esctask.save('table-selection', () => {
+                const achieve =  this.m_tableRowStart > -1 || this.m_tableColStart > -1;
+                this.resetSelection();
+                return achieve;
+            });
         }
     }
 }

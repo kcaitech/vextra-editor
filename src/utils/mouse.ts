@@ -1,10 +1,10 @@
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
-import { ClientXY, PageXY, XY } from "@/context/selection";
+import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { Comment } from "@/context/comment";
-import { XYsBounding, scout_once } from "@/utils/common";
+import { scout_once, XYsBounding } from "@/utils/common";
 import { multi_select_shape } from "./listview";
 
 /**
@@ -44,11 +44,14 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
     const selection = context.selection;
     const selected = selection.selectedShapes;
     if (selected.length === 1) {
-        if (selected[0].type === ShapeType.Cutout) {
+        const shape = selected[0];
+        const type = shape.type;
+        if (type === ShapeType.Cutout) {
             return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
+        } else if ((type === ShapeType.Contact || type === ShapeType.Line) && !shape.isClosed) {
+            return selection.scout.isPointInShape(shape, workspace.getRootXY(e));
         } else {
-            const m = new Matrix(workspace.matrix.inverse);
-            return selection.scout.isPointInShape(selected[0], m.computeCoord3(workspace.getContentXY(e)));
+            return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
         }
     } else {
         return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
@@ -254,7 +257,7 @@ export function update_comment(context: Context, need_update_comment: boolean) {
  * @description 动作抬起点在控件上时，在已选图形中选择图形
  * @p root坐标系上一点
  */
-export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {    
+export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y: number }) {
     const selection = context.selection;
     const selected = selection.selectedShapes;
     const hoveredShape = selection.hoveredShape;

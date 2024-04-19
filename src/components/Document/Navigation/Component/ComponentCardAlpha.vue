@@ -163,7 +163,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="compo-preview-container" ref="preview_container">
+    <div class="compo-preview-container" ref="preview_container" :style="{ cursor: isAttri ? 'auto' : 'grab' }">
         <div class="card-wrap" v-if="render_preview">
             <ShapeCard :shape="render_item" class="render-wrap" :size="28"></ShapeCard>
             <div>{{ name }}</div>
@@ -186,7 +186,7 @@ onUnmounted(() => {
         padding: 4px 0;
         box-sizing: border-box;
 
-        >.render-wrap {
+        > .render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
             // border: 1px solid var(--grey-dark);
@@ -195,7 +195,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
 
-        >div {
+        > div {
             margin-left: 4px;
             max-height: 100%;
             overflow: hidden;

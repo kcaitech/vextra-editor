@@ -306,7 +306,10 @@ export const attr: any = {
     asymmetric: "Asymmetric",
     path: 'Path',
     corner: 'corner',
-    unilateral: 'unilateral'
+    unilateral: 'unilateral',
+    independentCorners: 'Independent corners',
+    constrainProportions: 'Constrain proportions',
+    frameSize: 'Frame'
 }
 
 export const login = {

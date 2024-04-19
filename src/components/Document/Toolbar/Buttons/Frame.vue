@@ -89,15 +89,15 @@ const customFrame = () => {
 </script>
 
 <template>
-    <ToolButton ref="button" :selected="props.active">
+    <ToolButton ref="button" :selected="props.active" style="width: 32px">
         <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
             <div class="svg-container" @click="() => { emits('select', Action.AddFrame) }">
                 <svg-icon icon-class="frame"></svg-icon>
             </div>
         </Tooltip>
-        <div class="menu-f" @click="showMenu">
-            <svg-icon icon-class="white-down"></svg-icon>
-        </div>
+<!--        <div class="menu-f" @click="showMenu">-->
+<!--            <svg-icon icon-class="white-down"></svg-icon>-->
+<!--        </div>-->
     </ToolButton>
     <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
         <div>
@@ -126,7 +126,6 @@ const customFrame = () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-left: 4px;
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 

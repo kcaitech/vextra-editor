@@ -560,7 +560,7 @@ const shareSwitch = () => {
   box-sizing: border-box;
   overflow: hidden;
   z-index: 1000;
-  box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.18);
   animation: move 0.25s ease-in-out;
 
   .card-header {

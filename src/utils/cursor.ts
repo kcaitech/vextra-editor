@@ -115,6 +115,9 @@ export function styleSheetController(): StyleSheetController {
             case 'auto':
                 str += `cursor: -webkit-image-set(url(${source}) 2x) 13 13, auto !important;`;
                 break;
+            case 'scan':
+                str += 'cursor: text !important;'
+                break;
             case 'grab':
                 str += 'cursor: grab !important;';
                 break;

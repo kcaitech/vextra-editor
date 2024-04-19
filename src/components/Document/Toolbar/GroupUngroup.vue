@@ -79,8 +79,7 @@ const updater = debounce(_updater, 50);
 function tool_watcher(t?: number, alt?: boolean) {
     if (t === Tool.GROUP) {
         groupClick(alt);
-    }
-    else if (t === Tool.UNGROUP) {
+    } else if (t === Tool.UNGROUP) {
         ungroupClick();
     }
 }
@@ -230,31 +229,32 @@ const flattenShape = () => {
 </script>
 
 <template>
-    <div class="container" v-if="isGroup || isUngroup || isBoolGroup">
+    <div class="container">
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
+            <div class="vertical-line"/>
         </div>
-        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5" v-if="isGroup">
-            <div class="group" v-if="isGroup">
-                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
-                    :class="{ active: state & GROUP }">
-                    <svg-icon icon-class="group"></svg-icon>
-                </ToolButton>
-            </div>
-        </Tooltip>
+        <!--        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5" v-if="isGroup">-->
+        <!--            <div class="group" v-if="isGroup">-->
+        <!--                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"-->
+        <!--                    :class="{ active: state & GROUP }">-->
+        <!--                    <svg-icon icon-class="group"></svg-icon>-->
+        <!--                </ToolButton>-->
+        <!--            </div>-->
+        <!--        </Tooltip>-->
 
-        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
-            @flatten-shape="flattenShape"></BooleanObject>
+        <BooleanObject :context="context" :selection="selection"
+                       @changeBool="changeBoolgroup"
+                       @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
 
-        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5"
-            v-if="isUngroup">
-            <div class="group" v-if="isUngroup">
-                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false"
-                    :class="{ active: state & UNGROUP }">
-                    <svg-icon icon-class="ungroup"></svg-icon>
-                </ToolButton>
-            </div>
-        </Tooltip>
+        <!--        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5"-->
+        <!--            v-if="isUngroup">-->
+        <!--            <div class="group" v-if="isUngroup">-->
+        <!--                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false"-->
+        <!--                    :class="{ active: state & UNGROUP }">-->
+        <!--                    <svg-icon icon-class="ungroup"></svg-icon>-->
+        <!--                </ToolButton>-->
+        <!--            </div>-->
+        <!--        </Tooltip>-->
     </div>
 </template>
 
@@ -272,7 +272,7 @@ const flattenShape = () => {
         height: 100%;
         width: 34.5px;
 
-        >div {
+        > div {
             height: 32px;
             width: 32px;
             display: flex;
@@ -283,13 +283,13 @@ const flattenShape = () => {
             margin: 0;
             padding: 0;
 
-            >svg {
+            > svg {
                 height: 18px;
                 width: 18px;
             }
         }
 
-        >.active {
+        > .active {
             color: #ffffff;
         }
     }

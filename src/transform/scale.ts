@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { CtrlElementType, Matrix, Scaler, ScaleUnit, ShapeType, ShapeView } from "@kcdesign/data";
+import { adapt2Shape, CtrlElementType, Matrix, Scaler, ScaleUnit, ShapeType, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { boundingBox2Root } from "@/utils/common";
 
@@ -643,8 +643,9 @@ export class ScaleHandler extends TransformHandler {
             }
         }
         let targetRotation = this.rotation;
-        const targetFlipH = !!shape.isFlippedHorizontal || needFlipH;
-        const targetFlipV = !!shape.isFlippedVertical || needFlipV;
+        const __shape = adapt2Shape(shape); // 可优化
+        const targetFlipH = needFlipH ? !__shape.isFlippedHorizontal : !!__shape.isFlippedHorizontal;
+        const targetFlipV = needFlipV ? !__shape.isFlippedVertical : !!__shape.isFlippedVertical;
 
         const cx1 = width / 2;
         const cy1 = height / 2;

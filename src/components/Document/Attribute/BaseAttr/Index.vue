@@ -22,6 +22,7 @@ import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
+import { computeString } from "@/utils/content";
 
 interface Props {
     context: Context
@@ -132,7 +133,9 @@ function _update_view() {
 const update_view = debounce(_update_view, 200, { leading: true });
 
 function changeX(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
 
     const _x: number = Number.parseFloat(value);
     if (isNaN(_x)) {
@@ -151,7 +154,7 @@ function changeX(value: string) {
 
 function changeY(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _y: number = Number.parseFloat(value);
@@ -173,7 +176,7 @@ function changeY(value: string) {
 
 function changeW(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _w: number = Number.parseFloat(value);
@@ -192,7 +195,7 @@ function changeW(value: string) {
 
 function changeH(value: string) {
     value = Number
-        .parseFloat(value)
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const _h: number = Number.parseFloat(value);
@@ -262,12 +265,10 @@ function flipv() {
 }
 
 function changeR(value: string) {
-    const matchResult = value.match(/^(-?\d+)(\.\d+)?/);
-    if (!matchResult) {
-        return;
-    }
+    value = value.split('°').join(''); // 去掉单位
+
     value = Number
-        .parseFloat(matchResult[0])
+        .parseFloat(computeString(value))
         .toFixed(fix);
 
     const newRotate: number = Number.parseFloat(value);
@@ -471,6 +472,47 @@ function formatRotate(rotate: number | string) {
     return rotate + `${rotate === mixed ? '' : '°'}`;
 }
 
+let handlerHolder: any = null;
+const holderTime = 520;
+
+function initHdl(event: MouseEvent, type: 'rotating' | 'translating' | 'scaling') {
+    if (lockMouseHandler || handlerHolder) {
+        return;
+    }
+
+    lockMouseHandler = new LockMouse(props.context, event);
+    lockMouseHandler.createApiCaller(type);
+}
+
+function updateHdl() {
+    if (!lockMouseHandler) {
+        return;
+    }
+
+    if (handlerHolder) {
+        clearTimeout(handlerHolder);
+    }
+
+    handlerHolder = setTimeout(() => {
+        lockMouseHandler?.fulfil();
+        lockMouseHandler = undefined;
+        handlerHolder = null;
+    }, holderTime);
+}
+
+function wheelX(event: WheelEvent) {
+    // 暂缓
+    // initHdl(event as MouseEvent, 'translating');
+    //
+    // let step = event.deltaY > 0 ? 1 : -1;
+    // if (event.shiftKey) {
+    //     step *= 10;
+    // }
+    // lockMouseHandler?.executeX(step);
+    //
+    // updateHdl();
+}
+
 function selection_change() {
     update_view();
     calc_attri();
@@ -501,6 +543,7 @@ onUnmounted(() => {
                            @dragstart="dragstart"
                            @dragging="draggingX"
                            @dragend="dragend"
+                           @wheel="wheelX"
             ></MdNumberInput>
             <MdNumberInput icon="Y"
                            draggable
@@ -511,8 +554,10 @@ onUnmounted(() => {
                            @dragging="draggingY"
                            @dragend="dragend"
             ></MdNumberInput>
-            <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
-                <svg-icon icon-class="adapt"></svg-icon>
+            <div class="adapt" v-if="s_adapt" @click="adapt">
+                <Tooltip :content="t('attr.adapt')">
+                    <svg-icon icon-class="adapt"></svg-icon>
+                </Tooltip>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
@@ -535,13 +580,14 @@ onUnmounted(() => {
                            @dragging="draggingH"
                            @dragend="dragend"
             ></MdNumberInput>
-
-            <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
-            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
+            <Tooltip :content="t('attr.constrainProportions')">
+                <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
+                </div>
+                <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
+                </div>
+            </Tooltip>
         </div>
         <div class="tr" :reflush="reflush">
             <MdNumberInput icon="angle"
