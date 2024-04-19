@@ -336,7 +336,7 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
-    WxLogin: typeof import('./src/components/Mobile/WxLogin.vue')['default']
     VersionDesc: typeof import('./src/components/common/VersionDesc.vue')['default']
+    WxLogin: typeof import('./src/components/Mobile/WxLogin.vue')['default']
   }
 }
