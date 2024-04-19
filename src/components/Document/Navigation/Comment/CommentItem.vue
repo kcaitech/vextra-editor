@@ -187,9 +187,9 @@ const deleteComment = async () => {
 
 const formatDate = computed(() => {
     return function (value: string): string {
-        const lang = localStorage.getItem('locale') || 'zh'
+        const lang = localStorage.getItem('en') || 'zh'
         moment.locale(mapDateLang.get(lang) || 'zh-cn');
-        return filterDate(value);
+        return filterDate(value).replace(/\s*/g, '');
     }
 })
 
@@ -197,7 +197,8 @@ const filterDate = (time: string) => {
     const date = new Date(time);
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    // return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    return moment(date).fromNow();
 }
 
 const getPageName = () => {
