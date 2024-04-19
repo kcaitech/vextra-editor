@@ -2,8 +2,8 @@
     <template v-if="!showtips">
         <div v-bind="containerProps" style="height: 100%">
             <div v-bind="wrapperProps">
-                <div class="list-item" v-for=" (item, index) in list" :key="item.data.document.id" style="height: 84px;"
-                    @click="emits('openfile', item.data.document.id, index)">
+                <div class="list-item" v-for=" item in list" :key="item.data.document.id" style="height: 84px;"
+                    @click="openfile(item.data.document.id)">
                     <div class="image">
                         <img src="@/assets/file-default-icon.png" alt="file-icon">
                     </div>
@@ -39,18 +39,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { computed, onMounted, ref, watch, watchEffect, nextTick, onUnmounted } from 'vue';
 import Loading from '../common/Loading.vue';
 import { useVirtualList, UseVirtualListReturn } from '@vueuse/core'
 import { router } from '@/router';
 
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     data: any[],
-    errNetwork: boolean,
-    index?: number
-}>();
+    errNetwork?: boolean,
+    index?: string,
+}>(), {
+    index: '0',
+})
 
 const filteredList = computed(() => props.data.filter(item => item))
 
@@ -61,6 +63,14 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
     },
 )
 
+const openfile = (id: string) => {
+    router.push(({ name: 'pageviews', query: { id: id } }))
+    const index = filteredList.value.findIndex(item => item.document.id === id)
+    console.log(index);
+    sessionStorage.setItem('ss', index.toString())
+}
+
+
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
     (e: 'openfile', docID: number, index: number): void;
@@ -69,15 +79,17 @@ const emits = defineEmits<{
 }>()
 
 
-watch([() => props.data, () => props.errNetwork],() => {
-    console.log('1111');
-    
+watch([() => props.data, () => props.errNetwork], () => {
     if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
     }
     loading.value = false
+    setTimeout(() => {
+        scrollTo(Number(sessionStorage.getItem('ss')) > 0 ? Number(sessionStorage.getItem('ss')) : 0)
+        sessionStorage.removeItem('ss')
+    }, 200)
 })
 
 
@@ -87,7 +99,13 @@ const changeload = () => {
 }
 
 
+onMounted(() => {
 
+})
+
+onUnmounted(() => {
+    // 
+})
 
 </script>
 

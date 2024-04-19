@@ -2,7 +2,8 @@
     <div class="about">
         <div class="user">
             <div class="avatar">
-                <img :src="circleUrl!" alt="avatar">
+                <img v-if="circleUrl" :src="circleUrl!" alt="avatar">
+                <span v-else>{{ uname?.slice(0, 1) }}</span>
             </div>
             <div class="info">
                 <span class="name">{{ uname }}</span>
@@ -20,7 +21,10 @@
                 </div>
             </div>
         </div>
+        <button @click="OutLogin">退出登录</button>
     </div>
+
+
 
 </template>
 
@@ -42,11 +46,31 @@ const goto = (name: string) => {
     router.push({ name: name })
 }
 
+const OutLogin = () => {
+    localStorage.clear();
+    // window.location.href = window.location.href + "#wechat_redirect";
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        console.log(1111);
+        (window as any).uni.redirectTo({
+            url: '/pages/index/index',
+        });
+        (window as any).uni.postMessage({
+            data:{
+                name:'test',
+                age:100
+            }
+        });
+
+    }
+}
+
 const emits = defineEmits<{
     testevnt: [data: object]
 }>()
 
-onMounted(()=>{
+onMounted(() => {
     window.document.title = '关于'
 })
 
@@ -149,6 +173,17 @@ onMounted(()=>{
                 }
             }
         }
+    }
+
+    button {
+        outline: none;
+        border: none;
+        margin: 0 14px;
+        border-radius: 6px;
+        height: 44px;
+        background-color: #18f;
+        color: white;
+        font-size: 14px;
     }
 }
 </style>

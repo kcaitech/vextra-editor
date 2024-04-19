@@ -3,7 +3,7 @@
         <div class="list-item" v-for="project in list" :key="project.project.id"
             @click="skipprojectfile(project.project.id, project.project.name)">
             <div class="image">
-                <img src="@/assets/favicon.svg" alt="team-icon">
+                <img src="@/assets/project-icon.png" alt="team-icon">
             </div>
             <div class="content">
                 <div class="left">
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { router } from '@/router';
 import { useRoute } from 'vue-router';
@@ -39,7 +39,7 @@ const skipprojectfile = (id: number, name: string) => {
 
 watch(() => props.data, () => {
     list = props.data.filter((item: any) => item.project.team_id === route.query.id)
-    if (props.data.length === 0) {
+    if (list.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false

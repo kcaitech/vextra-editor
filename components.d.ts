@@ -174,6 +174,7 @@ declare module '@vue/runtime-core' {
     Locate: typeof import('./src/components/Document/Attribute/BaseAttr/Locate.vue')['default']
     Login: typeof import('./src/components/Login/Login.vue')['default']
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
+    Mapply: typeof import('./src/components/Mobile/Mapply.vue')['default']
     MdNumberInput: typeof import('./src/components/common/MdNumberInput.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     MessageBoxBeta: typeof import('./src/components/common/MessageBoxBeta.vue')['default']
@@ -331,5 +332,6 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
+    WxLogin: typeof import('./src/components/Mobile/WxLogin.vue')['default']
   }
 }

@@ -56,6 +56,7 @@ const selectValue = ref<number>(-1)
 const userlist = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const errormessage = ref<string>()
+const projectfile = ref<boolean>(false)
 
 const DocType = reactive([
     `${t('share.shareable')}`,
@@ -93,9 +94,9 @@ const options = [
 ]
 
 const documentShareURL = computed(() => {
-    return route.path !== '/document'
+    return route.path !== '/pageviews'
         ?
-        location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
+        location.origin + `/pageviews?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
         :
         location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })
@@ -233,7 +234,6 @@ watchEffect(() => {
     } else {
         UserId !== docUserId ? founder.value = true : founder.value = false
     }
-
 })
 
 //复制分享链接
@@ -263,6 +263,7 @@ const copyLink = async () => {
         })
         textArea.remove()
     }
+
 }
 
 watchEffect(() => {
@@ -295,12 +296,14 @@ watchEffect(() => {
 </script>
 
 <template>
-    <div class="share" v-if="docInfo">
+    <div class="share">
         <div class="header">
             <svg-icon icon-class="back-icon" @click.stop="userlist ? userlist = false : router.go(-1)"></svg-icon>
             <span>分享</span>
         </div>
-        <div class="content">
+        <div v-if="docInfo" class="content">
+            <div style="color: #8C8C8C;margin: 16px 16px 8px 16px;">权限设置{{ docInfo.project ? '（文件所在项目所有成员固定可见）' : '' }}
+            </div>
             <!-- 普通视图 -->
             <div v-if="founder" class="normal-view">
                 <div class="file-name">
@@ -318,10 +321,40 @@ watchEffect(() => {
             </div>
             <!-- 创建者视图 -->
             <div v-if="!founder" class="creator-view">
-                <div class="everyone" @click.stop="selectValue = 2">
+                <!-- <div class="everyone" @click.stop="selectValue = 2">
                     <div class="select" :style="{ visibility: [2, 3, 4].includes(selectValue) ? 'visible' : 'hidden' }">
+                    </div> -->
+                <div class="private" @click="selectValue = 0">
+                    <span>仅自己</span>
+                    <div class="select" :style="{ visibility: selectValue === 0 ? 'visible' : 'hidden' }">
+                        <svg-icon icon-class="mselect-icon"></svg-icon>
                     </div>
-                    <div class="bnt">所有人</div>
+                </div>
+                <div class="application" @click="selectValue = 1">
+                    <span>需要确认</span>
+                    <div class="select" :style="{ visibility: selectValue === 1 ? 'visible' : 'hidden' }">
+                        <svg-icon icon-class="mselect-icon"></svg-icon>
+                    </div>
+                </div>
+                <div class="readOnly" @click="selectValue = 2">
+                    <span>{{ t('share.anyone_can_read_it') }}</span>
+                    <div class="select" :style="{ visibility: selectValue === 2 ? 'visible' : 'hidden' }">
+                        <svg-icon icon-class="mselect-icon"></svg-icon>
+                    </div>
+                </div>
+                <div class="reviewable" @click="selectValue = 3">
+                    <span>{{ t('share.anyone_can_comment') }}</span>
+                    <div class="select" :style="{ visibility: selectValue === 3 ? 'visible' : 'hidden' }">
+                        <svg-icon icon-class="mselect-icon"></svg-icon>
+                    </div>
+                </div>
+                <div class="editable" @click="selectValue = 4">
+                    <span>{{ t('share.anyone_can_edit_it') }}</span>
+                    <div class="select" :style="{ visibility: selectValue === 4 ? 'visible' : 'hidden' }">
+                        <svg-icon icon-class="mselect-icon"></svg-icon>
+                    </div>
+                </div>
+                <!-- <div class="bnt">所有人</div>
                     <div class="radio">
                         <div class="item" @click.stop>
                             <input type="radio" id="read" :value=2 v-model="selectValue" />
@@ -337,38 +370,47 @@ watchEffect(() => {
                             <input type="radio" id="edit" :value=4 v-model="selectValue" />
                             <label for="edit">{{ t('share.editable') }}</label>
                         </div>
-                    </div>
-                </div>
-                <div class="application" @click="selectValue = 1">
-                    <div class="select" :style="{ visibility: [1].includes(selectValue) ? 'visible' : 'hidden' }">
-                    </div>
-                    <span>需要确认</span>
-                </div>
-                <div class="private" @click="selectValue = 0">
-                    <div class="select" :style="{ visibility: [0].includes(selectValue) ? 'visible' : 'hidden' }">
-                    </div>
-                    <span>仅自己</span>
-                </div>
+                    </div> -->
+                <!-- </div> -->
+
+
             </div>
             <!-- 已加入分享的人 -->
             <div v-if="!founder" class="share-user" @click="userlist = true">
                 <span>已加入分享的人</span>
                 <div class="left-info">
-                    <span style="color: #c8c8c8;">{{ listuser }}人</span>
-                    <svg-icon icon-class="back-icon"></svg-icon>
+                    <!-- <span style="color: #c8c8c8;">{{ listuser }}人</span> -->
+                    <svg-icon icon-class="arrows-icon"></svg-icon>
                 </div>
 
             </div>
             <!-- 分享到 -->
-            <div class="share-to">
-                <div class="title">分享到</div>
-                <div class="type">
-                    <div class="link" @click.stop="copyLink">
-                        <div class="icon"></div>
-                        <span>复制链接</span>
+            <Transition enter-active-class="animate__animated animate__fadeInUp"
+                leave-active-class="animate__animated animate__fadeOutDown">
+                <div v-if="selectValue !== 0" class="share-to">
+                    <div class="title">分享到</div>
+                    <div class="type">
+                        <div class="link" @click.stop="copyLink">
+                            <div class="left">
+                                <svg-icon icon-class="wechat-icon"></svg-icon>
+                                <span>微信</span>
+                            </div>
+                            <div class="right">
+                                <svg-icon icon-class="arrows-icon"></svg-icon>
+                            </div>
+                        </div>
+                        <div class="link" @click.stop="copyLink">
+                            <div class="left">
+                                <svg-icon icon-class="link-icon"></svg-icon>
+                                <span>复制链接</span>
+                            </div>
+                            <div class="right">
+                                <svg-icon icon-class="arrows-icon"></svg-icon>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Transition>
             <!-- 分享的人员列表 -->
             <Transition name="fade">
                 <div v-if="userlist" class="share-user-list">
@@ -390,9 +432,9 @@ watchEffect(() => {
                 </div>
             </Transition>
         </div>
-    </div>
-    <div v-if="errormessage" class="failed">
-        <span class="message"> {{ errormessage }}</span>
+        <div v-if="errormessage" class="failed">
+            <span class="message"> {{ errormessage }}</span>
+        </div>
     </div>
     <div v-if="loading" class="loading">
         <Loading :size="20"></Loading>
@@ -453,7 +495,6 @@ watchEffect(() => {
             .name {
                 overflow: hidden;
                 text-overflow: ellipsis;
-                font-size: 14px;
                 font-weight: 500;
                 color: rgba(0, 0, 0, 1);
             }
@@ -468,7 +509,6 @@ watchEffect(() => {
 
             .founder,
             .authority {
-                font-size: 14px;
                 font-weight: 400;
                 color: #c8c8c8;
             }
@@ -483,31 +523,34 @@ watchEffect(() => {
 
 .share-user {
     display: flex;
-    height: 44px;
+    height: 64px;
     align-items: center;
-    transform: rotate();
     justify-content: space-between;
-    border-top: 1em solid #f5f7fb;
+    margin: 16px 14px;
+    background-color: #fff;
+    border: 1px solid #F1F2F2;
+    box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+    border-radius: 6px;
+    padding: 0 16px;
 
     span {
-        margin-left: 14px;
+        // margin-left: 14px;
     }
 
     .left-info {
+        width: 10px;
+        height: 10px;
         display: flex;
         align-items: center;
+        margin-right: 8px;
 
         span {
             color: #c8c8c8;
-            font-size: 14px;
         }
 
         svg {
-            width: 24px;
-            height: 24px;
-            margin-top: 2px;
-            transform: rotate(180deg);
-            margin-right: 14px;
+            width: 100%;
+            height: 100%;
         }
     }
 
@@ -516,44 +559,59 @@ watchEffect(() => {
 .share-to {
     display: flex;
     flex-direction: column;
-    border-top: 1em solid #f5f7fb;
+    margin: 16px 14px 0 14px;
+    gap: 8px;
 
     .title {
         color: #8c8c8c;
-        margin: 14px 14px 0 14px;
     }
 
     .type {
         display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border-radius: 6px;
+        border: 1px solid #F1F2F2;
+        box-shadow: inset 0px -1px 0px 0px #F0F0F0;
 
         .link {
-            width: 80px;
-            height: 80px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 0.6em;
-            margin-top: 0.6em;
+            height: 64px;
+            justify-content: space-between;
+            margin: 0 14px;
 
+            .left {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
 
-            .icon {
-                width: 40px;
-                height: 40px;
-                border-radius: 100%;
-                background-color: blue;
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                span {
+                    font-weight: 400;
+                }
             }
 
-            span {
-                font-size: 12px;
-                font-weight: 400;
+            .right {
+                width: 10px;
+                height: 10px;
+                margin-right: 8px;
+
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
             }
         }
     }
 }
 
 .share,
-.failed,
 .loading {
     display: flex;
     flex-direction: column;
@@ -561,8 +619,9 @@ watchEffect(() => {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: #fff;
+    background-color: #FAFAFA;
     z-index: 999;
+    font-size: 15px;
 
     .header {
         display: flex;
@@ -586,14 +645,25 @@ watchEffect(() => {
         .creator-view {
             display: flex;
             flex-direction: column;
-            margin: 0 14px;
+            margin: 4px 14px;
+            background-color: #fff;
+            border-radius: 6px;
+            border: 1px solid #F1F2F2;
+            box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+            box-sizing: border-box;
 
-            .everyone,
             .application,
-            .private {
+            .private,
+            .readOnly,
+            .reviewable,
+            .editable {
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
-                height: 44px;
+                height: 64px;
+                margin: 0 16px;
+                border-bottom: 1px solid #f5f5f5;
+                box-sizing: border-box;
 
                 .bnt {
                     flex: 1;
@@ -613,12 +683,14 @@ watchEffect(() => {
                 }
 
                 .select {
-                    height: 6px;
-                    width: 12px;
-                    border-left: 2px solid #1878F5;
-                    border-bottom: 2px solid #1878F5;
-                    transform: rotate(-45deg);
-                    margin: 0 12px;
+                    height: 20px;
+                    width: 20px;
+                    margin-right: 8px;
+
+                    svg {
+                        width: 100%;
+                        height: 100%;
+                    }
                 }
 
             }
@@ -628,17 +700,29 @@ watchEffect(() => {
             display: flex;
             flex-direction: column;
             margin: 0 14px;
+            background-color: #fff;
+            border-radius: 6px;
+            border: 1px solid #F1F2F2;
+            box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+            box-sizing: border-box;
 
             .file-name,
             .founder,
             .permission {
                 display: flex;
                 align-items: center;
+                margin: 0 14px;
 
                 .type {
                     width: 96px;
                     min-width: 96px;
                     color: #8c8c8c;
+                }
+
+                .name {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
         }
@@ -646,9 +730,17 @@ watchEffect(() => {
 
     }
 
-    .message {
-        margin: auto;
-        color: #8c8c8c;
+    .failed {
+        display: flex;
+        flex-direction: column;
+        height: calc(100% - 44px);
+
+        .message {
+            margin: auto;
+            color: #8c8c8c;
+        }
     }
+
+
 }
 </style>

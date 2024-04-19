@@ -14,6 +14,17 @@ export function PostLogin(params = {}, ops = {}) {
 
 }
 
+// 登录请求
+export function PostWxLogin(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/auth/login/wx_mp',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+
+}
+
 
 // 获取用户信息
 export function GetInfo(params = {}, ops = {}) {

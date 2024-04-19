@@ -22,15 +22,14 @@
             </div>
             <div class="content" :style="{ height: activebnt !== 'About' ? 'calc(100% - 54px)' : '100%' }">
                 <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
-                <Transition name="fade">
-                    <div v-if="searchKey" class="search-list">
-                        <FilesItem :err-network="errnetwork" :data="searchData" @changeStar="changeStar"
-                            @openfile="openfile" @refresh="refreshTab" @sharefile="data" :index=listindex>
-                        </FilesItem>
-                    </div>
-                </Transition>
             </div>
         </div>
+        <Transition name="fade">
+            <div v-if="searchKey" class="search-list">
+                <FilesItem :data="searchData" @changeStar="changeStar">
+                </FilesItem>
+            </div>
+        </Transition>
         <div class="footer">
             <div class="bnt" :class="{ 'bnt-selct': activebnt === item.value }" v-for="(item, index) in bntdata"
                 :key=index @click="changetab(item.value)">
@@ -61,8 +60,10 @@ import Inform from './MessageInfo.vue';
 import { useSearchData } from './search'
 import { storeToRefs } from 'pinia';
 import { router } from '@/router';
-
-
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n'
+import { changeStar as change } from './files'
+const { t } = useI18n()
 const Data = useSearchData()
 const { searchKey, searchData } = storeToRefs(Data)
 
@@ -86,7 +87,6 @@ const teamApplyList = ref<any>([]);
 const totalList = ref<any[]>([])
 const showInForm = ref(false);
 const tsDone = ref(false)
-
 const closeInForm = () => {
     showInForm.value = false;
     tsDone.value = false
@@ -105,18 +105,12 @@ const tabs = new Map([
     ['About', About],
 ]);
 
-const openfile = (id: number, index: number) => {
-    sessionStorage.setItem('scrolltop', index.toString())
-    router.push(({ name: 'pageviews', query: { id: id } }))
-}
-
 
 const changetab = (tab: string) => {
     activebnt.value = tab;
     sessionStorage.setItem('selectTab', tab);
-    (window as any).wx.miniProgram.postMessage({data:{index:1,title:'哈哈'}});
-    (window as any).wx.miniProgram.navigateBack({delta: 1})
 }
+
 
 const testevent = (data: any) => {
     docid.value = data.data.document.id
@@ -134,6 +128,19 @@ const getApplyList = async () => {
     }
 }
 
+const changeStar = async (id: number, b: boolean) => {
+    if (await change(id, b)) {
+        searchData.value.filter((item) => {
+            if (item.document.id === id) {
+                item.document_favorites.is_favorite = !b
+            }
+            return item
+        })
+        ElMessage.closeAll('success')
+        ElMessage.success({ duration: 1500, message: !b ? t('home.star_ok') : t('home.star_cancel') })
+    }
+}
+
 const getProjectApplyList = async () => {
     try {
         const { data } = await team_api.getTeamProjectApplyAPI();
@@ -141,8 +148,8 @@ const getProjectApplyList = async () => {
             projectApplyList.value = data;
             totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
-                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -160,8 +167,8 @@ const getTeamApply = async () => {
             teamApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
-                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -179,8 +186,8 @@ const getProjectNotice = async () => {
             notifyPApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
-                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -196,8 +203,8 @@ const getTeamNotice = async () => {
             notifyTApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace('-', '/')).getTime();
-                const timeB = new Date(b.request.created_at.replace('-', '/')).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -277,13 +284,14 @@ onUnmounted(() => {
 
 .search-list {
     position: absolute;
-    top: 0;
+    top: 98px;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 98px);
     padding: 0 14px;
     box-sizing: border-box;
     background-color: #FAFAFA;
+    z-index: 1;
 }
 
 .bnt-selct {

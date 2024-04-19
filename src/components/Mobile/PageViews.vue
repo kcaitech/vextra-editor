@@ -165,8 +165,8 @@ const getDocumentInfo = async () => {
                         id: route.query.id,
                         page_id: route.query.page_id.slice(0, 8)
                     } : { id: route.query.id };
-                    router.push({
-                        name: "apply",
+                    router.replace({
+                        name: "mapply",
                         query: query,
                     });
                     return;
@@ -189,7 +189,7 @@ const getDocumentInfo = async () => {
                 page_id: route.query.page_id.slice(0, 8)
             } : { id: route.query.id };
             router.push({
-                name: "apply",
+                name: "mapply",
                 query: query,
             });
             return;
@@ -640,7 +640,7 @@ function end(e: TouchEvent) {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                         :matrix="matrix" @closeLoading="closeLoading"/>
+                         :matrix="(matrix as Matrix)" @closeLoading="closeLoading"/>
         </div>
     </div>
 </template>

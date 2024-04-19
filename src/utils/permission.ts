@@ -5,7 +5,7 @@ import isMobileDevice from "./mobileDeviceChecker";
 
 
 //守卫白名单
-const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
+const whiteList = ['/', '/login', '/wxlogin', '/404', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (to.meta.title) {
@@ -13,7 +13,7 @@ router.beforeEach((to, from, next) => {
     }
     //判断是否存在token且有效
     if (token) {
-        if (to.path === '/login') {
+        if (to.path === '/login' || to.path === '/wxlogin') {
             if (isMobileDevice()) {
                 next('/m')
             } else {
@@ -31,7 +31,11 @@ router.beforeEach((to, from, next) => {
             } else {
                 localStorage.setItem('perRoute', '')
             }
-            next('/login')
+            if (navigator.userAgent.includes('miniProgram')) {
+                next('/wxlogin')
+            } else {
+                next('/login')
+            }
         }
     }
 })

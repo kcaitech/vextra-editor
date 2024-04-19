@@ -9,7 +9,7 @@
         </div>
         <div ref="ellist" class="list">
             <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
-                @refresh="refreshTab" @sharefile="data" :index=listindex>
+                @refresh="refreshTab" @sharefile="data">
             </FilesItem>
         </div>
     </div>
@@ -27,7 +27,6 @@ const { t } = useI18n()
 const bntdata = ['最近', '收到的共享', '标星']
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
-const listindex = ref<number>(0)
 const errnetwork = ref<boolean>(false)
 const changetab = (id: number) => {
     activeTab.value = id
@@ -90,9 +89,6 @@ watchEffect(async () => {
         lists.value = []
         ElMessage.error({ duration: 3000, message: data.data.message })
     }
-
-    listindex.value = Number(sessionStorage.getItem('scrolltop'))
-
 })
 
 watch(activeTab, () => {

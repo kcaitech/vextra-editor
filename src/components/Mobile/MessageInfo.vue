@@ -218,7 +218,7 @@ function resizechange() {
 }
 
 const filterDate = (time: string) => {
-    const date = new Date(time);
+    const date = new Date(time.replace(/-/g,'/').slice(0,18));
     const hours = date.getHours();
     const minutes = date.getMinutes();
     return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;

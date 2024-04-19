@@ -136,6 +136,7 @@ var exports = defineConfig({
         }
     },
 
+    // https://webpack.js.org/configuration/dev-server/
     devServer: {
         port: 8080,
         https: true,
@@ -151,7 +152,12 @@ var exports = defineConfig({
                     // '^/api/v1': '/'
                 }
             }
-        }
+        },
+        static: {
+            directory: path.join(__dirname, "public"),
+        },
+        compress: true,
+        historyApiFallback: true,
     },
 })
 module.exports = exports

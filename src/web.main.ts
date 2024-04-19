@@ -10,6 +10,7 @@ import '@/style/constant.scss'
 import { router } from "./router"
 import { createPinia } from 'pinia'
 import '@/utils/permission'
+import 'animate.css';
 
 const pinia = createPinia()
 import * as settings from "@/settings"

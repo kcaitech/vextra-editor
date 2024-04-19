@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory} from "vue-router";
+import { createRouter, createWebHashHistory,createWebHistory} from "vue-router";
 import { SKIP_LOGIN } from '@/settings';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
@@ -38,6 +38,8 @@ const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
 const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
 const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
 const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
+const Wxlogin=()=>import('@/components/Mobile/WxLogin.vue')
+const Mapply=()=>import('@/components/Mobile/Mapply.vue')
 
 let _t: any = i18n.global
 
@@ -100,7 +102,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: 'login' },
+        redirect: { name: navigator.userAgent.includes('miniProgram')?'Wxlogin':'login' },
         children: [
             {
                 path: "introduction",
@@ -171,6 +173,14 @@ const routes = [
         redirect: '/files/recently',
         children: children
     },
+    {  
+        path: "/wxlogin",
+        name: "Wxlogin",
+        component: Wxlogin,
+        meta: {
+            requireAuth: true,
+        },
+    },
     {
         path: "/m",
         name: "mobilehome",
@@ -230,6 +240,14 @@ const routes = [
         }
     },
     {
+        path: "/mapply",
+        name: "mapply",
+        component: Mapply,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
         path: "/projectApply",
         name: "projectApply",
         component: projectApply,
@@ -250,8 +268,8 @@ const routes = [
 ]
 
 export const router = createRouter({
-    // history: createWebHistory(),
-    history: createWebHashHistory(),
+    history: createWebHistory("zbb"),
+    // history: createWebHashHistory(),
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition

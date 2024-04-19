@@ -317,9 +317,6 @@ const setSelectedPageVisible = () => {
     }, 200)
 }
 
-watchEffect(() => {
-    console.log(Attr);
-});
 onMounted(() => {
     getPageName();
     props.context.selection.watch(selectionWatcher);

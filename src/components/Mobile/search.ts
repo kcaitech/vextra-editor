@@ -10,20 +10,20 @@ export const useSearchData = defineStore('search', () => {
 
     getDoucment().then((res) => {
         filelist.value = res.data
+        
+        
     })
     getSharedata().then((res) => {
         sharelist.value = res.data
     })
 
     const searchData = computed(() => {
-        return filelist.value.concat(sharelist.value).filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchKey.value.toLowerCase()))
+        return filelist.value.concat(sharelist.value).filter((item: any) => {
+            if(item.document.name){
+              return  PinyinMatch.match(item.document.name.toLowerCase(), searchKey.value.toLowerCase())
+            }
+        })
     })
-
-    watchEffect(()=>{
-        console.log(searchKey.value,searchData.value);
-        
-    })
-
     return { searchData, searchKey }
 })
 
