@@ -123,7 +123,7 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     width: 124px;
     border-radius: 4px;
     padding: 2px;
-    background-color: #F5F5F5;
+    background-color: #F0F0F0;
 }
 
 .vertical-aligning {
@@ -135,7 +135,7 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     width: 94px;
     border-radius: 4px;
     padding: 2px;
-    background-color: #F5F5F5;
+    background-color: #F0F0F0;
 }
 
 .font-posi {

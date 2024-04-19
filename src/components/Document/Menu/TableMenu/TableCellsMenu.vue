@@ -29,8 +29,11 @@ const isAlignMenu = ref('')
 const color = ref<Color>(new Color(1, 255, 255, 255));
 const singleChoice = ref<boolean>(false);
 const showAlginMenu = (meun: string) => {
-    if (isAlignMenu.value) return isAlignMenu.value = '';
     isAlignMenu.value = meun
+}
+
+const hiddenAlginMenu = () => {
+        isAlignMenu.value = ''
 }
 const textAlginHor = (svg: string) => {
     horIcon.value = svg;
@@ -252,21 +255,25 @@ onUnmounted(() => {
         :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }"
         @mousedown.stop>
         <div v-if="props.cellMenu === CellMenu.MultiSelect" class="popover-content">
-            <div class="hor" @click="showAlginMenu('hor')" :class="{ selected_bgc: isAlignMenu === 'hor' }">
+            <div class="hor" @mouseenter="showAlginMenu('hor')" @mouseleave="hiddenAlginMenu"
+                :class="{ selected_bgc: isAlignMenu === 'hor' }">
                 <svg-icon :icon-class="horIcon"></svg-icon>
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
+                <div class="bridge" style="width: 130px;" v-if="isAlignMenu === 'hor'"></div>
                 <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu"
                     :selectIcon="horIcon" @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
             <div class="divider"></div>
-            <div class="ver" @click="showAlginMenu('ver')" :class="{ selected_bgc: isAlignMenu === 'ver' }">
+            <div class="ver" @mouseenter="showAlginMenu('ver')" @mouseleave="hiddenAlginMenu"
+                :class="{ selected_bgc: isAlignMenu === 'ver' }">
                 <svg-icon :icon-class="verIcon"></svg-icon>
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
+                <div class="bridge" style="width: 100px;" v-if="isAlignMenu === 'ver'"></div>
                 <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu"
                     :selectIcon="verIcon" @textAlginVer="textAlginVer">
                 </TableContextAlgin>
@@ -325,7 +332,7 @@ onUnmounted(() => {
 .custom-popover {
     position: absolute;
     height: 36px;
-    border-radius: 4px;
+    border-radius: 6px;
     background-color: #fff;
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.18);
     z-index: 10000;
@@ -351,6 +358,10 @@ onUnmounted(() => {
         height: 24px;
         border-radius: 3px;
 
+        &:hover {
+            background-color: #F0F0F0;
+        }
+
         >svg {
             width: 16px;
             height: 16px;
@@ -375,6 +386,7 @@ onUnmounted(() => {
         width: 36px;
         position: relative;
     }
+
     .divider {
         width: 16px;
         height: 100%;
@@ -402,6 +414,14 @@ onUnmounted(() => {
 }
 
 .selected_bgc {
-    background-color: #f5f5f5;
+    background-color: #F0F0F0;
+}
+
+.bridge {
+    position: absolute;
+    top: 22px;
+    left: -7px;
+    background-color: transparent;
+    height: 10px;
 }
 </style>
