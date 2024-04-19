@@ -23,10 +23,10 @@ import {
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import CommentInput from './Content/CommentInput.vue';
+import CommentInput from '../Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
-import ContactInit from './Toolbar/ContactInit.vue';
+import ContactInit from '../Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
@@ -69,20 +69,20 @@ const cursor = ref<string>('');
 
 // #endregion
 function down(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
+    if (e.button === 0) {
+        e.stopPropagation();
+        const action = props.context.tool.action;
+        modify_page_xy_1(e);
+        modify_client_xy_1(e);
+        if (action !== Action.AddComment) {
+            commentInput.value = false;
+        }
+        if (action === Action.AddContact) {
+            just_search = true;
+        }
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", up);
     }
-    const action = props.context.tool.action;
-    modify_page_xy_1(e);
-    modify_client_xy_1(e);
-    if (action !== Action.AddComment) {
-        commentInput.value = false;
-    }
-    if (action === Action.AddContact) {
-        just_search = true;
-    }
-    document.addEventListener("mousemove", move);
-    document.addEventListener("mouseup", up);
 }
 
 function move(e: MouseEvent) {
@@ -121,6 +121,7 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
+
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
@@ -503,7 +504,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
+    <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
                       :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
                       :rootWidth="rootWidth"
