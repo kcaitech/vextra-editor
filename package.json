@@ -80,6 +80,7 @@
     "sass-loader": "^13.2.0",
     "svg-sprite-loader": "^6.0.11",
     "svgo-loader": "^3.0.3",
+    "terser-webpack-plugin": "^5.3.10",
     "ts-jest": "^29.1.1",
     "ts-loader": "~8.2.0",
     "typedoc": "^0.22.17",
