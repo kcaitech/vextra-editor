@@ -2,9 +2,8 @@ import { TransformHandler } from "@/transform/handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action } from "@/context/tool";
-import { CreatorApiCaller, ShapeView } from "@kcdesign/data";
+import { CreatorApiCaller, Matrix, Shape, ShapeFrame, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
-import { Asssit } from "@/context/assist";
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
@@ -21,6 +20,7 @@ export class CreatorExecute extends TransformHandler {
     private verFixedValue: number = Infinity;
 
     private downEnv: ShapeView;
+    private frame: ShapeFrame = new ShapeFrame(0, 0, 100, 100);
 
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
@@ -28,7 +28,22 @@ export class CreatorExecute extends TransformHandler {
         this.livingPoint = this.workspace.getRootXY(event);
         this.fixedPoint = { ...this.livingPoint };
 
-        this.downEnv = context.selection.getClosestContainer(this.fixedPoint);
+        const fixed = this.fixedPoint;
+        const assist = this.context.assist.alignXY2(fixed);
+
+        if (assist.sticked_by_x) {
+            fixed.x = assist.x;
+        }
+        if (assist.sticked_by_y) {
+            fixed.y = assist.y;
+        }
+
+        if (context.user.isPixelAlignMent) {
+            fixed.x = Math.round(fixed.x);
+            fixed.y = Math.round(fixed.y);
+        }
+
+        this.downEnv = context.selection.getClosestContainer(fixed); // 确认落点环境
     }
 
     createApiCaller() {
@@ -51,8 +66,6 @@ export class CreatorExecute extends TransformHandler {
             this.updateVerFixedStatus(this.livingPoint.y, assist);
         }
         // 3. 键盘事件修正Shift、Alt
-
-
         this.__modifyFrame();
     }
 
@@ -193,13 +206,128 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private __modifyFrame() {
+        const fixedPoint = { ...this.fixedPoint };
+        const livingPoint = { ...this.livingPoint };
+
         if (this.altStatus) {
-            // continue;
+            const __x = livingPoint.x - fixedPoint.x;
+            const __y = livingPoint.y - fixedPoint.y;
+
+            fixedPoint.x = fixedPoint.x - __x;
+            fixedPoint.y = fixedPoint.y - __y;
         }
 
         if (this.shiftStatus) {
+            const h = Math.abs(livingPoint.y - fixedPoint.y);
+            const w = Math.abs(livingPoint.x - fixedPoint.x);
 
+            if (h > w) {
+                livingPoint.x = livingPoint.x + ((h - w) * ((livingPoint.x - fixedPoint.x) / w));
+            } else {
+                livingPoint.y = livingPoint.y + ((w - h) * ((livingPoint.y - fixedPoint.y) / h));
+            }
         }
+
+        const cx = fixedPoint.x < livingPoint.x;
+        const cy = fixedPoint.y < livingPoint.y;
+        const left = cx ? fixedPoint.x : livingPoint.x;
+        const right = cx ? livingPoint.x : fixedPoint.x;
+        const top = cy ? fixedPoint.y : livingPoint.y;
+        const bottom = cy ? livingPoint.y : fixedPoint.y;
+
+        this.frame.x = left;
+        this.frame.y = top;
+        this.frame.width = right - left;
+        this.frame.height = bottom - top;
+
+        // console.log('frame:', this.frame);
+
+        this.fixedByUserConfig();
+
+        const m = new Matrix(this.downEnv.matrix2Root().inverse);
+        const xy = m.computeCoord3(this.frame);
+        this.frame.x = xy.x;
+        this.frame.y = xy.y;
+        const transform = this.getTransform();
+    }
+
+    private fixedByUserConfig() {
+        const align = this.alignPixel;
+
+        const f = this.frame;
+
+        if (align) {
+            f.x = Math.round(f.x);
+            f.y = Math.round(f.y);
+            f.width = Math.round(f.width);
+            f.height = Math.round(f.height);
+
+            if (f.width < 1) {
+                f.width = 1;
+            }
+            if (f.height < 1) {
+                f.height = 1;
+            }
+        }
+
+    }
+
+    private getTransform() {
+        const result = { flipH: false, flipV: false, rotation: 0 };
+        const env: ShapeView = this.downEnv;
+
+        // flip
+        let ohflip = false;
+        let ovflip = false;
+
+        let p: ShapeView | undefined = env;
+        while (p) {
+            if (p.isFlippedHorizontal) {
+                ohflip = !ohflip;
+            }
+            if (p.isFlippedVertical) {
+                ovflip = !ovflip;
+            }
+            p = p.parent;
+        }
+
+        result.flipH = ohflip;
+        result.flipV = ovflip;
+
+        // rotate
+        const pm = env.matrix2Root();
+        const pminverse = pm.inverse;
+
+        const m = new Matrix(pminverse);
+
+        let sina = m.m10;
+        let cosa = m.m00;
+
+        if (result.flipH) sina = -sina;
+        if (result.flipV) cosa = -cosa;
+
+        let rotate = Math.asin(sina);
+
+        if (cosa < 0) {
+            if (sina > 0) rotate = Math.PI - rotate;
+            else if (sina < 0) rotate = -Math.PI - rotate;
+            else rotate = Math.PI;
+        }
+
+        if (!Number.isNaN(rotate)) {
+            result.rotation = (rotate / (2 * Math.PI) * 360) % 360;
+        }
+
+        if (result.flipH) {
+            result.rotation = result.rotation - 180;
+        }
+        if (result.flipV) {
+            result.rotation = result.rotation - 180;
+        }
+
+        result.rotation %= 360;
+
+        return result;
     }
 
     fulfil() {
