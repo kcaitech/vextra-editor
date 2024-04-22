@@ -388,6 +388,11 @@ export const bool = {
     cohere: '路径拼合'
 }
 
+export const date = {
+    just_now: '刚刚',
+    s: '秒前',
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';

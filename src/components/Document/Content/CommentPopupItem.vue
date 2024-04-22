@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/request/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
-import { mapDateLang } from '@/utils/date_lang'
+import { formatPast, mapDateLang } from '@/utils/date_lang'
 import { Comment } from '@/context/comment';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { Perm } from '@/context/workspace';
@@ -144,15 +144,10 @@ const formatDate = computed(() => {
     return function (value: string): string {
         const lang = localStorage.getItem('locale') || 'zh'
         moment.locale(mapDateLang.get(lang) || 'zh-cn');
-        return filterDate(value).replace(/\s*/g, '');
+        return formatPast(value, t).replace(/\s*/g, '').replace(/,/g, ' ');
     }
 })
 
-const filterDate = (time: string) => {
-    const date = new Date(time);
-    return moment(date).fromNow();
-    // return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
 function startEditing() {
     isEditing.value = true
 }

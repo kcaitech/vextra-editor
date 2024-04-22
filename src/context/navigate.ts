@@ -18,6 +18,7 @@ export class Navi extends WatchableObject {
     static ITEM_DRAG = 11;
     static TO_SEARCH = 12;
     static COMP_LIST_CHANGED = 13;
+    static LIST_FOLD = 14;
     private m_page_need_extend: boolean = false;
     private m_focus_text: TextSelection | undefined;
     private m_keywords: string = '';

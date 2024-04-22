@@ -386,7 +386,10 @@ export const bool = {
     difference: 'Exclude',
     cohere: 'Vector'
 }
-
+export const date = {
+    just_now: 'Just now',
+    s: 's',
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

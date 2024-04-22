@@ -24,7 +24,6 @@ import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
 import { Color } from "../../../kcdesign-data/src";
-import { lowerFirst } from "lodash";
 
 // todo 键盘事件的权限处理
 
@@ -243,6 +242,10 @@ keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
     }
     if (event.shiftKey) {
         context.tool.setAction(Action.AddArrow); // 箭头工具
+        return;
+    }
+    if(event.altKey) {
+        context.navi.notify(Navi.LIST_FOLD);
         return;
     }
     context.tool.setAction(Action.AddLine); // 线段工具
