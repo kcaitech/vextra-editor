@@ -1,11 +1,11 @@
 {
-  "name": "mossdesign",
+  "name": "moss.design",
   "description": "A design system for rapidly building web applications",
-  "productName": "MossDesign",
+  "productName": "墨师设计",
   "version": "0.1.0",
   "private": true,
   "author": "moss.design",
-  "main": "background.js",
+  "main": "web.main.ts",
   "publishConfig": {
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
