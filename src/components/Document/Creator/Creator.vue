@@ -31,6 +31,7 @@ import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
 import { Asssit } from "@/context/assist";
+import { CreatorExecute } from "@/components/Document/Creator/execute";
 
 interface Props {
     context: Context
@@ -67,6 +68,8 @@ const posi = ref({ x: 0, y: 0 });
 const rootWidth = ref<number>(props.context.workspace.root.width);
 const cursor = ref<string>('');
 
+let creatorHdl: undefined | CreatorExecute = undefined;
+
 // #endregion
 function down(e: MouseEvent) {
     if (e.button === 0) {
@@ -80,6 +83,9 @@ function down(e: MouseEvent) {
         if (action === Action.AddContact) {
             just_search = true;
         }
+
+        creatorHdl = new CreatorExecute(props.context, e);
+
         document.addEventListener("mousemove", move);
         document.addEventListener("mouseup", up);
     }
@@ -89,6 +95,7 @@ function move(e: MouseEvent) {
     if (e.buttons === 1) {
         if (newShape) {
             modify_new_shape_frame(e);
+            creatorHdl?.modifyFrame(e);
         } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
             const __xy2 = props.context.workspace.getContentXY(e);
             page_xy_2 = matrix1.computeCoord(__xy2);
@@ -116,6 +123,7 @@ function up(e: MouseEvent) {
             init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
         }
     }
+    creatorHdl?.fulfil();
     isDrag = false;
     just_search = false;
     document.removeEventListener("mousemove", move);
@@ -278,26 +286,26 @@ function modify_client_xy_1(e: MouseEvent) {
 }
 
 function correct_page_xy(x: number, y: number) {
-    const stickness = props.context.assist.stickness;
-    const target = props.context.assist.create_match({ x, y });
-    if (target) {
-        if (stickedX) {
-            if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
-            else x = sticked_x_v;
-        } else if (target.sticked_by_x) {
-            x = target.x;
-            sticked_x_v = x;
-            stickedX = true;
-        }
-        if (stickedY) {
-            if (Math.abs(y - sticked_y_v) >= stickness) stickedY = false;
-            else y = sticked_y_v;
-        } else if (target.sticked_by_y) {
-            y = target.y;
-            sticked_y_v = y;
-            stickedY = true;
-        }
-    }
+    // const stickness = props.context.assist.stickness;
+    // const target = props.context.assist.create_match({ x, y });
+    // if (target) {
+    //     if (stickedX) {
+    //         if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
+    //         else x = sticked_x_v;
+    //     } else if (target.sticked_by_x) {
+    //         x = target.x;
+    //         sticked_x_v = x;
+    //         stickedX = true;
+    //     }
+    //     if (stickedY) {
+    //         if (Math.abs(y - sticked_y_v) >= stickness) stickedY = false;
+    //         else y = sticked_y_v;
+    //     } else if (target.sticked_by_y) {
+    //         y = target.y;
+    //         sticked_y_v = y;
+    //         stickedY = true;
+    //     }
+    // }
     return { x, y }
 }
 

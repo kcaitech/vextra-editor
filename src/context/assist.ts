@@ -728,6 +728,56 @@ export class Asssit extends WatchableObject {
         return target;
     }
 
+    creator(point: XY) {
+        if (!this.m_except.size) {
+            return;
+        }
+
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
+            const shape = this.m_shape_inner[i];
+            if (this.m_except.get(shape.id)) {
+                continue;
+            }
+
+            const c_pg = this.m_pg_inner.get(shape.id);
+            if (!c_pg) {
+                continue;
+            }
+
+            modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
+            modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
+        }
+
+        const _self = { id: 'self', p: { x: point.x, y: point.y } };
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x;
+            target.sticked_by_x = true;
+
+            _self.p.x = target.x;
+
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([_self]);
+        }
+
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y;
+            target.sticked_by_y = true;
+
+            _self.p.y = target.y;
+
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
+        }
+
+        return target;
+    }
+
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
