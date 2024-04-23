@@ -1,8 +1,16 @@
 import { TransformHandler } from "@/transform/handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
-import { Action } from "@/context/tool";
-import { CreatorApiCaller, Matrix, Shape, ShapeFrame, ShapeView } from "@kcdesign/data";
+import { Action, ResultByAction } from "@/context/tool";
+import {
+    CreatorApiCaller,
+    GeneratorParams,
+    GroupShapeView,
+    Matrix,
+    Shape,
+    ShapeFrame,
+    ShapeView
+} from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 
 export class CreatorExecute extends TransformHandler {
@@ -21,6 +29,8 @@ export class CreatorExecute extends TransformHandler {
 
     private downEnv: ShapeView;
     private frame: ShapeFrame = new ShapeFrame(0, 0, 100, 100);
+
+    private shape: ShapeView | undefined;
 
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
@@ -44,6 +54,8 @@ export class CreatorExecute extends TransformHandler {
         }
 
         this.downEnv = context.selection.getClosestContainer(fixed); // 确认落点环境
+
+        this.action = context.tool.action;
     }
 
     createApiCaller() {
@@ -240,8 +252,6 @@ export class CreatorExecute extends TransformHandler {
         this.frame.width = right - left;
         this.frame.height = bottom - top;
 
-        // console.log('frame:', this.frame);
-
         this.fixedByUserConfig();
 
         const m = new Matrix(this.downEnv.matrix2Root().inverse);
@@ -249,6 +259,39 @@ export class CreatorExecute extends TransformHandler {
         this.frame.x = xy.x;
         this.frame.y = xy.y;
         const transform = this.getTransform();
+
+        const type = ResultByAction(this.action);
+        const namePrefix = this.workspace.t(`shape.${type}`);
+
+        if (!type) {
+            return;
+        }
+
+        const params: GeneratorParams = {
+            parent: this.downEnv as GroupShapeView,
+            frame: new ShapeFrame(this.frame.x, this.frame.y, this.frame.width, this.frame.height),
+            type,
+            transform,
+            namePrefix,
+            isFixedRatio: this.shiftStatus,
+            shape: this.shape
+        };
+
+        const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
+
+        if (shape && !this.shape) {
+            const selection = this.context.selection;
+            this.context.nextTick(
+                selection.selectedPage!,
+                () => {
+                    this.shape = selection.selectedPage!.getShape(shape.id);
+                    if (this.shape) {
+                        this.context.assist.set_trans_target([(this.shape)]);
+                        selection.selectShape(this.shape);
+                    }
+                }
+            );
+        }
     }
 
     private fixedByUserConfig() {
@@ -339,14 +382,15 @@ export class CreatorExecute extends TransformHandler {
 
         }
 
+        super.fulfil();
+
         this.context.cursor.reset();
+        this.context.tool.setAction(Action.AutoV);
 
         if (this.__wheel_timer) {
             clearInterval(this.__wheel_timer);
             this.__wheel_timer = null;
         }
-
-        super.fulfil();
     }
 
 

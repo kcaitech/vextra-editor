@@ -93,13 +93,17 @@ function down(e: MouseEvent) {
 
 function move(e: MouseEvent) {
     if (e.buttons === 1) {
-        if (newShape) {
-            modify_new_shape_frame(e);
+        // if (newShape) {
+        if (isDrag) {
+            // modify_new_shape_frame(e);
             creatorHdl?.modifyFrame(e);
-        } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
-            const __xy2 = props.context.workspace.getContentXY(e);
-            page_xy_2 = matrix1.computeCoord(__xy2);
-            gen_new_shape(e);
+        // } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+        } else if (Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+            // const __xy2 = props.context.workspace.getContentXY(e);
+            // page_xy_2 = matrix1.computeCoord(__xy2);
+            // gen_new_shape(e);
+            creatorHdl?.createApiCaller();
+
             isDrag = true;
         }
     }
@@ -114,15 +118,15 @@ function move2(e: MouseEvent) {
 }
 
 function up(e: MouseEvent) {
-    if (isDrag && newShape) {
-        shapeCreateEnd();
-    } else if (!isDrag && props.context.tool.action.startsWith('add')) {
-        const action = props.context.tool.action;
-        if (action === Action.AddComment) return addComment(e);
-        if (action !== Action.AddContact && action !== Action.AddTable) {
-            init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
-        }
-    }
+    // if (isDrag && newShape) {
+    //     shapeCreateEnd();
+    // } else if (!isDrag && props.context.tool.action.startsWith('add')) {
+    //     const action = props.context.tool.action;
+    //     if (action === Action.AddComment) return addComment(e);
+    //     if (action !== Action.AddContact && action !== Action.AddTable) {
+    //         init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
+    //     }
+    // }
     creatorHdl?.fulfil();
     isDrag = false;
     just_search = false;
