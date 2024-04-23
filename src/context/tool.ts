@@ -18,7 +18,9 @@ export enum Action {
     AddContact = 'add-contact',
     AddCutout = 'add-cutout',
     Curve = 'curve',
-    PathClip = 'path-clip'
+    PathClip = 'path-clip',
+    Pen = 'Pen',
+    Pencil = 'Pencil'
 }
 
 const A2R = new Map([
