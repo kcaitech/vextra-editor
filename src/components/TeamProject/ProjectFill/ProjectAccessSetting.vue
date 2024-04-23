@@ -201,7 +201,7 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://moss.design/#/files/project/${project.id}`
+    sharelink.value = `https://moss.design/files/project/${project.id}`
 
 })
 

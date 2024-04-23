@@ -29,7 +29,7 @@ enum docType {
 }
 
 const props = defineProps<{
-    docId: string,
+    docId?: string,
     projectPerm?: number | undefined
 }>()
 

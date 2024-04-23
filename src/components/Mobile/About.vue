@@ -58,8 +58,7 @@ const OutLogin = () => {
         });
         (window as any).uni.postMessage({
             data:{
-                name:'test',
-                age:100
+                login:'false',
             }
         });
 

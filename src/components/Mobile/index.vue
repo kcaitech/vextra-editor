@@ -416,8 +416,8 @@ onUnmounted(() => {
         justify-content: space-between;
         position: sticky;
         bottom: 0;
-        min-height: 58px;
-        font-size: 10px;
+        min-height: 72px;
+        font-size: 12px;
         font-weight: 500;
         background-color: #FFFFFF;
         color: #BFBFBF;

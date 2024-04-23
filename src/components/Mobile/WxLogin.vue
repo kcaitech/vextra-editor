@@ -1,8 +1,5 @@
 <template>
-
-    <button v-if="route.query.code" @click="Login">点击登录</button>
-
-    <div>{{ route.query.code }}</div>
+    <div></div>
 </template>
 
 <script setup lang="ts">
@@ -14,7 +11,7 @@ import { ElMessage } from "element-plus";
 const route = useRoute()
 const userid = ref('')
 async function Login() {
-    console.log('触发登录');
+    console.log('1111');
     
     user_api.PostWxLogin({ code: route.query.code }).then((linfo: any) => {
         if (linfo) {

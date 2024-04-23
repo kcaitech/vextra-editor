@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@/router';
-import { onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
@@ -269,25 +269,25 @@ const getDocumentInfo = async () => {
 }
 
 async function updateDocumentKey() {
-  if (!documentLoader) return;
-  const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-  if (docKeyRes.code !== 0) return;
-  const docKeyData = docKeyRes.data;
-  const storageOptions: StorageOptions = {
-    endPoint: docKeyData.endpoint,
-    region: docKeyData.region,
-    accessKey: docKeyData.access_key,
-    secretKey: docKeyData.secret_access_key,
-    sessionToken: docKeyData.session_token,
-    bucketName: docKeyData.bucket_name,
-  }
-  let storage: IStorage;
-  if (docKeyData.provider === "oss") {
-    storage = new OssStorage(storageOptions);
-  } else {
-    storage = new S3Storage(storageOptions);
-  }
-  documentLoader.setStorage(storage);
+    if (!documentLoader) return;
+    const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    if (docKeyRes.code !== 0) return;
+    const docKeyData = docKeyRes.data;
+    const storageOptions: StorageOptions = {
+        endPoint: docKeyData.endpoint,
+        region: docKeyData.region,
+        accessKey: docKeyData.access_key,
+        secretKey: docKeyData.secret_access_key,
+        sessionToken: docKeyData.session_token,
+        bucketName: docKeyData.bucket_name,
+    }
+    let storage: IStorage;
+    if (docKeyData.provider === "oss") {
+        storage = new OssStorage(storageOptions);
+    } else {
+        storage = new S3Storage(storageOptions);
+    }
+    documentLoader.setStorage(storage);
 }
 
 let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
@@ -492,8 +492,23 @@ const stop2 = watch(() => curPage.value, (page, old) => {
     }
 })
 
+watch(fileName, (NewNanme) => {
+    let miniprogram: any;
+    if (NewNanme) {
+        miniprogram = navigator.userAgent.includes('miniProgram')
+        if (miniprogram) {
+            (window as any).uni.postMessage({
+                data: {
+                    name: NewNanme,
+                }
+            });
+        }
+    }
+})
+
 
 onMounted(() => {
+
     window.addEventListener('beforeunload', onBeforeUnload);
     window.addEventListener('unload', onUnload);
     init_doc();
@@ -644,7 +659,9 @@ function end(e: TouchEvent) {
         preAnchor = __anchor(e);
     }
 }
-
+const backlink = computed(() => {
+    return window.history.state.back ? true : false
+})
 
 </script>
 
@@ -655,14 +672,14 @@ function end(e: TouchEvent) {
                 <svg-icon icon-class="back-icon"></svg-icon>
             </div>
             <span>{{ fileName }}</span>
-            <div class="list" @click="router.go(-1)">
+            <div class="list" @click="backlink?router.go(-1):router.replace({path:'/m'})">
                 <svg-icon icon-class="back-icon"></svg-icon>
             </div>
         </div>
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist">
                 <div class="list-item" v-for="page in arr" :key="page.id"
-                     @click.stop="switchPage(page.data.value as string)">
+                    @click.stop="switchPage(page.data.value as string)">
                     <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
                     </div>
                     <div class="pagename">{{ page.data.content }}</div>
@@ -671,7 +688,7 @@ function end(e: TouchEvent) {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                         :matrix="(matrix as Matrix)" @closeLoading="closeLoading"/>
+                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" />
         </div>
     </div>
 </template>

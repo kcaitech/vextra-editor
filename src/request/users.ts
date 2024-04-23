@@ -14,7 +14,7 @@ export function PostLogin(params = {}, ops = {}) {
 
 }
 
-// 登录请求
+// 微信小程序登录请求
 export function PostWxLogin(params = {}, ops = {}) {
     return httpRequest({
         url: '/auth/login/wx_mp',
@@ -23,6 +23,16 @@ export function PostWxLogin(params = {}, ops = {}) {
         ...ops
     })
 
+}
+
+//获取小程序码
+export function GetminiProgramCode(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/shares/wx_mp_code',
+        method: 'get',
+        params: params,
+        ...ops
+    })
 }
 
 
