@@ -319,7 +319,7 @@ const getUserInfo = async () => {
 }
 
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
 
 //获取文档信息
 const getDocumentInfo = async () => {
