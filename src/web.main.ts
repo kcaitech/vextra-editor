@@ -46,4 +46,10 @@ if (settings.production) {
 
     window.addEventListener('hashchange', switchlog);
     switchlog();
+
+    (window as any)._switchlog = () => {
+        const _log = console.log;
+        if (_log === _silentlog) console.log = _commonlog;
+        else if (_log === _commonlog) console.log = _silentlog;
+    }; // for electron
 }
