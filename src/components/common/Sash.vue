@@ -6,7 +6,6 @@
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
 
 <script setup lang="ts">
-import e from 'express';
 import { ref } from 'vue';
 
 const emit = defineEmits<{

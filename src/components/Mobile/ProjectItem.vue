@@ -26,7 +26,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
-import { urlencoded } from 'express';
 
 const props = defineProps<{
     data: any,
