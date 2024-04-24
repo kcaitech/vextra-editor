@@ -95,6 +95,7 @@ export class Navi extends WatchableObject {
     }
 
     set_current_navi_module(v: "Shape" | "Comps" | "Resource" | "Comment") {
+        if(v == this.m_cur_module) return;
         this.m_cur_module = v;
         this.notify(Navi.MODULE_CHANGE);
     }
