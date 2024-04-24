@@ -8,23 +8,25 @@ const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin');
 
-var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs'
-// var run_env = 'nodejs'
-console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
-    // if (process.env.NODE_ENV === 'production') {
-    //   // 为生产环境修改配置...
-    // } else {
-    //   // 为开发环境修改配置...
-    // }
-    if (run_env === 'browser') {
-        config.entry.app = ['./src/web.main.ts']
-        config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
+    if (process.env.NODE_ENV === 'production') {
+        // 为生产环境修改配置...
+        config.optimization.minimizer.push(
+            new TerserPlugin({
+                terserOptions: {
+                    compress: true,
+                    parallel: true,
+                },
+            })
+        )
     } else {
-        config.entry.app = ['./src/electron.main.ts']
-        config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
+        // 为开发环境修改配置...
     }
+
+    config.entry.app = ['./src/web.main.ts']
+    config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
 
     const iconspath = path.resolve('src/assets/icons');
     config.module.rules.forEach(element => {
@@ -89,7 +91,7 @@ var configureWebpack = (config) => {
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
-    }.js`
+        }.js`
     config.plugins = [
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] }),
