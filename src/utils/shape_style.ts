@@ -6,7 +6,7 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -230,8 +230,8 @@ export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
-        const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
+        const { isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting } = border;
+        const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
         actions.push({ target: (shapes[i]), value: new_border });
     }
     return actions;
@@ -257,8 +257,8 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
         const new_borders: Border[] = [];
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
-            const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
-            const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle);
+            const { isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting } = border;
+            const new_border = new Border(new BasicArray(), v4(), isEnabled, fillType, color, position, thickness, borderStyle, cornerType, sideSetting);
             if (border.gradient) {
                 const _g = cloneGradient(border.gradient);
                 new_border.gradient = _g;
@@ -310,6 +310,15 @@ export function get_actions_border_style(shapes: ShapeView[], index: number, sty
             bs.gap = 10, bs.length = 10;
         }
         actions.push({ target: (shapes[i]), index, value: bs });
+    }
+    return actions;
+}
+
+export function get_actions_border(shapes: ShapeView[], index: number, value: any) {
+    const actions: BatchAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), index, value: value });
     }
     return actions;
 }
@@ -607,3 +616,36 @@ export function get_actions_export_format_file_format(shapes: ShapeView[], index
     return actions;
 }
 
+
+
+export function get_borders_corner(shapes: ShapeView[], index: number): false | CornerType {
+    const shape = shapes[0];
+    const styleborders = shape.getBorders() || [];
+    if(!styleborders.length) return false;
+    const corner = styleborders[index].cornerType;
+    const mixed = shapes.every(shape => {
+        const borders = shape.getBorders() || [];
+        return borders[index].cornerType === corner;
+    });
+    if (mixed) {
+        return corner;
+    } else {
+        return false;
+    }
+}
+
+export function get_borders_side(shapes: ShapeView[], index: number): false | SideType {
+    const shape = shapes[0];
+    const styleborders = shape.getBorders() || [];
+    if(!styleborders.length) return false;
+    const side = styleborders[index].sideSetting.sideType;
+    const mixed = shapes.every(shape => {
+        const borders = shape.getBorders() || [];
+        return borders[index].sideSetting.sideType === side;
+    });
+    if (mixed) {
+        return side;
+    } else {
+        return false;
+    }
+}

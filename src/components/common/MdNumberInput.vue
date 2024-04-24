@@ -76,7 +76,7 @@ function click() {
     active.value = true;
 }
 
-function change(e: InputEvent) {
+function change(e: Event) {
     emits('change', (e.target as HTMLInputElement).value);
 
     const el = inputEl.value;

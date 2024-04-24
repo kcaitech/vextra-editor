@@ -33,7 +33,7 @@ const isBold = ref<any>()
 const isTilt = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFangSC-Regular')
+const fontName = ref('PingFang SC')
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -392,7 +392,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
         textColor.value = format.color;
         highlight.value = format.highlight;
@@ -475,7 +475,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         isBold.value = format.bold;

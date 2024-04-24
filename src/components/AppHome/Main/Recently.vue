@@ -374,37 +374,28 @@ onUnmounted(() => {
 
 @keyframes bounce-in {
     0% {
-
-        transform: translateX(110%) scale(0);
+        transform: scale(0);
     }
-
     50% {
-
-        transform: translateX(60%) scale(0.5);
+        transform: scale(0.5);
     }
-
     100% {
-
-        transform: translateX(0%) scale(1);
-
+        transform: scale(1);
     }
 }
 
 @keyframes bounce2-in {
     0% {
-
-        transform: translateX(-110%) scale(0);
+        transform: translate(100%, 0%) scale(0.5);
+        opacity: 0;
     }
-
     50% {
-
-        transform: translateX(-60%) scale(0.5);
+        transform: translate(60%, 0%) scale(0.8);
+        opacity: 0.5;
     }
-
     100% {
-
-        transform: translateX(0%) scale(1);
-
+        transform: translate(0%, 0%) scale(1);
+        opacity: 1;
     }
 }
 
