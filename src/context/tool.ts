@@ -19,8 +19,8 @@ export enum Action {
     AddCutout = 'add-cutout',
     Curve = 'curve',
     PathClip = 'path-clip',
-    Pen = 'Pen',
-    Pencil = 'Pencil'
+    Pen = 'add-vector',
+    Pencil = 'add-free-path'
 }
 
 const A2R = new Map([
@@ -217,6 +217,7 @@ export class Tool extends WatchableObject {
         if (ctrl || meta || shift) return;
         this.setAction(Action.AddContact);
     }
+
     keydown_s(ctrl: boolean, meta: boolean, shift: boolean) {
         if (ctrl || meta || shift) return;
         this.setAction(Action.AddCutout);
