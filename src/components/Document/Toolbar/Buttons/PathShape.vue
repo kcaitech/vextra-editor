@@ -21,6 +21,7 @@ const tipsVisible = ref<boolean>(false);
 const selected = ref<boolean>(false);
 const popoverXY = ref<XY>({ x: 0, y: 0 });
 
+// 当前工具Icon
 const pattern = computed<string>(() => {
     switch (currentTool.value) {
         case Action.AddRect:
@@ -38,19 +39,20 @@ const pattern = computed<string>(() => {
     }
 });
 
+// 当前工具Tips
 const tips = computed<string>(() => {
-    const defaultRect = `${t('shape.rect')} R`;
+    const defaultRect = `${t('shape.rect')}\u00a0\u00a0\u00a0\u00a0R`;
     switch (currentTool.value) {
         case Action.AddRect:
             return defaultRect;
         case Action.AddEllipse:
-            return `${t('shape.oval')} O`;
+            return `${t('shape.oval')}\u00a0\u00a0\u00a0\u00a0O`;
         case Action.AddLine:
-            return `${t('shape.line')} L`;
+            return `${t('shape.line')}\u00a0\u00a0\u00a0\u00a0L`;
         case Action.AddArrow:
-            return string_by_sys(`${t('shape.arrow')} L`);
+            return string_by_sys(`${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0L`);
         case Action.Pen:
-            return `${t('shape.pen')} P`;
+            return `${t('shape.pen')}\u00a0\u00a0\u00a0\u00a0P`;
         default:
             return defaultRect;
     }
@@ -172,6 +174,7 @@ onUnmounted(() => {
          class="popover-shape-tool"
          :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }"
     >
+        <!--矩形-->
         <div class="item" @click="() => { setAction(Action.AddRect) }">
             <div v-if="currentTool=== Action.AddRect" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
@@ -182,6 +185,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">R</div>
         </div>
+        <!--圆形-->
         <div class="item" @click="() => { setAction(Action.AddEllipse) }">
             <div v-if="currentTool=== Action.AddEllipse" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
@@ -192,6 +196,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">O</div>
         </div>
+        <!--线条-->
         <div class="item" @click="() => { setAction(Action.AddLine) }">
             <div v-if="currentTool=== Action.AddLine" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
@@ -202,6 +207,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">L</div>
         </div>
+        <!--箭头-->
         <div class="item" @click="() => { setAction(Action.AddArrow) }">
             <div v-if="currentTool=== Action.AddArrow" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
@@ -213,6 +219,7 @@ onUnmounted(() => {
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
         <div class="line"/>
+        <!--钢笔-->
         <div class="item" @click="() => { setAction(Action.Pen) }">
             <div v-if="currentTool=== Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>

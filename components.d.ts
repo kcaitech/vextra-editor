@@ -271,7 +271,6 @@ declare module '@vue/runtime-core' {
     ShadowInput: typeof import('./src/components/Document/Attribute/Shadow/ShadowInput.vue')['default']
     ShadowPosition: typeof import('./src/components/Document/Attribute/Shadow/ShadowPosition.vue')['default']
     Shadows: typeof import('./src/components/Document/Attribute/Shadow/Shadows.vue')['default']
-    Shape: typeof import('./src/components/Document/Toolbar/Buttons/Shape.vue')['default']
     ShapeAvatar: typeof import('./src/components/Document/Selection/TeamWork/ShapeAvatar.vue')['default']
     ShapeCard: typeof import('./src/components/common/ShapeCard.vue')['default']
     ShapeCutout: typeof import('./src/components/Document/Cutout/ShapeCutout.vue')['default']

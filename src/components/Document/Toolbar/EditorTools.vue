@@ -19,7 +19,6 @@ import { message } from "@/utils/message";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { string_by_sys } from "@/utils/common";
 import { ElMessage } from "element-plus";
-import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
 import * as share_api from '@/request/share'
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
