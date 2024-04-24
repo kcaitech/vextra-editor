@@ -42,6 +42,11 @@ function gen_view(table: TableView, cells: { cell: TableCellView | undefined, ro
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
     const grid = (table).getLayout().grid;
+    let row_p = undefined;
+    if(props.context.tableSelection.tableMenuVRowVisible) {
+        const f = grid.get(props.context.tableSelection.tableRowStart, 0).frame;
+        row_p = t2r.computeCoord2(f.x, f.y + (f.height / 2));
+    }
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
         const f = grid.get(cell.rowIdx, cell.colIdx).frame;
@@ -53,7 +58,7 @@ function gen_view(table: TableView, cells: { cell: TableCellView | undefined, ro
     }
     selection_path.value = genRectPath(points);
     if (gen_menu_posi) {
-        _get_menu_position(points);
+        _get_menu_position(points, row_p);
     }
 }
 function update_triangle() {
@@ -101,6 +106,7 @@ function table_selection_watcher(t: number, gen_menu_posi: any) {
     if (t === TableSelection.CHANGE_TABLE_CELL) {
         update_cell_selection(gen_menu_posi);
         cells_watcher();
+        props.context.tableSelection.setTableMenuVisible(false);
     } else if (t === TableSelection.CHANGE_EDITING_CELL) return update_triangle();
 }
 
@@ -113,7 +119,7 @@ function select_cell_by_triangle(e: MouseEvent) {
         e.stopPropagation();
     }
 }
-function _get_menu_position(points: ClientXY[]) {
+function _get_menu_position(points: ClientXY[], row_p?: ClientXY) {
     // const tableSelection = props.context.tableSelection, rows = tableSelection.tableRowStart, rowe = tableSelection.tableRowEnd;
     // const pl = points.length, p1 = points[0], p2 = points[(pl / (rowe - rows + 1)) - 3];
     // if (p1 && p2) {
@@ -122,8 +128,13 @@ function _get_menu_position(points: ClientXY[]) {
     //     const b = XYsBounding(points);
     //     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
     // }
-    const b = XYsBounding(points);
-    emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
+    if(row_p) {
+        emits("get-menu", row_p.x, row_p.y, CellMenu.SelectRow, true);
+    } else {
+
+        const b = XYsBounding(points);
+        emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
+    }
 }
 
 let watchCells: Map<string, TableCellView> = new Map();

@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, BasicArray, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
+import { AsyncTextAttrEditor, AttrGetter, BasicArray, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextBehaviour, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -18,6 +18,8 @@ import { watch } from 'vue';
 import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
+import { TextSelectionLite } from '@/context/textselectionlite';
+import { Attribute } from '@/context/atrribute';
 
 interface Props {
     context: Context
@@ -35,11 +37,9 @@ const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
 const isBold = ref<any>()
 const isTilt = ref(false)
-const isUnderline = ref(false)
-const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFangSC-Regular')
+const fontName = ref('PingFang SC')
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -58,13 +58,20 @@ const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
 const shapes = ref<TextShapeView[]>(props.textShapes);
 const disableWeight = ref(false);
+const fontNameEl = ref<HTMLDivElement>();
+const selectText = ref('autowidth');
+const wordSpace = ref();
+const charSpacing = ref<HTMLInputElement>()
+const lineHeight = ref<HTMLInputElement>()
+const rowHeight = ref()
+const row_height = ref(`${t('attr.auto')}`)
 
 function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16)
         .toUpperCase().length === 1
         ? `0${n.toString(16).toUpperCase()}`
         : n.toString(16).toUpperCase();
-    return  (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
+    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
 }
 
 const onShowFont = () => {
@@ -166,38 +173,7 @@ const setFontWeight = (weight: number, italic: boolean) => {
     onBold(weight);
     onTilt(italic);
 }
-//设置下划线
-const onUnderlint = () => {
-    isUnderline.value = !isUnderline.value;
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextUnderline(isUnderline.value, 0, Infinity)
-        } else {
-            editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-            textFormat()
-        }
-    } else {
-        editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
-    }
-}
-// 设置删除线
-const onDeleteline = () => {
-    isDeleteline.value = !isDeleteline.value;
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
-        } else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-            textFormat()
-        }
-    } else {
-        editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
-    }
-}
+
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon;
@@ -272,6 +248,68 @@ const setFont = (font: string) => {
     textFormat()
 }
 
+const setWordSpace = () => {
+    const editor = props.context.editor4TextShape(props.shape)
+    if (wordSpace.value.length < 1) {
+        wordSpace.value = 0
+    }
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        // if (wordSpace.value.slice(-1) === '%') {
+        //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+        // }
+        if (!isNaN(Number(wordSpace.value))) {
+            if (isSelectText()) {
+                editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
+            } else {
+                editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+            }
+        } else {
+            textFormat()
+        }
+    } else {
+        if (!isNaN(Number(wordSpace.value))) {
+            editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
+        } else {
+            textFormat()
+        }
+    }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.kerning = Number(wordSpace.value);
+    props.context.textSelection.setTextAttr(textAttr);
+    charSpacing.value?.blur()
+}
+
+const setRowHeight = () => {
+    const editor = props.context.editor4TextShape(props.shape)
+    if (rowHeight.value.length < 1) {
+        rowHeight.value = 1
+    }
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (!isNaN(Number(rowHeight.value))) {
+            if (isSelectText()) {
+                editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+            } else {
+                editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+            }
+        } else {
+            textFormat()
+        }
+    } else {
+        if (!isNaN(Number(rowHeight.value))) {
+            editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
+        } else {
+            textFormat()
+        }
+    }
+    const textAttr = props.context.textSelection.getTextAttr;
+    textAttr.maximumLineHeight = Number(rowHeight.value);
+    textAttr.minimumLineHeight = Number(rowHeight.value);
+    props.context.textSelection.setTextAttr(textAttr);
+    lineHeight.value?.blur();
+}
+
 function getTextSelection() {
     return props.context.selection.textSelection;
 }
@@ -335,13 +373,14 @@ const _textFormat = () => {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
+        rowHeight.value = format.minimumLineHeight || 0
+        wordSpace.value = format.kerning || 0
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
         selectVertical.value = format.verAlign || 'top'
-        fontName.value = format.fontName || 'PingFangSC-Regular'
+        selectText.value = format.textBehaviour || 'flexible'
+        fontName.value = format.fontName || 'PingFang SC'
         fonstSize.value = format.fontSize || 14
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
@@ -349,7 +388,9 @@ const _textFormat = () => {
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
+        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
         if (format.boldIsMulti) weightMixed.value = true;
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
@@ -358,8 +399,6 @@ const _textFormat = () => {
             fontName.value = `${t('attr.more_value')}`
         }
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
-        if (format.underlineIsMulti) isUnderline.value = false
-        if (format.strikethroughIsMulti) isDeleteline.value = false
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText()
@@ -410,14 +449,15 @@ const _textFormat = () => {
                 format[key] = `unlikeness`;
             }
         }
+        rowHeight.value = format.minimumLineHeight || 0;
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
+        wordSpace.value = format.kerning || 0;
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        selectText.value = format.textBehaviour;
+        fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         textColor.value = format.color;
         isBold.value = format.bold;
@@ -430,19 +470,22 @@ const _textFormat = () => {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`;
         }
+        if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
+        if (format.textBehaviour === 'unlikeness') selectText.value = '';
         if (format.bold === 'unlikeness') weightMixed.value = true;
         if (format.italic === 'unlikeness') weightMixed.value = true;
-        if (format.underline === 'unlikeness') isUnderline.value = false;
-        if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
         if (format.fillType === 'unlikeness') mixed.value = true;
         if (format.fillTypeIsMulti === 'unlikeness') mixed.value = true;
+        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
         if (format.fillTypeIsMulti !== 'unlikeness' && format.fillType === FillType.Gradient && format.gradientIsMulti === 'unlikeness') mixed.value = true;
         if (format.gradient === 'unlikeness') gradient.value = undefined;
         if (format.fillType === FillType.Gradient && format.gradient === 'unlikeness') mixed.value = true;
@@ -458,11 +501,7 @@ function selection_wather(t: number) {
 }
 
 function workspace_wather(t: number) {
-    if (t === WorkSpace.UNDER_LINE) {
-        onUnderlint()
-    } else if (t === WorkSpace.DELETE_LINE) {
-        onDeleteline()
-    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
     }
 }
@@ -853,6 +892,16 @@ const editor_gradient = (g: Gradient) => {
     }
 }
 
+const onSelectText = (icon: TextBehaviour) => {
+    selectText.value = icon;
+    const editor = props.context.editor4TextShape(props.shape)
+    if (length.value) {
+        editor.setTextBehaviour(icon)
+    } else {
+        editor.setTextBehaviourMulti(props.textShapes, icon);
+    }
+}
+
 const sizeColorInput = () => {
     if (sizeColor.value && alphaFill.value) {
         const value = sizeColor.value.value;
@@ -907,6 +956,14 @@ const selectHiglighAlpha = () => {
 const getTextShapes = () => {
     shapes.value = props.textShapes;
 }
+
+const selectCharSpacing = () => {
+    charSpacing.value && charSpacing.value.select()
+}
+const selectLineHeight = () => {
+    lineHeight.value && lineHeight.value.select()
+}
+
 const filterAlpha = () => {
     let a: number = 100;
     if (fillType.value === FillType.SolidColor) {
@@ -925,6 +982,103 @@ const filterAlpha = () => {
     }
 }
 
+const pointX = ref<number>()
+const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+let type = 'row-height';
+let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+const onMouseDown = async (e: MouseEvent, t: string) => {
+    pointX.value = e.clientX
+    pointY.value = e.clientY
+    type = t;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    let index = textIndex;
+    let length = selectLength;
+    if (isSelectText()) {
+        index = 0; length = Number.MAX_VALUE;
+    } else {
+        index = textIndex; length = selectLength;
+    }
+    textAttrEditor = props.context.editor4TextShape(props.shape).asyncSetTextAttr(props.textShapes, index, length);
+    e.stopPropagation()
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove);
+    showpoint.value = true
+}
+
+function updatePosition(movementX: number, movementY: number) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
+function onMouseMove(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+    if (type === 'row-height') {
+        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
+        rowHeight.value = Number(rowHeight.value) + e.movementX;
+        if (textAttrEditor) {
+            rowHeight.value = rowHeight.value < 0 ? 0 : Number(rowHeight.value)
+            textAttrEditor.execute_line_height(rowHeight.value);
+        }
+    } else {
+        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
+        wordSpace.value = Number(wordSpace.value) + e.movementX;
+        if (textAttrEditor) {
+            wordSpace.value = wordSpace.value < 0 ? 0 : Number(wordSpace.value)
+            textAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+    }
+}
+
+function onMouseUp(e: MouseEvent) {
+    e.stopPropagation()
+    document.exitPointerLock()
+    showpoint.value = false
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    if (textAttrEditor) {
+        textAttrEditor.close();
+        textAttrEditor = undefined;
+    }
+}
+
+const text_selection_wather = (t: number) => {
+    if (t === Attribute.ADD_SIZE_CHANGE) {
+        if (textSize.value) {
+            let value = textSize.value.value.trim();
+            if (value.length < 1) {
+                value = '1'
+            }
+            if (!isNaN(Number(value)) && Number(value) > 0) {
+                changeTextSize(Number(value) + 1);
+            }
+        }
+    } else if (t === Attribute.MINUS_SIZE_CHANGE) {
+        if (textSize.value) {
+            let value = textSize.value.value.trim();
+            if (value.length < 1) {
+                value = '1'
+            }
+            if (!isNaN(Number(value)) && Number(value) > 1) {
+                changeTextSize(Number(value) - 1);
+            }
+        }
+    } else if(t === Attribute.FRAME_CHANGE) {
+        textFormat();
+    }
+}
+
 // const stop = watch(() => props.dataChange, textFormat);
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
@@ -938,11 +1092,13 @@ const stop3 = watch(() => props.trigger, v => {
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
 onMounted(() => {
     props.context.selection.watch(selection_wather);
+    props.context.attr.watch(text_selection_wather);
     props.context.workspace.watch(workspace_wather);
     textFormat();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.context.attr.unwatch(text_selection_wather);
     props.context.workspace.unwatch(workspace_wather);
     // stop();
     stop2();
@@ -961,16 +1117,21 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text-container">
             <div class="text-top">
-                <div class="select-font jointly-text" style="padding-right: 0;" @click="onShowFont">
+                <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
                 <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
-                    :fontWeight="fontWeight" @setFontWeight="setFontWeight">
+                    :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
                 </SelectFont>
                 <div class="overlay" @click.stop v-if="showFont" @mousedown.stop="showFont = false"></div>
+            </div>
+            <div class="text-middle">
+                <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
+                    :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+                </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
                         <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
@@ -992,52 +1153,52 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="text-middle">
-                <div class="text-middle-size">
-                    <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
-                        :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
-                    </FontWeightSelected>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
-                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                            <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
-                        </Tooltip>
+                <div class="interval jointly-text" style="margin-right: 8px;">
+                    <div @mousedown="(e) => onMouseDown(e, 'row-height')">
+                        <svg-icon icon-class="word-space"></svg-icon>
                     </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
-                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon
-                                :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
-                        </Tooltip>
+                    <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
+                        :placeholder="row_height" @focus="selectLineHeight" @input="handleSize">
+                </div>
+                <div class="interval jointly-text" style="padding-right: 0;">
+                    <div @mousedown="(e) => onMouseDown(e, 'char-space')">
+                        <svg-icon icon-class="row-height"></svg-icon>
                     </div>
+                    <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
+                        @focus="selectCharSpacing" @input="handleSize">
+                </div>
+            </div>
+            <div class="text-bottom">
+                <div class="level-aligning jointly-text">
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
+                        @click="onSelectLevel(TextHorAlign.Left)">
+                        <Tooltip :content="t('attr.align_left')" :offset="15">
+                            <svg-icon icon-class="text-left"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
+                        @click="onSelectLevel(TextHorAlign.Centered)">
+                        <Tooltip :content="t('attr.align_center')" :offset="15">
+                            <svg-icon icon-class="text-center"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
+                        @click="onSelectLevel(TextHorAlign.Right)">
+                        <Tooltip :content="t('attr.align_right')" :offset="15">
+                            <svg-icon icon-class="text-right"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
+                        @click="onSelectLevel(TextHorAlign.Natural)">
+                        <Tooltip :content="t('attr.align_the_sides')" :offset="15">
+                            <svg-icon icon-class="text-justify"></svg-icon>
+                        </Tooltip>
+                    </i>
                 </div>
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
-                    <div class="level-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'left' }"
-                            @click="onSelectLevel(TextHorAlign.Left)">
-                            <Tooltip :content="t('attr.align_left')" :offset="15">
-                                <svg-icon icon-class="text-left"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'centered' }"
-                            @click="onSelectLevel(TextHorAlign.Centered)">
-                            <Tooltip :content="t('attr.align_center')" :offset="15">
-                                <svg-icon icon-class="text-center"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'right' }"
-                            @click="onSelectLevel(TextHorAlign.Right)">
-                            <Tooltip :content="t('attr.align_right')" :offset="15">
-                                <svg-icon icon-class="text-right"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'natural' }"
-                            @click="onSelectLevel(TextHorAlign.Natural)">
-                            <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                                <svg-icon icon-class="text-justify"></svg-icon>
-                            </Tooltip>
-                        </i>
-                    </div>
-                    <div class="vertical-aligning jointly-text">
+                    <div class="vertical-aligning jointly-text" style="margin-right: 8px;">
                         <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
                             @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
@@ -1054,6 +1215,26 @@ onUnmounted(() => {
                             @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <svg-icon icon-class="align-bottom"></svg-icon>
+                            </Tooltip>
+                        </i>
+                    </div>
+                    <div class="vertical-aligning jointly-text">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
+                            @click="onSelectText(TextBehaviour.Flexible)">
+                            <Tooltip :content="t('attr.autowidth')" :offset="15">
+                                <svg-icon icon-class="text-autowidth"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
+                            @click="onSelectText(TextBehaviour.Fixed)">
+                            <Tooltip :content="t('attr.autoheight')" :offset="15">
+                                <svg-icon icon-class="text-autoheight"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
+                            @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
+                            <Tooltip :content="t('attr.fixedsize')" :offset="15">
+                                <svg-icon icon-class="text-fixedsize"></svg-icon>
                             </Tooltip>
                         </i>
                     </div>
@@ -1086,9 +1267,9 @@ onUnmounted(() => {
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @input="sizeAlphaInput" />
                 </div>
-<!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
+                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
                         }}
@@ -1099,7 +1280,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1149,6 +1330,10 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+        <teleport to="body">
+            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px'}">
+            </div>
+        </teleport>
     </div>
 </template>
 
@@ -1199,16 +1384,16 @@ onUnmounted(() => {
 
         .text-top {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            margin-top: 6px;
             display: flex;
 
             .select-font {
                 padding: 8px 12px;
                 box-sizing: border-box;
-                width: calc(100% - 80px);
+                width: 100%;
                 height: 32px;
                 border-radius: 6px;
-                margin-right: 8px;
 
                 span {
                     overflow: hidden;
@@ -1221,30 +1406,90 @@ onUnmounted(() => {
                 background: #EBEBEB;
             }
 
-            .text-size {
-                position: relative;
-                width: 72px;
-                height: 32px;
-                border-radius: 6px;
-                padding: 9px 0;
+
+        }
+
+        .text-size {
+            flex: 1;
+            position: relative;
+            height: 32px;
+            border-radius: 6px;
+            padding: 9px 0;
+            box-sizing: border-box;
+
+            .size_input {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 12px;
                 box-sizing: border-box;
 
-                .size_input {
+                .down {
+                    width: 26px;
+                    height: 26px;
+                    margin-right: 3px;
+
+                    &:hover {
+                        background-color: #EBEBEB;
+                    }
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+
+            }
+
+            .input {
+                width: 64px;
+                background-color: transparent;
+                border: none;
+            }
+
+            input[type="text"]::-webkit-inner-spin-button,
+            input[type="text"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type="text"] {
+                -moz-appearance: textfield;
+                appearance: textfield;
+                font-size: var(--font-default-fontsize);
+            }
+
+            input:focus {
+                outline: none;
+            }
+
+            .font-size-list {
+                position: absolute;
+                left: 0px;
+                width: 100%;
+                border-radius: 6px;
+                background-color: #fff;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                border: 1px solid #EBEBEB;
+                color: #262626;
+                padding: 4px 0;
+                z-index: 100;
+
+                >div {
                     display: flex;
-                    justify-content: space-between;
                     align-items: center;
-                    padding-left: 6px;
-                    padding-right: 8px;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding-left: 10px;
+                    height: 32px;
                     box-sizing: border-box;
 
-                    .down {
-                        width: 26px;
-                        height: 26px;
-                        margin-right: 3px;
-
-                        &:hover {
-                            background-color: #EBEBEB;
-                        }
+                    .icon {
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
 
                         >svg {
                             width: 12px;
@@ -1252,10 +1497,52 @@ onUnmounted(() => {
                         }
                     }
 
+                    &:hover {
+                        background-color: #1878F5;
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        .text-middle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+
+            .overbold {
+                width: 32px;
+                display: flex;
+                justify-content: center;
+                margin-left: 8px;
+            }
+
+            .overbold:hover {
+                background-color: #EBEBEB;
+            }
+
+            .interval {
+                flex: 1;
+                height: 32px;
+                padding-right: 6px;
+
+                >div {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    width: 26px;
+                    height: 32px;
+
+                    >svg {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        width: 14px;
+                        height: 14px;
+                    }
                 }
 
                 .input {
-                    width: 32px;
+                    width: 78px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1275,77 +1562,6 @@ onUnmounted(() => {
                 input:focus {
                     outline: none;
                 }
-
-                .font-size-list {
-                    position: absolute;
-                    left: 0px;
-                    width: 100%;
-                    border-radius: 6px;
-                    background-color: #fff;
-                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    border: 1px solid #EBEBEB;
-                    color: #262626;
-                    padding: 4px 0;
-                    z-index: 100;
-
-                    >div {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        width: 100%;
-                        padding-left: 10px;
-                        height: 32px;
-                        box-sizing: border-box;
-
-                        .icon {
-                            width: 30px;
-                            height: 30px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-
-                            >svg {
-                                width: 12px;
-                                height: 12px;
-                            }
-                        }
-
-                        &:hover {
-                            background-color: #1878F5;
-                            color: #fff;
-                        }
-                    }
-                }
-            }
-        }
-
-        .text-middle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-
-
-
-            .text-middle-size {
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
-
-
-
-            .overbold {
-                width: 32px;
-                display: flex;
-                justify-content: center;
-                margin-left: 8px;
-            }
-
-            .overbold:hover {
-                background-color: #EBEBEB;
             }
         }
 
@@ -1353,7 +1569,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
 
             .text-bottom-align {
                 display: flex;
@@ -1363,19 +1579,27 @@ onUnmounted(() => {
             }
 
             .level-aligning {
-                width: 130px;
+                width: 100%;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
                 border-radius: var(--default-radius);
+
+                >i {
+                    flex: 1;
+                    height: 28px;
+                    display: flex;
+                    justify-content: center;
+                    border-radius: 4px;
+                    border: 1px solid #F4F5F5;
+                }
             }
 
             .vertical-aligning {
-                width: 96px;
+                flex: 1;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 8px;
                 border-radius: var(--default-radius);
             }
 
@@ -1574,5 +1798,16 @@ onUnmounted(() => {
     height: 100%;
     z-index: 1000;
     background-color: transparent;
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

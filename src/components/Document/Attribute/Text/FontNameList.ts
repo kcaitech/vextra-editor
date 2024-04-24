@@ -30,7 +30,7 @@ export const fontNameListEn = [
     'Noto Sans Saurashtra', 'Noto Sans Sharada', 'Noto Sans Siddham', 'Noto Sans SoraSompeng', 'Noto Sans Sundanese', 'Noto Sans SylotiNagri', 'Noto Sans Syriac', 'Noto Sans Tagalog', 'Noto Sans Tagbanwa', 'Noto Sans TaiLe', 'Noto Sans TaiTham', 'Noto Sans TaiViet', 'Noto Sans Takri', 'Noto Sans Thaana',
     'Noto Sans Tifinagh', 'Noto Sans Tirhuta', 'Noto Sans Ugaritic', 'Noto Sans Vai', 'Noto Sans Wancho', 'Noto Sans WarangCiti', 'Noto Sans Yi', 'Noto SerifAhom', 'Noto SerifBalinese', 'Noto SerifMyanmar', 'Noto SerifYezidi', 'Optima', 'Oriya MN', 'Oriya Sangam MN', 'Palatino', 'Papyrus', 'PartyLET-plain', 'Phosphate', 'PingFang', 'PlantagenetCherokee', 'PTMono', 'PTSans', 'PTSerif', 'PTSerifCaption', 'Raanana', 'Rockwell', 'Sana', 'Sathu',
     'Savoye LET', 'Seravek', 'SF Arabic Ultralight', 'SF Compact Ultralight', 'SF Compact Rounded Ultralight', 'SF NS Mono', 'SFNSRounded', 'Shree714', 'SignPainter', 'Silom', 'Sinhala MN', 'Sinhala Sangam MN', 'Skia', 'SnellRoundhand', 'Songti', 'Source Han Mono',
-    'Source Han Sans CN', 'STHeiti', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
+    'Source Han Sans CN', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
     'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
 ]
 

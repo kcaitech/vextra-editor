@@ -1,6 +1,6 @@
 import { IPalPath } from "@kcdesign/data";
 
-const PathKitInit = require('pathkit-wasm/bin/pathkit.js')
+const PathKitInit = require('pathkit-wasm/bin/pathkit.js');
 
 // - `PathKit.PathOp.DIFFERENCE`
 // - `PathKit.PathOp.INTERSECT`
