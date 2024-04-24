@@ -6,8 +6,8 @@ import { onBeforeUnmount, onMounted } from "vue";
 import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
 import { PROJECT_NAME } from "@/const";
 import { MockKcDesk } from './components/DeskTopBar/ikcdesk';
-const kcdesk = new MockKcDesk();
-// const kcdesk = (window as any)['kcdesk_07444f3a-343d-45a7-bd37-635fc9a26871'];
+
+const kcdesk = (window as any)['kcdesk_07444f3a-343d-45a7-bd37-635fc9a26871'] || new MockKcDesk();
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {

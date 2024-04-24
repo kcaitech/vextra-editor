@@ -22,7 +22,7 @@ const props = defineProps<{ kcdesk: IKcDesk }>();
     background-color: green;
 
     button {
-        width: 40px;
+        width: 26px;
         height: 100%;
     }
 }

@@ -8,10 +8,35 @@ const props = defineProps<{ kcdesk: IKcDesk }>();
 const platform = props.kcdesk.getPlatform();
 const isMac = platform == 'darwin';
 
+let mousex = 0;
+let mousey = 0;
+function onMouseDown(e: MouseEvent) {
+    e.preventDefault();
+    mousex = e.screenX;
+    mousey = e.screenY;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+}
+function onMouseMove(e: MouseEvent) {
+    e.preventDefault();
+    const dx = e.screenX - mousex;
+    const dy = e.screenY - mousey;
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        props.kcdesk.move(dx, dy);
+        mousex = e.screenX;
+        mousey = e.screenY;
+    }
+}
+function onMouseUp(e: MouseEvent) {
+    e.preventDefault();
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+}
+
 </script>
 
 <template>
-    <div class="topbar">
+    <div class="topbar" @mousedown="onMouseDown">
         <MacOps v-if="isMac" :kcdesk="kcdesk" />
         <div class="topbarmain"></div>
         <div class="topbarlist"></div>
@@ -21,7 +46,7 @@ const isMac = platform == 'darwin';
 
 <style scoped lang="scss">
 .topbar {
-    height: 40px;
+    height: 38px;
     width: 100%;
     background-color: black;
     display: flex;
@@ -29,7 +54,7 @@ const isMac = platform == 'darwin';
 }
 
 .topbarmain {
-    width: 60px;
+    width: 42px;
     height: 100%;
     background-color: green;
 }
@@ -39,5 +64,4 @@ const isMac = platform == 'darwin';
     height: 100%;
     flex: 1;
 }
-
 </style>./ikcdesk
