@@ -7,7 +7,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
-import { CurveMode, PathShapeView2, PathType, ShapeView } from "@kcdesign/data";
+import { CurveMode, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
 
 interface Props {
@@ -38,7 +38,7 @@ const check_is_unable_to_open_path = () => {
         disableToChangeCloseStatus.value = true;
         return;
     }
-    return disableToChangeCloseStatus.value = (path_shape.pathType === PathType.Multi && (path_shape as PathShapeView2).segments.length > 1);
+    return disableToChangeCloseStatus.value = (path_shape.pathType === PathType.Editable && (path_shape as PathShapeView).segments.length > 1);
 }
 
 function execute_change_xy(key: 'x' | 'y', val: any) {
@@ -106,12 +106,7 @@ function modify_path_closed_status() {
         return;
     }
     if (path_shape.pathType === PathType.Editable) {
-        if (!path_shape.isClosed) {
-            path_close_status.value = false;
-            btn_string_for_status.value = t('attr.close_path');
-        }
-    } else if (path_shape.pathType === PathType.Multi) {
-        (path_shape as PathShapeView2).segments.forEach(segment => {
+        (path_shape as PathShapeView).segments.forEach(segment => {
             if (!segment.isClosed) {
                 path_close_status.value = false;
                 btn_string_for_status.value = t('attr.close_path');

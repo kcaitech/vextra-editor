@@ -3,7 +3,6 @@ import {
     CurvePoint,
     Matrix,
     PathShapeView,
-    PathShapeView2,
     PathType,
     WatchableObject
 } from "@kcdesign/data";
@@ -72,10 +71,8 @@ export class Path extends WatchableObject {
             }
 
             let max = 0;
-            if (pathType === 1) {
-                max = (pathShape as PathShapeView).points.length - 1;
-            } else if (pathType === 2) {
-                max = (pathShape as PathShapeView2).segments[segment]?.points?.length - 1;
+            if (pathType === PathType.Editable) {
+                max = (pathShape as PathShapeView).segments[segment]?.points?.length - 1;
             }
 
             if (max > -1) {
@@ -314,19 +311,7 @@ export class Path extends WatchableObject {
         }
 
         if (shape.pathType === PathType.Editable) {
-            const indexes = this.selected_points.get(0);
-            if (!indexes?.length) {
-                return  points;
-            }
-            const __points = (shape as PathShapeView).points;
-            for (let i = 0; i < indexes.length; i++) {
-                const p = __points[indexes[i]];
-                if (p) {
-                    points.push(p);
-                }
-            }
-        } else if (shape.pathType === PathType.Multi) {
-            const segments = (shape as PathShapeView2).segments;
+            const segments = (shape as PathShapeView).segments;
             this.selected_points.forEach((indexes, segment) => {
                 const __points = segments[segment]?.points as CurvePoint[];
 

@@ -249,14 +249,16 @@ function for_virtual(shape: ShapeView) {
     }
 }
 function for_path_shape(shape: PathShapeView) {
-    const points = shape.points;
-    const is_straight_1 = !points[0]?.hasFrom;
-    const is_straight_2 = !points[1]?.hasTo;
-    if (points.length === 2 && is_straight_1 && is_straight_2) {
-        controllerType.value = ControllerType.Line;
-    } else {
-        controllerType.value = ControllerType.Rect;
-    }
+    // const points = shape.points;
+    // const is_straight_1 = !points[0]?.hasFrom;
+    // const is_straight_2 = !points[1]?.hasTo;
+    // if (points.length === 2 && is_straight_1 && is_straight_2) {
+    //     controllerType.value = ControllerType.Line;
+    // } else {
+    //     controllerType.value = ControllerType.Rect;
+    // }
+
+    controllerType.value = ControllerType.Rect;
 }
 function modify_controller_type(shapes: ShapeView[],) {
     if (!permIsEdit(props.context) || props.context.tool.isLable) {

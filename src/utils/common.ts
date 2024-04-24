@@ -279,8 +279,9 @@ export function get_side_by_points(points: XY[]) {
 }
 
 export function get_points_for_straight(shape: PathShapeView) {
-    const start = shape.points[0];
-    const end = shape.points[1];
+    const segment = shape.segments[0];
+    const start = segment.points[0];
+    const end = segment.points[1];
 
     if (!start || !end) {
         return [];

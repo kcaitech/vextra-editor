@@ -7,7 +7,7 @@ import {
     ModifyUnits,
     ShapeView,
     PathType,
-    PathShapeView2, CurvePoint
+    CurvePoint
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
@@ -66,13 +66,8 @@ export class PathEditor extends TransformHandler {
         const selected = this.path.syntheticPoints;
 
         if (this.shape.pathType === PathType.Editable) {
-            const indexes = selected.get(0)!;
-            const points = (this.shape as PathShapeView).points;
-
-            this.__getData(points as CurvePoint[], indexes);
-        } else if (this.shape.pathType === PathType.Multi) {
             selected.forEach((indexes, segment) => {
-                const points = (this.shape as PathShapeView2).segments[segment].points;
+                const points = (this.shape as PathShapeView).segments[segment].points;
 
                 this.__getData(points as CurvePoint[], indexes);
             })
@@ -150,12 +145,8 @@ export class PathEditor extends TransformHandler {
         const units: ModifyUnits = new Map();
 
         if (this.shape.pathType === PathType.Editable) {
-            const indexes = selected.get(0) || [];
-            const points = (this.shape as PathShapeView).points;
-            this.__gen(units, points, 0, indexes, dx, dy);
-        } else if (this.shape.pathType === PathType.Multi) {
             selected.forEach((indexes, segment) => {
-                const points = (this.shape as PathShapeView2).segments[segment].points as CurvePoint[];
+                const points = (this.shape as PathShapeView).segments[segment].points as CurvePoint[];
                 this.__gen(units, points, segment, indexes, dx, dy);
             })
         }

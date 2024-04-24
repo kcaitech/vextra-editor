@@ -208,7 +208,7 @@ export function get_rotation(shape: ShapeView) {
     return rotation;
 }
 export function get_straight_line_length(shape: ShapeView) {
-    const points = (shape as PathShapeView).points;
+    const points = (shape as PathShapeView).segments[0]?.points;
 
     const f = shape.frame, m = shape.matrix2Root();
     m.preScale(f.width, f.height);
@@ -224,20 +224,19 @@ export function get_straight_line_length(shape: ShapeView) {
     return Math.hypot(rb.x - lt.x, rb.y - lt.y);
 }
 export function is_straight(shape: ShapeView) {
-    if (!(shape instanceof PathShapeView)) {
+    if (!(shape instanceof PathShapeView) || shape.type === ShapeType.Contact) {
         return false;
     }
-    if (shape.type === ShapeType.Contact) {
-        return false;
-    }
-    const points = shape.points;
+
+    const points = shape.segments[0]?.points;
+
     if (points.length !== 2) {
         return false;
     }
     return !points[0].hasFrom && !points[1].hasTo;
 }
 export function get_rotate_for_straight(shape: PathShapeView) {
-    const points = shape.points;
+    const points = shape.segments[0].points;
     const p1 = points[0];
     const p2 = points[1];
     const m = new Matrix(shape.matrix2Root());
@@ -245,29 +244,6 @@ export function get_rotate_for_straight(shape: PathShapeView) {
     const lt = m.computeCoord2(p1.x, p1.y);
     const rb = m.computeCoord2(p2.x, p2.y);
     return Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
-}
-export function get_indexes(shape: PathShape, type: 'rt' | 'lt' | 'rb' | 'lb' | 'all') {
-    let result: number[] = [];
-    if (type === 'all') {
-        result = shape.points.map((_, index) => index);
-    }
-    switch (type) {
-        case 'rt':
-            result.push(1);
-            break;
-        case 'lt':
-            result.push(0);
-            break;
-        case 'rb':
-            result.push(2);
-            break;
-        case 'lb':
-            result.push(3);
-            break;
-        default:
-            break;
-    }
-    return result;
 }
 export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     let result: number[] = [];

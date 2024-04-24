@@ -1,6 +1,7 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
+import { uuid } from "@kcdesign/data/dist/basic/uuid";
 
 export enum Action {
     Auto = 'auto',
@@ -285,5 +286,9 @@ export class Tool extends WatchableObject {
     setLableSwitch(v: boolean) {
         this.m_lable_status = v;
         this.notify(Tool.LABLE_CHANGE);
+    }
+
+    get uniqueID() {
+        return uuid();
     }
 }

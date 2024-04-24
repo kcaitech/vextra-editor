@@ -3,10 +3,8 @@ import {
     ContactLineView,
     CtrlElementType, CurvePoint,
     Matrix,
-    PathShape,
-    PathShapeView, PathShapeView2,
+    PathShapeView,
     PathType,
-    Point2D,
     ShapeView
 } from "@kcdesign/data"
 import { XY } from "@/context/selection";
@@ -179,11 +177,7 @@ export function get_path_by_point(s: ShapeView, matrix: Matrix, map: Map<number,
     const points: { segment: number, index: number, point: XY, selected: boolean }[] = [];
 
     if (s.pathType === PathType.Editable) {
-        const raw_p = (s as PathShapeView).points;
-        __exe(0, raw_p);
-
-    } else if (s.pathType === PathType.Multi) {
-        const segments = (s as PathShapeView2).segments;
+        const segments = (s as PathShapeView).segments;
         segments.forEach((segment, index) => {
             __exe(index, segment.points as CurvePoint[]);
         })
@@ -207,32 +201,6 @@ export function get_path_by_point(s: ShapeView, matrix: Matrix, map: Map<number,
         }
     }
 
-}
-
-export function get_conact_by_point(s: PathShape, matrix: Matrix) {
-    const points = [], raw_p = s.points, m = new Matrix(matrix);
-    if (!raw_p || !raw_p.length) return [];
-    m.preScale(s.frame.width, s.frame.height);
-    const len = raw_p.length - 1;
-    if (len < 1) return [];
-    for (let i = 0; i < len; i++) {
-        const p1: Point2D = raw_p[i], p2: Point2D = raw_p[i + 1];
-        if (!p1 || !p2) continue;
-        const point_raw = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-        const apex1 = m.computeCoord2(p1.x, p1.y);
-        const apex2 = m.computeCoord2(p2.x, p2.y);
-        const point = { x: (apex1.x + apex2.x) / 2, y: (apex1.y + apex2.y) / 2 };
-        points.push({ apex1, point, apex2, point_raw, index: i + 1 });
-    }
-    const p1: Point2D = raw_p[len], p2: Point2D = raw_p[0];
-    if (p1 && p2) {
-        const point_raw = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-        const apex1 = m.computeCoord2(p1.x, p1.y);
-        const apex2 = m.computeCoord2(p2.x, p2.y);
-        const point = { x: (apex1.x + apex2.x) / 2, y: (apex1.y + apex2.y) / 2 };
-        points.push({ apex1, point, apex2, point_raw, index: len + 1 });
-    }
-    return points;
 }
 
 export function get_apexs(s: ContactLineView, matrix: Matrix) {

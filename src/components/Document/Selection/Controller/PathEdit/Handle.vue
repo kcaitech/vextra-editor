@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { __angle, __anther_side_xy, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix, PathShapeView, PathShapeView2, PathType } from "@kcdesign/data";
+import { Matrix, PathShapeView, PathType } from "@kcdesign/data";
 import { add_blur_for_window, add_move_and_up_for_document, remove_blur_from_window, remove_move_and_up_from_document } from "@/utils/mouse_interactive";
 import { CurvePoint } from "@kcdesign/data";
 import { XY } from "@/context/selection";
@@ -102,14 +102,11 @@ function update() {
     let selected: number[] = [];
 
     if (path_shape.pathType === PathType.Editable) {
-        __points = (path_shape as PathShapeView).points;
-        selected = props.context.path.selectedPoints.get(0) || [];
-    } else if (path_shape.pathType === PathType.Multi) {
         const __segment =  [...props.context.path.selectedPoints.keys()][0];
         if (__segment < 0) {
             return;
         }
-        __points = (path_shape as PathShapeView2)?.segments[__segment]?.points as CurvePoint[];
+        __points = (path_shape as PathShapeView)?.segments[__segment]?.points as CurvePoint[];
         selected = [...props.context.path.selectedPoints.values()][0] || [];
 
         segment = __segment;
