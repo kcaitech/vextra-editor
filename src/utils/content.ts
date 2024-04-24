@@ -169,7 +169,6 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
         const name = getName(type, (parent).childs, t);
 
         asyncCreator = editor.asyncCreator(mousedownOnPageXY, isLockRatio);
-
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page.data, (adapt2Shape(parent) as GroupShape), name, frame);
         } else if (action === Action.AddCutout) {
@@ -519,8 +518,9 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
  * 使page全部内容都在可视区，并居中
  * @param context
  */
-export function adapt_page(context: Context, initPage = false) {
-    const childs = context.selection.selectedPage?.childs || [];
+export function adapt_page(context: Context, initPage = false, is_select = false) {
+    const selectedShapes = context.selection.selectedShapes || [];
+    const childs = is_select ? selectedShapes : context.selection.selectedPage?.childs || [];
     if (!childs.length) return new Matrix();
     const matrix = context.workspace.matrix;
     const points: ClientXY[] = [];
@@ -1119,7 +1119,7 @@ export function shape_title_width(shape: ShapeView, matrix: Matrix) {
 /**
  * @description 全选操作，ps:文本的全选操作不在这里处理
  */
-export function select_all(context: Context) {
+export function select_all(context: Context, reverse?: boolean) {
     // todo 编辑模式
     if (context.workspace.is_path_edit_mode) {
         select_all_for_path_edit(context);
@@ -1148,9 +1148,15 @@ export function select_all(context: Context) {
     });
     if (p_map.size > 1) {
         const page = selection.selectedPage;
-        if (page) selection.rangeSelectShape(page.childs);
+        if (page && !reverse) selection.rangeSelectShape(page.childs);
     } else {
-        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+        if (reverse) {
+            const s_id = selected.map(s => s.id)
+            const r_shape = Array.from(p_map.values())[0].childs.filter((item: any) => !s_id.includes(item.id))
+            selection.rangeSelectShape(r_shape);
+        } else {
+            selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+        }
     }
 }
 
@@ -1382,4 +1388,34 @@ export function computeString(str: string) {
     } catch (e) {
         return NaN;
     }
+}
+
+/**
+ * 
+ * @description 放大
+ * @param context 
+ * @returns 
+ */
+export const magnify = (context: Context) => {
+    const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
+    const cur_scale = context.workspace.matrix.toArray()[0];
+    const closestIndex = scale_sizes.findIndex((size) => size > cur_scale || size === 256);
+    if (closestIndex === -1) return cur_scale;
+    const scale = scale_sizes[closestIndex];
+    page_scale(context, scale)
+}
+
+/**
+ * 
+ * @description 缩小
+ * @param context 
+ * @returns 
+ */
+export const lessen = (context: Context) => {
+    const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
+    const cur_scale = context.workspace.matrix.toArray()[0];
+    const closestIndex = scale_sizes.reverse().findIndex((size) => size < cur_scale || size === 0.02);
+    if (closestIndex === -1) return cur_scale;
+    const scale = scale_sizes[closestIndex];
+    page_scale(context, scale)
 }

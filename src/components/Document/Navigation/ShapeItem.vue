@@ -352,6 +352,12 @@ const navi_watcher = (t: number) => {
             return;
         }
         emits("toggleexpand", props.data.shapeview());
+    } else if (t === Navi.RENAME) {
+        if(props.data.selected) {
+            if(props.data.context.selection.selectedShapes.length === 1) {
+                onRename();
+            }
+        }
     }
 }
 onUpdated(() => {

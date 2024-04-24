@@ -2,6 +2,8 @@ import { Context } from "@/context";
 import { TextShapeView, TableCellView } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { TextSelectionLite } from "@/context/textselectionlite";
+import { Attribute } from "@/context/atrribute";
 
 const keydelays = 15;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
@@ -338,6 +340,21 @@ const end = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCel
     }
 }
 
+const comma = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if ((ctrlKey || metaKey) && shiftKey) {
+        e.preventDefault();
+        context.attr.notify(Attribute.MINUS_SIZE_CHANGE);
+    }
+}
+const period = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if ((ctrlKey || metaKey) && shiftKey) {
+        e.preventDefault();
+        context.attr.notify(Attribute.ADD_SIZE_CHANGE);
+    }
+}
+
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -359,6 +376,8 @@ handler['i'] = Italic;
 handler['b'] = Bold;
 handler['home'] = home;
 handler['end'] = end;
+handler['<'] = comma;
+handler['>'] = period;
 
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {

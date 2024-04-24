@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, BasicArray, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextBehaviour, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
+import { AsyncTextAttrEditor, AttrGetter, BasicArray, FillType, Gradient, GradientType, Matrix, ShapeType, Stop, TextBehaviour, TextShapeView, adapt2Shape, cloneGradient } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -18,6 +18,8 @@ import { watch } from 'vue';
 import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEdit/gradient_utils';
 import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
+import { TextSelectionLite } from '@/context/textselectionlite';
+import { Attribute } from '@/context/atrribute';
 
 interface Props {
     context: Context
@@ -371,7 +373,7 @@ const _textFormat = () => {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
-        rowHeight.value = format.minimumLineHeight || ''
+        rowHeight.value = format.minimumLineHeight || 0
         wordSpace.value = format.kerning || 0
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
@@ -385,7 +387,6 @@ const _textFormat = () => {
         isBold.value = format.bold
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
-        rowHeight.value = format.minimumLineHeight || 0;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
@@ -448,7 +449,7 @@ const _textFormat = () => {
                 format[key] = `unlikeness`;
             }
         }
-        rowHeight.value = format.minimumLineHeight || '';
+        rowHeight.value = format.minimumLineHeight || 0;
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
@@ -984,22 +985,34 @@ const filterAlpha = () => {
 const pointX = ref<number>()
 const pointY = ref<number>()
 const showpoint = ref<boolean>(false)
-const onMouseDown = async (e: MouseEvent) => {
+let type = 'row-height';
+let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+const onMouseDown = async (e: MouseEvent, t: string) => {
     pointX.value = e.clientX
     pointY.value = e.clientY
+    type = t;
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
         await el.requestPointerLock({
             unadjustedMovement: true,
         });
     }
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    let index = textIndex;
+    let length = selectLength;
+    if (isSelectText()) {
+        index = 0; length = Number.MAX_VALUE;
+    } else {
+        index = textIndex; length = selectLength;
+    }
+    textAttrEditor = props.context.editor4TextShape(props.shape).asyncSetTextAttr(props.textShapes, index, length);
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener("mousemove", onMouseMove, false);
+    document.addEventListener("mousemove", onMouseMove);
     showpoint.value = true
 }
 
-function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+function updatePosition(movementX: number, movementY: number) {
     if (pointX.value === undefined || pointY.value === undefined) return;
     const clientHeight = document.documentElement.clientHeight
     const clientWidth = document.documentElement.clientWidth
@@ -1010,16 +1023,60 @@ function updatePosition(movementX: number, movementY: number, isRotating: boolea
 }
 
 function onMouseMove(e: MouseEvent) {
-    const isRotating = e.movementX > 0;
-    updatePosition(e.movementX, e.movementY, isRotating)
+    updatePosition(e.movementX, e.movementY);
+    if (type === 'row-height') {
+        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
+        rowHeight.value = Number(rowHeight.value) + e.movementX;
+        if (textAttrEditor) {
+            rowHeight.value = rowHeight.value < 0 ? 0 : Number(rowHeight.value)
+            textAttrEditor.execute_line_height(rowHeight.value);
+        }
+    } else {
+        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
+        wordSpace.value = Number(wordSpace.value) + e.movementX;
+        if (textAttrEditor) {
+            wordSpace.value = wordSpace.value < 0 ? 0 : Number(wordSpace.value)
+            textAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+    }
 }
 
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation()
     document.exitPointerLock()
     showpoint.value = false
-    document.removeEventListener("mousemove", onMouseMove, false);
+    document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+    if (textAttrEditor) {
+        textAttrEditor.close();
+        textAttrEditor = undefined;
+    }
+}
+
+const text_selection_wather = (t: number) => {
+    if (t === Attribute.ADD_SIZE_CHANGE) {
+        if (textSize.value) {
+            let value = textSize.value.value.trim();
+            if (value.length < 1) {
+                value = '1'
+            }
+            if (!isNaN(Number(value)) && Number(value) > 0) {
+                changeTextSize(Number(value) + 1);
+            }
+        }
+    } else if (t === Attribute.MINUS_SIZE_CHANGE) {
+        if (textSize.value) {
+            let value = textSize.value.value.trim();
+            if (value.length < 1) {
+                value = '1'
+            }
+            if (!isNaN(Number(value)) && Number(value) > 1) {
+                changeTextSize(Number(value) - 1);
+            }
+        }
+    } else if(t === Attribute.FRAME_CHANGE) {
+        textFormat();
+    }
 }
 
 // const stop = watch(() => props.dataChange, textFormat);
@@ -1035,11 +1092,13 @@ const stop3 = watch(() => props.trigger, v => {
 const stop4 = watch(() => props.selectionChange, textFormat); // 监听选区变化
 onMounted(() => {
     props.context.selection.watch(selection_wather);
+    props.context.attr.watch(text_selection_wather);
     props.context.workspace.watch(workspace_wather);
     textFormat();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.context.attr.unwatch(text_selection_wather);
     props.context.workspace.unwatch(workspace_wather);
     // stop();
     stop2();
@@ -1095,14 +1154,14 @@ onUnmounted(() => {
             </div>
             <div class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
-                    <div>
+                    <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                         <svg-icon icon-class="word-space"></svg-icon>
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
                         :placeholder="row_height" @focus="selectLineHeight" @input="handleSize">
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
-                    <div>
+                    <div @mousedown="(e) => onMouseDown(e, 'char-space')">
                         <svg-icon icon-class="row-height"></svg-icon>
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
@@ -1476,7 +1535,7 @@ onUnmounted(() => {
                     height: 32px;
 
                     >svg {
-                        // cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         width: 14px;
                         height: 14px;
                     }

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -288,9 +288,6 @@ const setWordSpace = () => {
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value)
-        // if (wordSpace.value.slice(-1) === '%') {
-        //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-        // }
         if (!isNaN(Number(wordSpace.value))) {
             if (isSelectText()) {
                 editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
@@ -522,7 +519,6 @@ const textFormat = (_t?: any) => {
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
@@ -620,7 +616,6 @@ const set_gradient_opacity = (opacity: number) => {
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }
-
 
 function onColorChange(e: Event, type: string) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -1035,14 +1030,40 @@ const selectLineHeight = () => {
 const pointX = ref<number>()
 const pointY = ref<number>()
 const showpoint = ref<boolean>(false)
-const onMouseDown = async (e: MouseEvent) => {
+let type = 'row-height';
+let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+let tableTextAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+const onMouseDown = async (e: MouseEvent, t: string) => {
     pointX.value = e.clientX
     pointY.value = e.clientY
+    type = t;
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
         await el.requestPointerLock({
             unadjustedMovement: true,
         });
+    }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        let index = textIndex;
+        let length = selectLength;
+        if (isSelectText()) {
+            index = 0; length = Number.MAX_VALUE;
+        } else {
+            index = textIndex; length = selectLength;
+        }
+        textAttrEditor = props.context.editor4TextShape(shape.value).asyncSetTextAttr([shape.value], index, length);
+    } else {
+        const table = props.shape;
+        const table_Selection = props.context.tableSelection;
+        const editor = props.context.editor4Table(table);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            tableTextAttrEditor = editor.asyncSetTableAttr();
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            tableTextAttrEditor = editor.asyncSetTableAttr(cell_selection);
+        }
+
     }
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
@@ -1062,7 +1083,26 @@ function updatePosition(movementX: number, movementY: number, isRotating: boolea
 
 function onMouseMove(e: MouseEvent) {
     const isRotating = e.movementX > 0;
-    updatePosition(e.movementX, e.movementY, isRotating)
+    updatePosition(e.movementX, e.movementY, isRotating);
+    if (type === 'row-height') {
+        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
+        rowHeight.value = Number(rowHeight.value) + e.movementX < 0 ? 0 : Number(rowHeight.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_line_height(rowHeight.value);
+        }
+        if(tableTextAttrEditor) {
+            tableTextAttrEditor.execute_line_height(rowHeight.value);
+        }
+    } else {
+        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
+        wordSpace.value = Number(wordSpace.value) + e.movementX < 0 ? 0 : Number(wordSpace.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+        if(tableTextAttrEditor) {
+            tableTextAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+    }
 }
 
 function onMouseUp(e: MouseEvent) {
@@ -1071,6 +1111,14 @@ function onMouseUp(e: MouseEvent) {
     showpoint.value = false
     document.removeEventListener("mousemove", onMouseMove, false);
     document.removeEventListener('mouseup', onMouseUp);
+    if (textAttrEditor) {
+        textAttrEditor.close();
+        textAttrEditor = undefined;
+    }
+    if (tableTextAttrEditor) {
+        tableTextAttrEditor.close();
+        tableTextAttrEditor = undefined;
+    }
 }
 
 const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
@@ -1156,14 +1204,14 @@ onUnmounted(() => {
             </div>
             <div class="text-middle">
                 <div class="interval jointly-text" style="margin-right: 8px;">
-                    <div>
+                    <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                         <svg-icon icon-class="word-space"></svg-icon>
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
                         @focus="selectLineHeight" @input="handleSize">
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
-                    <div>
+                    <div @mousedown="(e) => onMouseDown(e, 'char-space')">
                         <svg-icon icon-class="row-height"></svg-icon>
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
@@ -1511,7 +1559,7 @@ onUnmounted(() => {
                     height: 32px;
 
                     >svg {
-                        // cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         width: 14px;
                         height: 14px;
                     }
