@@ -263,6 +263,11 @@ keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
+    if (!permIsEdit(context)) {
+        return;
+    }
+
+    context.tool.setAction(Action.Pen); // 钢笔工具
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {

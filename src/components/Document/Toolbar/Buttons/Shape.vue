@@ -123,7 +123,7 @@ function tool_watcher(t?: number) {
     }
 }
 
-var timer: any = null
+let timer: any = null
 const onMouseenter = () => {
     timer = setTimeout(() => {
         visible.value = true

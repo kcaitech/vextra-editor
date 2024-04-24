@@ -22,7 +22,10 @@ import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
 import * as share_api from '@/request/share'
+import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
+
 const { t } = useI18n();
+
 interface Props {
     context: Context
     selection: Selection
@@ -125,22 +128,23 @@ function applyForEdit() {
 <template>
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-            :is_lable="isLable" :edit="isEdit"></Cursor>
+                :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
+            <div class="vertical-line"/>
         </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Shape :context="context" @select="select"></Shape>
+        <!--        <Shape :context="context" @select="select"></Shape>-->
+        <PathShape :context="context"></PathShape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
+            <div class="vertical-line"/>
         </div>
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton style="width: 32px">
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
@@ -158,15 +162,12 @@ function applyForEdit() {
             </button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-            :is_lable="isLable" :edit="isEdit"></Cursor>
-        <!--        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">-->
-        <!--            <div class="vertical-line" v-if="!isread" />-->
-        <!--        </div>-->
+                :is_lable="isLable" :edit="isEdit"></Cursor>
         <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
         </Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
-        :selected="selected"></PathEditTool>
+                  :selected="selected"></PathEditTool>
 </template>
 
 <style scoped lang="scss">
@@ -229,7 +230,7 @@ function applyForEdit() {
         padding: 6px 6px 6px 6px;
         box-sizing: border-box;
 
-        >svg {
+        > svg {
             width: 18px;
             height: 18px;
         }

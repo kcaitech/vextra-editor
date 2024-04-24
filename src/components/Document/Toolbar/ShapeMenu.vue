@@ -96,7 +96,4 @@ function get_icon_class() {
   font-weight: 500;
   z-index: 1;
 }
-//.container-change>div {
-//  margin-left: var(--default-margin);
-//}
 </style>
