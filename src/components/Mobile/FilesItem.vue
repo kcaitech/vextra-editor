@@ -1,6 +1,6 @@
 <template>
     <template v-if="!showtips">
-        <div v-bind="containerProps" style="height: 100%">
+        <div v-bind="containerProps" style="height: 100%;padding: 0 14px;">
             <div v-bind="wrapperProps">
                 <div class="list-item" v-for=" item in list" :key="item.data.document.id" style="height: 84px;"
                     @click="openfile(item.data.document.id)">
@@ -14,8 +14,7 @@
         item.data.document_access_record.last_access_time }}</span>
                         </div>
                         <div class="right" @click.stop>
-                            <div class="share"
-                                @click="router.push({ name: 'share', query: { id: item.data.document.id } })">
+                            <div class="share" @click="shareTo(item.data.document.id)">
                                 <svg-icon icon-class="mShare"></svg-icon>
                             </div>
                             <div class="star"
@@ -32,24 +31,27 @@
         </div>
     </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips && !props.errNetwork" class="null"><span>当前列表没有文件</span></div>
+    <div v-if="showtips && !props.errNetwork" class="null"><span>{{ searchkey ? t('miniprogram.search') : t('miniprogram.listnull') }}</span></div>
     <div v-if="props.errNetwork && !loading" class="errnetwork" @click="changeload">
-        <span>刷新</span>
+        <span>{{ t('miniprogram.flushed') }}</span>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect, nextTick, onUnmounted } from 'vue';
+import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue';
 import Loading from '../common/Loading.vue';
-import { useVirtualList, UseVirtualListReturn } from '@vueuse/core'
+import { useVirtualList } from '@vueuse/core'
 import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
 
+const {t}=useI18n()
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
 const props = withDefaults(defineProps<{
     data: any[],
     errNetwork?: boolean,
     index?: string,
+    searchkey?: string,
 }>(), {
     index: '0',
 })
@@ -66,10 +68,14 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
 const openfile = (id: string) => {
     router.push(({ name: 'pageviews', query: { id: id } }))
     const index = filteredList.value.findIndex(item => item.document.id === id)
-    console.log(index);
-    sessionStorage.setItem('ss', index.toString())
+    sessionStorage.setItem('scrollTop', index.toString())
 }
 
+const shareTo = (id: string) => {
+    router.push({ name: 'share', query: { id: id } })
+    const index = filteredList.value.findIndex(item => item.document.id === id)
+    sessionStorage.setItem('scrollTop', index.toString())
+}
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
@@ -86,10 +92,12 @@ watch([() => props.data, () => props.errNetwork], () => {
         showtips.value = false
     }
     loading.value = false
-    setTimeout(() => {
-        scrollTo(Number(sessionStorage.getItem('ss')) > 0 ? Number(sessionStorage.getItem('ss')) : 0)
-        sessionStorage.removeItem('ss')
-    }, 200)
+    nextTick(() => {
+        if (Number(sessionStorage.getItem('scrollTop')) > 0) {
+            scrollTo(Number(sessionStorage.getItem('scrollTop')))
+            sessionStorage.removeItem('scrollTop')
+        }
+    })
 })
 
 

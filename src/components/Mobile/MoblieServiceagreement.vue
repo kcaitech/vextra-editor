@@ -2,7 +2,7 @@
     <div class="serviceagreement">
         <div ref="hdow" class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
-            <span>在线服务协议</span>
+            <span>{{ t('miniprogram.serve') }}</span>
         </div>
         <div ref="cdow" class="content" v-html="htmlContent(Markdowncontent)" @scroll="scrollevent"></div>
     </div>
@@ -12,8 +12,10 @@
 import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/serviceagreement.md";
 import { router } from '@/router'
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n()
 const hdow = ref<HTMLElement>()
 const cdow = ref<HTMLElement>()
 const scrollevent = (el: Event) => {
@@ -25,7 +27,6 @@ const scrollevent = (el: Event) => {
         hdow.value!.style.boxShadow = ''
     }
 }
-
 </script>
 
 <style lang="scss" scoped>

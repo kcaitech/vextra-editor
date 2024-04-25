@@ -2,12 +2,10 @@
     <div class="privacypolicy">
         <div ref="hdow" class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
-            <span>隐私协议</span>
+            <span>{{t('miniprogram.privacy')}}</span>
         </div>
         <div ref="cdow" class="content" v-html="htmlContent(Markdowncontent)" @scroll="scrollevent"></div>
     </div>
-
-
 </template>
 
 <script setup lang="ts">
@@ -15,7 +13,9 @@ import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/privacypolicy.md"
 import { router } from '@/router'
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
+const {t}=useI18n()
 const hdow = ref<HTMLElement>()
 const cdow = ref<HTMLElement>()
 const scrollevent = (el: Event) => {

@@ -13,13 +13,11 @@
         </Teleport>
         <Teleport to="body">
             <div v-if="qrcode" class="grop-code">
-                <div v-if="!showwx" class="qq-code" @click.stop="showwx=!showwx">
+                <!-- <div v-if="!showwx" class="qq-code" @click.stop="showwx=!showwx">
                     <img class="code-image" :src="QQCode" alt="QRCode">
-                    <span>点击切换微信群</span>
-                </div>
-                <div v-if="showwx" class="wx-code" @click.stop="showwx=!showwx">
+                </div> -->
+                <div class="wx-code">
                     <img class="code-image" :src="WXCode" alt="QRCode">
-                    <span>点击切换QQ群</span>
                 </div>
             </div>
             <div v-if="report" class="overlay">
@@ -29,6 +27,7 @@
         </Teleport>
     </div>
 </template>
+
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -43,7 +42,7 @@ import { Menu } from '@/context/menu';
 const props = defineProps<{
     context?: Context
 }>();
-const showwx=ref<boolean>(true)
+const showwx = ref<boolean>(true)
 const route = useRoute()
 const showitem = ref(false)
 const qrcode = ref(false)
@@ -170,6 +169,7 @@ onUnmounted(() => {
 })
 
 </script>
+
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
@@ -253,7 +253,8 @@ onUnmounted(() => {
     box-sizing: border-box;
     z-index: 9999;
 
-    .qq-code,.wx-code {
+    .qq-code,
+    .wx-code {
         width: 200px;
         height: 200px;
         display: flex;
@@ -265,7 +266,8 @@ onUnmounted(() => {
         .code-image {
             width: 80%;
         }
-        span{
+
+        span {
             color: #c8c8c8;
             font-size: 14px;
         }

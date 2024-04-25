@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <button @click="OutLogin">退出登录</button>
+        <!-- <button @click="OutLogin">退出登录</button> -->
     </div>
 
 
@@ -31,6 +31,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, toRefs } from 'vue'
 import { router } from '@/router'
+import { useI18n } from 'vue-i18n';
+
+const {t}=useI18n()
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
@@ -38,8 +41,8 @@ const state = reactive({
 })
 const { circleUrl, uname, id } = toRefs(state)
 const data = ref([
-    { id: 1, value: '隐私政策', icon: 'ys-icon', name: 'privacy' },
-    { id: 2, value: '在线服务协议', icon: 'fw-icon', name: 'agreements' }
+    { id: 1, value:t('miniprogram.privacy'), icon: 'ys-icon', name: 'privacy' },
+    { id: 2, value: t('miniprogram.serve'), icon: 'fw-icon', name: 'agreements' }
 ])
 
 const goto = (name: string) => {
@@ -52,7 +55,6 @@ const OutLogin = () => {
     let miniprogram: any;
     miniprogram = navigator.userAgent.includes('miniProgram')
     if (miniprogram) {
-        console.log(1111);
         (window as any).uni.redirectTo({
             url: '/pages/index/index',
         });
@@ -65,12 +67,9 @@ const OutLogin = () => {
     }
 }
 
-const emits = defineEmits<{
-    testevnt: [data: object]
-}>()
 
 onMounted(() => {
-    window.document.title = '关于'
+    
 })
 
 </script>

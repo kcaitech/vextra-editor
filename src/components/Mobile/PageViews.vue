@@ -668,12 +668,12 @@ const backlink = computed(() => {
 <template>
     <div class="container">
         <div class="status-bar">
-            <div class="back" @click="showpagelist = !showpagelist">
-                <svg-icon icon-class="back-icon"></svg-icon>
+            <div class="list" @click="showpagelist = !showpagelist">
+                <svg-icon icon-class="menu-black"></svg-icon>
             </div>
             <span>{{ fileName }}</span>
-            <div class="list" @click="backlink?router.go(-1):router.replace({path:'/m'})">
-                <svg-icon icon-class="back-icon"></svg-icon>
+            <div class="back" @click="backlink ? router.go(-1) : router.replace({ path: '/m' })">
+                <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <transition name="fade">
@@ -722,10 +722,10 @@ const backlink = computed(() => {
     z-index: 999;
 
     .back {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
         position: absolute;
-        left: 8px;
+        right: 8px;
 
         svg {
             width: 100%;
@@ -735,10 +735,10 @@ const backlink = computed(() => {
     }
 
     .list {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
         position: absolute;
-        right: 8px;
+        left: 8px;
 
         svg {
             width: 100%;

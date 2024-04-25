@@ -299,10 +299,11 @@ watchEffect(() => {
     <div class="share">
         <div class="header">
             <svg-icon icon-class="back-icon" @click.stop="userlist ? userlist = false : router.go(-1)"></svg-icon>
-            <span>分享</span>
+            <span>{{ t('miniprogram.share_title') }}</span>
         </div>
         <div v-if="docInfo" class="content">
-            <div style="color: #8C8C8C;margin: 16px 16px 8px 16px;">权限设置{{ docInfo.project ? '（文件所在项目所有成员固定可见）' : '' }}
+            <div style="color: #8C8C8C;margin: 16px 16px 8px 16px;">{{ t('miniprogram.permissions') + (docInfo.project ?
+                '（文件所在项目所有成员固定可见）' : '') }}
             </div>
             <!-- 普通视图 -->
             <div v-if="founder" class="normal-view">
@@ -325,13 +326,13 @@ watchEffect(() => {
                     <div class="select" :style="{ visibility: [2, 3, 4].includes(selectValue) ? 'visible' : 'hidden' }">
                     </div> -->
                 <div class="private" @click="selectValue = 0">
-                    <span>仅自己</span>
+                    <span>{{t('miniprogram.myself')}}</span>
                     <div class="select" :style="{ visibility: selectValue === 0 ? 'visible' : 'hidden' }">
                         <svg-icon icon-class="mselect-icon"></svg-icon>
                     </div>
                 </div>
                 <div class="application" @click="selectValue = 1">
-                    <span>需要确认</span>
+                    <span>{{t('miniprogram.confirm')}}</span>
                     <div class="select" :style="{ visibility: selectValue === 1 ? 'visible' : 'hidden' }">
                         <svg-icon icon-class="mselect-icon"></svg-icon>
                     </div>
@@ -377,7 +378,7 @@ watchEffect(() => {
             </div>
             <!-- 已加入分享的人 -->
             <div v-if="!founder" class="share-user" @click="userlist = true">
-                <span>已加入分享的人</span>
+                <span>{{t('miniprogram.share_users')}}</span>
                 <div class="left-info">
                     <!-- <span style="color: #c8c8c8;">{{ listuser }}人</span> -->
                     <svg-icon icon-class="arrows-icon"></svg-icon>
@@ -388,9 +389,9 @@ watchEffect(() => {
             <Transition enter-active-class="animate__animated animate__fadeInUp"
                 leave-active-class="animate__animated animate__fadeOutDown">
                 <div v-if="selectValue !== 0" class="share-to">
-                    <div class="title">分享到</div>
+                    <div class="title">{{t('miniprogram.share_to')}}</div>
                     <div class="type">
-                        <div class="link" @click.stop="copyLink">
+                        <!-- <div class="link" @click.stop="copyLink">
                             <div class="left">
                                 <svg-icon icon-class="wechat-icon"></svg-icon>
                                 <span>微信</span>
@@ -398,11 +399,11 @@ watchEffect(() => {
                             <div class="right">
                                 <svg-icon icon-class="arrows-icon"></svg-icon>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="link" @click.stop="copyLink">
                             <div class="left">
                                 <svg-icon icon-class="link-icon"></svg-icon>
-                                <span>复制链接</span>
+                                <span>{{t('miniprogram.copy_link')}}</span>
                             </div>
                             <div class="right">
                                 <svg-icon icon-class="arrows-icon"></svg-icon>
@@ -424,7 +425,7 @@ watchEffect(() => {
                         </div>
                     </div>
                     <div v-if="!shareList.length" class="null">
-                        <span>没有加入的成员</span>
+                        <span>{{t('miniprogram.share_users_null')}}</span>
                     </div>
                     <div v-if="loading" class="loading">
                         <Loading :size="20"></Loading>

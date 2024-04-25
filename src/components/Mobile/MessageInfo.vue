@@ -17,21 +17,29 @@
             <!-- 文件消息列表 -->
             <div class="contain" v-if="itemid === 0">
                 <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
-                    <div class="avatar"><img :src="item.user.avatar" alt=""></div>
-                    <div class="item-container">
-                        <div class="item-title">
+                    <div class="item-title">
+                        <div class="item-title-left">
+                            <div class="avatar"><img :src="item.user.avatar" alt=""></div>
                             <span class="name">{{ item.user.nickname }}</span>
                             <span class="date">{{ formatDate(item.apply.created_at) }}</span>
                         </div>
-                        <div class="item-text">
-                            <span>{{ t('apply.application_documents') }}</span>"{{ item.document.name }}"
-                            <div class="purview">{{ permission[item.apply.perm_type] }}</div>
-                            <div class="notes" v-if="item.apply.applicant_notes !== ''">
-                                {{ t('apply.remarks') }}：{{ item.apply.applicant_notes }}
+                        <div class="item-title-right">
+                            <div class="botton">
+                                <span class="agreed" v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</span>
+                                <span class="rejected" v-if="item.apply.status === 2">{{ t('apply.rejected') }}
+                                </span>
                             </div>
                         </div>
                     </div>
-                    <div class="botton" v-if="item.apply.status === 0">
+                    <div class="item-text">
+                        <div class="purview"><span>申请</span><span>「</span>{{ permission[item.apply.perm_type]
+                            }}<span>」</span><span>「</span>{{
+                item.document.name }}<span>」</span></div>
+                        <div class="notes" v-if="item.apply.applicant_notes !== ''">
+                            {{ t('apply.remarks') }}：{{ item.apply.applicant_notes }}
+                        </div>
+                    </div>
+                    <div v-if="item.apply.status === 0" class="botton">
                         <button class="bnt_confirm" type="button" @click.stop="consent(item.apply.id, item)">
                             {{ t('apply.agree') }}
                         </button>
@@ -39,12 +47,9 @@
                             {{ t('apply.refuse') }}
                         </button>
                     </div>
-                    <div class="botton" v-else>
-                        <p class="agreed" v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
-                        <p class="rejected" v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
-                    </div>
                 </div>
-                <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span>
+                <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received')
+                        }}</span>
                 </div>
             </div>
 
@@ -52,38 +57,56 @@
             <!-- 团队消息列表 -->
             <div class="contain" v-if="itemid === 1">
                 <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
-                    <div class="avatar"><img :src="item.approver ? item.approver.avatar : item.user.avatar" alt="">
-                    </div>
-                    <div class="item-container">
-                        <div class="item-title">
+
+                    <div class="item-title">
+                        <div class="item-title-left">
+                            <div class="avatar"><img :src="item.approver ? item.approver.avatar : item.user.avatar"
+                                    alt=""></div>
                             <span class="name">{{ getName(item) }}</span>
                             <span class="date">{{ formatDate(item.request.created_at) }}</span>
                         </div>
-                        <div class="item-text" v-if="item.team && item.user">
-                            <span>{{ t('apply.apply_team') }}</span>{{ item.team.name }}
-                            <br>
-                            <span>{{ t('apply.authority') }}</span>{{ permissionTeam[item.request.perm_type] }}
+                        <div class="item-title-right">
+                            <div class="botton">
+                                <div class="agreed" v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</div>
+                                <div class="rejected" v-if="item.request.status === 2">{{ t('apply.rejected') }}</div>
+                            </div>
                         </div>
-                        <div class="item-text" v-else-if="item.project && item.user">
+
+                    </div>
+                    <div v-if="item.team && item.user" class="item-text">
+                        <div class="context">
+                            <span>{{ t('apply.apply_team') }}</span>{{ item.team.name }}
+                        <br>
+                            <span>{{ t('apply.authority') }}</span>「{{ permissionTeam[item.request.perm_type] }}」
+                        </div>
+
+                    </div>
+                    <div v-else-if="item.project && item.user" class="item-text">
+                        <div class="context">
                             <span>{{ t('apply.apply_project') }}</span>{{ item.project.name }}
                             <br>
-                            <span>{{ t('apply.authority') }}</span>{{ permission[item.request.perm_type] }}
+                            <span>{{ t('apply.authority') }}</span>「{{ permission[item.request.perm_type] }}」
                         </div>
-                        <div class="item-text" v-else-if="!item.user && item.request.status === 1">
+                    </div>
+                    <div v-else-if="!item.user && item.request.status === 1" class="item-text">
+                        <div class="context">
                             <span>{{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') :
                 t('Createteam.team')
                                 }}：</span> {{
                 item.project ? item.project.name : item.team.name }}
                         </div>
-                        <div class="item-text" v-else-if="!item.user && item.request.status === 2">
-                            {{ t('Createteam.rejectprompt1') }}<span>您申请加入团队</span>"{{ item.project ? item.project.name
-                :
-                item.team.name }}"
+
+                    </div>
+                    <div v-else-if="!item.user && item.request.status === 2" class="item-text">
+                        <div class="context">
+                            {{ t('Createteam.rejectprompt1') }}
+                            <span>您申请加入团队</span>
+                            "{{ item.project ? item.project.name : item.team.name }}"
                             <br>
-                            <span>{{ item.project ? t('Createteam.rejectprompt3') : t('Createteam.rejectprompt2')
-                                }}</span>
+                            <span>{{ item.project ? t('Createteam.rejectprompt3') : t('Createteam.rejectprompt2')}}</span>
                         </div>
                     </div>
+
                     <div class="botton" v-if="item.request.status === 0 && item.user">
                         <button class="bnt_confirm" type="button" @click.stop="consentTeam(item.request.id, i, item)">
                             {{ t('apply.agree') }}
@@ -93,10 +116,6 @@
                         </button>
                     </div>
                     <div class="botton" v-else-if="!item.user"></div>
-                    <div class="botton" v-else>
-                        <p class="agreed" v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</p>
-                        <p class="rejected" v-else-if="item.request.status === 2">{{ t('apply.rejected') }}</p>
-                    </div>
                 </div>
                 <div class="text" v-if="props.teamApplyList.length === 0"><span>{{ t('apply.no_message_received')
                         }}</span>
@@ -218,7 +237,7 @@ function resizechange() {
 }
 
 const filterDate = (time: string) => {
-    const date = new Date(time.replace(/-/g,'/').slice(0,18));
+    const date = new Date(time.replace(/-/g, '/').slice(0, 18));
     const hours = date.getHours();
     const minutes = date.getMinutes();
     return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -262,48 +281,51 @@ onMounted(() => {
         width: 100%;
         height: 100%;
         overflow-y: scroll;
-        font-size: var(--font-default-fontsize);
-
+        padding: 0 14px;
+        box-sizing: border-box;
+        font-size: 15px;
+        font-weight: 500;
 
         .inform-item {
             width: 100%;
             height: auto;
+            padding: 14px 0;
             display: flex;
+            flex-direction: column;
             border-bottom: 1px solid var(--theme-color-line);
-            margin-bottom: 16px;
-            gap: 6px;
+            gap: 4px;
+            box-sizing: border-box;
 
-            .avatar {
-                width: 24px;
-                min-width: 24px;
-                height: 24px;
-                border-radius: 50%;
+            .item-title {
                 display: flex;
-                justify-content: center;
+                justify-content: space-between;
                 align-items: center;
+                gap: 8px;
 
-
-                >img {
-                    width: 100%;
-                    height: 100%;
-                    border-radius: 50%;
-                }
-            }
-
-            .item-container {
-                width: 205px;
-                margin-bottom: 16px;
-
-                .item-title {
+                .item-title-left {
                     display: flex;
-                    justify-content: flex-start;
                     align-items: center;
-                    height: 24px;
-                    gap: 8px;
+                    gap: 6px;
+
+                    .avatar {
+                        width: 32px;
+                        min-width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+
+
+                        >img {
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 50%;
+                        }
+                    }
 
                     .date {
                         color: rgba(191, 191, 191, 1);
-                        font-size: 12px;
                         white-space: nowrap;
                     }
 
@@ -316,57 +338,73 @@ onMounted(() => {
                     }
                 }
 
-                .item-text {
-                    font-size: 13px;
-                    font-weight: 500;
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-box-orient: vertical;
-                    // -webkit-line-clamp: 2;
-                    // line-clamp: 2;
-                    text-overflow: ellipsis;
-                    line-height: 24px;
-                    word-break: break-all;
+                .item-title-right {
+                    .botton {
+                        white-space: nowrap;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        font-size: 13px;
+                        gap: 8px;
 
+                        .agreed {
+                            color: rgba(191, 191, 191, 1);
+                        }
+
+                        .rejected {
+                            color: rgba(255, 199, 199, 1);
+                        }
+                    }
+                }
+
+
+            }
+
+            .item-text {
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                -webkit-box-orient: vertical;
+                text-overflow: ellipsis;
+                word-break: break-all;
+
+                .context{
+                    color: #000000;
+                    span{
+                        color: #BFBFBF;
+                    }
+                }
+
+                .purview {
+                    color: rgba(0, 0, 0, 1);
+                    line-height: 26px;
 
                     span {
-                        color: rgba(140, 140, 140, 1);
+                        color: #BFBFBF;
                     }
+                }
 
-
-                    .purview {
-                        color: rgba(0, 0, 0, 1);
-                    }
-
-                    .notes {
-                        color: rgba(140, 140, 140, 1)
-                    }
+                .notes {
+                    line-height: 26px;
+                    color: #8C8C8C;
                 }
             }
 
             .botton {
                 white-space: nowrap;
                 display: flex;
-                flex-direction: column;
-                justify-content: center;
+                justify-content: flex-end;
                 align-items: center;
                 gap: 8px;
 
-                .agreed {
-                    color: rgba(191, 191, 191, 1);
-                }
-
-                .rejected {
-                    color: rgba(255, 199, 199, 1);
-                }
-
                 button {
                     cursor: pointer;
-                    font-size: 11px;
-                    width: 40px;
-                    height: 22px;
+                    font-size: 13px;
+                    width: 54px;
+                    height: 32px;
                     border: none;
-                    border-radius: 4px;
+                    border-radius: 5px;
                     box-sizing: border-box;
                 }
 
@@ -397,6 +435,19 @@ onMounted(() => {
                     }
                 }
             }
+
+
+
+            .item-container {
+                width: 205px;
+                margin-bottom: 16px;
+
+
+
+
+            }
+
+
         }
 
         .text {

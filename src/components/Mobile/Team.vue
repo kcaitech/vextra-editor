@@ -14,9 +14,7 @@ const store = useCounterStore()
 const { list } = storeToRefs(store)
 const { GetteamList } = store
 
-const emits = defineEmits<{
-   testevnt: [data: object]
-}>()
+
 
 onMounted(() => {
    window.document.title = '团队'

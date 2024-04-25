@@ -16,7 +16,6 @@ const emit = defineEmits<{
 }>()
 
 const linkSwitch = ref(false)
-const sharelink = ref(``)
 const isshow = ref(false)
 const checked = ref(false);
 const currentProject = ref<any[]>([props.data]);
@@ -81,6 +80,11 @@ enum permissions {
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 }
+
+const sharelink = computed(()=>{
+
+return `${location.origin}/files/project/${currentProject.value[0].project.id}`
+})
 
 const onLinkSwitch = () => {
     if (disabled.value) return
@@ -201,8 +205,6 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://moss.design/files/project/${project.id}`
-
 })
 
 const inputTypeSelect = ref<HTMLInputElement>()

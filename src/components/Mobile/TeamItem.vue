@@ -15,7 +15,7 @@
         </div>
     </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>还未加入团队</span></div>
+    <div v-if="showtips" class="null"><span>{{ t('miniprogram.team_jion_null') }}</span></div>
     <div v-if="typeof props.data === 'string'" class="error"><span>{{ props.data }}</span></div>
 </template>
 
@@ -23,14 +23,15 @@
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+
+const {t}=useI18n()
+const showtips = ref<boolean>(false)
+const loading = ref<boolean>(true)
 
 const props = defineProps<{
     data: any,
 }>();
-
-const showtips = ref<boolean>(false)
-const loading = ref<boolean>(true)
-
 
 watch(() => props.data, () => {
     if (props.data.length === 0) {

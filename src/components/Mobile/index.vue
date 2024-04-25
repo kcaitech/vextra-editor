@@ -9,10 +9,7 @@
                     <div class="s-header">
                         <svg-icon icon-class="search-icon2"></svg-icon>
                     </div>
-                    <input type="text" placeholder="搜索文件" v-model="searchKey">
-                    <div v-if="searchKey.trim()" class="s-footer" @click="searchKey = ''">
-                        <svg-icon icon-class="close"></svg-icon>
-                    </div>
+                    <input type="text" :placeholder="t('system.placeholder')" @focus="router.push({ path: '/search' })">
                 </div>
                 <div class="notice" @click="showInForm = !showInForm">
                     <svg-icon icon-class="m-notice"></svg-icon>
@@ -21,15 +18,9 @@
                 </div>
             </div>
             <div class="content" :style="{ height: activebnt !== 'About' ? 'calc(100% - 54px)' : '100%' }">
-                <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
+                <component :is="tabs.get(activebnt)||Home"></component>
             </div>
         </div>
-        <Transition name="fade">
-            <div v-if="searchKey" class="search-list">
-                <FilesItem :data="searchData" @changeStar="changeStar">
-                </FilesItem>
-            </div>
-        </Transition>
         <div class="footer">
             <div class="bnt" :class="{ 'bnt-selct': activebnt === item.value }" v-for="(item, index) in bntdata"
                 :key=index @click="changetab(item.value)">
@@ -50,33 +41,17 @@
 <script setup lang="ts">
 import * as share_api from '@/request/share';
 import * as team_api from '@/request/team';
-import FilesItem from './FilesItem.vue'
 import Home from './HomePage.vue';
 import MyFile from './MyFile.vue';
 import Team from './Team.vue';
 import About from './About.vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Inform from './MessageInfo.vue';
-import { useSearchData } from './search'
-import { storeToRefs } from 'pinia';
 import { router } from '@/router';
-import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n'
-import { changeStar as change } from './files'
+
 const { t } = useI18n()
-const Data = useSearchData()
-const { searchKey, searchData } = storeToRefs(Data)
-
-
-const bntdata = [
-    { label: '首页', value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
-    { label: '我的文件', value: 'MyFiles', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
-    { label: '团队', value: 'Team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
-    { label: '我的', value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
-]
-
 const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
-
 const projectApplyList = ref<any>([]);
 const notifyPApplyList = ref<any>([]);
 const notifyTApplyList = ref<any>([]);
@@ -87,16 +62,13 @@ const teamApplyList = ref<any>([]);
 const totalList = ref<any[]>([])
 const showInForm = ref(false);
 const tsDone = ref(false)
-const closeInForm = () => {
-    showInForm.value = false;
-    tsDone.value = false
-}
 
-const docid = ref<string>()
-const total = computed(() => {
-    return applynum.value + teamnum.value ?? 99;
-})
-
+const bntdata = [
+    { label: t('miniprogram.home'), value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
+    { label: t('miniprogram.my_file'), value: 'MyFiles', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
+    { label:t('miniprogram.team'), value: 'Team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
+    { label: t('miniprogram.about'), value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
+]
 
 const tabs = new Map([
     ['Home', Home,],
@@ -105,15 +77,18 @@ const tabs = new Map([
     ['About', About],
 ]);
 
+const total = computed(() => {
+    return applynum.value + teamnum.value ?? 99;
+})
+
+const closeInForm = () => {
+    showInForm.value = false;
+    tsDone.value = false
+}
 
 const changetab = (tab: string) => {
     activebnt.value = tab;
     sessionStorage.setItem('selectTab', tab);
-}
-
-
-const testevent = (data: any) => {
-    docid.value = data.data.document.id
 }
 
 const getApplyList = async () => {
@@ -128,18 +103,7 @@ const getApplyList = async () => {
     }
 }
 
-const changeStar = async (id: number, b: boolean) => {
-    if (await change(id, b)) {
-        searchData.value.filter((item) => {
-            if (item.document.id === id) {
-                item.document_favorites.is_favorite = !b
-            }
-            return item
-        })
-        ElMessage.closeAll('success')
-        ElMessage.success({ duration: 1500, message: !b ? t('home.star_ok') : t('home.star_cancel') })
-    }
-}
+
 
 const getProjectApplyList = async () => {
     try {
@@ -218,6 +182,7 @@ const getTeamNotice = async () => {
 watch(totalList, () => {
     teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
 }, { deep: true })
+
 watch(applyList, () => {
     applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
 }, { deep: true })
@@ -239,9 +204,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-
     clearInterval(timer)
-
 })
 
 </script>

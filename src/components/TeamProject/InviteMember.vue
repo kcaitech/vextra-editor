@@ -43,10 +43,11 @@
         </div>
         <div class="invitemember">
             <button type="submit" :disabled="!teamInviteSwitch" @click.stop="copyText">{{ t('Createteam.copylink')
-            }}</button>
+                }}</button>
         </div>
     </div>
 </template>
+
 <script setup lang="ts">
 import { Ref, computed, inject, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -128,7 +129,7 @@ const Getteaminfo = async () => {
 }
 
 const teaminviteinfo = computed(() => {
-    return `https://moss.design/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
+    return `${location.origin}/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
 })
 
 async function copyText() {
@@ -158,6 +159,7 @@ onMounted(() => {
 })
 
 </script>
+
 <style lang="scss" scoped>
 @media (max-height: 350px) {
     .card-container {

@@ -5,12 +5,9 @@
             <span>{{ filename }}</span>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
-                @refresh="getdocument" @sharefile="data"></FilesItem>
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="getdocument"
+                @sharefile="data"></FilesItem>
         </div>
-        <transition name="fade">
-            <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
-        </transition>
     </div>
 
 </template>
@@ -24,7 +21,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { router } from '@/router';
 import { useRoute } from 'vue-router'
-import ShareFile from './ShareFile.vue';
+
 
 const route = useRoute()
 const { t } = useI18n()
@@ -52,10 +49,7 @@ const changeStar = async (id: number, b: boolean) => {
     }
 }
 
-const openfile = (id: number) => {
-    sessionStorage.setItem('scrolltop', ellist.value!.scrollTop.toString())
-    router.push(({ name: 'pageviews', query: { id: id } }))
-}
+
 
 async function getdocument() {
     let data: any
@@ -77,19 +71,7 @@ async function getdocument() {
 
 
 onMounted(async () => {
-    const value = Number(sessionStorage.getItem('scrolltop')) || 0
     await getdocument()
-    if (ellist.value !== undefined) {
-        setTimeout(() => {
-            if (ellist.value !== undefined) {
-                if (ellist.value.scrollTop === null) {
-                    return
-                }
-                ellist.value.scrollTop = value
-            }
-            sessionStorage.setItem('scrolltop', '0')
-        }, 0)
-    }
 })
 
 onUnmounted(() => {

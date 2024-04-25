@@ -8,38 +8,30 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @openfile="openfile"
-                @refresh="refreshTab" @sharefile="data">
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="refreshTab" >
             </FilesItem>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch, watchEffect, onUnmounted } from 'vue';
+import { onMounted, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { getRecentlydata, getSharedata, getStardata, changeStar as change } from './files'
 import FilesItem from './FilesItem.vue'
 import { ElMessage } from 'element-plus'
-import { router } from '@/router';
 
 const { t } = useI18n()
-const bntdata = ['最近', '收到的共享', '标星']
+const bntdata = [t('miniprogram.recent'), t('miniprogram.share'),  t('miniprogram.star')]
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
 const errnetwork = ref<boolean>(false)
+
 const changetab = (id: number) => {
     activeTab.value = id
     sessionStorage.setItem('activeTab', id.toLocaleString())
 }
 
-const emits = defineEmits<{
-    testevnt: [data: object]
-}>()
-
-const data = (data: object) => {
-    emits('testevnt', data)
-}
 
 const refreshTab = async (tab?: number): Promise<void> => {
     let data: any
@@ -91,9 +83,6 @@ watchEffect(async () => {
     }
 })
 
-watch(activeTab, () => {
-    sessionStorage.setItem('scrolltop', '0')
-})
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -113,13 +102,9 @@ const changeStar = async (id: number, b: boolean) => {
     }
 }
 
-const openfile = (id: number, index: number) => {
-    sessionStorage.setItem('scrolltop', index.toString())
-    router.push(({ name: 'pageviews', query: { id: id } }))
-}
 
 onMounted(() => {
-    window.document.title = '首页'
+   
 })
 
 </script>
@@ -148,7 +133,6 @@ onMounted(() => {
             font-size: 14px;
             font-weight: 400;
             gap: 2px;
-            transition: all 0.25s ease-in;
 
             .choose {
                 width: 12px;
@@ -162,8 +146,6 @@ onMounted(() => {
     .list {
         height: calc(100% - 40px);
         overflow-y: scroll;
-        padding: 0 14px;
-
     }
 }
 

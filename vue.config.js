@@ -127,7 +127,8 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    // publicPath: '/zbb',
+     publicPath: './',
     configureWebpack,
 
     pluginOptions: {
@@ -153,7 +154,7 @@ var exports = defineConfig({
                     '^/api': '/api'
                     // '^/api/v1': '/'
                 }
-            }
+            },
         },
         static: {
             directory: path.join(__dirname, "public"),

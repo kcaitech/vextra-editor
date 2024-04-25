@@ -40,6 +40,7 @@ const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
 const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
 const Wxlogin=()=>import('@/components/Mobile/WxLogin.vue')
 const Mapply=()=>import('@/components/Mobile/Mapply.vue')
+const Msearch=()=>import('@/components/Mobile/Searchview.vue')
 
 let _t: any = i18n.global
 
@@ -214,6 +215,14 @@ const routes = [
         }
     },
     {
+        path: "/search",
+        name: 'search',
+        component: Msearch,
+        meta: {
+            requireAuth: true,
+        }
+    },
+    {
         path: "/privacy",
         name: 'privacy',
         component: Privacy,
@@ -268,7 +277,8 @@ const routes = [
 ]
 
 export const router = createRouter({
-    history: createWebHistory("zbb"),
+    history: createWebHistory(),
+    // history: createWebHistory("zbb"),
     // history: createWebHashHistory(),
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
