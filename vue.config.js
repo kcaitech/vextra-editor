@@ -87,7 +87,7 @@ var configureWebpack = (config) => {
     )
 
     const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication.js')
-    const communicationWorkerTargetFilename = `communication.${crypto.createHash('md5')
+    const communicationWorkerTargetFilename = `/static/communication.${crypto.createHash('md5')
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
@@ -96,11 +96,6 @@ var configureWebpack = (config) => {
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] }),
         new CopyWebpackPlugin({
-            patterns: [
-                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-            ]
-        }),
-        new CopyWebpackPlugin({
             patterns: [{
                 from: communicationWorkerSourcePath,
                 to: communicationWorkerTargetFilename,
@@ -108,6 +103,18 @@ var configureWebpack = (config) => {
         }),
         new webpack.DefinePlugin({
             COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/GetCode.html",
+                to: "/static/GetCode.html",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "node_modules/pathkit-wasm/bin/pathkit.wasm",
+                to: "/static/pathkit.wasm",
+            }]
         }),
         ...config.plugins,
     ]
