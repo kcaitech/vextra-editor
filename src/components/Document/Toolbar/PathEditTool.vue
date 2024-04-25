@@ -2,9 +2,11 @@
 import Auto from '@/components/Document/Toolbar/PathEdit/Auto.vue'
 import Curve from '@/components/Document/Toolbar/PathEdit/Curve.vue';
 import PathClip from '@/components/Document/Toolbar/PathEdit/PathClip.vue';
+import Pen from '@/components/Document/Toolbar/PathEdit/Pen.vue';
+
 import { Context } from "@/context";
 import { Action } from "@/context/tool";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 
 interface Props {
     context: Context
@@ -59,15 +61,16 @@ function keyboard_down_watcher(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-    // document.addEventListener('keydown', keyboard_down_watcher);
+    document.addEventListener('keydown', keyboard_down_watcher);
 })
 onUnmounted(() => {
-    // document.removeEventListener('keydown', keyboard_down_watcher);
+    document.removeEventListener('keydown', keyboard_down_watcher);
 })
 </script>
 <template>
     <div class="wrapper">
         <Auto :active="props.selected === Action.AutoV" @select="select"></Auto>
+        <Pen :active="props.selected === Action.Pen2" @select="select"></Pen>
         <Curve :active="is_curve_active()" @select="select"></Curve>
         <PathClip :active="props.selected === Action.PathClip" @select="select"></PathClip>
     </div>
@@ -75,6 +78,5 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .wrapper {
     height: 100%;
-    width: 96px;
 }
 </style>

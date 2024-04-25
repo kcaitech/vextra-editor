@@ -44,6 +44,8 @@ let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 let current_side: number = -1;
 
+const preXY = ref<XY>({ x: -10, y: -10 });
+
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
@@ -85,39 +87,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     current_segment = segment;
     current_curve_point_index = index;
-
-    pathModifier = new PathEditor(props.context, event);
-    downXY = { x: event.x, y: event.y };
-
-    document.addEventListener('mousemove', point_mousemove);
-    document.addEventListener('mouseup', point_mouseup);
-
-    move = point_mousemove;
-}
-
-/**
- * @description 边
- */
-function down_background_path(event: MouseEvent, segment: number, index: number) {
-    if (event.button !== 0) {
-        return;
-    }
-    event.stopPropagation();
-
-    clear_high_light();
-
-    const path = props.context.path;
-
-    if (event.shiftKey) {
-        path.adjust_sides(segment, index);
-    } else {
-        if (!path.is_selected_segs(segment, index)) {
-            path.select_side(segment, index);
-        }
-    }
-
-    current_segment = segment;
-    current_side = index;
 
     pathModifier = new PathEditor(props.context, event);
     downXY = { x: event.x, y: event.y };
@@ -237,11 +206,11 @@ function enter(event: MouseEvent, segment: number, index: number) {
 
     new_high_light.value = `${segment}-${index}`;
 
-    if (path.no_add) {
-        return;
-    }
-
-    add_rect.value = `${segment}-${index}`;
+    // if (path.no_add) {
+    //     return;
+    // }
+    //
+    // add_rect.value = `${segment}-${index}`;
 }
 
 function leave(event: MouseEvent) {
@@ -292,6 +261,10 @@ function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
+function documentMove(e: MouseEvent) {
+    preXY.value = props.context.workspace.getContentXY(e);
+}
+
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
 
@@ -304,6 +277,8 @@ onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
+
+    document.addEventListener('mousemove', documentMove);
 })
 
 onUnmounted(() => {
@@ -313,19 +288,15 @@ onUnmounted(() => {
     shape?.unwatch(update);
 
     window.removeEventListener('blur', window_blur);
+
+    document.removeEventListener('mousemove', documentMove);
 })
 </script>
 <template>
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
            @mouseleave="leave">
-            <g @mousedown="(e) => down_background_path(e, si, i)">
-                <path class="background-path" :d="p.path"></path>
-                <path
-                    :class="{ path: true, 'path-high-light': new_high_light === `${si}-${i}`, 'path-selected': p.is_selected }"
-                    :d="p.path">
-                </path>
-            </g>
+            <path class="path" :d="p.path"/>
             <rect v-if="add_rect === `${si}-${i}`"
                   :class="{ 'insert-point': true, 'insert-point-selected': add_rect === `${si}-${i}` }"
                   :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)">
@@ -334,15 +305,16 @@ onUnmounted(() => {
     </g>
 
     <Handle :context="props.context"></Handle>
-    <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
-    <!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
-    <!--        {{ i }}-->
-    <!--    </text>-->
+    <!--点序 for Dev-->
+    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">
+        {{ i }}
+    </text>
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }">
     </rect>
+    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"></rect>
 </template>
 <style lang='scss' scoped>
 .point {
@@ -371,7 +343,7 @@ onUnmounted(() => {
 }
 
 .path {
-    stroke: gray;
+    stroke: red;
     fill: none;
 }
 

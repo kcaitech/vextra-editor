@@ -21,6 +21,7 @@ export enum Action {
     Curve = 'curve',
     PathClip = 'path-clip',
     Pen = 'add-vector',
+    Pen2 = 'vector',
     Pencil = 'add-free-path'
 }
 
@@ -72,46 +73,6 @@ export class Tool extends WatchableObject {
         return this.m_current_action;
     }
 
-    keyhandle(e: KeyboardEvent) {
-        const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
-        if (target instanceof HTMLInputElement) return;
-        if (code === 'KeyR') {
-            if (!(ctrlKey || shiftKey)) e.preventDefault();
-            this.keydown_r(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyV') {
-            e.preventDefault();
-            this.keydown_v(ctrlKey, metaKey);
-        } else if (code === 'KeyL') {
-            this.keydown_l(shiftKey);
-        } else if (code === 'KeyK') {
-            this.keydown_k(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyO') {
-            e.preventDefault();
-            this.keydown_o(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyC') {
-            e.preventDefault();
-            this.keydown_c(ctrlKey, metaKey, shiftKey)
-        } else if (code === 'KeyG') {
-            e.preventDefault();
-            this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
-        } else if (code === 'KeyT') {
-            e.preventDefault();
-            this.keydown_t(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyF') {
-            e.preventDefault();
-            this.keydown_f(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyX') {
-            e.preventDefault();
-            this.keydown_x(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyS') {
-            e.preventDefault();
-            this.keydown_s(ctrlKey, shiftKey, metaKey);
-        } else if (code === 'KeyI') {
-            e.preventDefault();
-            this.keydown_i(ctrlKey, metaKey, shiftKey);
-        }
-    }
-
     setAction(action: Action) {
         this.m_current_action = action;
         if (action.startsWith('add')) {
@@ -127,6 +88,8 @@ export class Tool extends WatchableObject {
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
                 this.m_context.cursor.setType('comment', 0);
+            } else if (action === Action.Pen) {
+                this.m_context.cursor.setType('pen', 0);
             } else {
                 this.m_context.cursor.setType('cross', 0);
             }
@@ -147,81 +110,6 @@ export class Tool extends WatchableObject {
         this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
         return exe_result;
-    }
-
-    keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddRect);
-    }
-
-    keydown_v(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) return;
-        this.setAction(Action.AutoV);
-    }
-
-    keydown_l(shiftKey: boolean) {
-        this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
-    }
-
-    keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (!(ctrl || meta || shift)) {
-            // this.setAction(Action.AutoK);
-        }
-    }
-
-    keydown_o(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddEllipse);
-    }
-
-    keydown_f(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddFrame);
-    }
-
-    keydown_t(ctrl: boolean, shift: boolean, meta: boolean) {
-        if (ctrl || shift || meta) return;
-        this.setAction(Action.AddText);
-    }
-
-    keydown_c(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddComment);
-    }
-
-    keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
-        if ((ctrl || meta) && !shift) { // 编组
-            if (alt) {
-                this.notify(Tool.GROUP, alt);
-            } else {
-                this.notify(Tool.GROUP);
-            }
-        } else if ((ctrl || meta) && shift) {
-            this.notify(Tool.UNGROUP);
-        }
-    }
-
-    keydown_n(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
-        if ((ctrl || meta) && !shift && !alt) {
-            this.notify(Tool.NEW_FILE);
-        }
-    }
-
-    keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
-        // todo
-        if (shift) {
-            this.notify(Tool.COMPONENT);
-        }
-    }
-
-    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddContact);
-    }
-
-    keydown_s(ctrl: boolean, meta: boolean, shift: boolean) {
-        if (ctrl || meta || shift) return;
-        this.setAction(Action.AddCutout);
     }
 
     get isShowTitle() {
