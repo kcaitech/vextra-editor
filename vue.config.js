@@ -107,13 +107,13 @@ var configureWebpack = (config) => {
         new CopyWebpackPlugin({
             patterns: [{
                 from: "src/assets/GetCode.html",
-                to: "/static/GetCode.html",
+                to: "static/GetCode.html",
             }]
         }),
         new CopyWebpackPlugin({
             patterns: [{
                 from: "node_modules/pathkit-wasm/bin/pathkit.wasm",
-                to: "/static/pathkit.wasm",
+                to: "static/pathkit.wasm",
             }]
         }),
         ...config.plugins,
