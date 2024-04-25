@@ -70,7 +70,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         return;
     }
 
-    if (dbl_action()) { // m1458
+    if (dbl_action()) {
         modify_point_curve_mode(props.context, index);
     }
 
@@ -95,6 +95,16 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
     document.addEventListener('mouseup', point_mouseup);
 
     move = point_mousemove;
+}
+
+function checkStatus() {
+    const path = props.context.path;
+    const params = path.bridgeParam;
+    if (!params) {
+        return;
+    }
+
+    path.select_point(params.segment, params.index);
 }
 
 function point_mousemove(event: MouseEvent) {
@@ -205,12 +215,6 @@ function enter(event: MouseEvent, segment: number, index: number) {
     }
 
     new_high_light.value = `${segment}-${index}`;
-
-    // if (path.no_add) {
-    //     return;
-    // }
-    //
-    // add_rect.value = `${segment}-${index}`;
 }
 
 function leave(event: MouseEvent) {

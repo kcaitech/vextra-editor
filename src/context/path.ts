@@ -9,6 +9,7 @@ import {
 import { Context } from ".";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";
+import { PathEditor } from "@/transform/pathEdit";
 
 export type PointEditType = CurveMode | 'INVALID'
 
@@ -31,6 +32,10 @@ export class Path extends WatchableObject {
     private m_segments: Segment[][] = [];
 
     private m_bridging_events: { segment: number, index: number, event: MouseEvent } | undefined = undefined;
+
+    private contacting: boolean = false;
+
+    private bridgeParams: { handler: PathEditor, segment: number, index: number } | undefined = undefined;
 
     constructor(context: Context) {
         super();
@@ -344,5 +349,21 @@ export class Path extends WatchableObject {
         } else {
             return false;
         }
+    }
+
+    get isContacting() {
+        return this.contacting;
+    }
+
+    setContactStatus(v: boolean) {
+        this.contacting = v;
+    }
+
+    get bridgeParam() {
+        return this.bridgeParams;
+    }
+
+    setBridgeParams(p: { handler: PathEditor, segment: number, index: number } | undefined) {
+        this.bridgeParams = p;
     }
 }

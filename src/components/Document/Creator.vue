@@ -89,13 +89,15 @@ function down(e: MouseEvent) {
         if (vec) {
             const page = props.context.selection.selectedPage!;
             props.context.nextTick(page, () => {
-                const _vec =  page.getShape(vec.id);
+                const _vec = page.getShape(vec.id);
                 if (!_vec) {
                     return;
                 }
 
                 props.context.selection.selectShape(_vec);
                 props.context.workspace.setPathEditMode(true);
+                props.context.path.setContactStatus(true);
+                props.context.path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0 });
 
                 mode.value = 'normal';
             });
