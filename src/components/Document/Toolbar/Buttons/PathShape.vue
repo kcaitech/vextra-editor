@@ -218,18 +218,18 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <div class="line"/>
+        <!--        <div class="line"/>-->
         <!--钢笔-->
-        <div class="item" @click="() => { setAction(Action.Pen) }">
-            <div v-if="currentTool=== Action.Pen" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-pen"></svg-icon>
-                <span>{{ t('shape.pen') }}</span>
-            </div>
-            <div class="shortKey">P</div>
-        </div>
+        <!--        <div class="item" @click="() => { setAction(Action.Pen) }">-->
+        <!--            <div v-if="currentTool=== Action.Pen" class="check">-->
+        <!--                <svg-icon icon-class="white-select"></svg-icon>-->
+        <!--            </div>-->
+        <!--            <div class="desc">-->
+        <!--                <svg-icon icon-class="pattern-pen"></svg-icon>-->
+        <!--                <span>{{ t('shape.pen') }}</span>-->
+        <!--            </div>-->
+        <!--            <div class="shortKey">P</div>-->
+        <!--        </div>-->
     </div>
 </template>
 
