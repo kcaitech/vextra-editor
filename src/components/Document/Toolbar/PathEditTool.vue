@@ -2,7 +2,7 @@
 import Auto from '@/components/Document/Toolbar/PathEdit/Auto.vue'
 import Curve from '@/components/Document/Toolbar/PathEdit/Curve.vue';
 import PathClip from '@/components/Document/Toolbar/PathEdit/PathClip.vue';
-import Pen from '@/components/Document/Toolbar/PathEdit/Pen.vue';
+import Pen from '@/components/Document/Toolbar/PathEdit/PathPen.vue';
 
 import { Context } from "@/context";
 import { Action } from "@/context/tool";

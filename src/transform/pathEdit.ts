@@ -7,10 +7,11 @@ import {
     ModifyUnits,
     ShapeView,
     PathType,
-    CurvePoint
+    CurvePoint, ShapeFrame, GroupShapeView
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
+import { ShapeType } from "@kcdesign/data";
 
 type Base = {
     x: number;
@@ -32,23 +33,29 @@ export class PathEditor extends TransformHandler {
 
     baseData: BaseData = new Map();
 
-    baseWidth: number;
-    baseHeight: number;
+    baseWidth: number = 0;
+    baseHeight: number = 0;
 
-    baseMatrix: Matrix;
-    baseMatrixInverse: Matrix;
+    baseMatrix: Matrix = new Matrix();
+    baseMatrixInverse: Matrix = new Matrix();
 
     isHandleAction: boolean = false;
     handleInfo: { index: number, segment: number, side: 'from' | 'to' } | undefined = undefined;
+
+    isInitMatrix: boolean = false;
 
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
         this.path = context.path;
 
-        this.shape = context.selection.selectedShapes[0];
-
         this.fixedPoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.fixedPoint };
+
+        this.shape = this.context.selection.selectedShapes[0]
+    }
+
+    initMatrix() {
+        this.shape = this.context.selection.selectedShapes[0];
 
         const m = this.shape.matrix2Root();
         const frame = this.shape.frame;
@@ -59,6 +66,8 @@ export class PathEditor extends TransformHandler {
 
         this.baseWidth = frame.width;
         this.baseHeight = frame.height;
+
+        this.getBaseData();
     }
 
     getBaseData() {
@@ -98,32 +107,59 @@ export class PathEditor extends TransformHandler {
     }
 
     createApiCaller(segment = -1, index = -1) {
-        this.asyncApiCaller = new PathModifier(this.context.coopRepo, this.context.data, this.page, this.shape);
+        this.asyncApiCaller = new PathModifier(this.context.coopRepo, this.context.data, this.page);
 
         let addRes = false;
         if (index > -1 && segment > -1) {
-            addRes = (this.asyncApiCaller as PathModifier).addPoint(segment, index);
+            addRes = (this.asyncApiCaller as PathModifier).addPoint(this.shape, segment, index);
 
             if (addRes) {
                 this.path.select_point(segment, index);
             }
         }
 
-        this.getBaseData();
-
         this.path.editing(true);
 
         return addRes;
     }
 
+    createVec() {
+        const env = this.context.selection.getClosestContainer(this.livingPoint);
+        const frame = new ShapeFrame(0, 0, 1, 1);
+
+        const m = new Matrix(env.matrix2Root().inverse);
+
+        const __xy = m.computeCoord3(this.livingPoint);
+        frame.x = __xy.x;
+        frame.y = __xy.y;
+
+        let count = 1;
+
+        this.context.selection.selectedPage!.shapes.forEach(s => {
+            if (s.type === ShapeType.Path) count++;
+        })
+
+        const name = `${this.context.workspace.t('shape.path')} ${count}`;
+
+        return (this.asyncApiCaller as PathModifier).createVec(name, frame, env as GroupShapeView);
+    }
+
     execute(event: MouseEvent) {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+            this.isInitMatrix = true;
+        }
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.__execute();
     }
 
     execute4handlePre(index: number, segment = -1) {
-        (this.asyncApiCaller as PathModifier).preCurve(index, segment);
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+            this.isInitMatrix = true;
+        }
+        (this.asyncApiCaller as PathModifier).preCurve(this.shape, index, segment);
     }
 
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
@@ -131,7 +167,7 @@ export class PathEditor extends TransformHandler {
         if (!this.handleInfo) {
             this.handleInfo = { index, segment, side };
         }
-        (this.asyncApiCaller as PathModifier).execute4handle(index, side, from, to, segment);
+        (this.asyncApiCaller as PathModifier).execute4handle(this.shape, index, side, from, to, segment);
     }
 
     private __execute() {
@@ -151,7 +187,7 @@ export class PathEditor extends TransformHandler {
             })
         }
 
-        (this.asyncApiCaller as PathModifier).execute(units);
+        (this.asyncApiCaller as PathModifier).execute(this.shape, units);
     }
 
     private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {

@@ -202,6 +202,7 @@ declare module '@vue/runtime-core' {
     PathClip: typeof import('./src/components/Document/Toolbar/PathEdit/PathClip.vue')['default']
     PathEditMode: typeof import('./src/components/Document/Selection/Controller/PathEdit/PathEditMode.vue')['default']
     PathEditTool: typeof import('./src/components/Document/Toolbar/PathEditTool.vue')['default']
+    PathPen: typeof import('./src/components/Document/Toolbar/PathEdit/PathPen.vue')['default']
     PathShape: typeof import('./src/components/Document/Toolbar/Buttons/PathShape.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
     PenMode: typeof import('./src/components/Document/Selection/Controller/PathEdit/PenMode.vue')['default']

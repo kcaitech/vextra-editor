@@ -31,6 +31,7 @@ import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
 import { Asssit } from "@/context/assist";
+import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
@@ -70,22 +71,40 @@ const cursor = ref<string>('');
 const mode = ref<'normal' | 'pen'>('normal');
 
 const dotXY = ref<XY>({ x: -10, y: -10 });
+let pathEditor: PathEditor | undefined;
 
 // #endregion
 function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
+    modify_page_xy_1(e);
+    modify_client_xy_1(e);
+
     if (mode.value === 'pen') {
-        props.context.selection.selectShape(props.context.selection.selectedPage?.childs[0]);
-        props.context.workspace.setPathEditMode(true);
-        mode.value = 'normal';
+        pathEditor = new PathEditor(props.context, e);
+        pathEditor.createApiCaller();
+
+        const vec = pathEditor.createVec();
+        if (vec) {
+            const page = props.context.selection.selectedPage!;
+            props.context.nextTick(page, () => {
+                const _vec =  page.getShape(vec.id);
+                if (!_vec) {
+                    return;
+                }
+
+                props.context.selection.selectShape(_vec);
+                props.context.workspace.setPathEditMode(true);
+
+                mode.value = 'normal';
+            });
+        }
         return;
     }
 
     const action = props.context.tool.action;
-    modify_page_xy_1(e);
-    modify_client_xy_1(e);
+
     if (action !== Action.AddComment) {
         commentInput.value = false;
     }

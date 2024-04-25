@@ -5,6 +5,7 @@ export const shape: any = {
     line: '直线',
     oval: '圆形',
     rect: '矩形',
+    path: '路径',
     artboard: '容器',
     arrow: '箭头',
     text: '文字',
