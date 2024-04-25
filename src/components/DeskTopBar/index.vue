@@ -8,35 +8,44 @@ const props = defineProps<{ kcdesk: IKcDesk }>();
 const platform = props.kcdesk.getPlatform();
 const isMac = platform == 'darwin';
 
+let draging = false;
 let mousex = 0;
 let mousey = 0;
 function onMouseDown(e: MouseEvent) {
-    e.preventDefault();
     mousex = e.screenX;
     mousey = e.screenY;
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
 }
 function onMouseMove(e: MouseEvent) {
-    e.preventDefault();
     const dx = e.screenX - mousex;
     const dy = e.screenY - mousey;
-    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+    if (draging && (Math.abs(dx) > 1 || Math.abs(dy) > 1) ||
+        !draging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        draging = true;
+        e.preventDefault();
         props.kcdesk.move(dx, dy);
         mousex = e.screenX;
         mousey = e.screenY;
     }
 }
 function onMouseUp(e: MouseEvent) {
-    e.preventDefault();
+    if (draging) {
+        e.preventDefault();
+        draging = false;
+    }
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+}
+
+function onDblClick() {
+    props.kcdesk.toggleMaximize();
 }
 
 </script>
 
 <template>
-    <div class="topbar" @mousedown="onMouseDown">
+    <div class="topbar" @mousedown="onMouseDown" @dblclick="onDblClick">
         <MacOps v-if="isMac" :kcdesk="kcdesk" />
         <div class="topbarmain"></div>
         <div class="topbarlist"></div>
