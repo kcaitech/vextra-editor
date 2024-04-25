@@ -124,12 +124,12 @@ export class CoopNet implements ICoopNet {
                 return
             }
             if (data.data?.type === "duplicate") {
-                console.log("数据重复", data.data?.duplicateCmd)
-                if (!data.data?.duplicateCmd) {
+                const duplicateCmd = data.data?.duplicateCmd
+                console.log("数据重复", duplicateCmd)
+                if (!duplicateCmd) {
                     console.log("返回数据格式错误")
                     return
                 }
-                const duplicateCmd = data.data.duplicateCmd
                 duplicateCmd.cmd.id = duplicateCmd.cmd_id
                 duplicateCmd.cmd.version = this.radixRevert.from(duplicateCmd.id)
                 duplicateCmd.cmd.previousVersion = this.radixRevert.from(duplicateCmd.previous_id)

@@ -32,7 +32,8 @@ const getBase64ByType = new Map([
     ['rotate', rotate],
     ['extend', extend],
     ['scan', scan],
-    ['comment', comment]
+    ['comment', comment],
+    ['magnify', auto],
 ])
 
 const hot = [16, 16]; // 光标热点在svg的位置

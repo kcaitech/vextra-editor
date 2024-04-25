@@ -1,11 +1,11 @@
 {
-  "name": "mossdesign",
+  "name": "moss.design",
   "description": "A design system for rapidly building web applications",
-  "productName": "MossDesign",
+  "productName": "墨师设计",
   "version": "0.1.0",
   "private": true,
   "author": "moss.design",
-  "main": "web.main.js",
+  "main": "web.main.ts",
   "publishConfig": {
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
@@ -13,18 +13,14 @@
     "build-worker": "cd ./src/communication && npm install && npm run build",
     "dev:web": "npm run build-worker && vue-cli-service --public=moss.design serve",
     "build:web": "cross-env NODE_ENV=production && npm run build-worker && vue-cli-service build",
-    "install-electron-deps": "electron-builder install-app-deps",
-    "dev:electron": "npm run build-worker && vue-cli-service electron:serve",
-    "build:electron": "npm run build-worker && vue-cli-service electron:build",
     "lint": "vue-cli-service lint",
     "test": "jest",
     "test:watch": "jest --watch",
     "generate-package-dev": "node generate-package.js dev && npm install",
-    "generate-package-prod": "node generate-package.js prod && npm install",
-    "electron:generate-icons": "electron-icon-builder --input=./src/assets/logo.png --output=build --flatten"
+    "generate-package-prod": "node generate-package.js prod && npm install"
   },
   "dependencies": {
-    "@kcdesign/data": "1.0.6",
+    "@kcdesign/data": "1.0.6-dev.1",
     "ali-oss": "^6.18.1",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",
@@ -84,6 +80,7 @@
     "sass-loader": "^13.2.0",
     "svg-sprite-loader": "^6.0.11",
     "svgo-loader": "^3.0.3",
+    "terser-webpack-plugin": "^5.3.10",
     "ts-jest": "^29.1.1",
     "ts-loader": "~8.2.0",
     "typedoc": "^0.22.17",

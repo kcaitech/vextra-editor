@@ -16,7 +16,8 @@ const props = defineProps<{
     fontName: string,
     context: Context,
     fontWeight: string,
-    showFont: boolean
+    showFont: boolean,
+    fontNameEl?: HTMLDivElement
 }>()
 type FontName = {
     used: {
@@ -119,12 +120,16 @@ const unfoldFontName = (num: number) => {
 
 const get_top_posi = () => {
     if (font_context.value) {
-        const body_h = document.body.clientHeight;
-        const { y, height } = font_context.value.getBoundingClientRect();
-        const su = body_h - y;
-        const cur_t = su - height;
-        if (cur_t - 10 < 0) {
-            font_context.value.style.top = cur_t + 20 + 'px';
+        const p_container = props.fontNameEl?.getBoundingClientRect()
+        if(p_container) {
+            const body_h = document.body.clientHeight;
+            const { y, height } = font_context.value.getBoundingClientRect();
+            font_context.value.style.top = p_container.y + 'px';
+            const su = body_h - p_container.y;
+            const cur_t = su - height;
+            if (cur_t - 10 < 0) {
+                font_context.value.style.top = p_container.y + cur_t - 10 + 'px';
+            }
         }
     }
 }
@@ -289,10 +294,11 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .font-container {
-    position: absolute;
+    position: fixed;
+    right: 254px;
     top: 36px;
     width: 224px;
-    height: 440px;
+    height: 580px;
     border-radius: 8px;
     background-color: #fff;
     border: 1px solid #F0F0F0;
@@ -326,7 +332,7 @@ onMounted(() => {
     }
 
     .font-scroll {
-        height: 400px;
+        height: 540px;
         box-sizing: border-box;
         padding-bottom: 8px;
 
