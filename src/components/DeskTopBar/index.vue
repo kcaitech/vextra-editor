@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { IKcDesk } from './ikcdesk'
+import { IKcDesk } from '@/basic/ikcdesk'
 import WinOps from "./WinOps.vue"
 import MacOps from "./MacOps.vue"
 
 const props = defineProps<{ kcdesk: IKcDesk }>();
 
-const platform = props.kcdesk.getPlatform();
+const platform = props.kcdesk.osPlatform();
 const isMac = platform == 'darwin';
 
 let draging = false;
@@ -24,7 +24,7 @@ function onMouseMove(e: MouseEvent) {
         !draging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
         draging = true;
         e.preventDefault();
-        props.kcdesk.move(dx, dy);
+        props.kcdesk.winMove(dx, dy);
         mousex = e.screenX;
         mousey = e.screenY;
     }
@@ -39,7 +39,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function onDblClick() {
-    props.kcdesk.toggleMaximize();
+    props.kcdesk.winToggleMaximize();
 }
 
 </script>
@@ -73,4 +73,4 @@ function onDblClick() {
     height: 100%;
     flex: 1;
 }
-</style>./ikcdesk
+</style>

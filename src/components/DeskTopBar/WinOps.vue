@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { IKcDesk } from './ikcdesk'
+import { IKcDesk } from '@/basic/ikcdesk'
 
 const props = defineProps<{ kcdesk: IKcDesk }>();
 
@@ -8,9 +8,9 @@ const props = defineProps<{ kcdesk: IKcDesk }>();
 <template>
 
     <div class="topbarops">
-        <button @click="() => { kcdesk.toggleMaximize() }">M</button>
-        <button @click="() => { kcdesk.minimize() }">I</button>
-        <button @click="() => { kcdesk.close() }">C</button>
+        <button @click="() => { kcdesk.winToggleMaximize() }">M</button>
+        <button @click="() => { kcdesk.winMinimize() }">I</button>
+        <button @click="() => { kcdesk.winClose() }">C</button>
     </div>
 
 </template>
@@ -26,4 +26,4 @@ const props = defineProps<{ kcdesk: IKcDesk }>();
         height: 100%;
     }
 }
-</style>./ikcdesk
+</style>

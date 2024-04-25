@@ -5,9 +5,8 @@ import { debounce } from 'lodash';
 import { onBeforeUnmount, onMounted } from "vue";
 import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
 import { PROJECT_NAME } from "@/const";
-import { MockKcDesk } from './components/DeskTopBar/ikcdesk';
 
-const kcdesk = (window as any)['kcdesk_07444f3a-343d-45a7-bd37-635fc9a26871'] || new MockKcDesk();
+const kcdesk = (window as any)['kcdesk_07444f3a-343d-45a7-bd37-635fc9a26871'];
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
@@ -28,7 +27,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <DeskTopBar v-if="kcdesk" :kcdesk="kcdesk"/>
+    <DeskTopBar v-if="kcdesk" :kcdesk="kcdesk" />
     <RouterView></RouterView>
 </template>
 
