@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, Path, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -306,13 +306,14 @@ function modify_rotate(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const shape = shapes[0];
         if (shape instanceof PathShapeView) {
-            const points = shape.points;
-            const is_straight_1 = !points[0]?.hasFrom;
-            const is_straight_2 = !points[1]?.hasTo;
-            if (points.length === 2 && is_straight_1 && is_straight_2) {
-                rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
-                return;
-            }
+            // todo for path
+            // const points = shape.points;
+            // const is_straight_1 = !points[0]?.hasFrom;
+            // const is_straight_2 = !points[1]?.hasTo;
+            // if (points.length === 2 && is_straight_1 && is_straight_2) {
+            //     rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
+            //     return;
+            // }
         }
         rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[1]);
     }
@@ -323,7 +324,7 @@ function modify_theme(shapes: ShapeView[]) {
     if (shapes.length !== 1) {
         return;
     }
-    if (is_symbol_class(shapes[0])) {
+    if (is_symbol_class(shapes[0] as any)) {
         theme.value = SelectionTheme.Symbol;
     }
 }

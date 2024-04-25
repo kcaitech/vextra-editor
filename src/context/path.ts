@@ -330,4 +330,19 @@ export class Path extends WatchableObject {
 
         return points;
     }
+
+    get isSingleSelection() {
+        if (this.selected_sides.size) {
+            return false;
+        }
+        if (this.selected_points.size === 1) {
+            let result = false;
+            this.selected_points.forEach(s => {
+                result = s.length === 1;
+            })
+            return result;
+        } else {
+            return false;
+        }
+    }
 }
