@@ -12,6 +12,11 @@ declare module '*.md' {
   const content: string;
   export default content;
 }
+
+declare interface Window {
+  wx: any,
+}
+
 declare module "*/dom-to-image.js";
 // 声明静态资源作为模块
 declare module "*.png";

@@ -575,7 +575,7 @@ export function adapt_page2(context: Context, containerWidth: number, containerH
         return new Matrix();
     }
     const matrix = context.workspace.matrix;
-
+    matrix.reset();
     const points: ClientXY[] = [];
     const frame = page.frame;
     points.push(...[[frame.x, frame.y], [frame.x + frame.width, frame.y], [frame.x + frame.width, frame.y + frame.height], [frame.x, frame.y + frame.height]].map(p => matrix.computeCoord2(p[0], p[1])));
@@ -597,7 +597,8 @@ export function adapt_page2(context: Context, containerWidth: number, containerH
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
         const p_center = { x: page.frame.x + page.frame.width / 2, y: page.frame.y + page.frame.height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y }; // 这里直接算del是不对的
+
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
         const max = 1;

@@ -2,7 +2,8 @@
     <div class="about">
         <div class="user">
             <div class="avatar">
-                <img :src="circleUrl!" alt="avatar">
+                <img v-if="circleUrl" :src="circleUrl!" alt="avatar">
+                <span v-else>{{ uname?.slice(0, 1) }}</span>
             </div>
             <div class="info">
                 <span class="name">{{ uname }}</span>
@@ -20,13 +21,19 @@
                 </div>
             </div>
         </div>
+        <!-- <button @click="OutLogin">退出登录</button> -->
     </div>
+
+
 
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, toRefs } from 'vue'
+import { onMounted, reactive, ref, toRefs } from 'vue'
 import { router } from '@/router'
+import { useI18n } from 'vue-i18n';
+
+const {t}=useI18n()
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
@@ -34,17 +41,36 @@ const state = reactive({
 })
 const { circleUrl, uname, id } = toRefs(state)
 const data = ref([
-    { id: 1, value: '隐私政策', icon: 'ys-icon', name: 'privacypolicy' },
-    { id: 2, value: '在线服务协议', icon: 'fw-icon', name: 'serviceagreement' }
+    { id: 1, value:t('miniprogram.privacy'), icon: 'ys-icon', name: 'privacy' },
+    { id: 2, value: t('miniprogram.serve'), icon: 'fw-icon', name: 'agreements' }
 ])
 
 const goto = (name: string) => {
     router.push({ name: name })
 }
 
-const emits = defineEmits<{
-    testevnt: [data: object]
-}>()
+const OutLogin = () => {
+    localStorage.clear();
+    // window.location.href = window.location.href + "#wechat_redirect";
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).uni.redirectTo({
+            url: '/pages/index/index',
+        });
+        (window as any).uni.postMessage({
+            data:{
+                login:'false',
+            }
+        });
+
+    }
+}
+
+
+onMounted(() => {
+    
+})
 
 </script>
 
@@ -145,6 +171,17 @@ const emits = defineEmits<{
                 }
             }
         }
+    }
+
+    button {
+        outline: none;
+        border: none;
+        margin: 0 14px;
+        border-radius: 6px;
+        height: 44px;
+        background-color: #18f;
+        color: white;
+        font-size: 14px;
     }
 }
 </style>

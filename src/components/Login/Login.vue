@@ -109,6 +109,7 @@ function clickaffirm() {
     user_api.PostLogin({ code: Wxcode.value, invite_code: codevalue.value, id: userid.value }).then((result: any) => {
         if (result) {
             if (result.code === 0 && result.data.token !== '') {
+
                 localStorage.setItem('token', result.data.token)
                 localStorage.setItem('avatar', result.data.avatar)
                 localStorage.setItem('nickname', result.data.nickname)
@@ -179,13 +180,18 @@ const handleOpenNewWindow = (routeName: string) => {
 
 watchEffect(() => {
     if (loginshow.value) {
-        setTimeout(() => {
+        setTimeout(async () => {
             isLoading.value = true
-            wxcode()
-            const login: any = document.querySelector('iframe')
-            login.addEventListener('load', function () {
+            if (isMobileDevice()) {
+                await GetminiProgramCode()
                 isLoading.value = false
-            })
+            } else {
+                wxcode()
+                const login: any = document.querySelector('iframe')
+                login.addEventListener('load', function () {
+                    isLoading.value = false
+                })
+            }
         }, 500);
     } else {
         inputvalues.forEach(item => { item.value = ""; })
@@ -197,8 +203,17 @@ watchEffect(() => {
     }
 })
 
+const miniprogramcode = ref<string>()
+
+async function GetminiProgramCode() {
+    const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent("home=pages/index/index") })
+    if (code === 0) {
+        miniprogramcode.value = data
+    }
+}
 
 onMounted(() => {
+
     // if (isMobileDevice()) {
     //     router.push({ name: "privacypolicy" })
     // } else {
@@ -291,6 +306,7 @@ function changesize(e: HTMLElement) {
 }
 
 onMounted(() => {
+
     if (isMobileDevice()) {
         const el = document.querySelector('.login') as HTMLElement
         window.onresize = () => { changesize(el) }
@@ -308,7 +324,11 @@ onMounted(() => {
                 <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
                     <div class="login-page" v-if="loginshow">
                         <div class="title">{{ t('system.wx_login') }}</div>
-                        <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading">
+                        <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
+                            v-loading="isLoading">
+                        </div>
+                        <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
+                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
                         </div>
                         <div class="tips">
                             <span>{{ t('system.login_read') }}</span>

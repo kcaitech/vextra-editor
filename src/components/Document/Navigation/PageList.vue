@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick, watchEffect } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -264,7 +264,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     } else if (item === 'copy_link') {
         e?.stopPropagation();
         const docInfo = props.context.comment.isDocumentInfo?.document;
-        const page_url = location.origin + `/#/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
+        const page_url = location.origin + `/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
         copyLink(page_url, t);
     } else if (item === 'delete') {
         e?.stopPropagation();
@@ -343,6 +343,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 });
 </script>
+
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">

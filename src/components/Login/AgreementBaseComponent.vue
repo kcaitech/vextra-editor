@@ -2,19 +2,19 @@
     <div style="height: 100%;width: 100%;">
     <div class="header-container">
         <div class="kc-header">
-            <div class="logo" @click="$router.push({ path: '/' })">
-                <img class="logo-img" :src=avatar :alt="PROJECT_NAME">
+            <div class="logo" @click="router.go(-1)">
+                <img class="logo-img" :src=avatar alt="MossDesign">
             </div>
-            <button class="loginbnt" v-if="!isMobile" type="button" @click.stop="router.push({ name: 'login' })">
+            <button class="loginbnt"  type="button" @click.stop="router.push({ name: 'login' })">
                 {{ t('system.btn_login') }}
             </button>
         </div>
     </div>
-    <div v-if="isMobile" class="phonetips"> {{ t('system.phonetips') }}</div>
-    <div class="content-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
+    <!-- <div v-if="isMobile" class="phonetips"> {{ t('system.phonetips') }}</div> -->
+    <div class="content-container" :style="{ top: 56 + 'px' }">
         <slot></slot>
     </div>
-    <div class="footer-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
+    <div class="footer-container" :style="{ top: 56 + 'px' }">
         <Footer />
     </div>
 </div>
@@ -23,28 +23,11 @@
 import avatar from '@/assets/h-logo.svg'
 import { router } from '@/router'
 import Footer from './Footer.vue'
-import isMobileDevice from '@/utils/mobileDeviceChecker'
-import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
-const isMobile = ref(isMobileDevice())
-let tiemr: any
-function updateDeviceType() {
-    tiemr = setTimeout(() => {
-        isMobile.value = isMobileDevice()
-        clearTimeout(tiemr)
-    }, 0)
-}
 
-onMounted(() => {
-    window.addEventListener('resize', updateDeviceType)
-})
-
-onUnmounted(() => {
-    window.removeEventListener('resize', updateDeviceType)
-})
 
 </script>
 <style lang="scss" scoped>
