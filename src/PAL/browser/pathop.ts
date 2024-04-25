@@ -115,7 +115,7 @@ let _ck: PathKit;
 export async function init() {
     if (_ck) return;
     _ck = await PathKitInit({
-        locateFile: (file: string) => file
+        locateFile: (file: string) => `/static/${file}`
     })
 }
 
