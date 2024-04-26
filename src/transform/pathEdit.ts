@@ -129,7 +129,7 @@ export class PathEditor extends TransformHandler {
         }
         let addRes = false;
         if (index > -1 && segment > -1) {
-            addRes = (this.asyncApiCaller as PathModifier).addPointForPen(this.shape, segment, index);
+            // addRes = (this.asyncApiCaller as PathModifier).addPointForPen(this.shape, segment, index);
 
             if (addRes) {
                 this.path.select_point(segment, index);
