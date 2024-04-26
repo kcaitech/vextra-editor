@@ -259,9 +259,16 @@ function pre_bridging() {
     update();
     modify_side2(event);
 }
+
 function init_editor(e: MouseEvent) {
-    pathModifier = new PathEditor(props.context, e);
-    pathModifier.createApiCaller();
+    const param = props.context.path.bridgeParam;
+    if (param) {
+        pathModifier = param.handler;
+        props.context.path.setBridgeParams(undefined);
+    } else {
+        pathModifier = new PathEditor(props.context, e);
+        pathModifier.createApiCaller();
+    }
 }
 function __pre() {
     pathModifier?.execute4handlePre(down_index, segment);

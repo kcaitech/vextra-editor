@@ -128,13 +128,9 @@ function point_mousemove(event: MouseEvent) {
     if (bridged) {
         return;
     }
-
-    if (isDragging) {
-        pathModifier?.execute(event);
-    } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-        isDragging = true;
+    if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         bridged = true;
-        launch_bridging(event); // handle交接
+        launch_bridging(event);
     }
 }
 
@@ -149,6 +145,10 @@ function bridging_completed() {
 function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
+    }
+
+    if (!bridged) {
+        props.context.path.setBridgeParams(undefined);
     }
 
     pathModifier?.fulfil();
@@ -279,6 +279,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
+    <path v-if="livingPathVisible" :d="livingPath" stroke="red"/>
+
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
            @mouseleave="leave">
@@ -296,9 +298,8 @@ onUnmounted(() => {
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }">
     </rect>
-    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"></rect>
 
-    <path v-if="livingPathVisible" :d="livingPath"/>
+    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"></rect>
 </template>
 <style lang='scss' scoped>
 .point {
