@@ -199,8 +199,6 @@ watch(() => props.projectMembergDialog, (v) => {
     if (v) {
         permFilter.value = 0;
         memberList.value = memberList2.value;
-        console.log(memberList.value);
-
     }
 })
 

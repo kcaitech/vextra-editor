@@ -1,4 +1,3 @@
-
 <template>
     <div class="title">
         <div class="left">
@@ -7,8 +6,8 @@
                 <div v-if="show && !searchvalue" class="newandopen">
                     <div class="newfile" @click="newFile">
                         <div class="left">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
-                                version="1.1" width="24" height="24" viewBox="0 0 24 24">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                fill="none" version="1.1" width="24" height="24" viewBox="0 0 24 24">
                                 <defs>
                                     <clipPath id="master_svg0_1_720">
                                         <rect x="0" y="0" width="24" height="24" rx="0" />
@@ -53,8 +52,8 @@
                     </div>
                     <div class="openfile" @click="picker.invoke">
                         <div class="left">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
-                                version="1.1" width="24" height="24" viewBox="0 0 24 24">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                fill="none" version="1.1" width="24" height="24" viewBox="0 0 24 24">
                                 <defs>
                                     <clipPath id="master_svg0_1_743">
                                         <rect x="0" y="0" width="24" height="24" rx="0" />
@@ -105,11 +104,11 @@
     </div>
     <div class="tatle" style="height: calc(100vh - 144px)">
         <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile"
-            @dbclickopen="openDocument" :address="true" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
-            @refreshDoc="refreshDoc" :nulldata="nulldata" />
+            @dbclickopen="openDocument" :address="true" @updatestar="Starfile" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" @refreshDoc="refreshDoc" :nulldata="nulldata" />
     </div>
-    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removehistory="Removefile" @ropen="openDocument" />
+    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile"
+        @r-sharefile="Sharefile" @r-removehistory="Removefile" @ropen="openDocument" />
     <div v-if="showFileShare" class="overlay">
         <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
@@ -374,42 +373,29 @@ onUnmounted(() => {
 
 @keyframes bounce-in {
     0% {
-
-        transform: translateX(110%) scale(0);
+        transform: scale(0);
     }
-
     50% {
-
-        transform: translateX(60%) scale(0.5);
+        transform: scale(0.5);
     }
-
     100% {
-
-        transform: translateX(0%) scale(1);
-
+        transform: scale(1);
     }
 }
 
 @keyframes bounce2-in {
-    0% {
-
-        transform: translateX(-110%) scale(0);
-    }
-
     50% {
-
-        transform: translateX(-60%) scale(0.5);
+        transform: translate(60%, -60%) scale(0);
+        opacity: 0;
     }
-
     100% {
-
-        transform: translateX(0%) scale(1);
-
+        transform: translate(0%, 0%) scale(1);
+        opacity: 1;
     }
 }
 
 .tatle {
-    transition: all 0.3s;
+    transition: height 0.3s ease;
 }
 
 .overlay {

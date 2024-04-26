@@ -29,6 +29,8 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/request/users';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import isMobileDevice from '@/utils/mobileDeviceChecker';
+import { router } from '@/router';
 import VersionDesc from "@/components/common/VersionDesc.vue";
 
 const { t } = useI18n();
@@ -204,6 +206,9 @@ const closeNetMsg = () => {
 
 let timer: any
 onMounted(() => {
+  // if(isMobileDevice()){
+  //   router.push({name:'mobilehome'})
+  // }
   GetprojectLists();
   if (timer) {
     clearInterval(timer)

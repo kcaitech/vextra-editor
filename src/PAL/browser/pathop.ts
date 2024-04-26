@@ -1,6 +1,6 @@
 import { IPalPath } from "@kcdesign/data";
 
-const PathKitInit = require('pathkit-wasm/bin/pathkit.js')
+const PathKitInit = require('pathkit-wasm/bin/pathkit.js');
 
 // - `PathKit.PathOp.DIFFERENCE`
 // - `PathKit.PathOp.INTERSECT`
@@ -115,7 +115,7 @@ let _ck: PathKit;
 export async function init() {
     if (_ck) return;
     _ck = await PathKitInit({
-        locateFile: (file: string) => file
+        locateFile: (file: string) => `/static/${file}`
     })
 }
 

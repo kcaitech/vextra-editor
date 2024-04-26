@@ -24,6 +24,7 @@ export class Menu extends WatchableObject {
   static CLOSE_INSTANCE_ATTR_MENU = 13;
   static OPEN_SHORTCUTS = 14;
   static WRITE_MEDIA = 15;
+  static UPDATE_LOCATE = 16;
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨

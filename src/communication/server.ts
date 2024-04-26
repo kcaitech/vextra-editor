@@ -46,7 +46,7 @@ export class Server {
     }
 
     async connect(): Promise<boolean> {
-        console.log("server connect", this.isClosed, this.isConnected, this.isConnecting, !!this.connectPromise)
+        // console.log("server connect", this.isClosed, this.isConnected, this.isConnecting, !!this.connectPromise)
         if (this.isClosed) return false;
         if (this.isConnected) return true;
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;

@@ -7,7 +7,7 @@ import { Selection } from '@/context/selection'
 import * as comment_api from '@/request/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
-import { mapDateLang } from '@/utils/date_lang'
+import { formatPast, mapDateLang } from '@/utils/date_lang'
 import { Comment } from "@/context/comment";
 import { Perm, WorkSpace } from "@/context/workspace";
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -187,18 +187,11 @@ const deleteComment = async () => {
 
 const formatDate = computed(() => {
     return function (value: string): string {
-        const lang = localStorage.getItem('locale') || 'zh'
+        const lang = localStorage.getItem('en') || 'zh'
         moment.locale(mapDateLang.get(lang) || 'zh-cn');
-        return filterDate(value);
+        return formatPast(value, t).replace(/\s*/g, '').replace(/,/g, ' ');
     }
 })
-
-const filterDate = (time: string) => {
-    const date = new Date(time);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
 
 const getPageName = () => {
     const pages = props.context.data.pagesList

@@ -132,7 +132,8 @@ onUnmounted(() => {
 .font_weight {
     position: relative;
     box-sizing: border-box;
-    width: calc(100% - 80px);
+    width: 50%;
+    margin-right: 8px;
     border-radius: 6px;
 
     span {

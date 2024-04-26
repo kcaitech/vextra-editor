@@ -28,15 +28,15 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-html,
-body {
-    margin: 0;
-    padding: 0;
-    background-color: rgba(250, 250, 250, 1);
+html {
+    height: -webkit-fill-available;
 
-    >body {
+    body {
+        min-height: -webkit-fill-available;
+        margin: 0;
+        padding: 0;
+        background-color: rgba(250, 250, 250, 1);
         font-family: var(--font-family);
-        height: 100vh;
         user-select: none; //禁止复制内容
         position: relative;
 
@@ -44,12 +44,12 @@ body {
             height: 0;
             width: 0;
         }
-
-        >#app {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
     }
+}
+
+#app {
+    position: absolute;
+    width: 100%;
+    height: 100%;
 }
 </style>
