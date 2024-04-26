@@ -104,7 +104,22 @@ function checkStatus() {
         return;
     }
 
-    path.select_point(params.segment, params.index);
+    const { segment, index, handler, e } = params;
+
+    path.select_point(segment, index);
+
+    current_segment = segment;
+    current_curve_point_index = index;
+
+    pathModifier = handler;
+
+    downXY = { x: e.x, y: e.y };
+
+    document.addEventListener('mousemove', point_mousemove);
+    document.addEventListener('mouseup', point_mouseup);
+
+    move = point_mousemove;
+
 }
 
 function point_mousemove(event: MouseEvent) {

@@ -97,7 +97,7 @@ function down(e: MouseEvent) {
                 props.context.selection.selectShape(_vec);
                 props.context.workspace.setPathEditMode(true);
                 props.context.path.setContactStatus(true);
-                props.context.path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0 });
+                props.context.path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
 
                 mode.value = 'normal';
             });

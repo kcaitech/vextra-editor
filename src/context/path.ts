@@ -35,7 +35,12 @@ export class Path extends WatchableObject {
 
     private contacting: boolean = false;
 
-    private bridgeParams: { handler: PathEditor, segment: number, index: number } | undefined = undefined;
+    private bridgeParams: {
+        handler: PathEditor;
+        segment: number;
+        index: number;
+        e: MouseEvent;
+    } | undefined = undefined;
 
     constructor(context: Context) {
         super();
@@ -363,7 +368,7 @@ export class Path extends WatchableObject {
         return this.bridgeParams;
     }
 
-    setBridgeParams(p: { handler: PathEditor, segment: number, index: number } | undefined) {
+    setBridgeParams(p: { handler: PathEditor, segment: number, index: number, e: MouseEvent } | undefined) {
         this.bridgeParams = p;
     }
 }
