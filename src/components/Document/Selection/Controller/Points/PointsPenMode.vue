@@ -248,7 +248,6 @@ function modifyLivingPath() {
     if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
         const c1 = m.computeCoord2(previous.fromX, previous.fromY);
         livingPath.value = `M${p1.x} ${p1.y} Q${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y}`;
-        console.log('curve', livingPath.value)
     } else {
         livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
         console.log('straight', livingPath.value)
