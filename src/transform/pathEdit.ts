@@ -161,7 +161,13 @@ export class PathEditor extends TransformHandler {
         }
         (this.asyncApiCaller as PathModifier).preCurve(this.shape, index, segment);
     }
-
+    execute4handlePreForPen(index: number, segment = -1) {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+            this.isInitMatrix = true;
+        }
+        (this.asyncApiCaller as PathModifier).preCurve2(this.shape, index, segment);
+    }
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
         this.isHandleAction = true;
         if (!this.handleInfo) {

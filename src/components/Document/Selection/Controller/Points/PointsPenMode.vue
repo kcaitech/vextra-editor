@@ -149,9 +149,10 @@ function point_mouseup(event: MouseEvent) {
 
     if (!bridged) {
         props.context.path.setBridgeParams(undefined);
+        pathModifier?.fulfil();
+        props.context.path.setLastPoint((props.context.selection.selectedShapes[0] as PathShapeView).segments[current_segment].points[current_curve_point_index] as CurvePoint);
     }
 
-    pathModifier?.fulfil();
     pathModifier = undefined;
 
     document.removeEventListener('mousemove', move);
@@ -216,12 +217,18 @@ function matrix_watcher(t: number) {
 function documentMove(e: MouseEvent) {
     preXY.value = props.context.workspace.getContentXY(e);
 
+    livingPath.value = '';
+    livingPathVisible.value = false;
+
+    if (e.buttons) {
+        return;
+    }
+
     modifyLivingPath();
 }
 
 function modifyLivingPath() {
-    livingPath.value = '';
-    livingPathVisible.value = false;
+
 
     const path = props.context.path;
     const previous = path.lastPoint;
@@ -241,9 +248,12 @@ function modifyLivingPath() {
     if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
         const c1 = m.computeCoord2(previous.fromX, previous.fromY);
         livingPath.value = `M${p1.x} ${p1.y} Q${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y}`;
+        console.log('curve', livingPath.value)
     } else {
         livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
+        console.log('straight', livingPath.value)
     }
+
 
     livingPathVisible.value = true;
 }
@@ -279,7 +289,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path v-if="livingPathVisible" :d="livingPath" stroke="red"/>
+    <path v-if="livingPathVisible" :d="livingPath" stroke="red" fill="none"/>
 
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
