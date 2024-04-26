@@ -372,13 +372,13 @@ export class Path extends WatchableObject {
         this.bridgeParams = p;
     }
 
-    private m_last_point: CurvePoint | undefined;
+    private m_last_point: { point: CurvePoint, segment: number, index: number } | undefined;
 
     get lastPoint() {
         return this.m_last_point;
     }
 
-    setLastPoint(point: CurvePoint) {
+    setLastPoint(point: { point: CurvePoint, segment: number, index: number }) {
         this.m_last_point = point;
     }
 }

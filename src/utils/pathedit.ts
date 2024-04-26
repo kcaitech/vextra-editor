@@ -381,8 +381,7 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
     return result_segments;
 
     function _gen(segment: number, points: CurvePoint[], isClosed: boolean) {
-        if (!points?.length) {
-            console.error('get_segments:!points?.length');
+        if (!points?.length || points.length < 2) {
             return [];
         }
 

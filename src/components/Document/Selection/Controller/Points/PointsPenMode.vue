@@ -5,8 +5,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
-import { dbl_action } from "@/utils/mouse_interactive";
-import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit";
+import { Segment, get_segments } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
@@ -16,7 +15,10 @@ interface Props {
 }
 
 interface Dot {
-    point: { x: number, y: number }
+    point: {
+        x: number,
+        y: number
+    }
     segment: number
     index: number
     selected: boolean
@@ -24,7 +26,10 @@ interface Dot {
 
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const data: { dots: Dot[], segments: Segment[][] } = reactive({ dots: [], segments: [] });
+const data: {
+    dots: Dot[],
+    segments: Segment[][]
+} = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
 const dragActiveDis = 3;
 const new_high_light = ref<string>('');
@@ -47,6 +52,8 @@ const lastPoint = ref<CurvePoint | undefined>();
 
 const livingPathVisible = ref<boolean>(false);
 const livingPath = ref<string>('');
+const root = { ...props.context.workspace.root };
+const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
@@ -69,31 +76,10 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         return;
     }
 
-    if (dbl_action()) {
-        modify_point_curve_mode(props.context, index);
-    }
-
     event.stopPropagation();
 
-    const path = props.context.path;
-    if (event.shiftKey) {
-        path.adjust_points(segment, index)
-    } else {
-        if (!path.is_selected(segment, index)) {
-            path.select_point(segment, index);
-        }
-    }
+    // todo
 
-    current_segment = segment;
-    current_curve_point_index = index;
-
-    pathModifier = new PathEditor(props.context, event);
-    downXY = { x: event.x, y: event.y };
-
-    document.addEventListener('mousemove', point_mousemove);
-    document.addEventListener('mouseup', point_mouseup);
-
-    move = point_mousemove;
 }
 
 function checkStatus() {
@@ -114,9 +100,11 @@ function checkStatus() {
 
     downXY = { x: e.x, y: e.y };
 
-    lastPoint.value = (props.context.selection.selectedShapes[0] as PathShapeView).segments[0].points[0] as CurvePoint;
+    lastPoint.value = (props.context.selection.selectedShapes[0] as PathShapeView)
+        .segments[0]
+        .points[0] as CurvePoint;
 
-    props.context.path.setLastPoint(lastPoint.value);
+    props.context.path.setLastPoint({ point: lastPoint.value, index: 0, segment: 0 });
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -150,7 +138,11 @@ function point_mouseup(event: MouseEvent) {
     if (!bridged) {
         props.context.path.setBridgeParams(undefined);
         pathModifier?.fulfil();
-        props.context.path.setLastPoint((props.context.selection.selectedShapes[0] as PathShapeView).segments[current_segment].points[current_curve_point_index] as CurvePoint);
+        const __point = (props.context.selection.selectedShapes[0] as PathShapeView)
+            .segments[current_segment]
+            .points[current_curve_point_index] as CurvePoint;
+
+        props.context.path.setLastPoint({ point: __point, index: current_curve_point_index, segment: current_segment });
     }
 
     pathModifier = undefined;
@@ -228,10 +220,8 @@ function documentMove(e: MouseEvent) {
 }
 
 function modifyLivingPath() {
-
-
     const path = props.context.path;
-    const previous = path.lastPoint;
+    const previous = path.lastPoint?.point;
 
     if (!previous || !path.isContacting) {
         return;
@@ -240,7 +230,7 @@ function modifyLivingPath() {
     const shape = props.context.selection.selectedShapes[0] as PathShapeView;
 
     const m = new Matrix(shape.matrix2Root());
-    m.preScale(shape.frame.x, shape.frame.y);
+    m.preScale(shape.frame.width, shape.frame.height);
     m.multiAtLeft(props.context.workspace.matrix);
 
     const p1 = m.computeCoord3(previous);
@@ -250,11 +240,25 @@ function modifyLivingPath() {
         livingPath.value = `M${p1.x} ${p1.y} Q${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y}`;
     } else {
         livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
-        console.log('straight', livingPath.value)
     }
 
-
     livingPathVisible.value = true;
+}
+
+function down(e: MouseEvent) {
+    const lastPoint = props.context.path.lastPoint;
+    if (lastPoint) {
+        pathModifier = new PathEditor(props.context, e);
+        pathModifier.createApiCaller();
+        pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
+        downXY = { x: e.x, y: e.y };
+        document.addEventListener('mousemove', point_mousemove);
+        document.addEventListener('mouseup', point_mouseup);
+
+        move = point_mousemove;
+    } else {
+        // add segment
+    }
 }
 
 onMounted(() => {
@@ -288,6 +292,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
+    <path :d="maskPath" fill="transparent" @mousedown="down"></path>
     <path v-if="livingPathVisible" :d="livingPath" stroke="red" fill="none"/>
 
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
@@ -297,7 +302,7 @@ onUnmounted(() => {
         </g>
     </g>
 
-    <Handle :context="props.context"></Handle>
+    <Handle :context="props.context"/>
     <!--点序 for Dev-->
     <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">
         {{ i }}
@@ -305,10 +310,8 @@ onUnmounted(() => {
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
-          :class="{ point: true, selected: p.selected }">
-    </rect>
-
-    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"></rect>
+          :class="{ point: true, selected: p.selected }"/>
+    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"/>
 </template>
 <style lang='scss' scoped>
 .point {

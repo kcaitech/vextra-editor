@@ -5,7 +5,6 @@ import {
     lessen,
     lower_layer,
     magnify,
-    page_scale,
     redo,
     scale_0,
     select_all,
@@ -287,7 +286,11 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
 
-    // context.tool.setAction(Action.Pen); // 钢笔工具
+    if (context.workspace.is_path_edit_mode) {
+        context.tool.setAction(Action.Pen2);
+    } else {
+        context.tool.setAction(Action.Pen); // 钢笔工具
+    }
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {

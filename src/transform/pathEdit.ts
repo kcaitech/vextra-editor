@@ -123,6 +123,24 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
+    addPointForPen(segment: number, index: number) {
+        if (!this.asyncApiCaller) {
+            return false;
+        }
+        let addRes = false;
+        if (index > -1 && segment > -1) {
+            addRes = (this.asyncApiCaller as PathModifier).addPointForPen(this.shape, segment, index);
+
+            if (addRes) {
+                this.path.select_point(segment, index);
+            }
+        }
+
+        this.path.editing(true);
+
+        return addRes;
+    }
+
     createVec() {
         const env = this.context.selection.getClosestContainer(this.livingPoint);
         const frame = new ShapeFrame(0, 0, 1, 1);
@@ -161,6 +179,7 @@ export class PathEditor extends TransformHandler {
         }
         (this.asyncApiCaller as PathModifier).preCurve(this.shape, index, segment);
     }
+
     execute4handlePreForPen(index: number, segment = -1) {
         if (!this.isInitMatrix) {
             this.initMatrix();
@@ -168,6 +187,7 @@ export class PathEditor extends TransformHandler {
         }
         (this.asyncApiCaller as PathModifier).preCurve2(this.shape, index, segment);
     }
+
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
         this.isHandleAction = true;
         if (!this.handleInfo) {
