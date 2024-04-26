@@ -23,8 +23,7 @@ import { message } from "./message";
 import { permIsEdit } from "./permission";
 import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
-import { Color } from "../../../kcdesign-data/src";
-import { lowerFirst } from "lodash";
+import { Color } from "@kcdesign/data";
 
 // todo 键盘事件的权限处理
 

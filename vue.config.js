@@ -127,7 +127,8 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    // publicPath: '/zbb',
+     publicPath: './',
     configureWebpack,
 
     pluginOptions: {
@@ -138,6 +139,7 @@ var exports = defineConfig({
         }
     },
 
+    // https://webpack.js.org/configuration/dev-server/
     devServer: {
         port: 8080,
         https: true,
@@ -152,8 +154,13 @@ var exports = defineConfig({
                     '^/api': '/api'
                     // '^/api/v1': '/'
                 }
-            }
-        }
+            },
+        },
+        static: {
+            directory: path.join(__dirname, "public"),
+        },
+        compress: true,
+        historyApiFallback: true,
     },
 })
 module.exports = exports

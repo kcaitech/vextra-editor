@@ -1,39 +1,40 @@
 <template>
     <div class="project">
         <div class="header">
-            <svg-icon icon-class="back-icon"></svg-icon>
-            <span>分享</span>
+            <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
+            <span>{{ route.query.name }}</span>
         </div>
         <div class="list">
-            <TeamItem :data="projectlist"></TeamItem>
+            <ProjectItem :data="list"></ProjectItem>
         </div>
     </div>
 
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { GetteamList, GetprojectLists } from './team'
-import { router } from '@/router'
+import { onMounted } from 'vue';
 import { useRoute } from 'vue-router'
-const projectlist = ref<any[]>([])
+import ProjectItem from './ProjectItem.vue';
+import { router } from '@/router';
+import { useCounterStore } from './team'
+import { storeToRefs } from 'pinia'
 
+const store = useCounterStore()
+const { list } = storeToRefs(store)
+const { GetprojectLists } = store
 const route = useRoute()
 
-
-onMounted(async () => {
-    if (route.query.id)
-        if (route) {
-            projectlist.value = await GetprojectLists(Number(route.query.id))
-        }
+onMounted(() => {
+    GetprojectLists()
 })
+
 </script>
 
 <style lang="scss" scoped>
 .project {
     height: 100%;
     width: 100%;
-    background-color: #fff;
+    background-color: #FAFAFA;
 
 
     .header {

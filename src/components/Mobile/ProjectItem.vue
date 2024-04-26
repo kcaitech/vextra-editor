@@ -1,49 +1,53 @@
 <template>
-    <div class="list-item" v-for=" project  in props.data" :key="project.team.id">
-        <div class="image">
-            <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
-            <span v-else>{{ team.team.name.slice(0, 1) }}</span>
-        </div>
-        <div class="content">
-            <div class="left">
-                <span class="name"> {{ team.team.name }}</span>
-                <span class="time">{{ team.team.description }}</span>
+    <template v-if="!loading">
+        <div class="list-item" v-for="project in list" :key="project.project.id"
+            @click="skipprojectfile(project.project.id, project.project.name)">
+            <div class="image">
+                <img src="@/assets/project-icon.png" alt="team-icon">
             </div>
-            <!-- <div class="right">
-                <div class="share">
-                    <svg-icon icon-class="mShare"></svg-icon>
+            <div class="content">
+                <div class="left">
+                    <span class="name"> {{ project.project.name }}</span>
+                    <span class="time">{{ project.project.description }}</span>
                 </div>
-                <div class="star">
-                    <svg-icon icon-class="mStar"></svg-icon>
-                </div>
-            </div> -->
+            </div>
         </div>
-    </div>
+    </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>还未加入项目</span></div>
+    <div v-if="showtips" class="null"><span>{{t('miniprogram.projectnull')}}</span></div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
+import { router } from '@/router';
+import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+
+const {t}=useI18n()
+const route = useRoute()
+const showtips = ref<boolean>(false)
+const loading = ref<boolean>(true)
+let list: any
 
 const props = defineProps<{
     data: any,
 }>();
 
-const showtips = ref<boolean>(false)
-const loading = ref<boolean>(true)
+
+const skipprojectfile = (id: number, name: string) => {
+    router.push({ name: 'projectfileview', query: { id: id, name: name } })
+}
 
 watch(() => props.data, () => {
-    if (props.data.length === 0) {
+    list = props.data.filter((item: any) => item.project.team_id === route.query.id)
+    if (list.length === 0) {
         showtips.value = true
     } else {
         showtips.value = false
     }
     loading.value = false
 })
-
-
 
 </script>
 

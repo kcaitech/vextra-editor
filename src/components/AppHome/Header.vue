@@ -262,6 +262,8 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                     <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
                         <Close />
                     </el-icon>
+
+                    
                 </template>
             </el-input>
         </div>

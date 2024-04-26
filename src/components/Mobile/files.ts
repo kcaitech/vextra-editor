@@ -1,7 +1,6 @@
 import i18n from '@/i18n'
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref } from 'vue'
 
 //获取服务器最近列表
 export async function getRecentlydata() {
@@ -56,9 +55,9 @@ export async function getStardata() {
 
 //
 //获取服务器我的文件列表
-export async function getDoucment() {
+export async function getDoucment(projectid?: string) {
     try {
-        const { data } = await user_api.getDoucmentListAPI() as any
+        const { data } = await user_api.getDoucmentListAPI(projectid ? { project_id: projectid } : '') as any
         for (let i = 0; i < data.length; i++) {
             let { document: { size, created_at } } = data[i]
             data[i].last = false

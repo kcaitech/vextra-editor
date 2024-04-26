@@ -14,6 +14,27 @@ export function PostLogin(params = {}, ops = {}) {
 
 }
 
+// 微信小程序登录请求
+export function PostWxLogin(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/auth/login/wx_mp',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+
+}
+
+//获取小程序码
+export function GetminiProgramCode(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/shares/wx_mp_code',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
 
 // 获取用户信息
 export function GetInfo(params = {}, ops = {}) {
@@ -340,10 +361,12 @@ export function RefreshToken(params = {}, ops = {}) {
 }
 
 //获取文档列表
-export function getDoucmentListAPI() {
+export function getDoucmentListAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/',
-        method: 'get'
+        method: 'get',
+        params: params,
+        ...opts
     })
 }
 

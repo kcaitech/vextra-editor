@@ -1,18 +1,15 @@
 <template>
     <div class="container">
         <div class="header">
-            <img src="../../assets/mlogo.svg" alt="logo">
+            <img src="@/assets/h-logo2.svg" alt="logo">
         </div>
         <div class="main">
-            <div class="search">
+            <div v-if="activebnt !== 'About'" class="search">
                 <div class="search-input">
                     <div class="s-header">
                         <svg-icon icon-class="search-icon2"></svg-icon>
                     </div>
-                    <input type="text" placeholder="搜索文件" v-model="inputvalue">
-                    <div v-if="inputvalue.trim()" class="s-footer" @click="inputvalue = ''">
-                        <svg-icon icon-class="close"></svg-icon>
-                    </div>
+                    <input type="text" :placeholder="t('system.placeholder')" @focus="router.push({ path: '/search' })">
                 </div>
                 <div class="notice" @click="showInForm = !showInForm">
                     <svg-icon icon-class="m-notice"></svg-icon>
@@ -20,9 +17,8 @@
                     </div>
                 </div>
             </div>
-            <div class="content">
-                <component :is="tabs.get(activebnt)||Home" @testevnt="testevent"></component>
-                <div v-if="inputvalue" class="search-list"></div>
+            <div class="content" :style="{ height: activebnt !== 'About' ? 'calc(100% - 54px)' : '100%' }">
+                <component :is="tabs.get(activebnt)||Home"></component>
             </div>
         </div>
         <div class="footer">
@@ -34,10 +30,11 @@
                 <div class="label">{{ item.label }}</div>
             </div>
         </div>
-        <ShareFile class="share" v-if="docid" @close="docid = ''" :docId="docid"></ShareFile>
-        <!-- <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
-            @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform> -->
-        <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList" :teamApplyList="totalList"></Inform>
+        <Transition @after-enter="tsDone = true" name="fade">
+            <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList"
+                :teamApplyList="totalList" :done="tsDone">
+            </Inform>
+        </Transition>
     </div>
 </template>
 
@@ -49,19 +46,12 @@ import MyFile from './MyFile.vue';
 import Team from './Team.vue';
 import About from './About.vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import ShareFile from './ShareFile.vue';
 import Inform from './MessageInfo.vue';
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n'
 
-const bntdata = [
-    { label: '首页', value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
-    { label: '我的文件', value: 'MyFiles', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
-    { label: '团队', value: 'Team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
-    { label: '我的', value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
-]
-
+const { t } = useI18n()
 const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
-const inputvalue = ref<string>('')
-
 const projectApplyList = ref<any>([]);
 const notifyPApplyList = ref<any>([]);
 const notifyTApplyList = ref<any>([]);
@@ -71,14 +61,14 @@ const applyList = ref<any[]>([]);
 const teamApplyList = ref<any>([]);
 const totalList = ref<any[]>([])
 const showInForm = ref(false);
-const closeInForm = () => {
-    showInForm.value = false;
-}
-const docid = ref<string>()
-const total = computed(() => {
-    return applynum.value + teamnum.value ?? 99;
-})
+const tsDone = ref(false)
 
+const bntdata = [
+    { label: t('miniprogram.home'), value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
+    { label: t('miniprogram.my_file'), value: 'MyFiles', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
+    { label:t('miniprogram.team'), value: 'Team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
+    { label: t('miniprogram.about'), value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
+]
 
 const tabs = new Map([
     ['Home', Home,],
@@ -87,14 +77,18 @@ const tabs = new Map([
     ['About', About],
 ]);
 
-const changetab = (tab: string) => {
-    activebnt.value = tab
-    sessionStorage.setItem('selectTab', tab)
+const total = computed(() => {
+    return applynum.value + teamnum.value ?? 99;
+})
+
+const closeInForm = () => {
+    showInForm.value = false;
+    tsDone.value = false
 }
 
-const testevent = (data: any) => {
-    console.log(data);
-    docid.value = data.document.id
+const changetab = (tab: string) => {
+    activebnt.value = tab;
+    sessionStorage.setItem('selectTab', tab);
 }
 
 const getApplyList = async () => {
@@ -109,6 +103,8 @@ const getApplyList = async () => {
     }
 }
 
+
+
 const getProjectApplyList = async () => {
     try {
         const { data } = await team_api.getTeamProjectApplyAPI();
@@ -116,8 +112,8 @@ const getProjectApplyList = async () => {
             projectApplyList.value = data;
             totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -135,8 +131,8 @@ const getTeamApply = async () => {
             teamApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -154,8 +150,8 @@ const getProjectNotice = async () => {
             notifyPApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -171,8 +167,8 @@ const getTeamNotice = async () => {
             notifyTApplyList.value = data;
             totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
             totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at).getTime();
-                const timeB = new Date(b.request.created_at).getTime();
+                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
+                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
                 // 返回结果以实现降序排序
                 return timeB - timeA;
             });
@@ -182,9 +178,11 @@ const getTeamNotice = async () => {
     }
 }
 
+
 watch(totalList, () => {
     teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
 }, { deep: true })
+
 watch(applyList, () => {
     applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
 }, { deep: true })
@@ -206,19 +204,28 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-
     clearInterval(timer)
-
 })
 
 </script>
 
 <style lang="scss" scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(500px);
+    opacity: 0.5;
+}
+
 .num {
     position: relative;
     font-size: 10px;
-    top: -4px;
-    left: 10px;
+    top: -8px;
+    left: 8px;
     min-width: 14px;
     min-height: 14px;
     background-color: red;
@@ -240,11 +247,14 @@ onUnmounted(() => {
 
 .search-list {
     position: absolute;
-    top: 0;
+    top: 98px;
     left: 0;
     width: 100%;
-    height: 100%;
-    background-color: #262626;
+    height: calc(100% - 98px);
+    padding: 0 14px;
+    box-sizing: border-box;
+    background-color: #FAFAFA;
+    z-index: 1;
 }
 
 .bnt-selct {
@@ -264,7 +274,6 @@ onUnmounted(() => {
     .header {
         display: flex;
         align-items: center;
-        padding: 0 14px;
         width: 100%;
         min-height: 44px;
         position: sticky;
@@ -274,8 +283,8 @@ onUnmounted(() => {
         z-index: 1;
 
         img {
-            width: 165px;
-            height: 24px;
+            margin-left: 14px;
+            height: 34px;
         }
     }
 
@@ -343,12 +352,13 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 24px;
-                height: 24px;
+                width: 32px;
+                height: 32px;
 
                 svg {
-                    width: 100%;
-                    height: 100%;
+                    position: absolute;
+                    width: 24px;
+                    height: 24px;
                 }
             }
 
@@ -365,17 +375,20 @@ onUnmounted(() => {
 
     .footer {
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
         position: sticky;
         bottom: 0;
-        min-height: 58px;
-        font-size: 10px;
+        min-height: 72px;
+        font-size: 12px;
         font-weight: 500;
         background-color: #FFFFFF;
         color: #BFBFBF;
         border-width: 1px 0px 0px 0px;
         border-style: solid;
         border-color: #F1F2F2;
+        padding: 6px 0 0 0;
+        box-sizing: border-box;
 
         .bnt {
             flex: 1;

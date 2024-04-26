@@ -1,7 +1,15 @@
 <template>
-    <div ref="ellist" class="list">
-        <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="getdocument"></FilesItem>
+    <div class="projectfile">
+        <div class="header">
+            <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
+            <span>{{ filename }}</span>
+        </div>
+        <div ref="ellist" class="list">
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="getdocument"
+                @sharefile="data"></FilesItem>
+        </div>
     </div>
+
 </template>
 
 <script setup lang="ts">
@@ -11,11 +19,21 @@ import FilesItem from './FilesItem.vue';
 import { changeStar as change } from './files'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import { router } from '@/router';
+import { useRoute } from 'vue-router'
 
+
+const route = useRoute()
 const { t } = useI18n()
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
 const errnetwork = ref<boolean>(false)
+const filename = ref<string>(route.query.name as string)
+const docid = ref<string>('')
+
+const data = (data: any) => {
+    docid.value = data.data.document.id
+}
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -24,16 +42,19 @@ const changeStar = async (id: number, b: boolean) => {
                 item.document_favorites.is_favorite = !b
             }
             return item
-        })
+        }
+        )
         ElMessage.closeAll('success')
         ElMessage.success({ duration: 1500, message: !b ? t('home.star_ok') : t('home.star_cancel') })
     }
 }
 
+
+
 async function getdocument() {
     let data: any
     try {
-        data = await getDoucment()
+        data = await getDoucment(route.query.id as string)
         if (data.state === 'success') {
             errnetwork.value = false
             lists.value = data.data
@@ -59,9 +80,44 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.list {
-    height: 100%;
-    overflow-y: scroll;
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
 
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(500px);
+    opacity: 0.5;
+}
+
+.projectfile {
+    height: 100%;
+    width: 100%;
+    background-color: #FAFAFA;
+
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        height: 44px;
+
+        svg {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            left: 14px;
+        }
+
+        span {}
+    }
+
+    .list {
+        height: calc(100% - 44px);
+        overflow-y: scroll;
+        padding: 0 14px;
+    }
 }
 </style>

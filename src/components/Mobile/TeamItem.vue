@@ -1,40 +1,37 @@
 <template>
-    <div class="list-item" v-for=" team  in props.data" :key="team.team.id" @click="toteamproject(team.team.id)">
-        <div class="image">
-            <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
-            <span v-else>{{ team.team.name.slice(0, 1) }}</span>
-        </div>
-        <div class="content">
-            <div class="left">
-                <span class="name"> {{ team.team.name }}</span>
-                <span class="time">{{ team.team.description }}</span>
+    <template v-if="!loading">
+        <div class="list-item" v-for=" team  in props.data" :key="team.team.id"
+            @click="skipproject(team.team.id, team.team.name)">
+            <div class="image">
+                <img v-if="team.team.avatar" :src="team.team.avatar" alt="team-icon">
+                <span v-else>{{ team.team.name.slice(0, 1) }}</span>
             </div>
-            <!-- <div class="right">
-                <div class="share">
-                    <svg-icon icon-class="mShare"></svg-icon>
+            <div class="content">
+                <div class="left">
+                    <span class="name"> {{ team.team.name }}</span>
+                    <span class="time">{{ team.team.description }}</span>
                 </div>
-                <div class="star">
-                    <svg-icon icon-class="mStar"></svg-icon>
-                </div>
-            </div> -->
+            </div>
         </div>
-    </div>
+    </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>还未加入团队</span></div>
+    <div v-if="showtips" class="null"><span>{{ t('miniprogram.team_jion_null') }}</span></div>
+    <div v-if="typeof props.data === 'string'" class="error"><span>{{ props.data }}</span></div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+
+const {t}=useI18n()
+const showtips = ref<boolean>(false)
+const loading = ref<boolean>(true)
 
 const props = defineProps<{
     data: any,
 }>();
-
-
-const showtips = ref<boolean>(false)
-const loading = ref<boolean>(true)
 
 watch(() => props.data, () => {
     if (props.data.length === 0) {
@@ -45,15 +42,21 @@ watch(() => props.data, () => {
     loading.value = false
 })
 
-const toteamproject = (id: number) => {
-    router.push({ path: '/team/' + id });
+const skipproject = (id: number, name: string) => {
+    router.push({
+        name: 'projectview',
+        query: {
+            id: id,
+            name: name
+        }
+    })
 }
-
 
 </script>
 
 <style lang="scss" scoped>
-.null {
+.null,
+.error {
     display: flex;
     height: 100%;
 

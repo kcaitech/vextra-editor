@@ -31,7 +31,7 @@ const promptMessage = () => {
         messages.value = t('apply.maximum_share')
         showNotification()
         const routeTimer = setTimeout(() => {
-            router.push('/files')
+            router.push('/m')
             clearTimeout(routeTimer)
         }, 3000)
     } else {
@@ -58,8 +58,8 @@ const getDocumentAuthority = async () => {
             permType = data.perm_type
             if (permType !== 0) {
                 const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
-                router.push({
-                    name: 'document',
+                router.replace({
+                    name: 'pageviews',
                     query: query
                 })
             }
@@ -157,14 +157,6 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <div class="header">
-            <div class="svgBox" @click.stop="() => { router.push({ name: 'apphome' }) }">
-                <svg-icon icon-class="home"></svg-icon>
-            </div>
-            <div class="user-avatar">
-                <img :src="avatar" alt="avatar">
-            </div>
-        </div>
         <div class="context" v-if="linkValid && docInfo.document">
             <span class="fileName">{{ docInfo.document.name }}</span>
             <div class="svg-file">
@@ -321,7 +313,7 @@ label::before {
     }
 
     .context {
-        height: calc(100% - 52px);
+        height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
