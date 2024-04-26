@@ -1,16 +1,14 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
-import { add_move_and_up_for_document } from "@/utils/mouse";
 import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
-import { Action } from '@/context/tool';
 import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
@@ -42,9 +40,13 @@ let downXY: XY = { x: 0, y: 0 };
 
 let current_segment: number = -1;
 let current_curve_point_index: number = -1;
-let current_side: number = -1;
 
 const preXY = ref<XY>({ x: -10, y: -10 });
+
+const lastPoint = ref<CurvePoint | undefined>();
+
+const livingPathVisible = ref<boolean>(false);
+const livingPath = ref<string>('');
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
@@ -62,9 +64,6 @@ function update() {
     props.context.path.set_segments(segments);
 }
 
-/**
- * @description down下任意一个已有的编辑点
- */
 function point_mousedown(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
@@ -115,11 +114,14 @@ function checkStatus() {
 
     downXY = { x: e.x, y: e.y };
 
+    lastPoint.value = (props.context.selection.selectedShapes[0] as PathShapeView).segments[0].points[0] as CurvePoint;
+
+    props.context.path.setLastPoint(lastPoint.value);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 
     move = point_mousemove;
-
 }
 
 function point_mousemove(event: MouseEvent) {
@@ -129,22 +131,10 @@ function point_mousemove(event: MouseEvent) {
 
     if (isDragging) {
         pathModifier?.execute(event);
-        return;
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
-
-        if (props.context.path.selectedSides.size) {
-            pathModifier?.createApiCaller();
-            return;
-        }
-
-        if (is_curve_tool()) {
-            bridged = true;
-            launch_bridging(event); // handle交接
-            return;
-        }
-
-        pathModifier?.createApiCaller();
+        bridged = true;
+        launch_bridging(event); // handle交接
     }
 }
 
@@ -156,62 +146,9 @@ function bridging_completed() {
     bridged = false;
 }
 
-/**
- * @description 新增一个编辑点
- */
-function n_point_down(event: MouseEvent, segment: number, index: number) {
-    if (event.button !== 0) {
-        return;
-    }
-
-    event.stopPropagation();
-
-    pathModifier = new PathEditor(props.context, event);
-    downXY = { x: event.x, y: event.y };
-
-    const __index = index + 1;
-
-    if (pathModifier.createApiCaller(segment, __index)) {
-        current_curve_point_index = __index;
-        current_segment = segment;
-    }
-
-    add_move_and_up_for_document(n_point_mousemove, point_mouseup);
-    move = n_point_mousemove;
-}
-
-/**
- * @description 新增编辑点之后紧接的拖拽编辑
- */
-function n_point_mousemove(event: MouseEvent) {
-    if (isDragging) {
-        pathModifier?.execute(event);
-    } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-        isDragging = true;
-    }
-}
-
-/**
- * @description 点击编辑点之后的抬起
- */
 function point_mouseup(event: MouseEvent) {
-    clear_high_light();
-
     if (event.button !== 0) {
         return;
-    }
-
-    if (isDragging) {
-        isDragging = false;
-    } else {
-        const path = props.context.path;
-
-        if (path.selectedPointsLength && !event.shiftKey) {
-            path.select_point(current_segment, current_curve_point_index);
-        }
-        if (path.selectedSidesLength && !event.shiftKey) {
-            path.select_side(current_segment, current_side);
-        }
     }
 
     pathModifier?.fulfil();
@@ -276,24 +213,54 @@ function matrix_watcher(t: number) {
     }
 }
 
-function is_curve_tool() {
-    return props.context.tool.action === Action.Curve;
-}
-
 function documentMove(e: MouseEvent) {
     preXY.value = props.context.workspace.getContentXY(e);
+
+    modifyLivingPath();
+}
+
+function modifyLivingPath() {
+    livingPath.value = '';
+    livingPathVisible.value = false;
+
+    const path = props.context.path;
+    const previous = path.lastPoint;
+
+    if (!previous || !path.isContacting) {
+        return;
+    }
+
+    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
+
+    const m = new Matrix(shape.matrix2Root());
+    m.preScale(shape.frame.x, shape.frame.y);
+    m.multiAtLeft(props.context.workspace.matrix);
+
+    const p1 = m.computeCoord3(previous);
+
+    if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
+        const c1 = m.computeCoord2(previous.fromX, previous.fromY);
+        livingPath.value = `M${p1.x} ${p1.y} Q${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y}`;
+    } else {
+        livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
+    }
+
+    livingPathVisible.value = true;
 }
 
 onMounted(() => {
+    checkStatus();
+
     props.context.workspace.watch(matrix_watcher);
 
     shape = props.context.selection.pathshape!;
     if (!shape) {
         return console.log('wrong shape');
     }
-    shape.watch(update);
 
+    shape.watch(update);
     update();
+
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
 
@@ -316,10 +283,6 @@ onUnmounted(() => {
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
            @mouseleave="leave">
             <path class="path" :d="p.path"/>
-            <rect v-if="add_rect === `${si}-${i}`"
-                  :class="{ 'insert-point': true, 'insert-point-selected': add_rect === `${si}-${i}` }"
-                  :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, si, i)">
-            </rect>
         </g>
     </g>
 
@@ -334,6 +297,8 @@ onUnmounted(() => {
           :class="{ point: true, selected: p.selected }">
     </rect>
     <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"></rect>
+
+    <path v-if="livingPathVisible" :d="livingPath"/>
 </template>
 <style lang='scss' scoped>
 .point {

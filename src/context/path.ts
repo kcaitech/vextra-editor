@@ -371,4 +371,14 @@ export class Path extends WatchableObject {
     setBridgeParams(p: { handler: PathEditor, segment: number, index: number, e: MouseEvent } | undefined) {
         this.bridgeParams = p;
     }
+
+    private m_last_point: CurvePoint | undefined;
+
+    get lastPoint() {
+        return this.m_last_point;
+    }
+
+    setLastPoint(point: CurvePoint) {
+        this.m_last_point = point;
+    }
 }

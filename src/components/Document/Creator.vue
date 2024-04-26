@@ -83,7 +83,7 @@ function down(e: MouseEvent) {
 
     if (mode.value === 'pen') {
         pathEditor = new PathEditor(props.context, e);
-        pathEditor.createApiCaller();
+        pathEditor.createApiCaller(-1, -1, true);
 
         const vec = pathEditor.createVec();
         if (vec) {

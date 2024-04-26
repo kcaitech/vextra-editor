@@ -85,7 +85,7 @@ export class WorkSpace extends WatchableObject {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_round: boolean = false;
-    private m_font_name_list: {zh: string[], en: string[]} = { zh: [], en: [] };
+    private m_font_name_list: { zh: string[], en: string[] } = { zh: [], en: [] };
 
     private m_root: Root = {
         init: false,
@@ -387,9 +387,11 @@ export class WorkSpace extends WatchableObject {
     setFontNameListZh(zh: string[]) {
         this.m_font_name_list.zh = zh;
     }
+
     setFontNameListEn(en: string[]) {
         this.m_font_name_list.en = en;
     }
+
     get fontNameList() {
         return this.m_font_name_list;
     }
