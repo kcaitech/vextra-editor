@@ -60,6 +60,18 @@ function update() {
     props.context.path.set_segments(segments);
 }
 
+function updatePassive() {
+    dots.length = 0;
+    segments.length = 0;
+
+    init_matrix();
+
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
+
+    props.context.path.set_segments(segments);
+}
+
 /**
  * @description down下任意一个已有的编辑点
  */
@@ -91,6 +103,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+
+    props.context.workspace.setSelectionViewUpdater(false);
 
     move = point_mousemove;
 }
@@ -135,7 +149,7 @@ function point_mousemove(event: MouseEvent) {
 
     if (isDragging) {
         pathModifier?.execute(event);
-        return;
+        pathModifier?.updateCtrlView();
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
 
@@ -223,6 +237,8 @@ function point_mouseup(event: MouseEvent) {
     pathModifier?.fulfil();
     pathModifier = undefined;
 
+    props.context.workspace.setSelectionViewUpdater(true);
+
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', point_mouseup);
 }
@@ -292,6 +308,12 @@ function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        updatePassive();
+    }
+}
+
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
 
@@ -304,6 +326,7 @@ onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
+    props.context.workspace.watch(workspaceWatcher);
 })
 
 onUnmounted(() => {
@@ -313,6 +336,7 @@ onUnmounted(() => {
     shape?.unwatch(update);
 
     window.removeEventListener('blur', window_blur);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 <template>

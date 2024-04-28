@@ -79,6 +79,9 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
     event.stopPropagation();
 
     // todo
+    if (index === 0) {
+
+    }
 
 }
 
@@ -123,6 +126,11 @@ function point_mousemove(event: MouseEvent) {
 }
 
 function launch_bridging(event: MouseEvent) {
+    const last = props.context.path.lastPoint;
+    if (!last) {
+        return;
+    }
+    props.context.path.setBridgeParams({ handler: pathModifier!, segment: last.segment, index: last.index, e: event });
     props.context.path.bridging({ segment: -1, index: -1, event });
 }
 
@@ -138,11 +146,6 @@ function point_mouseup(event: MouseEvent) {
     if (!bridged) {
         props.context.path.setBridgeParams(undefined);
         pathModifier?.fulfil();
-        const __point = (props.context.selection.selectedShapes[0] as PathShapeView)
-            .segments[current_segment]
-            .points[current_curve_point_index] as CurvePoint;
-
-        props.context.path.setLastPoint({ point: __point, index: current_curve_point_index, segment: current_segment });
     }
 
     pathModifier = undefined;
@@ -293,7 +296,8 @@ onUnmounted(() => {
 </script>
 <template>
     <path :d="maskPath" fill="transparent" @mousedown="down"></path>
-    <path v-if="livingPathVisible" :d="livingPath" stroke="red" fill="none"/>
+
+    <path v-if="livingPathVisible" :d="livingPath" stroke="red" fill="none" style="pointer-events: none"/>
 
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
@@ -340,8 +344,9 @@ onUnmounted(() => {
 }
 
 .path {
-    stroke: red;
+    stroke: green;
     fill: none;
+    pointer-events: none;
 }
 
 .path-high-light {

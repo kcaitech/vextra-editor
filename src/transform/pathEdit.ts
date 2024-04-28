@@ -12,6 +12,7 @@ import {
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 import { ShapeType } from "@kcdesign/data";
+import { lowerFirst } from "lodash";
 
 type Base = {
     x: number;
@@ -51,7 +52,9 @@ export class PathEditor extends TransformHandler {
         this.fixedPoint = this.workspace.getRootXY(event);
         this.livingPoint = { ...this.fixedPoint };
 
-        this.shape = this.context.selection.selectedShapes[0]
+        this.shape = this.context.selection.selectedShapes[0];
+
+        this.workspace.setSelectionViewUpdater(false);
     }
 
     initMatrix() {
@@ -124,15 +127,27 @@ export class PathEditor extends TransformHandler {
     }
 
     addPointForPen(segment: number, index: number) {
-        if (!this.asyncApiCaller) {
+        if (!this.asyncApiCaller || !this.shape) {
             return false;
         }
+
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+            this.isInitMatrix = true;
+        }
+
+        const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
+
         let addRes = false;
         if (index > -1 && segment > -1) {
-            // addRes = (this.asyncApiCaller as PathModifier).addPointForPen(this.shape, segment, index);
+            addRes = (this.asyncApiCaller as PathModifier)
+                .addPointForPen(this.shape, segment, index, xy);
 
             if (addRes) {
                 this.path.select_point(segment, index);
+                const point = (this.shape as PathShapeView).segments[segment].points[index] as CurvePoint;
+
+                this.context.path.setLastPoint({ point, index, segment })
             }
         }
 
@@ -271,6 +286,7 @@ export class PathEditor extends TransformHandler {
             // 矫正
         }
 
+        this.workspace.setSelectionViewUpdater(true);
         this.path.editing(false);
 
         super.fulfil();

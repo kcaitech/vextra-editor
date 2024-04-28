@@ -336,7 +336,7 @@ function clear_state() {
     const __point = (props.context.selection.selectedShapes[0] as PathShapeView)
         .segments[0]
         .points[current_index.value] as CurvePoint;
-    
+
     props.context.path.setLastPoint({ point: __point, index: 0, segment: 0 });
     if (is_bridging_action) {
         bridging_completed();
