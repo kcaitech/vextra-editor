@@ -180,4 +180,5 @@ var exports = defineConfig({
         historyApiFallback: true,
     },
 })
+
 module.exports = exports
