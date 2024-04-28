@@ -147,7 +147,7 @@ const getUserInfo = async () => {
 
 let arr = ref<Array<SelectSource>>([])
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined; // eslint-disable-line
 
 const getDocumentInfo = async () => {
     try {
