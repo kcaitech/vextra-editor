@@ -1,12 +1,11 @@
 export const fontNameListZh = [
-    'PingFangSC-Regular', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
-    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei Light', 'Microsoft JhengHei UI',
-    'Microsoft JhengHei UI Light', 'Microsoft YaHei UI', 'Microsoft YaHei UI Light',
+    'PingFang SC', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
+    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI','Microsoft YaHei UI',
     'MingLiU', 'MingLiU_HKSCS', 'PMingLiU', 'STFangsong', 'STHeiti', 'STKaiti', '黑体-简',
     'STSong', '仿宋', '冬青黑体简体中文', '凌慧体-简', '华文中宋', '华文仿宋', '华文新魏',
     '华文楷体', '华文琥珀', '华文行楷', '华文隶书', '娃娃体-简', '圆体-简', '宋体', '等线',
-    '宋体-简', '微软雅黑', '微软雅黑 Light', '手札体-简', '报隶-简', '新宋体', '楷体',
-    '楷体-简', '翩翩体-简', '苹方-简', '行楷-简', '隶变-简', '雅痞-简', '魏碑-简', '黑体', '等线 Light',
+    '宋体-简', '微软雅黑', '手札体-简', '报隶-简', '新宋体', '楷体',
+    '楷体-简', '翩翩体-简', '苹方-简', '行楷-简', '隶变-简', '雅痞-简', '魏碑-简', '黑体',
     'Apple LiGothic', 'Apple LiSung', 'BiauKai', 'Hiragino Sans CNS', 'LiHei Pro', 'LiSong Pro',
     '兰亭黑-繁', '凌慧体-繁', '圆体-繁', '娃娃体-繁', '宋体-繁', '手札体-繁', '报隶-繁',
     '楷体-繁', '翩翩体-繁', '苹方-港', '苹方-繁', '行楷-繁', '隶变-繁', '雅痞-繁', '魏碑-繁', '黑体-繁',
@@ -14,9 +13,9 @@ export const fontNameListZh = [
 ]
 
 export const fontNameListEn = [
-    'Arial', 'Arial Black', 'Helvetica', 'Helvetica Neue', 'Garamond',
+    'Arial', 'Helvetica', 'Helvetica Neue', 'Garamond',
     'Adobe Garamond Pro', 'Adobe Caslon Pro', 'Baskerville', 'Times',
-    'Times New Roman', 'Calibri', 'Calibri Light', 'Comic Sans MS',
+    'Times New Roman', 'Calibri', 'Comic Sans MS',
     'Georgia', 'MS PMincho', 'Tahoma', 'Courier', 'Courier New', 'Verdana',
     "Academy Engraved LET Fonts", "Al Nile", "Al Tarikh", "AlBayan", "Andale Mono", "AppleMyungjo", "AppleSDGothicNeo", "AquaKana", "Arial Narrow", "Arial Rounded",
     "Arial Unicode", "ArialHB", "Athelas", "Avenir Next Conden,sed", "Avenir Next", "Avenir", "Ayuthaya", "Baghdad", "Bangla MN", "Bangla Sangam MN", "Beirut", "BigCaslon", "Bodoni 72 OS", "Bodoni 72 Smallcaps Book", "Bodoni 72", "Bodoni Ornaments", "Bradley Hand", "Brush Script", "Chalkboard", "ChalkboardSE", "Chalkduster",
@@ -30,11 +29,9 @@ export const fontNameListEn = [
     'Noto Sans OldPermic', 'Noto Sans OldPersian', 'Noto Sans OldSouthArabian', 'Noto Sans OldTurkic', 'Noto Sans Oriya', 'Noto Sans Osage', 'Noto Sans Osmanya', 'Noto Sans PahawhHmong', 'Noto Sans Palmyrene', 'Noto Sans PauCinHau', 'Noto Sans PhagsPa', 'Noto Sans Phoenician', 'Noto Sans PsalterPahlavi', 'Noto Sans Rejang', 'Noto Sans Samaritan',
     'Noto Sans Saurashtra', 'Noto Sans Sharada', 'Noto Sans Siddham', 'Noto Sans SoraSompeng', 'Noto Sans Sundanese', 'Noto Sans SylotiNagri', 'Noto Sans Syriac', 'Noto Sans Tagalog', 'Noto Sans Tagbanwa', 'Noto Sans TaiLe', 'Noto Sans TaiTham', 'Noto Sans TaiViet', 'Noto Sans Takri', 'Noto Sans Thaana',
     'Noto Sans Tifinagh', 'Noto Sans Tirhuta', 'Noto Sans Ugaritic', 'Noto Sans Vai', 'Noto Sans Wancho', 'Noto Sans WarangCiti', 'Noto Sans Yi', 'Noto SerifAhom', 'Noto SerifBalinese', 'Noto SerifMyanmar', 'Noto SerifYezidi', 'Optima', 'Oriya MN', 'Oriya Sangam MN', 'Palatino', 'Papyrus', 'PartyLET-plain', 'Phosphate', 'PingFang', 'PlantagenetCherokee', 'PTMono', 'PTSans', 'PTSerif', 'PTSerifCaption', 'Raanana', 'Rockwell', 'Sana', 'Sathu',
-    'Savoye LET', 'Seravek', 'SF Arabic Ultralight', 'SF Compact Ultralight', 'SF Compact Rounded Ultralight', 'SF NS Mono', 'SFNSRounded', 'Shree714', 'SignPainter', 'Silom', 'Sinhala MN', 'Sinhala Sangam MN', 'Skia', 'SnellRoundhand', 'Songti', 'Source Han Mono L', 'Source Han Mono M', 'Source Han Mono N',
-    'Source Han Mono', 'Source Han Mono HC L', 'Source Han Mono HC M', 'Source Han Mono HC N', 'Source Han Mono K L', 'Source Han Mono K M', 'Source Han Mono K N', 'Source Han Mono SC L', 'Source Han Mono SC M',
-    'Source Han Mono SC N', 'Source Han Mono TC L', 'Source Han Mono TC M', 'Source Han Mono TC N',
-    'Source Han Sans CN', 'STHeiti', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
-    'Source Han Mono El', 'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
+    'Savoye LET', 'Seravek', 'SF Arabic Ultralight', 'SF Compact Ultralight', 'SF Compact Rounded Ultralight', 'SF NS Mono', 'SFNSRounded', 'Shree714', 'SignPainter', 'Silom', 'Sinhala MN', 'Sinhala Sangam MN', 'Skia', 'SnellRoundhand', 'Songti', 'Source Han Mono',
+    'Source Han Sans CN', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
+    'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
 ]
 
 export function FontAvailable(fontName: string) {

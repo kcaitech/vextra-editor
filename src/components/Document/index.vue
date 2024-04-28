@@ -44,6 +44,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
+import VersionDesc from "@/components/common/VersionDesc.vue";
 import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
@@ -157,6 +158,7 @@ function selectionWatcher(t: number) {
         }
     }
 }
+
 const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
     if (showRight.value || (!isEdit.value && !isLable.value)) {
@@ -232,6 +234,7 @@ const not_perm_hidden_right = () => {
         rightWidth.value = 250
     }
 }
+
 enum PermissionChange {
     update,
     close,
@@ -315,6 +318,9 @@ const getUserInfo = async () => {
     }
 }
 
+type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -377,7 +383,9 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const document = await importRemote(storage, path, "", versionId, repo)
+        const d = await importRemote(storage, path, "", versionId, repo)
+        const document = d.document;
+        documentLoader = d.loader;
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
@@ -405,6 +413,7 @@ const getDocumentInfo = async () => {
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
             switchPage(page?.id || context!.data.pagesList[0]?.id);
+            updateDocumentKeyTimer = setInterval(updateDocumentKey, 1000 * 60 * 30); // 30分钟更新一次文档密钥
         }
     } catch (err) {
         loading.value = false;
@@ -413,6 +422,30 @@ const getDocumentInfo = async () => {
         throw err;
     }
 }
+
+async function updateDocumentKey() {
+    if (!documentLoader) return;
+    const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    if (docKeyRes.code !== 0) return;
+    const docKeyData = docKeyRes.data;
+    const storageOptions: StorageOptions = {
+        endPoint: docKeyData.endpoint,
+        region: docKeyData.region,
+        accessKey: docKeyData.access_key,
+        secretKey: docKeyData.secret_access_key,
+        sessionToken: docKeyData.session_token,
+        bucketName: docKeyData.bucket_name,
+    }
+    let storage: IStorage;
+    if (docKeyData.provider === "oss") {
+        storage = new OssStorage(storageOptions);
+    } else {
+        storage = new S3Storage(storageOptions);
+    }
+    documentLoader.setStorage(storage);
+}
+
+let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
 
 async function upload(projectId: string) {
     const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
@@ -440,7 +473,7 @@ async function upload(projectId: string) {
     }
     const doc_id = result!.data.doc_id;
     console.log("文档上传成功", doc_id);
-    if(route.name !== 'document') return;
+    if (route.name !== 'document') return;
     router.replace({
         path: '/document',
         query: { id: doc_id },
@@ -724,6 +757,7 @@ onUnmounted(() => {
     context?.component.unwatch(component_watcher);
     uninstall_keyboard_units();
     stop();
+    clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
 })
 </script>
 
@@ -737,8 +771,9 @@ onUnmounted(() => {
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
+                      v-if="inited && !null_context"
+                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+                      :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                             @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
@@ -748,16 +783,17 @@ onUnmounted(() => {
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                    @closeLoading="closeLoading">
+                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                             @closeLoading="closeLoading">
                 </ContentView>
             </template>
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
-                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                           @mouseenter="(e: Event) => { mouseenter('right') }"
+                           @mouseleave="() => { mouseleave('right') }"
+                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
+                           @showAttrbute="showHiddenRight">
                 </Attribute>
-<!--                @@@-->
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>

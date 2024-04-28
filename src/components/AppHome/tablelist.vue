@@ -553,6 +553,7 @@ watchEffect(() => {
 :deep(.el-table-v2__header) {
     font-size: 12px !important;
     height: 26px !important;
+    border-bottom: #fafafa solid 1px;
 }
 
 :deep(.el-table-v2__header-cell) {

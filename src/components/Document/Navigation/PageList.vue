@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick, watchEffect } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -15,6 +15,7 @@ import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";
 import { v4 } from "uuid";
 import { menu_locate2 } from "@/utils/common";
+import Tooltip from "@/components/common/Tooltip.vue";
 
 type List = InstanceType<typeof ListView>;
 
@@ -226,7 +227,11 @@ const chartMenuMount = (e: MouseEvent) => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
             menu_locate2(e, el, pageList.value);
-            props.context.esctask.save(v4(), close);
+            props.context.esctask.save(v4(), () => {
+                const achieve = pageMenu.value;
+                pageMenu.value = false;
+                return achieve;
+            });
         }
     })
 }
@@ -259,7 +264,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     } else if (item === 'copy_link') {
         e?.stopPropagation();
         const docInfo = props.context.comment.isDocumentInfo?.document;
-        const page_url = location.origin + `/#/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
+        const page_url = location.origin + `/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
         copyLink(page_url, t);
     } else if (item === 'delete') {
         e?.stopPropagation();
@@ -338,15 +343,17 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 });
 </script>
+
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
-                    v-if="context.workspace.documentPerm === Perm.isEdit && !isLable">
-                    <svg-icon icon-class="add"></svg-icon>
-                </div>
+                <Tooltip v-if="context.workspace.documentPerm === Perm.isEdit && !isLable" :content="t('navi.add_page')">
+                    <div class="add" @click.stop="addPage">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </Tooltip>
                 <div class="shrink" @click="toggle">
                     <svg-icon icon-class="down"
                         :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>

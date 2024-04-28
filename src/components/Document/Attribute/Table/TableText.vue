@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, TableCellView, TextShapeView, FillType, Gradient, GradientType, cloneGradient, BasicArray, Stop, Matrix, TableCellType, AsyncTextAttrEditor } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -31,11 +31,9 @@ const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
 const isBold = ref<any>()
 const isTilt = ref(false)
-const isUnderline = ref(false)
-const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFangSC-Regular')
+const fontName = ref('PingFang SC')
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -54,11 +52,15 @@ const mixed = ref<boolean>(false);
 const fontWeight = ref('Regular');
 const weightMixed = ref<boolean>(false);
 const disableWeight = ref(false);
+const fontNameEl = ref<HTMLDivElement>();
+const wordSpace = ref()
+const rowHeight = ref()
 // const selection = ref(props.context.selection) 
-
-function toHex(r: number, g: number, b: number) {
+const charSpacing = ref<HTMLInputElement>()
+const lineHeight = ref<HTMLInputElement>()
+function toHex(r: number, g: number, b: number, prefix = true) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return '#' + hex(r) + hex(g) + hex(b);
+    return (prefix ? '#' : '') + hex(r) + hex(g) + hex(b);
 }
 
 const onShowFont = () => {
@@ -154,54 +156,7 @@ const setFontWeight = (weight: number, italic: boolean) => {
     onBold(weight);
     onTilt(italic);
 }
-//设置下划线
-const onUnderlint = () => {
-    isUnderline.value = !isUnderline.value
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextUnderline(isUnderline.value, 0, Infinity)
-        } else {
-            editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextUnderline(isUnderline.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextUnderline(isUnderline.value, cell_selection);
-        }
-    }
-    textFormat();
-}
-// 设置删除线
-const onDeleteline = () => {
-    isDeleteline.value = !isDeleteline.value
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
-        } else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextStrikethrough(isDeleteline.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextStrikethrough(isDeleteline.value, cell_selection);
-        }
-    }
-    textFormat();
-}
+
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
@@ -295,6 +250,70 @@ const setFont = (font: string) => {
     textFormat();
 }
 
+const setRowHeight = () => {
+    if (rowHeight.value.length < 1) {
+        rowHeight.value = 24
+    }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(shape.value)
+        if (!isNaN(Number(rowHeight.value))) {
+            if (isSelectText()) {
+                editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+            } else {
+                editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+            }
+        } else {
+            textFormat();
+        }
+    } else {
+        if (!isNaN(Number(rowHeight.value))) {
+            const table = props.shape;
+            const table_Selection = props.context.tableSelection;
+            const editor = props.context.editor4Table(table)
+            if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+                editor.setLineHeight(Number(rowHeight.value));
+            } else {
+                const cell_selection = cellSelect(table_Selection)
+                editor.setLineHeight(Number(rowHeight.value), cell_selection);
+            }
+        } else {
+            textFormat();
+        }
+    }
+}
+
+const setWordSpace = () => {
+    if (wordSpace.value.length < 1) { wordSpace.value = 0 }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(shape.value)
+        if (!isNaN(Number(wordSpace.value))) {
+            if (isSelectText()) {
+                editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
+            } else {
+                editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+            }
+        } else {
+            textFormat()
+        }
+    } else {
+        if (!isNaN(Number(wordSpace.value))) {
+            const table = props.shape;
+            const table_Selection = props.context.tableSelection;
+            const editor = props.context.editor4Table(table)
+            if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+                editor.setCharSpacing(Number(wordSpace.value));
+            } else {
+                const cell_selection = cellSelect(table_Selection)
+                editor.setCharSpacing(Number(wordSpace.value), cell_selection);
+            }
+        } else {
+            textFormat();
+        }
+    }
+}
+
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
     const selection = props.context.textSelection;
@@ -348,7 +367,8 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 })
 const reflush = ref(0);
 // 获取当前文字格式
-const textFormat = () => {
+const textFormat = (_t?: any) => {
+    if (_t && (_t === 'frame' || _t === 'colWidths' || _t === 'rowHeights')) return;
     const table = props.context.tableSelection;
     shape.value = undefined;
     mixed.value = false;
@@ -367,13 +387,13 @@ const textFormat = () => {
             format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         }
         colorIsMulti.value = format.colorIsMulti;
+        rowHeight.value = format.minimumLineHeight || '';
+        wordSpace.value = format.kerning || 0;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         textColor.value = format.color;
         highlight.value = format.highlight;
         isBold.value = format.bold;
@@ -381,15 +401,15 @@ const textFormat = () => {
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
+        if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
         if (format.italicIsMulti) weightMixed.value = true;
         if (format.boldIsMulti) weightMixed.value = true;
         if (format.fontNameIsMulti) {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`
         }
+        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`;
         if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
-        if (format.underlineIsMulti) isUnderline.value = false;
-        if (format.strikethroughIsMulti) isDeleteline.value = false;
         if (format.fillTypeIsMulti) mixed.value = true;
         if (!format.fillTypeIsMulti && format.fillType === FillType.Gradient && format.gradientIsMulti) mixed.value = true;
         props.context.workspace.focusText();
@@ -450,13 +470,13 @@ const textFormat = () => {
             }
         }
         colorIsMulti.value = format.colorIsMulti;
+        wordSpace.value = format.kerning || 0;
+        rowHeight.value = format.minimumLineHeight || ''
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
-        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
         highlight.value = format.highlight;
         isBold.value = format.bold;
         isTilt.value = format.italic || false;
@@ -476,14 +496,16 @@ const textFormat = () => {
         } else if (format.fontSizeIsMulti) {
             fonstSize.value = `${t('attr.more_value')}`;
         }
+        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+        if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.bold === 'unlikeness') weightMixed.value = true;
         if (format.italic === 'unlikeness') weightMixed.value = true;
-        if (format.underline === 'unlikeness') isUnderline.value = false;
-        if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
         if (format.fillType === 'unlikeness') mixed.value = true;
@@ -497,7 +519,6 @@ const textFormat = () => {
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
@@ -506,11 +527,7 @@ function selection_wather(t: number) {
     }
 }
 function workspace_wather(t: number) {
-    if (t === WorkSpace.UNDER_LINE) {
-        onUnderlint();
-    } else if (t === WorkSpace.DELETE_LINE) {
-        onDeleteline();
-    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     } else if (t === WorkSpace.TABLE_TEXT_GRADIENT_UPDATE) {
         _textFormat();
@@ -599,7 +616,6 @@ const set_gradient_opacity = (opacity: number) => {
     g.gradientOpacity = opacity;
     editor_gradient(g);
 }
-
 
 function onColorChange(e: Event, type: string) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -1004,6 +1020,107 @@ const selectHiglighAlpha = () => {
     higlighAlpha.value && higlighAlpha.value.select();
 }
 
+const selectCharSpacing = () => {
+    charSpacing.value && charSpacing.value.select()
+}
+const selectLineHeight = () => {
+    lineHeight.value && lineHeight.value.select()
+}
+
+const pointX = ref<number>()
+const pointY = ref<number>()
+const showpoint = ref<boolean>(false)
+let type = 'row-height';
+let textAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+let tableTextAttrEditor: AsyncTextAttrEditor | undefined = undefined;
+const onMouseDown = async (e: MouseEvent, t: string) => {
+    pointX.value = e.clientX
+    pointY.value = e.clientY
+    type = t;
+    const el = e.target as HTMLElement
+    if (!document.pointerLockElement) {
+        await el.requestPointerLock({
+            unadjustedMovement: true,
+        });
+    }
+    if (shape.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        let index = textIndex;
+        let length = selectLength;
+        if (isSelectText()) {
+            index = 0; length = Number.MAX_VALUE;
+        } else {
+            index = textIndex; length = selectLength;
+        }
+        textAttrEditor = props.context.editor4TextShape(shape.value).asyncSetTextAttr([shape.value], index, length);
+    } else {
+        const table = props.shape;
+        const table_Selection = props.context.tableSelection;
+        const editor = props.context.editor4Table(table);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            tableTextAttrEditor = editor.asyncSetTableAttr();
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            tableTextAttrEditor = editor.asyncSetTableAttr(cell_selection);
+        }
+
+    }
+    e.stopPropagation()
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove, false);
+    showpoint.value = true
+}
+
+function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
+    if (pointX.value === undefined || pointY.value === undefined) return;
+    const clientHeight = document.documentElement.clientHeight
+    const clientWidth = document.documentElement.clientWidth
+    pointX.value += movementX
+    pointY.value += movementY
+    pointX.value = pointX.value < 0 ? clientWidth : (pointX.value > clientWidth ? 0 : pointX.value)
+    pointY.value = pointY.value < 0 ? clientHeight : (pointY.value > clientHeight ? 0 : pointY.value)
+}
+
+function onMouseMove(e: MouseEvent) {
+    const isRotating = e.movementX > 0;
+    updatePosition(e.movementX, e.movementY, isRotating);
+    if (type === 'row-height') {
+        if (isNaN(rowHeight.value) || rowHeight.value < 0) return;
+        rowHeight.value = Number(rowHeight.value) + e.movementX < 0 ? 0 : Number(rowHeight.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_line_height(rowHeight.value);
+        }
+        if(tableTextAttrEditor) {
+            tableTextAttrEditor.execute_line_height(rowHeight.value);
+        }
+    } else {
+        if (isNaN(wordSpace.value) || wordSpace.value < 0) return;
+        wordSpace.value = Number(wordSpace.value) + e.movementX < 0 ? 0 : Number(wordSpace.value) + e.movementX;
+        if (textAttrEditor) {
+            textAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+        if(tableTextAttrEditor) {
+            tableTextAttrEditor.execute_char_spacing(wordSpace.value);
+        }
+    }
+}
+
+function onMouseUp(e: MouseEvent) {
+    e.stopPropagation()
+    document.exitPointerLock()
+    showpoint.value = false
+    document.removeEventListener("mousemove", onMouseMove, false);
+    document.removeEventListener('mouseup', onMouseUp);
+    if (textAttrEditor) {
+        textAttrEditor.close();
+        textAttrEditor = undefined;
+    }
+    if (tableTextAttrEditor) {
+        tableTextAttrEditor.close();
+        tableTextAttrEditor = undefined;
+    }
+}
+
 const watchCells = new Map<string, TableCellView>(); // 表格单元格监听
 function watch_cells() {
     watchCells.forEach((v, k) => {
@@ -1051,15 +1168,20 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text-container">
             <div class="text-top">
-                <div class="select-font jointly-text" style="padding-right: 0;" @click="onShowFont">
+                <div class="select-font jointly-text" ref="fontNameEl" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
                         <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
                 <SelectFont :showFont="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"
-                    :fontWeight="fontWeight" @setFontWeight="setFontWeight">
+                    :fontWeight="fontWeight" @setFontWeight="setFontWeight" :fontNameEl="fontNameEl">
                 </SelectFont>
+            </div>
+            <div class="text-middle">
+                <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
+                    :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
+                </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
                         <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
@@ -1081,76 +1203,73 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="text-middle">
-                <div class="text-middle-size">
-                    <FontWeightSelected :context="context" :selected="fontWeight" :weightMixed="weightMixed"
-                        :disable="disableWeight" :reflush="reflush" :fontName="fontName" @setFontWeight="setFontWeight">
-                    </FontWeightSelected>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
-                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                            <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
-                        </Tooltip>
+                <div class="interval jointly-text" style="margin-right: 8px;">
+                    <div @mousedown="(e) => onMouseDown(e, 'row-height')">
+                        <svg-icon icon-class="word-space"></svg-icon>
                     </div>
-                    <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
-                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon
-                                :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
-                        </Tooltip>
+                    <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
+                        @focus="selectLineHeight" @input="handleSize">
+                </div>
+                <div class="interval jointly-text" style="padding-right: 0;">
+                    <div @mousedown="(e) => onMouseDown(e, 'char-space')">
+                        <svg-icon icon-class="row-height"></svg-icon>
                     </div>
+                    <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
+                        @focus="selectCharSpacing" @input="handleSize">
                 </div>
             </div>
             <div class="text-bottom">
-                <div class="text-bottom-align">
-                    <div class="level-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'left' }"
-                            @click="onSelectLevel(TextHorAlign.Left)">
-                            <Tooltip :content="t('attr.align_left')" :offset="15">
-                                <svg-icon icon-class="text-left"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'centered' }"
-                            @click="onSelectLevel(TextHorAlign.Centered)">
-                            <Tooltip :content="t('attr.align_center')" :offset="15">
-                                <svg-icon icon-class="text-center"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'right' }"
-                            @click="onSelectLevel(TextHorAlign.Right)">
-                            <Tooltip :content="t('attr.align_right')" :offset="15">
-                                <svg-icon icon-class="text-right"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'natural' }"
-                            @click="onSelectLevel(TextHorAlign.Natural)">
-                            <Tooltip :content="t('attr.align_the_sides')" :offset="15">
-                                <svg-icon icon-class="text-justify"></svg-icon>
-                            </Tooltip>
-                        </i>
-                    </div>
-                    <div class="vertical-aligning jointly-text">
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
-                            @click="onSelectVertical(TextVerAlign.Top)">
-                            <Tooltip :content="t('attr.align_top')" :offset="15">
-                                <svg-icon icon-class="align-top"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
-                            @click="onSelectVertical(TextVerAlign.Middle)">
-                            <Tooltip :content="t('attr.align_middle')" :offset="15">
-                                <svg-icon icon-class="align-middle"></svg-icon>
-                            </Tooltip>
-                        </i>
-                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
-                            @click="onSelectVertical(TextVerAlign.Bottom)">
-                            <Tooltip :content="t('attr.align_bottom')" :offset="15">
-                                <svg-icon icon-class="align-bottom"></svg-icon>
-                            </Tooltip>
-                        </i>
-                    </div>
+                <div class="level-aligning jointly-text">
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'left' }"
+                        @click="onSelectLevel(TextHorAlign.Left)">
+                        <Tooltip :content="t('attr.align_left')" :offset="15">
+                            <svg-icon icon-class="text-left"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'centered' }"
+                        @click="onSelectLevel(TextHorAlign.Centered)">
+                        <Tooltip :content="t('attr.align_center')" :offset="15">
+                            <svg-icon icon-class="text-center"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'right' }"
+                        @click="onSelectLevel(TextHorAlign.Right)">
+                        <Tooltip :content="t('attr.align_right')" :offset="15">
+                            <svg-icon icon-class="text-right"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectLevel === 'natural' }"
+                        @click="onSelectLevel(TextHorAlign.Natural)">
+                        <Tooltip :content="t('attr.align_the_sides')" :offset="15">
+                            <svg-icon icon-class="text-justify"></svg-icon>
+                        </Tooltip>
+                    </i>
                 </div>
-                <!--                <div class="perch"></div>-->
+            </div>
+            <div class="text-bottom">
+                <div class="vertical-aligning jointly-text">
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'top' }"
+                        @click="onSelectVertical(TextVerAlign.Top)">
+                        <Tooltip :content="t('attr.align_top')" :offset="15">
+                            <svg-icon icon-class="align-top"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'middle' }"
+                        @click="onSelectVertical(TextVerAlign.Middle)">
+                        <Tooltip :content="t('attr.align_middle')" :offset="15">
+                            <svg-icon icon-class="align-middle"></svg-icon>
+                        </Tooltip>
+                    </i>
+                    <i :class="{ 'jointly-text': true, selected_bg: selectVertical === 'bottom' }"
+                        @click="onSelectVertical(TextVerAlign.Bottom)">
+                        <Tooltip :content="t('attr.align_bottom')" :offset="15">
+                            <svg-icon icon-class="align-bottom"></svg-icon>
+                        </Tooltip>
+                    </i>
+                </div>
             </div>
             <!-- 字体颜色 -->
-            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
+            <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 6px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{ t('attr.font_color') }}
                 </div>
                 <div class="color">
@@ -1166,16 +1285,16 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input v-if="fillType !== FillType.Gradient" ref="sizeColor" class="sizeColor"
                         @focus="selectColorValue" :spellcheck="false"
-                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
                         @change="(e) => onColorChange(e, 'color')" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
             gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
-                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>
+                <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
             </div>
-            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti || mixed" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color')
                         }}
@@ -1186,7 +1305,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
-            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{
             t('attr.font_color')
@@ -1206,7 +1325,7 @@ onUnmounted(() => {
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
                         @change="(e) => onColorChange(e, 'highlight')" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
                         :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
@@ -1236,6 +1355,10 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+        <teleport to="body">
+            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px'}">
+            </div>
+        </teleport>
     </div>
 </template>
 
@@ -1244,7 +1367,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -1288,16 +1411,16 @@ onUnmounted(() => {
 
         .text-top {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            margin-top: 6px;
             display: flex;
 
             .select-font {
                 padding: 9px 12px;
                 box-sizing: border-box;
-                width: calc(100% - 88px);
+                width: 100%;
                 height: 32px;
                 border-radius: 6px;
-                margin-right: 8px;
 
                 span {
                     overflow: hidden;
@@ -1310,39 +1433,140 @@ onUnmounted(() => {
                 background: #EBEBEB;
             }
 
-            .text-size {
-                position: relative;
-                width: 80px;
-                height: 32px;
+        }
+
+        .text-size {
+            flex: 1;
+            position: relative;
+            height: 32px;
+            border-radius: 6px;
+            padding: 9px 0;
+            box-sizing: border-box;
+
+            .size_input {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-left: 12px;
+
+                .down {
+                    width: 26px;
+                    height: 26px;
+                    margin-right: 3px;
+
+                    &:hover {
+                        background-color: #EBEBEB;
+                    }
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+            }
+
+            .input {
+                width: 64px;
+                background-color: transparent;
+                border: none;
+            }
+
+            input[type="text"]::-webkit-inner-spin-button,
+            input[type="text"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type="text"] {
+                -moz-appearance: textfield;
+                appearance: textfield;
+                font-size: var(--font-default-fontsize);
+            }
+
+            input:focus {
+                outline: none;
+            }
+
+            .font-size-list {
+                position: absolute;
+                left: 0px;
+                width: 100%;
                 border-radius: 6px;
-                padding: 9px 0;
-                box-sizing: border-box;
+                background-color: #fff;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                border: 1px solid #EBEBEB;
+                color: #262626;
+                padding: 4px 0;
+                z-index: 100;
 
-                .size_input {
+                >div {
                     display: flex;
-                    justify-content: space-between;
                     align-items: center;
-                    padding-left: 8px;
-                    padding-right: 8px;
+                    justify-content: space-between;
+                    width: 100%;
+                    padding-left: 10px;
+                    height: 32px;
+                    box-sizing: border-box;
 
-                    .down {
-                        width: 26px;
-                        height: 26px;
-                        margin-right: 3px;
-
-                        &:hover {
-                            background-color: #EBEBEB;
-                        }
+                    .icon {
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
 
                         >svg {
                             width: 12px;
                             height: 12px;
                         }
                     }
+
+                    &:hover {
+                        background-color: #1878F5;
+                        color: #fff;
+                    }
+                }
+            }
+        }
+
+        .text-middle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+
+            .overbold {
+                width: 32px;
+                display: flex;
+                justify-content: center;
+                margin-left: 8px;
+            }
+
+            .overbold:hover {
+                background-color: #EBEBEB;
+            }
+
+            .interval {
+                flex: 1;
+                height: 32px;
+                padding-right: 6px;
+
+                >div {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+                    width: 26px;
+                    height: 32px;
+
+                    >svg {
+                        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
+                        width: 14px;
+                        height: 14px;
+                    }
                 }
 
                 .input {
-                    width: 40px;
+                    width: 78px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1362,74 +1586,6 @@ onUnmounted(() => {
                 input:focus {
                     outline: none;
                 }
-
-                .font-size-list {
-                    position: absolute;
-                    left: 0px;
-                    width: 100%;
-                    border-radius: 6px;
-                    background-color: #fff;
-                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    border: 1px solid #EBEBEB;
-                    color: #262626;
-                    padding: 4px 0;
-                    z-index: 100;
-
-                    >div {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        width: 100%;
-                        padding-left: 10px;
-                        height: 32px;
-                        box-sizing: border-box;
-
-                        .icon {
-                            width: 30px;
-                            height: 30px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-
-                            >svg {
-                                width: 12px;
-                                height: 12px;
-                            }
-                        }
-
-                        &:hover {
-                            background-color: #1878F5;
-                            color: #fff;
-                        }
-                    }
-                }
-            }
-        }
-
-        .text-middle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-
-            .text-middle-size {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
-
-
-
-            .overbold {
-                width: 32px;
-                display: flex;
-                justify-content: center;
-                margin-left: 8px;
-            }
-
-            .overbold:hover {
-                background-color: #EBEBEB;
             }
         }
 
@@ -1437,39 +1593,40 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
-
-            .text-bottom-align {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex: 1;
-            }
+            margin-bottom: 6px;
 
             .level-aligning {
-                width: 124px;
+                width: 100%;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
                 border-radius: var(--default-radius);
+
+                >i {
+                    flex: 1;
+                    height: 28px;
+                    display: flex;
+                    justify-content: center;
+                    border-radius: 4px;
+                    border: 1px solid #F4F5F5;
+                }
             }
 
             .vertical-aligning {
-                width: 94px;
+                width: 100%;
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 6px;
                 border-radius: var(--default-radius);
-            }
 
-            .font-posi {
-                width: 30px;
-                height: 28px;
-                display: flex;
-                justify-content: center;
-                border-radius: 4px;
-                border: 1px solid #F4F5F5;
+                >i {
+                    flex: 1;
+                    height: 28px;
+                    display: flex;
+                    justify-content: center;
+                    border-radius: 4px;
+                    border: 1px solid #F4F5F5;
+                }
             }
 
             .selected_bg {
@@ -1656,5 +1813,16 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>

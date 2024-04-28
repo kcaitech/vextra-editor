@@ -10,6 +10,7 @@ import { Arrange } from '@/context/arrange';
 import { reactive } from 'vue';
 import { debounce, throttle } from 'lodash';
 import { Selection } from '@/context/selection';
+import { string_by_sys } from "@/utils/common";
 interface Props {
     context: Context;
     shapes: ShapeView[];
@@ -224,42 +225,42 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container">
-        <Tooltip :content="t('home.align_left')" :offset="15">
+        <Tooltip :content="`${t('home.align_left')} ${string_by_sys('Alt A')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start">
                 <svg-icon icon-class="flex-start"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.align_h_c')" :offset="15">
+        <Tooltip :content="`${t('home.align_h_c')} ${string_by_sys('Alt H')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_h">
                 <svg-icon icon-class="justify-midle-h"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.align_right')" :offset="15">
+        <Tooltip :content="`${t('home.align_right')} ${string_by_sys('Alt D')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end">
                 <svg-icon icon-class="flex-end"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.align_top')" :offset="15">
+        <Tooltip :content="`${t('home.align_top')} ${string_by_sys('Alt W')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_start_col">
                 <svg-icon icon-class="flex-start-col"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.align_v_c')" :offset="15">
+        <Tooltip :content="`${t('home.align_v_c')} ${string_by_sys('Alt V')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="justify_midle_v">
                 <svg-icon icon-class="justify-midle-v"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.align_bottom')" :offset="15">
+        <Tooltip :content="`${t('home.align_bottom')} ${string_by_sys('Alt S')}`" :offset="15">
             <div :class="model_enable.o ? 'item' : 'disable'" @click="flex_end_col">
                 <svg-icon icon-class="flex-end-col"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.distribute_h')" :offset="15">
+        <Tooltip :content="`${t('home.distribute_h')} ${string_by_sys('Shift Alt H')}`" :offset="15">
             <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_h">
                 <svg-icon icon-class="space-around-h"></svg-icon>
             </div>
         </Tooltip>
-        <Tooltip :content="t('home.distribute_v')" :offset="15">
+        <Tooltip :content="`${t('home.distribute_v')} ${string_by_sys('Shift Alt V')}`" :offset="15">
             <div :class="model_enable.hv ? 'item' : 'disable'" @click="space_around_v">
                 <svg-icon icon-class="space-around-v"></svg-icon>
             </div>

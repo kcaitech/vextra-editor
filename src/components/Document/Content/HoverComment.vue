@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/request/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
-import { mapDateLang } from '@/utils/date_lang'
+import { formatPast, mapDateLang } from '@/utils/date_lang'
 import { Comment } from '@/context/comment';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { Perm } from '@/context/workspace';
@@ -116,16 +116,9 @@ const formatDate = computed(() => {
     return function (value: string): string {
         const lang = localStorage.getItem('locale') || 'zh'
         moment.locale(mapDateLang.get(lang) || 'zh-cn');
-        return filterDate(value);
+        return formatPast(value, t).replace(/\s*/g, '').replace(/,/g, ' ');
     }
 })
-
-const filterDate = (time: string) => {
-    const date = new Date(time);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
 
 const commentUpdate = (t: number) => {
     if (t === Comment.CURRENT_COMMENT) {
@@ -210,12 +203,12 @@ onUnmounted(() => {
     border-radius: calc(12px);
     border-bottom-left-radius: 0;
     font-size: var(--font-default-fontsize);
-    transition: 0.2s;
+    transition: 0.15s;
     transform-origin: left bottom;
     cursor: default;
     background: #FFFFFF;
     border: 1px solid #EBEBEB;
-    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.07);
+    box-shadow: 0px 3px 20px 0px rgba(0, 0, 0, 0.18);
 
     .avatar {
         width: 24px;

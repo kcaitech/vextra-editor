@@ -1249,7 +1249,6 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
 }
 
 function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
-    console.log('..', maySvgText(data));
     if (maySvgText(data)) {
         return handleSvgText(context, data, _xy);
     }

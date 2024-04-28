@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@/router';
-import { onMounted, onUnmounted, reactive, ref, shallowRef, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
@@ -23,15 +23,18 @@ import * as user_api from "@/request/users";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { WorkSpace } from "@/context/workspace";
-import { Selection } from "@/context/selection";
+import { Selection, XY } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import { PROJECT_NAME } from "@/const";
+import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
+import { genOptions } from '@/utils/common';
+
 
 const route = useRoute();
 const initialized = ref<boolean>(false);
-const {t} = useI18n();
+const { t } = useI18n();
 let context: Context | undefined;
 const permType = ref<number>();
 const docInfo: any = ref({});
@@ -44,7 +47,7 @@ const permissionChange = ref(-1);
 const showHint = ref(false);
 const canComment = ref(false);
 const curPage = shallowRef<PageView | undefined>(undefined);
-
+const showpagelist = ref<boolean>(false)
 const HEAD_HEIGHT = 44;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
 
@@ -66,6 +69,7 @@ const network_anomaly = t('message.network_anomaly');
 const network_error = t('message.network_error');
 const countdown = ref(10);
 
+
 const showNotification = (type?: number) => {
     insertNetworkInfo('networkError', false, network_error);
     showHint.value = true;
@@ -75,7 +79,7 @@ const hideNotification = (type?: number) => {
     showHint.value = false;
     countdown.value = 10;
     if (type === 0) {
-        router.push('/files')
+        router.push('/m')
     } else {
         window.location.reload();
     }
@@ -92,7 +96,7 @@ const startCountdown = (type?: number) => {
 }
 const getDocumentAuthority = async () => {
     try {
-        const data = await share_api.getDocumentAuthorityAPI({doc_id: route.query.id})
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         if (data.code === 400) {
             permissionChange.value = PermissionChange.delete
             showNotification(0)
@@ -132,7 +136,7 @@ const getDocumentAuthority = async () => {
     }
 }
 const getUserInfo = async () => {
-    const {data} = await user_api.GetInfo()
+    const { data } = await user_api.GetInfo()
     if (data && context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
@@ -140,37 +144,42 @@ const getUserInfo = async () => {
         localStorage.setItem('userId', data.id)
     }
 }
+
+let arr = ref<Array<SelectSource>>([])
+type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
         noNetwork.value = false;
-        const docInfoPromise = share_api.getDocumentInfoAPI({doc_id: route.query.id});
-        const docKeyPromise = share_api.getDocumentKeyAPI({doc_id: route.query.id});
+        const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+        const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
         if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
             if (docKeyRes.code === 403) {
                 if (docKeyRes.message === "审核不通过") {
-                    router.push("/files");
-                    ElMessage.error({duration: 3000, message: t('system.sensitive_reminder3')})
+                    router.push("/m");
+                    ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
                     return;
                 }
                 if (docKeyRes.message === "无访问权限") {
                     const query = route.query.page_id ? {
                         id: route.query.id,
                         page_id: route.query.page_id.slice(0, 8)
-                    } : {id: route.query.id};
-                    router.push({
-                        name: "apply",
+                    } : { id: route.query.id };
+                    router.replace({
+                        name: "mapply",
                         query: query,
                     });
                     return;
                 }
-                router.push("/files");
-                ElMessage.error({duration: 3000, message: docKeyRes.message})
+                router.push("/m");
+                ElMessage.error({ duration: 3000, message: docKeyRes.message })
                 return;
             } else {
-                router.push("/files");
-                ElMessage.error({duration: 3000, message: docInfoRes.message})
+                router.push("/m");
+                ElMessage.error({ duration: 3000, message: docInfoRes.message })
                 return;
             }
         }
@@ -181,9 +190,9 @@ const getDocumentInfo = async () => {
             const query = route.query.page_id ? {
                 id: route.query.id,
                 page_id: route.query.page_id.slice(0, 8)
-            } : {id: route.query.id};
+            } : { id: route.query.id };
             router.push({
-                name: "apply",
+                name: "mapply",
                 query: query,
             });
             return;
@@ -208,13 +217,16 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const document = await importRemote(storage, path, "", versionId, repo)
+        const d = await importRemote(storage, path, "", versionId, repo)
+        const document = d.document;
+        documentLoader = d.loader;
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             fileName.value = file_name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
             context = new Context(document, coopRepo);
+            matrix.value = context.workspace.matrix;
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
             getUserInfo();
@@ -224,7 +236,7 @@ const getDocumentInfo = async () => {
             const docId = route.query.id as string;
             const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
             if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
-                router.push("/files");
+                router.push("/m");
                 return;
             }
             loading.value = false;
@@ -235,6 +247,18 @@ const getDocumentInfo = async () => {
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
             switchPage(page?.id || context!.data.pagesList[0]?.id);
+
+            if (context?.data) {
+                for (let index = 0; index < context!.data.pagesList.length; index++) {
+                    let a: SelectSource = {
+                        id: index,
+                        data: { value: context!.data.pagesList[index].id, content: context!.data.pagesList[index].name }
+                    }
+                    arr.value.push(a)
+                }
+            }
+
+            updateDocumentKeyTimer = setInterval(updateDocumentKey, 1000 * 60 * 30); // 30分钟更新一次文档密钥
         }
     } catch (err) {
         loading.value = false;
@@ -243,6 +267,30 @@ const getDocumentInfo = async () => {
         throw err;
     }
 }
+
+async function updateDocumentKey() {
+    if (!documentLoader) return;
+    const docKeyRes = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    if (docKeyRes.code !== 0) return;
+    const docKeyData = docKeyRes.data;
+    const storageOptions: StorageOptions = {
+        endPoint: docKeyData.endpoint,
+        region: docKeyData.region,
+        accessKey: docKeyData.access_key,
+        secretKey: docKeyData.secret_access_key,
+        sessionToken: docKeyData.session_token,
+        bucketName: docKeyData.bucket_name,
+    }
+    let storage: IStorage;
+    if (docKeyData.provider === "oss") {
+        storage = new OssStorage(storageOptions);
+    } else {
+        storage = new S3Storage(storageOptions);
+    }
+    documentLoader.setStorage(storage);
+}
+
+let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
 
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
@@ -285,8 +333,8 @@ async function upload(projectId: string) {
     const doc_id = result!.data.doc_id;
     console.log("文档上传成功", doc_id)
     router.replace({
-        path: '/document',
-        query: {id: doc_id},
+        path: '/pageviews',
+        query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         console.log("文档操作通道开启失败")
@@ -302,8 +350,10 @@ async function upload(projectId: string) {
     })
 }
 
+
 function switchPage(id?: string) {
     if (!id) return
+    if (showpagelist.value) showpagelist.value = !showpagelist.value
     if (context) {
         const ctx: Context = context;
         const pagesMgr = ctx.data.pagesMgr;
@@ -317,7 +367,6 @@ function switchPage(id?: string) {
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.selection.selectPage(pagedom);
                 curPage.value = pagedom;
-                console.log('success:', pagedom);
             }
         })
     }
@@ -335,6 +384,7 @@ function init_doc() {
     } else if ((window as any).sketchDocument) {
         loading.value = true;
         context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+        matrix.value = context.workspace.matrix;
         null_context.value = false;
         getUserInfo();
         init_watcher();
@@ -343,7 +393,7 @@ function init_doc() {
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     } else {
-        router.push('/files');
+        router.push('/m');
     }
 }
 
@@ -357,7 +407,7 @@ function selectionWatcher(t: number) {
 
 function workspace_watcher(type?: number) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION && context) {
-        matrix.reset(context.workspace.matrix);
+        matrix.value.reset(context.workspace.matrix);
     }
 }
 
@@ -407,7 +457,7 @@ const closeLoading = () => {
     emit('closeLoading');
 }
 
-const matrix: Matrix = reactive((context?.workspace.matrix || new Matrix()) as any);
+const matrix = ref<Matrix>(new Matrix() as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 
 function initMatrix(cur: PageView) {
@@ -416,11 +466,18 @@ function initMatrix(cur: PageView) {
     }
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page2(context, document.documentElement.clientWidth, document.documentElement.clientHeight - HEAD_HEIGHT));
-        info = {m, x: cur.frame.x, y: cur.frame.y};
+        const __m = adapt_page2(
+            context,
+            document.documentElement.clientWidth,
+            document.documentElement.clientHeight - HEAD_HEIGHT
+        );
+
+        info = { m: new Matrix(__m), x: cur.frame.x, y: cur.frame.y };
+
         matrixMap.set(cur.id, info);
     }
-    matrix.reset(info.m.toArray());
+
+    matrix.value.reset(info.m.toArray());
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
@@ -428,14 +485,30 @@ const stop2 = watch(() => curPage.value, (page, old) => {
     if (page) {
         if (old) {
             let info = matrixMap.get(old.id);
-            info!.m.reset(matrix.toArray())
+            info!.m.reset(matrix.value.toArray());
         }
 
         initMatrix(page);
     }
 })
 
+watch(fileName, (NewNanme) => {
+    let miniprogram: any;
+    if (NewNanme) {
+        miniprogram = navigator.userAgent.includes('miniProgram')
+        if (miniprogram) {
+            (window as any).uni.postMessage({
+                data: {
+                    name: NewNanme,
+                }
+            });
+        }
+    }
+})
+
+
 onMounted(() => {
+
     window.addEventListener('beforeunload', onBeforeUnload);
     window.addEventListener('unload', onUnload);
     init_doc();
@@ -446,6 +519,8 @@ onMounted(() => {
     })
 })
 onUnmounted(() => {
+    console.log(route);
+
     closeNetMsg();
     onUnloadForCommunication();
     context?.selection.unwatch(selectionWatcher);
@@ -459,36 +534,209 @@ onUnmounted(() => {
     networkStatus.close();
     stop();
     stop2();
+    clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
 })
+
+const ORIGIN = { x: 0, y: HEAD_HEIGHT };
+let downTouchesLength = 1;
+
+let preGap = 0;
+let preAnchor = { x: 0, y: 0 };
+let preScale = 1;
+
+const __box = (event: TouchEvent) => {
+    const touches = event.touches;
+    const len = touches.length;
+
+    const xys: XY[] = [];
+
+    for (let i = 0; i < len; i++) {
+        const t = touches.item(i);
+
+        if (!t) {
+            continue;
+        }
+
+        xys.push({ x: t.clientX - ORIGIN.x, y: t.clientY - ORIGIN.y });
+    }
+
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+
+    xys.forEach(i => {
+        if (i.x < left) {
+            left = i.x;
+        }
+        if (i.x > right) {
+            right = i.x;
+        }
+
+        if (i.y < top) {
+            top = i.y;
+        }
+        if (i.y > bottom) {
+            bottom = i.y;
+        }
+    });
+
+    return { left, top, right, bottom };
+}
+const __gap = (event: TouchEvent) => {
+    const { left, top, right, bottom } = __box(event);
+
+    return Math.hypot(right - left, bottom - top);
+}
+
+const __anchor = (event: TouchEvent) => {
+    let a = event.touches[0]!;
+
+    return { x: a.clientX - ORIGIN.x, y: a.clientY - ORIGIN.y };
+}
+
+function start(e: TouchEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    downTouchesLength = e.touches.length;
+
+    if (downTouchesLength > 1) { // 只有多根手指才可能触发缩放
+        preGap = __gap(e);
+        preScale = matrix.value.m00;
+    }
+
+    preAnchor = __anchor(e);
+}
+
+const MAX = 25600;
+const MIN = 2;
+
+function move(e: TouchEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const anchor = __anchor(e);
+
+    const dx = anchor.x - preAnchor.x;
+    const dy = anchor.y - preAnchor.y;
+
+    matrix.value.trans(dx, dy);
+
+    preAnchor = { ...anchor };
+
+    if (downTouchesLength < 2) {
+        return;
+    }
+
+    const currentGap = __gap(e);
+
+    if (!(currentGap > 0)) {
+        return;
+    }
+
+    let scale = currentGap / preGap;
+
+    const _scale = Number((matrix.value.toArray()[0] * 100).toFixed(0)) * scale;
+    if (_scale <= MIN) {
+        scale = 1;
+    } else if (_scale >= MAX) {
+        scale = MAX / scale;
+    }
+
+    const offsetX = preAnchor.x - ORIGIN.x;
+    const offsetY = preAnchor.y - ORIGIN.y;
+
+    matrix.value.trans(-offsetX, -offsetY);
+    matrix.value.scale(scale);
+    matrix.value.trans(offsetX, offsetY);
+
+    preGap = currentGap;
+}
+
+function end(e: TouchEvent) {
+    showpagelist.value = false
+    if (e.touches.length) {
+        preAnchor = __anchor(e);
+    }
+}
+const backlink = computed(() => {
+    return window.history.state.back ? true : false
+})
+
 </script>
 
 <template>
-    <div class="status-bar">
-        <div class="back" @click="router.go(-1)">
-            <svg-icon icon-class="back-icon"></svg-icon>
+    <div class="container">
+        <div class="status-bar">
+            <div class="list" @click="showpagelist = !showpagelist">
+                <svg-icon icon-class="menu-black"></svg-icon>
+            </div>
+            <span>{{ fileName }}</span>
+            <div class="back" @click="backlink ? router.go(-1) : router.replace({ path: '/m' })">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
         </div>
-
-        <span>{{ fileName }}</span>
-    </div>
-    <div class="pageview">
-        <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)" :matrix="matrix"
-                     @closeLoading="closeLoading"/>
+        <transition name="fade">
+            <div v-if="showpagelist" class="pagelist">
+                <div class="list-item" v-for="page in arr" :key="page.id"
+                    @click.stop="switchPage(page.data.value as string)">
+                    <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                    </div>
+                    <div class="pagename">{{ page.data.content }}</div>
+                </div>
+            </div>
+        </transition>
+        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
+            <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
+                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" />
+        </div>
     </div>
 </template>
 
 
 <style scoped lang="scss">
+.fade-enter-active,
+.fade-leave-active {
+    transition: all 0.25s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    transform: translateX(-300px);
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+}
+
 .status-bar {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     height: v-bind('HEAD_HEIGHT_CSS');
     background-color: #fff;
     box-sizing: border-box;
+    box-shadow: 0 0 5px silver;
+    z-index: 999;
 
     .back {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
+        position: absolute;
+        right: 8px;
+
+        svg {
+            width: 100%;
+            height: 100%;
+
+        }
+    }
+
+    .list {
+        width: 20px;
+        height: 20px;
         position: absolute;
         left: 8px;
 
@@ -501,9 +749,56 @@ onUnmounted(() => {
 
 }
 
+.pagelist {
+    position: absolute;
+    left: 0;
+    width: 40%;
+    height: calc(100% - 44px);
+    background-color: #fff;
+    z-index: 1;
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        height: 44px;
+        font-size: 14px;
+        justify-content: center;
+
+        .choose {
+            box-sizing: border-box;
+            width: 10px;
+            height: 6px;
+            margin-right: 10px;
+            margin-left: 2px;
+            border-width: 0 0 2px 2px;
+            border-style: solid;
+            border-color: rgb(0, 0, 0, .75);
+            transform: rotate(-45deg) translateY(-30%);
+        }
+
+        .pagename {
+            flex: 0.8;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
 .pageview {
     width: 100%;
     height: calc(100% - v-bind('HEAD_HEIGHT_CSS'));
     background-color: #EFEFEF;
+
+    overflow: hidden;
+
+    position: relative;
+}
+
+.tips {
+    position: absolute;
+    width: 72px;
+    height: 30px;
+    top: 50px;
+    margin: 0 auto;
 }
 </style>

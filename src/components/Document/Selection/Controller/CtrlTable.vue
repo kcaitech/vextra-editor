@@ -15,6 +15,7 @@ import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
+import { WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{
     context: Context,
@@ -96,15 +97,33 @@ function isEditingText() {
     const ret = editingCell.value &&
         editingCell.value.cellType === TableCellType.Text &&
         editingCell.value.text
-        return ret;
+    return ret;
 }
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
     cell_menu.value = false;
+    props.context.tableSelection.setTableMenuVisible(false);
 }
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) return init();
     else if (t === Selection.CHANGE_PAGE) return init();
+    else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
 }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_EDITING_CELL) {
@@ -141,6 +160,9 @@ function init() {
 function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
     if (props.context.menu.cellMenuType) {
         cell_menu_type.value = props.context.menu.cellMenuType;
+        if(cmt === CellMenu.SelectRow) {
+            props.context.tableSelection.setTableMenuVisible(cm);
+        }
     } else {
         cell_menu_type.value = cmt;
     }
@@ -280,6 +302,14 @@ function get_y_by_row(row: number) {
 function leave() {
     props.context.cursor.reset();
 }
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
+
 function page_watcher() {
     const page = props.context.selection.selectedPage;
 
@@ -313,22 +343,23 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
     remove_page_watcher();
+    reset_hidden();
 })
 </script>
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
-        @mousemove="move" @mousedown="down" @mouseleave="leave" data-area="controller">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :class="{ hidden: selection_hidden }"
+        preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds) :width="width" :height="height"
+        :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
+        @mouseleave="leave" data-area="controller">
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell"
             :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
-            :selection="props.context.selection.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
+            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -357,6 +388,10 @@ onUnmounted(() => {
 </template>
 
 <style lang='scss' scoped>
+.hidden {
+    opacity: 0;
+}
+
 svg {
     position: absolute;
 }

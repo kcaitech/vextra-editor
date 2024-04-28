@@ -79,8 +79,6 @@ function rename() {
 
 function save_name(v: string) {
     const shape = edit_symbol.value || props.context.selection.symbolshape;
-    console.log(shape, 'shape');
-    
     if (!shape) return;
     const editor = props.context.editor4Shape(shape);
     editor.modifyVariableName(props.variable, v);

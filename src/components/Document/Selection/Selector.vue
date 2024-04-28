@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { GroupShapeView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
-import { watchEffect, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watchEffect } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget2 } from '@/utils/common';
 
@@ -89,6 +89,20 @@ function finder(childs: ShapeView[], points: [XY, XY, XY, XY, XY]) {
             continue;
         }
 
+        let p = shape.parent;
+        let f = false;
+        while (p) {
+            if (selectedShapes.get(p.id)) {
+                f = true;
+                console.log('有这回事情吗')
+                break;
+            }
+            p = p.parent;
+        }
+        if (f) {
+            continue;
+        }
+
         if (shape.type === ShapeType.Artboard && shape.childs.length) {
             const _shape = shape as GroupShapeView;
 
@@ -96,7 +110,7 @@ function finder(childs: ShapeView[], points: [XY, XY, XY, XY, XY]) {
                 private_set(_shape.id, _shape);
 
                 for (let i = 0; i < _shape.childs.length; i++) {
-                    private_delete(_shape.childs[i].id);
+                    private_delete(_shape.childs[i]);
                 }
             }
             else {
@@ -125,22 +139,28 @@ function remove(childs: Map<string, ShapeView>, points: [XY, XY, XY, XY, XY]) {
     childs.forEach((value, key) => {
         if (value.type === ShapeType.Artboard) {
             if (!isTarget2(points, value, true)) {
-                private_delete(key);
+                private_delete(value);
             }
         } else if (value.type === ShapeType.Group) {
             if (!is_target_for_group(value as GroupShapeView, points)) {
-                private_delete(key);
+                private_delete(value);
             }
         } else {
             if (!isTarget2(points, value, props.selectorFrame.includes)) {
-                private_delete(key);
+                private_delete(value);
             }
         }
     })
 }
 
-function private_delete(key: string) {
-    selectedShapes.delete(key);
+function private_delete(shape: ShapeView) {
+    selectedShapes.delete(shape.id);
+
+    if (shape.type === ShapeType.Artboard) {
+        for (let i = 0; i < shape.childs.length; i++) {
+            private_delete(shape.childs[i])
+        }
+    }
     changed = true;
 }
 

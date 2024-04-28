@@ -79,7 +79,7 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
         context.tool.setTitleVisible(false);
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
+            // pageViewEl.classList.add('transition-400');
             const m = new Matrix(workspace.matrix);
             m.trans(transX, transY);
             const root = workspace.root;
@@ -94,12 +94,14 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
                 m.trans(root.width / 2, root.height / 2);
             }
             workspace.matrix.reset(m);
-            const timer = setTimeout(() => {
-                selection.selectShape(shape);
-                context.tool.setTitleVisible(true);
-                pageViewEl.classList.remove('transition-400');
-                clearTimeout(timer);
-            }, 400);
+            selection.selectShape(shape);
+            context.tool.setTitleVisible(true);
+            // const timer = setTimeout(() => {
+            //     selection.selectShape(shape);
+            //     context.tool.setTitleVisible(true);
+            //     pageViewEl.classList.remove('transition-400');
+            //     clearTimeout(timer);
+            // }, 400);
         } else {
             workspace.matrix.trans(transX, transY);
         }

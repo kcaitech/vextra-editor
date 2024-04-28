@@ -326,11 +326,12 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
     .content {
+        padding: 6px 0;
         display: flex;
         align-items: center;
         gap: 12px;

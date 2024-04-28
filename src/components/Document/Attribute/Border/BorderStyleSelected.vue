@@ -15,7 +15,7 @@ const props = defineProps<{
 <style scoped lang="scss">
 .item-container {
     width: 100%;
-    height: 55px;
+    height: 32px;
     display: flex;
     align-items: center;
 

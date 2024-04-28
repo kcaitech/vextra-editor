@@ -8,23 +8,25 @@ const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin');
 
-var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs'
-// var run_env = 'nodejs'
-console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
-    // if (process.env.NODE_ENV === 'production') {
-    //   // 为生产环境修改配置...
-    // } else {
-    //   // 为开发环境修改配置...
-    // }
-    if (run_env === 'browser') {
-        config.entry.app = ['./src/web.main.ts']
-        config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
+    if (process.env.NODE_ENV === 'production') {
+        // 为生产环境修改配置...
+        config.optimization.minimizer.push(
+            new TerserPlugin({
+                terserOptions: {
+                    compress: true,
+                    parallel: true,
+                },
+            })
+        )
     } else {
-        config.entry.app = ['./src/electron.main.ts']
-        config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
+        // 为开发环境修改配置...
     }
+
+    config.entry.app = ['./src/web.main.ts']
+    config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
 
     const iconspath = path.resolve('src/assets/icons');
     config.module.rules.forEach(element => {
@@ -85,19 +87,14 @@ var configureWebpack = (config) => {
     )
 
     const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication.js')
-    const communicationWorkerTargetFilename = `communication.${crypto.createHash('md5')
+    const communicationWorkerTargetFilename = `static/communication.${crypto.createHash('md5')
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
-    }.js`
+        }.js`
     config.plugins = [
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] }),
-        new CopyWebpackPlugin({
-            patterns: [
-                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-            ]
-        }),
         new CopyWebpackPlugin({
             patterns: [{
                 from: communicationWorkerSourcePath,
@@ -106,6 +103,18 @@ var configureWebpack = (config) => {
         }),
         new webpack.DefinePlugin({
             COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/GetCode.html",
+                to: "static/GetCode.html",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "node_modules/pathkit-wasm/bin/pathkit.wasm",
+                to: "static/pathkit.wasm",
+            }]
         }),
         ...config.plugins,
     ]
@@ -125,7 +134,9 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    // publicPath: '/zbb',
+    publicPath: '/',
+    assetsDir: "static",
     configureWebpack,
 
     pluginOptions: {
@@ -136,6 +147,7 @@ var exports = defineConfig({
         }
     },
 
+    // https://webpack.js.org/configuration/dev-server/
     devServer: {
         port: 8080,
         https: true,
@@ -150,8 +162,13 @@ var exports = defineConfig({
                     '^/api': '/api'
                     // '^/api/v1': '/'
                 }
-            }
-        }
+            },
+        },
+        static: {
+            directory: path.join(__dirname, "public"),
+        },
+        compress: true,
+        historyApiFallback: true,
     },
 })
 module.exports = exports

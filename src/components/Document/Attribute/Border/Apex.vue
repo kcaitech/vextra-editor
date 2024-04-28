@@ -71,6 +71,8 @@ function borderApexStyleSelect(selected: SelectItem) {
 function init_v() {
     const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
     const len = shapes.length;
+    s_mixed.value = false;
+    e_mixed.value = false;
     if (len === 1) {
         const s = shapes[0];
         const sm = s.startMarkerType;

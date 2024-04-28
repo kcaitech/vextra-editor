@@ -131,7 +131,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .wrap {
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     height: auto;
     border-bottom: 1px solid #F0F0F0;

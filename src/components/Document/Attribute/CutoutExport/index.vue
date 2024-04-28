@@ -23,7 +23,6 @@ import {
     get_actions_export_format_delete,
     get_actions_export_format_file_format,
     get_actions_export_format_perfix,
-    get_actions_export_format_scale,
     get_actions_export_format_unify,
     get_export_formats
 } from '@/utils/shape_style';
@@ -151,6 +150,11 @@ function updateData() {
 const showPreinstall = () => {
     if (isPreinstall.value) return isPreinstall.value = false;
     isPreinstall.value = true;
+    props.context.esctask.save('showPreinstall', () => {
+        const achieve = isPreinstall.value;
+        isPreinstall.value = false;
+        return achieve;
+    })
 }
 
 const preinstall = (v: string) => {
@@ -433,8 +437,6 @@ const getExportUrl = async () => {
             (shape.exportOptions! as ExportOptions).exportFormats.forEach((format) => {
                 const id = shape.id + format.id;
                 const { width, height } = svg.viewBox.baseVal
-                console.log(width, height);
-                
                 svg.setAttribute("width", `${width * format.scale}`);
                 svg.setAttribute("height", `${height * format.scale}`);
                 let promise: Promise<void> = Promise.resolve();
@@ -578,7 +580,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -631,7 +633,7 @@ onUnmounted(() => {
 
     .argus {
         width: 100%;
-        margin: 3px 0;
+        padding: 6px 0;
     }
 
     .canvas-bgc {

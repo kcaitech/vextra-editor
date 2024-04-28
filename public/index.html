@@ -3,55 +3,30 @@
 
 <head>
   <meta charset="UTF-8">
-  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-  <!--meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"-->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
   <link rel="icon" href="<%= BASE_URL %>favicon.ico">
   <title>
     <%= htmlWebpackPlugin.options.title %>
   </title>
-  <!-- link href="./styles.css" rel="stylesheet">
-    <title>Hello World!</title-->
-  <!-- <script src="http://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js"></script> -->
+  <meta name="description" content="墨师设计是一款支持在线协作的产品设计工具，支持产品文稿写作、专业 UI 设计、获取设计标注，为产品研发团队提供一站式协同办公新体验。">
+  <meta name="keywords" content="墨师设计,设计,在线设计,产品设计,UI设计,sketch文件,在线sketch,免费sketch,国内figma,中国figma,figma中文,团队设计,墨师,moss,design,mossdesign,协同设计,标注切图,交互原型,团队协作">
   <script>
-    // function isMobileDevice() {
-    //   const mobileKeywords = [
-    //     "Android",
-    //     "webOS",
-    //     "iPhone",
-    //     "iPad",
-    //     "iPod",
-    //     "BlackBerry",
-    //     "Windows Phone",
-    //   ];
-
-    //   const userAgent = navigator.userAgent;
-
-    //   for (const keyword of mobileKeywords) {
-    //     if (userAgent.includes(keyword)) {
-    //       return true;
-    //     }
-    //   }
-    //   return false;
-    // }
-
-
     ! function (a, b, c) {
       function d(a) {
         var c = "default";
         a.self_redirect === !0 ? c = "true" : a.self_redirect === !1 && (c = "false");
         var d = b.createElement("iframe"),
           e = "https://open.weixin.qq.com/connect/qrconnect?appid=" + a.appid + "&scope=" + a.scope + "&redirect_uri=" + a.redirect_uri + "&state=" + a.state + "&login_type=jssdk&self_redirect=" + c + '&styletype=' + (a.styletype || '') + '&sizetype=' + (a.sizetype || '') + '&bgcolor=' + (a.bgcolor || '') + '&rst=' + (a.rst || '');
-        e += a.style ? "&style=" + a.style : "", e += a.href ? "&href=" + a.href : "", d.src = e, d.frameBorder = "0", d.allowTransparency = "true", d.scrolling = "no", d.width = "200px", d.height ="200px", d.title = "";
+        e += a.style ? "&style=" + a.style : "", e += a.href ? "&href=" + a.href : "", d.src = e, d.frameBorder = "0", d.allowTransparency = "true", d.scrolling = "no", d.width = "200px", d.height = "200px", d.title = "";
         var f = b.getElementById(a.id);
         f.innerHTML = "", f.appendChild(d)
       }
       a.WxLogin = d
     }(window, document);
-
-
   </script>
+  <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.4.0.js"></script>
+  <script type="text/javascript" src="https://js.cdn.aliyun.dcloud.net.cn/dev/uni-app/uni.webview.0.1.52.js"></script>
 </head>
 
 <body oncontextmenu="return false;">

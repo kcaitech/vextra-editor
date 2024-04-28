@@ -32,7 +32,8 @@ const getBase64ByType = new Map([
     ['rotate', rotate],
     ['extend', extend],
     ['scan', scan],
-    ['comment', comment]
+    ['comment', comment],
+    ['magnify', auto],
 ])
 
 const hot = [16, 16]; // 光标热点在svg的位置
@@ -114,6 +115,9 @@ export function styleSheetController(): StyleSheetController {
         switch (type) {
             case 'auto':
                 str += `cursor: -webkit-image-set(url(${source}) 2x) 13 13, auto !important;`;
+                break;
+            case 'scan':
+                str += 'cursor: text !important;'
                 break;
             case 'grab':
                 str += 'cursor: grab !important;';

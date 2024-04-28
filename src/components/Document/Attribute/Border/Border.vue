@@ -1,21 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import {
-    BasicArray,
-    AsyncBorderThickness,
-    GradientType,
-    GroupShapeView,
-    Shape,
-    ShapeType,
-    ShapeView,
-    Stop,
-    TableCell,
-    TableCellView,
-    TableShape,
-    TableView,
-    adapt2Shape
-} from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -25,7 +11,6 @@ import { FillType, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
 import { toHex } from "@/utils/color";
-import { WorkSpace } from '@/context/workspace';
 import {
     get_borders,
     get_actions_add_boder,
@@ -35,7 +20,9 @@ import {
     get_actions_border_delete,
     get_aciton_gradient,
     get_aciton_gradient_stop,
-    get_actions_filltype
+    get_actions_filltype,
+    get_actions_border,
+    get_borders_side
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -51,7 +38,7 @@ import {
     get_actions_border_position,
     get_actions_border_style
 } from '@/utils/shape_style'
-
+import { getSideThickness } from "./index"
 
 interface BorderItem {
     id: number
@@ -81,7 +68,7 @@ const apex_view = ref<number>(0);
 let table: TableShape;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
-
+const reflush_side = ref(0);
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -176,7 +163,8 @@ function updateData() {
 function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle);
+    const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Inner, 1, borderStyle, CornerType.Miter, side);
     const selected = props.context.selection.selectedShapes;
     const s = selected[0];
     const page = props.context.selection.selectedPage;
@@ -314,8 +302,6 @@ function onAlphaChange(b: Border, idx: number) {
                 alpha = 100
             }
             alpha = Number((Number(alpha)).toFixed(2)) / 100;
-            console.log(borders, 'borders');
-
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -710,7 +696,9 @@ async function onMouseDown(e: MouseEvent, index: number) {
     pointX.value = e.clientX
     pointY.value = e.clientY
     testEl.value = borderThickness.value![index] as HTMLElement
-    testidx.value = index
+    if (borderThickness.value && isNaN(Number(borderThickness.value[index].value))) return;
+    if (testEl.value)
+        testidx.value = index
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
         await el.requestPointerLock({
@@ -722,10 +710,10 @@ async function onMouseDown(e: MouseEvent, index: number) {
         const table = props.context.tableSelection;
         const range = get_table_range(table);
         bordercellthickness_editor = props.context.editor4Table(shapes[0] as TableView).asyncBorderThickness4Cell(range);
-        bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+        // bordercellthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     } else {
         borderthickness_editor = props.context.editor.controller().asyncBorderThickness(shapes, page!)
-        borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
+        // borderthickness_editor.execute(Number(borders[index].border.thickness), borders.length - index - 1)
     }
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
@@ -778,7 +766,8 @@ function onMouseMove(e: MouseEvent) {
     const shape = shapes[0];
     const table = props.context.tableSelection;
     if (borderThickness.value?.length) {
-        const thickness = Number(borders[index].border.thickness) + e.movementX;
+        let thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
+        if(thickness > 300) thickness = 300;
         if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
             bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
         } else {
@@ -787,8 +776,8 @@ function onMouseMove(e: MouseEvent) {
                 borderthickness_editor.execute(thickness < 0 ? 0 : thickness, id);
             }
         }
+        reflush_side.value++;
     }
-
 }
 
 function onMouseUp(e: MouseEvent) {
@@ -809,10 +798,12 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function setThickness(e: Event, id: number) {
-    const thickness = Number((e.target as HTMLInputElement).value);
+    let thickness = Number((e.target as HTMLInputElement).value);
+    if (isNaN(thickness)) return;
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
+    if(thickness > 300) thickness = 300;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -821,10 +812,34 @@ function setThickness(e: Event, id: number) {
         e.setBorderThickness4Cell(id, thickness < 0 ? 0 : thickness, range)
     } else {
         const shapes = getShapesForStyle(selecteds);
-        const actions = get_actions_border_thickness(shapes, id, thickness < 0 ? 0 : thickness);
+        const t = thickness < 0 ? 0 : thickness;
+        const actions = get_actions_border(shapes, id, t);
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderThickness(actions);
+        }
+    }
+    reflush_side.value++;
+}
+
+const thickness_value = (index: number, idx: number) => {
+    if (typeof getSideThickness(borders[idx].border.sideSetting) === 'boolean') {
+        return t('attr.mixed')
+    } else {
+        let result = [];
+        const selected = props.context.selection.selectedShapes;
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            const borders = shape.getBorders();
+            if (!borders.length) return 0;
+            result.push(getSideThickness(borders[index].sideSetting));
+        }
+        const unique = new Set(result);
+        if (unique.size === 1 && !unique.has(false)) {
+            return Number(result[0]);
+        } else {
+            return t('attr.mixed')
         }
     }
 }
@@ -846,7 +861,7 @@ function setThickness(e: Event, id: number) {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell">
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div class="top">
                     <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
@@ -854,28 +869,26 @@ function setThickness(e: Event, id: number) {
                     </div>
                     <div class="color">
                         <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                                     :locat="{ index: borders.length - idx - 1, type: 'borders' }"
-                                     :op="b.border.isEnabled"
-                                     @change="(c: Color) => getColorFromPicker(c, idx)"
-                                     @gradient-reverse="() => gradient_reverse(idx)"
-                                     :gradient="isGradient() ? b.border.gradient : undefined"
-                                     :fillType="b.border.fillType"
-                                     @gradient-rotate="() => gradient_rotate(idx)"
-                                     @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                                     @gradient-type="(type) => togger_gradient_type(idx, type)"
-                                     @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                                     @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"/>
+                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
+                            @change="(c: Color) => getColorFromPicker(c, idx)"
+                            @gradient-reverse="() => gradient_reverse(idx)"
+                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                            @gradient-rotate="() => gradient_rotate(idx)"
+                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                            @gradient-type="(type) => togger_gradient_type(idx, type)"
+                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
                         <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
-                               :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                               :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                               @focus="selectColor($event)" @input="colorInput($event)"/>
+                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                            @focus="selectColor($event)" @input="colorInput($event)" />
                         <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
-                              v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                                t(`color.${b.border.gradient.gradientType}`)
-                            }}</span>
+                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+            t(`color.${b.border.gradient.gradientType}`)
+        }}</span>
                         <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                               style="text-align: center;" :value="filterAlpha(b.border) + '%'"
-                               @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput"/>
+                            style="text-align: center;" :value="filterAlpha(b.border) + '%'"
+                            @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput" />
                     </div>
                     <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
                         :index="borders.length - idx - 1">
@@ -888,21 +901,23 @@ function setThickness(e: Event, id: number) {
                 <div class="bottom">
                     <!-- 边框位置 -->
                     <div style=" flex: calc(50% - 20px);"
-                         :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
                         <Select class="select" :context="props.context" :shapes="props.shapes"
-                                :source="positonOptionsSource"
-                                :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
-                                @select="positionSelect" :index="borders.length - idx - 1"></Select>
+                            :source="positonOptionsSource"
+                            :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
+                            @select="positionSelect" :index="borders.length - idx - 1"></Select>
                     </div>
                     <div class="thickness-container" style=" flex: calc(50% - 20px);"
-                         :class="{ actived: isActived === idx }">
-                        <svg-icon icon-class="thickness" @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
-                        <input ref="borderThickness" type="text" :value="b.border.thickness"
-                               @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
-                               @focus="selectBorderThicknes($event, idx)">
+                        :class="{ actived: isActived === idx }">
+                        <svg-icon icon-class="thickness"
+                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
+                            @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
+                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
+                            @focus="selectBorderThicknes($event, idx)">
                     </div>
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                                  :index="borders.length - idx - 1">
+                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
                     </BorderDetail>
                 </div>
 
@@ -910,11 +925,11 @@ function setThickness(e: Event, id: number) {
             <!--                </div>-->
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-              :trigger="props.trigger">
+            :trigger="props.trigger">
         </Apex>
     </div>
     <teleport to="body">
-        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px'}">
+        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
         </div>
     </teleport>
 </template>
@@ -965,7 +980,7 @@ function setThickness(e: Event, id: number) {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
@@ -980,7 +995,7 @@ function setThickness(e: Event, id: number) {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -1004,6 +1019,7 @@ function setThickness(e: Event, id: number) {
     }
 
     .borders-container {
+        padding: 6px 0;
         .border {
             width: 100%;
             display: flex;
@@ -1031,7 +1047,7 @@ function setThickness(e: Event, id: number) {
                     border-radius: 4px;
                     margin-right: 5px;
 
-                    > svg {
+                    >svg {
                         width: 60%;
                         height: 60%;
                     }
@@ -1083,7 +1099,7 @@ function setThickness(e: Event, id: number) {
                         box-sizing: border-box;
                     }
 
-                    input + input {
+                    input+input {
                         width: 45px;
                     }
 
@@ -1106,14 +1122,15 @@ function setThickness(e: Event, id: number) {
                     transition: 0.2s;
                     border-radius: var(--default-radius);
 
-                    > svg {
+                    >svg {
                         width: 16px;
                         height: 16px;
                     }
                 }
 
                 .delete:hover {
-                    background-color: #F5F5F5;;
+                    background-color: #F5F5F5;
+                    ;
                 }
 
                 //}
@@ -1127,7 +1144,7 @@ function setThickness(e: Event, id: number) {
                 gap: 6px;
                 margin-left: 19px;
 
-                > .select {
+                >.select {
                     height: 100%;
                     width: 100px;
                 }
@@ -1144,13 +1161,17 @@ function setThickness(e: Event, id: number) {
                     gap: 8px;
                     overflow: hidden;
 
-                    > svg {
+                    >svg {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         flex: 0 0 16px;
                         height: 16px;
                     }
 
-                    > input {
+                    .cursor_pointer {
+                        cursor: default !important;
+                    }
+
+                    >input {
                         outline: none;
                         border: none;
                         padding: 0;

@@ -37,6 +37,7 @@ import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/utils/svg_parser";
 import { sort_by_layer } from "@/utils/group_ungroup";
+import { Navi } from "@/context/navigate";
 
 export interface Media {
     name: string
@@ -168,7 +169,6 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
         const name = getName(type, (parent).childs, t);
 
         asyncCreator = editor.asyncCreator(mousedownOnPageXY, isLockRatio);
-
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page.data, (adapt2Shape(parent) as GroupShape), name, frame);
         } else if (action === Action.AddCutout) {
@@ -435,6 +435,10 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
+    if (!permIsEdit(context) || context.tool.isLable) {
+        return;
+    }
+
     e.preventDefault();
     const data = e?.dataTransfer?.files;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) {
@@ -514,8 +518,9 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
  * 使page全部内容都在可视区，并居中
  * @param context
  */
-export function adapt_page(context: Context, initPage = false) {
-    const childs = context.selection.selectedPage?.childs || [];
+export function adapt_page(context: Context, initPage = false, is_select = false) {
+    const selectedShapes = context.selection.selectedShapes || [];
+    const childs = is_select ? selectedShapes : context.selection.selectedPage?.childs || [];
     if (!childs.length) return new Matrix();
     const matrix = context.workspace.matrix;
     const points: ClientXY[] = [];
@@ -570,7 +575,7 @@ export function adapt_page2(context: Context, containerWidth: number, containerH
         return new Matrix();
     }
     const matrix = context.workspace.matrix;
-
+    matrix.reset();
     const points: ClientXY[] = [];
     const frame = page.frame;
     points.push(...[[frame.x, frame.y], [frame.x + frame.width, frame.y], [frame.x + frame.width, frame.y + frame.height], [frame.x, frame.y + frame.height]].map(p => matrix.computeCoord2(p[0], p[1])));
@@ -592,7 +597,8 @@ export function adapt_page2(context: Context, containerWidth: number, containerH
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
         const p_center = { x: page.frame.x + page.frame.width / 2, y: page.frame.y + page.frame.height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y }; // 这里直接算del是不对的
+
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
         const max = 1;
@@ -1114,7 +1120,7 @@ export function shape_title_width(shape: ShapeView, matrix: Matrix) {
 /**
  * @description 全选操作，ps:文本的全选操作不在这里处理
  */
-export function select_all(context: Context) {
+export function select_all(context: Context, reverse?: boolean) {
     // todo 编辑模式
     if (context.workspace.is_path_edit_mode) {
         select_all_for_path_edit(context);
@@ -1143,9 +1149,15 @@ export function select_all(context: Context) {
     });
     if (p_map.size > 1) {
         const page = selection.selectedPage;
-        if (page) selection.rangeSelectShape(page.childs);
+        if (page && !reverse) selection.rangeSelectShape(page.childs);
     } else {
-        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+        if (reverse) {
+            const s_id = selected.map(s => s.id)
+            const r_shape = Array.from(p_map.values())[0].childs.filter((item: any) => !s_id.includes(item.id))
+            selection.rangeSelectShape(r_shape);
+        } else {
+            selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+        }
     }
 }
 
@@ -1215,6 +1227,7 @@ export function component(context: Context) {
             const s = symbol && page.getShape(symbol.id);
             s && context.selection.selectShape(s);
         })
+        context.navi.notify(Navi.COMP_LIST_CHANGED);
     }
 }
 
@@ -1364,4 +1377,46 @@ export function copyAsPNG(context: Context) {
     } else {
         message('info', '复制失败');
     }
+}
+
+/**
+ * @description 以字符串的格式传入运算表达式，返回运算结果,用于替代高危函数eval,eval可以用于任意的代码注入到程序内，并拥有开发者的权限
+ * @param str
+ */
+export function computeString(str: string) {
+    try {
+        return Function('"use strict";return (' + str + ")")();
+    } catch (e) {
+        return NaN;
+    }
+}
+
+/**
+ * 
+ * @description 放大
+ * @param context 
+ * @returns 
+ */
+export const magnify = (context: Context) => {
+    const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
+    const cur_scale = context.workspace.matrix.toArray()[0];
+    const closestIndex = scale_sizes.findIndex((size) => size > cur_scale || size === 256);
+    if (closestIndex === -1) return cur_scale;
+    const scale = scale_sizes[closestIndex];
+    page_scale(context, scale)
+}
+
+/**
+ * 
+ * @description 缩小
+ * @param context 
+ * @returns 
+ */
+export const lessen = (context: Context) => {
+    const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
+    const cur_scale = context.workspace.matrix.toArray()[0];
+    const closestIndex = scale_sizes.reverse().findIndex((size) => size < cur_scale || size === 0.02);
+    if (closestIndex === -1) return cur_scale;
+    const scale = scale_sizes[closestIndex];
+    page_scale(context, scale)
 }

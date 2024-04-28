@@ -45,8 +45,6 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 const cancelFixed = (project: any, state: boolean) => {
-    console.log(favoriteList);
-
     project.is_favor = !project.is_favor;
     const i = projectList.value.findIndex(item => item.project.id === project.project.id);
     if (!state) {

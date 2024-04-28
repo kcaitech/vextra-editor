@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch, onUpdated } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import { fontWeightList, fontweightNameConvert } from "./FontNameList";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
@@ -30,6 +30,11 @@ const showWeightList = () => {
     getFontWeightList(props.fontName);
     transTop();
     isSelectList.value = true;
+    props.context.esctask.save('showWeightList', () => {
+        const achieve = isSelectList.value;
+        isSelectList.value = false;
+        return achieve;
+    })
     document.addEventListener("mousedown", onShowWeightBlur)
 }
 const onShowWeightBlur = (e: MouseEvent) => {
@@ -127,7 +132,8 @@ onUnmounted(() => {
 .font_weight {
     position: relative;
     box-sizing: border-box;
-    width: calc(100% - 88px);
+    width: 50%;
+    margin-right: 8px;
     border-radius: 6px;
 
     span {

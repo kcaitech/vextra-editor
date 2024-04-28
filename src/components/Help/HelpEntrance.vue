@@ -12,9 +12,12 @@
             </div>
         </Teleport>
         <Teleport to="body">
-            <div v-if="qrcode" class="qq-grop-code">
-                <div class="qr-code">
-                    <img class="code-image" :src="QRCode" alt="QRCode">
+            <div v-if="qrcode" class="grop-code">
+                <!-- <div v-if="!showwx" class="qq-code" @click.stop="showwx=!showwx">
+                    <img class="code-image" :src="QQCode" alt="QRCode">
+                </div> -->
+                <div class="wx-code">
+                    <img class="code-image" :src="WXCode" alt="QRCode">
                 </div>
             </div>
             <div v-if="report" class="overlay">
@@ -24,10 +27,12 @@
         </Teleport>
     </div>
 </template>
+
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import QRCode from '@/assets/qr-code.png';
+import QQCode from '@/assets/qq-code.png';
+import WXCode from '@/assets/wx-code.png';
 import ShortCut from './ShortCut.vue';
 import Report from './Report.vue'
 import { Context } from '@/context';
@@ -37,7 +42,7 @@ import { Menu } from '@/context/menu';
 const props = defineProps<{
     context?: Context
 }>();
-
+const showwx = ref<boolean>(true)
 const route = useRoute()
 const showitem = ref(false)
 const qrcode = ref(false)
@@ -57,7 +62,15 @@ const handleClickShowhelp = () => {
         shortcut.value = false
         return
     }
-    showitem.value = !showitem.value
+
+    showitem.value = !showitem.value;
+    if (showitem.value) {
+        props.context?.esctask.save('handleClickShowhelp', () => {
+            const achieve = showitem.value;
+            showitem.value = false;
+            return achieve;
+        })
+    }
 }
 
 const handleClickOutside = (e: MouseEvent) => {
@@ -74,19 +87,57 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const handleClickShow = (index: number) => {
-    showitem.value = false
+    showitem.value = false;
+
+    qrcode.value = false;
+    shortcut.value = false;
+    report.value = false;
+
     if (index === 0) {
-        qrcode.value = true
-        shortcut.value = false
-        report.value = false
+        qrcode.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-0', () => {
+                const achieve = qrcode.value;
+                qrcode.value = false;
+                return achieve;
+            })
+        }
     } else if (index === 1) {
-        qrcode.value = false
-        shortcut.value = false
-        report.value = true
+        report.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-1', () => {
+                const achieve = report.value;
+                report.value = false;
+                return achieve;
+            })
+        }
     } else if (index === 2) {
-        report.value = false
-        qrcode.value = false
-        shortcut.value = true
+        shortcut.value = true;
+
+        if (props.context) {
+            props.context.esctask.save('handleClickShow-2', () => {
+                const achieve = shortcut.value;
+                shortcut.value = false;
+                return achieve;
+            })
+        }
+    }
+}
+
+function keyup(event: KeyboardEvent) {
+    if (event.code !== 'Escape' || event.target instanceof HTMLInputElement || props.context) {
+        return;
+    }
+    if (qrcode.value) {
+        qrcode.value = false;
+    }
+    if (report.value) {
+        report.value = false;
+    }
+    if (shortcut.value) {
+        shortcut.value = false;
     }
 }
 
@@ -100,22 +151,25 @@ watch([qrcode, showitem], ([newvalue1, newvalue2]) => {
     }
 })
 const menu_watcher = (t: number) => {
-    if(t === Menu.OPEN_SHORTCUTS) {
+    if (t === Menu.OPEN_SHORTCUTS) {
         handleClickShow(2);
     }
 }
 onMounted(() => {
-    if(props.context) {
+    if (props.context) {
         props.context.menu.watch(menu_watcher);
     }
+    document.addEventListener('keyup', keyup);
 })
 onUnmounted(() => {
-    if(props.context) {
+    if (props.context) {
         props.context.menu.unwatch(menu_watcher);
     }
+    document.removeEventListener('keyup', keyup);
 })
 
 </script>
+
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
@@ -189,7 +243,7 @@ onUnmounted(() => {
 }
 
 
-.qq-grop-code {
+.grop-code {
     position: fixed;
     bottom: 66px;
     right: 20px;
@@ -199,16 +253,23 @@ onUnmounted(() => {
     box-sizing: border-box;
     z-index: 9999;
 
-    .qr-code {
+    .qq-code,
+    .wx-code {
         width: 200px;
         height: 200px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
 
         .code-image {
             width: 80%;
+        }
+
+        span {
+            color: #c8c8c8;
+            font-size: 14px;
         }
     }
 }

@@ -8,6 +8,7 @@ import { debounce } from 'lodash';
 import { Page, SymbolShape } from '@kcdesign/data';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import Tooltip from "@/components/common/Tooltip.vue";
 
 const { t } = useI18n();
 
@@ -76,12 +77,14 @@ onMounted(() => {
                     <svg-icon icon-class="search" style="width: 12px;height: 12px"></svg-icon>
                 </template>
             </el-input>
-            <div class="toggle_list">
-                <svg-icon v-if="card_type === 'alpha'" icon-class="resource-icon"
-                    @click.stop="() => set_card_type('beta')"></svg-icon>
-                <svg-icon v-if="card_type === 'beta'" icon-class="text-bulleted-list"
-                    @click.stop="() => set_card_type('alpha')"></svg-icon>
-            </div>
+            <Tooltip :content="`${t('compos.toggle_list_style')}`">
+                <div class="toggle_list">
+                    <svg-icon v-if="card_type === 'alpha'" icon-class="resource-icon"
+                              @click.stop="() => set_card_type('beta')"></svg-icon>
+                    <svg-icon v-if="card_type === 'beta'" icon-class="text-bulleted-list"
+                              @click.stop="() => set_card_type('alpha')"></svg-icon>
+                </div>
+            </Tooltip>
         </div>
         <div class="body" ref="root" v-show="!search">
             <ComponentContainer :context="context" :search="search" :is-attri="true" :card-type="card_type" :root="root">
@@ -195,6 +198,7 @@ onMounted(() => {
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
 
             &:hover {
                 background-color: #F5F5F5;

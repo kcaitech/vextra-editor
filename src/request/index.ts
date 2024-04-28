@@ -51,7 +51,11 @@ service.interceptors.response.use(function (response) {
                 ElMessage({ duration: 3000, message: '登录失效，请重新登录', type: 'info' })
                 clearTimeout(timer)
             }, 500);
-            router.push('/login')
+            if(navigator.userAgent.includes('miniProgram')){
+                router.push('/wxlogin')
+            }else{
+                router.push('/login')
+            }
             localStorage.removeItem('token')
         }
         return Promise.reject(response)

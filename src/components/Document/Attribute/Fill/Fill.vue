@@ -576,7 +576,7 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="fills-container" v-else-if="!mixed && !mixed_cell">
+        <div class="fills-container" v-else-if="!mixed && !mixed_cell && fills.length">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
@@ -627,7 +627,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px 18px 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -653,6 +653,7 @@ onUnmounted(() => {
     }
 
     .fills-container {
+        padding: 6px 0;
         .fill {
             height: 30px;
             width: 100%;

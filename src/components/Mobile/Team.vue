@@ -1,28 +1,31 @@
 <template>
    <div class="list">
-      <TeamItem :data="teamlist"></TeamItem>
+      <TeamItem :data="list"></TeamItem>
    </div>
 </template>
+
 <script setup lang="ts">
-import { GetteamList, GetprojectLists } from './team'
 import TeamItem from './TeamItem.vue';
-import { ref } from 'vue';
 import { onMounted } from 'vue';
+import { useCounterStore } from './team'
+import { storeToRefs } from 'pinia'
 
-const teamlist = ref<any[]>([])
+const store = useCounterStore()
+const { list } = storeToRefs(store)
+const { GetteamList } = store
 
-const emits = defineEmits<{
-    testevnt: [data: object]
-}>()
 
-onMounted(async () => {
-   teamlist.value = await GetteamList()
+
+onMounted(() => {
+   window.document.title = '团队'
+   GetteamList()
 })
 </script>
+
 <style lang="scss" scoped>
 .list {
-    height: 100%;
-    overflow-y: scroll;
-    padding: 0 14px;
+   height: 100%;
+   overflow-y: scroll;
+   padding: 0 14px;
 }
 </style>

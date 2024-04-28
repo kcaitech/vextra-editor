@@ -46,5 +46,6 @@ export const compos = {
     conflict_2: 'Conflict',
     confirm: 'Confirm',
     circle_warning: 'Wrong reference',
-    invalid_compos: 'Invalid Symbol'
+    invalid_compos: 'Invalid Symbol',
+    toggle_list_style: 'list style'
 }

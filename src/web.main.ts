@@ -6,9 +6,13 @@ import "@/assets/icons/loadall"
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/style/constant.scss'
-// import '@/style/app.scss'
+import '@/style/app.scss'
 import { router } from "./router"
+import { createPinia } from 'pinia'
 import '@/utils/permission'
+import 'animate.css';
+
+const pinia = createPinia()
 import * as settings from "@/settings"
 
 const app = createApp(App)
@@ -24,7 +28,7 @@ app.directive('focus', {
         })
     }
 })
-
+app.use(pinia)
 app.mount("#app")
 
 // 屏蔽掉普通log输出

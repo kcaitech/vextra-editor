@@ -82,7 +82,7 @@ const options = [
 const documentShareURL = computed(() => {
   return route.path !== '/document'
     ?
-    location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
+    location.origin + `/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
     :
     location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })
@@ -560,7 +560,7 @@ const shareSwitch = () => {
   box-sizing: border-box;
   overflow: hidden;
   z-index: 1000;
-  box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.18);
   animation: move 0.25s ease-in-out;
 
   .card-header {
