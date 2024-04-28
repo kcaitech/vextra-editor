@@ -1,4 +1,4 @@
-import {IPalPath, StrokeOpts} from "@kcdesign/data";
+import { IPalPath } from "@kcdesign/data";
 
 const PathKitInit = require('pathkit-wasm/bin/pathkit.js')
 
@@ -107,10 +107,6 @@ export function union(path0: string, path1: string): string {
     return "";
 }
 
-export function stroke(ops?: StrokeOpts): string {
-    return "";
-}
-
 export class PalPath implements IPalPath {
     private _path: PathKitPath;
     constructor(path: string) {
@@ -138,8 +134,5 @@ export class PalPath implements IPalPath {
     }
     delete(): void {
         this._path.delete();
-    }
-    stroke(ops?: StrokeOpts): string {
-        return this.toSVGString();
     }
 }

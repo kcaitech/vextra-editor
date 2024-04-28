@@ -1,5 +1,5 @@
 import { Path2D } from "skia-canvas";
-import {IPalPath, StrokeOpts} from "@kcdesign/data";
+import { IPalPath } from "@kcdesign/data";
 
 export async function init() {
 }
@@ -63,9 +63,5 @@ export class PalPath implements IPalPath {
         return this._path.d;
     }
     delete(): void {
-    }
-
-    stroke(ops?: StrokeOpts): string {
-        return this.toSVGString();
     }
 }
