@@ -48,17 +48,18 @@ let current_curve_point_index: number = -1;
 
 const preXY = ref<XY>({ x: -10, y: -10 });
 
-const lastPoint = ref<CurvePoint | undefined>();
-
 const livingPathVisible = ref<boolean>(false);
 const livingPath = ref<string>('');
 const root = { ...props.context.workspace.root };
 const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
+const preparePointVisible = ref<boolean>(false);
+
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    // 更新机制优化一下
+    // if (!props.context.workspace.shouldSelectionViewUpdate) {
+    //     return;
+    // }
 
     dots.length = 0;
     segments.length = 0;
@@ -80,9 +81,14 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     // todo
     if (index === 0) {
-
+        // 闭合路径 或 延续路径
+        // 看是不是自己这条路径，要是别的非闭合路径，那就延续，要是自己那就直接闭合
+        return;
     }
-
+    const points = (shape as PathShapeView).segments[segment];
+    if (!segment) {
+        return;
+    }
 }
 
 function checkStatus() {
@@ -94,20 +100,18 @@ function checkStatus() {
 
     const { segment, index, handler, e } = params;
 
-    path.select_point(segment, index);
-
     current_segment = segment;
     current_curve_point_index = index;
+    downXY = { x: e.x, y: e.y };
 
     pathModifier = handler;
 
-    downXY = { x: e.x, y: e.y };
-
-    lastPoint.value = (props.context.selection.selectedShapes[0] as PathShapeView)
+    const point = (props.context.selection.selectedShapes[0] as PathShapeView)
         .segments[0]
         .points[0] as CurvePoint;
 
-    props.context.path.setLastPoint({ point: lastPoint.value, index: 0, segment: 0 });
+    path.setLastPoint({ point, index: 0, segment: 0 });
+    path.select_point(segment, index);
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -215,11 +219,15 @@ function documentMove(e: MouseEvent) {
     livingPath.value = '';
     livingPathVisible.value = false;
 
+    preparePointVisible.value = false;
+
     if (e.buttons) {
         return;
     }
 
     modifyLivingPath();
+
+    preparePointVisible.value = true;
 }
 
 function modifyLivingPath() {
@@ -240,7 +248,7 @@ function modifyLivingPath() {
 
     if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
         const c1 = m.computeCoord2(previous.fromX, previous.fromY);
-        livingPath.value = `M${p1.x} ${p1.y} Q${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y}`;
+        livingPath.value = `M${p1.x} ${p1.y} C${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y} ${preXY.value.x} ${preXY.value.y}`;
     } else {
         livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
     }
@@ -259,6 +267,8 @@ function down(e: MouseEvent) {
         document.addEventListener('mouseup', point_mouseup);
 
         move = point_mousemove;
+
+        e.stopPropagation();
     } else {
         // add segment
     }
@@ -315,7 +325,15 @@ onUnmounted(() => {
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
           :class="{ point: true, selected: p.selected }"/>
-    <rect class="point" style="pointer-events: none" :x="preXY.x - 4" :y="preXY.y - 4" rx="4" ry="4"/>
+    <rect
+        v-if="preparePointVisible"
+        class="point"
+        style="pointer-events: none"
+        :x="preXY.x - 4"
+        :y="preXY.y - 4"
+        rx="4"
+        ry="4"
+    />
 </template>
 <style lang='scss' scoped>
 .point {

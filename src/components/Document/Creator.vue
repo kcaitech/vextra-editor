@@ -13,7 +13,7 @@ import {
     Artboard,
     AsyncCreator,
     ContactForm,
-    ContactLineView,
+    ContactLineView, CurvePoint,
     GroupShape,
     Matrix,
     PageView,
@@ -32,6 +32,7 @@ import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
 import { Asssit } from "@/context/assist";
 import { PathEditor } from "@/transform/pathEdit";
+import { PathShapeView } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -96,8 +97,17 @@ function down(e: MouseEvent) {
 
                 props.context.selection.selectShape(_vec);
                 props.context.workspace.setPathEditMode(true);
-                props.context.path.setContactStatus(true);
-                props.context.path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+
+                const path = props.context.path;
+
+                path.setContactStatus(true);
+                path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+
+                const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
+                if (point) {
+                    path.setLastPoint({ point, segment: 0, index: 0 });
+                    // path.select_point(0, 0);
+                }
 
                 mode.value = 'normal';
             });
