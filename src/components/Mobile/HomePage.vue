@@ -137,7 +137,7 @@ onMounted(() => {
             .choose {
                 width: 12px;
                 height: 2px;
-                background-color: #1878F5;
+                background-color: #1a1c1f;
                 border-radius: 100px;
             }
         }

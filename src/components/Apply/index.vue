@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import * as share_api from '../../request/share'
 import { useI18n } from 'vue-i18n'
 import { Warning } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 const { t } = useI18n()
 const radio = ref('1')
 const textarea = ref('')
@@ -73,26 +74,30 @@ const getDocumentAuthority = async () => {
 getDocumentAuthority()
 const getDocumentInfo = async () => {
     try {
-        const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        if (data) {
+        const { code, data } = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
+        if (code === 0) {
             docInfo.value = data.data
-            if (data.code === 400) {
-                return linkValid.value = false
-            }
             if (docInfo.value.document.doc_type === 0) {
                 linkValid.value = false
             } else {
                 linkValid.value = true
             }
-            if (execute.value) {
-                promptMessage()
-            }
-            if (docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
-                status.value = docInfo.value.apply_list[0].status
-            } else if (docInfo.value.apply_list[0].status !== 2) {
-                status.value = docInfo.value.apply_list[0].status
+        } else {
+            linkValid.value = false
+            if(code===403){
+                ElMessage.error({duration:3000,message:'审核不通过'})
+                return router.push({path:'/files'})
             }
         }
+        if (execute.value) {
+            promptMessage()
+        }
+        if (docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
+            status.value = docInfo.value.apply_list[0].status
+        } else if (docInfo.value.apply_list[0].status !== 2) {
+            status.value = docInfo.value.apply_list[0].status
+        }
+
         execute.value = false
     } catch (err) {
         console.log(err);
@@ -219,6 +224,7 @@ onUnmounted(() => {
         <span class="text">{{ messages }}</span>
     </div>
 </template>
+
 <style lang="scss" scoped>
 input[type="radio"] {
     display: none;

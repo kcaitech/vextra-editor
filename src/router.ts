@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory,createWebHistory} from "vue-router";
+import { createRouter, createWebHashHistory,createWebHistory,NavigationGuardWithThis} from "vue-router";
 import { SKIP_LOGIN } from '@/settings';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
@@ -8,6 +8,7 @@ import isMobileDevice from "./utils/mobileDeviceChecker";
 declare module 'vue-router'{
     interface RouteMeta{
         transition?:string,
+        beforeEnter?:NavigationGuardWithThis<undefined> | NavigationGuardWithThis<undefined>[];
     }
 }
 
@@ -50,6 +51,15 @@ const children = [
         name: 'recently',
         component: Recently,
         meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
+        beforeEnter:(to:any,from:any,next:any)=>{
+            if(to.name==='recently'){
+                if(isMobileDevice()){
+                    next('/m')
+                }else{
+                    next()
+                }
+            }
+        }
     },
     {
         path: 'star',
@@ -172,7 +182,7 @@ const routes = [
         name: "apphome",
         component: Apphome,
         redirect: '/files/recently',
-        children: children
+        children: children,
     },
     {  
         path: "/wxlogin",
@@ -277,7 +287,7 @@ const routes = [
 ]
 
 export const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory("zbb"),
     // history: createWebHistory("zbb"),
     // history: createWebHashHistory(),
     scrollBehavior(to, from, savedPosition) {
