@@ -144,7 +144,7 @@ var exports = defineConfig({
         })
     },
     transpileDependencies: true,
-    publicPath: '/',
+    publicPath: '/zbb',
     assetsDir: "static",
     configureWebpack,
 

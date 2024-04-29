@@ -71,17 +71,17 @@ const openfile = (id: string) => {
     sessionStorage.setItem('scrollTop', index.toString())
 }
 
-const shareTo = (id: string) => {
-    router.push({ name: 'share', query: { id: id } })
+const shareTo = async (id: string) => {
+    console.log(id);
+    
+    await router.push({ name: 'share', query: { id: id } })
     const index = filteredList.value.findIndex(item => item.document.id === id)
     sessionStorage.setItem('scrollTop', index.toString())
 }
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
-    (e: 'openfile', docID: number, index: number): void;
     (e: 'refresh', tab?: number): void;
-    (e: 'sharefile', data: object): void;
 }>()
 
 
@@ -108,6 +108,7 @@ const changeload = () => {
 
 
 onMounted(() => {
+console.log('1111');
 
 })
 

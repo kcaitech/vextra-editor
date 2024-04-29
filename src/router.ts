@@ -1,14 +1,15 @@
-import { createRouter, createWebHashHistory,createWebHistory,NavigationGuardWithThis} from "vue-router";
+import { createRouter, createWebHashHistory, createWebHistory, NavigationGuardWithThis } from "vue-router";
 import { SKIP_LOGIN } from '@/settings';
 import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
 
-declare module 'vue-router'{
-    interface RouteMeta{
-        transition?:string,
-        beforeEnter?:NavigationGuardWithThis<undefined> | NavigationGuardWithThis<undefined>[];
+declare module 'vue-router' {
+    interface RouteMeta {
+        transition?: string,
+        beforeEnter?: NavigationGuardWithThis<undefined> | NavigationGuardWithThis<undefined>[],
+        title?: string
     }
 }
 
@@ -36,12 +37,17 @@ const MobileHome = () => import('@/components/Mobile/index.vue')
 const PageViews = () => import('@/components/Mobile/PageViews.vue')
 const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
-const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
-const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
-const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
-const Wxlogin=()=>import('@/components/Mobile/WxLogin.vue')
-const Mapply=()=>import('@/components/Mobile/Mapply.vue')
-const Msearch=()=>import('@/components/Mobile/Searchview.vue')
+const Privacy = () => import('@/components/Mobile/MobliePrivacyolicy.vue')
+const Agreements = () => import('@/components/Mobile/MoblieServiceagreement.vue')
+const Sharefile = () => import('@/components/Mobile/ShareFile.vue')
+const Wxlogin = () => import('@/components/Mobile/WxLogin.vue')
+const Mapply = () => import('@/components/Mobile/Mapply.vue')
+const Msearch = () => import('@/components/Mobile/Searchview.vue')
+const HomePage = () => import('@/components/Mobile/HomePage.vue')
+const MyFile = () => import('@/components/Mobile/MyFile.vue')
+const MyTeam = () => import('@/components/Mobile/Team.vue')
+const About = () => import('@/components/Mobile/About.vue')
+const Message=()=>import('@/components/Mobile/MessageInfo.vue')
 
 let _t: any = i18n.global
 
@@ -51,11 +57,11 @@ const children = [
         name: 'recently',
         component: Recently,
         meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
-        beforeEnter:(to:any,from:any,next:any)=>{
-            if(to.name==='recently'){
-                if(isMobileDevice()){
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'recently') {
+                if (isMobileDevice()) {
                     next('/m')
-                }else{
+                } else {
                     next()
                 }
             }
@@ -113,7 +119,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: navigator.userAgent.includes('miniProgram')?'Wxlogin':'login' },
+        redirect: { name: navigator.userAgent.includes('miniProgram') ? 'Wxlogin' : 'login' },
         children: [
             {
                 path: "introduction",
@@ -125,7 +131,7 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name')},
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name') },
 
             },
             {
@@ -140,7 +146,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true},
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true },
     },
     {
         path: "/home",
@@ -184,7 +190,7 @@ const routes = [
         redirect: '/files/recently',
         children: children,
     },
-    {  
+    {
         path: "/wxlogin",
         name: "Wxlogin",
         component: Wxlogin,
@@ -196,8 +202,49 @@ const routes = [
         path: "/m",
         name: "mobilehome",
         component: MobileHome,
+        redirect: '/m/home',
+        children: [
+            {
+                path: "home",
+                name: "home",
+                component: HomePage,
+                meta: {
+                    requireAuth: true,
+                    title: '首页'
+                }
+            },
+            {
+                path: "file",
+                name: "file",
+                component: MyFile,
+                meta: {
+                    requireAuth: true,
+                    title: '我的文件'
+                }
+            },
+            {
+                path: "team",
+                name: "team",
+                component: MyTeam,
+                meta: {
+                    requireAuth: true,
+                    title: '团队'
+                }
+            },
+            {
+                path: "about",
+                name: "about",
+                component: About,
+                meta: {
+                    requireAuth: true,
+                    title: '我的'
+                }
+            },
+
+        ],
         meta: {
             requireAuth: true,
+            title: '首页'
         }
     },
     {
@@ -206,6 +253,7 @@ const routes = [
         component: ProjectView,
         meta: {
             requireAuth: true,
+            title: '团队'
         }
     },
     {
@@ -222,6 +270,7 @@ const routes = [
         component: Sharefile,
         meta: {
             requireAuth: true,
+            title: '分享'
         }
     },
     {
@@ -230,17 +279,33 @@ const routes = [
         component: Msearch,
         meta: {
             requireAuth: true,
+            title: '搜索'
+        }
+    },
+    {
+        path: "/message",
+        name: 'message',
+        component: Message,
+        meta: {
+            requireAuth: true,
+            title: '消息通知'
         }
     },
     {
         path: "/privacy",
         name: 'privacy',
         component: Privacy,
+        meta: {
+            title: '隐私政策'
+        }
     },
     {
         path: "/agreements",
         name: 'agreements',
         component: Agreements,
+        meta: {
+            title: '在线服务协议'
+        }
     },
     {
         path: "/join",

@@ -4,21 +4,21 @@
             <img src="@/assets/h-logo2.svg" alt="logo">
         </div>
         <div class="main">
-            <div v-if="activebnt !== 'About'" class="search">
+            <div v-if="activebnt !== 'about'" class="search">
                 <div class="search-input">
                     <div class="s-header">
                         <svg-icon icon-class="search-icon2"></svg-icon>
                     </div>
                     <input type="text" :placeholder="t('system.placeholder')" @focus="router.push({ path: '/search' })">
                 </div>
-                <div class="notice" @click="showInForm = !showInForm">
+                <div class="notice" @click="router.push({ path: '/message' })">
                     <svg-icon icon-class="m-notice"></svg-icon>
                     <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
                     </div>
                 </div>
             </div>
-            <div class="content" :style="{ height: activebnt !== 'About' ? 'calc(100% - 54px)' : '100%' }">
-                <component :is="tabs.get(activebnt)||Home"></component>
+            <div class="content" :style="{ height: activebnt !== 'about' ? 'calc(100% - 54px)' : '100%' }">
+                <RouterView></RouterView>
             </div>
         </div>
         <div class="footer">
@@ -30,177 +30,56 @@
                 <div class="label">{{ item.label }}</div>
             </div>
         </div>
-        <Transition @after-enter="tsDone = true" name="fade">
-            <Inform class="inform" v-if="showInForm" @close="closeInForm" :applyList="applyList"
-                :teamApplyList="totalList" :done="tsDone">
-            </Inform>
-        </Transition>
     </div>
 </template>
 
 <script setup lang="ts">
-import * as share_api from '@/request/share';
-import * as team_api from '@/request/team';
-import Home from './HomePage.vue';
-import MyFile from './MyFile.vue';
-import Team from './Team.vue';
-import About from './About.vue';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import Inform from './MessageInfo.vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { router } from '@/router';
+import { RouterView, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia';
+import { useMessage } from './message'
 
+const Data = useMessage()
+const { applynum, teamnum } = storeToRefs(Data)
 const { t } = useI18n()
-const activebnt = ref(sessionStorage.getItem('selectTab') || 'Home')
-const projectApplyList = ref<any>([]);
-const notifyPApplyList = ref<any>([]);
-const notifyTApplyList = ref<any>([]);
-const applynum = ref(0);
-const teamnum = ref(0);
-const applyList = ref<any[]>([]);
-const teamApplyList = ref<any>([]);
-const totalList = ref<any[]>([])
-const showInForm = ref(false);
-const tsDone = ref(false)
+const route = useRoute()
+const activebnt = ref(route.name?.toString() || 'home')
 
 const bntdata = [
-    { label: t('miniprogram.home'), value: 'Home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
-    { label: t('miniprogram.my_file'), value: 'MyFiles', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
-    { label:t('miniprogram.team'), value: 'Team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
-    { label: t('miniprogram.about'), value: 'About', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
+    { label: t('miniprogram.home'), value: 'home', icon: { normal: 'mhome-normal', select: 'mhome-select' } },
+    { label: t('miniprogram.my_file'), value: 'file', icon: { normal: 'mfiles-normal', select: 'mfiles-select' } },
+    { label: t('miniprogram.team'), value: 'team', icon: { normal: 'mteam-normal', select: 'mteam-select' } },
+    { label: t('miniprogram.about'), value: 'about', icon: { normal: 'mabout-normal', select: 'mabout-select' } },
 ]
-
-const tabs = new Map([
-    ['Home', Home,],
-    ['MyFiles', MyFile],
-    ['Team', Team],
-    ['About', About],
-]);
 
 const total = computed(() => {
     return applynum.value + teamnum.value ?? 99;
 })
 
-const closeInForm = () => {
-    showInForm.value = false;
-    tsDone.value = false
-}
-
 const changetab = (tab: string) => {
     activebnt.value = tab;
+    router.push({ name: tab })
     sessionStorage.setItem('selectTab', tab);
 }
 
-const getApplyList = async () => {
-    try {
-        const { data } = await share_api.getApplyListAPI();
-        if (data) {
-            applyList.value = data;
-            applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-
-
-const getProjectApplyList = async () => {
-    try {
-        const { data } = await team_api.getTeamProjectApplyAPI();
-        if (data) {
-            projectApplyList.value = data;
-            totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
-            totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                // 返回结果以实现降序排序
-                return timeB - timeA;
-            });
-            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-const getTeamApply = async () => {
-    try {
-        const { data } = await team_api.getTeamApplyAPI();
-        if (data) {
-            teamApplyList.value = data;
-            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
-            totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                // 返回结果以实现降序排序
-                return timeB - timeA;
-            });
-            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
-            getProjectApplyList();
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-const getProjectNotice = async () => {
-    try {
-        const { data } = await team_api.getProjectNoticeAPI();
-        if (data) {
-            notifyPApplyList.value = data;
-            totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
-            totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                // 返回结果以实现降序排序
-                return timeB - timeA;
-            });
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-const getTeamNotice = async () => {
-    try {
-        const { data } = await team_api.getTeamNoticeAPI();
-        if (data) {
-            notifyTApplyList.value = data;
-            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
-            totalList.value.sort((a: any, b: any) => {
-                const timeA = new Date(a.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                const timeB = new Date(b.request.created_at.replace(/-/g, '/').slice(0, 18)).getTime();
-                // 返回结果以实现降序排序
-                return timeB - timeA;
-            });
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-
-watch(totalList, () => {
-    teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
-}, { deep: true })
-
-watch(applyList, () => {
-    applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
-}, { deep: true })
-
-getApplyList();
-getTeamApply();
-getProjectNotice();
-getTeamNotice();
-getProjectApplyList();
+// getApplyList();
+// getTeamApply();
+// getProjectNotice();
+// getTeamNotice();
+// getProjectApplyList();
 let timer: any = null
 onMounted(() => {
-    timer = setInterval(() => {
-        getApplyList();
-        getTeamApply();
-        getProjectNotice();
-        getTeamNotice();
-        getProjectApplyList();
-    }, 60000)
+
+
+    // timer = setInterval(() => {
+    //     getApplyList();
+    //     getTeamApply();
+    //     getProjectNotice();
+    //     getTeamNotice();
+    //     getProjectApplyList();
+    // }, 60000)
 })
 
 onUnmounted(() => {
@@ -210,17 +89,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.fade-enter-active,
-.fade-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    transform: translateX(500px);
-    opacity: 0.5;
-}
-
 .num {
     position: relative;
     font-size: 10px;

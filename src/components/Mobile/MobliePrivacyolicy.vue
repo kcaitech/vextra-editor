@@ -1,9 +1,9 @@
 <template>
     <div class="privacypolicy">
-        <div ref="hdow" class="header">
+        <!-- <div ref="hdow" class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
-            <span>{{t('miniprogram.privacy')}}</span>
-        </div>
+            <span>{{ t('miniprogram.privacy') }}</span>
+        </div> -->
         <div ref="cdow" class="content" v-html="htmlContent(Markdowncontent)" @scroll="scrollevent"></div>
     </div>
 </template>
@@ -15,16 +15,19 @@ import { router } from '@/router'
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 
-const {t}=useI18n()
+const { t } = useI18n()
 const hdow = ref<HTMLElement>()
 const cdow = ref<HTMLElement>()
 const scrollevent = (el: Event) => {
     if ((el.target as HTMLElement).scrollTop > 0) {
-        if (hdow.value !== undefined) {
-            hdow.value.style.boxShadow = '0 0 5px silver'
+        if (hdow.value?.style) {
+            hdow.value!.style!.boxShadow = '0 0 5px silver'
         }
     } else {
-        hdow.value!.style.boxShadow = ''
+        if (hdow.value?.style) {
+            hdow.value!.style!.boxShadow = ''
+        }
+
     }
 }
 
@@ -55,7 +58,7 @@ const scrollevent = (el: Event) => {
     }
 
     .content {
-        height: calc(100% - 44px);
+        height: 100%;
         overflow-y: scroll;
         padding: 0 14px;
         color: #333333;

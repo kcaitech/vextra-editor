@@ -1,19 +1,18 @@
 <template>
     <div class="projectfile">
-        <div class="header">
+        <!-- <div class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
             <span>{{ filename }}</span>
-        </div>
+        </div> -->
         <div ref="ellist" class="list">
-            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="getdocument"
-                @sharefile="data"></FilesItem>
+            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="getdocument"></FilesItem>
         </div>
     </div>
 
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getDoucment } from './files'
 import FilesItem from './FilesItem.vue';
 import { changeStar as change } from './files'
@@ -28,12 +27,6 @@ const { t } = useI18n()
 const lists = ref<any[]>([])
 const ellist = ref<HTMLElement>()
 const errnetwork = ref<boolean>(false)
-const filename = ref<string>(route.query.name as string)
-const docid = ref<string>('')
-
-const data = (data: any) => {
-    docid.value = data.data.document.id
-}
 
 const changeStar = async (id: number, b: boolean) => {
     if (await change(id, b)) {
@@ -69,8 +62,13 @@ async function getdocument() {
     }
 }
 
+watch(() => route.query.name, (title) => {
+    document.title = title as string
+})
+
 
 onMounted(async () => {
+    document.title = route.query.name as string
     await getdocument()
 })
 
@@ -115,7 +113,7 @@ onUnmounted(() => {
     }
 
     .list {
-        height: calc(100% - 44px);
+        height: 100%;
         overflow-y: scroll;
         padding: 0 14px;
     }
