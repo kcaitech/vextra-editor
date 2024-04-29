@@ -12,7 +12,6 @@ import {
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 import { ShapeType } from "@kcdesign/data";
-import { lowerFirst } from "lodash";
 
 type Base = {
     x: number;
@@ -156,6 +155,36 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
+    addSegmentForPen() {
+        if (!this.asyncApiCaller || !this.shape) {
+            return false;
+        }
+
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+            this.isInitMatrix = true;
+        }
+
+        const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
+
+        let addRes = false;
+
+        addRes = (this.asyncApiCaller as PathModifier)
+            .addSegmentForPen(this.shape, xy);
+
+
+        if (addRes) {
+            const segment = (this.shape as PathShapeView).segments.length - 1;
+            const point = (this.shape as PathShapeView).segments[segment].points[0] as CurvePoint;
+            this.path.select_point(segment, 0);
+            this.context.path.setLastPoint({ point, index: 0, segment })
+        }
+
+        this.path.editing(true);
+
+        return addRes;
+    }
+
     createVec() {
         const env = this.context.selection.getClosestContainer(this.livingPoint);
         const frame = new ShapeFrame(0, 0, 1, 1);
@@ -174,7 +203,15 @@ export class PathEditor extends TransformHandler {
 
         const name = `${this.context.workspace.t('shape.path')} ${count}`;
 
-        return (this.asyncApiCaller as PathModifier).createVec(name, frame, env as GroupShapeView);
+        const previousPathStyle = this.path.previousPathStyle;
+
+        const _vec = (this.asyncApiCaller as PathModifier).createVec(name, frame, env as GroupShapeView, previousPathStyle);
+
+        if (_vec) {
+            this.path.setPreviousPathId(_vec.id);
+        }
+
+        return _vec;
     }
 
     execute(event: MouseEvent) {
@@ -192,7 +229,10 @@ export class PathEditor extends TransformHandler {
             this.initMatrix();
             this.isInitMatrix = true;
         }
-        (this.asyncApiCaller as PathModifier).preCurve(this.shape, index, segment);
+
+        const order = this.altStatus ? 2 : 3;
+
+        (this.asyncApiCaller as PathModifier).preCurve(order, this.shape, index, segment);
     }
 
     execute4handlePreForPen(index: number, segment = -1) {
@@ -200,7 +240,10 @@ export class PathEditor extends TransformHandler {
             this.initMatrix();
             this.isInitMatrix = true;
         }
-        (this.asyncApiCaller as PathModifier).preCurve2(this.shape, index, segment);
+
+        const lowOrder = this.altStatus;
+
+        (this.asyncApiCaller as PathModifier).preCurve2(lowOrder ? 2 : 3, this.shape, index, segment);
     }
 
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {

@@ -21,7 +21,7 @@ import {
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
@@ -96,6 +96,7 @@ function down(e: MouseEvent) {
                 }
 
                 props.context.selection.selectShape(_vec);
+
                 props.context.workspace.setPathEditMode(true);
 
                 const path = props.context.path;
@@ -106,8 +107,15 @@ function down(e: MouseEvent) {
                 const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
                 if (point) {
                     path.setLastPoint({ point, segment: 0, index: 0 });
-                    // path.select_point(0, 0);
                 }
+
+                nextTick(() => {
+                    props.context.esctask.save('contact-status', () => {
+                        const achieve = path.isContacting;
+                        path.setContactStatus(false);
+                        return achieve;
+                    });
+                })
 
                 mode.value = 'normal';
             });

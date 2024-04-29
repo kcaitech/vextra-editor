@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { adapt2Shape, CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
@@ -210,6 +210,10 @@ function path_watcher(type: number) {
 function matrix_watcher(t: number) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
+
+        if (livingPathVisible.value) {
+            modifyLivingPath();
+        }
     }
 }
 
@@ -238,7 +242,7 @@ function modifyLivingPath() {
         return;
     }
 
-    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
+    const shape = adapt2Shape(props.context.selection.selectedShapes[0] as PathShapeView); // 异步问题需要处理
 
     const m = new Matrix(shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
@@ -257,20 +261,47 @@ function modifyLivingPath() {
 }
 
 function down(e: MouseEvent) {
-    const lastPoint = props.context.path.lastPoint;
-    if (lastPoint) {
+    const keepOn = props.context.path.isContacting;
+
+    if (keepOn) {
+        const lastPoint = props.context.path.lastPoint;
+        if (lastPoint) {
+            pathModifier = new PathEditor(props.context, e);
+            pathModifier.createApiCaller();
+            pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
+            downXY = { x: e.x, y: e.y };
+            document.addEventListener('mousemove', point_mousemove);
+            document.addEventListener('mouseup', point_mouseup);
+
+            move = point_mousemove;
+
+            e.stopPropagation();
+        }
+    } else {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
-        pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
+        const addRes = pathModifier.addSegmentForPen();
+
+        if (!addRes) {
+            return;
+        }
+
+        props.context.path.setContactStatus(true);
+
+        props.context.esctask.save('contact-status', () => {
+            const achieve = props.context.path.isContacting;
+            props.context.path.setContactStatus(false);
+            return achieve;
+        });
+
         downXY = { x: e.x, y: e.y };
+
         document.addEventListener('mousemove', point_mousemove);
         document.addEventListener('mouseup', point_mouseup);
 
         move = point_mousemove;
 
         e.stopPropagation();
-    } else {
-        // add segment
     }
 }
 

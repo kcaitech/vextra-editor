@@ -3,7 +3,7 @@ import {
     CurvePoint,
     Matrix,
     PathShapeView,
-    PathType,
+    PathType, Style,
     WatchableObject
 } from "@kcdesign/data";
 import { Context } from ".";
@@ -381,4 +381,27 @@ export class Path extends WatchableObject {
     setLastPoint(point: { point: CurvePoint, segment: number, index: number }) {
         this.m_last_point = point;
     }
+
+    private previous_path_id: string = '';
+    private previous_path_style: Style | undefined;
+
+    get previousPathId() {
+        return this.previous_path_id;
+    }
+
+    setPreviousPathId(id: string) {
+        this.previous_path_id = id;
+    }
+
+    get previousPathStyle() {
+        const page = this.m_context.selection.selectedPage!;
+        const shape = page.getShape(this.previous_path_id);
+        return shape?.style;
+        // return this.previous_path_style;
+    }
+
+    setPreviousPathStyle(style: Style | undefined) {
+        this.previous_path_style = style;
+    }
+
 }
