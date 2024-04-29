@@ -13,6 +13,7 @@ import { is_component_class } from "@/utils/listview";
 import Abbr from "@/components/common/Abbr.vue";
 import { debounce } from "lodash";
 import { shutdown_menu } from "@/utils/mouse";
+import { Navi } from "@/context/navigate";
 
 export interface ItemData {
     id: string
@@ -345,6 +346,20 @@ const getHovered = () => {
         hovered.value = false;
     }
 }
+const navi_watcher = (t: number) => {
+    if (t === Navi.LIST_FOLD) {
+        if (!showTriangle.value || !props.data.expand) {
+            return;
+        }
+        emits("toggleexpand", props.data.shapeview());
+    } else if (t === Navi.RENAME) {
+        if(props.data.selected) {
+            if(props.data.context.selection.selectedShapes.length === 1) {
+                onRename();
+            }
+        }
+    }
+}
 onUpdated(() => {
     nextTick(current_node_radius);
     getHovered();
@@ -354,11 +369,13 @@ onMounted(() => {
     updater();
     props.data.context.tool.watch(tool_watcher);
     props.data.context.selection.watch(selectedWatcher);
+    props.data.context.navi.watch(navi_watcher);
 })
 onUnmounted(() => {
     props.data.context.tool.unwatch(tool_watcher);
     oldshape && oldshape.unwatch(updater);
     props.data.context.selection.unwatch(selectedWatcher);
+    props.data.context.navi.unwatch(navi_watcher);
     stop();
 })
 </script>

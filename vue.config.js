@@ -10,8 +10,18 @@ const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin');
 
+let envSuffix = process.env.ENV_SUFFIX;
+if (envSuffix) {
+    if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
+    if (envSuffix[envSuffix.length - 1] !== '/') envSuffix += '/';
+} else {
+    envSuffix = '/';
+}
+
+let IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
 var configureWebpack = (config) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (IS_PRODUCTION) {
         // 为生产环境修改配置...
         config.optimization.minimizer.push(
             new TerserPlugin({
@@ -102,7 +112,9 @@ var configureWebpack = (config) => {
             }]
         }),
         new webpack.DefinePlugin({
-            COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+            COMMUNICATION_WORKER_URL: JSON.stringify(`${envSuffix}${communicationWorkerTargetFilename}`),
+            ENV_SUFFIX: JSON.stringify(envSuffix),
+            IS_PRODUCTION: JSON.stringify(IS_PRODUCTION),
         }),
         new CopyWebpackPlugin({
             patterns: [{
@@ -127,7 +139,7 @@ var configureWebpack = (config) => {
         poll: 5000,
     }
 
-    if (process.env.NODE_ENV === "production") {
+    if (IS_PRODUCTION) {
         config.devtool = "nosources-source-map"
     }
 }
@@ -144,7 +156,7 @@ var exports = defineConfig({
         })
     },
     transpileDependencies: true,
-    publicPath: '/zbb',
+    publicPath: envSuffix,
     assetsDir: "static",
     configureWebpack,
 
@@ -177,7 +189,10 @@ var exports = defineConfig({
             directory: path.join(__dirname, "public"),
         },
         compress: true,
-        historyApiFallback: true,
+        historyApiFallback: {
+            index: `${envSuffix}index.html`,
+            verbose: true,
+        },
     },
 })
 

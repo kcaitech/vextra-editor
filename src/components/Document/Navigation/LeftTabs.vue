@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { Page, PageView } from "@kcdesign/data";
 import { Comment } from "@/context/comment";
 import { Action, Tool } from "@/context/tool";
+import { Navi } from "@/context/navigate";
 
 const { t } = useI18n();
 
@@ -92,15 +93,25 @@ const stopMouseDown = (e: MouseEvent) => {
         e.stopPropagation();
     }
 }
+
+const navi_watch = (t: number) => {
+    if(t === Navi.MODULE_CHANGE) {
+        const tab = props.context.navi.current_navi_module;
+        currentTab.value = tab;
+        updateUnderlinePosition();
+    }
+}
 onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
     props.context.comment.watch(update);
     props.context.tool.watch(tool_watch);
+    props.context.navi.watch(navi_watch);
     updateUnderlinePosition();
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
     props.context.tool.unwatch(tool_watch);
+    props.context.navi.watch(navi_watch);
 })
 </script>
 

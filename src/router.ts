@@ -1,6 +1,4 @@
 import { createRouter, createWebHashHistory, createWebHistory, NavigationGuardWithThis } from "vue-router";
-import { SKIP_LOGIN } from '@/settings';
-import { Component } from "vue-property-decorator";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
@@ -351,9 +349,16 @@ const routes = [
     },
 ]
 
+declare const ENV_SUFFIX: string;
+let devPrefix = ENV_SUFFIX;
+if (devPrefix) {
+    if (devPrefix[0] !== '/') devPrefix = '/' + devPrefix;
+    if (devPrefix[devPrefix.length - 1] !== '/') devPrefix += '/';
+}
+
 export const router = createRouter({
-    history: createWebHistory("zbb"),
-    // history: createWebHistory("zbb"),
+    // history: createWebHistory(),
+    history: createWebHistory(devPrefix),
     // history: createWebHashHistory(),
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {

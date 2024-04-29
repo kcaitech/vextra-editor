@@ -10,6 +10,7 @@ export class TableSelection extends WatchableObject {
     private m_tableColEnd: number = -1;
     private m_editing_cell: TableCellView | undefined;
     private m_context: Context;
+    private m_menu_visible: boolean = false;
     private m_onCellChange: () => void;
     constructor(cxt: Context, onCellChange: () => void) {
         super();
@@ -86,7 +87,7 @@ export class TableSelection extends WatchableObject {
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
 
             this.m_context.esctask.save('table-selection', () => {
-                const achieve =  this.m_tableRowStart > -1 || this.m_tableColStart > -1;
+                const achieve = this.m_tableRowStart > -1 || this.m_tableColStart > -1;
                 this.resetSelection();
                 return achieve;
             });
@@ -103,10 +104,17 @@ export class TableSelection extends WatchableObject {
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
 
             this.m_context.esctask.save('table-selection', () => {
-                const achieve =  this.m_tableRowStart > -1 || this.m_tableColStart > -1;
+                const achieve = this.m_tableRowStart > -1 || this.m_tableColStart > -1;
                 this.resetSelection();
                 return achieve;
             });
         }
+    }
+
+    setTableMenuVisible(visible: boolean) {
+        this.m_menu_visible = visible;
+    }
+    get tableMenuVRowVisible() {
+        return this.m_menu_visible;
     }
 }

@@ -18,6 +18,8 @@ export const shape: any = {
     curve: "Curve",
     clip: "Clip",
     default: 'Default',
+    pen: 'Pen',
+    pencil: 'Pencil'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 
