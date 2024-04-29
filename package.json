@@ -11,8 +11,10 @@
   },
   "scripts": {
     "build-worker": "cd ./src/communication && npm install && npm run build",
-    "dev:web": "npm run build-worker && vue-cli-service --public=moss.design serve",
-    "build:web": "cross-env NODE_ENV=production && npm run build-worker && vue-cli-service build",
+    "dev:web": "npm run build-worker && vue-cli-service --public=moss.design --mode=development serve",
+    "dev:web-prod": "npm run build-worker && vue-cli-service --public=moss.design --mode=production serve",
+    "build:web": "cross-env NODE_ENV=production && npm run build-worker && vue-cli-service --mode=production build",
+    "build:web-dev": "cross-env NODE_ENV=production && npm run build-worker && vue-cli-service --mode=development build",
     "lint": "vue-cli-service lint",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -20,8 +22,7 @@
     "generate-package-prod": "node generate-package.js prod && npm install"
   },
   "dependencies": {
-    "@kcdesign/data": "^1.0.6-dev.1",
-    "@vueuse/core": "^10.9.0",
+    "@kcdesign/data": "1.0.9",
     "ali-oss": "^6.18.1",
     "animate.css": "^4.1.1",
     "aws-sdk": "2.1420.0",

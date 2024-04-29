@@ -247,6 +247,7 @@ onUnmounted(() => {
     props.context.menu.setCellMenuType(undefined);
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_watcher);
+    props.context.tableSelection.setTableMenuVisible(false);
 })
 </script>
 

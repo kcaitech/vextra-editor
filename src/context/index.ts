@@ -35,6 +35,7 @@ import { Component } from "./component";
 import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
+import { Attribute } from "./atrribute";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -101,6 +102,7 @@ export class Context extends WatchableObject {
     private m_color: ColorCtx;
     private m_medias: PdMedia;
     private m_user: User;
+    private m_attr: Attribute;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -132,7 +134,7 @@ export class Context extends WatchableObject {
         this.m_color = new ColorCtx();
         this.m_medias = new PdMedia(this);
         this.m_user = new User();
-        
+        this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
     }
 
@@ -252,6 +254,10 @@ export class Context extends WatchableObject {
 
     get user() {
         return this.m_user;
+    }
+
+    get attr() {
+        return this.m_attr;
     }
 
     private createVDom(page: Page) {

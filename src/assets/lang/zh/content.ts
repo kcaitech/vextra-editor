@@ -18,6 +18,8 @@ export const shape: any = {
     curve: "曲线工具",
     clip: "裁剪工具",
     default: '默认',
+    pen: '钢笔',
+    pencil: '铅笔'
 }
 shape[ShapeType.Rectangle] = '矩形';
 

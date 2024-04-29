@@ -109,13 +109,20 @@ interface PathKitPath {
 //     .field("join",        &StrokeOpts::join)
 //     .field("cap",         &StrokeOpts::cap);
 
-
+declare const ENV_SUFFIX: string;
+let envSuffix = ENV_SUFFIX;
+if (envSuffix) {
+    if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
+    if (envSuffix[envSuffix.length - 1] !== '/') envSuffix += '/';
+} else {
+    envSuffix = '/';
+}
 
 let _ck: PathKit;
 export async function init() {
     if (_ck) return;
     _ck = await PathKitInit({
-        locateFile: (file: string) => file
+        locateFile: (file: string) => `${envSuffix}static/${file}`
     })
 }
 

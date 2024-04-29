@@ -4,8 +4,9 @@ import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -15,11 +16,7 @@ interface Props {
 const popover = ref();
 const props = defineProps<Props>();
 const selectCase = ref()
-const selectText = ref('autowidth')
 const selectId = ref()
-const wordSpace = ref()
-const rowHeight = ref()
-const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
@@ -28,6 +25,8 @@ const paraSpacing = ref<HTMLInputElement>()
 const isActived1 = ref(false)
 const isActived2 = ref(false)
 const isActived3 = ref(false)
+const isUnderline = ref(false)
+const isDeleteline = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -61,15 +60,6 @@ const onSelectId = (icon: BulletNumbersType) => {
   textFormat()
 }
 
-const onSelectText = (icon: TextBehaviour) => {
-  selectText.value = icon;
-  const editor = props.context.editor4TextShape(props.textShape)
-  if (length.value) {
-    editor.setTextBehaviour(icon)
-  } else {
-    editor.setTextBehaviourMulti(props.textShapes, icon);
-  }
-}
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon;
   const editor = props.context.editor4TextShape(props.textShape)
@@ -85,72 +75,9 @@ const onSelectCase = (icon: TextTransformType) => {
     editor.setTextTransformMulti(props.textShapes, icon);
   }
   const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.transform = icon;
-    props.context.textSelection.setTextAttr(textAttr);
+  textAttr.transform = icon;
+  props.context.textSelection.setTextAttr(textAttr);
 }
-
-const setRowHeight = () => {
-  const editor = props.context.editor4TextShape(props.textShape)
-  rowHeight.value = rowHeight.value.trim()
-  if (rowHeight.value.length < 1) {
-    rowHeight.value = 1
-  }
-  if (length.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    if (!isNaN(Number(rowHeight.value))) {
-      if (isSelectText()) {
-        editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
-      } else {
-        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      }
-    } else {
-      textFormat()
-    }
-  } else {
-    if (!isNaN(Number(rowHeight.value))) {
-      editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
-    } else {
-      textFormat()
-    }
-  }
-  const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.maximumLineHeight = Number(rowHeight.value);
-    textAttr.minimumLineHeight = Number(rowHeight.value);
-    props.context.textSelection.setTextAttr(textAttr);
-}
-
-const setWordSpace = () => {
-  const editor = props.context.editor4TextShape(props.textShape)
-  wordSpace.value = wordSpace.value.trim()
-  if (wordSpace.value.length < 1) {
-    wordSpace.value = 0
-  }
-  if (length.value) {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    // if (wordSpace.value.slice(-1) === '%') {
-    //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-    // }
-    if (!isNaN(Number(wordSpace.value))) {
-      if (isSelectText()) {
-        editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-      } else {
-        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-      }
-    } else {
-      textFormat()
-    }
-  } else {
-    if (!isNaN(Number(wordSpace.value))) {
-      editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
-    } else {
-      textFormat()
-    }
-  }
-  const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.kerning = Number(wordSpace.value);
-    props.context.textSelection.setTextAttr(textAttr);
-}
-
 const setParagraphSpace = () => {
   const editor = props.context.editor4TextShape(props.textShape)
   paragraphSpace.value = paragraphSpace.value.trim()
@@ -173,8 +100,40 @@ const setParagraphSpace = () => {
     }
   }
   const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.paraSpacing = Number(paragraphSpace.value);
-    props.context.textSelection.setTextAttr(textAttr);
+  textAttr.paraSpacing = Number(paragraphSpace.value);
+  props.context.textSelection.setTextAttr(textAttr);
+}
+
+//设置下划线
+const onUnderlint = () => {
+  isUnderline.value = !isUnderline.value;
+  const editor = props.context.editor4TextShape(props.textShape)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if (isSelectText()) {
+      editor.setTextUnderline(isUnderline.value, 0, Infinity)
+    } else {
+      editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
+      textFormat()
+    }
+  } else {
+    editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
+  }
+}
+const onDeleteline = () => {
+  isDeleteline.value = !isDeleteline.value;
+  const editor = props.context.editor4TextShape(props.textShape)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if (isSelectText()) {
+      editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+    } else {
+      editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
+      textFormat()
+    }
+  } else {
+    editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
+  }
 }
 
 //判断是否选择文本框还是光标聚焦了
@@ -188,16 +147,16 @@ const isSelectText = () => {
 }
 
 const selectCharSpacing = () => {
-    isActived1.value = true
-    charSpacing.value && charSpacing.value.select()
+  isActived1.value = true
+  charSpacing.value && charSpacing.value.select()
 }
 const selectLineHeight = () => {
-    isActived2.value = true
-    lineHeight.value && lineHeight.value.select()
+  isActived2.value = true
+  lineHeight.value && lineHeight.value.select()
 }
 const selectParaSpacing = () => {
-    isActived3.value = true
-    paraSpacing.value && paraSpacing.value.select()
+  isActived3.value = true
+  paraSpacing.value && paraSpacing.value.select()
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -216,16 +175,15 @@ const textFormat = () => {
     } else {
       format = props.textShape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
-    wordSpace.value = format.kerning || 0
-    selectText.value = format.textBehaviour || 'flexible'
-    rowHeight.value = format.minimumLineHeight || 0
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
+    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
     selectId.value = format.bulletNumbers?.type || 'none'
-    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
-    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
+    if (format.strikethroughIsMulti) isDeleteline.value = false
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
     if (format.transformIsMulti) selectCase.value = 'none'
+    if (format.underlineIsMulti) isUnderline.value = false
   } else {
     let formats: any[] = [];
     let format: any = {};
@@ -248,7 +206,6 @@ const textFormat = () => {
             break;
           }
         } else if (formats[i][key] !== referenceValue) {
-          foundEqual = false;
           break;
         }
       }
@@ -258,21 +215,17 @@ const textFormat = () => {
         format[key] = `unlikeness`;
       }
     }
-    wordSpace.value = format.kerning || 0;
-    rowHeight.value = format.minimumLineHeight || 0;
     paragraphSpace.value = format.paraSpacing || 0;
     selectCase.value = format.transform;
-    selectText.value = format.textBehaviour;
+    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
     selectId.value = format.bulletNumbers?.type || 'none';
-    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
-    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-    if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.underline === 'unlikeness') isUnderline.value = false;
+    if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
     if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti === 'unlikeness') selectCase.value = 'none';
     if (format.transform === 'unlikeness') selectCase.value = 'none';
-    if (format.textBehaviour === 'unlikeness') selectText.value = '';
   }
 }
 function selection_wather(t: any) {
@@ -284,10 +237,20 @@ function selection_wather(t: any) {
   }
 }
 
+function workspace_wather(t: number) {
+  if (t === WorkSpace.UNDER_LINE) {
+    onUnderlint()
+  } else if (t === WorkSpace.DELETE_LINE) {
+    onDeleteline()
+  } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    textFormat()
+  }
+}
+
 function blur2() {
-    isActived1.value = false
-    isActived2.value = false
-    isActived3.value = false
+  isActived1.value = false
+  isActived2.value = false
+  isActived3.value = false
 }
 
 watchEffect(() => {
@@ -295,10 +258,12 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  props.context.workspace.watch(workspace_wather);
   props.textShape.watch(textFormat)
   props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
+  props.context.workspace.unwatch(workspace_wather);
   props.context.selection.unwatch(selection_wather);
   props.textShape.unwatch(textFormat)
   shapeWatch()
@@ -319,22 +284,12 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <div>
-            <span>{{ t('attr.word_space') }}</span>
-            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
-                @change="setWordSpace" style="width: 100%;height: 100%"></div>
-          </div>
-          <div>
-            <span>{{ t('attr.row_height') }}</span>
-            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
-          </div>
-          <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
-                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
+            <div :class="{ actived: isActived3 }"
+              style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
+              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%">
+            </div>
           </div>
           <div>
             <span>{{ t('attr.id_style') }}</span>
@@ -355,6 +310,36 @@ onUnmounted(() => {
                 @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                 <Tooltip :content="t('attr.ordered_list')" :offset="15">
                   <svg-icon icon-class="text-number-list"></svg-icon>
+                </Tooltip>
+              </i>
+            </div>
+          </div>
+          <div>
+            <span>{{ t('attr.underline') }}</span>
+            <div class="underline jointly-text">
+              <i :class="{ 'jointly-text': true, selected_bg: !isUnderline }" @click="onUnderlint">
+                <Tooltip :content="t('attr.none_list')" :offset="15">
+                  <svg-icon icon-class="text-no-list"></svg-icon>
+                </Tooltip>
+              </i>
+              <i :class="{ 'jointly-text': true, selected_bg: isUnderline }" @click="onUnderlint">
+                <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
+                  <svg-icon icon-class="text-underline"></svg-icon>
+                </Tooltip>
+              </i>
+            </div>
+          </div>
+          <div>
+            <span>{{ t('attr.deleteline') }}</span>
+            <div class="underline jointly-text">
+              <i :class="{ 'jointly-text': true, selected_bg: !isDeleteline }" @click="onDeleteline">
+                <Tooltip :content="t('attr.none_list')" :offset="15">
+                  <svg-icon icon-class="text-no-list"></svg-icon>
+                </Tooltip>
+              </i>
+              <i :class="{ 'jointly-text': true, selected_bg: isDeleteline }" @click="onDeleteline">
+                <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
+                  <svg-icon icon-class="text-deleteline"></svg-icon>
                 </Tooltip>
               </i>
             </div>
@@ -388,29 +373,6 @@ onUnmounted(() => {
               </i>
             </div>
           </div>
-          <div>
-            <span>{{ t('attr.text_style') }}</span>
-            <div class="vertical-aligning jointly-text">
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
-                @click="onSelectText(TextBehaviour.Flexible)">
-                <Tooltip :content="t('attr.autowidth')" :offset="15">
-                  <svg-icon icon-class="text-autowidth"></svg-icon>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
-                @click="onSelectText(TextBehaviour.Fixed)">
-                <Tooltip :content="t('attr.autoheight')" :offset="15">
-                  <svg-icon icon-class="text-autoheight"></svg-icon>
-                </Tooltip>
-              </i>
-              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
-                @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
-                <Tooltip :content="t('attr.fixedsize')" :offset="15">
-                  <svg-icon icon-class="text-fixedsize"></svg-icon>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
         </div>
       </template>
     </Popover>
@@ -440,9 +402,9 @@ onUnmounted(() => {
       }
     }
 
-      .trigger:hover {
-          background-color: #F5F5F5;
-      }
+    .trigger:hover {
+      background-color: #F5F5F5;
+    }
 
     .options-container {
       display: flex;
@@ -485,6 +447,22 @@ onUnmounted(() => {
           box-sizing: border-box;
         }
 
+        .underline {
+          display: flex;
+          width: 98px;
+          padding: 2px;
+          box-sizing: border-box;
+
+          >i {
+            flex: 1;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            border-radius: 4px;
+            border: 1px solid #F4F5F5;
+          }
+        }
+
         .level-aligning {
           padding: 2px;
           box-sizing: border-box;
@@ -515,7 +493,7 @@ onUnmounted(() => {
           -moz-appearance: textfield;
           appearance: textfield;
           font-size: 13px;
-          width: 124px;
+          width: 98px;
           border: none;
           background-color: var(--input-background);
           height: 32px;
@@ -531,19 +509,19 @@ onUnmounted(() => {
           outline: none;
         }
 
-          input::selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          input::-moz-selection {
-              color: #FFFFFF;
-              background: #1878F5;
-          }
+        input::-moz-selection {
+          color: #FFFFFF;
+          background: #1878F5;
+        }
 
-          .actived {
-              border: 1px solid #1878F5;
-          }
+        .actived {
+          border: 1px solid #1878F5;
+        }
       }
     }
   }
