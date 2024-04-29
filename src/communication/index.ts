@@ -13,11 +13,12 @@ import * as communication from "./communication"
 
 declare const COMMUNICATION_WORKER_URL: string
 
+let enabledWorker = typeof SharedWorker !== "undefined"
+
 export class Communication {
     private info: CommunicationInfo
     private worker: SharedWorker | undefined = undefined
     private channel: MessageChannel | undefined = undefined
-    private enabledWorker: boolean = typeof SharedWorker !== "undefined"
     protected onMessage: (data: any) => void = () => {}
     protected onClose: () => void = () => {}
     private isClosed: boolean = false
@@ -41,15 +42,15 @@ export class Communication {
     }
 
     public enableWorker() {
-        this.enabledWorker = true
+        enabledWorker = true
     }
 
     public disableWorker() {
-        this.enabledWorker = false
+        enabledWorker = false
     }
 
     private get port() {
-        return this.enabledWorker ? this.worker?.port : this.channel?.port1
+        return enabledWorker ? this.worker?.port : this.channel?.port1
     }
 
     public async start(token: string, retryCount: number = 0): Promise<boolean> {
@@ -57,8 +58,8 @@ export class Communication {
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
 
-        console.log("this.enabledWorker", this.enabledWorker)
-        if (this.enabledWorker) {
+        console.log("this.enabledWorker", enabledWorker)
+        if (enabledWorker) {
             this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
             this.channel = undefined
         } else {
