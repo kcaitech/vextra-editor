@@ -23,6 +23,7 @@ import { format_value as format } from '@/utils/common';
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import { computeString } from "@/utils/content";
+import { Attribute } from '@/context/atrribute';
 
 interface Props {
     context: Context
@@ -191,6 +192,7 @@ function changeW(value: string) {
     const editor = props.context.editor4Page(page);
 
     editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
 }
 
 function changeH(value: string) {
@@ -210,6 +212,7 @@ function changeH(value: string) {
     const editor = props.context.editor4Page(page);
 
     editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
 }
 
 function lockToggle() {
@@ -467,7 +470,10 @@ function draggingRotate(e: MouseEvent) {
 function dragend() {
     modifyTelUp();
 }
-
+function dragend2() {
+    modifyTelUp();
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
+}
 function formatRotate(rotate: number | string) {
     return rotate + `${rotate === mixed ? '' : '°'}`;
 }
@@ -518,6 +524,14 @@ function selection_change() {
     calc_attri();
 }
 
+const attr_watcher = (t: number) => {
+    if (t === Attribute.HOR_HILP) {
+        fliph();
+    } else if (t === Attribute.VER_HILP) {
+        flipv();
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
@@ -525,8 +539,12 @@ const stop3 = watch(() => props.trigger, v => {
     }
 });
 
-onMounted(selection_change);
+onMounted(() => {
+    selection_change();
+    props.context.attr.watch(attr_watcher);
+});
 onUnmounted(() => {
+    props.context.attr.unwatch(attr_watcher);
     stop1();
     stop3();
 })
@@ -535,25 +553,10 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr" :reflush="reflush">
-            <MdNumberInput icon="X"
-                           draggable
-                           :value="format(x)"
-                           :disabled="model_disable_state.x"
-                           @change="changeX"
-                           @dragstart="dragstart"
-                           @dragging="draggingX"
-                           @dragend="dragend"
-                           @wheel="wheelX"
-            ></MdNumberInput>
-            <MdNumberInput icon="Y"
-                           draggable
-                           :value="format(y)"
-                           @change="changeY"
-                           :disabled="model_disable_state.y"
-                           @dragstart="dragstart"
-                           @dragging="draggingY"
-                           @dragend="dragend"
-            ></MdNumberInput>
+            <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
+            <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
             <div class="adapt" v-if="s_adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <svg-icon icon-class="adapt"></svg-icon>
@@ -562,24 +565,11 @@ onUnmounted(() => {
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
-            <MdNumberInput icon="W"
-                           draggable
-                           :value="format(w)"
-                           @change="changeW"
-                           :disabled="model_disable_state.width"
-                           @dragstart="dragstart"
-                           @dragging="draggingW"
-                           @dragend="dragend"
-            ></MdNumberInput>
-            <MdNumberInput icon="H"
-                           draggable
-                           :value="format(h)"
-                           @change="changeH"
-                           :disabled="model_disable_state.height"
-                           @dragstart="dragstart"
-                           @dragging="draggingH"
-                           @dragend="dragend"
-            ></MdNumberInput>
+            <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+            <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
+            </MdNumberInput>
             <Tooltip :content="t('attr.constrainProportions')">
                 <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                     <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
@@ -590,26 +580,18 @@ onUnmounted(() => {
             </Tooltip>
         </div>
         <div class="tr" :reflush="reflush">
-            <MdNumberInput icon="angle"
-                           draggable
-                           :value="formatRotate(rotate)"
-                           @change="changeR"
-                           :disabled="model_disable_state.rotation"
-                           @dragstart="dragstart"
-                           @dragging="draggingRotate"
-                           @dragend="dragend"
-            ></MdNumberInput>
+            <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
+                :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
+                @dragend="dragend"></MdNumberInput>
             <div class="flip-warpper">
                 <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-                    <div
-                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <svg-icon icon-class="fliph"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                    <div
-                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <svg-icon icon-class="flipv"></svg-icon>
                     </div>
@@ -620,7 +602,7 @@ onUnmounted(() => {
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
     </div>
     <teleport to="body">
-        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
         </div>
     </teleport>
 </template>
@@ -651,7 +633,7 @@ onUnmounted(() => {
         margin-bottom: 8px;
 
 
-        > .icontext {
+        >.icontext {
             background-color: var(--input-background);
         }
 
@@ -680,13 +662,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }
@@ -712,7 +694,7 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 width: 14px;
                 height: 14px;
@@ -729,7 +711,7 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -754,7 +736,7 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 14px;
                     height: 14px;
@@ -775,7 +757,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -800,14 +782,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }

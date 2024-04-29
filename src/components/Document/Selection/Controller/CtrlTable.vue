@@ -97,11 +97,12 @@ function isEditingText() {
     const ret = editingCell.value &&
         editingCell.value.cellType === TableCellType.Text &&
         editingCell.value.text
-        return ret;
+    return ret;
 }
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
     cell_menu.value = false;
+    props.context.tableSelection.setTableMenuVisible(false);
 }
 function modify_selection_hidden() {
     if (hidden_holder) {
@@ -159,6 +160,9 @@ function init() {
 function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
     if (props.context.menu.cellMenuType) {
         cell_menu_type.value = props.context.menu.cellMenuType;
+        if(cmt === CellMenu.SelectRow) {
+            props.context.tableSelection.setTableMenuVisible(cm);
+        }
     } else {
         cell_menu_type.value = cmt;
     }
@@ -345,17 +349,17 @@ onUnmounted(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :class="{ hidden: selection_hidden }" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
-        @mousemove="move" @mousedown="down" @mouseleave="leave" data-area="controller">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :class="{ hidden: selection_hidden }"
+        preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds) :width="width" :height="height"
+        :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
+        @mouseleave="leave" data-area="controller">
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell"
             :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
-            :selection="props.context.selection.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
+            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">

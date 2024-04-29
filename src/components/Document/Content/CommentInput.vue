@@ -361,6 +361,7 @@ onUnmounted(() => {
 
         .el-input--small {
             display: flex;
+            width: calc(100% - 24px);
             font-size: 13px;
             line-height: 22px;
             align-items: center;
@@ -374,7 +375,7 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-left: 2px;
+            margin-bottom: 3px;
             width: 24px;
             height: 24px;
             background-color: #1878F5;
