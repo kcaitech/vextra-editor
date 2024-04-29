@@ -1,8 +1,7 @@
-import { createRouter, createWebHashHistory,createWebHistory} from "vue-router";
-import { Component } from "vue-property-decorator";
+import { createRouter, createWebHistory} from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
-import isMobileDevice from "./utils/mobileDeviceChecker";
+import kcdesk from "./kcdesk";
 
 declare module 'vue-router'{
     interface RouteMeta{
@@ -145,6 +144,10 @@ const routes = [
             requireAuth: true
         },
         beforeEnter: (to: any, from: any, next: any) => {
+            if (kcdesk) {
+                next(false);
+                return;
+            }
             if (to.name === 'document' && to.query.id) {
                 const id = to.query.id
                 const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';

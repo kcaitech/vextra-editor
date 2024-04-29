@@ -113,7 +113,6 @@ declare module '@vue/runtime-core' {
     CutoutExport: typeof import('./src/components/Document/Attribute/CutoutExport/index.vue')['default']
     Describes: typeof import('./src/components/Login/Describes.vue')['default']
     Design: typeof import('./src/components/Document/Attribute/Design.vue')['default']
-    DeskTopBar: typeof import('./src/components/DeskTopBar/index.vue')['default']
     Document: typeof import('./src/components/Document/index.vue')['default']
     DocumentMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/DocumentMenu.vue')['default']
     DropFile: typeof import('./src/components/Home/DropFile.vue')['default']
@@ -178,7 +177,6 @@ declare module '@vue/runtime-core' {
     Loading: typeof import('./src/components/common/Loading.vue')['default']
     Locate: typeof import('./src/components/Document/Attribute/BaseAttr/Locate.vue')['default']
     Login: typeof import('./src/components/Login/Login.vue')['default']
-    MacOps: typeof import('./src/components/DeskTopBar/MacOps.vue')['default']
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
     Mapply: typeof import('./src/components/Mobile/Mapply.vue')['default']
     MdNumberInput: typeof import('./src/components/common/MdNumberInput.vue')['default']
@@ -339,7 +337,6 @@ declare module '@vue/runtime-core' {
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
     VersionDesc: typeof import('./src/components/common/VersionDesc.vue')['default']
-    WinOps: typeof import('./src/components/DeskTopBar/WinOps.vue')['default']
     WxLogin: typeof import('./src/components/Mobile/WxLogin.vue')['default']
   }
 }
