@@ -115,6 +115,11 @@ function update() {
             return;
         }
         __points = (path_shape as PathShapeView)?.segments[__segment]?.points as CurvePoint[];
+
+        if (!__points) {
+            return;
+        }
+
         selected = [...props.context.path.selectedPoints.values()][0] || [];
 
         segment = __segment;

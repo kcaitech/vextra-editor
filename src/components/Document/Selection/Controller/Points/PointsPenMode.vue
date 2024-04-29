@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { adapt2Shape, CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
@@ -37,7 +37,6 @@ const add_rect = ref<string>('');
 let shape: ShapeView;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let move: any;
 let bridged = false;
 
 let pathModifier: PathEditor | undefined;
@@ -66,6 +65,10 @@ function update() {
 
     init_matrix();
 
+    if (!(shape as PathShapeView)?.segments?.length) {
+        return;
+    }
+
     dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
@@ -79,15 +82,75 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     event.stopPropagation();
 
-    // todo
-    if (index === 0) {
-        // 闭合路径 或 延续路径
-        // 看是不是自己这条路径，要是别的非闭合路径，那就延续，要是自己那就直接闭合
-        return;
-    }
-    const points = (shape as PathShapeView).segments[segment];
-    if (!segment) {
-        return;
+
+    const path = props.context.path;
+    const isContacting = path.isContacting;
+
+    if (isContacting) { // 连接状态
+        const last = path.lastPoint;
+        if (!last) {
+            return; // 连接状态却没有lastPoint，说明出了预期以外的问题
+        }
+
+        const lastSegment = last.segment;
+        const lastIndex = last.index;
+
+        if (lastSegment === segment) {
+            if (index === 0) {
+                // 闭合当前路径 --check
+                console.log(`闭合路径【${segment}】，选中路径的起点，并在抬起的时候取消链接状态`);
+                pathModifier = new PathEditor(props.context, event);
+                pathModifier.closeSegmentAt(segment);
+                asyncEnvMount();
+            } else {
+                // todo 正常加点
+                console.log(`将在路径【${segment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
+            }
+        } else {
+            const __segment = (shape as PathShapeView).segments[segment];
+            if (!__segment) {
+                return;
+            }
+
+            const points = __segment.points;
+
+            // 合并两条路径，并取消钢笔的连接状态
+            if (index === 0) {
+                console.log(`将把路径【${lastSegment}】合并到路径【${segment}】的起点，并取消链接状态`);
+                pathModifier = new PathEditor(props.context, event);
+                pathModifier.mergeSegment(lastSegment, segment, 'start');
+                asyncEnvMount();
+            } else if (index === (points.length - 1)) {
+                console.log(`将把路径【${lastSegment}】合并到路径【${segment}】的终点，并取消链接状态`);
+                pathModifier = new PathEditor(props.context, event);
+                pathModifier.mergeSegment(lastSegment, segment, 'end');
+                asyncEnvMount();
+            } else {
+                // todo 正常加点
+                console.log(`将在路径【${lastSegment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
+            }
+        }
+    } else { // 非连接状态
+        const __segment = (shape as PathShapeView).segments[segment];
+        if (!__segment) {
+            return;
+        }
+
+        const points = __segment.points;
+
+        // 延续已有路径，开启钢笔的连接状态
+        if (index === 0) {
+            // todo
+            // 考虑调换点的顺序
+            console.log(`从起点处延续路径【${segment}】，并进入连接状态`);
+        } else if (index === (points.length - 1)) {
+            // todo
+            // 不需要调换点的顺序
+            console.log(`从末尾处延续路径【${segment}】，并进入连接状态`);
+        } else {
+            // todo 新开路径加点
+            console.log(`将新增一条路径，并进入链接状态`);
+        }
     }
 }
 
@@ -115,8 +178,6 @@ function checkStatus() {
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
-
-    move = point_mousemove;
 }
 
 function point_mousemove(event: MouseEvent) {
@@ -124,18 +185,22 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
     if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-        bridged = true;
+
         launch_bridging(event);
     }
 }
 
 function launch_bridging(event: MouseEvent) {
     const last = props.context.path.lastPoint;
-    if (!last) {
+    if (!last || !pathModifier) {
         return;
     }
-    props.context.path.setBridgeParams({ handler: pathModifier!, segment: last.segment, index: last.index, e: event });
+    props.context.path.setBridgeParams({ handler: pathModifier, segment: last.segment, index: last.index, e: event });
     props.context.path.bridging({ segment: -1, index: -1, event });
+
+    pathModifier = undefined;
+
+    bridged = true;
 }
 
 function bridging_completed() {
@@ -147,14 +212,18 @@ function point_mouseup(event: MouseEvent) {
         return;
     }
 
-    if (!bridged) {
+    clearStatus();
+}
+
+function clearStatus() {
+    if (!bridged || pathModifier) {
         props.context.path.setBridgeParams(undefined);
         pathModifier?.fulfil();
     }
 
     pathModifier = undefined;
 
-    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
 
@@ -169,7 +238,7 @@ function enter(event: MouseEvent, segment: number, index: number) {
     new_high_light.value = `${segment}-${index}`;
 }
 
-function leave(event: MouseEvent) {
+function leave() {
     clear_high_light();
 }
 
@@ -179,11 +248,7 @@ function clear_high_light() {
 }
 
 function window_blur() {
-    pathModifier?.fulfil();
-    pathModifier = undefined;
-
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
+    clearStatus();
 }
 
 function init_matrix() {
@@ -273,8 +338,6 @@ function down(e: MouseEvent) {
             document.addEventListener('mousemove', point_mousemove);
             document.addEventListener('mouseup', point_mouseup);
 
-            move = point_mousemove;
-
             e.stopPropagation();
         }
     } else {
@@ -296,13 +359,15 @@ function down(e: MouseEvent) {
 
         downXY = { x: e.x, y: e.y };
 
-        document.addEventListener('mousemove', point_mousemove);
-        document.addEventListener('mouseup', point_mouseup);
-
-        move = point_mousemove;
+        asyncEnvMount();
 
         e.stopPropagation();
     }
+}
+
+function asyncEnvMount() {
+    document.addEventListener('mousemove', point_mousemove);
+    document.addEventListener('mouseup', point_mouseup);
 }
 
 onMounted(() => {
@@ -338,7 +403,7 @@ onUnmounted(() => {
 <template>
     <path :d="maskPath" fill="transparent" @mousedown="down"></path>
 
-    <path v-if="livingPathVisible" :d="livingPath" stroke="red" fill="none" style="pointer-events: none"/>
+    <path v-if="livingPathVisible" :d="livingPath" stroke="#1878f5" fill="none" style="pointer-events: none"/>
 
     <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
         <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
@@ -349,8 +414,10 @@ onUnmounted(() => {
 
     <Handle :context="props.context"/>
     <!--点序 for Dev-->
-    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">
-        {{ i }}
+    <text v-for="(p, i) in dots"
+          :key="i"
+          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">
+        {{ `${p.segment},${p.index}` }}
     </text>
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
@@ -393,7 +460,7 @@ onUnmounted(() => {
 }
 
 .path {
-    stroke: green;
+    stroke: gray;
     fill: none;
     pointer-events: none;
 }

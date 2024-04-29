@@ -70,6 +70,8 @@ export class PathEditor extends TransformHandler {
         this.baseHeight = frame.height;
 
         this.getBaseData();
+
+        this.isInitMatrix = true;
     }
 
     getBaseData() {
@@ -132,7 +134,6 @@ export class PathEditor extends TransformHandler {
 
         if (!this.isInitMatrix) {
             this.initMatrix();
-            this.isInitMatrix = true;
         }
 
         const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
@@ -162,7 +163,6 @@ export class PathEditor extends TransformHandler {
 
         if (!this.isInitMatrix) {
             this.initMatrix();
-            this.isInitMatrix = true;
         }
 
         const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
@@ -217,7 +217,6 @@ export class PathEditor extends TransformHandler {
     execute(event: MouseEvent) {
         if (!this.isInitMatrix) {
             this.initMatrix();
-            this.isInitMatrix = true;
         }
         this.livingPoint = this.workspace.getRootXY(event);
 
@@ -227,7 +226,6 @@ export class PathEditor extends TransformHandler {
     execute4handlePre(index: number, segment = -1) {
         if (!this.isInitMatrix) {
             this.initMatrix();
-            this.isInitMatrix = true;
         }
 
         const order = this.altStatus ? 2 : 3;
@@ -238,7 +236,6 @@ export class PathEditor extends TransformHandler {
     execute4handlePreForPen(index: number, segment = -1) {
         if (!this.isInitMatrix) {
             this.initMatrix();
-            this.isInitMatrix = true;
         }
 
         const lowOrder = this.altStatus;
@@ -252,6 +249,59 @@ export class PathEditor extends TransformHandler {
             this.handleInfo = { index, segment, side };
         }
         (this.asyncApiCaller as PathModifier).execute4handle(this.shape, index, side, from, to, segment);
+    }
+
+    closeSegmentAt(segmentIndex: number) {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
+        const segment = (this.shape as PathShapeView).segments[segmentIndex];
+
+        if (!segment) {
+            return false;
+        }
+
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
+
+        const caller = this.asyncApiCaller as PathModifier;
+
+        const res = caller.closeSegmentAt(this.shape, segmentIndex);
+
+        if (res) {
+            this.path.select_point(segmentIndex, 0);
+            this.path.setContactStatus(false);
+        }
+
+        return res;
+    }
+
+    mergeSegment(segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
+        const segment = (this.shape as PathShapeView).segments[segmentIndex];
+
+        if (!segment) {
+            return false;
+        }
+
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
+
+        const caller = this.asyncApiCaller as PathModifier;
+
+        const res = caller.mergeSegment(this.shape, segmentIndex, toSegmentIndex, at);
+
+        if (res) {
+            this.path.select_point(res.segment, res.activeIndex);
+            // this.path.reset_points(); // todo 重新选点
+            this.path.setContactStatus(false);
+        }
     }
 
     private __execute() {
