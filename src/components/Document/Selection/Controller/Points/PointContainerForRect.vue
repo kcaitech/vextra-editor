@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme, XY } from '@/context/selection';
-import { PointActionType, PointHandler } from '@/transform/point';
-import { Matrix, PathShapeView, PolygonShapeView, ShapeFrame, ShapeType, ShapeView } from '@kcdesign/data';
+import { SelectionTheme } from '@/context/selection';
+import { PointHandler } from '@/transform/point';
+import { Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint } from './common';
 import { fixedZero } from '@/utils/common';

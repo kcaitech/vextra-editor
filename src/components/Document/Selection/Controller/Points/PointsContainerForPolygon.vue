@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { Matrix, PathShapeView, PolygonShapeView, ShapeType, ShapeView } from '@kcdesign/data';
+import { Matrix, PolygonShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
@@ -27,7 +27,6 @@ const cursor_point = ref<Point>({ x: 0, y: 0 });
 const counts = ref(0);
 const radius = ref(0);
 const max_radius = ref(0);
-const is_percent = ref(false);
 const cursor_enter = ref(false);
 const cursor_down = ref(false);
 const countDotEl = ref<SVGGElement>();

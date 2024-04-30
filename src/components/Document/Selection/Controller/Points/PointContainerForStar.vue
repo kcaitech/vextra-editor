@@ -29,7 +29,6 @@ const counts = ref(0);
 const inner_angle = ref(0);
 const radius = ref(0);
 const max_radius = ref(0);
-const is_percent = ref(false);
 const cursor_enter = ref(false);
 const cursor_down = ref(false);
 const countDotEl = ref<SVGGElement>();
