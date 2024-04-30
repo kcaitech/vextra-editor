@@ -142,11 +142,24 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         if (index === 0) {
             // todo
             // 考虑调换点的顺序
-            console.log(`从起点处延续路径【${segment}】，并进入连接状态`);
+            console.log(`从起点处延续路径【${segment}】，需要调换点的顺序，使起点成为终点，并进入连接状态`);
+
+
         } else if (index === (points.length - 1)) {
-            // todo
             // 不需要调换点的顺序
             console.log(`从末尾处延续路径【${segment}】，并进入连接状态`);
+            const point = (shape as PathShapeView)?.segments[segment]?.points[index];
+            if (!point) {
+                return;
+            }
+
+            path.setLastPoint({ point: point as CurvePoint, segment, index })
+            path.setContactStatus(true);
+            path.select_point(segment, index);
+
+            pathModifier = new PathEditor(props.context, event);
+            pathModifier.createApiCaller();
+            asyncEnvMount();
         } else {
             // todo 新开路径加点
             console.log(`将新增一条路径，并进入链接状态`);
