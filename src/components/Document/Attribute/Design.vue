@@ -78,6 +78,8 @@ const WITH_SHADOW = [
     ShapeType.Symbol,
     ShapeType.SymbolUnion,
     ShapeType.SymbolRef,
+    ShapeType.Star,
+    ShapeType.Polygon,
     ShapeType.BoolShape
 ]
 const WITHOUT_OPACITY = [

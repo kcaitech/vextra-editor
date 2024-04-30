@@ -7,6 +7,7 @@ import {
     PathShapeView, PathShapeView2,
     PathType,
     Point2D,
+    ShapeFrame,
     ShapeView
 } from "@kcdesign/data"
 import { XY } from "@/context/selection";
@@ -327,4 +328,80 @@ export function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) 
     }
 
     return Math.floor(deg) % 360;
+}
+
+export function getCornerControlPoint(points: CurvePoint[], idx: number, frame: ShapeFrame) {
+    const len = points.length;
+    const preIndex = idx === 0 ? len - 1 : idx - 1;
+    const nextIndex = idx === len - 1 ? 0 : idx + 1;
+    const { width, height } = frame;
+    const pre = points[preIndex];
+    const cur = points[idx];
+    const next = points[nextIndex];
+    // 拿到三个点
+    const prePoint = { x: points[preIndex].x * width, y: points[preIndex].y * height };
+    const curPoint = { x: points[idx].x * width, y: points[idx].y * height };
+    const nextPoint = { x: points[nextIndex].x * width, y: points[nextIndex].y * height }
+
+    const lenAB = distanceTo(curPoint, prePoint);
+    const lenBC = distanceTo(curPoint, nextPoint);
+
+    const radian = calcAngleABC(prePoint, curPoint, nextPoint);
+    if (Number.isNaN(radian)) {
+        return;
+    }
+
+    let radius = cur.radius || 0;
+    const tangent = Math.tan(radian / 2);
+    let dist = radius / tangent;
+
+    const minDist = Math.min(
+        (pre.radius || 0) > 0 ? lenAB / 2 : lenAB,
+        (next.radius || 0) > 0 ? lenBC / 2 : lenBC
+    );
+
+    if (dist > minDist) {
+        dist = minDist;
+        radius = dist * tangent;
+    }
+
+    const vPre = norm(minus(prePoint, curPoint));
+    const vNext = norm(minus(nextPoint, curPoint));
+
+    let preTangent = add(multiply(vPre, dist), curPoint);
+    let nextTangent = add(multiply(vNext, dist), curPoint);
+
+    const kappa = (4 / 3) * Math.tan((Math.PI - radian) / 4);
+
+    let preHandle = add(multiply(vPre, -radius * kappa), preTangent);
+    let nextHandle = add(multiply(vNext, -radius * kappa), nextTangent);
+    return { preHandle, nextHandle, radius, prePoint, nextPoint, curPoint };
+}
+
+function distanceTo(p0: XY, p1: XY) {
+    return Math.hypot(p0.x - p1.x, p0.y - p1.y);
+}
+
+function calcAngleABC(A: XY, B: XY, C: XY) {
+    const AB = distanceTo(A, B);
+    const BC = distanceTo(B, C);
+    const AC = distanceTo(C, A);
+    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+}
+
+function minus(p0: XY, p1: XY) {
+    return { x: p0.x - p1.x, y: p0.y - p1.y };
+}
+
+function norm(p: XY) {
+    const d = Math.hypot(p.x, p.y);
+    return { x: p.x / d, y: p.y / d };
+}
+
+function multiply(p: XY, d: number) {
+    return { x: p.x * d, y: p.y * d };
+}
+
+function add(p: XY, pt: XY) {
+    return { x: p.x + pt.x, y: p.y + pt.y };
 }

@@ -5,11 +5,15 @@ import {
     Matrix,
     PathShape,
     PathShapeView,
+    PolygonShape,
+    PolygonShapeView,
     RectShape,
     Shape,
     ShapeFrame,
     ShapeType,
-    ShapeView
+    ShapeView,
+    StarShape,
+    StarShapeView
 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
@@ -484,4 +488,78 @@ export function get_shapes_rotation(shapes: ShapeView[], mixed: string) {
     }
 
     return first_rotation;
+}
+
+export function get_shapes_angle_counts(shapes: ShapeView[], mixed: string) {
+    const polygon_shapes = shapes.filter(s => (s.type === ShapeType.Polygon || s.type === ShapeType.Star) && !s.data.haveEdit);
+    if(polygon_shapes.length === 0) return 0;
+    const first_shape = polygon_shapes[0] as PolygonShapeView | StarShapeView;
+    let first_counts: number | string = first_shape.data.counts;
+    
+    for (let i = 1, l = polygon_shapes.length; i < l; i++) {
+        const shape = polygon_shapes[i] as PolygonShapeView | StarShapeView;
+        if (!is_equal(shape.data.counts, first_counts)) {
+            first_counts = mixed;
+            break;
+        }
+    }
+    
+    return first_counts || 0;
+}
+
+export function get_shapes_inner_angle(shapes: ShapeView[], mixed: string) {
+    const star_shapes = shapes.filter(s => s.type === ShapeType.Star && !s.data.haveEdit);
+    if(star_shapes.length === 0) return 0;
+    const first_shape = star_shapes[0] as StarShapeView;
+    let first_inner_angle: number | string = first_shape.data.innerAngle * 100;
+    
+    for (let i = 1, l = star_shapes.length; i < l; i++) {
+        const shape = star_shapes[i] as StarShapeView;
+        if (!is_equal(shape.data.innerAngle * 100, first_inner_angle)) {
+            first_inner_angle = mixed;
+            break;
+        }
+    }
+    
+    return first_inner_angle || 0;
+}
+
+export function get_actions_counts(shapes: ShapeView[], count: number) {
+    const actions: { target: (PolygonShape | StarShape), count: number }[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if ((shape.type !== ShapeType.Polygon && shape.type !== ShapeType.Star) || shape.data.haveEdit) continue;
+        actions.push({ target: adapt2Shape(shape) as PolygonShape | StarShape, count: count });
+    }
+    return actions;
+}
+
+export function get_actions_inner_angle(shapes: ShapeView[], offset: number) {
+    const actions: { target: StarShape, offset: number }[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape.type !== ShapeType.Star || shape.data.haveEdit) continue;
+        actions.push({ target: adapt2Shape(shape) as StarShape, offset: offset });
+    }
+    return actions;
+}
+
+export const showCounts = (shapes: ShapeView[]) => {
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if((shape.type === ShapeType.Polygon || shape.type === ShapeType.Star) && !shape.data.haveEdit) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export const showInnerAngle = (shapes: ShapeView[]) => {
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if(shape.type === ShapeType.Star && !shape.data.haveEdit) {
+            return true;
+        }
+    }
+    return false;
 }

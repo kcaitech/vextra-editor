@@ -34,6 +34,10 @@ const pattern = computed<string>(() => {
             return 'pattern-arrow';
         case Action.Pen:
             return 'pattern-pen';
+        case Action.Polygon:
+            return 'pattern-polygon';
+        case Action.Star:
+            return 'pattern-star';
         default:
             return 'pattern-rectangle';
     }
@@ -53,6 +57,10 @@ const tips = computed<string>(() => {
             return string_by_sys(`${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0L`);
         case Action.Pen:
             return `${t('shape.pen')}\u00a0\u00a0\u00a0\u00a0P`;
+        case Action.Polygon:
+            return `${t('shape.polygon')}`;
+        case Action.Star:
+            return `${t('shape.star')}`;
         default:
             return defaultRect;
     }
@@ -83,7 +91,9 @@ function toolWatcher(t: number) {
             || action === Action.AddEllipse
             || action === Action.AddLine
             || action === Action.AddArrow
-            || action === Action.Pen;
+            || action === Action.Pen
+            || action === Action.Polygon
+            || action === Action.Star;
 
         if (selected.value) {
             currentTool.value = action;
@@ -149,19 +159,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <el-tooltip
-        effect="dark"
-        :content="tips"
-        :show-after="600"
-        :offset="10"
-        :visible="!popover && tipsVisible"
-    >
-        <ToolButton
-            :selected="selected"
-            @mouseenter.stop="enter"
-            @mouseleave.stop="leave"
-            @click="shot"
-        >
+    <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
+        <ToolButton :selected="selected" @mouseenter.stop="enter" @mouseleave.stop="leave" @click="shot">
             <div class="svg-container">
                 <svg-icon :icon-class="pattern"></svg-icon>
             </div>
@@ -170,13 +169,10 @@ onUnmounted(() => {
             </div>
         </ToolButton>
     </el-tooltip>
-    <div v-if="popover"
-         class="popover-shape-tool"
-         :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }"
-    >
+    <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
         <!--矩形-->
         <div class="item" @click="() => { setAction(Action.AddRect) }">
-            <div v-if="currentTool=== Action.AddRect" class="check">
+            <div v-if="currentTool === Action.AddRect" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -187,7 +183,7 @@ onUnmounted(() => {
         </div>
         <!--圆形-->
         <div class="item" @click="() => { setAction(Action.AddEllipse) }">
-            <div v-if="currentTool=== Action.AddEllipse" class="check">
+            <div v-if="currentTool === Action.AddEllipse" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -198,7 +194,7 @@ onUnmounted(() => {
         </div>
         <!--线条-->
         <div class="item" @click="() => { setAction(Action.AddLine) }">
-            <div v-if="currentTool=== Action.AddLine" class="check">
+            <div v-if="currentTool === Action.AddLine" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -209,7 +205,7 @@ onUnmounted(() => {
         </div>
         <!--箭头-->
         <div class="item" @click="() => { setAction(Action.AddArrow) }">
-            <div v-if="currentTool=== Action.AddArrow" class="check">
+            <div v-if="currentTool === Action.AddArrow" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -218,10 +214,32 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <div class="line"/>
+        <!--多边形-->
+        <div class="item" @click="() => { setAction(Action.Polygon) }">
+            <div v-if="currentTool === Action.Polygon" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-polygon"></svg-icon>
+                <span>{{ t('shape.polygon') }}</span>
+            </div>
+            <div class="shortKey"></div>
+        </div>
+        <!--星形-->
+        <div class="item" @click="() => { setAction(Action.Star) }">
+            <div v-if="currentTool === Action.Star" class="check">
+                <svg-icon icon-class="white-select"></svg-icon>
+            </div>
+            <div class="desc">
+                <svg-icon icon-class="pattern-star"></svg-icon>
+                <span>{{ t('shape.star') }}</span>
+            </div>
+            <div class="shortKey"></div>
+        </div>
+        <div class="line" />
         <!--钢笔-->
         <div class="item" @click="() => { setAction(Action.Pen) }">
-            <div v-if="currentTool=== Action.Pen" class="check">
+            <div v-if="currentTool === Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -238,7 +256,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
 
-    > svg {
+    >svg {
         width: 18px;
         height: 18px;
     }
@@ -249,7 +267,7 @@ onUnmounted(() => {
     margin-left: 4px;
     transition: 0.2s;
 
-    > svg {
+    >svg {
         width: 12px;
         height: 12px;
     }
@@ -293,7 +311,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -304,12 +322,12 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
 
-            > span {
+            >span {
                 margin-left: 8px;
             }
         }

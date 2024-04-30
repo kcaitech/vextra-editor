@@ -16,7 +16,13 @@ import {
     get_width,
     get_height,
     get_constrainer_proportions,
-    get_shapes_rotation
+    get_shapes_rotation,
+    get_shapes_angle_counts,
+    get_actions_counts,
+    showCounts,
+    showInnerAngle,
+    get_shapes_inner_angle,
+    get_actions_inner_angle
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
@@ -36,6 +42,8 @@ interface LayoutOptions {
     s_flip: boolean
     s_radius: boolean
     s_length: boolean
+    s_counts: boolean
+    s_inner_angle: boolean
 }
 
 interface ModelState {
@@ -47,6 +55,8 @@ interface ModelState {
     flipHorizontal: boolean
     flipVertical: boolean
     radius: boolean
+    counts: boolean
+    innerAngle: boolean
 }
 
 const props = defineProps<Props>();
@@ -56,10 +66,12 @@ const y = ref<number | string>(0);
 const w = ref<number | string>(0);
 const h = ref<number | string>(0);
 const rotate = ref<number | string>(0);
+const counts = ref<number | string>(0);
+const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
+const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false });
 const model_disable_state: ModelState = reactive({
     x: false,
     y: false,
@@ -68,9 +80,11 @@ const model_disable_state: ModelState = reactive({
     rotation: false,
     flipHorizontal: false,
     flipVertical: false,
-    radius: false
+    radius: false,
+    counts: false,
+    innerAngle: false
 });
-let { s_flip, s_adapt, s_radius, s_length } = layout_options;
+let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_options;
 const reflush = ref<number>(0);
 
 function _calc_attri() {
@@ -85,6 +99,8 @@ function _calc_attri() {
     h.value = get_height(selected, mixed);
     isLock.value = get_constrainer_proportions(selected);
     rotate.value = get_shapes_rotation(selected, mixed);
+    counts.value = get_shapes_angle_counts(selected, mixed);
+    innerAngle.value = get_shapes_inner_angle(selected, mixed);
 }
 
 const calc_attri = throttle(_calc_attri, 60, { trailing: true });
@@ -288,6 +304,49 @@ function changeR(value: string) {
     editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
 }
 
+function changeCounts(value: string) {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    let count = Number.parseFloat(value);
+    if (isNaN(count) || count == counts.value) {
+        return;
+    }
+    if (count < 3) count = 3;
+    if (count > 60) count = 60;
+    const shapes = props.context.selection.selectedShapes;
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+    const actions = get_actions_counts(shapes, count);
+
+    editor.modifyShapesAngleCount(actions);
+}
+
+function changeInnerAngle(value: string) {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    let offset: number = Number.parseFloat(value);
+    if (isNaN(offset) || offset == innerAngle.value) {
+        return;
+    }
+    if (offset < 0.1) offset = 0.1;
+    if (offset > 100) offset = 100;
+
+    const shapes = props.context.selection.selectedShapes;
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+    const actions = get_actions_inner_angle(shapes, offset / 100);
+
+    editor.modifyShapesInnerAngle(actions);
+}
+
 function adapt() {
     props.context
         .editor4Shape((props.context.selection.selectedShapes[0]))
@@ -308,6 +367,8 @@ function layout() {
             s_length = true;
         }
     }
+    s_counts = showCounts(selected);
+    s_inner_angle = showInnerAngle(selected);
     reflush.value++;
 }
 
@@ -316,6 +377,8 @@ function reset_layout() {
     s_flip = true;
     s_radius = false;
     s_length = false;
+    s_counts = false;
+    s_inner_angle = false;
 }
 
 function check_model_state() {
@@ -331,7 +394,8 @@ function check_model_state() {
         model_disable_state.width = true, model_disable_state.height = true;
         model_disable_state.rotation = true;
         model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
-        model_disable_state.radius = false;
+        model_disable_state.radius = false; model_disable_state.counts = false;
+        model_disable_state.innerAngle = false;
     }
 
     if (is_straight(shape)) {
@@ -344,7 +408,8 @@ function reset_model_state() {
     model_disable_state.width = false, model_disable_state.height = false;
     model_disable_state.rotation = false;
     model_disable_state.flipVertical = false, model_disable_state.flipHorizontal = false;
-    model_disable_state.radius = false;
+    model_disable_state.radius = false; model_disable_state.counts = false;
+    model_disable_state.innerAngle = false;
 }
 
 function all_disable() {
@@ -352,7 +417,8 @@ function all_disable() {
     model_disable_state.width = true, model_disable_state.height = true;
     model_disable_state.rotation = true;
     model_disable_state.flipVertical = true, model_disable_state.flipHorizontal = true;
-    model_disable_state.radius = true;
+    model_disable_state.radius = true; model_disable_state.counts = true;
+    model_disable_state.innerAngle = true;
 }
 
 const tel = ref<boolean>(false);
@@ -465,6 +531,44 @@ function draggingRotate(e: MouseEvent) {
     }
 
     lockMouseHandler.executeRotate(e.movementX);
+}
+
+function draggingCounts(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (isNaN(Number(counts.value)) || e.movementX === 0) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+    let count = Number(counts.value) + e.movementX;
+    if (count < 3) count = 3;
+    if (count > 60) count = 60;
+    lockMouseHandler.executeCounts(count);
+}
+
+function draggingInnerAngle(e: MouseEvent) {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) {
+        return
+    }
+
+    if (isNaN(Number(innerAngle.value)) || e.movementX === 0) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('rotating');
+    }
+
+    let offset = Number(innerAngle.value) + (e.movementX / 10)
+
+    if (offset < 0.1) offset = 0.1;
+    if (offset > 100) offset = 100;
+    lockMouseHandler.executeInnerAngle(offset / 100);
 }
 
 function dragend() {
@@ -584,13 +688,13 @@ onUnmounted(() => {
                 :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
                 @dragend="dragend"></MdNumberInput>
             <div class="flip-warpper">
-                <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <svg-icon icon-class="fliph"></svg-icon>
                     </div>
                 </Tooltip>
-                <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
                     <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <svg-icon icon-class="flipv"></svg-icon>
@@ -598,6 +702,16 @@ onUnmounted(() => {
                 </Tooltip>
             </div>
             <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+        </div>
+        <div class="tr" :reflush="reflush" v-if="s_counts">
+            <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
+                @dragend="dragend"></MdNumberInput>
+            <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
+                :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
+                @dragend="dragend"></MdNumberInput>
+            <div style="width: 32px;height: 32px;"></div>
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
     </div>

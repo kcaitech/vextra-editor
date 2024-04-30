@@ -480,7 +480,17 @@ export function format_value(val: number | string, fix = 2) {
         return Number(val.toFixed(0));
     }
 
-    return val.toFixed(fix);
+    return fixedZero(val);
+}
+export const fixedZero = (value: number) => {
+    value = Math.round(value * 100) / 100;
+    if (Number.isInteger(value)) {
+        return value.toFixed(0); // 返回整数形式
+    } else if (Math.abs(value * 10 - Math.round(value * 10)) < Number.EPSILON) {
+        return value.toFixed(1); // 保留一位小数
+    } else {
+        return value.toFixed(2); // 保留两位小数
+    }
 }
 
 export function modifyOpacity(context: Context, val: number, _shapes?: ShapeView[]) {

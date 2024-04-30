@@ -9,6 +9,7 @@ import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { useI18n } from "vue-i18n";
+import { fixedZero } from '@/utils/common';
 const { t } = useI18n();
 
 interface Props {
@@ -166,10 +167,10 @@ function get_all_values(shapes: ShapeView[]) {
         return;
     }
     const f_r = get_rect_shape_all_value(first_shape);
-    radius.lt = f_r.lt;
-    radius.rt = f_r.rt;
-    radius.rb = f_r.rb;
-    radius.lb = f_r.lb;
+    radius.lt = fixedZero(f_r.lt);
+    radius.rt = fixedZero(f_r.rt);
+    radius.rb = fixedZero(f_r.rb);
+    radius.lb = fixedZero(f_r.lb);
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
@@ -237,7 +238,7 @@ function modify_radius_value() {
         }
     }
 
-    radius.lt = init;
+    radius.lt = fixedZero(init);
     return;
 }
 

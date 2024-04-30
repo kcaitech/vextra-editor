@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, PolygonShapeView, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -11,6 +11,8 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
+import { point_map } from "./Points/map"
+import PointsContainerForPolygon from "./Points/PointsContainerForPolygon.vue";
 
 interface Props {
     context: Context
@@ -156,19 +158,18 @@ watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-         :width="width"
-         :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
+        data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox="viewBox" :width="width" :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
+        overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
         <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
         <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
+            :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
         <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                         :axle="axle"
-                         :c-frame="props.controllerFrame" :theme="theme">
+            :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
+        <component v-if="!shape.data.haveEdit" :is="point_map.get(shape.type)" :context="props.context" :matrix="submatrix.toArray()"
+            :shape="props.shape as PolygonShapeView" :theme="theme"></component>
     </svg>
 </template>
 <style lang='scss' scoped>
