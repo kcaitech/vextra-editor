@@ -144,14 +144,15 @@ const routes = [
             requireAuth: true
         },
         beforeEnter: (to: any, from: any, next: any) => {
-            if (kcdesk) {
-                next(false);
-                return;
-            }
             if (to.name === 'document' && to.query.id) {
                 const id = to.query.id
                 const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
-                if (newid !== id) {
+                if (kcdesk && to.query.from !== 'kcdesk') {
+                    const name = window.sessionStorage.getItem("kcdesk_document_name") ?? "";
+                    kcdesk.fileOpen(newid, name, "");
+                    next(false);
+                }
+                else if (newid !== id) {
                     next({ ...to, query: { ...to.query, id: newid } });
                 } else {
                     next();
