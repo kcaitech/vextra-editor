@@ -1,17 +1,20 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
 import {
-    PathShapeView,
-    PathModifier,
+    CurveMode,
+    CurvePoint,
+    GroupShapeView,
     Matrix,
     ModifyUnits,
-    ShapeView,
+    PathModifier,
+    PathShapeView,
     PathType,
-    CurvePoint, ShapeFrame, GroupShapeView
+    ShapeFrame,
+    ShapeType,
+    ShapeView
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
-import { ShapeType } from "@kcdesign/data";
 
 type Base = {
     x: number;
@@ -25,24 +28,26 @@ type Base = {
 type BaseData = Map<string, Base>;
 
 export class PathEditor extends TransformHandler {
-    shape: ShapeView;
-    path: Path;
+    private shape: ShapeView;
+    private path: Path;
 
-    fixedPoint: XY;
-    livingPoint: XY;
+    private fixedPoint: XY;
+    private livingPoint: XY;
 
-    baseData: BaseData = new Map();
+    private baseData: BaseData = new Map();
 
-    baseWidth: number = 0;
-    baseHeight: number = 0;
+    private baseWidth: number = 0;
+    private baseHeight: number = 0;
 
-    baseMatrix: Matrix = new Matrix();
-    baseMatrixInverse: Matrix = new Matrix();
+    private baseMatrix: Matrix = new Matrix();
+    private baseMatrixInverse: Matrix = new Matrix();
 
-    isHandleAction: boolean = false;
-    handleInfo: { index: number, segment: number, side: 'from' | 'to' } | undefined = undefined;
+    private isHandleAction: boolean = false;
+    private handleInfo: { index: number, segment: number, side: 'from' | 'to' } | undefined = undefined;
 
-    isInitMatrix: boolean = false;
+    private isInitMatrix: boolean = false;
+
+    private actionType: 'handle' | 'penHandle' | 'point' = 'handle';
 
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
@@ -56,7 +61,7 @@ export class PathEditor extends TransformHandler {
         this.workspace.setSelectionViewUpdater(false);
     }
 
-    initMatrix() {
+    private initMatrix() {
         this.shape = this.context.selection.selectedShapes[0];
 
         const m = this.shape.matrix2Root();
@@ -74,7 +79,7 @@ export class PathEditor extends TransformHandler {
         this.isInitMatrix = true;
     }
 
-    getBaseData() {
+    private getBaseData() {
         this.baseData.clear();
         const selected = this.path.syntheticPoints;
 
@@ -87,7 +92,7 @@ export class PathEditor extends TransformHandler {
         }
     }
 
-    __getData(points: CurvePoint[], indexes: number[]) {
+    private __getData(points: CurvePoint[], indexes: number[]) {
         if (!indexes) {
             return;
         }
@@ -108,6 +113,152 @@ export class PathEditor extends TransformHandler {
                 toY: point.toY
             })
         }
+    }
+
+    private __execute() {
+        const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
+        const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
+
+        const dx = __living.x - __fixed.x;
+        const dy = __living.y - __fixed.y;
+
+        const selected = this.path.syntheticPoints;
+        const units: ModifyUnits = new Map();
+
+        if (this.shape.pathType === PathType.Editable) {
+            selected.forEach((indexes, segment) => {
+                const points = (this.shape as PathShapeView).segments[segment].points as CurvePoint[];
+                this.__gen(units, points, segment, indexes, dx, dy);
+            })
+        }
+
+        (this.asyncApiCaller as PathModifier).execute(this.shape, units);
+    }
+
+    private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {
+        const __units: any[] = [];
+        for (let i = 0; i < indexes.length; i++) {
+            const index = indexes[i];
+            const point = points[index];
+
+            const base = this.baseData.get(point.id);
+            if (!base) {
+                continue;
+            }
+
+            __units.push({
+                index,
+                x: base.x + dx,
+                y: base.y + dy,
+                fromX: (base.fromX || 0) + dx,
+                fromY: (base.fromY || 0) + dy,
+                toX: (base.toX || 0) + dx,
+                toY: (base.toY || 0) + dy,
+            })
+        }
+
+        actions.set(segment, __units);
+    }
+
+    private passiveExecute() {
+        if (!this.asyncApiCaller) {
+            return;
+        }
+
+        if (this.actionType === 'point') {
+            this.__execute();
+        } else {
+            if (this.altStatus) {
+                this.breakOff();
+            } else {
+                this.recovery();
+            }
+        }
+    }
+
+    // handle折断之前的CurveMode；
+    private curveModeBefore: CurveMode | undefined;
+
+    // 拖动之后通过键盘事件控制折断状态
+    private breakOff() {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
+        if (!this.handleInfo) {
+            return;
+        }
+
+        const { index, segment } = this.handleInfo;
+
+        const point = (this.shape as PathShapeView)?.segments[segment]?.points[index];
+
+        if (!point) {
+            return;
+        }
+
+        if (point.mode === CurveMode.Disconnected) { // 已经是折断状态
+            return;
+        }
+
+        this.curveModeBefore = point.mode;
+
+        (this.asyncApiCaller as PathModifier).breakOffHandle(this.shape, segment, index);
+    }
+
+    private recovery() {
+        if (!this.curveModeBefore) { // 没有进行过折断，不需要恢复
+            return;
+        }
+
+        if (!this.handleInfo) {
+            return;
+        }
+
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
+        const { index, segment, side } = this.handleInfo;
+
+        const point = (this.shape as PathShapeView)?.segments[segment]?.points[index];
+
+        if (!point) {
+            return;
+        }
+
+        if (point.mode !== CurveMode.Disconnected) { // 不需要恢复
+            return;
+        }
+
+        (this.asyncApiCaller as PathModifier).recoveryHandle(this.shape, segment, index, this.curveModeBefore, side);
+
+        this.curveModeBefore = undefined;
+    }
+
+    protected keydown(event: KeyboardEvent) {
+        if (event.repeat) {
+            return;
+        }
+        if (event.altKey) {
+            this.altStatus = true;
+            this.passiveExecute();
+        }
+        // if (event.shiftKey) {
+        //     this.shiftStatus = true;
+        //     this.passiveExecute();
+        // }
+    }
+
+    protected keyup(event: KeyboardEvent) {
+        if (event.code === 'AltLeft') {
+            this.altStatus = false;
+            this.passiveExecute();
+        }
+        // if (event.code === "ShiftLeft") {
+        //     this.shiftStatus = false;
+        //     this.passiveExecute();
+        // }
     }
 
     createApiCaller(segment = -1, index = -1, needStore = false) {
@@ -221,6 +372,8 @@ export class PathEditor extends TransformHandler {
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.__execute();
+
+        this.actionType = 'point';
     }
 
     execute4handlePre(index: number, segment = -1) {
@@ -231,6 +384,8 @@ export class PathEditor extends TransformHandler {
         const order = this.altStatus ? 2 : 3;
 
         (this.asyncApiCaller as PathModifier).preCurve(order, this.shape, index, segment);
+
+        this.actionType = 'handle';
     }
 
     execute4handlePreForPen(index: number, segment = -1) {
@@ -238,17 +393,43 @@ export class PathEditor extends TransformHandler {
             this.initMatrix();
         }
 
+        if (!this.handleInfo) {
+            this.handleInfo = { index, segment, side: 'from' };
+        }
+
         const lowOrder = this.altStatus;
 
         (this.asyncApiCaller as PathModifier).preCurve2(lowOrder ? 2 : 3, this.shape, index, segment);
+
+        this.actionType = 'penHandle';
     }
 
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
         this.isHandleAction = true;
+
         if (!this.handleInfo) {
             this.handleInfo = { index, segment, side };
         }
-        (this.asyncApiCaller as PathModifier).execute4handle(this.shape, index, side, from, to, segment);
+
+        const point = (this.shape as PathShapeView)?.segments[segment]?.points[index];
+
+        if (!point) {
+            return;
+        }
+
+        const caller = this.asyncApiCaller as PathModifier;
+
+        // 让控制棒进入折断状态
+        if (this.altStatus && point.mode !== CurveMode.Disconnected) {
+            this.curveModeBefore = point.mode;
+            caller.breakOffHandle(this.shape, segment, index);
+        }
+
+        caller.execute4handle(this.shape, index, side, from, to, segment);
     }
 
     closeSegmentAt(segmentIndex: number) {
@@ -301,76 +482,6 @@ export class PathEditor extends TransformHandler {
             this.path.select_point(res.segment, res.activeIndex);
             // this.path.reset_points(); // todo 重新选点
             this.path.setContactStatus(false);
-        }
-    }
-
-    private __execute() {
-        const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
-        const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
-
-        const dx = __living.x - __fixed.x;
-        const dy = __living.y - __fixed.y;
-
-        const selected = this.path.syntheticPoints;
-        const units: ModifyUnits = new Map();
-
-        if (this.shape.pathType === PathType.Editable) {
-            selected.forEach((indexes, segment) => {
-                const points = (this.shape as PathShapeView).segments[segment].points as CurvePoint[];
-                this.__gen(units, points, segment, indexes, dx, dy);
-            })
-        }
-
-        (this.asyncApiCaller as PathModifier).execute(this.shape, units);
-    }
-
-    private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {
-        const __units: any[] = [];
-        for (let i = 0; i < indexes.length; i++) {
-            const index = indexes[i];
-            const point = points[index];
-
-            const base = this.baseData.get(point.id);
-            if (!base) {
-                continue;
-            }
-
-            __units.push({
-                index,
-                x: base.x + dx,
-                y: base.y + dy,
-                fromX: (base.fromX || 0) + dx,
-                fromY: (base.fromY || 0) + dy,
-                toX: (base.toX || 0) + dx,
-                toY: (base.toY || 0) + dy,
-            })
-        }
-
-        actions.set(segment, __units);
-    }
-
-    passiveExecute() {
-        if (!this.asyncApiCaller) {
-            return;
-        }
-
-        this.__execute();
-    }
-
-    protected keydown(event: KeyboardEvent) {
-        if (event.repeat) {
-            return;
-        }
-        if (event.shiftKey) {
-            this.shiftStatus = true;
-            this.passiveExecute();
-        }
-    }
-
-    protected keyup(event: KeyboardEvent) {
-        if (event.code === "ShiftLeft") {
-            this.shiftStatus = false;
-            this.passiveExecute();
         }
     }
 
