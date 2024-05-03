@@ -480,9 +480,37 @@ export class PathEditor extends TransformHandler {
 
         if (res) {
             this.path.select_point(res.segment, res.activeIndex);
-            // this.path.reset_points(); // todo 重新选点
             this.path.setContactStatus(false);
         }
+    }
+
+    reverseSegment(segmentIndex: number) {
+        if (!this.isInitMatrix) {
+            this.initMatrix();
+        }
+
+        const segment = (this.shape as PathShapeView).segments[segmentIndex];
+
+        if (!segment) {
+            return false;
+        }
+
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
+
+        const caller = this.asyncApiCaller as PathModifier;
+
+        const res = caller.reversePointsAt(this.shape, segmentIndex);
+
+        if (res) {
+            this.path.select_point(res.segment, res.activeIndex);
+            this.path.setContactStatus(true);
+
+            return res;
+        }
+
+        return false;
     }
 
     fulfil() {

@@ -140,11 +140,31 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
         // 延续已有路径，开启钢笔的连接状态
         if (index === 0) {
-            // todo
             // 考虑调换点的顺序
             console.log(`从起点处延续路径【${segment}】，需要调换点的顺序，使起点成为终点，并进入连接状态`);
+            pathModifier = new PathEditor(props.context, event);
+            const result = pathModifier.reverseSegment(segment);
 
+            if (result) {
+                const { segment: _segment, activeIndex } = result;
+                const point = (shape as PathShapeView)?.segments[_segment]?.points[activeIndex];
+                if (!point) {
+                    return;
+                }
 
+                path.select_point(_segment, activeIndex);
+                path.setLastPoint({ point: point as CurvePoint, segment: _segment, index: activeIndex });
+
+                path.setContactStatus(true);
+
+                asyncEnvMount();
+
+                props.context.esctask.save('contact-status', () => {
+                    const achieve = props.context.path.isContacting;
+                    props.context.path.setContactStatus(false);
+                    return achieve;
+                });
+            }
         } else if (index === (points.length - 1)) {
             // 不需要调换点的顺序
             console.log(`从末尾处延续路径【${segment}】，并进入连接状态`);
@@ -160,6 +180,12 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             pathModifier = new PathEditor(props.context, event);
             pathModifier.createApiCaller();
             asyncEnvMount();
+
+            props.context.esctask.save('contact-status', () => {
+                const achieve = props.context.path.isContacting;
+                props.context.path.setContactStatus(false);
+                return achieve;
+            });
         } else {
             // todo 新开路径加点
             console.log(`将新增一条路径，并进入链接状态`);
@@ -292,6 +318,8 @@ function matrix_watcher(t: number) {
         if (livingPathVisible.value) {
             modifyLivingPath();
         }
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        update();
     }
 }
 
