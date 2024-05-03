@@ -278,7 +278,7 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number) {
+    addPointForPen(segment: number, index: number, point?: CurvePoint) {
         if (!this.asyncApiCaller || !this.shape) {
             return false;
         }
@@ -287,7 +287,7 @@ export class PathEditor extends TransformHandler {
             this.initMatrix();
         }
 
-        const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
+        const xy = point ?? this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
         let addRes = false;
         if (index > -1 && segment > -1) {
@@ -307,7 +307,7 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addSegmentForPen() {
+    addSegmentForPen(point?: CurvePoint) {
         if (!this.asyncApiCaller || !this.shape) {
             return false;
         }
@@ -316,7 +316,7 @@ export class PathEditor extends TransformHandler {
             this.initMatrix();
         }
 
-        const xy = this.baseMatrixInverse.computeCoord3(this.livingPoint);
+        const xy = point ?? this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
         let addRes = false;
 

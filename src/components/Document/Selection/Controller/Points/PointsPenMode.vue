@@ -75,6 +75,9 @@ function update() {
     props.context.path.set_segments(segments);
 }
 
+/**
+ * training...
+ */
 function point_mousedown(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) {
         return;
@@ -97,14 +100,24 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
         if (lastSegment === segment) {
             if (index === 0) {
-                // 闭合当前路径 --check
+                // 闭合当前路径
                 console.log(`闭合路径【${segment}】，选中路径的起点，并在抬起的时候取消链接状态`);
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.closeSegmentAt(segment);
                 asyncEnvMount();
             } else {
-                // todo 正常加点
-                console.log(`将在路径【${segment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
+                console.log(`将在路径【${lastSegment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
+                const point = (shape as PathShapeView)?.segments[segment]?.points[index];
+                if (!point) {
+                    return;
+                }
+
+                pathModifier = new PathEditor(props.context, event);
+                pathModifier.createApiCaller();
+                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                downXY = { x: event.x, y: event.y };
+                document.addEventListener('mousemove', point_mousemove);
+                document.addEventListener('mouseup', point_mouseup);
             }
         } else {
             const __segment = (shape as PathShapeView).segments[segment];
@@ -126,8 +139,18 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.mergeSegment(lastSegment, segment, 'end');
                 asyncEnvMount();
             } else {
-                // todo 正常加点
                 console.log(`将在路径【${lastSegment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
+                const point = (shape as PathShapeView)?.segments[segment]?.points[index];
+                if (!point) {
+                    return;
+                }
+
+                pathModifier = new PathEditor(props.context, event);
+                pathModifier.createApiCaller();
+                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                downXY = { x: event.x, y: event.y };
+                document.addEventListener('mousemove', point_mousemove);
+                document.addEventListener('mouseup', point_mouseup);
             }
         }
     } else { // 非连接状态
@@ -187,8 +210,32 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 return achieve;
             });
         } else {
-            // todo 新开路径加点
             console.log(`将新增一条路径，并进入链接状态`);
+
+            const point = (shape as PathShapeView)?.segments[segment]?.points[index];
+            if (!point) {
+                return;
+            }
+
+            pathModifier = new PathEditor(props.context, event);
+            pathModifier.createApiCaller();
+            const addRes = pathModifier.addSegmentForPen(point as CurvePoint);
+
+            if (!addRes) {
+                return;
+            }
+
+            props.context.path.setContactStatus(true);
+
+            props.context.esctask.save('contact-status', () => {
+                const achieve = props.context.path.isContacting;
+                props.context.path.setContactStatus(false);
+                return achieve;
+            });
+
+            downXY = { x: event.x, y: event.y };
+
+            asyncEnvMount();
         }
     }
 }
@@ -366,6 +413,9 @@ function modifyLivingPath() {
     livingPathVisible.value = true;
 }
 
+/**
+ * training...
+ */
 function down(e: MouseEvent) {
     const keepOn = props.context.path.isContacting;
 
