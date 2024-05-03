@@ -298,11 +298,13 @@ export class PathEditor extends TransformHandler {
                 this.path.select_point(segment, index);
                 const point = (this.shape as PathShapeView).segments[segment].points[index] as CurvePoint;
 
-                this.context.path.setLastPoint({ point, index, segment })
+                this.context.path.setLastPoint({ point, index, segment });
+
+                this.path.editing(true);
+
+                this.updateCtrlView();
             }
         }
-
-        this.path.editing(true);
 
         return addRes;
     }
@@ -430,6 +432,8 @@ export class PathEditor extends TransformHandler {
         }
 
         caller.execute4handle(this.shape, index, side, from, to, segment);
+
+        this.updateCtrlView();
     }
 
     closeSegmentAt(segmentIndex: number) {
@@ -514,10 +518,6 @@ export class PathEditor extends TransformHandler {
     }
 
     fulfil() {
-        if (this.isHandleAction && this.handleInfo) {
-            // 矫正
-        }
-
         this.workspace.setSelectionViewUpdater(true);
         this.path.editing(false);
 

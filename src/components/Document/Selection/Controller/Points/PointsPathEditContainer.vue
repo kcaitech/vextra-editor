@@ -44,8 +44,7 @@ let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 let current_side: number = -1;
 
-function update(...args: any[]) {
-    console.log('update:', args);
+function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
     }

@@ -25,7 +25,6 @@ interface Dot {
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
 const data: {
     dots: Dot[],
     segments: Segment[][]
@@ -54,20 +53,36 @@ const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
 const preparePointVisible = ref<boolean>(false);
 
+// 每次更新都是全局更新，虽然计算量大的场景少，但要是可以有局部更新的方案会更好
 function update() {
-    // 更新机制优化一下
-    // if (!props.context.workspace.shouldSelectionViewUpdate) {
-    //     return;
-    // }
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        return;
+    }
 
     dots.length = 0;
     segments.length = 0;
 
-    init_matrix();
+    const matrix = init_matrix();
 
     if (!(shape as PathShapeView)?.segments?.length) {
         return;
     }
+
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
+
+    props.context.path.set_segments(segments);
+}
+
+function passiveUpdate() {
+    dots.length = 0;
+    segments.length = 0;
+
+    if (!(shape as PathShapeView)?.segments?.length) {
+        return;
+    }
+
+    const matrix = init_matrix();
 
     dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
@@ -338,8 +353,10 @@ function window_blur() {
 }
 
 function init_matrix() {
-    matrix.reset(shape.matrix2Root());
-    matrix.multiAtLeft(props.context.workspace.matrix);
+    const m = new Matrix(shape.matrix2Root());
+    m.multiAtLeft(props.context.workspace.matrix);
+
+    return m;
 }
 
 function path_watcher(type: number) {
@@ -366,7 +383,11 @@ function matrix_watcher(t: number) {
             modifyLivingPath();
         }
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        update();
+        passiveUpdate();
+
+        if (livingPathVisible.value) {
+            modifyLivingPath();
+        }
     }
 }
 
