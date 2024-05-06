@@ -149,7 +149,6 @@ function point_mousemove(event: MouseEvent) {
 
     if (isDragging) {
         pathModifier?.execute(event);
-        pathModifier?.updateCtrlView();
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
 
@@ -298,25 +297,19 @@ function path_watcher(type: number) {
     }
 }
 
-function matrix_watcher(t: number) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
-}
-
 function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         updatePassive();
     }
 }
 
 onMounted(() => {
-    props.context.workspace.watch(matrix_watcher);
-
     shape = props.context.selection.pathshape!;
     if (!shape) {
         return console.log('wrong shape');
@@ -330,7 +323,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    props.context.workspace.unwatch(matrix_watcher);
     props.context.path.unwatch(path_watcher);
 
     shape?.unwatch(update);

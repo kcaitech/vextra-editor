@@ -133,6 +133,8 @@ export class PathEditor extends TransformHandler {
         }
 
         (this.asyncApiCaller as PathModifier).execute(this.shape, units);
+
+        this.updateCtrlView();
     }
 
     private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {
@@ -140,6 +142,8 @@ export class PathEditor extends TransformHandler {
         for (let i = 0; i < indexes.length; i++) {
             const index = indexes[i];
             const point = points[index];
+
+            if (!point) continue;
 
             const base = this.baseData.get(point.id);
             if (!base) {
