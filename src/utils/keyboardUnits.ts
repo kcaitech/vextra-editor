@@ -287,7 +287,7 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
 
-    context.tool.setAction(Action.Pen); // 钢笔工具
+    // context.tool.setAction(Action.Pen); // 钢笔工具
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {

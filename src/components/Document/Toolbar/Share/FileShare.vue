@@ -82,7 +82,7 @@ const options = [
 const documentShareURL = computed(() => {
   return route.path !== '/document'
     ?
-    location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
+    location.origin + `/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
     :
     location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })

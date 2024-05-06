@@ -141,6 +141,19 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
+
+const pointVisible = computed(() => {
+    return bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90;
+})
+const is_enter = ref(false);
+const mouseenter = () => {
+    is_enter.value = true;
+}
+
+const mouseleave = () => {
+    is_enter.value = false;
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -160,7 +173,7 @@ watchEffect(updateControllerView);
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
         :viewBox="viewBox" :width="width" :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
-        overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
+        overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mouseenter="mouseenter" @mouseleave="mouseleave">
         <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
         <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
@@ -168,8 +181,8 @@ watchEffect(updateControllerView);
         <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
-        <component v-if="!shape.data.haveEdit" :is="point_map.get(shape.type)" :context="props.context" :matrix="submatrix.toArray()"
-            :shape="props.shape as PolygonShapeView" :theme="theme"></component>
+        <component v-if="!shape.data.haveEdit" v-show="is_enter && pointVisible" :is="point_map.get(shape.type)" :context="props.context"
+            :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView" :theme="theme"></component>
     </svg>
 </template>
 <style lang='scss' scoped>

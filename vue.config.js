@@ -10,8 +10,18 @@ const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin');
 
+let envSuffix = process.env.ENV_SUFFIX;
+if (envSuffix) {
+    if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
+    if (envSuffix[envSuffix.length - 1] !== '/') envSuffix += '/';
+} else {
+    envSuffix = '/';
+}
+
+let IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
 var configureWebpack = (config) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (IS_PRODUCTION) {
         // 为生产环境修改配置...
         config.optimization.minimizer.push(
             new TerserPlugin({
@@ -87,7 +97,7 @@ var configureWebpack = (config) => {
     )
 
     const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication.js')
-    const communicationWorkerTargetFilename = `communication.${crypto.createHash('md5')
+    const communicationWorkerTargetFilename = `static/communication.${crypto.createHash('md5')
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
@@ -96,18 +106,27 @@ var configureWebpack = (config) => {
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] }),
         new CopyWebpackPlugin({
-            patterns: [
-                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-            ]
-        }),
-        new CopyWebpackPlugin({
             patterns: [{
                 from: communicationWorkerSourcePath,
                 to: communicationWorkerTargetFilename,
             }]
         }),
         new webpack.DefinePlugin({
-            COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+            COMMUNICATION_WORKER_URL: JSON.stringify(`${envSuffix}${communicationWorkerTargetFilename}`),
+            ENV_SUFFIX: JSON.stringify(envSuffix),
+            IS_PRODUCTION: JSON.stringify(IS_PRODUCTION),
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/GetCode.html",
+                to: "static/GetCode.html",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "node_modules/pathkit-wasm/bin/pathkit.wasm",
+                to: "static/pathkit.wasm",
+            }]
         }),
         ...config.plugins,
     ]
@@ -120,14 +139,15 @@ var configureWebpack = (config) => {
         poll: 5000,
     }
 
-    if (process.env.NODE_ENV === "production") {
+    if (IS_PRODUCTION) {
         config.devtool = "nosources-source-map"
     }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    publicPath: envSuffix,
+    assetsDir: "static",
     configureWebpack,
 
     pluginOptions: {
@@ -138,6 +158,7 @@ var exports = defineConfig({
         }
     },
 
+    // https://webpack.js.org/configuration/dev-server/
     devServer: {
         port: 8080,
         https: true,
@@ -152,8 +173,16 @@ var exports = defineConfig({
                     '^/api': '/api'
                     // '^/api/v1': '/'
                 }
-            }
-        }
+            },
+        },
+        static: {
+            directory: path.join(__dirname, "public"),
+        },
+        compress: true,
+        historyApiFallback: {
+            index: `${envSuffix}index.html`,
+            verbose: true,
+        },
     },
 })
 module.exports = exports

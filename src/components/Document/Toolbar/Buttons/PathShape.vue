@@ -238,7 +238,7 @@ onUnmounted(() => {
         </div>
         <div class="line" />
         <!--钢笔-->
-        <div class="item" @click="() => { setAction(Action.Pen) }">
+        <!-- <div class="item" @click="() => { setAction(Action.Pen) }">
             <div v-if="currentTool === Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -247,7 +247,7 @@ onUnmounted(() => {
                 <span>{{ t('shape.pen') }}</span>
             </div>
             <div class="shortKey">P</div>
-        </div>
+        </div> -->
     </div>
 </template>
 

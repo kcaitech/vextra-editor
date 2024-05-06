@@ -347,6 +347,7 @@ export function getCornerControlPoint(points: CurvePoint[], idx: number, frame: 
     const lenBC = distanceTo(curPoint, nextPoint);
 
     const radian = calcAngleABC(prePoint, curPoint, nextPoint);
+    
     if (Number.isNaN(radian)) {
         return;
     }
@@ -386,7 +387,9 @@ function calcAngleABC(A: XY, B: XY, C: XY) {
     const AB = distanceTo(A, B);
     const BC = distanceTo(B, C);
     const AC = distanceTo(C, A);
-    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+    let value = (BC * BC + AB * AB - AC * AC) / (2 * BC * AB);
+    if(value < -1) value = -1; // 防止出现NaN (特色情况：星形三个角，内角50%)
+    return Math.acos(value);
 }
 
 function minus(p0: XY, p1: XY) {

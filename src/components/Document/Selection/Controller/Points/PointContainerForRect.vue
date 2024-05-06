@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { SelectionTheme } from '@/context/selection';
+import { SelectionTheme, XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
 import { Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -49,25 +49,35 @@ function getRadiusPosition() {
         const cornerInfo = getCornerControlPoint(shape.points, i, props.shape.frame);
         if (!cornerInfo) continue;
         radius.value[i] = cornerInfo.radius;
-        let r = cornerInfo.radius < 8 ? 8 : cornerInfo.radius;
+        let r = cornerInfo.radius;
         let x = point.x * width, y = point.y * height;
+        const origin = matrix.computeCoord2(x, y);
         if (i === 0) {
             x += r; y += r;
-        }
-        if (i === 1) {
+        } else if (i === 1) {
             x -= r; y += r;
-        }
-        if (i === 2) {
+        } else if (i === 2) {
             x -= r; y -= r;
-        }
-        if (i === 3) {
+        } else if (i === 3) {
             x += r; y -= r;
         }
         const p = matrix.computeCoord2(x, y);
+        if (Math.abs(origin.x - p.x) < 15) {
+            if (i === 0) {
+                p.x = origin.x + 15; p.y = origin.y + 15;
+            } else if (i === 1) {
+                p.x = origin.x - 15; p.y = origin.y + 15;
+            } else if (i === 2) {
+                p.x = origin.x - 15; p.y = origin.y - 15;
+            } else if (i === 3) {
+                p.x = origin.x + 15; p.y = origin.y - 15;
+            }
+        }
         result.push(p);
     }
     return result;
 }
+
 const point_mousedown = (e: MouseEvent, index: number) => {
     changeR = index;
     cursor_down.value = true;
@@ -86,20 +96,21 @@ function point_mousemove(e: MouseEvent) {
         pointModifyHandler.createApiCaller();
     }
     let r = radiusDotMove(e);
-    
+    const isAlt = props.context.selection.is_interval;
     if (r === 0) return;
     r = radius.value[changeR] + r;
     const max_r = maxRadius(props.shape.frame);
     if (r > max_r) return;
     if (r < 0) r = 0;
-    pointModifyHandler?.executeRadius([r]);
+    let values = [-1, -1, -1, -1];
+    isAlt ? values[changeR] = r : values = [r];
+    pointModifyHandler?.executeRadius(values);
 }
 
 const maxRadius = (frame: ShapeFrame) => {
     const { width, height } = frame;
     return Math.min(width / 2, height / 2);
 }
-
 const radiusDotMove = (e: MouseEvent) => {
     let radius = 0;
     if (radiusDotEl.value) {
@@ -107,58 +118,58 @@ const radiusDotMove = (e: MouseEvent) => {
         if (e.movementY === 0 && e.movementX === 0) return radius;
         if (changeR === 0) {
             if (e.clientY < y && e.movementY < 0) {
-                radius -= 1;
+                radius += e.movementY;
             }
             if (e.clientY > y && e.movementY > 0) {
-                radius += 1;
+                radius += e.movementY;
             }
             if (e.clientX < x && e.movementX < 0) {
-                radius -= 1;
+                radius += e.movementX;
             }
             if (e.clientX > x && e.movementX > 0) {
-                radius += 1;
+                radius += e.movementX;
             }
         }
         if (changeR === 1) {
             if (e.clientY < y && e.movementY < 0) {
-                radius -= 1;
+                radius += e.movementY;
             }
             if (e.clientY > y && e.movementY > 0) {
-                radius += 1;
+                radius += e.movementY;
             }
             if (e.clientX < x && e.movementX < 0) {
-                radius += 1;
+                radius -= e.movementX;
             }
             if (e.clientX > x && e.movementX > 0) {
-                radius -= 1;
+                radius -= e.movementX;
             }
         }
         if (changeR === 2) {
             if (e.clientY < y && e.movementY < 0) {
-                radius += 1;
+                radius -= e.movementY;
             }
             if (e.clientY > y && e.movementY > 0) {
-                radius -= 1;
+                radius -= e.movementY;
             }
             if (e.clientX < x && e.movementX < 0) {
-                radius += 1;
+                radius -= e.movementX;
             }
             if (e.clientX > x && e.movementX > 0) {
-                radius -= 1;
+                radius -= e.movementX;
             }
         }
         if (changeR === 3) {
             if (e.clientY < y && e.movementY < 0) {
-                radius += 1;
+                radius -= e.movementY;
             }
             if (e.clientY > y && e.movementY > 0) {
-                radius -= 1;
+                radius -= e.movementY;
             }
             if (e.clientX < x && e.movementX < 0) {
-                radius -= 1;
+                radius += e.movementX;
             }
             if (e.clientX > x && e.movementX > 0) {
-                radius += 1;
+                radius += e.movementX;
             }
         }
     }

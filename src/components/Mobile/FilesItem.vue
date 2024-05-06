@@ -1,48 +1,85 @@
 <template>
-    <div class="list-item" v-for=" item in props.data" :key="item.document.id"
-        @click="emits('openfile', item.document.id)">
-        <div class="image">
-            <svg-icon icon-class="file-default-icon"></svg-icon>
-        </div>
-        <div class="content">
-            <div class="left">
-                <span class="name"> {{ item.document.name }}</span>
-                <span class="time">{{ !item.last ? item.document.created_at :
-        item.document_access_record.last_access_time }}</span>
-            </div>
-            <div class="right" @click.stop>
-                <div class="share" @click="emits('sharefile',item)">
-                    <svg-icon icon-class="mShare"></svg-icon>
+    <template v-if="!showtips">
+        <div v-bind="containerProps" style="height: 100%;padding: 0 14px;">
+            <div v-bind="wrapperProps">
+                <div class="list-item" v-for=" item in list" :key="item.data.document.id" style="height: 84px;"
+                    @click="openfile(item.data.document.id)">
+                    <div class="image">
+                        <img src="@/assets/file-default-icon.png" alt="file-icon">
+                    </div>
+                    <div class="content">
+                        <div class="left">
+                            <span class="name"> {{ item.data.document.name }}</span>
+                            <span class="time">{{ !item.data.last ? item.data.document.created_at :
+        item.data.document_access_record.last_access_time }}</span>
+                        </div>
+                        <div class="right" @click.stop>
+                            <div class="share" @click="shareTo(item.data.document.id)">
+                                <svg-icon icon-class="mShare"></svg-icon>
+                            </div>
+                            <div class="star"
+                                @click="emits('changeStar', item.data.document.id, item.data.document_favorites.is_favorite)">
+                                <svg-icon
+                                    :style="{ padding: item.data.document_favorites.is_favorite ? '3.67px 3.27px' : '' }"
+                                    :icon-class="item.data.document_favorites.is_favorite ? 'mStar-select' : 'mStar'"></svg-icon>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="star" @click="emits('changeStar', item.document.id, item.document_favorites.is_favorite)">
-                    <svg-icon :style="{ padding: item.document_favorites.is_favorite ? '3.67px 3.27px' : '' }"
-                        :icon-class="item.document_favorites.is_favorite ? 'mStar-select' : 'mStar'"></svg-icon>
-                </div>
             </div>
         </div>
-    </div>
+    </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips && !props.errNetwork" class="null"><span>当前列表没有文件</span></div>
+    <div v-if="showtips && !props.errNetwork" class="null"><span>{{ searchkey ? t('miniprogram.search') : t('miniprogram.listnull') }}</span></div>
     <div v-if="props.errNetwork && !loading" class="errnetwork" @click="changeload">
-        <span>刷新</span>
+        <span>{{ t('miniprogram.flushed') }}</span>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue';
 import Loading from '../common/Loading.vue';
+import { useVirtualList } from '@vueuse/core'
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
 
+const {t}=useI18n()
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
-
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     data: any[],
-    errNetwork: boolean,
-}>();
+    errNetwork?: boolean,
+    index?: string,
+    searchkey?: string,
+}>(), {
+    index: '0',
+})
+
+const filteredList = computed(() => props.data.filter(item => item))
+
+const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
+    filteredList,
+    {
+        itemHeight: 84,
+    },
+)
+
+const openfile = (id: string) => {
+    router.push(({ name: 'pageviews', query: { id: id } }))
+    const index = filteredList.value.findIndex(item => item.document.id === id)
+    sessionStorage.setItem('scrollTop', index.toString())
+}
+
+const shareTo = (id: string) => {
+    router.push({ name: 'share', query: { id: id } })
+    const index = filteredList.value.findIndex(item => item.document.id === id)
+    sessionStorage.setItem('scrollTop', index.toString())
+}
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
-    (e: 'openfile', docID: number): void;
+    (e: 'openfile', docID: number, index: number): void;
     (e: 'refresh', tab?: number): void;
     (e: 'sharefile', data: object): void;
 }>()
@@ -55,13 +92,28 @@ watch([() => props.data, () => props.errNetwork], () => {
         showtips.value = false
     }
     loading.value = false
+    nextTick(() => {
+        if (Number(sessionStorage.getItem('scrollTop')) > 0) {
+            scrollTo(Number(sessionStorage.getItem('scrollTop')))
+            sessionStorage.removeItem('scrollTop')
+        }
+    })
 })
+
 
 const changeload = () => {
     loading.value = true
     emits('refresh', Number(sessionStorage.getItem('activeTab')))
 }
 
+
+onMounted(() => {
+
+})
+
+onUnmounted(() => {
+    // 
+})
 
 </script>
 
@@ -110,7 +162,7 @@ const changeload = () => {
         width: 40px;
         height: 40px;
 
-        svg {
+        img {
             width: 100%;
             height: 100%;
         }

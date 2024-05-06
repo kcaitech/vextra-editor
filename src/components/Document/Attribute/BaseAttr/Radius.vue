@@ -298,11 +298,11 @@ function draggingLT(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(radius.lt as number)) {
+    if (isNaN(Number(radius.lt))) {
         return;
     }
 
-    let values = [radius.lt as number, -1, -1, -1];
+    let values = [Number(radius.lt), -1, -1, -1];
     values[0] += e.movementX;
 
     if (values[0] < 0) {
@@ -327,11 +327,12 @@ function draggingRT(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(radius.rt as number)) {
+    if (isNaN(Number(radius.rt))) {
         return;
     }
 
-    const values = [-1, radius.rt as number, -1, -1];
+    const values = [-1, Number(radius.rt), -1, -1];
+
     values[1] += e.movementX;
 
     if (values[1] < 0) {
@@ -352,11 +353,11 @@ function draggingRB(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(radius.rb as number)) {
+    if (isNaN(Number(radius.rb))) {
         return;
     }
 
-    const values = [-1, -1, radius.rb as number, -1];
+    const values = [-1, -1, Number(radius.rb), -1];
     values[2] += e.movementX;
 
     if (values[2] < 0) {
@@ -377,11 +378,11 @@ function draggingLB(e: MouseEvent) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(radius.lb as number)) {
+    if (isNaN(Number(radius.lb))) {
         return;
     }
 
-    const values = [-1, -1, -1, radius.lb as number];
+    const values = [-1, -1, -1, Number(radius.lb)];
     values[3] += e.movementX;
 
     if (values[3] < 0) {
@@ -410,63 +411,31 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="tr">
-        <MdNumberInput
-            icon="radius"
-            :draggable="radius.lt !== mixed"
-            :value="radius.lt"
-            :disabled="disabled"
-            @change="value => change(value, 'lt')"
-            @dragstart="dragstart"
-            @dragging="draggingLT"
-            @dragend="dragend"
-        ></MdNumberInput>
+        <MdNumberInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
+            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend">
+        </MdNumberInput>
         <div class="space" v-if="!rect"></div>
-        <MdNumberInput
-            v-if="rect"
-            class="r-90"
-            icon="radius"
-            :draggable="radius.rt !== mixed"
-            :value="radius.rt"
-            :disabled="disabled"
-            @change="value => change(value, 'rt')"
-            @dragstart="dragstart"
-            @dragging="draggingRT"
-            @dragend="dragend"
-        ></MdNumberInput>
+        <MdNumberInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
+            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
+            @dragend="dragend"></MdNumberInput>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
                 <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
-                          :class="{ 'active': rect }"></svg-icon>
+                    :class="{ 'active': rect }"></svg-icon>
             </div>
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
-        <MdNumberInput
-            class="r-270"
-            icon="radius"
-            :draggable="radius.lb !== mixed"
-            :value="radius.lb"
-            :disabled="disabled"
-            @change="value => change(value, 'lb')"
-            @dragstart="dragstart"
-            @dragging="draggingLB"
-            @dragend="dragend"
-        ></MdNumberInput>
-        <MdNumberInput
-            class="r-180"
-            icon="radius"
-            :draggable="radius.rb !== mixed"
-            :value="radius.rb"
-            :disabled="disabled"
-            @change="value => change(value, 'rb')"
-            @dragstart="dragstart"
-            @dragging="draggingRB"
-            @dragend="dragend"
-        ></MdNumberInput>
+        <MdNumberInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
+            :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
+            @dragend="dragend"></MdNumberInput>
+        <MdNumberInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
+            :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
+            @dragend="dragend"></MdNumberInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
     <teleport to="body">
-        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px`}">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
         </div>
     </teleport>
 </template>
@@ -498,14 +467,14 @@ onUnmounted(() => {
         border: 1px solid #F0F0F0;
         padding: 9px;
 
-        > svg {
+        >svg {
             transition: 0.3s;
             color: #808080;
             width: 14px;
             height: 14px;
         }
 
-        > svg.active {
+        >svg.active {
             color: #FFFFFF;
         }
     }

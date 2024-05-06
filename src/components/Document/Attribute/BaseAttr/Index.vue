@@ -564,11 +564,7 @@ function draggingInnerAngle(e: MouseEvent) {
         lockMouseHandler.createApiCaller('rotating');
     }
 
-    let offset = Number(innerAngle.value) + (e.movementX / 10)
-
-    if (offset < 0.1) offset = 0.1;
-    if (offset > 100) offset = 100;
-    lockMouseHandler.executeInnerAngle(offset / 100);
+    lockMouseHandler.executeInnerAngle(e.movementX / 1000);
 }
 
 function dragend() {

@@ -140,6 +140,7 @@ const showNotification = (type?: number) => {
     startCountdown(type);
 }
 
+
 onMounted(() => {
     timer = setInterval(() => {
         getDocumentInfo()

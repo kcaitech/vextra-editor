@@ -153,10 +153,10 @@ const radiusDotMove = (e: MouseEvent) => {
         const { y } = radiusDotEl.value.getBoundingClientRect();
         if (e.movementY === 0) return radius;
         if (e.clientY < y && e.movementY < 0) {
-            radius = -1;
+            radius = e.movementY;
         }
         if (e.clientY > y && e.movementY > 0) {
-            radius = 1;
+            radius = e.movementY;
         }
     }
     return radius;
@@ -206,33 +206,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- 圓角 -->
-    <g :style="`transform: translate(${radius_dot.x - 4}px, ${radius_dot.y}px);`" ref="radiusDotEl"
-        @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
-        @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
-        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-            stroke-width="1" />
-        <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+    <g>
+        <!-- 圓角 -->
+        <g :style="`transform: translate(${radius_dot.x - 4}px, ${radius_dot.y}px);`" ref="radiusDotEl"
+            @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
+            @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
+            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                stroke-width="1" />
+            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+        </g>
+        <!-- 角数 -->
+        <g :style="`transform: translate(${count_dot.x - 4}px, ${count_dot.y - 4}px);`" ref="countDotEl"
+            @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
+            @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
+            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                stroke-width="1" />
+            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+        </g>
+        <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
+            width="100px" height="28px">
+            <div class="percent_container">
+                <span v-if="changeType === PointActionType.Count">角数 {{ fixedZero(counts) }}</span>
+                <span v-else>圆角 {{ fixedZero(max_radius) }} </span>
+            </div>
+        </foreignObject>
     </g>
-    <!-- 角数 -->
-    <g :style="`transform: translate(${count_dot.x - 4}px, ${count_dot.y - 4}px);`" ref="countDotEl"
-        @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
-        @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
-        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-            stroke-width="1" />
-        <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
-    </g>
-    <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15" width="100px"
-        height="28px">
-        <div class="percent_container">
-            <span v-if="changeType === PointActionType.Count">角数 {{ fixedZero(counts) }}</span>
-            <span v-else>圆角 {{ fixedZero(max_radius) }} </span>
-        </div>
-    </foreignObject>
 </template>
 
 <style scoped lang="scss">

@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = 'release-1.0.3'; // 当前版本
+export const CURRENT_VERSION = 'release-1.0.5'; // 当前版本
 export const SCREEN_SIZE = {
     KEY: 'documentFullScreen',
     FULL: 'full',
@@ -8,7 +8,8 @@ export const WEAKEN_ANIMATION = false; // 弱化动画
 
 export const SKIP_LOGIN = false; // 跳过登录过程，直接进入个人首页，开发使用
 
-export const production = false;
+declare const IS_PRODUCTION: string;
+export const production = IS_PRODUCTION;
 export const BASE_SCHEME = production ? "https" : "https";
 export const BASE_HOST = production ? "moss.design" : "moss.design";
 export const BASE_PATH = `${BASE_SCHEME}://${BASE_HOST}`;

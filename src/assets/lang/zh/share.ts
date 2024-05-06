@@ -1,6 +1,6 @@
 export const share = {
     need_to_apply_for_confirmation: "需申请确认",
-    editable: "可编辑",
+    editable: "编辑",
     readOnly: "只读",
     remove: '移除',
     anyone_can_read_it: '任何人均可阅读',
@@ -20,7 +20,7 @@ export const share = {
     share_limit: '分享限制人数',
     founder: '创建者',
     document_permission: '文档权限',
-    reviewable: '可评论',
+    reviewable: '评论',
     no_document:'没有该文档',
 }
 
