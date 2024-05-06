@@ -3,7 +3,7 @@ import {
     CurvePoint,
     Matrix,
     PathShapeView,
-    PathType, Style,
+    PathType,
     WatchableObject
 } from "@kcdesign/data";
 import { Context } from ".";
@@ -109,9 +109,55 @@ export class Path extends WatchableObject {
         return !!points?.length && points.findIndex((i) => i === index) > -1;
     }
 
-    select_point(segment: number, index: number) {
+    select_point(segmentIndex: number, index: number, deep = false) {
         this._reset();
-        this.selected_points.set(segment, [index]);
+
+
+        if (deep) {
+            const pathShape = this.m_context.selection.pathshape as PathShapeView;
+            if (!pathShape) {
+                return;
+            }
+
+            const point = pathShape?.segments[segmentIndex]?.points[index];
+
+            if (!point) {
+                return;
+            }
+
+            const { x, y } = point;
+
+            const segments = pathShape.segments;
+
+            const resultPoints = new Map<number, number[]>();
+
+            for (let i = 0; i < segments.length; i++) {
+                const points = segments[i].points;
+
+                let container = resultPoints.get(i);
+                if (!container) {
+                    container = [];
+                    resultPoints.set(i, container);
+                }
+
+                for (let j = 0; j < points.length; j++) {
+                    const __point = points[j];
+                    if (__point.x === x && __point.y === y) {
+                        container.push(j);
+                    }
+                }
+            }
+
+            resultPoints.forEach((points, segmentIndex) => {
+                if (!points.length) {
+                    return;
+                }
+
+                this.selected_points.set(segmentIndex, points);
+            });
+        } else {
+            this.selected_points.set(segmentIndex, [index]);
+        }
 
         this.notify(Path.SELECTION_CHANGE);
     }
@@ -149,33 +195,6 @@ export class Path extends WatchableObject {
     is_selected_segs(segment: number, index: number) {
         const sides = this.selected_sides.get(segment);
         return !!sides?.length && sides.findIndex((i) => i === index) > -1;
-    }
-
-    push_after_sort_points(segment: number, index: number) {
-        const points = this.selected_points.get(segment);
-
-        if (!points?.length) {
-            return;
-        }
-
-        for (let i = points.length - 1; i > -1; i--) {
-            if (points[i] >= index) {
-                points[i]++;
-            }
-        }
-        points.push(index);
-
-        this.notify(Path.SELECTION_CHANGE);
-    }
-
-    reset_points() {
-        const need_notify = this.selected_points.size;
-
-        this.selected_points.clear();
-
-        if (need_notify) {
-            this.notify(Path.SELECTION_CHANGE);
-        }
     }
 
     get selectedSides() {
@@ -234,15 +253,6 @@ export class Path extends WatchableObject {
             this.selected_sides.set(k, Array.from(v.values()));
         })
         this.notify(Path.SELECTION_CHANGE);
-    }
-
-    reset_sides() {
-        const need_notify = this.selected_sides.size;
-        this.selected_sides.clear();
-
-        if (need_notify) {
-            this.notify(Path.SELECTION_CHANGE);
-        }
     }
 
     _reset() {
@@ -383,11 +393,6 @@ export class Path extends WatchableObject {
     }
 
     private previous_path_id: string = '';
-    private previous_path_style: Style | undefined;
-
-    get previousPathId() {
-        return this.previous_path_id;
-    }
 
     setPreviousPathId(id: string) {
         this.previous_path_id = id;
@@ -397,11 +402,5 @@ export class Path extends WatchableObject {
         const page = this.m_context.selection.selectedPage!;
         const shape = page.getShape(this.previous_path_id);
         return shape?.style;
-        // return this.previous_path_style;
     }
-
-    setPreviousPathStyle(style: Style | undefined) {
-        this.previous_path_style = style;
-    }
-
 }

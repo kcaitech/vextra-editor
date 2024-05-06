@@ -80,8 +80,9 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         return;
     }
 
-    if (dbl_action()) { // m1458
+    if (dbl_action()) {
         modify_point_curve_mode(props.context, index);
+        return;
     }
 
     event.stopPropagation();
@@ -91,7 +92,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         path.adjust_points(segment, index)
     } else {
         if (!path.is_selected(segment, index)) {
-            path.select_point(segment, index);
+            path.select_point(segment, index, true);
         }
     }
 

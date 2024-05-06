@@ -10,6 +10,7 @@ import {
     ShapeType,
     ShapeView
 } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
@@ -185,7 +186,7 @@ export function modify_point_curve_mode(context: Context, index: number) {
     } else {
         target_curve_mode = CurveMode.Straight
     }
-
+    
     editor.modifyPointsCurveMode(selected, target_curve_mode);
 }
 
