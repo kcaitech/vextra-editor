@@ -364,6 +364,8 @@ export class PathEditor extends TransformHandler {
             this.path.setPreviousPathId(_vec.id);
         }
 
+        this.updateCtrlView();
+
         return _vec;
     }
 

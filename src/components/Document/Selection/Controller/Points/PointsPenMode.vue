@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { adapt2Shape, CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { adapt2Shape, CurvePoint, Matrix, PathShape, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -28,27 +28,27 @@ const props = defineProps<Props>();
 const data: {
     dots: Dot[],
     segments: Segment[][]
-} = reactive({ dots: [], segments: [] });
-const { dots, segments } = data;
+} = reactive({dots: [], segments: []});
+const {dots, segments} = data;
 const dragActiveDis = 3;
 const new_high_light = ref<string>('');
 const add_rect = ref<string>('');
 let shape: ShapeView;
-let startPosition: ClientXY = { x: 0, y: 0 };
+let startPosition: ClientXY = {x: 0, y: 0};
 let isDragging = false;
 let bridged = false;
 
 let pathModifier: PathEditor | undefined;
-let downXY: XY = { x: 0, y: 0 };
+let downXY: XY = {x: 0, y: 0};
 
 let current_segment: number = -1;
 let current_curve_point_index: number = -1;
 
-const preXY = ref<XY>({ x: -10, y: -10 });
+const preXY = ref<XY>({x: -10, y: -10});
 
 const livingPathVisible = ref<boolean>(false);
 const livingPath = ref<string>('');
-const root = { ...props.context.workspace.root };
+const root = {...props.context.workspace.root};
 const maskPath = `M0 0, h${root.width} v${root.height} h${-root.width} z`;
 
 const preparePointVisible = ref<boolean>(false);
@@ -130,7 +130,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
                 pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
-                downXY = { x: event.x, y: event.y };
+                downXY = {x: event.x, y: event.y};
                 document.addEventListener('mousemove', point_mousemove);
                 document.addEventListener('mouseup', point_mouseup);
             }
@@ -163,7 +163,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
                 pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
-                downXY = { x: event.x, y: event.y };
+                downXY = {x: event.x, y: event.y};
                 document.addEventListener('mousemove', point_mousemove);
                 document.addEventListener('mouseup', point_mouseup);
             }
@@ -184,14 +184,14 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             const result = pathModifier.reverseSegment(segment);
 
             if (result) {
-                const { segment: _segment, activeIndex } = result;
+                const {segment: _segment, activeIndex} = result;
                 const point = (shape as PathShapeView)?.segments[_segment]?.points[activeIndex];
                 if (!point) {
                     return;
                 }
 
                 path.select_point(_segment, activeIndex);
-                path.setLastPoint({ point: point as CurvePoint, segment: _segment, index: activeIndex });
+                path.setLastPoint({point: point as CurvePoint, segment: _segment, index: activeIndex});
 
                 path.setContactStatus(true);
 
@@ -211,7 +211,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 return;
             }
 
-            path.setLastPoint({ point: point as CurvePoint, segment, index })
+            path.setLastPoint({point: point as CurvePoint, segment, index})
             path.setContactStatus(true);
             path.select_point(segment, index);
 
@@ -248,7 +248,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 return achieve;
             });
 
-            downXY = { x: event.x, y: event.y };
+            downXY = {x: event.x, y: event.y};
 
             asyncEnvMount();
         }
@@ -262,11 +262,11 @@ function checkStatus() {
         return;
     }
 
-    const { segment, index, handler, e } = params;
+    const {segment, index, handler, e} = params;
 
     current_segment = segment;
     current_curve_point_index = index;
-    downXY = { x: e.x, y: e.y };
+    downXY = {x: e.x, y: e.y};
 
     pathModifier = handler;
 
@@ -274,8 +274,10 @@ function checkStatus() {
         .segments[0]
         .points[0] as CurvePoint;
 
-    path.setLastPoint({ point, index: 0, segment: 0 });
+    path.setLastPoint({point, index: 0, segment: 0});
     path.select_point(segment, index);
+
+    passiveUpdate();
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -286,7 +288,6 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
     if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-
         launch_bridging(event);
     }
 }
@@ -296,8 +297,8 @@ function launch_bridging(event: MouseEvent) {
     if (!last || !pathModifier) {
         return;
     }
-    props.context.path.setBridgeParams({ handler: pathModifier, segment: last.segment, index: last.index, e: event });
-    props.context.path.bridging({ segment: -1, index: -1, event });
+    props.context.path.setBridgeParams({handler: pathModifier, segment: last.segment, index: last.index, e: event});
+    props.context.path.bridging({segment: -1, index: -1, event});
 
     pathModifier = undefined;
 
@@ -410,13 +411,20 @@ function documentMove(e: MouseEvent) {
 
 function modifyLivingPath() {
     const path = props.context.path;
-    const previous = path.lastPoint?.point;
 
-    if (!previous || !path.isContacting) {
+    if (!path.lastPoint) {
         return;
     }
 
     const shape = adapt2Shape(props.context.selection.selectedShapes[0] as PathShapeView); // 异步问题需要处理
+
+
+    const {segment, index} = path.lastPoint;
+    const previous = (shape as PathShape)?.pathsegs[segment]?.points[index];
+
+    if (!previous || !path.isContacting) {
+        return;
+    }
 
     const m = new Matrix(shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
@@ -446,7 +454,7 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
-            downXY = { x: e.x, y: e.y };
+            downXY = {x: e.x, y: e.y};
             document.addEventListener('mousemove', point_mousemove);
             document.addEventListener('mouseup', point_mouseup);
 
@@ -469,7 +477,7 @@ function down(e: MouseEvent) {
             return achieve;
         });
 
-        downXY = { x: e.x, y: e.y };
+        downXY = {x: e.x, y: e.y};
 
         asyncEnvMount();
 
@@ -483,14 +491,14 @@ function asyncEnvMount() {
 }
 
 onMounted(() => {
-    checkStatus();
-
     props.context.workspace.watch(matrix_watcher);
 
     shape = props.context.selection.pathshape!;
     if (!shape) {
         return console.log('wrong shape');
     }
+
+    checkStatus();
 
     shape.watch(update);
     update();
