@@ -28,6 +28,8 @@ type Base = {
 type BaseData = Map<string, Base>;
 
 export class PathEditor extends TransformHandler {
+    static BORDER_MAP = 1; // 建立动作点之外的点形成的地图
+    static FULL_MAP = 2; // 建立完整的图层地图
     private shape: ShapeView;
     private path: Path;
 
@@ -42,14 +44,14 @@ export class PathEditor extends TransformHandler {
     private baseMatrix: Matrix = new Matrix();
     private baseMatrixInverse: Matrix = new Matrix();
 
-    private isHandleAction: boolean = false;
     private handleInfo: { index: number, segment: number, side: 'from' | 'to' } | undefined = undefined;
 
     private isInitMatrix: boolean = false;
 
     private actionType: 'handle' | 'penHandle' | 'point' = 'handle';
 
-    constructor(context: Context, event: MouseEvent) {
+
+    constructor(context: Context, event: MouseEvent, needBuildMap = 0, flattenPoint = false) {
         super(context, event);
         this.path = context.path;
 
@@ -59,6 +61,81 @@ export class PathEditor extends TransformHandler {
         this.shape = this.context.selection.selectedShapes[0];
 
         this.workspace.setSelectionViewUpdater(false);
+
+        if (needBuildMap) {
+            this.buildMap(needBuildMap);
+        }
+
+        if (flattenPoint) { // 用于减去重合的点
+            this.getUniquePosition();
+        }
+    }
+
+    private mapX = new Map<number, XY[]>();
+    private mapY = new Map<number, XY[]>();
+
+    private buildMap(buildType: number) {
+        this.initMatrix();
+
+        const shape = this.shape as PathShapeView;
+
+        if (!shape) {
+            return;
+        }
+
+        const clientMatrix = new Matrix(this.baseMatrix);
+        clientMatrix.multiAtLeft(this.context.workspace.matrix);
+
+        const activeTarget = new Set<string>();
+
+        if (buildType === 1) {
+            this.path.syntheticPoints.forEach((points, segmentIndex) => {
+                if (!points.length) return;
+                points.forEach(index => {
+                    const point = shape?.segments[segmentIndex]?.points[index];
+                    if (!point) return;
+                    activeTarget.add(point.id);
+                })
+            })
+        }
+
+
+        const segments = shape.segments;
+
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+
+            if (!segment) continue;
+
+            const points = segment.points;
+
+            for (let j = 0; j < points.length; j++) {
+                const point = points[j];
+                if (!point) continue;
+
+                if (buildType === 1 && activeTarget.has(point.id)) continue;
+
+                const xy = clientMatrix.computeCoord3(point);
+
+                let xContainer = this.mapX.get(xy.x);
+                if (!xContainer) {
+                    xContainer = [xy];
+                    this.mapX.set(xy.x, xContainer);
+                } else {
+                    xContainer.push(xy);
+                }
+                let yContainer = this.mapY.get(xy.y);
+                if (!yContainer) {
+                    yContainer = [xy];
+                    this.mapY.set(xy.y, yContainer);
+                } else {
+                    yContainer.push(xy);
+                }
+            }
+        }
+
+        console.log('mapX:', this.mapX);
+        console.log('mapY:', this.mapY);
     }
 
     private initMatrix() {
@@ -115,14 +192,89 @@ export class PathEditor extends TransformHandler {
         }
     }
 
+    private uniquePosition: Set<string> = new Set();
+    private selected: Map<number, number[]> | undefined = undefined;
+
+    private getUniquePosition() {
+        const selected = this.selected || this.path.syntheticPoints;
+        if (!this.selected) {
+            this.selected = selected;
+        }
+        const shape = this.shape as PathShapeView;
+        const __xy_string = new Set<string>();
+        selected.forEach((indexes, segmentIndex) => {
+            const points = shape.segments[segmentIndex]?.points;
+
+            if (!points) return;
+
+            for (let i = 0; i < indexes.length; i++) {
+                const point = points[indexes[i]];
+                if (!point) continue;
+
+                const __xyStr = `${point.x}?${point.y}`;
+
+                console.log('__xyStr', __xyStr, point.id);
+
+                if (!__xy_string.has(__xyStr)) {
+                    this.uniquePosition!.add(point.id);
+                    __xy_string.add(__xyStr);
+                }
+            }
+        });
+
+        console.log('uniquePositionID:', this.uniquePosition);
+    }
+
+    private modifyDelta(dx: number, dy: number) {
+        const points: XY[] = [];
+        const baseData = this.baseData;
+
+        const clientMatrix = new Matrix(this.baseMatrix);
+        clientMatrix.multiAtLeft(this.context.workspace.matrix);
+
+        this.uniquePosition.forEach(id => {
+            const base = baseData.get(id);
+            if (!base) return;
+
+            points.push(clientMatrix.computeCoord2(base.x + dx, base.y + dy));
+        })
+
+        // todo 1.拿这些点去和其他的点做距离比对；2.拿这些点去和其他的线段做距离比对；
+
+        console.log('points:', points);
+    }
+
+    private modifyByPoints(activePoints: XY[]) {
+        // todo 比对、吸附、挣脱
+        // continue
+    }
+
+    private modifyBySegment() {
+
+    }
+
     private __execute() {
         const __fixed = this.baseMatrixInverse.computeCoord3(this.fixedPoint);
         const __living = this.baseMatrixInverse.computeCoord3(this.livingPoint);
 
-        const dx = __living.x - __fixed.x;
-        const dy = __living.y - __fixed.y;
+        let dx = __living.x - __fixed.x;
+        let dy = __living.y - __fixed.y;
 
-        const selected = this.path.syntheticPoints;
+        if (this.shiftStatus) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+                dy = 0;
+            } else {
+                dx = 0;
+            }
+        }
+
+        this.modifyDelta(dx, dy);
+
+        const selected = this.selected || this.path.syntheticPoints;
+        if (!this.selected) {
+            this.selected = selected;
+        }
+
         const units: ModifyUnits = new Map();
 
         if (this.shape.pathType === PathType.Editable) {
@@ -248,10 +400,10 @@ export class PathEditor extends TransformHandler {
             this.altStatus = true;
             this.passiveExecute();
         }
-        // if (event.shiftKey) {
-        //     this.shiftStatus = true;
-        //     this.passiveExecute();
-        // }
+        if (event.shiftKey) {
+            this.shiftStatus = true;
+            this.passiveExecute();
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -259,10 +411,10 @@ export class PathEditor extends TransformHandler {
             this.altStatus = false;
             this.passiveExecute();
         }
-        // if (event.code === "ShiftLeft") {
-        //     this.shiftStatus = false;
-        //     this.passiveExecute();
-        // }
+        if (event.code === "ShiftLeft") {
+            this.shiftStatus = false;
+            this.passiveExecute();
+        }
     }
 
     createApiCaller(segment = -1, index = -1, needStore = false) {
@@ -416,8 +568,6 @@ export class PathEditor extends TransformHandler {
         if (!this.isInitMatrix) {
             this.initMatrix();
         }
-
-        this.isHandleAction = true;
 
         if (!this.handleInfo) {
             this.handleInfo = { index, segment, side };

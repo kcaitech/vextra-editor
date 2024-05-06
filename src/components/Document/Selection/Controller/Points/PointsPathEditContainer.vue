@@ -99,7 +99,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
     current_segment = segment;
     current_curve_point_index = index;
 
-    pathModifier = new PathEditor(props.context, event);
+    pathModifier = new PathEditor(props.context, event, PathEditor.BORDER_MAP, true);
     downXY = { x: event.x, y: event.y };
 
     document.addEventListener('mousemove', point_mousemove);
