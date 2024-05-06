@@ -46,6 +46,8 @@ import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
 import VersionDesc from "@/components/common/VersionDesc.vue";
 import { PROJECT_NAME } from "@/const";
+import kcdesk from '@/kcdesk';
+import { newFile2, openFile3 } from '@/utils/neworopen';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -533,6 +535,25 @@ function init_doc() {
         upload(project_id);
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+    } else if (kcdesk && route.query.from === 'kcdesk') {
+        if (route.query.newdoc) {
+            // 新建
+            newFile2();
+            init_doc();
+        } else if (route.query.localfile) {
+            // 打开本地文档
+            kcdesk.osOpenFile(route.query.localfile as string).then(file => {
+                if (file) {
+                    openFile3(file).then(() => {
+                        init_doc();
+                    }).catch(e => {
+                        console.error(e);
+                    })
+                } else {
+                    // ??
+                }
+            });
+        }
     } else {
         router.push('/files');
     }

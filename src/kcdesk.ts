@@ -2,6 +2,7 @@
 interface IKcDesk {
     // os
     osPlatform(): string;
+    osOpenFile(localfile: string): Promise<File | undefined>;
 
     // window
     winClose(): void; // 关闭窗口
@@ -9,7 +10,7 @@ interface IKcDesk {
     winToggleMaximize(): void; // 切换最大化
 
     // files
-    fileGetList(): Promise<{ name: string, fid: string | undefined, viewid: number }[]>; // 打开文件列表
+    fileGetList(): Promise<{ name: string, viewid: number }[]>; // 打开文件列表
     fileWatchList(watcher: (list: { name: string, fid: string | undefined, viewid: number }[]) => void): void;
     fileClose(viewid: number): void; // 关闭文档
     fileShow(viewid: number): void; // 切换文档
@@ -18,6 +19,7 @@ interface IKcDesk {
     fileOffsetList(offset: number): void; // 文件列表偏移
     fileGetListOffset(): number; // 文件列表偏移
     fileOpen(id: string, name: string, args: string): void; // 打开文档或者切换到对应文档
+    fileOpenLocal(filter: string): void; // 打开文档或者切换到对应文档
     fileNew(name: string): void;
 }
 

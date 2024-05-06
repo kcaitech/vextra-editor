@@ -146,7 +146,7 @@ const routes = [
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'document' && to.query.id) {
                 const id = to.query.id
-                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : ''; // 去掉url中的空格
                 if (kcdesk && to.query.from !== 'kcdesk') {
                     const name = window.sessionStorage.getItem("kcdesk_document_name") ?? "";
                     kcdesk.fileOpen(newid, name, "");
