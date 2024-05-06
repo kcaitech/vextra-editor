@@ -14,6 +14,7 @@ import { Tool } from '@/context/tool';
 import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
+import kcdesk from "@/kcdesk";
 
 const route = useRoute();
 
@@ -212,7 +213,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container" @dblclick.stop>
-        <div class="home" @click="home">
+        <div class="home" @click="home" v-if="!kcdesk">
             <svg-icon icon-class="home"></svg-icon>
         </div>
         <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>

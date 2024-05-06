@@ -1,11 +1,11 @@
-import { createRouter, createWebHistory} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
-import kcdesk from "./kcdesk";
+import kcdesk from "@/kcdesk";
 
-declare module 'vue-router'{
-    interface RouteMeta{
-        transition?:string,
+declare module 'vue-router' {
+    interface RouteMeta {
+        transition?: string,
     }
 }
 
@@ -33,39 +33,46 @@ const MobileHome = () => import('@/components/Mobile/index.vue')
 const PageViews = () => import('@/components/Mobile/PageViews.vue')
 const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
-const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
-const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
-const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
-const Wxlogin=()=>import('@/components/Mobile/WxLogin.vue')
-const Mapply=()=>import('@/components/Mobile/Mapply.vue')
-const Msearch=()=>import('@/components/Mobile/Searchview.vue')
+const Privacy = () => import('@/components/Mobile/MobliePrivacyolicy.vue')
+const Agreements = () => import('@/components/Mobile/MoblieServiceagreement.vue')
+const Sharefile = () => import('@/components/Mobile/ShareFile.vue')
+const Wxlogin = () => import('@/components/Mobile/WxLogin.vue')
+const Mapply = () => import('@/components/Mobile/Mapply.vue')
+const Msearch = () => import('@/components/Mobile/Searchview.vue')
 
-let _t: any = i18n.global
+const _t: any = i18n.global
+const productName = _t.t('product.name');
 
-const children = [
+enum Group {
+    Home,
+    Document,
+}
+
+
+const apphome_children = [
     {
         path: 'recently',
         name: 'recently',
         component: Recently,
-        meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.recently_opened') + ' - ' + productName },
     },
     {
         path: 'star',
         name: 'starfile',
         component: StarFile,
-        meta: { title: _t.t('home.star_file') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.star_file') + ' - ' + productName },
     },
     {
         path: 'myfile',
         name: 'meshare',
         component: MeShare,
-        meta: { title: _t.t('home.file_shared') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.file_shared') + ' - ' + productName },
     },
     {
         path: 'shared',
         name: 'shareme',
         component: ShareMe,
-        meta: { title: _t.t('home.shared_file_received') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.shared_file_received') + ' - ' + productName },
     },
     {
         path: 'trash',
@@ -84,7 +91,7 @@ const children = [
         path: 'project_shared',
         name: 'ProjectShare',
         component: ProjectShare,
-        meta: { title: _t.t('Createteam.sharetip') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('Createteam.sharetip') + ' - ' + productName },
     },
     {
         path: 'project/:id',
@@ -101,7 +108,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: navigator.userAgent.includes('miniProgram')?'Wxlogin':'login' },
+        redirect: { name: navigator.userAgent.includes('miniProgram') ? 'Wxlogin' : 'login' },
         children: [
             {
                 path: "introduction",
@@ -113,35 +120,38 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name')},
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + productName },
 
             },
             {
                 path: "serviceagreement",
                 name: "serviceagreement",
                 component: Serviceagreement,
-                meta: { title: _t.t('system.read_TOS') + ' - ' + _t.t('product.name') },
+                meta: { title: _t.t('system.read_TOS') + ' - ' + productName },
             },
-        ]
+        ],
+        meta: { group: Group.Home }
     },
     {
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true},
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true, group: Group.Home },
     },
     {
         path: "/home",
         name: "home",
         component: HomeVue,
         props: true,
+        meta: { group: Group.Home }
     },
     {
         path: "/document",
         name: "document",
         component: DocumentVue,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Document
         },
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'document' && to.query.id) {
@@ -168,6 +178,7 @@ const routes = [
         component: PageViews,
         meta: {
             requireAuth: true,
+            group: Group.Document
         },
     },
     {
@@ -175,14 +186,18 @@ const routes = [
         name: "apphome",
         component: Apphome,
         redirect: '/files/recently',
-        children: children
+        children: apphome_children,
+        meta: {
+            group: Group.Home
+        }
     },
-    {  
+    {
         path: "/wxlogin",
         name: "Wxlogin",
         component: Wxlogin,
         meta: {
             requireAuth: true,
+            group: Group.Home
         },
     },
     {
@@ -191,6 +206,7 @@ const routes = [
         component: MobileHome,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -199,6 +215,7 @@ const routes = [
         component: ProjectView,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -207,6 +224,7 @@ const routes = [
         component: ProjectFileView,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -215,6 +233,7 @@ const routes = [
         component: Sharefile,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -223,24 +242,32 @@ const routes = [
         component: Msearch,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
         path: "/privacy",
         name: 'privacy',
         component: Privacy,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: "/agreements",
         name: 'agreements',
         component: Agreements,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: "/join",
         name: "join",
         component: joinTeam,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -248,7 +275,8 @@ const routes = [
         name: "apply",
         component: Apply,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -256,7 +284,8 @@ const routes = [
         name: "mapply",
         component: Mapply,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -264,13 +293,17 @@ const routes = [
         name: "projectApply",
         component: projectApply,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
         path: "/pcenter",
         name: "per_center",
-        component: per_center
+        component: per_center,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: '/catchAll(.*)/:catchAll(.*)',
@@ -300,5 +333,24 @@ export const router = createRouter({
         }
     },
     routes: routes
+})
+
+let kcdesk_viewid: number | undefined;
+
+router.beforeEach((to, from, next) => {
+    // save viewid
+    if (kcdesk && to.query.from === 'kcdesk') {
+        kcdesk_viewid = Number.parseInt(to.query.kcdesk_viewid as string);
+    }
+    if (kcdesk && from.meta.group === Group.Document && to.meta.group !== Group.Document) {
+        // 显示出错页还是关闭当前页？？
+        // 显示个页面即将关闭？
+        if (kcdesk_viewid) kcdesk.fileClose(kcdesk_viewid);
+
+        next(false);
+    }
+    else {
+        next();
+    }
 })
 
