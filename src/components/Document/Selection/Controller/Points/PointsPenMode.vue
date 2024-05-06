@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { adapt2Shape, CurvePoint, Matrix, PathShape, PathShapeView, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
@@ -131,8 +131,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
                 downXY = {x: event.x, y: event.y};
-                document.addEventListener('mousemove', point_mousemove);
-                document.addEventListener('mouseup', point_mouseup);
+                asyncEnvMount();
             }
         } else {
             const __segment = (shape as PathShapeView).segments[segment];
@@ -164,8 +163,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
                 downXY = {x: event.x, y: event.y};
-                document.addEventListener('mousemove', point_mousemove);
-                document.addEventListener('mouseup', point_mouseup);
+                asyncEnvMount();
             }
         }
     } else { // 非连接状态
@@ -268,8 +266,6 @@ function checkStatus() {
     current_curve_point_index = index;
     downXY = {x: e.x, y: e.y};
 
-    pathModifier = handler;
-
     const point = (props.context.selection.selectedShapes[0] as PathShapeView)
         .segments[0]
         .points[0] as CurvePoint;
@@ -279,8 +275,13 @@ function checkStatus() {
 
     passiveUpdate();
 
-    document.addEventListener('mousemove', point_mousemove);
-    document.addEventListener('mouseup', point_mouseup);
+    if (!e.buttons) {
+        handler?.fulfil();
+        return;
+    }
+
+    pathModifier = handler;
+    asyncEnvMount();
 }
 
 function point_mousemove(event: MouseEvent) {
@@ -455,8 +456,7 @@ function down(e: MouseEvent) {
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
             downXY = {x: e.x, y: e.y};
-            document.addEventListener('mousemove', point_mousemove);
-            document.addEventListener('mouseup', point_mouseup);
+            asyncEnvMount();
 
             e.stopPropagation();
         }

@@ -49,29 +49,29 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-let page_xy_1: PageXY = { x: 0, y: 0 };
-let page_xy_2: PageXY = { x: 0, y: 0 };
+let page_xy_1: PageXY = {x: 0, y: 0};
+let page_xy_2: PageXY = {x: 0, y: 0};
 
-let client_xy_1: ClientXY = { x: 0, y: 0 };
+let client_xy_1: ClientXY = {x: 0, y: 0};
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
 let just_search: boolean = false;
 
 // #region
 const commentInput = ref<boolean>(false);
-const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
+const commentPosition: ClientXY = reactive({x: 0, y: 0});
 type CommentInputEl = InstanceType<typeof CommentInput>;
 const commentEl = ref<CommentInputEl>();
 const shapeID = ref('')
-const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
+const shapePosition: ClientXY = reactive({x: 0, y: 0});
 const route = useRoute()
-const posi = ref({ x: 0, y: 0 });
+const posi = ref({x: 0, y: 0});
 const rootWidth = ref<number>(props.context.workspace.root.width);
 const cursor = ref<string>('');
 
 const mode = ref<'normal' | 'pen'>('normal');
 
-const dotXY = ref<XY>({ x: -10, y: -10 });
+const dotXY = ref<XY>({x: -10, y: -10});
 let pathEditor: PathEditor | undefined;
 
 // #endregion
@@ -102,11 +102,11 @@ function down(e: MouseEvent) {
                 const path = props.context.path;
 
                 path.setContactStatus(true);
-                path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+                path.setBridgeParams({handler: pathEditor!, segment: 0, index: 0, e});
 
                 const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
                 if (point) {
-                    path.setLastPoint({ point, segment: 0, index: 0 });
+                    path.setLastPoint({point, segment: 0, index: 0});
                 }
 
                 nextTick(() => {
@@ -178,7 +178,7 @@ function up(e: MouseEvent) {
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
-    const { x, y } = workspace.getContentXY(e);
+    const {x, y} = workspace.getContentXY(e);
     const xy = matrix1.computeCoord2(x, y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
@@ -188,12 +188,12 @@ const detectionShape = (e: MouseEvent) => {
     } else {
         const shape = shapes[0]
         const fp = shape.frame2Root();
-        const farmeXY = { x: fp.x, y: fp.y }
+        const farmeXY = {x: fp.x, y: fp.y}
         shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
         shapePosition.y = xy.y - farmeXY.y
         shapeID.value = shape.id
     }
-    return { x, y, xy }
+    return {x, y, xy}
 }
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
@@ -211,7 +211,7 @@ const addComment = (e: MouseEvent) => {
     if (commentInput.value) {
         return;
     }
-    const { x, y, xy } = detectionShape(e)
+    const {x, y, xy} = detectionShape(e)
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
 
@@ -222,7 +222,7 @@ const addComment = (e: MouseEvent) => {
 }
 
 const getCommentInputXY = (e: MouseEvent) => {
-    const { x, y, xy } = detectionShape(e)
+    const {x, y, xy} = detectionShape(e)
     commentPosition.x = xy.x;
     commentPosition.y = xy.y;
     posi.value.x = x
@@ -275,7 +275,7 @@ let apex1: ContactForm | undefined, apex2: ContactForm | undefined;
 let page_xy2: PageXY | undefined;
 
 function search_apex(e: MouseEvent) {
-    const { x, y } = props.context.workspace.root;
+    const {x, y} = props.context.workspace.root;
     const xy = props.context.workspace.matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
@@ -319,7 +319,7 @@ function modify_page_xy_1(e: MouseEvent) {
         rootXY.y = assistResult.y;
     }
 
-    page_xy_1 = { ...rootXY };
+    page_xy_1 = {...rootXY};
 
     modifyXYByAlignSetting(props.context, page_xy_1);
 
@@ -332,7 +332,7 @@ function modify_client_xy_1(e: MouseEvent) {
 
 function correct_page_xy(x: number, y: number) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.create_match({ x, y });
+    const target = props.context.assist.create_match({x, y});
     if (target) {
         if (stickedX) {
             if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
@@ -351,7 +351,7 @@ function correct_page_xy(x: number, y: number) {
             stickedY = true;
         }
     }
-    return { x, y }
+    return {x, y}
 }
 
 /**
@@ -359,11 +359,11 @@ function correct_page_xy(x: number, y: number) {
  */
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
     if (!newShape) {
-        asyncCreator.setFrame({ x, y });
+        asyncCreator.setFrame({x, y});
         return;
     }
     if (newShape.type === ShapeType.Line) {
-        const p2 = { x, y };
+        const p2 = {x, y};
         const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
         if (type_d === 0) {
@@ -394,7 +394,7 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
             p2.y = Math.round(p2.y);
         }
 
-        asyncCreator.setFrame({ x: p2.x, y: p2.y });
+        asyncCreator.setFrame({x: p2.x, y: p2.y});
     } else {
         const del = x - page_xy_1.x;
         y = page_xy_1.y + del;
@@ -405,14 +405,14 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
             y = Math.round(y);
         }
 
-        asyncCreator.setFrame({ x, y });
+        asyncCreator.setFrame({x, y});
     }
     props.context.assist.notify(Asssit.CLEAR);
 }
 
 function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
-    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+    const {x, y} = matrix1.computeCoord2(_xy.x, _xy.y);
     let width = Math.abs(x - page_xy_1.x);
     let height = Math.abs(y - page_xy_1.y);
 
@@ -447,7 +447,7 @@ function gen_new_shape(e: MouseEvent) {
 
 function modify_new_shape_frame(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
-    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+    const {x, y} = matrix1.computeCoord2(_xy.x, _xy.y);
 
     if (asyncCreator) {
         if (newShape && newShape.type === ShapeType.Contact) {
