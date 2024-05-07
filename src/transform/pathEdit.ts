@@ -15,6 +15,7 @@ import {
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
+import { Asssit } from "@/context/assist";
 
 type Base = {
     x: number;
@@ -131,7 +132,7 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 }
 
 export class PathEditor extends TransformHandler {
-    static DELTA = 3;
+    static DELTA = 5;
 
     static BORDER_MAP = 1; // 建立动作点之外的点形成的地图
     static FULL_MAP = 2; // 建立完整的图层地图
@@ -383,6 +384,8 @@ export class PathEditor extends TransformHandler {
 
         let DX = 0;
         let DY = 0;
+        let TX = 0;
+        let TY = 0;
 
         const xs = Array.from(this.mapX.keys());
         const ys = Array.from(this.mapY.keys());
@@ -397,6 +400,7 @@ export class PathEditor extends TransformHandler {
                 if (__dx < delX) {
                     delX = __dx;
                     DX = dx;
+                    TX = xs[j];
                 }
             }
 
@@ -407,19 +411,30 @@ export class PathEditor extends TransformHandler {
                 if (__dy < delY) {
                     delY = __dy;
                     DY = dy;
+                    TY = ys[k];
                 }
             }
         }
 
         let modified = false;
+        const assist = this.context.assist;
+
         if (delX < PathEditor.DELTA) {
             activePoints[0].x += DX;
+            assist.setNodesX2(this.mapX.get(TX) || []);
             modified = true;
         }
 
         if (delY < PathEditor.DELTA) {
             activePoints[0].y += DY;
+            assist.setNodesY2(this.mapY.get(TY) || []);
             modified = true;
+        }
+
+        if (modified) {
+            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+        } else {
+            assist.notify(Asssit.CLEAR);
         }
 
         return modified;
