@@ -15,7 +15,6 @@ import {
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
-import { type } from "typedoc/dist/lib/output/themes/default/partials/type";
 
 type Base = {
     x: number;
