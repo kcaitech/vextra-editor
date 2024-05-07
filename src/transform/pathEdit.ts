@@ -15,6 +15,7 @@ import {
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
+import { type } from "typedoc/dist/lib/output/themes/default/partials/type";
 
 type Base = {
     x: number;
@@ -27,7 +28,112 @@ type Base = {
 }
 type BaseData = Map<string, Base>;
 
+enum SegmentType {
+    Straight = 'line',
+    Curve3rd = '3rd',
+    Curve2nd = '2nd'
+}
+
+type Line = { start: XY, end: XY };
+type Curve3rd = { start: XY, c1: XY, c2: XY, end: XY };
+
+/**
+ * 点到折线的距离
+ */
+function point2line(point: XY, start: XY, end: XY) {
+    const px = point.x;
+    const py = point.y;
+    const x1 = start.x;
+    const y1 = start.y;
+    const x2 = end.x;
+    const y2 = end.y;
+
+    const lengthSquared = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+
+    if (!lengthSquared) {
+        return {
+            point: { x: x1, y: y1 },
+            distance: Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1))
+        };
+    }
+
+    let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / lengthSquared;
+    if (t >= 1 || t <= 0) {
+        return;
+    }
+
+    const x = x1 + t * (x2 - x1);
+    const y = y1 + t * (y2 - y1);
+
+    const distance = Math.sqrt((px - x) * (px - x) + (py - y) * (py - y));
+
+    return { point: { x, y }, distance };
+}
+
+/**
+ * @description 点到二阶贝塞尔曲线的距离 todo 目前为止项目内的二阶贝塞尔曲线用的时三阶拟合而成，后续需要改正
+ */
+function point2curve2nd(point: XY, start: XY, c1: XY, end: XY) {
+
+}
+
+/**
+ * @description 计算三次贝塞尔曲线上的点
+ */
+function cubicBezier(t: number, start: XY, c1: XY, c2: XY, end: XY) {
+    const x = Math.pow(1 - t, 3) * start.x + 3 * Math.pow(1 - t, 2) * t * c1.x + 3 * (1 - t) * Math.pow(t, 2) * c2.x + Math.pow(t, 3) * end.x;
+    const y = Math.pow(1 - t, 3) * start.y + 3 * Math.pow(1 - t, 2) * t * c1.y + 3 * (1 - t) * Math.pow(t, 2) * c2.y + Math.pow(t, 3) * end.y;
+    return { x, y };
+}
+
+/**
+ * @description 计算三次贝塞尔曲线上的导数
+ */
+function cubicBezierDerivative(t: number, start: XY, c1: XY, c2: XY, end: XY) {
+    const x = 3 * Math.pow(1 - t, 2) * (c1.x - start.x) + 6 * (1 - t) * t * (c2.x - c1.x) + 3 * Math.pow(t, 2) * (end.x - c2.x);
+    const y = 3 * Math.pow(1 - t, 2) * (c1.y - start.y) + 6 * (1 - t) * t * (c2.y - c1.y) + 3 * Math.pow(t, 2) * (end.y - c2.y);
+    return { x, y };
+}
+
+/**
+ * @description 点到三阶贝塞尔曲线的距离
+ */
+function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
+    const epsilon = 1e-6;
+    let t = 0.5;
+    let i = 0;
+
+    while (i < 50) {
+        const _xy = cubicBezier(t, start, c1, c2, end);
+        const _der = cubicBezierDerivative(t, start, c1, c2, end);
+
+        const dxToPoint = _xy.x - point.x;
+        const dyToPoint = _xy.y - point.y;
+
+        const derivativeDotProduct = dxToPoint * _der.x + dyToPoint * _der.y;
+
+        if (Math.abs(derivativeDotProduct) < epsilon) {
+            break;
+        }
+
+        t -= (derivativeDotProduct / (_der.x * _der.x + _der.y * _der.y));
+
+        i++;
+    }
+
+    if (t < 0 || t > 1) {
+        return;
+    }
+
+    const xy = cubicBezier(t, start, c1, c2, end);
+    const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
+
+    return { distance, point: xy };
+}
+
 export class PathEditor extends TransformHandler {
+    static DELTA = 3;
+
     static BORDER_MAP = 1; // 建立动作点之外的点形成的地图
     static FULL_MAP = 2; // 建立完整的图层地图
     private shape: ShapeView;
@@ -194,6 +300,7 @@ export class PathEditor extends TransformHandler {
 
     private uniquePosition: Set<string> = new Set();
     private selected: Map<number, number[]> | undefined = undefined;
+    private fullPosition: Set<string> = new Set();
 
     private getUniquePosition() {
         const selected = this.selected || this.path.syntheticPoints;
@@ -211,9 +318,9 @@ export class PathEditor extends TransformHandler {
                 const point = points[indexes[i]];
                 if (!point) continue;
 
-                const __xyStr = `${point.x}?${point.y}`;
+                this.fullPosition.add(point.id);
 
-                console.log('__xyStr', __xyStr, point.id);
+                const __xyStr = `${point.x}?${point.y}`;
 
                 if (!__xy_string.has(__xyStr)) {
                     this.uniquePosition!.add(point.id);
@@ -239,18 +346,211 @@ export class PathEditor extends TransformHandler {
             points.push(clientMatrix.computeCoord2(base.x + dx, base.y + dy));
         })
 
-        // todo 1.拿这些点去和其他的点做距离比对；2.拿这些点去和其他的线段做距离比对；
+        // todo 拿这些点去和其他的线段做距离比对；
+        const modified = this.modifyByPoints(points);
 
-        console.log('points:', points);
+        if (modified) {
+            let fulfil = false;
+            const __xy = clientMatrix.inverseCoord(points[0]);
+            this.uniquePosition.forEach(id => {
+                if (fulfil) return;
+                const base = baseData.get(id);
+                if (!base) return;
+                fulfil = true;
+
+                dx = __xy.x - base.x;
+                dy = __xy.y - base.y;
+            });
+
+            return { dx, dy }; // 点矫正之后，将不再进行线矫正
+        }
+
+        const modified2 = this.modifyBySegment(points);
+        if (modified2) {
+            let fulfil = false;
+            const __xy = clientMatrix.inverseCoord(points[0]);
+            this.uniquePosition.forEach(id => {
+                if (fulfil) return;
+                const base = baseData.get(id);
+                if (!base) return;
+                fulfil = true;
+
+                dx = __xy.x - base.x;
+                dy = __xy.y - base.y;
+            });
+
+        }
+        return { dx, dy };
     }
 
     private modifyByPoints(activePoints: XY[]) {
-        // todo 比对、吸附、挣脱
-        // continue
+        //  比对、吸附、挣脱
+        let delX = Infinity;
+        let delY = Infinity;
+
+        let DX = 0;
+        let DY = 0;
+
+        const xs = Array.from(this.mapX.keys());
+        const ys = Array.from(this.mapY.keys());
+
+        for (let i = 0; i < activePoints.length; i++) {
+            const { x, y } = activePoints[i];
+
+            for (let j = 0; j < xs.length; j++) {
+                const dx = xs[j] - x;
+                const __dx = Math.abs(dx);
+
+                if (__dx < delX) {
+                    delX = __dx;
+                    DX = dx;
+                }
+            }
+
+            for (let k = 0; k < ys.length; k++) {
+                const dy = ys[k] - y;
+                const __dy = Math.abs(dy);
+
+                if (__dy < delY) {
+                    delY = __dy;
+                    DY = dy;
+                }
+            }
+        }
+
+        let modified = false;
+        if (delX < PathEditor.DELTA) {
+            activePoints[0].x += DX;
+            modified = true;
+        }
+
+        if (delY < PathEditor.DELTA) {
+            activePoints[0].y += DY;
+            modified = true;
+        }
+
+        return modified;
     }
 
-    private modifyBySegment() {
+    private fixedSegments: Set<{ type: SegmentType, seg: Line | Curve3rd }> = new Set();
+    private initFixedSegments = false;
 
+    private __initFS() {
+        const segments = (this.shape as PathShapeView)?.segments;
+
+        if (!segments) {
+            return;
+        }
+
+        const full = this.fullPosition;
+        const fixed = this.fixedSegments;
+
+        const clientMatrix = new Matrix(this.baseMatrix);
+        clientMatrix.multiAtLeft(this.context.workspace.matrix);
+
+        for (let segmentIndex = 0; segmentIndex < segments.length; segmentIndex++) {
+            const segment = segments[segmentIndex];
+            const points = segment?.points;
+
+            const len = points?.length;
+            if (!len) continue;
+
+            for (let i = 0; i < len; i++) {
+                const point = points[i];
+                let nextPoint;
+
+                if (i === len - 1) {
+                    if (!segment.isClosed) break;
+                    nextPoint = points[0];
+                } else {
+                    nextPoint = points[i + 1];
+                }
+
+                if (!nextPoint || !point) continue;
+
+                if (full.has(point.id) || full.has(nextPoint.id)) continue;
+
+                if (point.hasFrom || nextPoint.hasTo) {
+                    const seg = {
+                        start: { x: point.x, y: point.y },
+                        c1: { x: (point.fromX || point.x || 0), y: (point.fromY || point.y || 0) },
+                        c2: { x: (nextPoint.toX || nextPoint.x || 0), y: (nextPoint.toY || nextPoint.y || 0) },
+                        end: { x: nextPoint.x, y: nextPoint.y }
+                    }
+
+                    seg.start = clientMatrix.computeCoord3(seg.start);
+                    seg.c1 = clientMatrix.computeCoord3(seg.c1);
+                    seg.c2 = clientMatrix.computeCoord3(seg.c2);
+                    seg.end = clientMatrix.computeCoord3(seg.end);
+
+                    fixed.add({ type: SegmentType.Curve3rd, seg });
+                } else {
+                    const seg = {
+                        start: { x: point.x, y: point.y },
+                        end: { x: nextPoint.x, y: nextPoint.y }
+                    }
+
+                    seg.start = clientMatrix.computeCoord3(seg.start);
+                    seg.end = clientMatrix.computeCoord3(seg.end);
+
+                    fixed.add({ type: SegmentType.Straight, seg });
+                }
+            }
+        }
+
+        this.initFixedSegments = true;
+    }
+
+    private modifyBySegment(activePoints: XY[]) {
+        if (!this.initFixedSegments) {
+            this.__initFS();
+        }
+
+        if (!this.initFixedSegments) {
+            return;
+        }
+
+        let distance = Infinity;
+        let dx = 0;
+        let dy = 0;
+
+        for (let i = 0; i < activePoints.length; i++) {
+            const point = activePoints[i];
+
+            this.fixedSegments.forEach(segment => {
+                let d: { point: { x: number, y: number }, distance: number } | undefined;
+
+                if (segment.type === SegmentType.Straight) {
+                    const seg = segment.seg as Line;
+                    d = point2line(point, seg.start, seg.end)
+                } else {
+                    const seg = segment.seg as Curve3rd;
+                    d = point2curve3rd(point, seg.start, seg.c1, seg.c2, seg.end);
+                }
+
+                if (d === undefined) return;
+
+                const D = Math.abs(d.distance);
+
+                if (D < distance) {
+                    const targetPoint = d.point;
+
+                    dx = targetPoint.x - point.x;
+                    dy = targetPoint.y - point.y;
+                    distance = D;
+                }
+            })
+        }
+
+        let modified = false;
+
+        if (distance < PathEditor.DELTA) {
+            activePoints[0].x += dx;
+            activePoints[0].y += dy;
+            modified = true;
+        }
+
+        return modified;
     }
 
     private __execute() {
@@ -268,7 +568,10 @@ export class PathEditor extends TransformHandler {
             }
         }
 
-        this.modifyDelta(dx, dy);
+        const modified = this.modifyDelta(dx, dy);
+
+        dx = modified.dx;
+        dy = modified.dy;
 
         const selected = this.selected || this.path.syntheticPoints;
         if (!this.selected) {
