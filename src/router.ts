@@ -45,8 +45,8 @@ const HomePage = () => import('@/components/Mobile/HomePage.vue')
 const MyFile = () => import('@/components/Mobile/MyFile.vue')
 const MyTeam = () => import('@/components/Mobile/Team.vue')
 const About = () => import('@/components/Mobile/About.vue')
-const Message=()=>import('@/components/Mobile/MessageInfo.vue')
-
+const Message = () => import('@/components/Mobile/MessageInfo.vue')
+const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
 let _t: any = i18n.global
 
 const children = [
@@ -180,6 +180,19 @@ const routes = [
         meta: {
             requireAuth: true,
         },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'pageviews' && to.query.id) {
+                const id = to.query.id
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
+                if (newid !== id) {
+                    next({ ...to, query: { ...to.query, id: newid } });
+                } else {
+                    next();
+                }
+            } else {
+                next();
+            }
+        },
     },
     {
         path: "/files",
@@ -269,6 +282,15 @@ const routes = [
         meta: {
             requireAuth: true,
             title: '分享'
+        }
+    },
+    {
+        path: "/member",
+        name: "member",
+        component: ShareMember,
+        meta: {
+            requireAuth: true,
+            title: '已加入分享的人'
         }
     },
     {

@@ -14,12 +14,6 @@ import { storeToRefs } from 'pinia'
 const Data = useCounterStore()
 const { projectlist } = storeToRefs(Data)
 const { GetprojectLists } = Data
-enum permissions {
-    noAuthority,
-    readOnly,
-    reviewable,
-    editable
-}
 
 enum docType {
     Private,
@@ -42,14 +36,12 @@ const authority = ref(false)
 const isSelectOpen = ref<boolean>(false)
 const index = ref(0)
 const founder = ref(false)
-const shareList = ref<any[]>([])
 const selectValue = ref<number>(-1)
 const selectDefault = ref<number>(-1)
 const userlist = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const errormessage = ref<string>()
 const fileuserid = ref<string>('')
-
 
 
 const DocType = reactive([
@@ -59,12 +51,7 @@ const DocType = reactive([
     `${t('share.anyone_can_comment')}`,
     `${t('share.anyone_can_edit_it')}`
 ])
-const permission = reactive([
-    `${t('share.no_authority')}`,
-    `${t('share.readOnly')}`,
-    `${t('share.reviewable')}`,
-    `${t('share.editable')}`
-])
+
 
 const documentShareURL = computed(() => {
     return route.path !== '/pageviews'
@@ -73,7 +60,6 @@ const documentShareURL = computed(() => {
         :
         location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })
-
 
 
 //获取文档信息
@@ -108,85 +94,11 @@ const projectPerm = computed(() => {
     return type ?? 0
 })
 
-//是否显示权限编辑菜单
-const selectAuthority = (i: number, e: Event) => {
-    e.stopPropagation()
-    if (isSelectOpen.value) isSelectOpen.value = false
-    authority.value = !authority.value
-    index.value = i
-}
-
-//设置为可编辑权限
-const onEditable = (id: any, type: number, index: number) => {
-    putShareAuthority(id, type)
-    shareList.value[index].document_permission.perm_type = type
-}
-
-//设置为可评论权限
-const onReviewable = (id: any, type: number, index: number) => {
-    putShareAuthority(id, type)
-    shareList.value[index].document_permission.perm_type = type
-}
-
-//设置为只读权限
-const onReadOnly = (id: string, type: number, index: number) => {
-    putShareAuthority(id, type)
-    shareList.value[index].document_permission.perm_type = type
-}
-
-//移除分享列表（本地列表）
-const onRemove = (id: string, i: number) => {
-    delShare(id)
-    shareList.value.splice(i, 1)
-}
-
-//获取当前文件分享列表
-const getShareList = async () => {
-    loading.value = true
-    try {
-        const { code, data, message } = await share_api.getShareListAPI({ doc_id: docID.value })
-        loading.value = false
-        if (code === 0) {
-            shareList.value = data
-        } else {
-            console.log(message);
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-//移除分享列表（服务端）
-const delShare = async (id: string) => {
-    try {
-        await share_api.delShareAuthorityAPI({ share_id: id })
-        getShareList()
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-//设置分享权限
-const putShareAuthority = async (id: string, type: number) => {
-    try {
-        await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
-        getShareList()
-    } catch (err) {
-        console.log(err);
-    }
-}
 
 //设置分享类型
 const setShateType = async (type: number) => {
     try {
         await share_api.setShateTypeAPI({ doc_id: docID.value, doc_type: type })
-        for (let i = 0; i < shareList.value.length; i++) {
-            if (type === 1) {
-                return
-            } else if (shareList.value[i].document_permission.perm_source_type === 0) {
-                shareList.value[i].document_permission.perm_type = type - 1
-            }
-        }
     } catch (err) {
         console.log(err);
     }
@@ -211,6 +123,8 @@ watchEffect(() => {
 
 //复制分享链接
 const copyLink = async () => {
+    console.log(window);
+
     if (navigator.clipboard && window.isSecureContext) {
         return navigator.clipboard.writeText(documentShareURL.value).then(() => {
             ElMessage({
@@ -218,10 +132,17 @@ const copyLink = async () => {
                 type: 'success',
             })
         }, () => {
+            const textArea = document.createElement('textarea')
+            textArea.value = documentShareURL.value
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
             ElMessage({
-                message: `${t('share.copy_failure')}`,
+                message: `${t('share.copy_success')}`,
                 type: 'success',
             })
+            textArea.remove()
         })
     } else {
         const textArea = document.createElement('textarea')
@@ -238,8 +159,6 @@ const copyLink = async () => {
     }
 
 }
-
-
 
 watch(selectValue, () => {
     if (selectValue.value === selectDefault.value) return
@@ -265,28 +184,21 @@ watch(selectValue, () => {
     selectDefault.value = selectValue.value
 })
 
-watchEffect(() => {
-    getDocumentInfo()
-    if (!founder.value) getShareList()
-})
-
 onMounted(() => {
-
-
-
+    getDocumentInfo()
 })
 
 </script>
 
 <template>
     <div class="share">
-        <div class="header">
+        <!-- <div class="header">
             <svg-icon icon-class="back-icon" @click.stop="userlist ? userlist = false : router.go(-1)"></svg-icon>
             <span>{{ t('miniprogram.share_title') }}</span>
-        </div>
+        </div> -->
         <div v-if="docInfo" class="content">
             <div style="color: #8C8C8C;margin: 16px 16px 8px 16px;">{{ t('miniprogram.permissions') + (docInfo.project ?
-                '（文件所在项目所有成员固定可见）' : '') }}
+            '（文件所在项目所有成员固定可见）' : '') }}
             </div>
             <!-- 普通视图 -->
             <div v-if="!founder" class="normal-view">
@@ -340,7 +252,8 @@ onMounted(() => {
                 </div>
             </div>
             <!-- 已加入分享的人 -->
-            <div v-if="founder" class="share-user" @click="userlist = true">
+            <div v-if="founder" class="share-user"
+                @click="router.push({ name: 'member', query: { id: route.query.id } })">
                 <span>{{ t('miniprogram.share_users') }}</span>
                 <div class="left-info">
                     <!-- <span style="color: #c8c8c8;">{{ listuser }}人</span> -->
@@ -374,26 +287,6 @@ onMounted(() => {
                     </div>
                 </div>
             </Transition>
-            <!-- 分享的人员列表 -->
-            <Transition name="fade">
-                <div v-if="userlist" class="share-user-list">
-                    <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
-                        <div class="item-left">
-                            <div class="avatar"><img :src="item.user.avatar"></div>
-                            <div class="name">{{ item.user.nickname }}</div>
-                        </div>
-                        <div class="item-right">
-                            <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
-                        </div>
-                    </div>
-                    <div v-if="!shareList.length" class="null">
-                        <span>{{ t('miniprogram.share_users_null') }}</span>
-                    </div>
-                    <div v-if="loading" class="loading">
-                        <Loading :size="20"></Loading>
-                    </div>
-                </div>
-            </Transition>
         </div>
         <div v-if="errormessage" class="failed">
             <span class="message"> {{ errormessage }}</span>
@@ -416,73 +309,7 @@ onMounted(() => {
     opacity: 0.5;
 }
 
-.share-user-list {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    top: 0;
-    background-color: #fff;
 
-    .scrollbar-demo-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 44px;
-        gap: 8px;
-        padding: 0 14px;
-        margin-top: 8px;
-
-        .item-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            overflow: hidden;
-            white-space: nowrap;
-
-            .avatar {
-                height: 32px;
-                width: 32px;
-                min-width: 32px;
-                border-radius: 50%;
-                overflow: hidden;
-
-                img {
-                    height: 100%;
-                    width: 100%;
-                }
-            }
-
-            .name {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                font-weight: 500;
-                color: rgba(0, 0, 0, 1);
-            }
-        }
-
-        .item-right {
-            position: relative;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            gap: 2px;
-
-            .founder,
-            .authority {
-                font-weight: 400;
-                color: #c8c8c8;
-            }
-        }
-    }
-
-    .null {
-        margin: auto;
-        color: #8c8c8c;
-    }
-}
 
 .share-user {
     display: flex;
@@ -561,6 +388,8 @@ onMounted(() => {
             }
 
             .right {
+                display: flex;
+                align-items: center;
                 width: 10px;
                 height: 10px;
                 margin-right: 8px;
@@ -603,7 +432,7 @@ onMounted(() => {
 
     .content {
         position: relative;
-        height: calc(100% - 44px);
+        height: 100%;
 
         .creator-view {
             display: flex;

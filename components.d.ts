@@ -291,6 +291,7 @@ declare module '@vue/runtime-core' {
     Share: typeof import('./src/components/Document/Toolbar/Share/Share.vue')['default']
     ShareFile: typeof import('./src/components/Mobile/ShareFile.vue')['default']
     ShareMe: typeof import('./src/components/AppHome/Main/ShareMe.vue')['default']
+    ShareMember: typeof import('./src/components/Mobile/ShareMember.vue')['default']
     ShortCut: typeof import('./src/components/Help/ShortCut.vue')['default']
     ShowHiddenLeft: typeof import('./src/components/Document/Navigation/ShowHiddenLeft.vue')['default']
     Simple: typeof import('./src/components/Document/Content/Simple.vue')['default']

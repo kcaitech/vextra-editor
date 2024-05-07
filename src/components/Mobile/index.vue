@@ -43,6 +43,7 @@ import { useMessage } from './message'
 
 const Data = useMessage()
 const { applynum, teamnum } = storeToRefs(Data)
+const { getApplyFile, getApplyTeam, getApplyProject, getNoticeTeam, getNoticeProject } = Data
 const { t } = useI18n()
 const route = useRoute()
 const activebnt = ref(route.name?.toString() || 'home')
@@ -64,22 +65,21 @@ const changetab = (tab: string) => {
     sessionStorage.setItem('selectTab', tab);
 }
 
-// getApplyList();
-// getTeamApply();
-// getProjectNotice();
-// getTeamNotice();
-// getProjectApplyList();
+getApplyFile();
+getApplyTeam();
+getApplyProject();
+getNoticeTeam();
+getNoticeProject();
+
 let timer: any = null
 onMounted(() => {
-
-
-    // timer = setInterval(() => {
-    //     getApplyList();
-    //     getTeamApply();
-    //     getProjectNotice();
-    //     getTeamNotice();
-    //     getProjectApplyList();
-    // }, 60000)
+    timer = setInterval(() => {
+        getApplyFile();
+        getApplyTeam();
+        getApplyProject();
+        getNoticeTeam();
+        getNoticeProject();
+    }, 60000)
 })
 
 onUnmounted(() => {

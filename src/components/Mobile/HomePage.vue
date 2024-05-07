@@ -8,8 +8,8 @@
             </div>
         </div>
         <div ref="ellist" class="list">
-            <FilesItem :err-network="errnetwork" :data="lists" @changeStar="changeStar" @refresh="refreshTab" >
-            </FilesItem>
+            <component :is="FilesItem" :data="lists" :tab="activeTab" :err-network="errnetwork" @changeStar="changeStar"
+                @refresh="refreshTab"></component>
         </div>
     </div>
 </template>
@@ -22,11 +22,10 @@ import FilesItem from './FilesItem.vue'
 import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
-const bntdata = [t('miniprogram.recent'), t('miniprogram.share'),  t('miniprogram.star')]
+const bntdata = [t('miniprogram.recent'), t('miniprogram.share'), t('miniprogram.star')]
 const activeTab = ref<number>(Number(sessionStorage.getItem('activeTab')) || 0)
 const lists = ref<any[]>([])
 const errnetwork = ref<boolean>(false)
-
 const changetab = (id: number) => {
     activeTab.value = id
     sessionStorage.setItem('activeTab', id.toLocaleString())
@@ -104,7 +103,7 @@ const changeStar = async (id: number, b: boolean) => {
 
 
 onMounted(() => {
-   
+
 })
 
 </script>

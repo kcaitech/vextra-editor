@@ -20,54 +20,63 @@ export const useMessage = defineStore('message', () => {
         })
     })
 
+    function getApplyFile() {
+        share_api.getApplyListAPI().then(({ code, data }) => {
+            if (code === 0) {
+                applyList.value = data
+            } else {
+                return
+            }
+
+        }).catch((error) => {
+
+        })
+    }
 
 
-    share_api.getApplyListAPI().then(({ code, data }) => {
-        if (code === 0) {
-            applyList.value = data
-        } else {
-            return
-        }
+    function getApplyTeam() {
+        team_api.getTeamApplyAPI().then(({ code, data }) => {
+            if (code === 0) {
+                teamApplyList.value = data
+            } else {
+                return
+            }
+        }).catch(() => {
 
-    }).catch((error) => {
+        })
+    }
 
-    })
+    function getApplyProject() {
+        team_api.getTeamProjectApplyAPI().then(({ code, data }) => {
+            if (code === 0) {
+                projectApplyList.value = data
+            } else {
+                return
+            }
+        }).catch(() => {
 
-    team_api.getTeamProjectApplyAPI().then(({ code, data }) => {
-        if (code === 0) {
-            projectApplyList.value = data
-        } else {
-            return
-        }
-    }).catch(() => {
+        })
+    }
 
-    })
+    function getNoticeTeam() {
+        team_api.getTeamNoticeAPI().then(({ code, data }) => {
+            if (code === 0) {
+                notifyTApplyList.value = data
+            }
+        }).catch(() => {
 
-    team_api.getTeamApplyAPI().then(({ code, data }) => {
-        if (code === 0) {
-            teamApplyList.value = data
-        } else {
-            return
-        }
-    }).catch(() => {
+        })
+    }
 
-    })
+    function getNoticeProject() {
+        team_api.getProjectNoticeAPI().then(({ code, data }) => {
+            if (code === 0) {
+                notifyPApplyList.value = data
+            }
+        }).catch(() => {
 
-    team_api.getProjectNoticeAPI().then(({ code, data }) => {
-        if (code === 0) {
-            notifyPApplyList.value = data
-        }
-    }).catch(() => {
-
-    })
-
-    team_api.getTeamNoticeAPI().then(({ code, data }) => {
-        if (code === 0) {
-            notifyTApplyList.value = data
-        }
-    }).catch(() => {
-
-    })
+        })
+    }
 
     const applynum = computed(() => {
         return applyList.value.filter(item => item.apply.status === 0).length
@@ -76,5 +85,5 @@ export const useMessage = defineStore('message', () => {
         return totalList.value.filter(item => item.request.status === 0).length
     });
 
-    return { applyList, totalList, applynum, teamnum }
+    return { applyList, totalList, applynum, teamnum, getApplyFile, getApplyTeam, getApplyProject, getNoticeTeam, getNoticeProject }
 })
