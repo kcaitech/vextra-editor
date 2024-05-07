@@ -79,7 +79,8 @@ const inited = ref(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 
-function screenSetting() {
+function switchFullScreen() {
+    if (kcdesk) return;
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
     if (isFullScreen === null) {
@@ -785,7 +786,7 @@ onUnmounted(() => {
 <template>
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
-        <div id="top" @dblclick="screenSetting" v-if="showTop">
+        <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
         <div id="visit">

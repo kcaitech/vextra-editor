@@ -9,9 +9,7 @@ import kcdesk from '@/kcdesk';
 export const newFile = () => {
 
     if (kcdesk) {
-        // @ts-ignore
-        const name = i18n.global.t('system.new_file');
-        kcdesk.fileNew(name);
+        kcdesk.fileNew();
         return;
     }
 

@@ -335,18 +335,12 @@ export const router = createRouter({
     routes: routes
 })
 
-let kcdesk_viewid: number | undefined;
 
 router.beforeEach((to, from, next) => {
-    // save viewid
-    if (kcdesk && to.query.from === 'kcdesk') {
-        kcdesk_viewid = Number.parseInt(to.query.kcdesk_viewid as string);
-    }
     if (kcdesk && from.meta.group === Group.Document && to.meta.group !== Group.Document) {
         // 显示出错页还是关闭当前页？？
         // 显示个页面即将关闭？
-        if (kcdesk_viewid) kcdesk.fileClose(kcdesk_viewid);
-
+        kcdesk.fileClose(kcdesk.getViewId());
         next(false);
     }
     else {
