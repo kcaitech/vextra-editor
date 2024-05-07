@@ -139,7 +139,7 @@ export class PathEditor extends TransformHandler {
     private shape: ShapeView;
     private path: Path;
 
-    private fixedPoint: XY;
+    readonly fixedPoint: XY;
     private livingPoint: XY;
 
     private baseData: BaseData = new Map();
@@ -239,9 +239,6 @@ export class PathEditor extends TransformHandler {
                 }
             }
         }
-
-        console.log('mapX:', this.mapX);
-        console.log('mapY:', this.mapY);
     }
 
     private initMatrix() {
@@ -328,8 +325,6 @@ export class PathEditor extends TransformHandler {
                 }
             }
         });
-
-        console.log('uniquePositionID:', this.uniquePosition);
     }
 
     private modifyDelta(dx: number, dy: number) {
@@ -346,7 +341,6 @@ export class PathEditor extends TransformHandler {
             points.push(clientMatrix.computeCoord2(base.x + dx, base.y + dy));
         })
 
-        // todo 拿这些点去和其他的线段做距离比对；
         const modified = this.modifyByPoints(points);
 
         if (modified) {
@@ -384,7 +378,7 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyByPoints(activePoints: XY[]) {
-        //  比对、吸附、挣脱
+        //  点与点之间 比对、吸附、挣脱
         let delX = Infinity;
         let delY = Infinity;
 
@@ -502,6 +496,7 @@ export class PathEditor extends TransformHandler {
     }
 
     private modifyBySegment(activePoints: XY[]) {
+        // 点与线之间 比对、吸附、挣脱
         if (!this.initFixedSegments) {
             this.__initFS();
         }
