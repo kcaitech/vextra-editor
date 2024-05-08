@@ -528,7 +528,7 @@ function onAlphaChange(e: Event, type: string) {
                 }
             } else {
                 color = highlightColorValue.value
-            }
+            }            
             setColor(color, value, type);
             return
         } else {
@@ -645,6 +645,7 @@ function getColorFromPicker(color: Color, type: string) {
 }
 
 function setColor(clr: string, alpha: number, type: string) {
+    if(clr.slice(0, 1) !== '#') clr = '#' + clr;
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));

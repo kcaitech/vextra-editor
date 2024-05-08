@@ -4,7 +4,7 @@ import { SelectionTheme, XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
 import { Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { getCornerControlPoint } from './common';
+import { getCornerControlPoint, getRadiusValue } from './common';
 import { fixedZero } from '@/utils/common';
 
 
@@ -13,6 +13,7 @@ interface Props {
     context: Context
     shape: PolygonShapeView
     theme: SelectionTheme
+    pointVisible: boolean
 }
 interface Point {
     x: number, y: number
@@ -22,6 +23,7 @@ const props = defineProps<Props>();
 const matrix = new Matrix();
 const radius_dot = ref<Point[]>();
 const cursor_point = ref<Point>({ x: 0, y: 0 });
+const max_radius = ref<number[]>([0, 0, 0, 0]);
 const radius = ref<number[]>([0, 0, 0, 0]);
 const cursor_enter = ref(false);
 const cursor_down = ref(false);
@@ -49,38 +51,32 @@ function getRadiusPosition() {
         const cornerInfo = getCornerControlPoint(shape.points, i, props.shape.frame);
         if (!cornerInfo) continue;
         radius.value[i] = cornerInfo.radius;
+        max_radius.value[i] = point.radius || 0;
         let r = cornerInfo.radius;
         let x = point.x * width, y = point.y * height;
-        const origin = matrix.computeCoord2(x, y);
+        const offset = 15 / props.context.workspace.matrix.m00;
         if (i === 0) {
-            x += r; y += r;
+            x += r > offset ? r : offset; y += r > offset ? r : offset;
         } else if (i === 1) {
-            x -= r; y += r;
+            x -= r > offset ? r : offset; y += r > offset ? r : offset;
         } else if (i === 2) {
-            x -= r; y -= r;
+            x -= r > offset ? r : offset; y -= r > offset ? r : offset;
         } else if (i === 3) {
-            x += r; y -= r;
+            x += r > offset ? r : offset; y -= r > offset ? r : offset;
         }
         const p = matrix.computeCoord2(x, y);
-        if (Math.abs(origin.x - p.x) < 15) {
-            if (i === 0) {
-                p.x = origin.x + 15; p.y = origin.y + 15;
-            } else if (i === 1) {
-                p.x = origin.x - 15; p.y = origin.y + 15;
-            } else if (i === 2) {
-                p.x = origin.x - 15; p.y = origin.y - 15;
-            } else if (i === 3) {
-                p.x = origin.x + 15; p.y = origin.y - 15;
-            }
-        }
+
         result.push(p);
     }
     return result;
 }
-
+let downClientXY: XY = { x: 0, y: 0 };
+let isDragging: boolean = false;
 const point_mousedown = (e: MouseEvent, index: number) => {
     changeR = index;
     cursor_down.value = true;
+    downClientXY.x = e.clientX;
+    downClientXY.y = e.clientY;
     pointModifyHandler = new PointHandler(props.context, e);
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -89,22 +85,56 @@ const point_mousedown = (e: MouseEvent, index: number) => {
 function point_mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    if (!pointModifyHandler) {
-        return
+    if (isDragging) {
+        if (!pointModifyHandler) {
+            return
+        }
+        if (!pointModifyHandler.asyncApiCaller) {
+            pointModifyHandler.createApiCaller();
+        }
+        let r = radiusDotMove(e);
+        const isAlt = props.context.selection.is_interval;
+        const max_r = maxRadius(props.shape.frame);
+        if (r > max_r) r = max_r;
+        if (r < 0) r = 0;
+        let values = [-1, -1, -1, -1];
+        isAlt ? values[changeR] = r : values = [r];
+        pointModifyHandler?.executeRadius(values);
+    } else {
+        const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
+        if (diff > 4) {
+            isDragging = true;
+            getMovePoint(e);
+        }
     }
-    if (!pointModifyHandler.asyncApiCaller) {
-        pointModifyHandler.createApiCaller();
+}
+
+const getMovePoint = (e: MouseEvent) => {
+    if (!radius_dot.value) return;
+    const shape = props.shape;
+    const curDot = radius_dot.value[changeR];
+    const clinetXY = props.context.workspace.getContentXY(e);
+    const frame = shape.frame;
+    let m = new Matrix(shape.matrix2Root()); // 图形转页面矩阵
+    m.multiAtLeft(props.context.workspace.matrix); // 页面转视图
+    m = new Matrix(m.inverse); // 视图转图形
+    const xy = m.computeCoord3(clinetXY);
+    xy.x /= frame.width;
+    xy.y /= frame.height;
+    const d0 = Math.hypot(xy.x - 0, xy.y - 0);
+    const d1 = Math.hypot(xy.x - 1, xy.y - 0);
+    const d2 = Math.hypot(xy.x - 1, xy.y - 1);
+    const d3 = Math.hypot(xy.x - 0, xy.y - 1);
+    const d = [d0, d1, d2, d3];
+    const distances = [];
+    for (let i = 0; i < radius_dot.value.length; i++) {
+        const dot = radius_dot.value[i];
+        if (Math.abs(curDot.x - dot.x) < 2 && Math.abs(curDot.y - dot.y) < 2) {
+            distances.push({ distance: d[i], i });
+        }
     }
-    let r = radiusDotMove(e);
-    const isAlt = props.context.selection.is_interval;
-    if (r === 0) return;
-    r = radius.value[changeR] + r;
-    const max_r = maxRadius(props.shape.frame);
-    if (r > max_r) return;
-    if (r < 0) r = 0;
-    let values = [-1, -1, -1, -1];
-    isAlt ? values[changeR] = r : values = [r];
-    pointModifyHandler?.executeRadius(values);
+    const mind = distances.reduce((d, obj) => d.distance < obj.distance ? d : obj);
+    changeR = mind.i;
 }
 
 const maxRadius = (frame: ShapeFrame) => {
@@ -113,68 +143,31 @@ const maxRadius = (frame: ShapeFrame) => {
 }
 const radiusDotMove = (e: MouseEvent) => {
     let radius = 0;
-    if (radiusDotEl.value) {
-        const { x, y } = radiusDotEl.value[changeR].getBoundingClientRect();
-        if (e.movementY === 0 && e.movementX === 0) return radius;
-        if (changeR === 0) {
-            if (e.clientY < y && e.movementY < 0) {
-                radius += e.movementY;
-            }
-            if (e.clientY > y && e.movementY > 0) {
-                radius += e.movementY;
-            }
-            if (e.clientX < x && e.movementX < 0) {
-                radius += e.movementX;
-            }
-            if (e.clientX > x && e.movementX > 0) {
-                radius += e.movementX;
-            }
-        }
-        if (changeR === 1) {
-            if (e.clientY < y && e.movementY < 0) {
-                radius += e.movementY;
-            }
-            if (e.clientY > y && e.movementY > 0) {
-                radius += e.movementY;
-            }
-            if (e.clientX < x && e.movementX < 0) {
-                radius -= e.movementX;
-            }
-            if (e.clientX > x && e.movementX > 0) {
-                radius -= e.movementX;
-            }
-        }
-        if (changeR === 2) {
-            if (e.clientY < y && e.movementY < 0) {
-                radius -= e.movementY;
-            }
-            if (e.clientY > y && e.movementY > 0) {
-                radius -= e.movementY;
-            }
-            if (e.clientX < x && e.movementX < 0) {
-                radius -= e.movementX;
-            }
-            if (e.clientX > x && e.movementX > 0) {
-                radius -= e.movementX;
-            }
-        }
-        if (changeR === 3) {
-            if (e.clientY < y && e.movementY < 0) {
-                radius -= e.movementY;
-            }
-            if (e.clientY > y && e.movementY > 0) {
-                radius -= e.movementY;
-            }
-            if (e.clientX < x && e.movementX < 0) {
-                radius += e.movementX;
-            }
-            if (e.clientX > x && e.movementX > 0) {
-                radius += e.movementX;
-            }
-        }
+    const { width, height } = props.shape.frame;
+    const max_r = maxRadius(props.shape.frame);
+    if (changeR === 0) {
+        const start = matrix.computeCoord2(0, 0);
+        const end = matrix.computeCoord2(max_r, max_r);
+        radius = getRadiusValue(start, end, e, props.context) * max_r;
     }
-    return radius;
+    if (changeR === 1) {
+        const start = matrix.computeCoord2(width, 0);
+        const end = matrix.computeCoord2(width - max_r, max_r);
+        radius = getRadiusValue(start, end, e, props.context) * max_r;
+    }
+    if (changeR === 2) {
+        const start = matrix.computeCoord2(width, height);
+        const end = matrix.computeCoord2(width - max_r, height - max_r);
+        radius = getRadiusValue(start, end, e, props.context) * max_r;
+    }
+    if (changeR === 3) {
+        const start = matrix.computeCoord2(0, height);
+        const end = matrix.computeCoord2(max_r, height - max_r);
+        radius = getRadiusValue(start, end, e, props.context) * max_r;
+    }
+    return Math.round(radius);
 }
+
 
 function dot_mousemove(e: MouseEvent) {
     if (cursor_down.value) return;
@@ -186,14 +179,15 @@ function point_mouseup(e: MouseEvent) {
     cursor_down.value = false;
     pointModifyHandler?.fulfil();
     pointModifyHandler = undefined;
+    isDragging = false;
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
 const point_mouseenter = (e: MouseEvent, index: number) => {
-    e.stopPropagation();
     if (cursor_down.value) {
         return;
     }
+    e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
 
     changeR = index;
@@ -222,7 +216,7 @@ onUnmounted(() => {
 <template>
     <!-- 圓角 -->
     <g v-if="radius_dot && radius_dot.length === 4">
-        <g v-for="(dot, index) in radius_dot" :key="index"
+        <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
             :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
             @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
             @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
@@ -235,7 +229,7 @@ onUnmounted(() => {
         <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
             width="100px" height="28px">
             <div class="percent_container">
-                <span>圆角 {{ fixedZero(radius[changeR]) }} </span>
+                <span>圆角 {{ fixedZero(max_radius[changeR]) }} </span>
             </div>
         </foreignObject>
     </g>

@@ -131,7 +131,11 @@ const getBoolGroupType = (shapes: ShapeView[]) => {
             state.value = false
         }
     } else if (shapes.length > 1) {
+        selectBool.value = 'union';
         state.value = true
+    } else {
+        selectBool.value = 'union';
+        state.value = false
     }
 }
 

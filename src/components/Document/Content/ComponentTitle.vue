@@ -306,7 +306,7 @@ onUnmounted(() => {
         outline-style: none;
         font-size: 10px;
         border: 1px solid var(--active-color);
-        padding: 0 3px;
+        padding: 0 1px;
         margin-right: 1px;
         box-sizing: border-box;
     }

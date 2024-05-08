@@ -2,9 +2,9 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { Matrix, StarShapeView } from '@kcdesign/data';
+import { Matrix, ShapeFrame, StarShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { getCornerControlPoint } from './common';
+import { getCornerControlPoint, getRadiusValue } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
 import { fixedZero } from '@/utils/common';
 
@@ -14,6 +14,7 @@ interface Props {
     context: Context
     shape: StarShapeView
     theme: SelectionTheme
+    pointVisible: boolean
 }
 interface Point {
     x: number, y: number
@@ -104,7 +105,8 @@ function getRadiusPosition() {
     if (!cornerInfo) return;
     radius.value = cornerInfo.radius || 0;
     max_radius.value = point.radius || 0;
-    const p = matrix.computeCoord2(point.x * width, (point.y * height) + (cornerInfo.radius || 10));
+    const offset = 19 / props.context.workspace.matrix.m00;
+    const p = matrix.computeCoord2(point.x * width, (point.y * height) + (cornerInfo.radius || offset));
     return p;
 }
 const point_mousedown = (e: MouseEvent, type: PointActionType) => {
@@ -132,19 +134,17 @@ function point_mousemove(e: MouseEvent) {
         if (count > 60) count = 60;
         pointModifyHandler?.executeCount(count);
     } else if (changeType === PointActionType.InnerAngle) {
-        let offset = innerAngleDotMove(e);
-        offset = inner_angle.value + offset;
-        if (offset < 0.1) offset = 0.1;
-        if (offset > 100) offset = 100;
-        pointModifyHandler?.executeInnerAngle(offset / 100);
+        let offset = innerAngleDotMove(e, props.shape.frame);
+        if (offset < 0.001) offset = 0.001;
+        if (offset > 1) offset = 1;
+        pointModifyHandler?.executeInnerAngle(offset);
     } else if (changeType === PointActionType.Radius) {
-        let r = radiusDotMove(e);
-        if (r === 0) return;
-        r = r > 0 ? max_radius.value + r : radius.value + r;
+        let r = radiusDotMove(e, props.shape.frame);
         if (r < 0) r = 0;
         pointModifyHandler?.executeRadius([r]);
     }
 }
+
 let increase = 0;
 let decrease = 0;
 const countDotMove = (e: MouseEvent) => {
@@ -180,39 +180,73 @@ const countDotMove = (e: MouseEvent) => {
     return count;
 }
 
-const innerAngleDotMove = (e: MouseEvent) => {
+const innerAngleDotMove = (e: MouseEvent, frame: ShapeFrame) => {
     let offset = 0;
-    if (innerAngleDotEl.value) {
-        const { x, y } = innerAngleDotEl.value.getBoundingClientRect();
-        if (e.movementY === 0 && e.movementX === 0) return offset;
-        if (e.clientX < x && e.movementX < 0) {
-            offset += e.movementX;
-        }
-        if (e.clientY > y && e.movementY > 0) {
-            offset -= e.movementY;
-        }
-        if (e.clientX > x && e.movementX > 0) {
-            offset += e.movementX;
-        }
-        if (e.clientY < y && e.movementY < 0) {
-            offset -= e.movementY;
-        }
-    }
+    const { x, y } = getInnerAngleMax();
+    const start = matrix.computeCoord2(x * frame.width, y * frame.height);
+    const end = matrix.computeCoord2(frame.width / 2, frame.height / 2);
+    offset = 1 - getRadiusValue(start, end, e, props.context);
+    
     return offset;
 }
-const radiusDotMove = (e: MouseEvent) => {
+
+const getInnerAngleMax = () => {
+    const sidesCount = props.shape.data.counts * 2;
+    const angleStep = (2 * Math.PI) / sidesCount;
+    let x = 0.5 + (0.5 - 0.5) * Math.cos(angleStep) - (0 - 0.5) * Math.sin(angleStep);
+    let y = 0.5 + (0.5 - 0.5) * Math.sin(angleStep) + (0 - 0.5) * Math.cos(angleStep);
+    return { x, y }
+}
+
+const radiusDotMove = (e: MouseEvent, frame: ShapeFrame) => {
     let radius = 0;
-    if (radiusDotEl.value) {
-        const { y } = radiusDotEl.value.getBoundingClientRect();
-        if (e.movementY === 0) return radius;
-        if (e.clientY < y && e.movementY < 0) {
-            radius = e.movementY;
+    const start = matrix.computeCoord2(frame.width / 2, 0);
+    const end = matrix.computeCoord2(frame.width / 2, frame.height / 2);
+    radius = getRadiusPercent(start, end, e) * (frame.height / 2);
+    return Math.round(radius);
+}
+
+const getRadiusPercent = (start: XY, end: XY, e: MouseEvent) => {
+    const point3 = props.context.workspace.getContentXY(e); //鼠标位置
+    if (start.x === end.x) {
+        // 如果线段是竖直的
+        const intersectionY = point3.y;
+        const lineLength = Math.abs(end.y - start.y); // 计算线段的长度（竖直线段的长度即为纵坐标的差的绝对值）
+        const distanceFromStart = Math.abs(intersectionY - start.y); // 交点到起点的距离（竖直线段的距离即为交点纵坐标与起点纵坐标的差的绝对值）
+        const distanceFromEnd = Math.abs(intersectionY - end.y); // 交点到终点的距离（竖直线段的距离即为交点纵坐标与终点纵坐标的差的绝对值）
+        const percent = distanceFromStart / lineLength; // 交点所在百分比位置
+        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
+            return 0;
         }
-        if (e.clientY > y && e.movementY > 0) {
-            radius = e.movementY;
+        return percent;
+    } else if (start.y === end.y) {
+        // 如果线段是水平的
+        const intersectionX = point3.x;
+        const lineLength = Math.abs(end.x - start.x);
+        const distanceFromStart = Math.abs(intersectionX - start.x);
+        const distanceFromEnd = Math.abs(intersectionX - end.x);
+        const percent1 = distanceFromStart / lineLength;
+        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
+            return 0;
         }
+        return percent1;
+    } else {
+        const slope = (end.y - start.y) / (end.x - start.x); // 起点和终点的斜率
+        const intercept = start.y - slope * start.x; //起点和终点的截距
+        const verSlope = -1 / slope; //起点和终点的垂线斜率
+        const verIntercept = point3.y - verSlope * point3.x; //垂线截距
+        const intersectionX = (verIntercept - intercept) / (slope - verSlope); //直线垂线的交点
+        const intersectionY = slope * intersectionX + intercept;
+        const lineLength = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+        const distanceFromStart = Math.sqrt(Math.pow(intersectionX - start.x, 2) + Math.pow(intersectionY - start.y, 2)); // 交点到起点的距离
+        const distanceFromEnd = Math.sqrt(Math.pow(intersectionX - end.x, 2) + Math.pow(intersectionY - end.y, 2)); // 交点到终点的距离
+
+        const percent = distanceFromStart / lineLength; // 交点所在百分比位置
+        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
+            return 0;
+        }
+        return percent;
     }
-    return radius;
 }
 
 function dot_mousemove(e: MouseEvent) {
@@ -230,10 +264,10 @@ function point_mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', point_mouseup);
 }
 const point_mouseenter = (e: MouseEvent, type: PointActionType) => {
-    e.stopPropagation();
     if (cursor_down.value) {
         return;
     }
+    e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
 
     changeType = type;
@@ -261,36 +295,38 @@ onUnmounted(() => {
 
 <template>
     <g>
-        <!-- 圓角 -->
-        <g :style="`transform: translate(${radius_dot.x - 4}px, ${radius_dot.y}px);`" ref="radiusDotEl"
-            @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
-            @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                stroke-width="1" />
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
-        </g>
-        <!-- 内角 -->
-        <g :style="`transform: translate(${inner_angle_dot.x - 4}px, ${inner_angle_dot.y - 4}px);`"
-            ref="innerAngleDotEl" @mousedown.stop="(e) => point_mousedown(e, PointActionType.InnerAngle)"
-            @mousemove="dot_mousemove" @mouseenter="(e) => point_mouseenter(e, PointActionType.InnerAngle)"
-            @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                stroke-width="1" />
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
-        </g>
-        <!-- 角数 -->
-        <g :style="`transform: translate(${count_dot.x - 4}px, ${count_dot.y - 4}px);`" ref="countDotEl"
-            @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
-            @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                stroke-width="1" />
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+        <g v-show="pointVisible">
+            <!-- 圓角 -->
+            <g :style="`transform: translate(${radius_dot.x - 4}px, ${radius_dot.y - 4}px);`" ref="radiusDotEl"
+                @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
+                @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
+                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                    stroke-width="1" />
+                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+            </g>
+            <!-- 内角 -->
+            <g :style="`transform: translate(${inner_angle_dot.x - 4}px, ${inner_angle_dot.y - 4}px);`"
+                ref="innerAngleDotEl" @mousedown.stop="(e) => point_mousedown(e, PointActionType.InnerAngle)"
+                @mousemove="dot_mousemove" @mouseenter="(e) => point_mouseenter(e, PointActionType.InnerAngle)"
+                @mouseleave="point_mouseleave">
+                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                    stroke-width="1" />
+                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+            </g>
+            <!-- 角数 -->
+            <g :style="`transform: translate(${count_dot.x - 4}px, ${count_dot.y - 4}px);`" ref="countDotEl"
+                @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
+                @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
+                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                    stroke-width="1" />
+                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+            </g>
         </g>
         <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
             width="100px" height="28px">

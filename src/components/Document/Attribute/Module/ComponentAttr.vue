@@ -114,6 +114,7 @@ const addTextDialog = () => {
     addType.value = VariableType.Text;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
     close();
 }
 /**
@@ -124,6 +125,7 @@ const examplesToggle = () => {
     addType.value = VariableType.SymbolRef;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
     close();
 }
 const warn = ref(false);
