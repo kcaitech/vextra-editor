@@ -340,7 +340,7 @@ router.beforeEach((to, from, next) => {
     if (kcdesk && from.meta.group === Group.Document && to.meta.group !== Group.Document) {
         // 显示出错页还是关闭当前页？？
         // 显示个页面即将关闭？
-        kcdesk.fileClose(kcdesk.getViewId());
+        kcdesk.fileCloseSelf();
         next(false);
     }
     else {
