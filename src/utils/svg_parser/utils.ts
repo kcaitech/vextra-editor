@@ -1,6 +1,7 @@
 import { Color, Shadow, } from "@kcdesign/data"
 import { Transform3D, TransformMode, TransformParams } from "./transform_3d"
 import { Matrix } from "./matrix"
+import {NumberArray2D} from "./number_array"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -27,8 +28,8 @@ export function getRectBox(x: number, y: number, w: number, h: number, transform
     // 变换后的四个顶点坐标
     const newPoints = transform.transform(points)
     // 右下角坐标
-    const maxX = Math.max(...newPoints.data[0])
-    const maxY = Math.max(...newPoints.data[1])
+    const maxX = Math.max(...newPoints.data.getRow(0))
+    const maxY = Math.max(...newPoints.data.getRow(1))
     // 从中心点平移回原点
     return {
         lt: { x: -maxX + w / 2 + x, y: -maxY + h / 2 + y },
@@ -108,13 +109,13 @@ export function parseTransform(transformContent: string, transformParams?: Trans
         })
 
         if (name === "matrix") {
-            const matrix = new Matrix([
-                [numArgList[0], numArgList[2], 0, numArgList[4]],
-                [numArgList[1], numArgList[3], 0, numArgList[5]],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1],
-            ], true)
-            transform.addTransform(new Transform3D({ matrix: matrix }))
+            const matrix = new Matrix(new NumberArray2D([4, 4], [
+                numArgList[0], numArgList[2], 0, numArgList[4],
+                numArgList[1], numArgList[3], 0, numArgList[5],
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ]))
+            transform.addTransform(new Transform3D({matrix: matrix}))
             // console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {

@@ -1,4 +1,5 @@
 import { buildIdentityArray, Matrix } from "./matrix"
+import {NumberArray2D} from "./number_array"
 
 export enum TransformMode { // 变换模式
     Local, // 相对坐标系变换，缩放、旋转、平移之间互不影响
@@ -84,12 +85,12 @@ export class Transform3D { // 变换
     }
 
     translate(x: number, y: number, z: number) { // 平移，会修改原变换
-        const matrix = new Matrix([
-            [1, 0, 0, x],
-            [0, 1, 0, y],
-            [0, 0, 1, z],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, x,
+            0, 1, 0, y,
+            0, 0, 1, z,
+            0, 0, 0, 1,
+        ]))
         if (!this.isLocalTransform) {
             this.matrix = matrix.multiply(this.matrix)
             return this
@@ -103,12 +104,12 @@ export class Transform3D { // 变换
     scale(xScale: number, yScale: number, zScale: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
-        const matrix = new Matrix([
-            [xScale, 0, 0, 0],
-            [0, yScale, 0, 0],
-            [0, 0, zScale, 0],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            xScale, 0, 0, 0,
+            0, yScale, 0, 0,
+            0, 0, zScale, 0,
+            0, 0, 0, 1,
+        ]))
         if (transformParams.transformMode === TransformMode.Global) {
             this.updateMatrix()
             this.isLocalTransform = false
@@ -159,12 +160,12 @@ export class Transform3D { // 变换
     }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
-        const matrix = new Matrix([
-            [1, 0, 0, 0],
-            [0, cos, -sin, 0],
-            [0, sin, cos, 0],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, 0,
+            0, cos, -sin, 0,
+            0, sin, cos, 0,
+            0, 0, 0, 1,
+        ]))
         return this._rotate(matrix, transformParams)
     }
 
@@ -174,12 +175,12 @@ export class Transform3D { // 变换
     }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
-        const matrix = new Matrix([
-            [cos, 0, sin, 0],
-            [0, 1, 0, 0],
-            [-sin, 0, cos, 0],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            cos, 0, sin, 0,
+            0, 1, 0, 0,
+            -sin, 0, cos, 0,
+            0, 0, 0, 1,
+        ]))
         return this._rotate(matrix, transformParams)
     }
 
@@ -189,12 +190,12 @@ export class Transform3D { // 变换
     }) {
         const sin = Math.sin(angle)
         const cos = Math.cos(angle)
-        const matrix = new Matrix([
-            [cos, -sin, 0, 0],
-            [sin, cos, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            cos, -sin, 0, 0,
+            sin, cos, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ]))
         return this._rotate(matrix, transformParams)
     }
 
@@ -204,16 +205,16 @@ export class Transform3D { // 变换
     }) {
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         axis = axis.normalize() // axis化为单位向量
-        const [x, y, z] = axis.data.map(item => item[0])
+        const [x, y, z] = axis.data.data
         const c = Math.cos(angle)
         const s = Math.sin(angle)
         const t = 1 - c
-        const matrix = new Matrix([
-            [t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0],
-            [t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0],
-            [t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0],
-            [0, 0, 0, 1],
-        ], true)
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
+            t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
+            t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
+            0, 0, 0, 1,
+        ]))
         return this._rotate(matrix, transformParams)
     }
 
@@ -224,9 +225,9 @@ export class Transform3D { // 变换
         this.rotate(axis, angle, {
             transformMode: TransformMode.LocalSpecialOrigin,
             origin: {
-                x: point.data[0][0] - this.translateMatrix.data[0][3],
-                y: point.data[1][0] - this.translateMatrix.data[1][3],
-                z: point.data[2][0] - this.translateMatrix.data[2][3]
+                x: point.data.get([0, 0]) - this.translateMatrix.data.get([0, 3]),
+                y: point.data.get([1, 0]) - this.translateMatrix.data.get([1, 3]),
+                z: point.data.get([2, 0]) - this.translateMatrix.data.get([2, 3]),
             },
         })
         return this
@@ -254,9 +255,9 @@ export class Transform3D { // 变换
     decompose3DTranslate() { // 解算出平移的三维值
         const m = !this.isLocalTransform ? this.matrix.data : this.translateMatrix.data
         return {
-            x: m[0][3],
-            y: m[1][3],
-            z: m[2][3],
+            x: m.get([0, 3]),
+            y: m.get([1, 3]),
+            z: m.get([2, 3]),
         }
     }
 
@@ -269,9 +270,9 @@ export class Transform3D { // 变换
     decompose3DScale() { // 解算出缩放的三维值
         if (!this.isLocalTransform) throw new Error("非局部变换模式，不能解算缩放值");
         return {
-            x: this.scaleMatrix.data[0][0],
-            y: this.scaleMatrix.data[1][1],
-            z: this.scaleMatrix.data[2][2],
+            x: this.scaleMatrix.data.get([0, 0]),
+            y: this.scaleMatrix.data.get([1, 1]),
+            z: this.scaleMatrix.data.get([2, 2]),
         }
     }
 
@@ -281,14 +282,14 @@ export class Transform3D { // 变换
     // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
     static decomposeEulerZXY(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const m = matrix.data
-        const x = Math.asin(m[2][1])
+        const x = Math.asin(m.get([2, 1]))
         let y, z
         if (x === Math.PI / 2 || x === -Math.PI / 2) {
-            y = Math.atan2(m[1][0], m[0][0])
+            y = Math.atan2(m.get([1, 0]), m.get([0, 0]))
             z = 0
         } else {
-            y = Math.atan2(-m[2][0], m[2][2])
-            z = Math.atan2(-m[0][1], m[1][1])
+            y = Math.atan2(-m.get([2, 0]), m.get([2, 2]))
+            z = Math.atan2(-m.get([0, 1]), m.get([1, 1]))
         }
         return {
             x: x,
@@ -333,10 +334,14 @@ export class Transform3D { // 变换
 
     clearTranslate() { // 清除平移操作，会修改原变换
         if (!this.isLocalTransform) {
-            this.matrix.data[0][3] = this.matrix.data[1][3] = this.matrix.data[2][3] = 0
+            this.matrix.data.set([0, 3], 0)
+            this.matrix.data.set([1, 3], 0)
+            this.matrix.data.set([2, 3], 0)
             return this
         }
-        this.translateMatrix.data[0][3] = this.translateMatrix.data[1][3] = this.translateMatrix.data[2][3] = 0
+        this.translateMatrix.data.set([0, 3], 0)
+        this.translateMatrix.data.set([1, 3], 0)
+        this.translateMatrix.data.set([2, 3], 0)
         this.isMatrixLatest = false
         return this
     }

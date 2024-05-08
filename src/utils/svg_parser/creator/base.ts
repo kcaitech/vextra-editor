@@ -499,7 +499,7 @@ export class BaseCreator extends BaseTreeNode {
                 from = new Point2D(translate.x / width, translate.y / height)
 
                 const toVec = fillColor.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
-                to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
+                to = new Point2D(toVec.data.get([0, 0]) / width, toVec.data.get([1, 0]) / height)
 
                 colorType = GradientType.Radial
                 // 按现有算法逆推，详见kcdesign-data/src/render/line_gradient.ts:render()->scaleY
