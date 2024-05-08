@@ -139,8 +139,8 @@ export class PathEditor extends TransformHandler {
     private shape: ShapeView;
     private path: Path;
 
-    readonly fixedPoint: XY;
-    private livingPoint: XY;
+    readonly fixedPoint: XY = { x: 0, y: 0 };
+    private livingPoint: XY = { x: 0, y: 0 };
 
     private baseData: BaseData = new Map();
 
@@ -157,12 +157,14 @@ export class PathEditor extends TransformHandler {
     private actionType: 'handle' | 'penHandle' | 'point' = 'handle';
 
 
-    constructor(context: Context, event: MouseEvent, needBuildMap = 0, flattenPoint = false) {
+    constructor(context: Context, event?: MouseEvent, needBuildMap = 0, flattenPoint = false) {
         super(context, event);
         this.path = context.path;
 
-        this.fixedPoint = this.workspace.getRootXY(event);
-        this.livingPoint = { ...this.fixedPoint };
+        if (event) {
+            this.fixedPoint = this.workspace.getRootXY(event);
+            this.livingPoint = { ...this.fixedPoint };
+        }
 
         this.shape = this.context.selection.selectedShapes[0];
 
@@ -246,6 +248,10 @@ export class PathEditor extends TransformHandler {
     private initMatrix() {
         this.shape = this.context.selection.selectedShapes[0];
 
+        if (!this.shape || !(this.shape instanceof PathShapeView)) {
+            return;
+        }
+
         const m = this.shape.matrix2Root();
         const frame = this.shape.frame;
         m.preScale(frame.width, frame.height);
@@ -322,7 +328,7 @@ export class PathEditor extends TransformHandler {
                 const __xyStr = `${point.x}?${point.y}`;
 
                 if (!__xy_string.has(__xyStr)) {
-                    this.uniquePosition!.add(point.id);
+                    this.uniquePosition.add(point.id);
                     __xy_string.add(__xyStr);
                 }
             }
@@ -1013,5 +1019,26 @@ export class PathEditor extends TransformHandler {
         this.path.editing(false);
 
         super.fulfil();
+    }
+
+    // 以下是自闭合函数，函数内执行fulfil
+    clip(segmentIndex: number, index: number) {
+        try {
+            if (!this.isInitMatrix) {
+                this.initMatrix();
+            }
+
+            if (!this.asyncApiCaller) {
+                this.createApiCaller();
+            }
+
+            if (!this.asyncApiCaller || !this.isInitMatrix) {
+                return;
+            }
+
+            (this.asyncApiCaller as PathModifier).clip(this.shape, segmentIndex, index);
+        } finally {
+            this.fulfil();
+        }
     }
 }
