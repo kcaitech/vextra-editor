@@ -887,6 +887,8 @@ export class PathEditor extends TransformHandler {
             this.init();
         }
 
+        this.buildMap(PathEditor.FULL_MAP);
+
         const order = this.altStatus ? 2 : 3;
 
         (this.asyncApiCaller as PathModifier).preCurve(order, this.shape, index, segment);
@@ -898,6 +900,8 @@ export class PathEditor extends TransformHandler {
         if (!this.isInitMatrix) {
             this.init();
         }
+
+        this.buildMap(PathEditor.FULL_MAP);
 
         if (!this.handleInfo) {
             this.handleInfo = { index, segment, side: 'from' };
@@ -931,6 +935,110 @@ export class PathEditor extends TransformHandler {
         if (this.altStatus && point.mode !== CurveMode.Disconnected) {
             this.curveModeBefore = point.mode;
             caller.breakOffHandle(this.shape, segment, index);
+        }
+
+        const m = new Matrix(this.baseMatrix);
+        m.multiAtLeft(this.context.workspace.matrix);
+
+        const xs = Array.from(this.mapX.keys());
+        const ys = Array.from(this.mapY.keys());
+
+        const isFrom = side === 'from';
+
+        const activePoint = isFrom ? m.computeCoord3(from) : m.computeCoord3(to);
+
+        let deltaX = Infinity;
+        let dx = 0;
+        let TX = 0;
+        let deltaY = Infinity;
+        let dy = 0;
+        let TY = 0;
+
+        for (let i = 0; i < xs.length; i++) {
+            const __x = xs[i];
+            const __d = __x - activePoint.x;
+            const D = Math.abs(__d);
+            if (D < deltaX) {
+                deltaX = D;
+                dx = __d;
+                TX = __x;
+            }
+        }
+        for (let i = 0; i < ys.length; i++) {
+            const __y = ys[i];
+            const __d = __y - activePoint.y;
+            const D = Math.abs(__d);
+            if (D < deltaY) {
+                deltaY = D;
+                dy = __d;
+                TY = __y;
+            }
+        }
+
+        const assist = this.context.assist;
+        let modified = false;
+        if (deltaX < PathEditor.DELTA) {
+            activePoint.x += dx;
+            const xNodes = [...this.mapX.get(TX) || []];
+            xNodes.push(activePoint);
+            modified = true;
+            assist.setNodesX2(xNodes);
+        } else {
+            assist.setNodesX2([]);
+        }
+        if (deltaY < PathEditor.DELTA) {
+            activePoint.y += dy;
+            const yNodes = [...this.mapY.get(TY) || []];
+            yNodes.push(activePoint);
+            modified = true;
+            assist.setNodesY2(yNodes);
+        } else {
+            assist.setNodesY2([]);
+        }
+
+        if (modified) {
+            const mInverse = new Matrix(m.inverse);
+            const mode = point.mode;
+
+            if (isFrom) {
+                from = mInverse.computeCoord3(activePoint);
+                if (mode === CurveMode.Asymmetric) {
+                    to.x = point.toX || 0;
+                    to.y = point.toY || 0;
+                    const l = Math.hypot(to.x - point.x, to.y - point.y);
+                    const __angle = Math.atan2(from.x - point.x, from.y - point.y);
+                    const _l_x = Math.abs(Math.sin(__angle) * l);
+                    const _l_y = Math.abs(Math.cos(__angle) * l);
+                    const _delta_x = from.x - point.x;
+                    const _delta_y = from.y - point.y;
+                    to.x = point.x - (_delta_x / Math.abs(_delta_x)) * _l_x;
+                    to.y = point.y - (_delta_y / Math.abs(_delta_y)) * _l_y;
+                } else if (mode === CurveMode.Mirrored) {
+                    to.x = 2 * point.x - from.x;
+                    to.y = 2 * point.y - from.y;
+                }
+            } else {
+                to = mInverse.computeCoord3(activePoint);
+                if (mode === CurveMode.Asymmetric) {
+                    from.x = point.fromX || 0;
+                    from.y = point.fromY || 0;
+                    const l = Math.hypot(from.x - point.x, from.y - point.y);
+                    const __angle = Math.atan2(to.x - point.x, to.y - point.y);
+                    const _l_x = Math.abs(Math.sin(__angle) * l);
+                    const _l_y = Math.abs(Math.cos(__angle) * l);
+                    const _delta_x = to.x - point.x;
+                    const _delta_y = to.y - point.y;
+                    from.x = point.x - (_delta_x / Math.abs(_delta_x)) * _l_x;
+                    from.y = point.y - (_delta_y / Math.abs(_delta_y)) * _l_y;
+                } else if (mode === CurveMode.Mirrored) {
+                    from.x = 2 * point.x - to.x;
+                    from.y = 2 * point.y - to.y;
+                }
+            }
+
+            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+        } else {
+            assist.notify(Asssit.CLEAR);
         }
 
         caller.execute4handle(this.shape, index, side, from, to, segment);

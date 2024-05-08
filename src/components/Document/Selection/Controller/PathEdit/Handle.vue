@@ -292,7 +292,7 @@ function init_editor(e: MouseEvent) {
         props.context.path.setBridgeParams(undefined);
         bridgeFromPen = true;
     } else {
-        pathModifier = new PathEditor(props.context, e);
+        pathModifier = new PathEditor(props.context, e, PathEditor.FULL_MAP);
         pathModifier.createApiCaller();
     }
 }
