@@ -275,11 +275,21 @@ export class PathEditor extends TransformHandler {
         const selected = this.path.syntheticPoints;
 
         if (this.shape.pathType === PathType.Editable) {
+            let wrongSelection = false;
             selected.forEach((indexes, segment) => {
-                const points = (this.shape as PathShapeView).segments[segment].points;
+                const points = (this.shape as PathShapeView)?.segments[segment]?.points;
+
+                if (!points?.length) {
+                    wrongSelection = true;
+                    return;
+                }
 
                 this.__getData(points as CurvePoint[], indexes);
             })
+
+            if (wrongSelection || !this.baseData.size) { // 选区出错，重置选区
+                this.path.reset();
+            }
         }
     }
 
