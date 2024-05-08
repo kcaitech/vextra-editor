@@ -202,7 +202,7 @@ export class Asssit extends WatchableObject {
         return !!this.m_pg_inner.get(shape.id);
     }
 
-    private clear() {
+    clear() {
         this.m_shape_inner.length = 0;
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
@@ -761,6 +761,8 @@ export class Asssit extends WatchableObject {
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
+        this.m_nodes_x2 = [];
+        this.m_nodes_y2 = [];
         this.multi_line_x = [];
         this.multi_line_y = [];
         this.m_except.clear();

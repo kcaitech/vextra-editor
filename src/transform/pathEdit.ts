@@ -223,17 +223,19 @@ export class PathEditor extends TransformHandler {
 
                 const xy = clientMatrix.computeCoord3(point);
 
-                let xContainer = this.mapX.get(xy.x);
+                const xKey = Number(xy.x.toFixed(2));
+                let xContainer = this.mapX.get(xKey);
                 if (!xContainer) {
                     xContainer = [xy];
-                    this.mapX.set(xy.x, xContainer);
+                    this.mapX.set(xKey, xContainer);
                 } else {
                     xContainer.push(xy);
                 }
-                let yContainer = this.mapY.get(xy.y);
+                const yKey = Number(xy.y.toFixed(2));
+                let yContainer = this.mapY.get(yKey);
                 if (!yContainer) {
                     yContainer = [xy];
-                    this.mapY.set(xy.y, yContainer);
+                    this.mapY.set(yKey, yContainer);
                 } else {
                     yContainer.push(xy);
                 }
@@ -390,7 +392,9 @@ export class PathEditor extends TransformHandler {
         const xs = Array.from(this.mapX.keys());
         const ys = Array.from(this.mapY.keys());
 
-        for (let i = 0; i < activePoints.length; i++) {
+        const aLen = activePoints.length;
+
+        for (let i = 0; i < aLen; i++) {
             const { x, y } = activePoints[i];
 
             for (let j = 0; j < xs.length; j++) {
@@ -420,15 +424,34 @@ export class PathEditor extends TransformHandler {
         const assist = this.context.assist;
 
         if (delX < PathEditor.DELTA) {
-            activePoints[0].x += DX;
-            assist.setNodesX2(this.mapX.get(TX) || []);
+            const ap: XY[] = [];
+            for (let i = 0; i < aLen; i++) {
+                const __ap = activePoints[i];
+                __ap.x += DX;
+                if (Number(__ap.x.toFixed(2)) === TX) {
+                    ap.push(__ap);
+                }
+            }
+
+            assist.setNodesX2([...(this.mapX.get(TX) || []), ...ap]);
             modified = true;
+        } else {
+            assist.setNodesX2([]);
         }
 
         if (delY < PathEditor.DELTA) {
-            activePoints[0].y += DY;
-            assist.setNodesY2(this.mapY.get(TY) || []);
+            const ap: XY[] = [];
+            for (let i = 0; i < aLen; i++) {
+                const __ap = activePoints[i];
+                __ap.y += DY;
+                if (Number(__ap.y.toFixed(2)) === TY) {
+                    ap.push(__ap);
+                }
+            }
+            assist.setNodesY2([...(this.mapY.get(TY) || []), ...ap]);
             modified = true;
+        } else {
+            assist.setNodesY2([]);
         }
 
         if (modified) {

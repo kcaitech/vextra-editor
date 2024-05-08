@@ -26,7 +26,6 @@ const data = reactive<Data>({
     lineY: '',
 });
 let { lineX, nodesX, lineY, nodesY } = data;
-let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
     if (t === Asssit.UPDATE_ASSIST_PATH) {
@@ -38,26 +37,28 @@ function assist_watcher(t: number) {
 
 function render() {
     clear();
-    const nodesX = [...props.context.assist.nodesX2];
-    const nodesY = [...props.context.assist.nodesY2];
-    if (nodesX.length) {
-        lineX = render_line_x(nodesX);
-        assist.value = true;
-    }
-    if (nodesY.length) {
-        lineY = render_line_y(nodesY);
-        assist.value = true;
-    }
 
-    console.log('lineX', lineX);
+    const nx = [...props.context.assist.nodesX2];
+    const ny = [...props.context.assist.nodesY2];
+
+    if (nx.length) {
+        nodesX.push(...nx);
+        lineX = render_line_x(nx);
+        assist.value = true;
+    }
+    if (ny.length) {
+        nodesY.push(...ny);
+        lineY = render_line_y(ny);
+        assist.value = true;
+    }
 }
 
 function clear() {
-    ax = 0, ay = 0;
     nodesX.length = 0;
     nodesY.length = 0;
     lineX = '';
     lineY = '';
+
     assist.value = false;
 }
 
@@ -120,15 +121,15 @@ onUnmounted(() => {
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="4"
-         height="4" viewBox="0 0 4 4" style="position: absolute">
-        <g id="node">
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="100"
+         height="100" viewBox="0 0 100 100" style="position: absolute">
+        <g id="node-path">
             <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
             <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
         </g>
         <g v-if="assist">
-            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
-            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
+            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
+            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node-path" :key="i"/>
 
             <path v-if="lineX" :d="lineX" class="a-path"/>
             <path v-if="lineY" :d="lineY" class="a-path"/>
@@ -136,6 +137,10 @@ onUnmounted(() => {
     </svg>
 </template>
 <style scoped lang="scss">
+svg {
+    pointer-events: none;
+}
+
 use {
     stroke-width: 1px;
     stroke: #ff2200;
