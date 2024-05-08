@@ -134,8 +134,8 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
 export class PathEditor extends TransformHandler {
     static DELTA = 5;
 
-    static BORDER_MAP = 1; // 建立动作点之外的点形成的地图
-    static FULL_MAP = 2; // 建立完整的图层地图
+    static BORDER_MAP = 'border-map'; // 建立动作点之外的点形成的地图
+    static FULL_MAP = 'full-map'; // 建立完整的图层地图
     private shape: ShapeView;
     private path: Path;
 
@@ -157,7 +157,7 @@ export class PathEditor extends TransformHandler {
     private actionType: 'handle' | 'penHandle' | 'point' = 'handle';
 
 
-    constructor(context: Context, event?: MouseEvent, needBuildMap = 0, flattenPoint = false) {
+    constructor(context: Context, event?: MouseEvent, needBuildMap = '', flattenPoint = false) {
         super(context, event);
         this.path = context.path;
 
@@ -182,8 +182,8 @@ export class PathEditor extends TransformHandler {
     private mapX = new Map<number, XY[]>();
     private mapY = new Map<number, XY[]>();
 
-    private buildMap(buildType: number) {
-        this.initMatrix();
+    private buildMap(buildType: string) {
+        this.init();
 
         const shape = this.shape as PathShapeView;
 
@@ -196,7 +196,7 @@ export class PathEditor extends TransformHandler {
 
         const activeTarget = new Set<string>();
 
-        if (buildType === 1) {
+        if (buildType === PathEditor.BORDER_MAP) {
             this.path.syntheticPoints.forEach((points, segmentIndex) => {
                 if (!points.length) return;
                 points.forEach(index => {
@@ -221,7 +221,7 @@ export class PathEditor extends TransformHandler {
                 const point = points[j];
                 if (!point) continue;
 
-                if (buildType === 1 && activeTarget.has(point.id)) continue;
+                if (buildType === PathEditor.BORDER_MAP && activeTarget.has(point.id)) continue;
 
                 const xy = clientMatrix.computeCoord3(point);
 
@@ -243,9 +243,12 @@ export class PathEditor extends TransformHandler {
                 }
             }
         }
+
+        console.log('mapX:', this.mapX);
+        console.log('mapY:', this.mapY);
     }
 
-    private initMatrix() {
+    private init() {
         this.shape = this.context.selection.selectedShapes[0];
 
         if (!this.shape || !(this.shape instanceof PathShapeView)) {
@@ -679,7 +682,7 @@ export class PathEditor extends TransformHandler {
     // 拖动之后通过键盘事件控制折断状态
     private breakOff() {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         if (!this.handleInfo) {
@@ -713,7 +716,7 @@ export class PathEditor extends TransformHandler {
         }
 
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const { index, segment, side } = this.handleInfo;
@@ -767,6 +770,8 @@ export class PathEditor extends TransformHandler {
 
             if (addRes) {
                 this.path.select_point(segment, index);
+                this.buildMap(PathEditor.BORDER_MAP);
+                this.getUniquePosition();
             }
         }
 
@@ -781,7 +786,7 @@ export class PathEditor extends TransformHandler {
         }
 
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const xy = point ?? this.baseMatrixInverse.computeCoord3(this.livingPoint);
@@ -812,7 +817,7 @@ export class PathEditor extends TransformHandler {
         }
 
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const xy = point ?? this.baseMatrixInverse.computeCoord3(this.livingPoint);
@@ -868,7 +873,7 @@ export class PathEditor extends TransformHandler {
 
     execute(event: MouseEvent) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
         this.livingPoint = this.workspace.getRootXY(event);
 
@@ -879,7 +884,7 @@ export class PathEditor extends TransformHandler {
 
     execute4handlePre(index: number, segment = -1) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const order = this.altStatus ? 2 : 3;
@@ -891,7 +896,7 @@ export class PathEditor extends TransformHandler {
 
     execute4handlePreForPen(index: number, segment = -1) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         if (!this.handleInfo) {
@@ -907,7 +912,7 @@ export class PathEditor extends TransformHandler {
 
     execute4handle(index: number, side: 'from' | 'to', from: XY, to: XY, segment = -1) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         if (!this.handleInfo) {
@@ -935,7 +940,7 @@ export class PathEditor extends TransformHandler {
 
     closeSegmentAt(segmentIndex: number) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const segment = (this.shape as PathShapeView).segments[segmentIndex];
@@ -962,7 +967,7 @@ export class PathEditor extends TransformHandler {
 
     mergeSegment(segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const segment = (this.shape as PathShapeView).segments[segmentIndex];
@@ -987,7 +992,7 @@ export class PathEditor extends TransformHandler {
 
     reverseSegment(segmentIndex: number) {
         if (!this.isInitMatrix) {
-            this.initMatrix();
+            this.init();
         }
 
         const segment = (this.shape as PathShapeView).segments[segmentIndex];
@@ -1025,7 +1030,7 @@ export class PathEditor extends TransformHandler {
     clip(segmentIndex: number, index: number) {
         try {
             if (!this.isInitMatrix) {
-                this.initMatrix();
+                this.init();
             }
 
             if (!this.asyncApiCaller) {
