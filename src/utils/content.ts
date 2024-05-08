@@ -1097,22 +1097,27 @@ export function pre_modify_anchor(shape: ShapeView) {
  * 容器标题的最大视图宽度
  */
 export function shape_title_width(shape: ShapeView, matrix: Matrix) {
-    const rotate = pre_modify_anchor(shape);
+    let rotate = pre_modify_anchor(shape);
+    if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    if (shape.isFlippedVertical) {
+        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    }
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     const f = shape.frame;
     let width = 0;
     const lt = matrix.computeCoord2(0, 0);
     const rt = matrix.computeCoord2(f.width, 0);
     const lb = matrix.computeCoord2(0, f.height);
     if (rotate >= 0 && rotate < 45) {
-        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
     } else if (rotate >= 45 && rotate < 135) {
-        width = Math.hypot(rt.x - lt.x, rt.y - lt.y)
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
     } else if (rotate >= 135 && rotate < 225) {
-        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
     } else if (rotate >= 225 && rotate < 315) {
-        width = Math.hypot(rt.x - lt.x, rt.y - lt.y)
-    } else if (rotate >= 315 && rotate <= 360) {
         width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    } else if (rotate >= 315 && rotate <= 360) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
     }
     return width;
 }

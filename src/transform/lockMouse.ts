@@ -50,6 +50,14 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeRotate(this.shapes, deg);
     }
 
+    executeCounts(count: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeCounts(this.shapes, count);
+    }
+
+    executeInnerAngle(offset: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeInnerAngle(this.shapes, offset);
+    }
+
     executeRadius(values: number[]) {
         (this.asyncApiCaller as LockMouseHandler).executeRadius(this.shapes, values);
     }

@@ -20,7 +20,9 @@ export enum Action {
     Curve = 'curve',
     PathClip = 'path-clip',
     Pen = 'add-vector',
-    Pencil = 'add-free-path'
+    Pencil = 'add-free-path',
+    Polygon = 'add-polygon',
+    Star = 'add-star',
 }
 
 const A2R = new Map([
@@ -35,6 +37,8 @@ const A2R = new Map([
     [Action.AddTable, ShapeType.Table],
     [Action.AddContact, ShapeType.Contact],
     [Action.AddCutout, ShapeType.Cutout],
+    [Action.Polygon, ShapeType.Polygon],
+    [Action.Star, ShapeType.Star],
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
