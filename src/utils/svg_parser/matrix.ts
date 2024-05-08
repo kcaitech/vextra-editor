@@ -74,22 +74,23 @@ export class Matrix { // 矩阵
         return true
     }
 
-    resize(m?: number, n?: number, fillValue: number = 0) { // 调整矩阵的大小，返回新矩阵
+    resize(m?: number, n?: number, fillValue: number = 0) { // 调整矩阵的大小
         const [m0, n0] = this.dimension
         if (m === undefined) m = m0;
         if (n === undefined) n = n0;
-        const result = buildArray(m, n, fillValue)
-        for (let i = 0; i < Math.min(m, m0); i++) {
-            for (let j = 0; j < Math.min(n, n0); j++) {
-                result.set([i, j], this.data.get([i, j]))
-            }
-        }
-        return new Matrix(result)
+
+        if (m0 > m) this.data.deleteRows(m, m0 - m);
+        else if (m0 < m) this.data.insertRows(buildArray(m - m0, n, fillValue).data, m0, true);
+
+        if (n0 > n) this.data.deleteCols(n, n0 - n);
+        else if (n0 < n) this.data.insertCols(buildArray(m, n - n0, fillValue).data, n0, true);
+
+        return this
     }
 
     forEach(callback: (value: number, row: number, column: number) => void) { // 遍历（横向优先）
         const [m, n] = this.dimension
-        for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) callback(this.data.get([i, j]), j, i);
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) callback(this.data.get([i, j]), i, j);
     }
 
     flat() { // 转为一维数组（横向优先）
@@ -137,15 +138,13 @@ export class Matrix { // 矩阵
     }
 
     col(n: number) { // 获取第n列列向量
-        const [m0, n0] = this.dimension
+        const [_, n0] = this.dimension
         if (n < 0 || n >= n0) throw new Error("列数越界");
-        const data = []
-        for (let i = 0; i < m0; i++) data.push(this.data.get([i, n]));
-        return Matrix.ColVec(data)
+        return Matrix.ColVec(this.data.col(n))
     }
 
-    cols(n0: number, n1?: number) { // 获取第n0列到第n1列的列向量
-        const [m, n] = this.dimension
+    cols(n0: number, n1?: number) { // 获取第n0列到第n1列的列向量（包含第n1列）
+        const [_, n] = this.dimension
         if (n1 === undefined) n1 = n;
         if (n0 < 0 || n1 < 0 || n0 >= n || n1 >= n) throw new Error("列数越界");
         if (n0 > n1) throw new Error("列数范围错误");
@@ -166,10 +165,10 @@ export class Matrix { // 矩阵
 
     row(m: number) { // 获取第n行行向量
         if (m < 0 || m >= this.dimension[0]) throw new Error("行数越界");
-        return Matrix.RowVec(this.data.data.slice(m * this.dimension[1], (m + 1) * this.dimension[1]))
+        return Matrix.RowVec(this.data.row(m))
     }
 
-    rows(m0: number, m1?: number) { // 获取第m0行到第m1行的行向量
+    rows(m0: number, m1?: number) { // 获取第m0行到第m1行的行向量（包含第m1行）
         const [m, n] = this.dimension
         if (m1 === undefined) m1 = m;
         if (m0 < 0 || m1 < 0 || m0 >= m || m1 >= m) throw new Error("行数越界");
@@ -183,69 +182,51 @@ export class Matrix { // 矩阵
         return this.rows(0)
     }
 
-    insertCols(cols: Matrix, index?: number) { // 插入多列，不修改原矩阵，返回新矩阵
-        const [m0, n0] = this.dimension
-        const [m1, n1] = cols.dimension
-        if (m0 !== m1) throw new Error("矩阵行数不匹配，无法插入");
-        if (index === undefined) index = n0;
-        const result = buildArray(m0, n0 + n1)
-        for (let i = 0; i < m0; i++) for (let j = 0; j < index; j++) result.set([i, j], this.data.get([i, j]));
-        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result.set([i, index + j], cols.data.get([i, j]));
-        for (let i = 0; i < m0; i++) for (let j = index; j < n0; j++) result.set([i, j + n1], this.data.get([i, j]));
-        return new Matrix(result)
+    insertCols(colsData: number[], col?: number, skipFillValueCheck = false) { // 插入多列
+        this.data.insertCols(colsData, col, skipFillValueCheck)
+        return this
     }
 
-    insertRows(rows: Matrix, index?: number) { // 插入多行，不修改原矩阵，返回新矩阵
-        const [m0, n0] = this.dimension
-        const [m1, n1] = rows.dimension
-        if (n0 !== n1) throw new Error("矩阵列数不匹配，无法插入");
-        if (index === undefined) index = m0;
-        const result = buildArray(m0 + m1, n0)
-        for (let i = 0; i < index; i++) for (let j = 0; j < n0; j++) result.set([i, j], this.data.get([i, j]));
-        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result.set([index + i, j], rows.data.get([i, j]));
-        for (let i = index; i < m0; i++) for (let j = 0; j < n0; j++) result.set([i + m1, j], this.data.get([i, j]));
-        return new Matrix(result)
+    insertRows(rowsData: number[], row?: number, skipFillValueCheck = false) { // 插入多行
+        this.data.insertRows(rowsData, row, skipFillValueCheck)
+        return this
     }
 
-    transpose() { // 转置，不修改原矩阵，返回新矩阵
+    transpose() { // 转置
         const [m, n] = this.dimension
-        const result = buildArray(n, m)
         for (let i = 0; i < m; i++) {
-            for (let j = 0; j < n; j++) {
-                result.set([j, i], this.data.get([i, j]))
+            for (let j = i + 1; j < n; j++) {
+                const temp = this.data.get([i, j])
+                this.data.set([i, j], this.data.get([j, i]))
+                this.data.set([j, i], temp)
             }
         }
-        return new Matrix(result)
+        return this
     }
 
-    add(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相加，将本矩阵的特定区域与matrix相加，不修改原矩阵，返回新矩阵
+    add(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相加，将本矩阵的特定区域与matrix相加
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相加");
-        const result = buildArray(m0, n0)
-        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result.set([i, j], this.data.get([i, j])); // 复制原矩阵
-        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result.set([row + i, column + j], result.get([row + i, column + j]) + matrix.data.get([i, j]));
-        return new Matrix(result)
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.data.set([row + i, column + j], this.data.get([row + i, column + j]) + matrix.data.get([i, j]));
+        return this
     }
 
-    subtract(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相减，将本矩阵的特定区域与matrix相减，不修改原矩阵，返回新矩阵
+    subtract(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相减，将本矩阵的特定区域与matrix相减
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相减");
-        const result = buildArray(m0, n0)
-        for (let i = 0; i < m0; i++) for (let j = 0; j < n0; j++) result.set([i, j], this.data.get([i, j])); // 复制原矩阵
-        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result.set([row + i, column + j], result.get([row + i, column + j]) - matrix.data.get([i, j]));
-        return new Matrix(result)
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.data.set([row + i, column + j], this.data.get([row + i, column + j]) - matrix.data.get([i, j]));
+        return this
     }
 
-    multiplyByNumber(number: number) { // 矩阵数乘，不修改原矩阵，返回新矩阵
+    multiplyByNumber(number: number) { // 矩阵数乘
         const [m, n] = this.dimension
-        const result = buildArray(m, n)
-        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) result.set([i, j], this.data.get([i, j]) * number);
-        return new Matrix(result)
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) this.data.set([i, j], this.data.get([i, j]) * number);
+        return this
     }
 
-    multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
+    _getMultiply(matrix: Matrix) {
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
@@ -260,18 +241,29 @@ export class Matrix { // 矩阵
                 result.set([i, j], sum)
             }
         }
-        return new Matrix(result)
+        return result
     }
 
-    multiplyRight(matrix: Matrix) { // 矩阵右乘，不修改原矩阵，返回新矩阵
+    getMultiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
+        return new Matrix(this._getMultiply(matrix))
+    }
+
+
+    multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，会修改原矩阵
+        this.data = this._getMultiply(matrix)
+        return this
+    }
+
+    multiplyRight(matrix: Matrix) { // 矩阵右乘
         return this.multiply(matrix)
     }
 
-    multiplyLeft(matrix: Matrix) { // 矩阵左乘，不修改原矩阵，返回新矩阵
-        return matrix.multiply(this)
+    multiplyLeft(matrix: Matrix) { // 矩阵左乘
+        this.data = matrix.clone().multiply(this).data
+        return this
     }
 
-    inverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
+    getInverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
 
         const n = this.dimension[0] // 矩阵的阶数
@@ -309,7 +301,8 @@ export class Matrix { // 矩阵
                 }
             }
         }
-        return new Matrix(result)
+        this.data = result
+        return this
     }
 
     rank(): number { // 求矩阵的秩（消元法）
@@ -362,7 +355,7 @@ export class Matrix { // 矩阵
         return result
     }
 
-    adjoint(): Matrix | undefined { // 求矩阵的伴随矩阵
+    getAdjoint(): Matrix | undefined { // 求矩阵的伴随矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无伴随矩阵
         const [m, n] = this.dimension // 矩阵的阶数
         const result = buildArray(m, n)
@@ -378,19 +371,18 @@ export class Matrix { // 矩阵
         return new Matrix(result)
     }
 
-    normalize() { // 将矩阵的每一列化为单位向量，不修改原矩阵，返回新矩阵
+    normalize() { // 将矩阵的每一列化为单位向量
         const [m, n] = this.dimension
-        const result = buildArray(m, n)
         for (let i = 0; i < n; i++) {
             let sum = 0
             for (let j = 0; j < m; j++) sum += this.data.get([j, i]) ** 2
             sum = Math.sqrt(sum)
-            for (let j = 0; j < m; j++) result.set([i, i], this.data.get([j, i]) / sum)
+            for (let j = 0; j < m; j++) this.data.set([i, i], this.data.get([j, i]) / sum)
         }
-        return new Matrix(result)
+        return this
     }
 
-    normalizeRow() { // 将矩阵的每一行化为单位向量，不修改原矩阵，返回新矩阵
+    normalizeRow() { // 将矩阵的每一行化为单位向量
         return this.transpose().normalize().transpose()
     }
 

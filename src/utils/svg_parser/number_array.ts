@@ -73,35 +73,55 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return new NumberArray2D(newObj.dimensionLength as [number, number], newObj.data, true)
     }
 
-    getRow(row: number) { // 获取NumberArray的一行
-        if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        return this.data.slice(row * this.dimensionLength[1], (row + 1) * this.dimensionLength[1])
+     getIndex(indexes: number[]): number {
+        if (indexes.length !== 2) throw new Error("维数不匹配");
+        return indexes[0] * this.dimensionLength[1] + indexes[1]
     }
 
-    getCol(col: number) { // 获取NumberArray的一列
+    rows(m0: number, m1?: number) { // 获取NumberArray中的第m0行到第m1行（包含第m1行）
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
+        const [m, n] = this.dimensionLength
+        if (m1 === undefined) m1 = m;
+        if (m0 < 0 || m1 < 0 || m0 >= m || m1 >= m) throw new Error("行索引越界");
+        return this.data.slice(m0 * n, (m1 + 1) * n)
+    }
+
+    row(m: number) { // 获取NumberArray中的第m行
+        return this.rows(m, m)
+    }
+
+    cols(n0: number, n1?: number) { // 获取NumberArray中的第n0列到第n1列（包含第n1列）
+        if (this.dimension !== 2) throw new Error("data必须是二维数组");
+        const [m, n] = this.dimensionLength
+        if (n1 === undefined) n1 = n;
+        if (n0 < 0 || n1 < 0 || n0 >= n || n1 >= n) throw new Error("列索引越界");
         const result = []
-        const [m, _] = this.dimensionLength
-        for (let i = 0; i < m; i++) result.push(this.get([i, col]))
+        for (let i = n0; i < n1 + 1; i++) for (let j = 0; j < m; j++) result.push(this.get([j, i]));
         return result
     }
 
-    insertRows(rowsData: number[], row?: number) { // 往NumberArray中插入多行
+    col(n: number) { // 获取NumberArray中的第n列
+        return this.cols(n, n)
+    }
+
+    insertRows(rowsData: number[], row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         if (rowsData.length % this.dimensionLength[1] !== 0) throw new Error("行数据长度不匹配");
         if (row === undefined) row = this.dimensionLength[0];
         if (row < 0 || row > this.dimensionLength[0]) throw new Error("行索引越界");
+        if (!skipFillValueCheck && rowsData.findIndex(item => typeof item !== "number") !== -1) throw new Error("填充数组元素类型不匹配");
         this.data.splice(row * this.dimensionLength[1], 0, ...rowsData)
         this.dimensionLength[0] += rowsData.length / this.dimensionLength[1]
         return this
     }
 
-    insertCols(colsData: number[], col?: number) { // 往NumberArray中插入多列
+    insertCols(colsData: number[], col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
         if (colsData.length % m !== 0) throw new Error("列数据长度不匹配");
         if (col === undefined) col = n;
         if (col < 0 || col > n) throw new Error("列索引越界");
+        if (!skipFillValueCheck && colsData.findIndex(item => typeof item !== "number") !== -1) throw new Error("填充数组元素类型不匹配");
         for (let i = colsData.length - 1; i > 0; i--) {
             for (let j = 0; j < m; j++) {
                 this.data.splice(j * n + col, 0, colsData[i * m + j])

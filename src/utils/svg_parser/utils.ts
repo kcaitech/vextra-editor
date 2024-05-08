@@ -28,8 +28,8 @@ export function getRectBox(x: number, y: number, w: number, h: number, transform
     // 变换后的四个顶点坐标
     const newPoints = transform.transform(points)
     // 右下角坐标
-    const maxX = Math.max(...newPoints.data.getRow(0))
-    const maxY = Math.max(...newPoints.data.getRow(1))
+    const maxX = Math.max(...newPoints.data.row(0))
+    const maxY = Math.max(...newPoints.data.row(1))
     // 从中心点平移回原点
     return {
         lt: { x: -maxX + w / 2 + x, y: -maxY + h / 2 + y },

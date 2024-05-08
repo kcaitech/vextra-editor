@@ -1,4 +1,4 @@
-import { buildIdentityArray, Matrix } from "./matrix"
+import {buildArray, buildIdentityArray, Matrix} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 export enum TransformMode { // 变换模式
@@ -37,7 +37,7 @@ export class Transform3D { // 变换
     updateMatrix() {
         if (!this.isLocalTransform) return this.matrix;
         if (!this.isMatrixLatest) {
-            this.matrix = this.translateMatrix.multiply(this.rotateMatrix).multiply(this.scaleMatrix)
+            this.matrix = this.translateMatrix.clone().multiply(this.rotateMatrix).multiply(this.scaleMatrix)
             this.isMatrixLatest = true
         }
         return this.matrix
@@ -77,14 +77,14 @@ export class Transform3D { // 变换
         const [m, n] = points.dimension
         if (m !== 3) throw new Error("点必须是3维向量");
         this.updateMatrix()
-        return this.matrix.multiply(points.insertRows(Matrix.build(1, n, 1))).resize(3, n)
+        return this.matrix.clone().multiply(points.insertRows(buildArray(1, n, 1).data)).resize(3, n)
     }
 
     transformPoint(x: number, y: number, z: number) { // 对一个三维点（列向量）进行变换
         return this.transform(Matrix.ColVec3D(x, y, z)).toXYZ()
     }
 
-    translate(x: number, y: number, z: number) { // 平移，会修改原变换
+    translate(x: number, y: number, z: number) { // 平移
         const matrix = new Matrix(new NumberArray2D([4, 4], [
             1, 0, 0, x,
             0, 1, 0, y,
@@ -100,7 +100,7 @@ export class Transform3D { // 变换
         return this
     }
 
-    // 缩放，会修改原变换
+    // 缩放
     scale(xScale: number, yScale: number, zScale: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -118,19 +118,19 @@ export class Transform3D { // 变换
         }
         this.scaleMatrix = matrix.multiply(this.scaleMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
-            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
+            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(buildIdentityArray(4, 3).data, 0, true)
         } else if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
             const origin = transformParams.origin || { x: 0, y: 0, z: 0 }
             const originCol = Matrix.ColVec([origin.x, origin.y, origin.z, 1])
             const originCol2 = matrix.multiply(originCol)
             const originDiffCol = originCol2.subtract(originCol)
-            this.translateMatrix = this.translateMatrix.add(originDiffCol, 0, 3)
+            this.translateMatrix.add(originDiffCol, 0, 3)
         }
         this.isMatrixLatest = false
         return this
     }
 
-    // 旋转缩放等，会修改原变换
+    // 旋转缩放等
     _rotate(matrix: Matrix, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -142,19 +142,19 @@ export class Transform3D { // 变换
         }
         this.rotateMatrix = matrix.multiply(this.rotateMatrix)
         if (transformParams.transformMode === TransformMode.LocalTranslate) {
-            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(Matrix.buildIdentity(4, 3), 0)
+            this.translateMatrix = matrix.multiply(this.translateMatrix).col(3).insertCols(buildIdentityArray(4, 3).data, 0, true)
         } else if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
             const origin = transformParams.origin || { x: 0, y: 0, z: 0 }
             const originCol = Matrix.ColVec([origin.x, origin.y, origin.z, 1])
             const originCol2 = matrix.multiply(originCol)
             const originDiffCol = originCol2.subtract(originCol)
-            this.translateMatrix = this.translateMatrix.add(originDiffCol, 0, 3)
+            this.translateMatrix.add(originDiffCol, 0, 3)
         }
         this.isMatrixLatest = false
         return this
     }
 
-    // 绕x轴旋转，会修改原变换
+    // 绕x轴旋转
     rotateX(angle: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -169,7 +169,7 @@ export class Transform3D { // 变换
         return this._rotate(matrix, transformParams)
     }
 
-    // 绕y轴旋转，会修改原变换
+    // 绕y轴旋转
     rotateY(angle: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -184,7 +184,7 @@ export class Transform3D { // 变换
         return this._rotate(matrix, transformParams)
     }
 
-    // 绕z轴旋转，会修改原变换
+    // 绕z轴旋转
     rotateZ(angle: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -199,7 +199,7 @@ export class Transform3D { // 变换
         return this._rotate(matrix, transformParams)
     }
 
-    // 绕任意轴旋转，axis为旋转轴的单位向量，会修改原变换
+    // 绕任意轴旋转，axis为旋转轴的单位向量
     rotate(axis: Matrix, angle: number, transformParams: TransformParams = {
         transformMode: TransformMode.Local
     }) {
@@ -218,7 +218,7 @@ export class Transform3D { // 变换
         return this._rotate(matrix, transformParams)
     }
 
-    // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点，会修改原变换
+    // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点
     rotateAt(axis: Matrix, point: Matrix, angle: number) {
         if (axis.dimension[0] !== 3 || axis.dimension[1] !== 1) throw new Error("旋转轴必须是3维向量");
         if (point.dimension[0] !== 3 || point.dimension[1] !== 1) throw new Error("旋转轴上的点必须是3维向量");
@@ -238,16 +238,16 @@ export class Transform3D { // 变换
         return !this.rotateMatrix.isIdentity
     }
 
-    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换），会修改原变换
+    addTransform(transform: Transform3D) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
         if (!transform.isLocalTransform) {
             this.updateMatrix()
             this.isLocalTransform = false
-            this.matrix = transform.matrix.multiply(this.matrix)
+            this.matrix = transform.matrix.clone().multiply(this.matrix)
             return this
         }
-        this.translateMatrix = transform.translateMatrix.multiply(this.translateMatrix)
-        this.rotateMatrix = transform.rotateMatrix.multiply(this.rotateMatrix)
-        this.scaleMatrix = transform.scaleMatrix.multiply(this.scaleMatrix)
+        this.translateMatrix = transform.translateMatrix.clone().multiply(this.translateMatrix)
+        this.rotateMatrix = transform.rotateMatrix.clone().multiply(this.rotateMatrix)
+        this.scaleMatrix = transform.scaleMatrix.clone().multiply(this.scaleMatrix)
         this.isMatrixLatest = false
         return this
     }
@@ -307,23 +307,23 @@ export class Transform3D { // 变换
         }
     }
 
-    clearRotation() { // 清除旋转操作，会修改原变换
+    clearRotation() { // 清除旋转操作
         if (!this.isLocalTransform) throw new Error("非局部变换模式，不能清除旋转操作");
         this.rotateMatrix = new Matrix(buildIdentityArray(4))
         this.isMatrixLatest = false
         return this
     }
 
-    clearScale() { // 清除缩放操作，会修改原变换
+    clearScale() { // 清除缩放操作
         if (!this.isLocalTransform) throw new Error("非局部变换模式，不能清除缩放操作");
         this.scaleMatrix = new Matrix(buildIdentityArray(4))
         this.isMatrixLatest = false
         return this
     }
 
-    clearRotationAndScale() { // 清除旋转和缩放操作，会修改原变换
+    clearRotationAndScale() { // 清除旋转和缩放操作
         if (!this.isLocalTransform) {
-            this.matrix = Matrix.buildIdentity(4, 3).insertCols(this.matrix.col(3))
+            this.matrix = Matrix.buildIdentity(4, 3).insertCols(this.matrix.data.col(3))
             return this
         }
         this.rotateMatrix = new Matrix(buildIdentityArray(4))
@@ -332,7 +332,7 @@ export class Transform3D { // 变换
         return this
     }
 
-    clearTranslate() { // 清除平移操作，会修改原变换
+    clearTranslate() { // 清除平移操作
         if (!this.isLocalTransform) {
             this.matrix.data.set([0, 3], 0)
             this.matrix.data.set([1, 3], 0)
