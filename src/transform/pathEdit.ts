@@ -704,6 +704,8 @@ export class PathEditor extends TransformHandler {
         this.curveModeBefore = point.mode;
 
         (this.asyncApiCaller as PathModifier).breakOffHandle(this.shape, segment, index);
+
+        this.updateCtrlView();
     }
 
     private recovery() {
@@ -734,6 +736,8 @@ export class PathEditor extends TransformHandler {
         (this.asyncApiCaller as PathModifier).recoveryHandle(this.shape, segment, index, this.curveModeBefore, side);
 
         this.curveModeBefore = undefined;
+
+        this.updateCtrlView();
     }
 
     protected keydown(event: KeyboardEvent) {
