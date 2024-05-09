@@ -72,7 +72,7 @@ onMounted(() => {
         background: #FFFFFF;
         box-sizing: border-box;
         border: 1px solid #F5F5F5;
-        margin: 0 14px;
+        margin: 8px 14px;
 
         &:focus-within {
             border-color: rgba(24, 120, 245, 1);
@@ -107,7 +107,7 @@ onMounted(() => {
 
     .search-list {
         position: relative;
-        height: calc(100% - 34px)
+        height: calc(100% - 50px)
     }
 }
 </style>

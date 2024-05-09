@@ -1,15 +1,17 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { router } from '../../router'
+import { router } from '@/router'
 import { useRoute } from 'vue-router'
-import * as share_api from '../../request/share'
+import * as share_api from '@/request/share'
 import { useI18n } from 'vue-i18n'
 import { Warning } from '@element-plus/icons-vue'
+import { DocInfo } from "@/context/user"
+import { ElMessage } from 'element-plus'
 const { t } = useI18n()
 const radio = ref('1')
 const textarea = ref('')
 const disabled = ref(false)
-const docInfo: any = ref({})
+const docInfo = ref<DocInfo>()
 const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
@@ -17,6 +19,7 @@ const status = ref(2)
 const messages = ref<string>(t('apply.request_access'))
 const execute = ref(false)
 const avatar = ref(localStorage.getItem('avatar')!)
+const docID = ref<string>(route.query.id as string)
 
 const onSave = () => {
     disabled.value = true
@@ -27,7 +30,7 @@ const onSave = () => {
 }
 
 const promptMessage = () => {
-    if (docInfo.value.shares_count >= 5) {
+    if ((docInfo.value as DocInfo).shares_count >= 5) {
         messages.value = t('apply.maximum_share')
         showNotification()
         const routeTimer = setTimeout(() => {
@@ -51,9 +54,12 @@ watch(radio, () => {
 watch(textarea, () => {
     disabled.value = false
 })
+
+
+
 const getDocumentAuthority = async () => {
     try {
-        const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+        const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: docID.value })
         if (data) {
             permType = data.perm_type
             if (permType !== 0) {
@@ -73,26 +79,30 @@ const getDocumentAuthority = async () => {
 getDocumentAuthority()
 const getDocumentInfo = async () => {
     try {
-        const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        if (data) {
-            docInfo.value = data.data
-            if (data.code === 400) {
-                return linkValid.value = false
-            }
-            if (docInfo.value.document.doc_type === 0) {
+        const { code, data } = await share_api.getDocumentInfoAPI({ doc_id: docID.value })
+        if (code === 0) {
+            docInfo.value = data
+            if (docInfo.value?.document.doc_type === 0) {
                 linkValid.value = false
             } else {
                 linkValid.value = true
             }
-            if (execute.value) {
-                promptMessage()
-            }
-            if (docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
-                status.value = docInfo.value.apply_list[0].status
-            } else if (docInfo.value.apply_list[0].status !== 2) {
-                status.value = docInfo.value.apply_list[0].status
+        } else {
+            linkValid.value = false
+            if (code === 403) {
+                ElMessage.error({ duration: 3000, message: '审核不通过' })
+                return router.push({ path: '/files' })
             }
         }
+        if (execute.value) {
+            promptMessage()
+        }
+        if (docInfo.value?.apply_list[0].status === 2 && status.value !== 2) {
+            status.value = docInfo.value!.apply_list[0].status
+        } else if (docInfo.value?.apply_list[0].status !== 2) {
+            status.value = docInfo.value!.apply_list[0].status
+        }
+
         execute.value = false
     } catch (err) {
         console.log(err);
@@ -116,6 +126,8 @@ const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, app
         showNotification()
     }
 }
+
+
 let timer: any = null
 
 //提示信息
@@ -142,12 +154,14 @@ const showNotification = (type?: number) => {
 
 
 onMounted(() => {
+    getDocumentInfo()
     timer = setInterval(() => {
         getDocumentInfo()
         getDocumentAuthority()
     }, 10000)
 })
 onUnmounted(() => {
+
     clearInterval(timer)
     showHint.value = false;
     countdown.value = 4;
@@ -165,7 +179,7 @@ onUnmounted(() => {
                 <img :src="avatar" alt="avatar">
             </div>
         </div>
-        <div class="context" v-if="linkValid && docInfo.document">
+        <div class="context" v-if="linkValid && docInfo?.document">
             <span class="fileName">{{ docInfo.document.name }}</span>
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>
@@ -219,6 +233,7 @@ onUnmounted(() => {
         <span class="text">{{ messages }}</span>
     </div>
 </template>
+
 <style lang="scss" scoped>
 input[type="radio"] {
     display: none;

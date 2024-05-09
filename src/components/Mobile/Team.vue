@@ -1,6 +1,6 @@
 <template>
    <div class="list">
-      <TeamItem :data="list"></TeamItem>
+      <TeamItem :data="teamlist" :tips="tips"></TeamItem>
    </div>
 </template>
 
@@ -11,13 +11,10 @@ import { useCounterStore } from './team'
 import { storeToRefs } from 'pinia'
 
 const store = useCounterStore()
-const { list } = storeToRefs(store)
+const { teamlist,tips  } = storeToRefs(store)
 const { GetteamList } = store
 
-
-
 onMounted(() => {
-   window.document.title = '团队'
    GetteamList()
 })
 </script>

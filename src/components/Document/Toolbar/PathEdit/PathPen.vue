@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import { Action } from "@/context/tool";
-import { useI18n } from 'vue-i18n'
+import {Action} from "@/context/tool";
+import {useI18n} from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 
-const { t } = useI18n()
+const {t} = useI18n()
 const props = defineProps<{
     active: boolean
 }>();
@@ -17,10 +17,10 @@ function select(action: Action) {
 }
 </script>
 <template>
-    <Tooltip :content="t('shape.curve')">
-        <ToolButton @click="() => {select(Action.Curve)}" :selected="props.active" :width="32" :height="32">
+    <Tooltip :content="t('shape.pen')">
+        <ToolButton ref="button" @click="() => {select(Action.Pen2)}" :selected="props.active" :width="32" :height="32">
             <div class="svg-container">
-                <svg-icon icon-class="curve-tool"></svg-icon>
+                <svg-icon icon-class="pattern-pen"></svg-icon>
             </div>
         </ToolButton>
     </Tooltip>

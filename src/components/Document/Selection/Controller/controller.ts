@@ -2,7 +2,7 @@ import {
     AsyncPathEditor,
     ShapeView,
     adapt2Shape,
-    PathShapeView, CurvePoint, PathType, PathShapeView2,
+    PathShapeView, CurvePoint, PathType,
 } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
@@ -145,9 +145,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         let firstPoint: CurvePoint | undefined = undefined;
 
         if (pathshape.pathType === PathType.Editable) {
-            firstPoint = (pathshape as PathShapeView).points[values[0][0]];
-        } else if (pathshape.pathType === PathType.Multi) {
-            const __points = (pathshape as PathShapeView2)?.segments[keys[0]]?.points;
+            const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
             if (!__points) {
                 return;
             }

@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, Path, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -15,6 +15,7 @@ import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
+import { is_straight } from "@/utils/attri_setting";
 
 export interface Point {
     x: number
@@ -83,6 +84,7 @@ function watchShapes() { // 监听选区相关shape的变化
         }
     })
 }
+
 function shapesWatcher(...args: any) {
     // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
@@ -208,6 +210,7 @@ function createController() {
     controller.value = true;
     // console.log('控件绘制用时(ms):', Date.now() - s);
 }
+
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const s = shapes[0], m = s.matrix2Root(), f = s.frame;
@@ -239,6 +242,7 @@ function modify_controller_frame(shapes: ShapeView[]) {
         y: b.bottom
     }];
 }
+
 function for_virtual(shape: ShapeView) {
     if (shape.type === ShapeType.Text) {
         controllerType.value = ControllerType.TextVirtual;
@@ -248,16 +252,15 @@ function for_virtual(shape: ShapeView) {
         controllerType.value = ControllerType.Virtual;
     }
 }
+
 function for_path_shape(shape: PathShapeView) {
-    const points = shape.points;
-    const is_straight_1 = !points[0]?.hasFrom;
-    const is_straight_2 = !points[1]?.hasTo;
-    if (points.length === 2 && is_straight_1 && is_straight_2) {
+    if (is_straight(shape)) {
         controllerType.value = ControllerType.Line;
     } else {
         controllerType.value = ControllerType.Rect;
     }
 }
+
 function modify_controller_type(shapes: ShapeView[],) {
     if (!permIsEdit(props.context) || props.context.tool.isLable) {
         controllerType.value = ControllerType.Readonly;
@@ -300,31 +303,35 @@ function modify_controller_type(shapes: ShapeView[],) {
 
     controllerType.value = ControllerType.RectMulti;
 }
+
 function modify_rotate(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const shape = shapes[0];
         if (shape instanceof PathShapeView) {
-            const points = shape.points;
-            const is_straight_1 = !points[0]?.hasFrom;
-            const is_straight_2 = !points[1]?.hasTo;
-            if (points.length === 2 && is_straight_1 && is_straight_2) {
-                rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
-                return;
-            }
+            // todo for path
+            // const points = shape.points;
+            // const is_straight_1 = !points[0]?.hasFrom;
+            // const is_straight_2 = !points[1]?.hasTo;
+            // if (points.length === 2 && is_straight_1 && is_straight_2) {
+            //     rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
+            //     return;
+            // }
         }
         rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[1]);
     }
     rotate.value = 0;
 }
+
 function modify_theme(shapes: ShapeView[]) {
     theme.value = SelectionTheme.Normol;
     if (shapes.length !== 1) {
         return;
     }
-    if (is_symbol_class(shapes[0])) {
+    if (is_symbol_class(shapes[0] as any)) {
         theme.value = SelectionTheme.Symbol;
     }
 }
+
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
     const selection = props.context.selection;
@@ -439,25 +446,26 @@ onUnmounted(() => {
 <template>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        style="transform: translate(0px, 0px); position: absolute;">
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+         style="transform: translate(0px, 0px); position: absolute;">
         <path :d="tracingFrame.path" fill="none" stroke="transparent"
-            :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+              :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
         <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+              stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
-        :shape="context.selection.selectedShapes[0]" :theme="theme">
+               :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+               :shape="context.selection.selectedShapes[0]" :theme="theme">
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
     <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix" :update-trigger="updateTrigger"></LableLine>
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"
+               :update-trigger="updateTrigger"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

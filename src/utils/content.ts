@@ -12,7 +12,6 @@ import {
     Matrix,
     Page,
     PathShapeView,
-    PathShapeView2,
     PathType,
     Shape,
     ShapeFrame,
@@ -1173,11 +1172,7 @@ function select_all_for_path_edit(context: Context) {
         return;
     }
     if (path_shape.pathType === PathType.Editable) {
-        const indexes = (path_shape as PathShapeView).points.map((_, idx) => idx);
-        context.path.select_points(0, indexes);
-        context.path.select_sides(0, indexes);
-    } else if (path_shape.pathType === PathType.Multi) {
-        (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+        (path_shape as PathShapeView).segments.forEach((segment, index) => {
             const indexes = segment.points.map((_, idx) => idx);
             context.path.select_points(index, indexes);
             context.path.select_sides(index, indexes);

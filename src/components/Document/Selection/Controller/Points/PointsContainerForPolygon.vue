@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
+import { CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
@@ -16,8 +16,10 @@ interface Props {
     theme: SelectionTheme
     pointVisible: boolean
 }
+
 interface Point {
-    x: number, y: number
+    x: number,
+    y: number
 }
 
 const props = defineProps<Props>();
@@ -34,6 +36,7 @@ const countDotEl = ref<SVGGElement>();
 const radiusDotEl = ref<SVGGElement>();
 let changeType: PointActionType = PointActionType.Radius;
 let pointModifyHandler: PointHandler | undefined = undefined;
+
 function update() {
     matrix.reset(props.matrix);
     update_dot_position();
@@ -47,9 +50,13 @@ const update_dot_position = () => {
 }
 
 function getCountPosition() {
-    const shape = props.shape.data;
+    const shape = props.shape;
     counts.value = shape.counts;
-    const cornerInfo = getCornerControlPoint(shape.points, 1, props.shape.frame);
+    const segments = shape.segments;
+    if (!segments) return;
+    const points = segments[0]?.points;
+    if (!points?.length) return;
+    const cornerInfo = getCornerControlPoint(points as CurvePoint[], 1, props.shape.frame);
     if (!cornerInfo) return;
     const { preHandle, nextHandle, radius, prePoint, nextPoint, curPoint } = cornerInfo;
     const length1 = sideLength(prePoint, curPoint);
@@ -73,9 +80,13 @@ const sideLength = (p1: XY, p2: XY) => {
 
 function getRadiusPosition() {
     const { width, height } = props.shape.frame;
-    const shape = props.shape.data;
-    const point = shape.points[0];
-    const cornerInfo = getCornerControlPoint(shape.points, 1, props.shape.frame);
+    const shape = props.shape;
+    const segments = shape.segments;
+    if (!segments) return;
+    const points = segments[0]?.points;
+    if (!points?.length) return;
+    const point = points[0];
+    const cornerInfo = getCornerControlPoint(points as CurvePoint[], 1, props.shape.frame);
     if (!cornerInfo) return;
     radius.value = cornerInfo.radius || 0;
     max_radius.value = point.radius || 0;
@@ -83,6 +94,7 @@ function getRadiusPosition() {
     const p = matrix.computeCoord2(point.x * width, (point.y * height) + (cornerInfo.radius || offset));
     return p;
 }
+
 const point_mousedown = (e: MouseEvent, type: PointActionType) => {
     changeType = type;
     cursor_down.value = true;
@@ -190,7 +202,7 @@ const getRadiusPercent = (start: XY, end: XY, e: MouseEvent) => {
         const lineLength = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
         const distanceFromStart = Math.sqrt(Math.pow(intersectionX - start.x, 2) + Math.pow(intersectionY - start.y, 2)); // 交点到起点的距离
         const distanceFromEnd = Math.sqrt(Math.pow(intersectionX - end.x, 2) + Math.pow(intersectionY - end.y, 2)); // 交点到终点的距离
-    
+
         const percent = distanceFromStart / lineLength; // 交点所在百分比位置
         if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
             return 0;
@@ -212,6 +224,7 @@ function point_mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
+
 const point_mouseenter = (e: MouseEvent, type: PointActionType) => {
     e.stopPropagation();
     if (cursor_down.value) {
@@ -247,27 +260,27 @@ onUnmounted(() => {
         <g v-show="pointVisible">
             <!-- 圓角 -->
             <g :style="`transform: translate(${radius_dot.x - 4}px, ${radius_dot.y - 4}px);`" ref="radiusDotEl"
-                @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
-                @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
-                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+               @mousedown.stop="(e) => point_mousedown(e, PointActionType.Radius)" @mousemove="dot_mousemove"
+               @mouseenter="(e) => point_mouseenter(e, PointActionType.Radius)" @mouseleave="point_mouseleave">
+                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
                 <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                    stroke-width="1" />
-                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+                         stroke-width="1"/>
+                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
             </g>
             <!-- 角数 -->
             <g :style="`transform: translate(${count_dot.x - 4}px, ${count_dot.y - 4}px);`" ref="countDotEl"
-                @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
-                @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
-                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+               @mousedown.stop="(e) => point_mousedown(e, PointActionType.Count)" @mousemove="dot_mousemove"
+               @mouseenter="(e) => point_mouseenter(e, PointActionType.Count)" @mouseleave="point_mouseleave">
+                <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+                <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
                 <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                    stroke-width="1" />
-                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+                         stroke-width="1"/>
+                <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
             </g>
         </g>
         <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
-            width="100px" height="28px">
+                       width="100px" height="28px">
             <div class="percent_container">
                 <span v-if="changeType === PointActionType.Count">角数 {{ fixedZero(counts) }}</span>
                 <span v-else>圆角 {{ fixedZero(max_radius) }} </span>

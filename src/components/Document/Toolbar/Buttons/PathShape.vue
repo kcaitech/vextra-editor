@@ -214,7 +214,6 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <!--多边形-->
         <div class="item" @click="() => { setAction(Action.Polygon) }">
             <div v-if="currentTool === Action.Polygon" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
@@ -236,10 +235,10 @@ onUnmounted(() => {
             </div>
             <div class="shortKey"></div>
         </div>
-        <div class="line" />
+        <div class="line"/>
         <!--钢笔-->
-        <!-- <div class="item" @click="() => { setAction(Action.Pen) }">
-            <div v-if="currentTool === Action.Pen" class="check">
+        <div class="item" @click="() => { setAction(Action.Pen) }">
+            <div v-if="currentTool=== Action.Pen" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
             <div class="desc">
@@ -247,7 +246,7 @@ onUnmounted(() => {
                 <span>{{ t('shape.pen') }}</span>
             </div>
             <div class="shortKey">P</div>
-        </div> -->
+        </div>
     </div>
 </template>
 
@@ -256,7 +255,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
 
-    >svg {
+    > svg {
         width: 18px;
         height: 18px;
     }
@@ -267,7 +266,7 @@ onUnmounted(() => {
     margin-left: 4px;
     transition: 0.2s;
 
-    >svg {
+    > svg {
         width: 12px;
         height: 12px;
     }
@@ -311,7 +310,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
 
-            >svg {
+            > svg {
                 width: 12px;
                 height: 12px;
             }
@@ -322,12 +321,12 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
             }
 
-            >span {
+            > span {
                 margin-left: 8px;
             }
         }

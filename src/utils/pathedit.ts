@@ -3,14 +3,14 @@ import { XY } from "@/context/selection";
 import {
     CurveMode,
     CurvePoint,
-    GroupShapeView,
     Matrix,
     PathShape,
     PathShapeView,
-    PathShapeView2,
     PathType,
-    ShapeType, ShapeView
+    ShapeType,
+    ShapeView
 } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
@@ -39,18 +39,10 @@ export function get_parent_points(context: Context, range?: Map<number, number[]
     let points: CurvePoint[] = [];
 
     if (range) {
-        if (path_shape.pathType === 1) {
-            exe(range, 0, (path_shape as PathShapeView).points);
-        } else if (path_shape.pathType === 2) {
-            (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+        if (path_shape.pathType === PathType.Editable) {
+            (path_shape as PathShapeView).segments.forEach((segment, index) => {
                 exe(range, index, segment.points as CurvePoint[]);
             });
-        }
-    } else {
-        if (path_shape.pathType === 1) {
-            points = (path_shape as PathShapeView).points;
-        } else if (path_shape.pathType === 2) {
-            points = (path_shape as PathShapeView2).segments.map(s => s.points).flat() as CurvePoint[];
         }
     }
 
@@ -134,9 +126,7 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
 
     const actions: { x: number, y: number, segment: number, index: number }[] = [];
     if (path_shape.pathType === PathType.Editable) {
-        exe(0, (path_shape as PathShapeView).points);
-    } else if (path_shape.pathType === PathType.Multi) {
-        (path_shape as PathShapeView2).segments.forEach((segment, index) => {
+        (path_shape as PathShapeView).segments.forEach((segment, index) => {
             exe(index, segment.points as CurvePoint[]);
         })
     }
@@ -173,45 +163,31 @@ export function modify_point_curve_mode(context: Context, index: number) {
 
     const selected = context.path.selectedPoints;
 
-    let point: CurvePoint | undefined = undefined;
+    let point: CurvePoint | undefined;
 
     if (path_shape.pathType === PathType.Editable) {
-        point = (path_shape as PathShapeView).points[index];
-    } else if (path_shape.pathType === PathType.Multi) {
         selected.forEach((indexes, segment) => {
-            point = (path_shape as PathShapeView2).segments[segment].points[index] as CurvePoint;
+            point = (path_shape as PathShapeView).segments[segment].points[index] as CurvePoint;
         })
-
     }
 
-    if (!point) return;
+    if (!point) {
+        return;
+    }
 
     const editor = context.editor4Shape(path_shape);
+
     let target_curve_mode: CurveMode;
+
     const _curve_mode = point.mode;
+
     if (_curve_mode === CurveMode.Straight || _curve_mode === CurveMode.Asymmetric) {
         target_curve_mode = CurveMode.Mirrored;
     } else {
         target_curve_mode = CurveMode.Straight
     }
-
+    
     editor.modifyPointsCurveMode(selected, target_curve_mode);
-}
-
-/**
- * @description 获取当前编辑点的上一个点
- */
-export function __previous_curve_point(shape: PathShape, index: number) {
-    const points = shape.points;
-    return index === 0 ? points[points.length - 1] : points[index - 1];
-}
-
-/**
- * @description 获取当前编辑点的下一个点
- */
-export function __next_curve_point(shape: PathShape, index: number) {
-    const points = shape.points;
-    return index === points.length - 1 ? points[0] : points[index + 1];
 }
 
 /**
@@ -398,9 +374,7 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
     const result_segments: Segment[][] = [];
 
     if (shape.pathType === PathType.Editable) {
-        result_segments.push(_gen(0, (shape as PathShapeView).points, shape.isClosed))
-    } else if (shape.pathType === PathType.Multi) {
-        (shape as PathShapeView2).segments.forEach((seg, index) => {
+        (shape as PathShapeView).segments.forEach((seg, index) => {
             result_segments.push(_gen(index, seg.points as CurvePoint[], seg.isClosed));
         })
     }
@@ -408,8 +382,7 @@ export function get_segments(shape: ShapeView, matrix: Matrix, map: Map<number, 
     return result_segments;
 
     function _gen(segment: number, points: CurvePoint[], isClosed: boolean) {
-        if (!points?.length) {
-            console.error('get_segments:!points?.length');
+        if (!points?.length || points.length < 2) {
             return [];
         }
 

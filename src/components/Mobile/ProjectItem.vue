@@ -14,17 +14,17 @@
         </div>
     </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips" class="null"><span>{{t('miniprogram.projectnull')}}</span></div>
+    <div v-if="showtips" class="null"><span>{{ t('miniprogram.projectnull') }}</span></div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Loading from '../common/Loading.vue';
 import { router } from '@/router';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
-const {t}=useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
@@ -47,6 +47,9 @@ watch(() => props.data, () => {
         showtips.value = false
     }
     loading.value = false
+})
+
+onMounted(() => {
 })
 
 </script>

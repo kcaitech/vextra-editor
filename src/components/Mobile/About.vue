@@ -33,7 +33,7 @@ import { onMounted, reactive, ref, toRefs } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 
-const {t}=useI18n()
+const { t } = useI18n()
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
@@ -41,7 +41,7 @@ const state = reactive({
 })
 const { circleUrl, uname, id } = toRefs(state)
 const data = ref([
-    { id: 1, value:t('miniprogram.privacy'), icon: 'ys-icon', name: 'privacy' },
+    { id: 1, value: t('miniprogram.privacy'), icon: 'ys-icon', name: 'privacy' },
     { id: 2, value: t('miniprogram.serve'), icon: 'fw-icon', name: 'agreements' }
 ])
 
@@ -59,17 +59,16 @@ const OutLogin = () => {
             url: '/pages/index/index',
         });
         (window as any).uni.postMessage({
-            data:{
-                login:'false',
+            data: {
+                login: 'false',
             }
         });
-
     }
 }
 
 
 onMounted(() => {
-    
+
 })
 
 </script>

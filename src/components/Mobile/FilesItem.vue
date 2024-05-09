@@ -31,7 +31,8 @@
         </div>
     </template>
     <Loading v-if="loading" :size="20"></Loading>
-    <div v-if="showtips && !props.errNetwork" class="null"><span>{{ searchkey ? t('miniprogram.search') : t('miniprogram.listnull') }}</span></div>
+    <div v-if="showtips && !props.errNetwork" class="null"><span>{{ searchkey ? t('miniprogram.search') :
+        t('miniprogram.listnull') }}</span></div>
     <div v-if="props.errNetwork && !loading" class="errnetwork" @click="changeload">
         <span>{{ t('miniprogram.flushed') }}</span>
     </div>
@@ -44,7 +45,7 @@ import { useVirtualList } from '@vueuse/core'
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 
-const {t}=useI18n()
+const { t } = useI18n()
 const showtips = ref<boolean>(false)
 const loading = ref<boolean>(true)
 const props = withDefaults(defineProps<{
@@ -52,6 +53,7 @@ const props = withDefaults(defineProps<{
     errNetwork?: boolean,
     index?: string,
     searchkey?: string,
+    tab?: number
 }>(), {
     index: '0',
 })
@@ -71,21 +73,24 @@ const openfile = (id: string) => {
     sessionStorage.setItem('scrollTop', index.toString())
 }
 
-const shareTo = (id: string) => {
-    router.push({ name: 'share', query: { id: id } })
+const shareTo = async (id: string) => {
+    await router.push({ name: 'share', query: { id: id } })
     const index = filteredList.value.findIndex(item => item.document.id === id)
     sessionStorage.setItem('scrollTop', index.toString())
 }
 
 const emits = defineEmits<{
     (e: 'changeStar', docID: number, b: boolean): void;
-    (e: 'openfile', docID: number, index: number): void;
     (e: 'refresh', tab?: number): void;
-    (e: 'sharefile', data: object): void;
 }>()
 
 
-watch([() => props.data, () => props.errNetwork], () => {
+watch(() => props.tab, () => {
+    scrollTo(0)
+})
+
+
+watch(() => props.data, (n, o) => {
     if (props.data && props.data.length === 0) {
         showtips.value = true
     } else {

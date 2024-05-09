@@ -1,22 +1,22 @@
 <template>
     <div class="info">
-        <div class="card-header">
+        <!-- <div class="card-header">
             <span>{{ t('apply.notification_message') }}</span>
             <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="back-icon"></svg-icon>
             </div>
-        </div>
+        </div> -->
         <div class="botton">
-            <div class="ms-botton-item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items"
-                :key="index" @click.stop="clickEvent(index, $event)">
-                {{ item }}
+            <div class="ms-botton-item" :class="{ 'activate': itemid === index, 'messagetips': item.num }"
+                v-for="(item, index) in items" :key="index" @click.stop="clickEvent(index, $event)">
+                {{ item.title }}
             </div>
             <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         </div>
         <div class="message-list">
             <!-- 文件消息列表 -->
             <div class="contain" v-if="itemid === 0">
-                <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
+                <div class="inform-item" v-for="(item, i) in applyList" :key="i">
                     <div class="item-title">
                         <div class="item-title-left">
                             <div class="avatar"><img :src="item.user.avatar" alt=""></div>
@@ -34,7 +34,7 @@
                     <div class="item-text">
                         <div class="purview"><span>申请</span><span>「</span>{{ permission[item.apply.perm_type]
                             }}<span>」</span><span>「</span>{{
-                item.document.name }}<span>」</span></div>
+                    item.document.name }}<span>」</span></div>
                         <div class="notes" v-if="item.apply.applicant_notes !== ''">
                             {{ t('apply.remarks') }}：{{ item.apply.applicant_notes }}
                         </div>
@@ -48,7 +48,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received')
+                <div class="text" v-if="applyList.length === 0"><span>{{ t('apply.no_message_received')
                         }}</span>
                 </div>
             </div>
@@ -56,7 +56,7 @@
 
             <!-- 团队消息列表 -->
             <div class="contain" v-if="itemid === 1">
-                <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
+                <div class="inform-item" v-for="(item, i) in totalList" :key="i">
 
                     <div class="item-title">
                         <div class="item-title-left">
@@ -76,7 +76,7 @@
                     <div v-if="item.team && item.user" class="item-text">
                         <div class="context">
                             <span>{{ t('apply.apply_team') }}</span>{{ item.team.name }}
-                        <br>
+                            <br>
                             <span>{{ t('apply.authority') }}</span>「{{ permissionTeam[item.request.perm_type] }}」
                         </div>
 
@@ -91,9 +91,9 @@
                     <div v-else-if="!item.user && item.request.status === 1" class="item-text">
                         <div class="context">
                             <span>{{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') :
-                t('Createteam.team')
+                    t('Createteam.team')
                                 }}：</span> {{
-                item.project ? item.project.name : item.team.name }}
+                    item.project ? item.project.name : item.team.name }}
                         </div>
 
                     </div>
@@ -103,7 +103,8 @@
                             <span>您申请加入团队</span>
                             "{{ item.project ? item.project.name : item.team.name }}"
                             <br>
-                            <span>{{ item.project ? t('Createteam.rejectprompt3') : t('Createteam.rejectprompt2')}}</span>
+                            <span>{{ item.project ? t('Createteam.rejectprompt3') :
+                    t('Createteam.rejectprompt2') }}</span>
                         </div>
                     </div>
 
@@ -115,9 +116,8 @@
                             {{ t('apply.refuse') }}
                         </button>
                     </div>
-                    <div class="botton" v-else-if="!item.user"></div>
                 </div>
-                <div class="text" v-if="props.teamApplyList.length === 0"><span>{{ t('apply.no_message_received')
+                <div class="text" v-if="applyList.length === 0"><span>{{ t('apply.no_message_received')
                         }}</span>
                 </div>
             </div>
@@ -134,11 +134,25 @@ import { mapDateLang } from '@/utils/date_lang'
 import { ElMessage } from 'element-plus';
 import * as share_api from '@/request/share';
 import * as team_api from '@/request/team';
+import { storeToRefs } from 'pinia';
+import { useMessage } from './message'
+
+const Data = useMessage()
+
+const { applyList, totalList } = storeToRefs(Data)
+
 
 const { t } = useI18n()
 const elwidth = ref()
 const elleft = ref()
-const items = [t('apply.fill'), t('apply.team')]
+const fillnum = computed(() => {
+    return applyList.value.filter((item: any) => item.apply.status === 0).length > 0
+})
+const teamnum = computed(() => {
+    return totalList.value.filter((item: any) => item.request.status === 0).length > 0
+})
+
+const items = [{ title: t('apply.fill'), num: fillnum.value }, { title: t('apply.team'), num: teamnum.value }]
 const itemid = ref<number>(Number(sessionStorage.getItem('message-tab')) || 0)
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const permissionTeam = ref([`${t('share.readOnly')}`, `${t('share.editable')}`])
@@ -147,17 +161,6 @@ enum Audit {
     Pass
 }
 
-
-const emits = defineEmits<{
-    (e: 'close'): void,
-    (e: 'reviewed'): void
-}>()
-
-const props = defineProps<{
-    applyList: any,
-    teamApplyList: any,
-    done?: boolean,
-}>()
 
 //同意文件申请
 const consent = (id: string, item: any) => {
@@ -228,14 +231,6 @@ const clickEvent = (index: number, e: MouseEvent) => {
     sessionStorage.setItem('message-tab', index.toString())
 }
 
-//获取item位置及宽度
-function resizechange() {
-    const items = document.querySelectorAll('.ms-botton-item')
-    const rect = items[itemid.value].getBoundingClientRect()
-    elwidth.value = rect.width
-    elleft.value = rect.x
-}
-
 const filterDate = (time: string) => {
     const date = new Date(time.replace(/-/g, '/').slice(0, 18));
     const hours = date.getHours();
@@ -261,9 +256,13 @@ const getName = (item: any) => {
     }
 }
 
-watch(() => props.done, (b) => {
-    if (b) resizechange()
-})
+//获取item位置及宽度
+function resizechange() {
+    const items = document.querySelectorAll('.ms-botton-item')
+    const rect = items[itemid.value].getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
+}
 
 onMounted(() => {
     resizechange()
@@ -274,7 +273,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .message-list {
     width: 100%;
-    height: calc(100% - 76px);
+    height: calc(100% - 40px);
 
 
     .contain {
@@ -288,7 +287,7 @@ onMounted(() => {
 
         .inform-item {
             width: 100%;
-            height: auto;
+            min-height: 152px;
             padding: 14px 0;
             display: flex;
             flex-direction: column;
@@ -369,9 +368,10 @@ onMounted(() => {
                 text-overflow: ellipsis;
                 word-break: break-all;
 
-                .context{
+                .context {
                     color: #000000;
-                    span{
+
+                    span {
                         color: #BFBFBF;
                     }
                 }
@@ -397,6 +397,9 @@ onMounted(() => {
                 justify-content: flex-end;
                 align-items: center;
                 gap: 8px;
+
+
+
 
                 button {
                     cursor: pointer;
@@ -441,10 +444,6 @@ onMounted(() => {
             .item-container {
                 width: 205px;
                 margin-bottom: 16px;
-
-
-
-
             }
 
 
@@ -466,6 +465,22 @@ onMounted(() => {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    height: 40px;
+
+    .messagetips {
+        position: relative;
+
+        &::before {
+            content: "";
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            top: 2px;
+            left: 32px;
+            border-radius: 100%;
+            background-color: red;
+        }
+    }
 
     .file,
     .team {
@@ -478,7 +493,7 @@ onMounted(() => {
     position: absolute;
     height: 2px;
     background-color: rgba(12, 111, 240, 1);
-    bottom: -4px;
+    bottom: 0px;
     border-radius: 2px;
     transition: all 0.2s ease-in-out;
 }
