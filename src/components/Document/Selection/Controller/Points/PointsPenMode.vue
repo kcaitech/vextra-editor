@@ -186,7 +186,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
-                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                const __xy = { x: point.x, y: point.y };
+                pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
                 downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
@@ -218,7 +219,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
-                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                const __xy = { x: point.x, y: point.y };
+                pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
                 downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
@@ -289,7 +291,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
             pathModifier = new PathEditor(props.context, event);
             pathModifier.createApiCaller();
-            const addRes = pathModifier.addSegmentForPen(point as CurvePoint);
+            const addRes = pathModifier.addSegmentForPen(preXY.value, point as CurvePoint);
 
             if (!addRes) {
                 return;
@@ -463,6 +465,10 @@ function documentMove(e: MouseEvent) {
     let DY = 0;
     let TX = 0;
     let TY = 0;
+
+    if (!mapX.size && !mapY.size) {
+        buildMap();
+    }
 
     const xs = Array.from(mapX.keys());
     const ys = Array.from(mapY.keys());
@@ -658,12 +664,12 @@ onUnmounted(() => {
     </g>
 
     <Handle :context="props.context"/>
-    <!--点序 for Dev-->
-    <text v-for="(p, i) in dots"
-          :key="i"
-          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">
-        {{ `${p.segment},${p.index}` }}
-    </text>
+    <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+    <!--    <text v-for="(p, i) in dots"-->
+    <!--          :key="i"-->
+    <!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
+    <!--        {{ `${p.segment},${p.index}` }}-->
+    <!--    </text>-->
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
