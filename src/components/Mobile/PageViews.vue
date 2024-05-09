@@ -31,7 +31,6 @@ import { PROJECT_NAME } from "@/const";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
 
 
-
 const route = useRoute();
 const initialized = ref<boolean>(false);
 const { t } = useI18n();
@@ -667,20 +666,37 @@ const backlink = computed(() => {
     return window.history.state.back ? true : false
 })
 
-const IconLeft = ref()
-const IconTop = ref()
+const iconPosition = ref({
+    left: window.innerWidth - 68,
+    top: window.innerHeight - 68
+})
+
 function moveIcon(e: TouchEvent) {
     e.stopPropagation()
     e.preventDefault()
-    IconLeft.value = (e.touches[0].clientX - 24) < 10 ? 10 : (e.touches[0].clientX - 24) > (e.view?.window.innerWidth! - 58) ? (e.view?.window.innerWidth! - 58) : (e.touches[0].clientX - 24)
-    IconTop.value = (e.touches[0].clientY - 24) < 10 ? 10 : (e.touches[0].clientY - 24) > (e.view?.window.innerHeight! - 58) ? (e.view?.window.innerHeight! - 58) : (e.touches[0].clientY - 24)
+    iconPosition.value.left = (e.touches[0].clientX - 24) < 20 ? 20 : (e.touches[0].clientX - 24) > (e.view?.window.innerWidth! - 68) ? (e.view?.window.innerWidth! - 68) : (e.touches[0].clientX - 24)
+    iconPosition.value.top = (e.touches[0].clientY - 24) < 20 ? 20 : (e.touches[0].clientY - 24) > (e.view?.window.innerHeight! - 68) ? (e.view?.window.innerHeight! - 68) : (e.touches[0].clientY - 24)
 }
+
+onMounted(() => {
+    if (localStorage.getItem('s-bar-pst')) {
+        const { L, T } = JSON.parse(localStorage.getItem('s-bar-pst') ?? '');
+        iconPosition.value.left = L
+        iconPosition.value.top = T
+    }
+})
+
+onUnmounted(() => {
+    let pst = { L: iconPosition.value.left, T: iconPosition.value.top }
+    localStorage.setItem('s-bar-pst', JSON.stringify(pst))
+})
 
 </script>
 
 <template>
     <div class="container">
-        <div class="status-bar" @touchmove.stop="moveIcon" :style="{ left: IconLeft + 'px', top: IconTop + 'px' }">
+        <div class="status-bar" @touchmove.stop="moveIcon"
+            :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showpagelist = !showpagelist">
                 <svg-icon icon-class="menu-black"></svg-icon>
             </div>
@@ -727,8 +743,6 @@ function moveIcon(e: TouchEvent) {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    bottom: 16px;
-    right: 16px;
     background-color: #fff;
     box-sizing: border-box;
     box-shadow: 0 0 5px silver;

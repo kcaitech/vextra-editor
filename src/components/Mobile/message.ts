@@ -84,6 +84,12 @@ export const useMessage = defineStore('message', () => {
     const teamnum = computed(() => {
         return totalList.value.filter(item => item.request.status === 0).length
     });
+    
+    getApplyFile();
+    getApplyTeam();
+    getApplyProject();
+    getNoticeTeam();
+    getNoticeProject();
 
     return { applyList, totalList, applynum, teamnum, getApplyFile, getApplyTeam, getApplyProject, getNoticeTeam, getNoticeProject }
 })
