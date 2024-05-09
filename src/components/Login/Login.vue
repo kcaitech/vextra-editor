@@ -206,7 +206,7 @@ watchEffect(() => {
 const miniprogramcode = ref<string>()
 
 async function GetminiProgramCode() {
-    const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent("home=pages/index/index") })
+    const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent("home") })
     if (code === 0) {
         miniprogramcode.value = data
     }

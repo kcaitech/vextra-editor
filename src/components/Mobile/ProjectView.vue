@@ -1,18 +1,18 @@
 <template>
     <div class="project">
-        <div class="header">
+        <!-- <div class="header">
             <svg-icon icon-class="back-icon" @click="router.go(-1)"></svg-icon>
             <span>{{ route.query.name }}</span>
-        </div>
+        </div> -->
         <div class="list">
-            <ProjectItem :data="list"></ProjectItem>
+            <ProjectItem :data="projectlist"></ProjectItem>
         </div>
     </div>
 
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router'
 import ProjectItem from './ProjectItem.vue';
 import { router } from '@/router';
@@ -20,12 +20,13 @@ import { useCounterStore } from './team'
 import { storeToRefs } from 'pinia'
 
 const store = useCounterStore()
-const { list } = storeToRefs(store)
+const { projectlist } = storeToRefs(store)
 const { GetprojectLists } = store
 const route = useRoute()
 
-onMounted(() => {
-    GetprojectLists()
+onMounted(async() => {
+    document.title = route.query.name as string
+   await GetprojectLists()
 })
 
 </script>
@@ -55,7 +56,7 @@ onMounted(() => {
     }
 
     .list {
-        height: calc(100% - 44px);
+        height: 100%;
         overflow-y: scroll;
         padding: 0 14px;
     }

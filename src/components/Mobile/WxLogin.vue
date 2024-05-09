@@ -1,5 +1,8 @@
 <template>
-    <div></div>
+    <div class="failed">
+        <button v-if="loginFailed" @click="againLogin">重新登录</button>
+    </div>
+
 </template>
 
 <script setup lang="ts">
@@ -8,11 +11,29 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import * as user_api from '@/request/users'
 import { ElMessage } from "element-plus";
+
 const route = useRoute()
 const userid = ref('')
+const loginFailed = ref<boolean>(false)
+
+const againLogin = () => {
+    localStorage.clear();
+    // window.location.href = window.location.href + "#wechat_redirect";
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).uni.redirectTo({
+            url: '/pages/index/index',
+        });
+        (window as any).uni.postMessage({
+            data: {
+                login: 'false',
+            }
+        });
+    }
+}
+
 async function Login() {
-    console.log('1111');
-    
     user_api.PostWxLogin({ code: route.query.code }).then((linfo: any) => {
         if (linfo) {
             if (linfo.code === 0 && linfo.data.token !== '') {
@@ -57,17 +78,15 @@ async function Login() {
                 userid.value = linfo.data.id
 
             } else if (linfo.code === -1) {
-
                 ElMessage.error({ duration: 1500, message: '服务异常，请稍后再试' })
-
+                loginFailed.value = true
             }
         }
     }).catch((linfo: any) => {
         if (linfo.data.code === -1) {
             ElMessage.error(linfo.data.message)
-
         }
-
+        loginFailed.value = true
     })
 }
 
@@ -76,4 +95,20 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.failed {
+    display: flex;
+    width: 100%;
+    height: 100%;
+
+    button {
+        margin: auto;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: white;
+        font-size: 13px;
+        background-color: rgba(24, 120, 245, 1);
+    }
+}
+</style>
