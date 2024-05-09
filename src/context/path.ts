@@ -21,6 +21,7 @@ export class Path extends WatchableObject {
     static CLEAR_HIGH_LIGHT = 5;
     static BRIDGING = 6;
     static BRIDGING_COMPLETED = 7;
+    static CONTACT_STATUS_CHANGE = 8;
 
     private m_context: Context;
 
@@ -372,6 +373,12 @@ export class Path extends WatchableObject {
 
     setContactStatus(v: boolean) {
         this.contacting = v;
+
+        if (!v) {
+            new PathEditor(this.m_context).sortSegment();
+        }
+
+        this.notify(Path.CONTACT_STATUS_CHANGE);
     }
 
     get bridgeParam() {

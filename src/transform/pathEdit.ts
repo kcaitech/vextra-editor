@@ -144,9 +144,6 @@ export class PathEditor extends TransformHandler {
 
     private baseData: BaseData = new Map();
 
-    private baseWidth: number = 0;
-    private baseHeight: number = 0;
-
     private baseMatrix: Matrix = new Matrix();
     private baseMatrixInverse: Matrix = new Matrix();
 
@@ -244,8 +241,8 @@ export class PathEditor extends TransformHandler {
             }
         }
 
-        console.log('mapX:', this.mapX);
-        console.log('mapY:', this.mapY);
+        // console.log('mapX:', this.mapX);
+        // console.log('mapY:', this.mapY);
     }
 
     private init() {
@@ -261,9 +258,6 @@ export class PathEditor extends TransformHandler {
 
         this.baseMatrix = m;
         this.baseMatrixInverse = new Matrix(m.inverse);
-
-        this.baseWidth = frame.width;
-        this.baseHeight = frame.height;
 
         this.getBaseData();
 
@@ -896,7 +890,7 @@ export class PathEditor extends TransformHandler {
         this.actionType = 'point';
     }
 
-    execute4handlePre(index: number, segment = -1) {
+    execute4handlePre(index: number, segmentIndex: number) {
         if (!this.isInitMatrix) {
             this.init();
         }
@@ -905,7 +899,7 @@ export class PathEditor extends TransformHandler {
 
         const order = this.altStatus ? 2 : 3;
 
-        (this.asyncApiCaller as PathModifier).preCurve(order, this.shape, index, segment);
+        (this.asyncApiCaller as PathModifier).preCurve(order, this.shape, index, segmentIndex);
 
         this.actionType = 'handle';
     }
@@ -1164,6 +1158,30 @@ export class PathEditor extends TransformHandler {
             }
 
             (this.asyncApiCaller as PathModifier).clip(this.shape, segmentIndex, index);
+        } finally {
+            this.fulfil();
+        }
+    }
+
+    sortSegment() {
+        try {
+            if (this.context.coopRepo.isInTransact()) {
+                return;
+            }
+
+            if (!this.isInitMatrix) {
+                this.init();
+            }
+
+            if (!this.asyncApiCaller) {
+                this.createApiCaller();
+            }
+
+            if (!this.asyncApiCaller || !this.isInitMatrix) {
+                return;
+            }
+
+            (this.asyncApiCaller as PathModifier).sortSegment(this.shape);
         } finally {
             this.fulfil();
         }

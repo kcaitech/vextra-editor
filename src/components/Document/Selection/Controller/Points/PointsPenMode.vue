@@ -72,6 +72,61 @@ function update() {
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
+
+
+}
+
+const mapX = new Map<number, XY[]>();
+const mapY = new Map<number, XY[]>();
+
+function buildMap() {
+    const shape = props.context.selection.pathshape! as PathShapeView;
+
+    if (!shape) {
+        return console.log('wrong shape');
+    }
+
+    const m = shape.matrix2Root();
+    const frame = shape.frame;
+    m.preScale(frame.width, frame.height);
+
+    m.multiAtLeft(props.context.workspace.matrix);
+
+    const path = props.context.path;
+
+    const segments = shape.segments;
+
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+
+        if (!segment) continue;
+
+        const points = segment.points;
+
+        for (let j = 0; j < points.length; j++) {
+            const point = points[j];
+            if (!point) continue;
+
+            const xy = m.computeCoord3(point);
+
+            const xKey = Number(xy.x.toFixed(2));
+            let xContainer = mapX.get(xKey);
+            if (!xContainer) {
+                xContainer = [xy];
+                mapX.set(xKey, xContainer);
+            } else {
+                xContainer.push(xy);
+            }
+            const yKey = Number(xy.y.toFixed(2));
+            let yContainer = mapY.get(yKey);
+            if (!yContainer) {
+                yContainer = [xy];
+                mapY.set(yKey, yContainer);
+            } else {
+                yContainer.push(xy);
+            }
+        }
+    }
 }
 
 function passiveUpdate() {
@@ -372,6 +427,9 @@ function path_watcher(type: number) {
         case Path.BRIDGING_COMPLETED:
             bridging_completed();
             break;
+        case Path.CONTACT_STATUS_CHANGE:
+            modifyLivingPath();
+            break;
         default:
             break;
     }
@@ -397,11 +455,11 @@ function documentMove(e: MouseEvent) {
     preXY.value = props.context.workspace.getContentXY(e);
 
     livingPath.value = '';
-    livingPathVisible.value = false;
-
-    preparePointVisible.value = false;
 
     if (e.buttons) {
+        livingPathVisible.value = false;
+
+        preparePointVisible.value = false;
         return;
     }
 
@@ -411,6 +469,9 @@ function documentMove(e: MouseEvent) {
 }
 
 function modifyLivingPath() {
+    livingPathVisible.value = false;
+    preparePointVisible.value = false;
+
     const path = props.context.path;
 
     if (!path.lastPoint) {
