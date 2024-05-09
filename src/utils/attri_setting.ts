@@ -231,7 +231,9 @@ export function is_straight(shape: ShapeView) {
     if (!(shape instanceof PathShapeView) || shape.type === ShapeType.Contact) {
         return false;
     }
-
+    if (shape.segments.length > 1) {
+        return false;
+    }
     const points = shape.segments[0]?.points;
 
     if (points.length !== 2) {
