@@ -45,6 +45,16 @@ export class NumberArray { // 任意维数的Number数组
         return array
     }
 
+    resize(dimensionLength: number[], fillValue: number = 0) { // 重新设置维数和维度长度，复用底层原数据
+        if (dimensionLength.findIndex(item => item < 0) !== -1) throw new Error("维数不能为负数");
+        const length = dimensionLength.reduce((a, b) => a * b, 1)
+        if (length < this.data.length) this.data = this.data.slice(0, length);
+        else if (length > this.data.length) this.data = this.data.concat(new Array(length - this.data.length).fill(fillValue));
+        this.dimension = dimensionLength.length
+        this.dimensionLength = dimensionLength
+        return this
+    }
+
     _toString(indexes: number[]): string { // 从索引位置开始，将剩余维度的数组转换为字符串
         if (indexes.length > this.dimension) throw new Error("维数不匹配");
         if (indexes.length === this.dimension) return this.get(indexes).toString();
@@ -73,9 +83,15 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return new NumberArray2D(newObj.dimensionLength as [number, number], newObj.data, true)
     }
 
-     getIndex(indexes: number[]): number {
+    getIndex(indexes: number[]): number {
         if (indexes.length !== 2) throw new Error("维数不匹配");
         return indexes[0] * this.dimensionLength[1] + indexes[1]
+    }
+
+    static FromNumberArray(numberArray: NumberArray) {
+        if (numberArray instanceof NumberArray2D) return numberArray;
+        if (numberArray.dimension !== 2) throw new Error("numberArray必须是二维数组");
+        return new NumberArray2D(numberArray.dimensionLength as [number, number], numberArray.data, true)
     }
 
     rows(m0: number, m1?: number) { // 获取NumberArray中的第m0行到第m1行（包含第m1行）
@@ -104,8 +120,9 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return this.cols(n, n)
     }
 
-    insertRows(rowsData: number[], row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
+    insertRows(rowsData: number[] | NumberArray, row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
+        if (rowsData instanceof NumberArray) rowsData = rowsData.data;
         if (rowsData.length % this.dimensionLength[1] !== 0) throw new Error("行数据长度不匹配");
         if (row === undefined) row = this.dimensionLength[0];
         if (row < 0 || row > this.dimensionLength[0]) throw new Error("行索引越界");
@@ -115,9 +132,10 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return this
     }
 
-    insertCols(colsData: number[], col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
+    insertCols(colsData: number[] | NumberArray, col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
+        if (colsData instanceof NumberArray) colsData = colsData.data;
         if (colsData.length % m !== 0) throw new Error("列数据长度不匹配");
         if (col === undefined) col = n;
         if (col < 0 || col > n) throw new Error("列索引越界");
@@ -144,9 +162,138 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         const [m, n] = this.dimensionLength
         if (col < 0 || col + count > n) throw new Error("列索引越界");
         for (let i = m - 1; i > 0; i--) {
-            this.data.splice(i * n + col,  count)
+            this.data.splice(i * n + col, count)
         }
         this.dimensionLength[1] -= count
         return this
     }
+
+    get m00() {
+        return this.get([0, 0])
+    }
+
+    set m00(value) {
+        this.set([0, 0], value)
+    }
+
+    get m01() {
+        return this.get([0, 1])
+    }
+
+    set m01(value) {
+        this.set([0, 1], value)
+    }
+
+    get m02() {
+        return this.get([0, 2])
+    }
+
+    set m02(value) {
+        this.set([0, 2], value)
+    }
+
+    get m03() {
+        return this.get([0, 3])
+    }
+
+    set m03(value) {
+        this.set([0, 3], value)
+    }
+
+    get m10() {
+        return this.get([1, 0])
+    }
+
+    set m10(value) {
+        this.set([1, 0], value)
+    }
+
+    get m11() {
+        return this.get([1, 1])
+    }
+
+    set m11(value) {
+        this.set([1, 1], value)
+    }
+
+    get m12() {
+        return this.get([1, 2])
+    }
+
+    set m12(value) {
+        this.set([1, 2], value)
+    }
+
+    get m13() {
+        return this.get([1, 3])
+    }
+
+    set m13(value) {
+        this.set([1, 3], value)
+    }
+
+    get m20() {
+        return this.get([2, 0])
+    }
+
+    set m20(value) {
+        this.set([2, 0], value)
+    }
+
+    get m21() {
+        return this.get([2, 1])
+    }
+
+    set m21(value) {
+        this.set([2, 1], value)
+    }
+
+    get m22() {
+        return this.get([2, 2])
+    }
+
+    set m22(value) {
+        this.set([2, 2], value)
+    }
+
+    get m23() {
+        return this.get([2, 3])
+    }
+
+    set m23(value) {
+        this.set([2, 3], value)
+    }
+
+    get m30() {
+        return this.get([3, 0])
+    }
+
+    set m30(value) {
+        this.set([3, 0], value)
+    }
+
+    get m31() {
+        return this.get([3, 1])
+    }
+
+    set m31(value) {
+        this.set([3, 1], value)
+    }
+
+    get m32() {
+        return this.get([3, 2])
+    }
+
+    set m32(value) {
+        this.set([3, 2], value)
+    }
+
+    get m33() {
+        return this.get([3, 3])
+    }
+
+    set m33(value) {
+        this.set([3, 3], value)
+    }
+
 }

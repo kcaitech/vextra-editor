@@ -1,6 +1,6 @@
-import { Color, Shadow, } from "@kcdesign/data"
-import { Transform3D, TransformMode, TransformParams } from "./transform_3d"
-import { Matrix } from "./matrix"
+import {Color, Shadow,} from "@kcdesign/data"
+import {Transform3D, TransformMode, TransformParams} from "./transform_3d"
+import {ColVector, Matrix} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 type RectBox = { // 矩形包围盒
@@ -12,18 +12,18 @@ type RectBox = { // 矩形包围盒
 
 export function getRectBox(x: number, y: number, w: number, h: number, transform: Transform3D): RectBox { // 获取一个矩形的包围盒
     if (!transform.hasRotation()) return {
-        lt: { x: x, y: y },
-        rb: { x: x + w, y: y + h },
+        lt: {x: x, y: y},
+        rb: {x: x + w, y: y + h},
         w: w,
         h: h,
     };
     transform = transform.decomposeRotateMatrix()
     // 矩形中心为原点的情况下，矩形的四个顶点坐标
     const points = Matrix.FromCols([
-        Matrix.ColVec3D(-w / 2, -h / 2, 0), // 左上
-        Matrix.ColVec3D(w / 2, -h / 2, 0), // 右上
-        Matrix.ColVec3D(w / 2, h / 2, 0), // 右下
-        Matrix.ColVec3D(-w / 2, h / 2, 0), // 左下
+        new ColVector([-w / 2, -h / 2, 0]), // 左上
+        new ColVector([w / 2, -h / 2, 0]), // 右上
+        new ColVector([w / 2, h / 2, 0]), // 右下
+        new ColVector([-w / 2, h / 2, 0]), // 左下
     ])
     // 变换后的四个顶点坐标
     const newPoints = transform.transform(points)
@@ -32,8 +32,8 @@ export function getRectBox(x: number, y: number, w: number, h: number, transform
     const maxY = Math.max(...newPoints.data.row(1))
     // 从中心点平移回原点
     return {
-        lt: { x: -maxX + w / 2 + x, y: -maxY + h / 2 + y },
-        rb: { x: maxX + w / 2 + x, y: maxY + h / 2 + y },
+        lt: {x: -maxX + w / 2 + x, y: -maxY + h / 2 + y},
+        rb: {x: maxX + w / 2 + x, y: maxY + h / 2 + y},
         w: maxX * 2,
         h: maxY * 2,
     }
@@ -45,8 +45,8 @@ export function mergeRectBox(...rectBoxes: RectBox[]): RectBox { // 合并多个
     const rbX = Math.max(...rectBoxes.map(item => item.rb.x))
     const rbY = Math.max(...rectBoxes.map(item => item.rb.y))
     return {
-        lt: { x: ltX, y: ltY },
-        rb: { x: rbX, y: rbY },
+        lt: {x: ltX, y: ltY},
+        rb: {x: rbX, y: rbY},
         w: rbX - ltX,
         h: rbY - ltY,
     }
@@ -114,7 +114,7 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                 numArgList[1], numArgList[3], 0, numArgList[5],
                 0, 0, 1, 0,
                 0, 0, 0, 1,
-            ]))
+            ], true))
             transform.addTransform(new Transform3D({matrix: matrix}))
             // console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
@@ -127,7 +127,7 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                         diffX -= transformParams.origin?.x || 0
                         diffY -= transformParams.origin?.y || 0
                     }
-                    transform.rotateAt(Matrix.ColVec([0, 0, 1]), Matrix.ColVec([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
+                    transform.rotateAt(new ColVector([0, 0, 1]), new ColVector([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
                 }
             } else if (name === "rotateX") {
                 transform.rotateX(numArgList[0], transformParams)
@@ -136,7 +136,7 @@ export function parseTransform(transformContent: string, transformParams?: Trans
             } else if (name === "rotateZ") {
                 transform.rotateZ(numArgList[0], transformParams)
             } else if (name === "rotate3d") {
-                transform.rotate(Matrix.ColVec([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3], transformParams)
+                transform.rotate(new ColVector([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3], transformParams)
             }
         } else if (name === "scale") {
             transform.scale(numArgList[0], numArgList[1], numArgList[2] || 1, transformParams)

@@ -22,7 +22,7 @@ import {
     BorderSideSetting,
     SideType,
 } from "@kcdesign/data"
-import { v4 as uuid } from "uuid"
+import {v4 as uuid} from "uuid"
 import {
     Attributes,
     FillColor,
@@ -38,9 +38,9 @@ import {
     parseTransform,
     RadialGradient
 } from "../utils"
-import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
-import { Transform3D, TransformMode } from "../transform_3d"
-import { Matrix } from "../matrix"
+import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
+import {Transform3D, TransformMode} from "../transform_3d"
+import {ColVector} from "../matrix"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -185,7 +185,7 @@ export class BaseCreator extends BaseTreeNode {
         const d = this.localAttributes["d"]
         if (d) {
             this.attributes.d = d
-            const { x, y, width, height } = getPathBoxFromD(d)
+            const {x, y, width, height} = getPathBoxFromD(d)
             this.attributes.pathX = x
             this.attributes.pathY = y
             this.attributes.width = width
@@ -462,7 +462,7 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const { translate, rotate } = this.transform.decompose3DWithEulerZXY()
+        const {translate, rotate} = this.transform.decompose3DWithEulerZXY()
 
         // 设置xy
         shape.frame.x = translate.x
@@ -498,7 +498,7 @@ export class BaseCreator extends BaseTreeNode {
                 const translate = fillColor.radialGradient!.transform.decompose3DTranslate()
                 from = new Point2D(translate.x / width, translate.y / height)
 
-                const toVec = fillColor.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
+                const toVec = fillColor.radialGradient!.transform.transform(new ColVector([1, 0, 0]))
                 to = new Point2D(toVec.data.get([0, 0]) / width, toVec.data.get([1, 0]) / height)
 
                 colorType = GradientType.Radial
@@ -539,7 +539,7 @@ export class BaseCreator extends BaseTreeNode {
             else position = BorderPosition.Outer;
             let cornerType: CornerType
             const corner = this.localAttributes["stroke-linejoin"];
-            if(corner) {
+            if (corner) {
                 if (corner === "miter") cornerType = CornerType.Miter;
                 else if (corner === "round") cornerType = CornerType.Round;
                 else cornerType = CornerType.Bevel;
