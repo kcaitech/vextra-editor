@@ -29,7 +29,7 @@ import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import { PROJECT_NAME } from "@/const";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
-import { genOptions } from '@/utils/common';
+
 
 
 const route = useRoute();
@@ -224,7 +224,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             fileName.value = file_name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}...` : `${file_name}`;
+            window.document.title = fileName.value;
             context = new Context(document, coopRepo);
             matrix.value = context.workspace.matrix;
             context.workspace.setDocumentPerm(perm);
@@ -670,15 +670,17 @@ const backlink = computed(() => {
 const IconLeft = ref()
 const IconTop = ref()
 function moveIcon(e: TouchEvent) {
-    IconLeft.value = (e.touches[0].clientX - 20) < 0 ? 0 : (e.touches[0].clientX - 20) < (e.view?.window.innerWidth! - 40) ? (e.touches[0].clientX - 20) : (e.view?.window.innerWidth! - 40)
-    IconTop.value = (e.touches[0].clientY - 20) < 0 ? 0 : (e.touches[0].clientY - 20) < (e.view?.window.innerHeight! - 40) ? (e.touches[0].clientY - 20) : (e.view?.window.innerHeight! - 40)
+    e.stopPropagation()
+    e.preventDefault()
+    IconLeft.value = (e.touches[0].clientX - 24) < 10 ? 10 : (e.touches[0].clientX - 24) > (e.view?.window.innerWidth! - 58) ? (e.view?.window.innerWidth! - 58) : (e.touches[0].clientX - 24)
+    IconTop.value = (e.touches[0].clientY - 24) < 10 ? 10 : (e.touches[0].clientY - 24) > (e.view?.window.innerHeight! - 58) ? (e.view?.window.innerHeight! - 58) : (e.touches[0].clientY - 24)
 }
 
 </script>
 
 <template>
     <div class="container">
-        <div class="status-bar" @touchmove="moveIcon" :style="{ left: IconLeft + 'px', top: IconTop + 'px' }">
+        <div class="status-bar" @touchmove.stop="moveIcon" :style="{ left: IconLeft + 'px', top: IconTop + 'px' }">
             <div class="list" @click="showpagelist = !showpagelist">
                 <svg-icon icon-class="menu-black"></svg-icon>
             </div>
@@ -722,11 +724,11 @@ function moveIcon(e: TouchEvent) {
     display: flex;
     align-items: center;
     justify-content: center;
-    width:48px;
+    width: 48px;
     height: 48px;
     border-radius: 50%;
     bottom: 16px;
-    right: 8px;
+    right: 16px;
     background-color: #fff;
     box-sizing: border-box;
     box-shadow: 0 0 5px silver;

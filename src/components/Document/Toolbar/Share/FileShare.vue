@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watchEffect, computed } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watchEffect, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
 import * as user_api from '@/request/users'
+import Loading from '@/components/common/Loading.vue';
 
 enum permissions {
   noAuthority,
@@ -337,6 +338,7 @@ const showImg = () => {
   showimg.value = !showimg.value
 }
 
+
 </script>
 
 <template>
@@ -401,6 +403,7 @@ const showImg = () => {
                 </clipPath>
               </defs>
             </svg>
+
           </div>
         </div>
       </div>
@@ -464,7 +467,13 @@ const showImg = () => {
       <div class="project" v-if="docInfo.project !== null">项目中所有成员均可访问</div>
     </div>
     <div class="wechat-code" v-if="showimg">
-      <img :src="miniprogramcode" alt="miniprogramcode">
+      <svg-icon icon-class="close" @click.stop="showimg = !showimg"></svg-icon>
+      <span style="font-size: 15px;">通过小程序打开</span>
+      <img v-if="miniprogramcode" :src="miniprogramcode" alt="miniprogramcode">
+      <div v-else class="loading">
+        <Loading :size="20"></Loading>
+      </div>
+
     </div>
   </el-card>
 
@@ -562,8 +571,10 @@ const showImg = () => {
 .wechat-code {
   position: fixed;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
   background-color: #FFFFFF;
   top: 50%;
   left: 50%;
@@ -573,8 +584,33 @@ const showImg = () => {
   border-radius: 6px;
   box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.18);
   overflow: hidden;
+  box-sizing: border-box;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    padding: 2px;
+    box-sizing: border-box;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: rgb(243, 243, 245);
+    }
+
+    &:active {
+      background-color: #EBEBEB;
+    }
+  }
 
   img {
+    width: 50%;
+    height: 50%;
+  }
+
+  .loading {
     width: 50%;
     height: 50%;
   }

@@ -102,8 +102,8 @@ const changeStar = async (id: number, b: boolean) => {
 }
 
 
-onMounted(() => {
-
+onMounted(async () => {
+    await getRecentlydata()
 })
 
 </script>

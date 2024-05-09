@@ -126,6 +126,7 @@ const copyLink = async () => {
     console.log(window);
 
     if (navigator.clipboard && window.isSecureContext) {
+        ElMessage.closeAll()
         return navigator.clipboard.writeText(documentShareURL.value).then(() => {
             ElMessage({
                 message: `${t('share.copy_success')}`,
