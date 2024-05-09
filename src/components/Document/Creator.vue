@@ -449,8 +449,8 @@ function modify_new_shape_frame(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const {x, y} = matrix1.computeCoord2(_xy.x, _xy.y);
 
-    if (asyncCreator) {
-        if (newShape && newShape.type === ShapeType.Contact) {
+    if (asyncCreator && newShape) {
+        if (newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
         } else {
             if (e.shiftKey) {
