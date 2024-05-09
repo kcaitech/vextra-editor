@@ -20,7 +20,9 @@ export const shape: any = {
     clip: "Clip",
     default: 'Default',
     pen: 'Pen',
-    pencil: 'Pencil'
+    pencil: 'Pencil',
+    polygon: 'Polygon',
+    star: 'Star',
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 
