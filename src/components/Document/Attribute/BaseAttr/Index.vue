@@ -30,6 +30,7 @@ import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import { computeString } from "@/utils/content";
 import { Attribute } from '@/context/atrribute';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -439,15 +440,14 @@ async function modifyTelDown(e: MouseEvent) {
     tel.value = true;
     telX.value = e.clientX;
     telY.value = e.clientY;
-
     const el = e.target as HTMLElement
     if (!document.pointerLockElement) {
         await el.requestPointerLock({
             unadjustedMovement: true,
         });
     }
-
     lockMouseHandler = new LockMouse(props.context, e);
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
 
 function modifyTelUp() {
@@ -456,7 +456,14 @@ function modifyTelUp() {
 
     lockMouseHandler?.fulfil();
     lockMouseHandler = undefined;
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
 }
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        modifyTelUp();
+    }
+}
+
 
 function dragstart(e: MouseEvent) {
     modifyTelDown(e);

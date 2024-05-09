@@ -14,6 +14,7 @@ import {
 } from '@/utils/symbol';
 import { Selection } from '@/context/selection';
 import { message } from '@/utils/message';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -35,8 +36,13 @@ const textDialog = () => {
     }
     getDialogPosi(atrrdialog.value);
     isTextShow.value = true
+    props.context.esctask.save(v4(), de_text_is_show);
 }
-
+function de_text_is_show() {
+    const is_achieve_expected_results = isTextShow.value;
+    isTextShow.value = false;
+    return is_achieve_expected_results;
+}
 const atrrdialog = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
@@ -90,6 +96,7 @@ function edit_text() {
     isBind();
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
+    props.context.esctask.save(v4(), de_text_is_show);
 }
 
 function save_layer_show(type: VariableType, name: string) {

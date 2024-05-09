@@ -285,6 +285,7 @@ async function dragstart(e: MouseEvent) {
     }
 
     lockMouseHandler = new LockMouse(props.context, e);
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 function draggingLT(e: MouseEvent) {
@@ -398,6 +399,13 @@ function dragend() {
 
     lockMouseHandler?.fulfil();
     lockMouseHandler = undefined;
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if(!document.pointerLockElement) {
+        dragend();
+    }
 }
 
 onMounted(() => {

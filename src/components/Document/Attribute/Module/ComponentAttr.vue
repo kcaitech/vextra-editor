@@ -204,7 +204,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative;margin-top: 12px;margin-bottom: 12px;box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative;margin-top: 12px;margin-bottom: 4px;box-sizing: border-box" ref="atrrdialog">
         <!--header-->
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
@@ -377,7 +377,7 @@ onUnmounted(() => {
 }
 
 .module_container {
-    padding: 6px 0;
+    padding-top: 6px;
     font-size: var(--font-default-fontsize);
 
     .module_attr_item {

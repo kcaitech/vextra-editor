@@ -7,6 +7,7 @@ import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 import PopoverDefaultInput from "@/components/Document/Attribute/Module/PopoverDefaultInput.vue";
+import { v4 } from "uuid";
 
 interface Props {
     context: Context
@@ -46,8 +47,13 @@ function edit_text() {
     get_text();
     get_dialog_posi(card_ref.value);
     iseditText.value = true;
+    props.context.esctask.save(v4(), de_text_is_show);
 }
-
+function de_text_is_show() {
+    const is_achieve_expected_results = iseditText.value;
+    iseditText.value = false;
+    return is_achieve_expected_results;
+}
 //选中图层的id
 const layerIds = ref<string[]>();
 const selectLayerId = (ids: string[]) => {
@@ -119,14 +125,14 @@ const get_text = () => {
     position: relative;
     display: flex;
     flex-direction: column;
-    //margin-bottom: 5px;
+    margin-bottom: 8px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 38px;
+        height: 32px;
         box-sizing: border-box;
     }
 

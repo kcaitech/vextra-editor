@@ -16,6 +16,7 @@ import {
 } from '@/utils/symbol';
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
+import { v4 } from 'uuid';
 
 const props = defineProps<{
     context: Context
@@ -27,8 +28,16 @@ const closeLayerShowPopup = () => {
 }
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
-    isLayerShow.value = true
+    isLayerShow.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
 }
+
+function de_layer_is_show() {
+    const is_achieve_expected_results = isLayerShow.value;
+    isLayerShow.value = false;
+    return is_achieve_expected_results;
+}
+
 const atrrdialog = ref<HTMLDivElement>();
 const card_ref = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
@@ -46,6 +55,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 function edit_visible() {
     getDialogPosi(card_ref.value);
     isLayerShow.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
 }
 
 const is_bind = ref<Variable>();
@@ -223,6 +233,7 @@ onUnmounted(() => {
 
 .attr_con {
     display: flex;
+    margin-top: 6px;
     align-items: center;
     justify-content: space-between;
 }
@@ -234,6 +245,9 @@ onUnmounted(() => {
     background-color: #F5F5F5;
     width: calc(100% - 32px);
     height: 32px;
+    &:hover {
+        background-color: #EBEBEB;
+    }
 
     .module_name {
         display: flex;
@@ -304,7 +318,9 @@ onUnmounted(() => {
         width: 16px;
         height: 16px;
     }
-
+    &:hover {
+            background-color: #F5F5F5;
+        }
     transition: .2s;
 }
 </style>

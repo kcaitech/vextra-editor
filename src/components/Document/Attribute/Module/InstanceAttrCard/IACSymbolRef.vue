@@ -8,6 +8,7 @@ import { Component } from "@/context/component";
 import { message } from "@/utils/message";
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useI18n } from "vue-i18n";
+import { v4 } from "uuid";
 
 
 interface Props {
@@ -32,9 +33,16 @@ const compsDialog = () => {
         comps_posi.value.y = el.y;
     }
     showCompsDialog.value = true;
+    props.context.esctask.save(v4(), de_symbol_is_show);
 }
 const closeDialog = () => {
     showCompsDialog.value = false;
+}
+
+function de_symbol_is_show() {
+    const is_achieve_expected_results = showCompsDialog.value;
+    showCompsDialog.value = false;
+    return is_achieve_expected_results;
 }
 
 // function select(index: number) {
@@ -118,7 +126,7 @@ onUnmounted(() => {
     position: relative;
     display: flex;
     align-items: center;
-    height: 44px;
+    margin-bottom: 8px;
 
     .state_item {
         display: flex;

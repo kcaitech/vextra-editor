@@ -69,11 +69,17 @@ function windowBlur() {
     clearDragStatus();
 }
 
-function click() {
-    const el = inputEl.value!;
+const is_select = ref(false);
 
+function click() {
+    if (!inputEl.value) return;
+    const el = inputEl.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
     el.select();
-    active.value = true;
+    is_select.value = true;
 }
 
 function change(e: Event) {
@@ -88,6 +94,11 @@ function change(e: Event) {
 
 function blur() {
     active.value = false;
+    is_select.value = false;
+}
+
+function foucs() {
+    active.value = true;
 }
 
 function wheel(event: WheelEvent) {
@@ -102,10 +113,9 @@ function wheel(event: WheelEvent) {
 </script>
 
 <template>
-    <div :class="{'md-number-input': true, disabled, active}" @wheel="wheel">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }"
-                  @mousedown="down"></svg-icon>
-        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur"/>
+    <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
+        <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down"></svg-icon>
+        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
     </div>
 </template>
 
@@ -121,7 +131,7 @@ function wheel(event: WheelEvent) {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    > svg {
+    >svg {
         flex: 0 0 12px;
         height: 12px;
         display: block;
@@ -133,7 +143,7 @@ function wheel(event: WheelEvent) {
         cursor: auto;
     }
 
-    > input {
+    >input {
         flex: 1;
         width: 100%;
         border: none;

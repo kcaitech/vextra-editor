@@ -138,6 +138,13 @@ async function dragStart(e: MouseEvent, type: SideType) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
     borderthickness_editor = props.context.editor.controller().asyncBorderSideThickness(shapes, page!, type);
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if(!document.pointerLockElement) {
+        dragEnd();
+    }
 }
 
 const dragging = (e: MouseEvent, thickness: number | string) => {
@@ -162,6 +169,7 @@ const dragEnd = () => {
         borderthickness_editor.close();
         borderthickness_editor = undefined;
     }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 onMounted(() => {

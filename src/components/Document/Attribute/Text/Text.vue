@@ -1010,7 +1010,14 @@ const onMouseDown = async (e: MouseEvent, t: string) => {
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove);
-    showpoint.value = true
+    showpoint.value = true;
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if(!document.pointerLockElement) {
+        onMouseUp();
+    }
 }
 
 function updatePosition(movementX: number, movementY: number) {
@@ -1042,8 +1049,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-function onMouseUp(e: MouseEvent) {
-    e.stopPropagation()
+function onMouseUp() {
     document.exitPointerLock()
     showpoint.value = false
     document.removeEventListener("mousemove", onMouseMove);
@@ -1052,6 +1058,7 @@ function onMouseUp(e: MouseEvent) {
         textAttrEditor.close();
         textAttrEditor = undefined;
     }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 const text_selection_wather = (t: number) => {

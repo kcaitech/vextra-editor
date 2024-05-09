@@ -1068,7 +1068,14 @@ const onMouseDown = async (e: MouseEvent, t: string) => {
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
-    showpoint.value = true
+    showpoint.value = true;
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if(!document.pointerLockElement) {
+        onMouseUp();
+    }
 }
 
 function updatePosition(movementX: number, movementY: number, isRotating: boolean) {
@@ -1105,8 +1112,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-function onMouseUp(e: MouseEvent) {
-    e.stopPropagation()
+function onMouseUp() {
     document.exitPointerLock()
     showpoint.value = false
     document.removeEventListener("mousemove", onMouseMove, false);
@@ -1119,6 +1125,7 @@ function onMouseUp(e: MouseEvent) {
         tableTextAttrEditor.close();
         tableTextAttrEditor = undefined;
     }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 const watchCells = new Map<string, TableCellView>(); // 表格单元格监听

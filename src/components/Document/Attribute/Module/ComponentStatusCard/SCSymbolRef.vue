@@ -6,6 +6,7 @@ import { SymbolRefShape, SymbolRefView, Variable, VariableType } from "@kcdesign
 import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
+import { v4 } from "uuid";
 
 interface Props {
     context: Context
@@ -43,6 +44,13 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
 function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
+    props.context.esctask.save(v4(), de_symbol_is_show);
+}
+
+function de_symbol_is_show() {
+    const is_achieve_expected_results = iseditToggle.value;
+    iseditToggle.value = false;
+    return is_achieve_expected_results;
 }
 
 //选中图层的id
@@ -111,14 +119,14 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    //margin-bottom: 5px;
+    margin-bottom: 8px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 38px;
+        height: 32px;
         box-sizing: border-box;
     }
 
