@@ -7,7 +7,7 @@ export class NumberArray { // 任意维数的Number数组
     constructor(dimensionLength: number[], fillValue: number | number[] = 0, skipFillValueCheck = false) {
         if (dimensionLength.findIndex(item => item < 0) !== -1) throw new Error("维数不能为负数");
         this.dimension = dimensionLength.length
-        this.dimensionLength = dimensionLength
+        this.dimensionLength = [...dimensionLength]
         const length = dimensionLength.reduce((a, b) => a * b, 1)
         const isFillValueArray = Array.isArray(fillValue)
         if (isFillValueArray) {
@@ -51,7 +51,7 @@ export class NumberArray { // 任意维数的Number数组
         if (length < this.data.length) this.data = this.data.slice(0, length);
         else if (length > this.data.length) this.data = this.data.concat(new Array(length - this.data.length).fill(fillValue));
         this.dimension = dimensionLength.length
-        this.dimensionLength = dimensionLength
+        this.dimensionLength = [...dimensionLength]
         return this
     }
 
@@ -120,9 +120,9 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return this.cols(n, n)
     }
 
-    insertRows(rowsData: number[] | NumberArray, row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
+    insertRows(rowsData: number[] | NumberArray2D, row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        if (rowsData instanceof NumberArray) rowsData = rowsData.data;
+        if (rowsData instanceof NumberArray2D) rowsData = rowsData.data;
         if (rowsData.length % this.dimensionLength[1] !== 0) throw new Error("行数据长度不匹配");
         if (row === undefined) row = this.dimensionLength[0];
         if (row < 0 || row > this.dimensionLength[0]) throw new Error("行索引越界");
@@ -132,20 +132,22 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return this
     }
 
-    insertCols(colsData: number[] | NumberArray, col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
+    insertCols(colsData: number[] | NumberArray2D, col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
-        if (colsData instanceof NumberArray) colsData = colsData.data;
-        if (colsData.length % m !== 0) throw new Error("列数据长度不匹配");
+        if (!(colsData instanceof NumberArray2D)) {
+            if (colsData.length % m !== 0) throw new Error("列数据长度不匹配");
+            colsData = new NumberArray2D([m, colsData.length / m], colsData, skipFillValueCheck);
+        }
         if (col === undefined) col = n;
         if (col < 0 || col > n) throw new Error("列索引越界");
-        if (!skipFillValueCheck && colsData.findIndex(item => typeof item !== "number") !== -1) throw new Error("填充数组元素类型不匹配");
-        for (let i = colsData.length - 1; i > 0; i--) {
-            for (let j = 0; j < m; j++) {
-                this.data.splice(j * n + col, 0, colsData[i * m + j])
+
+        for (let i = colsData.dimensionLength[1] - 1, l = 0; i >= 0; i--, l++) {
+            for (let j = m - 1; j >= 0; j--) {
+                this.data.splice(j * (n + l) + col, 0, colsData.get([j, i]))
             }
         }
-        this.dimensionLength[1] += colsData.length / this.dimensionLength[0]
+        this.dimensionLength[1] += colsData.dimensionLength[1]
         return this
     }
 
@@ -161,7 +163,7 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
         if (col < 0 || col + count > n) throw new Error("列索引越界");
-        for (let i = m - 1; i > 0; i--) {
+        for (let i = m - 1; i >= 0; i--) {
             this.data.splice(i * n + col, count)
         }
         this.dimensionLength[1] -= count

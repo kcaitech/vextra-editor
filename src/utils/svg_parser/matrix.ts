@@ -407,16 +407,16 @@ export class Matrix { // 矩阵
     getInverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
 
-        const n = this.dimension[0] // 矩阵的阶数
-        const result = buildIdentityArray(n) // 单位矩阵数组
+        const m = this.dimension[0] // 矩阵的阶数
+        const result = buildIdentityArray(m) // 单位矩阵数组
         const data = this.data.clone() // 原矩阵的副本
 
-        for (let i = 0; i < n; i++) {
+        for (let i = 0; i < m; i++) {
             if (data.get([i, i]) === 0) { // 行首为0，要进行行交换
                 let j = i + 1 // 从下一行开始找到行首不为0的行
-                for (; j < n; j++) if (data.get([j, i]) !== 0) break;
-                if (j === n) return; // 此列的第i行及以下行全为0，矩阵不可逆
-                for (let k = 0; k < n; k++) { // 交换行
+                for (; j < m; j++) if (data.get([j, i]) !== 0) break;
+                if (j === m) return; // 此列的第i行及以下行全为0，矩阵不可逆
+                for (let k = 0; k < m; k++) { // 交换行
                     let temp = data.get([i, k])
                     data.set([i, k], data.get([j, k]))
                     data.set([j, k], temp)
@@ -426,24 +426,28 @@ export class Matrix { // 矩阵
             }
             const factor = data.get([i, i]) // 主元
             // 第i行除以factor，使主元为1
-            data.set([i, i], 1)
-            for (let j = i + 1; j < n; j++) {
-                data.set([i, j], data.get([i, j]) / factor)
-                result.set([i, j], result.get([i, j]) / factor)
+            if (factor !== 1) {
+                data.set([i, i], 1)
+                result.set([i, i], result.get([i, i]) / factor)
+                for (let j = i + 1; j < m; j++) {
+                    data.set([i, j], data.get([i, j]) / factor)
+                    result.set([i, j], result.get([i, j]) / factor)
+                }
             }
             // 其余行减去对应倍数的第i行，使第i列除了主元外全为0
-            for (let j = 0; j < n; j++) {
+            for (let j = 0; j < m; j++) {
                 if (j === i) continue; // 跳过自身
                 const factor = data.get([j, i])
+                if (factor === 0) continue; // 本身为0，不需要处理
                 data.set([j, i], 0)
-                for (let k = i + 1; k < n; k++) {
+                result.set([j, i], -factor)
+                for (let k = i + 1; k < m; k++) {
                     data.set([j, k], data.get([j, k]) - data.get([i, k]) * factor)
                     result.set([j, k], result.get([j, k]) - result.get([i, k]) * factor)
                 }
             }
         }
-        this.data = result
-        return this
+        return new Matrix(result)
     }
 
     rank(): number { // 求矩阵的秩（消元法）
@@ -464,12 +468,15 @@ export class Matrix { // 矩阵
             }
             // 本行除以data[rank][i]，使主元为1
             const factor = data.get([rank, i])
-            data.set([rank, i], 1)
-            for (let k = i + 1; k < n; k++) data.set([rank, k], data.get([rank, k]) / factor);
+            if (factor !== 1) {
+                data.set([rank, i], 1)
+                for (let k = i + 1; k < n; k++) data.set([rank, k], data.get([rank, k]) / factor);
+            }
             // 其余行减去对应倍数的第rank行，使第i列除了主元外全为0
             for (let j = 0; j < m; j++) {
                 if (j === rank) continue; // 跳过自身
                 const factor = data.get([j, i])
+                if (factor === 0) continue; // 本身为0，不需要处理
                 data.set([j, i], 0)
                 for (let k = i + 1; k < n; k++) data.set([j, k], data.get([j, k]) - data.get([rank, k]) * factor);
             }

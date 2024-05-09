@@ -32,12 +32,13 @@ export class Transform { // 变换
         } else {
             this.translateMatrix = this.matrix.col(3).insertCols(buildIdentityArray(4, 3), 0, true)
 
-            const xDotY = this.matrix.col(0).dot(this.matrix.col(1)) // x轴与y轴的点积
-            const norm_xCrossY = (this.matrix.col(0).cross(this.matrix.col(1)) as Vector).norm // x轴与y轴叉积的模
+            const matrix3x3 = this.matrix.clone().resize(3, 3)
+            const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
+            const norm_xCrossY = (matrix3x3.col(0).cross(matrix3x3.col(1)) as Vector).norm // x轴与y轴叉积的模
             let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）
             if (angle < 0) angle += 2 * Math.PI;
-            const skewX = 0.5 * Math.PI - angle;
-            const tanSkewX = Math.tan(skewX)
+            const skewXAngle = 0.5 * Math.PI - angle;
+            const tanSkewX = Math.tan(skewXAngle)
             this.skewMatrix = new Matrix(new NumberArray2D([4, 4], [
                 1, tanSkewX, 0, 0,
                 0, 1, 0, 0,
@@ -233,6 +234,7 @@ export class Transform { // 变换
     }
 
     hasRotation() { // 判断是否有旋转
+        if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.rotateMatrix.isIdentity
     }
 
@@ -245,6 +247,7 @@ export class Transform { // 变换
     }
 
     decompose3DTranslate() { // 分解出平移的三维值
+        if (!this.isSubMatrixLatest) this.updateMatrix();
         const matrix = this.isMatrixLatest ? this.matrix : this.translateMatrix
         return {
             x: matrix.m03,
@@ -254,14 +257,24 @@ export class Transform { // 变换
     }
 
     decomposeEulerZXY() { // 分解出欧拉角（ZXY序）的三维值
+        if (!this.isSubMatrixLatest) this.updateMatrix();
         return Transform.decomposeEulerZXY(this.rotateMatrix)
     }
 
     decompose3DScale() { // 分解出缩放的三维值
+        if (!this.isSubMatrixLatest) this.updateMatrix();
         return {
             x: this.scaleMatrix.m00,
             y: this.scaleMatrix.m11,
             z: this.scaleMatrix.m22,
+        }
+    }
+
+    decomposeSkew() { // 分解出斜切的参数
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return {
+            skewX: Math.atan(this.skewMatrix.m01),
+            skewY: Math.atan(this.skewMatrix.m10),
         }
     }
 
@@ -292,6 +305,7 @@ export class Transform { // 变换
             translate: this.decompose3DTranslate(),
             rotate: this.decomposeEulerZXY(),
             scale: this.decompose3DScale(),
+            skew: this.decomposeSkew(),
         }
     }
 
