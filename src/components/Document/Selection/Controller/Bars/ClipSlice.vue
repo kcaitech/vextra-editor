@@ -2,9 +2,10 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Segment, get_segments } from '@/utils/pathedit';
-import { Matrix, Shape, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { get_path_by_point } from '../Points/common';
+import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
@@ -56,25 +57,9 @@ function init_matrix() {
     matrix.multiAtLeft(props.context.workspace.matrix);
 }
 
-function down_background_path(index: number, segment: number) {
-    const editor = props.context.editor4Shape(shape);
-    const s = editor.clipPathShape(index, segment);
-
-    if (s.id !== shape.id) {
-        props.context.selection.resetSelectShapes();
-    }
-    // after_clip(code);
-}
-
-function after_clip(data: { code: number, ex: Shape | undefined }) {
-    if (data.code === 1) {
-        props.context.selection.resetSelectShapes();
-        props.context.workspace.setPathEditMode(false);
-    }
-    if (data.ex) {
-        const s = props.context.selection.selectedPage!.getShape(data.ex.id);
-        s && props.context.selection.selectShape(s);
-    }
+function down_background_path(segment: number, index: number) {
+    console.log('即将进行裁剪', `${segment},${index}`);
+    new PathEditor(props.context).clip(segment, index);
 }
 
 function enter(index: number) {
@@ -131,7 +116,7 @@ onUnmounted(() => {
     <g v-for="(segment, idx) in segments" :key="idx">
         <g v-for="(seg, i) in segment" :key="i" data-area="controller-element" @mouseenter="() => enter(i)"
            @mouseleave="leave">
-            <g @mousedown.stop="() => down_background_path(seg.index, seg.segment)">
+            <g @mousedown.stop="() => down_background_path(seg.segment, seg.index)">
                 <path class="background-path" :d="seg.path"></path>
                 <path :class="{ path: true, 'path-high-light': new_high_light === i }" :d="seg.path">
                 </path>
@@ -141,6 +126,12 @@ onUnmounted(() => {
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4">
     </rect>
+    <!--点序 for Dev-->
+    <text v-for="(p, i) in dots"
+          :key="i"
+          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">
+        {{ `${p.index}` }}
+    </text>
 </template>
 <style scoped lang="scss">
 .background-path {

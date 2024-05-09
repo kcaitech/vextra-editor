@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
-import { Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
+import { CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { fixedZero } from '@/utils/common';
@@ -15,8 +15,10 @@ interface Props {
     theme: SelectionTheme
     pointVisible: boolean
 }
+
 interface Point {
-    x: number, y: number
+    x: number,
+    y: number
 }
 
 const props = defineProps<Props>();
@@ -30,6 +32,7 @@ const cursor_down = ref(false);
 const radiusDotEl = ref<SVGGElement[]>();
 let changeR: number = -1;
 let pointModifyHandler: PointHandler | undefined = undefined;
+
 function update() {
     matrix.reset(props.matrix);
     update_dot_position();
@@ -43,12 +46,19 @@ const update_dot_position = () => {
 
 function getRadiusPosition() {
     const { width, height } = props.shape.frame;
-    const shape = props.shape.data;
+    const shape = props.shape;
     let result: Point[] = [];
-    for (let i = 0; i < shape.points.length; i++) {
-        if (shape.points.length !== 4) return;
-        const point = shape.points[i];
-        const cornerInfo = getCornerControlPoint(shape.points, i, props.shape.frame);
+    const segment = shape?.segments[0];
+    if (!segment) {
+        return [];
+    }
+    const points = segment.points;
+
+    if (!points.length) return [];
+    for (let i = 0; i < points.length; i++) {
+        if (points.length !== 4) return [];
+        const point = points[i];
+        const cornerInfo = getCornerControlPoint(points as CurvePoint[], i, props.shape.frame);
         if (!cornerInfo) continue;
         radius.value[i] = cornerInfo.radius;
         max_radius.value[i] = point.radius || 0;
@@ -56,13 +66,17 @@ function getRadiusPosition() {
         let x = point.x * width, y = point.y * height;
         const offset = 15 / props.context.workspace.matrix.m00;
         if (i === 0) {
-            x += r > offset ? r : offset; y += r > offset ? r : offset;
+            x += r > offset ? r : offset;
+            y += r > offset ? r : offset;
         } else if (i === 1) {
-            x -= r > offset ? r : offset; y += r > offset ? r : offset;
+            x -= r > offset ? r : offset;
+            y += r > offset ? r : offset;
         } else if (i === 2) {
-            x -= r > offset ? r : offset; y -= r > offset ? r : offset;
+            x -= r > offset ? r : offset;
+            y -= r > offset ? r : offset;
         } else if (i === 3) {
-            x += r > offset ? r : offset; y -= r > offset ? r : offset;
+            x += r > offset ? r : offset;
+            y -= r > offset ? r : offset;
         }
         const p = matrix.computeCoord2(x, y);
 
@@ -70,6 +84,7 @@ function getRadiusPosition() {
     }
     return result;
 }
+
 let downClientXY: XY = { x: 0, y: 0 };
 let isDragging: boolean = false;
 const point_mousedown = (e: MouseEvent, index: number) => {
@@ -183,6 +198,7 @@ function point_mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
+
 const point_mouseenter = (e: MouseEvent, index: number) => {
     if (cursor_down.value) {
         return;
@@ -217,17 +233,17 @@ onUnmounted(() => {
     <!-- 圓角 -->
     <g v-if="radius_dot && radius_dot.length === 4">
         <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
-            :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
-            @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
-            @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
+           :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
+           @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
+           @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
+            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
             <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                stroke-width="1" />
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
+                     stroke-width="1"/>
+            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
         </g>
         <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
-            width="100px" height="28px">
+                       width="100px" height="28px">
             <div class="percent_container">
                 <span>圆角 {{ fixedZero(max_radius[changeR]) }} </span>
             </div>

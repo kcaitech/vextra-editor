@@ -12,7 +12,12 @@ import {
     modify_pt_y4create,
     modify_pt_y4p,
     gen_match_points_by_map,
-    PointsOffset, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit, alignXFromPointGroup, alignYFromPointGroup
+    PointsOffset,
+    gen_match_points_by_map2,
+    modify_pt_x_4_path_edit,
+    modify_pt_y_4_path_edit,
+    alignXFromPointGroup,
+    alignYFromPointGroup
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -129,9 +134,28 @@ export class Asssit extends WatchableObject {
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
 
+    private m_nodes_x2: XY[] = [];
+    private m_nodes_y2: XY[] = [];
+
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    setNodesX2(xys: XY[]) {
+        this.m_nodes_x2 = xys;
+    }
+
+    get nodesX2() {
+        return this.m_nodes_x2;
+    }
+
+    setNodesY2(xys: XY[]) {
+        this.m_nodes_y2 = xys;
+    }
+
+    get nodesY2() {
+        return this.m_nodes_y2;
     }
 
     get CPG() {
@@ -178,11 +202,13 @@ export class Asssit extends WatchableObject {
         return !!this.m_pg_inner.get(shape.id);
     }
 
-    private clear() {
+    clear() {
         this.m_shape_inner.length = 0;
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
         this.m_y_axis.clear();
+        this.m_nodes_x2.length = 0;
+        this.m_nodes_y2.length = 0;
     }
 
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
@@ -200,8 +226,7 @@ export class Asssit extends WatchableObject {
 
         if (parents.has(page.id)) {
             this.m_collect_target = [page];
-        }
-        else {
+        } else {
             const chains: Map<string, Set<ShapeView>> = new Map();
             let longest = 0;
             let longestChains: Set<ShapeView> = new Set<ShapeView>([page]);
@@ -280,8 +305,7 @@ export class Asssit extends WatchableObject {
         this.m_except.clear();
         if (shapes.length === 1) {
             get_tree(shapes[0], this.m_except);
-        }
-        else if (shapes.length > 1) {
+        } else if (shapes.length > 1) {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 get_tree(shapes[i], this.m_except);
             }
@@ -533,6 +557,7 @@ export class Asssit extends WatchableObject {
         this.notify(Asssit.UPDATE_ASSIST);
         return target;
     }
+
     alignXY2(point: XY) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -703,12 +728,14 @@ export class Asssit extends WatchableObject {
         })
 
 
-
         const offset_x = offsetMap[pre_target1.index];
         if (offset_x) {
             target.sticked_by_x = true;
 
-            this.m_nodes_x = [...(this.m_x_axis.get(pre_target1.x) || []), { p: { x: pre_target1.x, y: pre_target1.sy }, id: 'ex' }];
+            this.m_nodes_x = [...(this.m_x_axis.get(pre_target1.x) || []), {
+                p: { x: pre_target1.x, y: pre_target1.sy },
+                id: 'ex'
+            }];
 
             // target.x = pre_target1.x + offset_x.x;
             target.x = pre_target1.x;
@@ -718,7 +745,10 @@ export class Asssit extends WatchableObject {
         if (offset_y) {
             target.sticked_by_y = true;
 
-            this.m_nodes_y = [...(this.m_y_axis.get(pre_target2.y) || []), { p: { x: pre_target2.sx, y: pre_target2.y }, id: 'ex' }];
+            this.m_nodes_y = [...(this.m_y_axis.get(pre_target2.y) || []), {
+                p: { x: pre_target2.sx, y: pre_target2.y },
+                id: 'ex'
+            }];
 
             // target.y = pre_target2.y + offset_y.y;
             target.y = pre_target2.y;
@@ -731,6 +761,8 @@ export class Asssit extends WatchableObject {
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
+        this.m_nodes_x2 = [];
+        this.m_nodes_y2 = [];
         this.multi_line_x = [];
         this.multi_line_y = [];
         this.m_except.clear();

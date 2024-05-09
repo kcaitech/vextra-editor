@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "./handler";
 import { PointModifyHandler, ShapeView } from "@kcdesign/data";
-import { XY } from "@/context/selection";
 
 export enum PointActionType {
     Count = 'count',

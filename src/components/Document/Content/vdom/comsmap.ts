@@ -15,6 +15,8 @@ import { TextShapeDom } from "./textshape";
 import { CutoutShapeDom } from "./cutout";
 import { RectShapeDom } from "./rect";
 import { BoolShapeDom } from "./boolshape";
+import { StarShapeDom } from "./star";
+import { PolygonShapeDom } from "./polygon";
 // interface DataView {
 //     id: string;
 // }
@@ -36,7 +38,6 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.BoolShape, BoolShapeDom);
     comsMap.set(ShapeType.Path, PathShapeDom);
     comsMap.set(ShapeType.Path2, PathShapeDom2);
-    // comsMap.set(ShapeType.Rectangle, PathShapeDom);
     comsMap.set(ShapeType.Oval, PathShapeDom);
     comsMap.set(ShapeType.Text, TextShapeDom);
     comsMap.set(ShapeType.Symbol, SymbolDom);
@@ -48,4 +49,6 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.TableCell, TableCellDom as any as ViewType);
     comsMap.set(ShapeType.Cutout, CutoutShapeDom);
     comsMap.set(ShapeType.Rectangle, RectShapeDom);
+    comsMap.set(ShapeType.Star, StarShapeDom);
+    comsMap.set(ShapeType.Polygon, PolygonShapeDom);
 }

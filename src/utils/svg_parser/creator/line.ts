@@ -16,10 +16,6 @@ export class LineCreator extends BaseCreator {
         const y2 = this.attributes.y2 || 0
         const dx = x2 - x1
         const dy = y2 - y1
-        const line = shapeCreator.newLineShape("直线", new ShapeFrame(x1, y1, 1, 1))
-        if (!line.points) line.points = new BasicArray();
-        line.points[0] = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-        line.points[1] = new CurvePoint([0] as BasicArray<number>, uuid(), dx, dy, CurveMode.Straight);
-        this.shape = line
+        this.shape = shapeCreator.newLineShape("直线", new ShapeFrame(x1, y1, 1, 1))
     }
 }

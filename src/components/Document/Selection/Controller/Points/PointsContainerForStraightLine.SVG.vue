@@ -19,6 +19,7 @@ interface Props {
     rotation: number
     theme: SelectionTheme
 }
+
 interface Dot {
     point: { x: number, y: number }
     extra: { x: number, y: number }
@@ -26,6 +27,7 @@ interface Dot {
     type: CtrlElementType
     type2: CtrlElementType
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
@@ -48,6 +50,7 @@ function update() {
     matrix.reset(props.matrix);
     update_dot_path();
 }
+
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
@@ -56,8 +59,8 @@ function update_dot_path() {
     const f = props.shape.frame;
     const m = new Matrix(matrix);
     m.preScale(f.width, f.height);
-    const points = (props.shape as PathShapeView).points;
-    if (points.length < 2) {
+    const points = (props.shape as PathShapeView)?.segments[0]?.points;
+    if (!points?.length || points.length < 2) {
         console.log('points.length < 2');
         return;
     }
@@ -65,6 +68,7 @@ function update_dot_path() {
     const p2 = m.computeCoord3(points[1]);
     dots.push(...update_dot3([p1, p2]));
 }
+
 function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     if (event.button !== 0) {
         return;
@@ -86,6 +90,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
+
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const mouseOnClient: ClientXY = workspace.getContentXY(event);
@@ -121,38 +126,35 @@ function point_mousemove(event: MouseEvent) {
         isDragging = true;
     }
 }
+
 function get_t(index: number, p2: PageXY): PageXY {
     if (index === 0) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
         m.preScale(f.width, f.height);
-        const ap = (props.shape as PathShapeView).points[1];
+        const ap = (props.shape as PathShapeView).segments[0]?.points[1];
         const rb = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(rb, p2)));
         if (type_d === 0) {
             p2.y = rb.y;
-        }
-        else if (type_d === 45) {
+        } else if (type_d === 45) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 90) {
             p2.x = rb.x;
-        }
-        else if (type_d === 135) {
+        } else if (type_d === 135) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 180) {
             p2.y = rb.y;
-        }
-        else if (type_d === 225) {
+        } else if (type_d === 225) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 270) {
             p2.x = rb.x;
-        }
-        else if (type_d === 315) {
+        } else if (type_d === 315) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
@@ -161,34 +163,30 @@ function get_t(index: number, p2: PageXY): PageXY {
     } else if (index === 1) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
         m.preScale(f.width, f.height);
-        const ap = (props.shape as PathShapeView).points[0];
+        const ap = (props.shape as PathShapeView).segments[0]?.points[0];
         const lt = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
         if (type_d === 0) {
             p2.y = lt.y;
-        }
-        else if (type_d === 45) {
+        } else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 90) {
             p2.x = lt.x;
-        }
-        else if (type_d === 135) {
+        } else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 180) {
             p2.y = lt.y;
-        }
-        else if (type_d === 225) {
+        } else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         } else if (type_d === 270) {
             p2.x = lt.x;
-        }
-        else if (type_d === 315) {
+        } else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
@@ -198,6 +196,7 @@ function get_t(index: number, p2: PageXY): PageXY {
         return p2;
     }
 }
+
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
     const target = props.context.assist.point_match(p2);
@@ -226,16 +225,19 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     }
     asyncBaseAction.executeForLine(index, p2);
 }
+
 function scale2(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     props.context.assist.point_match(p2);
     asyncBaseAction.executeForLine(index, p2);
 }
+
 function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
     clear_status();
 }
+
 function setCursor(t: CtrlElementType, active = false) {
     const cursor = props.context.cursor;
 
@@ -255,6 +257,7 @@ function setCursor(t: CtrlElementType, active = false) {
         ? cursor.setTypeForce(type, deg)
         : cursor.setType(type, deg);
 }
+
 function for_rotate(p1: XY, p2: XY) {
     if (dots.length !== 2) {
         console.log('!dots.length !== 2');
@@ -279,17 +282,21 @@ function for_rotate(p1: XY, p2: XY) {
     asyncBaseAction.executeRotate(deg);
     setCursor(cur_ctrl_type, true);
 }
+
 function point_mouseenter(t: CtrlElementType) {
     need_reset_cursor_after_transform = false;
     setCursor(t);
 }
+
 function point_mouseleave() {
     props.context.cursor.reset();
     need_reset_cursor_after_transform = true;
 }
+
 function window_blur() {
     clear_status();
 }
+
 function set_status_on_down() {
     props.context.menu.menuMount();
 
@@ -302,9 +309,11 @@ function set_status_on_down() {
         ? workspace.rotating(true)
         : workspace.scaling(true);
 }
+
 function set_status_before_action() {
     props.context.assist.set_trans_target([props.shape]);
 }
+
 function clear_status() {
     if (asyncBaseAction) {
         asyncBaseAction = asyncBaseAction.close();
@@ -328,6 +337,7 @@ function clear_status() {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
+
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -347,10 +357,10 @@ onUnmounted(() => {
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
         <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2, i)"
-            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
         <g @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave">
+           @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assit-rect"></rect>
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>

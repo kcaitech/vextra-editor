@@ -5,6 +5,7 @@ export const shape: any = {
     line: 'Line',
     oval: 'Oval',
     rect: 'Rect',
+    path: 'Vector',
     artboard: 'Artboard',
     arrow: 'Arrow',
     text: 'text',
