@@ -284,13 +284,13 @@ export class Matrix { // 矩阵
         return new ColVector(this.data.col(n))
     }
 
-    cols(n0: number, n1?: number) { // 获取第n0列到第n1列的列向量（包含第n1列）
+    cols(n0: number, count?: number) { // 从第n0列开始，获取count列
         const [_, n] = this.dimension
-        if (n1 === undefined) n1 = n;
-        if (n0 < 0 || n1 < 0 || n0 >= n || n1 >= n) throw new Error("列数越界");
-        if (n0 > n1) throw new Error("列数范围错误");
+        if (count === undefined) count = n - n0;
+        if (n0 < 0 || n0 + count > n) throw new Error("列索引越界");
+        if (count < 0) throw new Error("列数范围错误");
         const result: Matrix[] = []
-        for (let i = n0; i <= n1; i++) result.push(this.col(i));
+        for (let i = n0; i < n0 + count; i++) result.push(this.col(i));
         return result
     }
 
@@ -309,13 +309,13 @@ export class Matrix { // 矩阵
         return new RowVector(this.data.row(m))
     }
 
-    rows(m0: number, m1?: number) { // 获取第m0行到第m1行的行向量（包含第m1行）
+    rows(m0: number, count?: number) { // 从第m0行开始，获取count行
         const [m, n] = this.dimension
-        if (m1 === undefined) m1 = m;
-        if (m0 < 0 || m1 < 0 || m0 >= m || m1 >= m) throw new Error("行数越界");
-        if (m0 > m1) throw new Error("行数范围错误");
+        if (count === undefined) count = m - m0;
+        if (m0 < 0 || m0 + count > m) throw new Error("行索引越界");
+        if (count < 0) throw new Error("行数范围错误");
         const result: Matrix[] = []
-        for (let i = m0; i <= m1; i++) result.push(this.row(i));
+        for (let i = m0; i < m0 + count; i++) result.push(this.row(i));
         return result
     }
 

@@ -94,30 +94,32 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return new NumberArray2D(numberArray.dimensionLength as [number, number], numberArray.data, true)
     }
 
-    rows(m0: number, m1?: number) { // 获取NumberArray中的第m0行到第m1行（包含第m1行）
+    rows(m0: number, count?: number) { // 从第m0行开始，获取count行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
-        if (m1 === undefined) m1 = m;
-        if (m0 < 0 || m1 < 0 || m0 >= m || m1 >= m) throw new Error("行索引越界");
-        return this.data.slice(m0 * n, (m1 + 1) * n)
+        if (count === undefined) count = m - m0;
+        if (m0 < 0 || m0 + count > m) throw new Error("行索引越界");
+        if (count < 0) throw new Error("行数范围错误");
+        return this.data.slice(m0 * n, (m0 + count) * n)
     }
 
     row(m: number) { // 获取NumberArray中的第m行
-        return this.rows(m, m)
+        return this.rows(m, 1)
     }
 
-    cols(n0: number, n1?: number) { // 获取NumberArray中的第n0列到第n1列（包含第n1列）
+    cols(n0: number, count?: number) { // 从第n0列开始，获取count列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
-        if (n1 === undefined) n1 = n;
-        if (n0 < 0 || n1 < 0 || n0 >= n || n1 >= n) throw new Error("列索引越界");
+        if (count === undefined) count = n - n0;
+        if (n0 < 0 || n0 + count > n) throw new Error("列索引越界");
+        if (count < 0) throw new Error("列数范围错误");
         const result = []
-        for (let i = n0; i < n1 + 1; i++) for (let j = 0; j < m; j++) result.push(this.get([j, i]));
+        for (let i = n0; i < n0 + count; i++) for (let j = 0; j < m; j++) result.push(this.get([j, i]));
         return result
     }
 
     col(n: number) { // 获取NumberArray中的第n列
-        return this.cols(n, n)
+        return this.cols(n, 1)
     }
 
     insertRows(rowsData: number[] | NumberArray2D, row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
