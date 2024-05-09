@@ -33,8 +33,9 @@ kcai1212
 
 4、在cmd命令行进入kcdesign工程的deployment\app目录，执行build.bat脚本
 
-build.bat version-tag
-例如：build.bat test-0.0.1-24，注意版本号不能与历史版本号混淆
+build.bat version-tag mode
+其中mode为空或为prod时编译生产环境镜像，为test时编译测试环境镜像
+例如：build.bat test-0.0.1-24 test，注意版本号不能与历史版本号混淆
 
 执行build.bat前注意修改utils\setting.ts中的production，为true时编译正式环境镜像，为false时编译测试环境镜像
 
