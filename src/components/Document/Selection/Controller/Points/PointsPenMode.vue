@@ -9,6 +9,7 @@ import { Segment, get_segments } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
+import { Asssit } from "@/context/assist";
 
 interface Props {
     context: Context
@@ -73,13 +74,16 @@ function update() {
 
     props.context.path.set_segments(segments);
 
-
+    buildMap();
 }
 
 const mapX = new Map<number, XY[]>();
 const mapY = new Map<number, XY[]>();
 
 function buildMap() {
+    mapX.clear();
+    mapY.clear();
+
     const shape = props.context.selection.pathshape! as PathShapeView;
 
     if (!shape) {
@@ -91,8 +95,6 @@ function buildMap() {
     m.preScale(frame.width, frame.height);
 
     m.multiAtLeft(props.context.workspace.matrix);
-
-    const path = props.context.path;
 
     const segments = shape.segments;
 
@@ -452,7 +454,69 @@ function matrix_watcher(t: number) {
 }
 
 function documentMove(e: MouseEvent) {
-    preXY.value = props.context.workspace.getContentXY(e);
+    const __client = props.context.workspace.getContentXY(e);
+
+    let delX = Infinity;
+    let delY = Infinity;
+
+    let DX = 0;
+    let DY = 0;
+    let TX = 0;
+    let TY = 0;
+
+    const xs = Array.from(mapX.keys());
+    const ys = Array.from(mapY.keys());
+
+    const { x, y } = __client;
+
+    for (let j = 0; j < xs.length; j++) {
+        const dx = xs[j] - x;
+        const __dx = Math.abs(dx);
+
+        if (__dx < delX) {
+            delX = __dx;
+            DX = dx;
+            TX = xs[j];
+        }
+    }
+
+    for (let k = 0; k < ys.length; k++) {
+        const dy = ys[k] - y;
+        const __dy = Math.abs(dy);
+
+        if (__dy < delY) {
+            delY = __dy;
+            DY = dy;
+            TY = ys[k];
+        }
+    }
+
+    let modified = false;
+    const assist = props.context.assist;
+
+    if (delX < PathEditor.DELTA) {
+        __client.x += DX;
+        assist.setNodesX2([...(mapX.get(TX) || []), __client]);
+        modified = true;
+    } else {
+        assist.setNodesX2([]);
+    }
+
+    if (delY < PathEditor.DELTA) {
+        __client.y += DY;
+        assist.setNodesY2([...(mapY.get(TY) || []), __client]);
+        modified = true;
+    } else {
+        assist.setNodesY2([]);
+    }
+
+    if (modified) {
+        assist.notify(Asssit.UPDATE_ASSIST_PATH);
+    } else {
+        assist.notify(Asssit.CLEAR);
+    }
+
+    preXY.value = __client;
 
     livingPath.value = '';
 
@@ -515,7 +579,7 @@ function down(e: MouseEvent) {
         if (lastPoint) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
-            pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1);
+            pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
             downXY = { x: e.x, y: e.y };
             asyncEnvMount();
 
@@ -524,7 +588,7 @@ function down(e: MouseEvent) {
     } else {
         pathModifier = new PathEditor(props.context, e);
         pathModifier.createApiCaller();
-        const addRes = pathModifier.addSegmentForPen();
+        const addRes = pathModifier.addSegmentForPen(preXY.value);
 
         if (!addRes) {
             return;
