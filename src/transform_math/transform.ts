@@ -254,6 +254,21 @@ export class Transform { // 变换
         return this
     }
 
+    // 设置平移参数
+    setTranslate(params: {
+        vector: ColVector3D,
+    }) {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        this.translateMatrix = TranslateMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, params.vector.x,
+            0, 1, 0, params.vector.y,
+            0, 0, 1, params.vector.z,
+            0, 0, 0, 1,
+        ], true)))
+        this.isMatrixLatest = false
+        return this
+    }
+
     // 缩放
     scale(params: {
         vector: ColVector3D,
@@ -281,6 +296,21 @@ export class Transform { // 变换
             this.isSubMatrixLatest = false
         }
 
+        return this
+    }
+
+    // 设置缩放参数
+    setScale(params: {
+        vector: ColVector3D,
+    }) {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            params.vector.x, 0, 0, 0,
+            0, params.vector.y, 0, 0,
+            0, 0, params.vector.z, 0,
+            0, 0, 0, 1,
+        ], true)))
+        this.isMatrixLatest = false
         return this
     }
 
@@ -382,11 +412,13 @@ export class Transform { // 变换
 
     // 绕任意轴旋转，axis为旋转轴
     rotate(params: {
-        axis: ColVector3D,
+        axis?: ColVector3D,
         angle: number,
         mode?: TransformMode,
     }) {
         if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if (params.axis === undefined) params.axis = new ColVector([0, 0, 1]);
         params.axis = params.axis.normalize() // axis化为单位向量
 
         if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
@@ -419,8 +451,8 @@ export class Transform { // 变换
 
     // 绕任意不过原点的轴旋转，axis为旋转轴，point为旋转轴上的一点
     rotateAt(params: {
-        axis: ColVector3D,
-        point: Point3D,
+        axis?: ColVector3D,
+        point?: Point3D,
         angle: number,
         mode?: TransformMode,
     }) {
@@ -429,6 +461,8 @@ export class Transform { // 变换
             || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
             this.updateMatrix()
         }
+
+        if (params.point === undefined) params.point = new Point3D([0, 0, 0]);
 
         if (params.mode === TransformMode.Local) {
             this.rotateMatrix.col3 = this.rotateMatrix.col3.subtract(params.point)
@@ -452,6 +486,27 @@ export class Transform { // 变换
         }
 
 
+        return this
+    }
+
+    // 设置旋转参数（欧拉角（ZXY序）：先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转）
+    // https://en.wikipedia.org/wiki/Euler_angles
+    // x、y、z分别对应维基百科中的β、γ、α
+    setRotate(params: {
+        euler: ColVector3D,
+    }) {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        const [x, y, z] = params.euler.rawData
+        const c2 = Math.cos(x), s2 = Math.sin(x)
+        const c3 = Math.cos(y), s3 = Math.sin(y)
+        const c1 = Math.cos(z), s1 = Math.sin(z)
+        this.rotateMatrix = RotateMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            c1 * c3 - s1 * s2 * s3, -c2 * s1, c1 * s3 + c3 * s1 * s2, 0,
+            c3 * s1 + c1 * s2 * s3, c1 * c2, s1 * s3 - c1 * c3 * s2, 0,
+            -c2 * s3, s2, c2 * c3, 0,
+            0, 0, 0, 1,
+        ], true)))
+        this.isMatrixLatest = false
         return this
     }
 
@@ -490,6 +545,22 @@ export class Transform { // 变换
         return this
     }
 
+    // 设置斜切参数
+    setSkew(params: {
+        skewAngle: ColVector2D,
+    }) {
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
+        this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
+            1, Math.tan(params.skewAngle.x), 0, 0,
+            Math.tan(params.skewAngle.y), 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true)))
+        this.isMatrixLatest = false
+        return this
+    }
+
     hasSkew() { // 判断是否有斜切
         if (!this.isSubMatrixLatest) this.updateMatrix();
         return !this.skewMatrix.isIdentity
@@ -509,10 +580,22 @@ export class Transform { // 变换
         })
     }
 
+    setFlipH(value: boolean) { // 设置水平翻转
+        const isFlipH = this.matrix.m00 < 0
+        if (value === isFlipH) return this;
+        return this.flipH()
+    }
+
     flipV() { // 垂直翻转
         return this.scale({
             vector: new ColVector3D([1, -1, 1]),
         })
+    }
+
+    setFlipV(value: boolean) { // 设置垂直翻转
+        const isFlipV = this.matrix.m11 < 0
+        if (value === isFlipV) return this;
+        return this.flipV()
     }
 
     decomposeTranslate() { // 分解平移参数
@@ -539,6 +622,7 @@ export class Transform { // 变换
     // 旋转矩阵转欧拉角
     // 欧拉角的“序”与实际操作顺序相反，例如ZXY序指的是先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转
     // https://en.wikipedia.org/wiki/Euler_angles
+    // x、y、z分别对应维基百科中的β、γ、α
     // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
     static DecomposeEuler(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const x = Math.asin(matrix.m21)
