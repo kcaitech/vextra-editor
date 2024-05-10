@@ -39,8 +39,8 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform3D, TransformMode} from "../transform_3d"
-import {ColVector} from "../matrix"
+import {Transform} from "../transform"
+import {ColVector3D} from "../matrix"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -57,7 +57,7 @@ export class BaseCreator extends BaseTreeNode {
     localAttributes: Record<string, string> = {}
     isLocalAttributesParsed = false
     attributes: Attributes = {}
-    transform = new Transform3D()
+    transform = new Transform()
 
     shape: Shape | undefined = undefined
     style?: Style
@@ -199,16 +199,7 @@ export class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform, {
-            transformMode: TransformMode.LocalSpecialOrigin,
-            origin: {
-                x: -(this.attributes.width || 0) / 2,
-                y: -(this.attributes.height || 0) / 2,
-                z: 0,
-            },
-            diffX: parseFloat(x) || 0,
-            diffY: parseFloat(y) || 0,
-        }));
+        if (transform) this.transform.addTransform(parseTransform(transform));
 
         // opacity
         const opacity = this.localAttributes["opacity"]
@@ -265,7 +256,7 @@ export class BaseCreator extends BaseTreeNode {
                         const cx = parseFloat(creator.localAttributes["cx"] || "0")
                         const cy = parseFloat(creator.localAttributes["cy"] || "0")
                         const r = parseFloat(creator.localAttributes["r"] || "1")
-                        const transform = new Transform3D()
+                        const transform = new Transform()
                         if (creator.localAttributes["gradientTransform"]) transform.addTransform(parseTransform(creator.localAttributes["gradientTransform"]));
                         const scaleArgs = getAllFunctionCallFromString(creator.localAttributes["gradientTransform"]).find(item => item[0] === "scale")?.[1].split(/,|\s+/).filter(arg => arg && arg.trim())
                         radialGradient = {
@@ -498,7 +489,7 @@ export class BaseCreator extends BaseTreeNode {
                 const translate = fillColor.radialGradient!.transform.decompose3DTranslate()
                 from = new Point2D(translate.x / width, translate.y / height)
 
-                const toVec = fillColor.radialGradient!.transform.transform(new ColVector([1, 0, 0]))
+                const toVec = fillColor.radialGradient!.transform.transform(new ColVector3D([1, 0, 0]))
                 to = new Point2D(toVec.data.get([0, 0]) / width, toVec.data.get([1, 0]) / height)
 
                 colorType = GradientType.Radial
@@ -575,7 +566,7 @@ export class BaseCreator extends BaseTreeNode {
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
-        if (x !== 0 || y !== 0) this.transform.translate(x, y, 0);
+        if (x !== 0 || y !== 0) this.transform.translate({vector: new ColVector3D([x, y, 0])});
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()

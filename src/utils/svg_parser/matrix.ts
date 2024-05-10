@@ -2,20 +2,20 @@ import {NumberArray, NumberArray2D} from "./number_array"
 
 export function buildIdentityArray(m: number, n: number = m) { // 构建m*n数组，n默认为m，主元为1，其余元素为0
     if (m === 2 && n === 2) {
-        return new NumberArray2D([m, n], [
+        return new NumberArray2D([2, 2], [
             1, 0,
             0, 1,
         ], true)
     }
     if (m === 3 && n === 3) {
-        return new NumberArray2D([m, n], [
+        return new NumberArray2D([3, 3], [
             1, 0, 0,
             0, 1, 0,
             0, 0, 1,
         ], true)
     }
     if (m === 4 && n === 4) {
-        return new NumberArray2D([m, n], [
+        return new NumberArray2D([4, 4], [
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -24,7 +24,7 @@ export function buildIdentityArray(m: number, n: number = m) { // 构建m*n数�
     }
     const result = new NumberArray2D([m, n], 0)
     const rank = Math.min(m, n)
-    for (let i = 0; i < rank; i++) result.set([i, i], 1)
+    for (let i = 0; i < rank; i++) result.set([i, i], 1);
     return result
 }
 
@@ -323,6 +323,101 @@ export class Matrix { // 矩阵
         return this.rows(0)
     }
 
+    subMatrix(start: [number, number], dimension: [number, number]) { // 获取子矩阵
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = dimension
+        if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+
+        const result = new NumberArray2D(dimension)
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) result.set([i, j], this.get([i + startRow, j + startCol]));
+        return new Matrix(result)
+    }
+
+    setSubMatrix(start: [number, number], matrix: Matrix) { // 设置子矩阵
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = matrix.dimension
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.set([i + startRow, j + startCol], matrix.get([i, j]));
+        return this
+    }
+
+    get col0(): ColVector {
+        return this.col(0)
+    }
+
+    set col0(value: ColVector | number[]) {
+        if (!(value instanceof ColVector)) value = new ColVector(value);
+        this.setSubMatrix([0, 0], value)
+    }
+
+    get col1(): ColVector {
+        return this.col(1)
+    }
+
+    set col1(value: ColVector | number[]) {
+        if (!(value instanceof ColVector)) value = new ColVector(value);
+        this.setSubMatrix([0, 1], value)
+    }
+
+    get col2(): ColVector {
+        return this.col(2)
+    }
+
+    set col2(value: ColVector | number[]) {
+        if (!(value instanceof ColVector)) value = new ColVector(value);
+        this.setSubMatrix([0, 2], value)
+    }
+
+    get col3(): ColVector {
+        return this.col(3)
+    }
+
+    set col3(value: ColVector | number[]) {
+        if (!(value instanceof ColVector)) value = new ColVector(value);
+        this.setSubMatrix([0, 3], value)
+    }
+
+    get row0(): ColVector {
+        return this.row(0)
+    }
+
+    set row0(value: RowVector | number[]) {
+        if (!(value instanceof RowVector)) value = new RowVector(value);
+        this.setSubMatrix([0, 0], value)
+    }
+
+    get row1(): ColVector {
+        return this.row(1)
+    }
+
+    set row1(value: RowVector | number[]) {
+        if (!(value instanceof RowVector)) value = new RowVector(value);
+        this.setSubMatrix([1, 0], value)
+    }
+
+    get row2(): ColVector {
+        return this.row(2)
+    }
+
+    set row2(value: RowVector | number[]) {
+        if (!(value instanceof RowVector)) value = new RowVector(value);
+        this.setSubMatrix([2, 0], value)
+    }
+
+    get row3(): ColVector {
+        return this.row(3)
+    }
+
+    set row3(value: RowVector | number[]) {
+        if (!(value instanceof RowVector)) value = new RowVector(value);
+        this.setSubMatrix([3, 0], value)
+    }
+
     insertCols(colsData: number[] | NumberArray2D, col?: number, skipFillValueCheck = false) { // 插入多列
         this.data.insertCols(colsData, col, skipFillValueCheck)
         return this
@@ -341,6 +436,21 @@ export class Matrix { // 矩阵
                 this.set([i, j], this.get([j, i]))
                 this.set([j, i], temp)
             }
+        }
+        return this
+    }
+
+    transposeSubMatrix(start: [number, number], dimension: number) { // 子矩阵转置
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const m1 = dimension, n1 = dimension
+        if (m1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        for (let i = 0; i < m1; i++) for (let j = i + 1; j < n1; j++) {
+            const temp = this.get([i + startRow, j + startCol])
+            this.set([i + startRow, j + startCol], this.get([j + startRow, i + startCol]))
+            this.set([j + startRow, i + startCol], temp)
         }
         return this
     }
@@ -367,6 +477,17 @@ export class Matrix { // 矩阵
         return this
     }
 
+    multiplyByNumberSubMatrix(start: [number, number], dimension: [number, number], number: number) { // 子矩阵数乘
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = dimension
+        if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.set([i + startRow, j + startCol], this.get([i + startRow, j + startCol]) * number);
+        return this
+    }
+
     _getMultiply(matrix: Matrix) {
         const [m0, n0] = this.dimension
         const [m1, n1] = matrix.dimension
@@ -389,9 +510,33 @@ export class Matrix { // 矩阵
         return new Matrix(this._getMultiply(matrix))
     }
 
+    getMultiplySubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = dimension
+        const [_, n2] = matrix.dimension
+        if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        if (n2 !== n1) throw new Error("矩阵阶数不匹配，无法相乘");
+        return new Matrix(this.subMatrix(start, dimension)._getMultiply(matrix))
+    }
 
     multiply(matrix: Matrix) { // 矩阵相乘，右乘matrix，会修改原矩阵
         this.data = this._getMultiply(matrix)
+        return this
+    }
+
+    multiplySubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵相乘，右乘matrix，会修改原矩阵
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = dimension
+        const [_, n2] = matrix.dimension
+        if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        if (n2 !== n1) throw new Error("矩阵阶数不匹配，无法相乘");
+        this.setSubMatrix(start, this.subMatrix(start, dimension).multiply(matrix))
         return this
     }
 
@@ -399,8 +544,25 @@ export class Matrix { // 矩阵
         return this.multiply(matrix)
     }
 
+    multiplyRightSubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵右乘
+        return this.multiplySubMatrix(start, dimension, matrix)
+    }
+
     multiplyLeft(matrix: Matrix) { // 矩阵左乘
         this.data = matrix.clone().multiply(this).data
+        return this
+    }
+
+    multiplyLeftSubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵左乘
+        const startRow = start[0]
+        const startCol = start[1]
+        const [m0, n0] = this.dimension
+        const [m1, n1] = dimension
+        const [m2, _] = matrix.dimension
+        if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
+        if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
+        if (m2 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
+        this.setSubMatrix(start, matrix.clone().multiply(this.subMatrix(start, dimension)))
         return this
     }
 
@@ -448,6 +610,14 @@ export class Matrix { // 矩阵
             }
         }
         return new Matrix(result)
+    }
+
+    negate() { // 取反
+        return this.multiplyByNumber(-1)
+    }
+
+    getNegate() { // 获取取反后的矩阵，不修改原矩阵，返回新矩阵
+        return this.clone().negate()
     }
 
     rank(): number { // 求矩阵的秩（消元法）
@@ -549,6 +719,10 @@ export class Vector extends Matrix { // 向量
         return new Vector(matrix.data.resize(isCol ? [matrix.data.data.length, 1] : [1, matrix.data.data.length]))
     }
 
+    clone() {
+        return new Vector(this.data.clone())
+    }
+
     dot(vector: Vector) { // 点积
         const [m, n] = this.dimension
         const [m1, n1] = vector.dimension
@@ -598,6 +772,10 @@ export class ColVector extends Vector { // 列向量
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof ColVector) return matrix;
         return new ColVector(matrix.data.resize([matrix.data.data.length, 1]))
+    }
+
+    clone() {
+        return new ColVector(this.data.clone())
     }
 
     get x() {
@@ -657,6 +835,54 @@ export class ColVector extends Vector { // 列向量
     }
 }
 
+export class ColVector2D extends ColVector { // 二维列向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[0] !== 2) throw new Error("二维列向量必须是2 * 1的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof ColVector2D) return matrix;
+        return new ColVector2D(matrix.data.resize([2, 1]))
+    }
+
+    clone() {
+        return new ColVector2D(this.data.clone())
+    }
+}
+
+export class ColVector3D extends ColVector { // 三维列向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[0] !== 3) throw new Error("三维列向量必须是3 * 1的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof ColVector3D) return matrix;
+        return new ColVector3D(matrix.data.resize([3, 1]))
+    }
+
+    clone() {
+        return new ColVector3D(this.data.clone())
+    }
+}
+
+export class ColVector4D extends ColVector { // 四维列向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[0] !== 4) throw new Error("四维列向量必须是4 * 1的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof ColVector4D) return matrix;
+        return new ColVector4D(matrix.data.resize([4, 1]))
+    }
+
+    clone() {
+        return new ColVector4D(this.data.clone())
+    }
+}
+
 export class RowVector extends Vector { // 行向量
     constructor(data: number[] | NumberArray2D) {
         if (!(data instanceof NumberArray)) data = new NumberArray2D([1, data.length], data, true);
@@ -667,6 +893,10 @@ export class RowVector extends Vector { // 行向量
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof RowVector) return matrix;
         return new RowVector(matrix.data.resize([1, matrix.data.data.length]))
+    }
+
+    clone() {
+        return new RowVector(this.data.clone())
     }
 
     get x() {
@@ -726,6 +956,54 @@ export class RowVector extends Vector { // 行向量
     }
 }
 
+export class RowVector2D extends RowVector { // 二维行向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[1] !== 2) throw new Error("二维行向量必须是1 * 2的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof RowVector2D) return matrix;
+        return new RowVector2D(matrix.data.resize([1, 2]))
+    }
+
+    clone() {
+        return new RowVector2D(this.data.clone())
+    }
+}
+
+export class RowVector3D extends RowVector { // 三维行向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[1] !== 3) throw new Error("三维行向量必须是1 * 3的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof RowVector3D) return matrix;
+        return new RowVector3D(matrix.data.resize([1, 3]))
+    }
+
+    clone() {
+        return new RowVector3D(this.data.clone())
+    }
+}
+
+export class RowVector4D extends RowVector { // 四维行向量
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[1] !== 4) throw new Error("四维行向量必须是1 * 4的矩阵");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof RowVector4D) return matrix;
+        return new RowVector4D(matrix.data.resize([1, 4]))
+    }
+
+    clone() {
+        return new RowVector4D(this.data.clone())
+    }
+}
+
 export class Point extends ColVector { // 点
     constructor(data: number[] | NumberArray2D) {
         super(data)
@@ -734,5 +1012,41 @@ export class Point extends ColVector { // 点
     static FromMatrix(matrix: Matrix) {
         if (matrix instanceof Point) return matrix;
         return new Point(matrix.data.resize([matrix.data.data.length, 1]))
+    }
+
+    clone() {
+        return new Point(this.data.clone())
+    }
+}
+
+export class Point2D extends Point { // 二维点
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[0] !== 2) throw new Error("二维点必须是2 * 1的列向量");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof Point2D) return matrix;
+        return new Point2D(matrix.data.resize([2, 1]))
+    }
+
+    clone() {
+        return new Point2D(this.data.clone())
+    }
+}
+
+export class Point3D extends Point { // 三维点
+    constructor(data: number[] | NumberArray2D) {
+        super(data)
+        if (this.dimension[0] !== 3) throw new Error("三维点必须是3 * 1的列向量");
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof Point3D) return matrix;
+        return new Point3D(matrix.data.resize([3, 1]))
+    }
+
+    clone() {
+        return new Point3D(this.data.clone())
     }
 }

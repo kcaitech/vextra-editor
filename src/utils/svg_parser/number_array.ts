@@ -45,7 +45,7 @@ export class NumberArray { // 任意维数的Number数组
         return array
     }
 
-    resize(dimensionLength: number[], fillValue: number = 0) { // 重新设置维数和维度长度，复用底层原数据
+    resize(dimensionLength: number[], fillValue: number = 0) { // 重新设置维数信息，复用底层原数据
         if (dimensionLength.findIndex(item => item < 0) !== -1) throw new Error("维数不能为负数");
         const length = dimensionLength.reduce((a, b) => a * b, 1)
         if (length < this.data.length) this.data = this.data.slice(0, length);

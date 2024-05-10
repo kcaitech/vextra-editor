@@ -1,8 +1,13 @@
-import {buildIdentityArray, ColVector, Matrix, Point, Vector} from "./matrix"
+import {buildIdentityArray, ColVector, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
     return matrix.col(0).dot(matrix.col(2)) !== 0 || matrix.col(1).dot(matrix.col(2)) !== 0
+}
+
+export enum TransformMode { // 变换模式
+    Local, // 局部模式，不同变换（缩放、斜切、旋转、平移）之间互不影响
+    Global, // 全局模式，不同变换之间相互影响
 }
 
 export class Transform { // 变换
@@ -19,7 +24,6 @@ export class Transform { // 变换
     rotateMatrix: Matrix // 旋转矩阵
     skewMatrix: Matrix // 斜切矩阵
     scaleMatrix: Matrix // 缩放矩阵
-
 
     isMatrixLatest: boolean = true // matrix为最新
     isSubMatrixLatest: boolean = true // 子矩阵是否为最新
@@ -99,7 +103,8 @@ export class Transform { // 变换
         })
     }
 
-    transform(cols: Matrix) { // 对多个三维列向量（三维点）进行变换
+    transform(cols: Matrix | ColVector3D[] | Point3D[]) { // 对多个三维列向量（三维点）进行变换
+        if (Array.isArray(cols)) cols = Matrix.FromCols(cols);
         const [m, n] = cols.dimension
         if (m !== 3) throw new Error("点必须是3维向量");
         if (!this.isMatrixLatest) this.updateMatrix();
@@ -107,95 +112,182 @@ export class Transform { // 变换
     }
 
     transformCol(x: number, y: number, z: number) { // 对一个三维列向量（三维点）进行变换
-        return this.transform(new ColVector([x, y, z])).toXYZ()
+        return this.transform(new ColVector3D([x, y, z])).toXYZ()
     }
 
-    translate(x: number, y: number, z: number) { // 平移
-        if (!this.isSubMatrixLatest) this.updateMatrix();
+    // 平移
+    translate(params: {
+        vector: ColVector3D,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            1, 0, 0, x,
-            0, 1, 0, y,
-            0, 0, 1, z,
+            1, 0, 0, params.vector.x,
+            0, 1, 0, params.vector.y,
+            0, 0, 1, params.vector.z,
             0, 0, 0, 1,
         ], true))
-        this.translateMatrix = matrix.multiply(this.translateMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.translateMatrix = matrix.multiply(this.translateMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
     // 缩放
     scale(params: {
-        xScale?: number,
-        yScale?: number,
-        zScale?: number,
+        vector: ColVector3D,
+        mode?: TransformMode,
     }) {
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const xScale = params.xScale || 1
-        const yScale = params.yScale || 1
-        const zScale = params.zScale || 1
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            xScale, 0, 0, 0,
-            0, yScale, 0, 0,
-            0, 0, zScale, 0,
+            params.vector.x, 0, 0, 0,
+            0, params.vector.y, 0, 0,
+            0, 0, params.vector.z, 0,
             0, 0, 0, 1,
         ], true))
-        this.scaleMatrix = matrix.multiply(this.scaleMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.scaleMatrix = matrix.multiply(this.scaleMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
-    rotateX(angle: number) { // 绕x轴旋转
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const sin = Math.sin(angle)
-        const cos = Math.cos(angle)
+    // 绕x轴旋转
+    rotateX(params: {
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
         const matrix = new Matrix(new NumberArray2D([4, 4], [
             1, 0, 0, 0,
             0, cos, -sin, 0,
             0, sin, cos, 0,
             0, 0, 0, 1,
         ], true))
-        this.rotateMatrix = matrix.multiply(this.rotateMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
-    rotateY(angle: number) { // 绕y轴旋转
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const sin = Math.sin(angle)
-        const cos = Math.cos(angle)
+    // 绕y轴旋转
+    rotateY(params: {
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
         const matrix = new Matrix(new NumberArray2D([4, 4], [
             cos, 0, sin, 0,
             0, 1, 0, 0,
             -sin, 0, cos, 0,
             0, 0, 0, 1,
         ], true))
-        this.rotateMatrix = matrix.multiply(this.rotateMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
-    rotateZ(angle: number) { // 绕z轴旋转
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        const sin = Math.sin(angle)
-        const cos = Math.cos(angle)
+    // 绕z轴旋转
+    rotateZ(params: {
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
+        const sin = Math.sin(params.angle)
+        const cos = Math.cos(params.angle)
         const matrix = new Matrix(new NumberArray2D([4, 4], [
             cos, -sin, 0, 0,
             sin, cos, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
         ], true))
-        this.rotateMatrix = matrix.multiply(this.rotateMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
-    rotate(axis: ColVector, angle: number) { // 绕任意轴旋转，axis为旋转轴的单位向量
-        if (axis.dimension[0] !== 3) throw new Error("旋转轴必须是3维向量");
-        if (!this.isSubMatrixLatest) this.updateMatrix();
-        axis = axis.normalize() // axis化为单位向量
-        const [x, y, z] = axis.rawData
-        const c = Math.cos(angle)
-        const s = Math.sin(angle)
+    // 绕任意轴旋转，axis为旋转轴的单位向量
+    rotate(params: {
+        axis: ColVector3D,
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+        params.axis = params.axis.normalize() // axis化为单位向量
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
+        const [x, y, z] = params.axis.rawData
+        const c = Math.cos(params.angle)
+        const s = Math.sin(params.angle)
         const t = 1 - c
         const matrix = new Matrix(new NumberArray2D([4, 4], [
             t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
@@ -203,32 +295,52 @@ export class Transform { // 变换
             t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
             0, 0, 0, 1,
         ], true))
-        this.rotateMatrix = matrix.multiply(this.rotateMatrix)
-        this.isMatrixLatest = false
+
+        if (params.mode === TransformMode.Local) {
+            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
         return this
     }
 
-    rotateAt(axis: ColVector, point: Point, angle: number) { // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点
-        if (point.dimension[0] !== 3) throw new Error("旋转轴上的点必须是3维点");
-        if (!this.isSubMatrixLatest) this.updateMatrix();
+    // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点
+    rotateAt(params: {
+        axis: ColVector3D,
+        point: Point3D,
+        angle: number,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
 
-        this.rotateMatrix.m03 -= point.x
-        this.rotateMatrix.m13 -= point.y
-        this.rotateMatrix.m23 -= point.z
+        if (params.mode === TransformMode.Local) {
+            this.rotateMatrix.col3 = this.rotateMatrix.col3.subtract(params.point)
+            this.rotate(params)
+            this.rotateMatrix.col3 = this.rotateMatrix.col3.add(params.point)
 
-        this.rotate(axis, angle)
+            const diffTranslate = this.rotateMatrix.col(3)
+            this.rotateMatrix.col3 = new ColVector([0, 0, 0, 1])
 
-        this.rotateMatrix.m03 += point.x
-        this.rotateMatrix.m13 += point.y
-        this.rotateMatrix.m23 += point.z
+            this.translate({
+                vector: diffTranslate,
+            })
+        } else {
+            this.translate({
+                vector: params.point.getNegate() as ColVector3D,
+            })
+            this.rotate(params)
+            this.translate({
+                vector: params.point,
+            })
+        }
 
-        const diffTranslate = this.rotateMatrix.col(3)
-
-        this.rotateMatrix.m03 = 0
-        this.rotateMatrix.m13 = 0
-        this.rotateMatrix.m23 = 0
-
-        this.translate(diffTranslate.m0, diffTranslate.m1, diffTranslate.m2)
 
         return this
     }
@@ -300,7 +412,7 @@ export class Transform { // 变换
         }
     }
 
-    decompose3DWithEulerZXY() { // 分解出平移、欧拉角（ZXY序）、缩放的三维值
+    decompose3DWithEulerZXY() { // 分解出平移、欧拉角（ZXY序）、缩放、斜切的三维值
         return {
             translate: this.decompose3DTranslate(),
             rotate: this.decomposeEulerZXY(),
@@ -344,6 +456,30 @@ export class Transform { // 变换
         this.translateMatrix = Matrix.buildIdentity(4)
         this.isMatrixLatest = false
         return this
+    }
+
+    makeFromRotateMatrix() { // 根据rotateMatrix构建新的Transform
+        return new Transform({
+            matrix: this.rotateMatrix.clone(),
+        })
+    }
+
+    makeFromTranslateMatrix() { // 根据translateMatrix构建新的Transform
+        return new Transform({
+            matrix: this.translateMatrix.clone(),
+        })
+    }
+
+    makeFromSkewMatrix() { // 根据skewMatrix构建新的Transform
+        return new Transform({
+            matrix: this.skewMatrix.clone(),
+        })
+    }
+
+    makeFromScaleMatrix() { // 根据scaleMatrix构建新的Transform
+        return new Transform({
+            matrix: this.scaleMatrix.clone(),
+        })
     }
 
     toString() {

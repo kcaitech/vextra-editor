@@ -1,6 +1,6 @@
 import {Color, Shadow,} from "@kcdesign/data"
-import {Transform3D, TransformMode, TransformParams} from "./transform_3d"
-import {ColVector, Matrix} from "./matrix"
+import {Transform} from "./transform"
+import {ColVector3D, Matrix, Point3D} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 type RectBox = { // 矩形包围盒
@@ -10,21 +10,21 @@ type RectBox = { // 矩形包围盒
     h: number, // 高
 }
 
-export function getRectBox(x: number, y: number, w: number, h: number, transform: Transform3D): RectBox { // 获取一个矩形的包围盒
+export function getRectBox(x: number, y: number, w: number, h: number, transform: Transform): RectBox { // 获取一个矩形的包围盒
     if (!transform.hasRotation()) return {
         lt: {x: x, y: y},
         rb: {x: x + w, y: y + h},
         w: w,
         h: h,
     };
-    transform = transform.decomposeRotateMatrix()
+    transform = transform.makeFromRotateMatrix()
     // 矩形中心为原点的情况下，矩形的四个顶点坐标
-    const points = Matrix.FromCols([
-        new ColVector([-w / 2, -h / 2, 0]), // 左上
-        new ColVector([w / 2, -h / 2, 0]), // 右上
-        new ColVector([w / 2, h / 2, 0]), // 右下
-        new ColVector([-w / 2, h / 2, 0]), // 左下
-    ])
+    const points = [
+        new ColVector3D([-w / 2, -h / 2, 0]), // 左上
+        new ColVector3D([w / 2, -h / 2, 0]), // 右上
+        new ColVector3D([w / 2, h / 2, 0]), // 右下
+        new ColVector3D([-w / 2, h / 2, 0]), // 左下
+    ]
     // 变换后的四个顶点坐标
     const newPoints = transform.transform(points)
     // 右下角坐标
@@ -66,7 +66,7 @@ export function getAllFunctionCallFromString(content: string): FunctionCall[] {
         if (!match) break;
         result.push([match[1], match[2]])
     }
-    return result
+    return result.reverse()
 }
 
 // 获取style属性中的所有key:value
@@ -80,16 +80,9 @@ export function getAllStyleFromString(content: string) {
     return result
 }
 
-export function parseTransform(transformContent: string, transformParams?: TransformParams & {
-    diffX?: number,
-    diffY?: number,
-}) {
-    if (!transformParams) transformParams = {
-        transformMode: TransformMode.Local,
-    };
-
+export function parseTransform(transformContent: string) {
     const functionCalls = getAllFunctionCallFromString(transformContent)
-    const transform = new Transform3D()
+    const transform = new Transform()
 
     for (const [name, args] of functionCalls) {
         const argList = args.split(/,|\s+/).filter(arg => arg && arg.trim()) // 分隔符为逗号或空格
@@ -115,33 +108,35 @@ export function parseTransform(transformContent: string, transformParams?: Trans
                 0, 0, 1, 0,
                 0, 0, 0, 1,
             ], true))
-            transform.addTransform(new Transform3D({matrix: matrix}))
+            transform.addTransform(new Transform({matrix: matrix}))
             // console.log("不支持的变换函数", name, args)
         } else if (name.startsWith("rotate")) {
             if (name === "rotate") {
-                if (numArgList.length === 1) transform.rotateZ(numArgList[0], transformParams);
-                else if (numArgList.length === 3) {
-                    let diffX = transformParams.diffX || 0
-                    let diffY = transformParams.diffY || 0
-                    if (transformParams.transformMode === TransformMode.LocalSpecialOrigin) {
-                        diffX -= transformParams.origin?.x || 0
-                        diffY -= transformParams.origin?.y || 0
-                    }
-                    transform.rotateAt(new ColVector([0, 0, 1]), new ColVector([numArgList[1] - diffX, numArgList[2] - diffY, 0]), numArgList[0])
+                if (numArgList.length === 1) {
+                    transform.rotateZ({angle: numArgList[0]})
+                } else if (numArgList.length === 3) {
+                    transform.rotateAt({
+                        axis: new ColVector3D([0, 0, 1]),
+                        point: new Point3D([numArgList[1], numArgList[2], 0]),
+                        angle: numArgList[0],
+                    })
                 }
             } else if (name === "rotateX") {
-                transform.rotateX(numArgList[0], transformParams)
+                transform.rotateX({angle: numArgList[0]})
             } else if (name === "rotateY") {
-                transform.rotateY(numArgList[0], transformParams)
+                transform.rotateY({angle: numArgList[0]})
             } else if (name === "rotateZ") {
-                transform.rotateZ(numArgList[0], transformParams)
+                transform.rotateZ({angle: numArgList[0]})
             } else if (name === "rotate3d") {
-                transform.rotate(new ColVector([numArgList[0], numArgList[1], numArgList[2]]), numArgList[3], transformParams)
+                transform.rotate({
+                    axis: new ColVector3D([numArgList[0], numArgList[1], numArgList[2]]),
+                    angle: numArgList[3],
+                })
             }
         } else if (name === "scale") {
-            transform.scale(numArgList[0], numArgList[1], numArgList[2] || 1, transformParams)
+            transform.scale({vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 1])})
         } else if (name === "translate") {
-            transform.translate(numArgList[0], numArgList[1], numArgList[2] || 0)
+            transform.translate({vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 0])})
         } else {
             console.log("不支持的变换函数", name, args)
         }
@@ -183,7 +178,7 @@ export type RadialGradient = {
     cy: number,
     r: number,
     opacity: number,
-    transform: Transform3D,
+    transform: Transform,
     stops: GradientStop[],
     scales: number[],
 }
