@@ -14,6 +14,7 @@ import { add_move_and_up_for_document, remove_move_and_up_from_document } from "
 import ClipMode from "../../Controller/ClipMode.vue";
 import PenMode from "@/components/Document/Selection/Controller/PathEdit/PenMode.vue";
 import { scout_once } from "@/utils/common";
+import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
@@ -188,6 +189,8 @@ onUnmounted(() => {
     props.context.tool.setAction(Action.AutoV);
     props.context.path.reset();
     window.removeEventListener('blur', window_blur);
+
+    new PathEditor(props.context).sortSegment();
 })
 </script>
 <template>
