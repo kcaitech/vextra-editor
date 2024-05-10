@@ -150,6 +150,8 @@ function passiveUpdate() {
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
+
+    buildMap();
 }
 
 /**
