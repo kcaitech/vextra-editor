@@ -190,15 +190,35 @@ const handleNameInput = () => {
 const selectScale = () => {
     if (scaleInput.value) {
         shapes.value = [...props.context.selection.selectedShapes];
-        scaleInput.value.select();
     }
 }
 
 const selectName = () => {
     if (nameInput.value) {
         shapes.value = [...props.context.selection.selectedShapes];
-        nameInput.value.select();
     }
+}
+
+const is_size_select = ref(false);
+function clickSize(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_size_select.value) return;
+    el.select();
+    is_size_select.value = true;
+}
+
+const is_presuffix_select = ref(false);
+function clickPresuffix(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_presuffix_select.value) return;
+    el.select();
+    is_presuffix_select.value = true;
 }
 
 const deleteItem = () => {
@@ -225,25 +245,25 @@ watchEffect(() => {
     <div class="args_container">
         <div class="format">
             <div class="cutout_size_input cutout_export_input" ref="cutout_size_input">
-                <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale"
-                       @input="handleScaleInput" @keyup="scaleInputBlur">
+                <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale" @click="clickSize"
+                    @input="handleScaleInput" @keyup="scaleInputBlur" @blur="is_size_select = false">
                 <div class="export_down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems" :width="60"
-                            :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize">
+                    :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize">
                 </ArgsSelect>
             </div>
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
                 <input class="presuffix_input" :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput"
-                       @focus="selectName" :value="name"
-                       @change="changeName" @input="handleNameInput" @keyup="nameInputBlur">
+                    @focus="selectName" :value="name" @change="changeName" @input="handleNameInput"
+                    @click="clickPresuffix" @keyup="nameInputBlur" @blur="is_presuffix_select = false">
                 <div class="export_down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems" :width="70"
-                            :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false"
-                            @select="selectPerfix"></ArgsSelect>
+                    :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" @select="selectPerfix">
+                </ArgsSelect>
             </div>
             <div class="cutout_format_input cutout_export_input" ref="cutout_format_input">
                 <div class="span" @click.stop="showCutoutFormatMenu">{{ formatValue }}</div>
@@ -251,8 +271,7 @@ watchEffect(() => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems" :width="60"
-                            :selectValue="formatValue" @close="showCutoutFormat = false"
-                            @select="selectFormat"></ArgsSelect>
+                    :selectValue="formatValue" @close="showCutoutFormat = false" @select="selectFormat"></ArgsSelect>
             </div>
         </div>
         <div class="delete" @click="deleteItem">
@@ -377,7 +396,7 @@ watchEffect(() => {
             align-items: center;
             justify-content: center;
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
                 color: #666666;
@@ -393,7 +412,7 @@ watchEffect(() => {
         height: 28px;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -406,4 +425,5 @@ watchEffect(() => {
 
 .opacity {
     opacity: 0.3;
-}</style>
+}
+</style>

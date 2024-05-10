@@ -16,9 +16,6 @@ const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 const selectValue = () => {
     isActived.value = true
-    if (input.value) {
-        input.value.select()
-    }
 }
 
 const onChange = () => {
@@ -89,6 +86,19 @@ const windowBlur = () => {
 
 function blur2() {
     isActived.value = false
+    is_select.value = false;
+}
+
+const is_select = ref(false);
+function click() {
+    if (!input.value) return;
+    const el = input.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
 }
 
 const getinput_value = () => {
@@ -105,7 +115,7 @@ const getinput_value = () => {
         <div class="icon" :class="{ cursor_pointer: getinput_value() }" ref="icon" @mousedown="onMouseDown">
             <svg-icon :icon-class="`border-${ticon}`"></svg-icon>
         </div>
-        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2">
+        <input ref="input" :value="props.shadowV" @focus="selectValue" @change="onChange" @blur="blur2" @click="click">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);" :style="{ cursor: 'pointer' }"
                 @click="augment"></svg-icon>

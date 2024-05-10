@@ -58,6 +58,7 @@ const handleShow = (val: SelectItem) => {
 
 function change(v: string) {
     emits("change", v);
+    input_v.value?.blur();
 }
 
 const input_v = ref();
@@ -77,7 +78,16 @@ watch(() => props.warn, (v) => {
         input_v.value.focus();
     }
 })
-
+const is_select = ref(false);
+function click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
+}
 const get_text = () => {
     if (props.default_value && props.default_value instanceof Text) {
         textDefaultValue.value = props.default_value.getText(0, Infinity);
@@ -99,7 +109,7 @@ onMounted(() => {
         </div>
         <div v-if="props.addType === VariableType.Text">
             <input ref="input_v" type="text" v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"
-                @keydown.stop="keysumbit" @change="change(textDefaultValue)" @input="fixed = true" />
+                @keydown.stop="keysumbit" @change="change(textDefaultValue)" @input="fixed = true" @click="click" @blur="is_select = false" />
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text && textDefaultValue.trim().length < 1">

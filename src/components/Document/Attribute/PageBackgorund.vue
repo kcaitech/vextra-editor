@@ -41,7 +41,7 @@ const _colorChangeFromPicker = debounce((c: Color) => {
     editor.setBackground(c);
 }, 100)
 const colorChangeFromPicker = (c: Color) => {
-    _colorChangeFromPicker(c).catch((e) => {});
+    _colorChangeFromPicker(c).catch((e) => { });
 };
 function change_c(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -92,11 +92,25 @@ function init_value(c: Color) {
     clr_v.value = toHex(c.red, c.green, c.blue);
     alpha_v.value = c.alpha * 100;
 }
-function clr_click() {
-    if (clr_ele.value) clr_ele.value.select();
+const is_color_select = ref(false);
+function clr_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    el.select();
+    is_color_select.value = true;
 }
-function alpha_click() {
-    if (alpha_ele.value) alpha_ele.value.select();
+const is_alpha_select = ref(false);
+function alpha_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
 }
 const stopWatch = watch(() => props.page, (cur) => {
     const f = cur.data.backgroundColor;
@@ -121,11 +135,12 @@ onUnmounted(() => {
             <ColorPicker class="color" :color="(background_color as Color)" :context="props.context" :late="-26"
                 :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
             </ColorPicker>
-            <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele" @click="clr_click"
-                :spellcheck="false">
-<!--            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"-->
-<!--                @click="alpha_click" :step="1" ref="alpha_ele">-->
-            <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha"  @click="alpha_click" ref="alpha_ele">
+            <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
+                @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
+            <!--            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"-->
+            <!--                @click="alpha_click" :step="1" ref="alpha_ele">-->
+            <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
+                @click="alpha_click" ref="alpha_ele">
         </div>
     </div>
 </template>
