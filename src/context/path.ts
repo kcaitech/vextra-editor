@@ -35,6 +35,7 @@ export class Path extends WatchableObject {
     private m_bridging_events: { segment: number, index: number, event: MouseEvent } | undefined = undefined;
 
     private contacting: boolean = false;
+    private m_last_mouseevent: MouseEvent | undefined;
 
     private bridgeParams: {
         handler: PathEditor;
@@ -46,6 +47,14 @@ export class Path extends WatchableObject {
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    saveEvent(e?: MouseEvent) {
+        this.m_last_mouseevent = e;
+    }
+
+    get lastEvent() {
+        return this.m_last_mouseevent;
     }
 
     get selectedPoints() {

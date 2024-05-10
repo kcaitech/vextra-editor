@@ -483,7 +483,8 @@ function matrix_watcher(t: number) {
     }
 }
 
-function documentMove(e: MouseEvent) {  // 鼠标抬起的时候为什么也会触发这里？？？
+function documentMove(e: MouseEvent) {
+    props.context.path.saveEvent(e);
     const __client = props.context.workspace.getContentXY(e);
 
     let delX = Infinity;
@@ -742,9 +743,20 @@ onMounted(() => {
     update();
 
     window.addEventListener('blur', window_blur);
-    props.context.path.watch(path_watcher);
+    const path = props.context.path;
+    path.watch(path_watcher);
 
     document.addEventListener('mousemove', documentMove);
+
+
+    if (path.isContacting && path.lastEvent) {
+        preXY.value = props.context.workspace.getContentXY(path.lastEvent);
+
+        modifyLivingPath();
+
+        preparePointVisible.value = true;
+    }
+
 })
 
 onUnmounted(() => {
@@ -756,6 +768,8 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 
     document.removeEventListener('mousemove', documentMove);
+
+    props.context.assist.notify(Asssit.CLEAR);
 })
 </script>
 <template>
