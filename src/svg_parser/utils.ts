@@ -1,7 +1,7 @@
 import {Color, Shadow,} from "@kcdesign/data"
-import {Transform} from "./transform"
-import {ColVector3D, Matrix, Point3D} from "./matrix"
-import {NumberArray2D} from "./number_array"
+import {Transform} from "@/transform_math/transform"
+import {ColVector3D, Matrix, Point3D} from "@/transform_math/matrix"
+import {NumberArray2D} from "@/transform_math/number_array"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标

@@ -34,7 +34,7 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
-import { parse as SVGParse } from "@/utils/svg_parser";
+import { parse as SVGParse } from "@/svg_parser";
 
 interface SystemClipboardItem {
     type: ShapeType

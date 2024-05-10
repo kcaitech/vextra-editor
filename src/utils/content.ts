@@ -35,7 +35,7 @@ import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shape
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
-import * as parse_svg from "@/utils/svg_parser";
+import * as parse_svg from "@/svg_parser";
 import { sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 
