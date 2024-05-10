@@ -724,7 +724,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
     }
 
     livingPathVisible.value = true;
-
+    props.context.assist.notify(Asssit.CLEAR);
     e.stopPropagation();
 }
 
