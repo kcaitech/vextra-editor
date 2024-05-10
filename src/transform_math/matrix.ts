@@ -511,6 +511,31 @@ export class Matrix { // 矩阵
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
         const result = new NumberArray2D([m0, n1])
+
+        const isSquareL = this.isSquare, isSquareR = matrix.isSquare
+        const isDiagonalL = this.isDiagonal, isDiagonalR = matrix.isDiagonal
+
+        if (isSquareL && isSquareR && isDiagonalL && isDiagonalR) { // 对角矩阵相乘
+            for (let i = 0; i < m0; i++) {
+                result.set([i, i], this.get([i, i]) * matrix.get([i, i]))
+            }
+            return result
+        } else if (isDiagonalL) { // 左矩阵为对角矩阵
+            for (let i = 0; i < m0; i++) {
+                for (let j = 0; j < n1; j++) {
+                    result.set([i, j], this.get([i, i]) * matrix.get([i, j]))
+                }
+            }
+            return result
+        } else if (isDiagonalR) { // 右矩阵为对角矩阵
+            for (let i = 0; i < m0; i++) {
+                for (let j = 0; j < n1; j++) {
+                    result.set([i, j], matrix.get([j, j]) * this.get([i, j]))
+                }
+            }
+            return result
+        }
+
         for (let i = 0; i < m0; i++) {
             for (let j = 0; j < n1; j++) {
                 let sum = 0
@@ -590,6 +615,16 @@ export class Matrix { // 矩阵
     getInverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
         if (!this.isSquare) throw new Error("矩阵不是方阵，无逆矩阵");
         const m = this.size[0] // 矩阵的阶数
+
+        if (this.isDiagonal) { // 对角矩阵的逆矩阵
+            const result = new NumberArray2D([m, m])
+            for (let i = 0; i < m; i++) {
+                const value = this.get([i, i])
+                if (isZero(value)) return; // 对角线上有0，矩阵不可逆
+                result.set([i, i], 1 / value)
+            }
+            return new Matrix(result)
+        }
 
         if (m === 3) {
             const det = this.m00 * this.m11 * this.m22 + this.m01 * this.m12 * this.m20 + this.m02 * this.m10 * this.m21
@@ -698,9 +733,13 @@ export class Matrix { // 矩阵
 
     determinant(): number { // 求矩阵的行列式（递归降阶法）
         if (!this.isSquare) throw new Error("矩阵不是方阵，无行列式");
+
         const [m, n] = this.size // 矩阵的阶数
         if (m === 1) return this.m00; // 1阶矩阵的行列式
         if (m === 2) return this.m00 * this.m11 - this.m01 * this.m10; // 2阶矩阵的行列式
+        if (m === 3) return this.m00 * this.m11 * this.m22 + this.m01 * this.m12 * this.m20 + this.m02 * this.m10 * this.m21
+            - this.m02 * this.m11 * this.m20 - this.m01 * this.m10 * this.m22 - this.m00 * this.m12 * this.m21; // 3阶矩阵的行列式
+
         let result = 0
         for (let i = 0; i < n; i++) {
             const factor = this.get([0, i]) // 第0行第i列的元素
@@ -710,6 +749,7 @@ export class Matrix { // 矩阵
             const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
             result += (i % 2 === 0 ? 1 : -1) * factor * subDeterminant // 递归计算行列式
         }
+
         return result
     }
 

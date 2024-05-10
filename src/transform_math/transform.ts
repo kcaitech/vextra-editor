@@ -1,4 +1,4 @@
-import {ColVector, ColVector2D, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
+import {ColVector, ColVector2D, ColVector3D, isZero, Matrix, Point3D, Vector} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
@@ -27,6 +27,16 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
 
 export class RotateMatrix extends Matrix { // 旋转矩阵
     getInverse(): Matrix | undefined {
+        if (isZero(this.m20) && isZero(this.m21) && isZero(this.m02) && isZero(this.m12)) { // 退化为二维旋转矩阵
+            const det = this.m00 * this.m11 - this.m01 * this.m10
+            if (isZero(det)) return; // 行列式为0，矩阵不可逆
+            return new Matrix(new NumberArray2D([4, 4], [
+                this.m11 / det, -this.m01 / det, 0, 0,
+                -this.m10 / det, this.m00 / det, 0, 0,
+                0, 0, 1 / this.m22, 0,
+                0, 0, 0, 1,
+            ], true))
+        }
         return super.getInverse()
     }
 
@@ -51,8 +61,9 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
     }
 
     multiply(matrix: Matrix) {
-        return matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
-            .add(matrix.row0.multiplyByNumber(this.m10), [1, 0])
+        const result = matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
+        if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
+        return result
     }
 }
 
