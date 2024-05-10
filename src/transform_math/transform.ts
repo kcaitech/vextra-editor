@@ -46,10 +46,11 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
     }
 
     multiply(matrix: Matrix) {
+        // 分块矩阵相乘
         const R0 = this.subMatrix([3, 3])
         matrix.multiplyLeftSubMatrix(R0)
             .multiplyLeftSubMatrix(R0, [3, 1], [0, 3])
-        return super.multiply(matrix)
+        return matrix
     }
 
     static FromMatrix(matrix: Matrix) {
