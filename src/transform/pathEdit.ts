@@ -810,6 +810,13 @@ export class PathEditor extends TransformHandler {
 
         let addRes = false;
         if (index > -1 && segment > -1) {
+            const __segment = (this.shape as PathShapeView).segments[segment];
+            if (!__segment) {
+                return false;
+            }
+
+            index = __segment.points.length;
+
             addRes = (this.asyncApiCaller as PathModifier)
                 .addPointForPen(this.shape, segment, index, xy);
 

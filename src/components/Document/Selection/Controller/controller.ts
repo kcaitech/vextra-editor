@@ -467,23 +467,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         initController();
         workspace.contentEdit(false);
 
-        context.esctask.save('select-shape', exit);
-
-        if (workspace.is_path_edit_mode) {
-            context.esctask.save('path-edit', () => {
-                const achieve = workspace.is_path_edit_mode;
-                workspace.setPathEditMode(false);
-                return achieve;
-            });
-        }
-
-        const path = context.path;
-        if (context.tool.action === Action.Pen2 && path.isContacting) {
-            context.esctask.save('contact-status', () => {
-                const achieve = path.isContacting;
-                path.setContactStatus(false);
-                return achieve;
-            });
+        if (!context.esctask.has('select-shape')) {
+            context.esctask.save('select-shape', exit);
         }
     }
 

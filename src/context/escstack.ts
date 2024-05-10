@@ -22,6 +22,10 @@ export class EscStack extends WatchableObject {
         this.m_stack_map.delete(key);
     }
 
+    has(key: string) {
+        return this.m_stack_map.has(key);
+    }
+
     execute() {
         const queue = Array.from(this.m_stack_map.values());
         for (let i = queue.length - 1; i > -1; i--) {
