@@ -105,7 +105,7 @@ export class Transform { // 变换
 
     transform(cols: Matrix | ColVector3D[] | Point3D[]) { // 对多个三维列向量（三维点）进行变换
         if (Array.isArray(cols)) cols = Matrix.FromCols(cols);
-        const [m, n] = cols.dimension
+        const [m, n] = cols.size
         if (m !== 3) throw new Error("点必须是3维列向量");
         if (!this.isMatrixLatest) this.updateMatrix();
         return this.matrix.clone().multiply(cols.clone().insertRows(new NumberArray2D([1, n], 1))).resize(3, n)

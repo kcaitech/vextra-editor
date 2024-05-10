@@ -1,13 +1,13 @@
 export class NumberArray { // 任意维数的Number数组
     dimension: number // 维数
-    dimensionLength: number[] // 各维度的长度
+    sizeForDimension: number[] // 各维度的大小
     data: number[]
 
     // skipFillValueCheck: 跳过填充值检查，用于在填充值为数组时不检查数组的元素类型
     constructor(dimensionLength: number[], fillValue: number | number[] = 0, skipFillValueCheck = false) {
         if (dimensionLength.findIndex(item => item < 0) !== -1) throw new Error("维数不能为负数");
         this.dimension = dimensionLength.length
-        this.dimensionLength = [...dimensionLength]
+        this.sizeForDimension = [...dimensionLength]
         const length = dimensionLength.reduce((a, b) => a * b, 1)
         const isFillValueArray = Array.isArray(fillValue)
         if (isFillValueArray) {
@@ -25,8 +25,8 @@ export class NumberArray { // 任意维数的Number数组
         let i = 0
         for (let j = 0; j < indexes.length; j++) {
             const index = indexes[j]
-            if (index < 0 || index >= this.dimensionLength[j]) throw new Error("索引越界");
-            i = i * this.dimensionLength[j] + index
+            if (index < 0 || index >= this.sizeForDimension[j]) throw new Error("索引越界");
+            i = i * this.sizeForDimension[j] + index
         }
         return i
     }
@@ -40,7 +40,7 @@ export class NumberArray { // 任意维数的Number数组
     }
 
     clone() {
-        const array = new NumberArray(this.dimensionLength)
+        const array = new NumberArray(this.sizeForDimension)
         array.data = this.data.slice()
         return array
     }
@@ -51,7 +51,7 @@ export class NumberArray { // 任意维数的Number数组
         if (length < this.data.length) this.data = this.data.slice(0, length);
         else if (length > this.data.length) this.data = this.data.concat(new Array(length - this.data.length).fill(fillValue));
         this.dimension = dimensionLength.length
-        this.dimensionLength = [...dimensionLength]
+        this.sizeForDimension = [...dimensionLength]
         return this
     }
 
@@ -61,7 +61,7 @@ export class NumberArray { // 任意维数的Number数组
         let indent = "\n"
         if (indexes.length > 0) indent += " ".repeat(indexes.length * 2);
         return (indexes.length === 0 ? "" : indent) + "[" // 首行不换行
-            + Array.from({length: this.dimensionLength[indexes.length]}, (_, i) => this._toString([...indexes, i]))
+            + Array.from({length: this.sizeForDimension[indexes.length]}, (_, i) => this._toString([...indexes, i]))
                 .join("," + (indexes.length === this.dimension - 1 ? " " : "")) // 最后一维的元素分隔符额外加一个空格
             + (indexes.length === this.dimension - 1 ? "" : ",") // 除最后一维外，每个维度所有元素的末尾加一个逗号
             + (indexes.length === this.dimension - 1 ? "" : indent) + "]" // 除最后一维外，每个维度所有元素末尾的']'前要加换行缩进
@@ -80,18 +80,18 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
 
     clone() {
         const newObj = super.clone()
-        return new NumberArray2D(newObj.dimensionLength as [number, number], newObj.data, true)
+        return new NumberArray2D(newObj.sizeForDimension as [number, number], newObj.data, true)
     }
 
     getIndex(indexes: number[]): number {
         if (indexes.length !== 2) throw new Error("维数不匹配");
-        return indexes[0] * this.dimensionLength[1] + indexes[1]
+        return indexes[0] * this.sizeForDimension[1] + indexes[1]
     }
 
     static FromNumberArray(numberArray: NumberArray) {
         if (numberArray instanceof NumberArray2D) return numberArray;
         if (numberArray.dimension !== 2) throw new Error("numberArray必须是二维数组");
-        return new NumberArray2D(numberArray.dimensionLength as [number, number], numberArray.data, true)
+        return new NumberArray2D(numberArray.sizeForDimension as [number, number], numberArray.data, true)
     }
 
     static BuildIdentity(m: number, n: number = m) { // 构建m*n数组，n默认为m，主元为1，其余元素为0
@@ -124,7 +124,7 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
 
     rows(m0: number, count?: number) { // 从第m0行开始，获取count行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        const [m, n] = this.dimensionLength
+        const [m, n] = this.sizeForDimension
         if (count === undefined) count = m - m0;
         if (m0 < 0 || m0 + count > m) throw new Error("行索引越界");
         if (count < 0) throw new Error("行数范围错误");
@@ -137,7 +137,7 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
 
     cols(n0: number, count?: number) { // 从第n0列开始，获取count列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        const [m, n] = this.dimensionLength
+        const [m, n] = this.sizeForDimension
         if (count === undefined) count = n - n0;
         if (n0 < 0 || n0 + count > n) throw new Error("列索引越界");
         if (count < 0) throw new Error("列数范围错误");
@@ -153,18 +153,18 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
     insertRows(rowsData: number[] | NumberArray2D, row?: number, skipFillValueCheck = false) { // 往NumberArray中插入多行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         if (rowsData instanceof NumberArray2D) rowsData = rowsData.data;
-        if (rowsData.length % this.dimensionLength[1] !== 0) throw new Error("行数据长度不匹配");
-        if (row === undefined) row = this.dimensionLength[0];
-        if (row < 0 || row > this.dimensionLength[0]) throw new Error("行索引越界");
+        if (rowsData.length % this.sizeForDimension[1] !== 0) throw new Error("行数据长度不匹配");
+        if (row === undefined) row = this.sizeForDimension[0];
+        if (row < 0 || row > this.sizeForDimension[0]) throw new Error("行索引越界");
         if (!skipFillValueCheck && rowsData.findIndex(item => typeof item !== "number") !== -1) throw new Error("填充数组元素类型不匹配");
-        this.data.splice(row * this.dimensionLength[1], 0, ...rowsData)
-        this.dimensionLength[0] += rowsData.length / this.dimensionLength[1]
+        this.data.splice(row * this.sizeForDimension[1], 0, ...rowsData)
+        this.sizeForDimension[0] += rowsData.length / this.sizeForDimension[1]
         return this
     }
 
     insertCols(colsData: number[] | NumberArray2D, col?: number, skipFillValueCheck = false) { // 往NumberArray中插入多列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        const [m, n] = this.dimensionLength
+        const [m, n] = this.sizeForDimension
         if (!(colsData instanceof NumberArray2D)) {
             if (colsData.length % m !== 0) throw new Error("列数据长度不匹配");
             colsData = new NumberArray2D([m, colsData.length / m], colsData, skipFillValueCheck);
@@ -172,31 +172,31 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         if (col === undefined) col = n;
         if (col < 0 || col > n) throw new Error("列索引越界");
 
-        for (let i = colsData.dimensionLength[1] - 1, l = 0; i >= 0; i--, l++) {
+        for (let i = colsData.sizeForDimension[1] - 1, l = 0; i >= 0; i--, l++) {
             for (let j = m - 1; j >= 0; j--) {
                 this.data.splice(j * (n + l) + col, 0, colsData.get([j, i]))
             }
         }
-        this.dimensionLength[1] += colsData.dimensionLength[1]
+        this.sizeForDimension[1] += colsData.sizeForDimension[1]
         return this
     }
 
     deleteRows(row: number, count = 1) { // 删除NumberArray的多行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        if (row < 0 || row + count > this.dimensionLength[0]) throw new Error("行索引越界");
-        this.data.splice(row * this.dimensionLength[1], count * this.dimensionLength[1])
-        this.dimensionLength[0] -= count
+        if (row < 0 || row + count > this.sizeForDimension[0]) throw new Error("行索引越界");
+        this.data.splice(row * this.sizeForDimension[1], count * this.sizeForDimension[1])
+        this.sizeForDimension[0] -= count
         return this
     }
 
     deleteCols(col: number, count = 1) { // 删除NumberArray的多列
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
-        const [m, n] = this.dimensionLength
+        const [m, n] = this.sizeForDimension
         if (col < 0 || col + count > n) throw new Error("列索引越界");
         for (let i = m - 1; i >= 0; i--) {
             this.data.splice(i * n + col, count)
         }
-        this.dimensionLength[1] -= count
+        this.sizeForDimension[1] -= count
         return this
     }
 

@@ -160,51 +160,51 @@ export class Matrix { // 矩阵
         this.data.m33 = value
     }
 
-    get dimension() { // 矩阵的阶数
-        return [...this.data.dimensionLength]
+    get size() { // 矩阵的大小
+        return [...this.data.sizeForDimension]
     }
 
     get isSquare() { // 判断是否为方阵
-        return this.data.dimensionLength[0] === this.data.dimensionLength[1]
+        return this.data.sizeForDimension[0] === this.data.sizeForDimension[1]
     }
 
     get isIdentity() { // 判断是否为单位矩阵
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m !== n) return false;
         for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (this.get([i, j]) !== (i === j ? 1 : 0)) return false;
         return true
     }
 
     get isDiagonal() { // 判断是否为对角矩阵
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m !== n) return false;
         for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (i !== j && this.get([i, j]) !== 0) return false;
         return true
     }
 
     get isSymmetric() { // 判断是否为对称矩阵
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m !== n) return false;
         for (let i = 0; i < m; i++) for (let j = i + 1; j < m; j++) if (this.get([i, j]) !== this.get([j, i])) return false;
         return true
     }
 
     get isUpperTriangular() { // 判断是否为上三角矩阵
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m !== n) return false;
         for (let i = 0; i < m; i++) for (let j = 0; j < i; j++) if (this.get([i, j]) !== 0) return false;
         return true
     }
 
     get isLowerTriangular() { // 判断是否为下三角矩阵
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m !== n) return false;
         for (let i = 0; i < m; i++) for (let j = i + 1; j < n; j++) if (this.get([i, j]) !== 0) return false;
         return true
     }
 
     resize(m?: number, n?: number, fillValue: number = 0) { // 调整矩阵的大小
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         if (m === undefined) m = m0;
         if (n === undefined) n = n0;
 
@@ -218,7 +218,7 @@ export class Matrix { // 矩阵
     }
 
     forEach(callback: (value: number, row: number, column: number) => void) { // 遍历（横向优先）
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) callback(this.get([i, j]), i, j);
     }
 
@@ -228,11 +228,11 @@ export class Matrix { // 矩阵
 
     static FromCols(vectors: ColVector[]) { // 从列向量构建矩阵
         const n = vectors.length
-        const m = vectors[0].dimension[0]
+        const m = vectors[0].size[0]
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < n; i++) {
             const vector = vectors[i]
-            if (vector.dimension[0] !== m) throw new Error("列向量的维度不匹配");
+            if (vector.size[0] !== m) throw new Error("列向量的维度不匹配");
             for (let j = 0; j < m; j++) result.set([j, i], vector.get([j, 0]));
         }
         return new Matrix(result)
@@ -240,24 +240,24 @@ export class Matrix { // 矩阵
 
     static FromRows(vectors: RowVector[]) { // 从行向量构建矩阵
         const m = vectors.length
-        const n = vectors[0].dimension[1]
+        const n = vectors[0].size[1]
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < m; i++) {
             const vector = vectors[i]
-            if (vector.dimension[1] !== n) throw new Error("行向量的维度不匹配");
+            if (vector.size[1] !== n) throw new Error("行向量的维度不匹配");
             for (let j = 0; j < n; j++) result.set([i, j], vector.get([0, j]));
         }
         return new Matrix(result)
     }
 
     col(n: number) { // 获取第n列列向量
-        const [_, n0] = this.dimension
+        const [_, n0] = this.size
         if (n < 0 || n >= n0) throw new Error("列数越界");
         return new ColVector(this.data.col(n))
     }
 
     cols(n0: number, count?: number) { // 从第n0列开始，获取count列
-        const [_, n] = this.dimension
+        const [_, n] = this.size
         if (count === undefined) count = n - n0;
         if (n0 < 0 || n0 + count > n) throw new Error("列索引越界");
         if (count < 0) throw new Error("列数范围错误");
@@ -271,18 +271,18 @@ export class Matrix { // 矩阵
     }
 
     toXYZ() { // 列向量转为三维坐标
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (m < 3 || n < 1) throw new Error(`${m + 1}*${n + 1}矩阵不能转为三维坐标`);
         return {x: this.m00, y: this.m10, z: this.m20}
     }
 
     row(m: number) { // 获取第n行行向量
-        if (m < 0 || m >= this.dimension[0]) throw new Error("行数越界");
+        if (m < 0 || m >= this.size[0]) throw new Error("行数越界");
         return new RowVector(this.data.row(m))
     }
 
     rows(m0: number, count?: number) { // 从第m0行开始，获取count行
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         if (count === undefined) count = m - m0;
         if (m0 < 0 || m0 + count > m) throw new Error("行索引越界");
         if (count < 0) throw new Error("行数范围错误");
@@ -298,7 +298,7 @@ export class Matrix { // 矩阵
     subMatrix(start: [number, number], dimension: [number, number]) { // 获取子矩阵
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const [m1, n1] = dimension
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
@@ -311,8 +311,8 @@ export class Matrix { // 矩阵
     setSubMatrix(start: [number, number], matrix: Matrix) { // 设置子矩阵
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
-        const [m1, n1] = matrix.dimension
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
         for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.set([i + startRow, j + startCol], matrix.get([i, j]));
         return this
@@ -401,7 +401,7 @@ export class Matrix { // 矩阵
     }
 
     transpose() { // 转置
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         for (let i = 0; i < m; i++) {
             for (let j = i + 1; j < n; j++) {
                 const temp = this.get([i, j])
@@ -415,7 +415,7 @@ export class Matrix { // 矩阵
     transposeSubMatrix(start: [number, number], dimension: number) { // 子矩阵转置
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const m1 = dimension, n1 = dimension
         if (m1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
@@ -428,23 +428,23 @@ export class Matrix { // 矩阵
     }
 
     add(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相加，将本矩阵的特定区域与matrix相加
-        const [m0, n0] = this.dimension
-        const [m1, n1] = matrix.dimension
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
         if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相加");
         for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.set([row + i, column + j], this.get([row + i, column + j]) + matrix.get([i, j]));
         return this
     }
 
     subtract(matrix: Matrix, row: number = 0, column: number = 0) { // 矩阵相减，将本矩阵的特定区域与matrix相减
-        const [m0, n0] = this.dimension
-        const [m1, n1] = matrix.dimension
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
         if (row + m1 > m0 || column + n1 > n0) throw new Error("矩阵阶数不匹配，无法相减");
         for (let i = 0; i < m1; i++) for (let j = 0; j < n1; j++) this.set([row + i, column + j], this.get([row + i, column + j]) - matrix.get([i, j]));
         return this
     }
 
     multiplyByNumber(number: number) { // 矩阵数乘
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) this.set([i, j], this.get([i, j]) * number);
         return this
     }
@@ -452,7 +452,7 @@ export class Matrix { // 矩阵
     multiplyByNumberSubMatrix(start: [number, number], dimension: [number, number], number: number) { // 子矩阵数乘
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const [m1, n1] = dimension
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
@@ -461,8 +461,8 @@ export class Matrix { // 矩阵
     }
 
     _getMultiply(matrix: Matrix) {
-        const [m0, n0] = this.dimension
-        const [m1, n1] = matrix.dimension
+        const [m0, n0] = this.size
+        const [m1, n1] = matrix.size
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
         const result = new NumberArray2D([m0, n1])
@@ -485,9 +485,9 @@ export class Matrix { // 矩阵
     getMultiplySubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵相乘，右乘matrix，不修改原矩阵，返回新矩阵
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const [m1, n1] = dimension
-        const [_, n2] = matrix.dimension
+        const [_, n2] = matrix.size
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
         if (n2 !== n1) throw new Error("矩阵阶数不匹配，无法相乘");
@@ -502,9 +502,9 @@ export class Matrix { // 矩阵
     multiplySubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵相乘，右乘matrix，会修改原矩阵
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const [m1, n1] = dimension
-        const [_, n2] = matrix.dimension
+        const [_, n2] = matrix.size
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
         if (n2 !== n1) throw new Error("矩阵阶数不匹配，无法相乘");
@@ -528,9 +528,9 @@ export class Matrix { // 矩阵
     multiplyLeftSubMatrix(start: [number, number], dimension: [number, number], matrix: Matrix) { // 子矩阵左乘
         const startRow = start[0]
         const startCol = start[1]
-        const [m0, n0] = this.dimension
+        const [m0, n0] = this.size
         const [m1, n1] = dimension
-        const [m2, _] = matrix.dimension
+        const [m2, _] = matrix.size
         if (m1 < 0 || n1 < 0) throw new Error("子矩阵大小不能为负");
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
         if (m2 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
@@ -541,7 +541,7 @@ export class Matrix { // 矩阵
     getInverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
 
-        const m = this.dimension[0] // 矩阵的阶数
+        const m = this.size[0] // 矩阵的阶数
         const result = NumberArray2D.BuildIdentity(m) // 单位矩阵数组
         const data = this.data.clone() // 原矩阵的副本
 
@@ -593,7 +593,7 @@ export class Matrix { // 矩阵
     }
 
     rank(): number { // 求矩阵的秩（消元法）
-        const [m, n] = this.dimension // 矩阵的阶数
+        const [m, n] = this.size // 矩阵的阶数
         const data = this.data.clone() // 原矩阵的副本
         const maxRank = Math.min(m, n) // 秩的最大值
         let rank = 0 // 秩
@@ -629,7 +629,7 @@ export class Matrix { // 矩阵
 
     determinant(): number | undefined { // 求矩阵的行列式（递归降阶法）
         if (!this.isSquare) return; // 矩阵不是方阵，无行列式
-        const [m, n] = this.dimension // 矩阵的阶数
+        const [m, n] = this.size // 矩阵的阶数
         if (m === 1) return this.m00; // 1阶矩阵的行列式
         if (m === 2) return this.m00 * this.m11 - this.m01 * this.m10; // 2阶矩阵的行列式
         let result = 0
@@ -647,7 +647,7 @@ export class Matrix { // 矩阵
 
     getAdjoint(): Matrix | undefined { // 求矩阵的伴随矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无伴随矩阵
-        const [m, n] = this.dimension // 矩阵的阶数
+        const [m, n] = this.size // 矩阵的阶数
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < m; i++) {
             for (let j = 0; j < n; j++) {
@@ -662,7 +662,7 @@ export class Matrix { // 矩阵
     }
 
     normalize() { // 将矩阵的每一列化为单位向量
-        const [m, n] = this.dimension
+        const [m, n] = this.size
         for (let i = 0; i < n; i++) {
             let sum = 0
             for (let j = 0; j < m; j++) sum += this.get([j, i]) ** 2
@@ -684,7 +684,7 @@ export class Matrix { // 矩阵
 export class Vector extends Matrix { // 向量
     constructor(data: NumberArray2D) {
         super(data)
-        if (data.dimensionLength[0] !== 1 && data.dimensionLength[1] !== 1) throw new Error("向量的大小必须是n * 1或1 * n");
+        if (data.sizeForDimension[0] !== 1 && data.sizeForDimension[1] !== 1) throw new Error("向量的大小必须是n * 1或1 * n");
     }
 
     static FromMatrix(matrix: Matrix, isCol = true) {
@@ -696,8 +696,8 @@ export class Vector extends Matrix { // 向量
     }
 
     dot(vector: Vector) { // 点积
-        const [m, n] = this.dimension
-        const [m1, n1] = vector.dimension
+        const [m, n] = this.size
+        const [m1, n1] = vector.size
         if (m !== m1 || n !== n1) throw new Error("向量维度不匹配");
         let result = 0
         for (let i = 0; i < m; i++) result += this.get([i, 0]) * vector.get([i, 0]);
@@ -705,8 +705,8 @@ export class Vector extends Matrix { // 向量
     }
 
     cross(vector: Vector) { // 叉积
-        const [m, n] = this.dimension
-        const [m1, n1] = vector.dimension
+        const [m, n] = this.size
+        const [m1, n1] = vector.size
         if (m !== m1 || n !== n1) throw new Error("向量维度不匹配");
         const dim = m !== 1 ? m : n
         if (dim !== 2 && dim !== 3) throw new Error("叉积只能用于二维向量或三维向量");
@@ -738,7 +738,7 @@ export class ColVector extends Vector { // 列向量
     constructor(data: number[] | NumberArray2D) {
         if (!(data instanceof NumberArray2D)) data = new NumberArray2D([data.length, 1], data, true);
         super(data)
-        if (data.dimensionLength[1] !== 1) throw new Error("列向量必须是n * 1的矩阵");
+        if (data.sizeForDimension[1] !== 1) throw new Error("列向量必须是n * 1的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -810,7 +810,7 @@ export class ColVector extends Vector { // 列向量
 export class ColVector2D extends ColVector { // 二维列向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[0] !== 2) throw new Error("二维列向量必须是2 * 1的矩阵");
+        if (this.size[0] !== 2) throw new Error("二维列向量必须是2 * 1的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -826,7 +826,7 @@ export class ColVector2D extends ColVector { // 二维列向量
 export class ColVector3D extends ColVector { // 三维列向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[0] !== 3) throw new Error("三维列向量必须是3 * 1的矩阵");
+        if (this.size[0] !== 3) throw new Error("三维列向量必须是3 * 1的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -842,7 +842,7 @@ export class ColVector3D extends ColVector { // 三维列向量
 export class ColVector4D extends ColVector { // 四维列向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[0] !== 4) throw new Error("四维列向量必须是4 * 1的矩阵");
+        if (this.size[0] !== 4) throw new Error("四维列向量必须是4 * 1的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -859,7 +859,7 @@ export class RowVector extends Vector { // 行向量
     constructor(data: number[] | NumberArray2D) {
         if (!(data instanceof NumberArray2D)) data = new NumberArray2D([1, data.length], data, true);
         super(data)
-        if (data.dimensionLength[0] !== 1) throw new Error("行向量必须是1 * n的矩阵");
+        if (data.sizeForDimension[0] !== 1) throw new Error("行向量必须是1 * n的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -931,7 +931,7 @@ export class RowVector extends Vector { // 行向量
 export class RowVector2D extends RowVector { // 二维行向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[1] !== 2) throw new Error("二维行向量必须是1 * 2的矩阵");
+        if (this.size[1] !== 2) throw new Error("二维行向量必须是1 * 2的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -947,7 +947,7 @@ export class RowVector2D extends RowVector { // 二维行向量
 export class RowVector3D extends RowVector { // 三维行向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[1] !== 3) throw new Error("三维行向量必须是1 * 3的矩阵");
+        if (this.size[1] !== 3) throw new Error("三维行向量必须是1 * 3的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -963,7 +963,7 @@ export class RowVector3D extends RowVector { // 三维行向量
 export class RowVector4D extends RowVector { // 四维行向量
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[1] !== 4) throw new Error("四维行向量必须是1 * 4的矩阵");
+        if (this.size[1] !== 4) throw new Error("四维行向量必须是1 * 4的矩阵");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -994,7 +994,7 @@ export class Point extends ColVector { // 点
 export class Point2D extends Point { // 二维点
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[0] !== 2) throw new Error("二维点必须是2 * 1的列向量");
+        if (this.size[0] !== 2) throw new Error("二维点必须是2 * 1的列向量");
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -1010,7 +1010,7 @@ export class Point2D extends Point { // 二维点
 export class Point3D extends Point { // 三维点
     constructor(data: number[] | NumberArray2D) {
         super(data)
-        if (this.dimension[0] !== 3) throw new Error("三维点必须是3 * 1的列向量");
+        if (this.size[0] !== 3) throw new Error("三维点必须是3 * 1的列向量");
     }
 
     static FromMatrix(matrix: Matrix) {
