@@ -12,7 +12,7 @@ export class Matrix { // 矩阵
         return new Matrix(new NumberArray2D([m, n], fillValue))
     }
 
-    static BuildIdentity(m: number, n?: number) { // 构建m*n的单位矩阵
+    static BuildIdentity(m: number, n?: number) { // // 构建m*n矩阵，n默认为m，主元为1，其余元素为0
         return new Matrix(NumberArray2D.BuildIdentity(m, n))
     }
 
