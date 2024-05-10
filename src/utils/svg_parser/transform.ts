@@ -1,4 +1,4 @@
-import {buildIdentityArray, ColVector, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
+import {buildIdentityArray, ColVector, ColVector2D, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
@@ -55,7 +55,7 @@ export class Transform { // 变换
             const zNorm = this.matrix.col(2).norm
             this.scaleMatrix = new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
-                0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
+                0, yNorm / Math.sqrt(tanSkewX**2 + 1), 0, 0,
                 0, 0, zNorm, 0,
                 0, 0, 0, 1,
             ], true))
@@ -76,11 +76,11 @@ export class Transform { // 变换
             scale: Matrix,
         },
     }) {
-        this.matrix = params?.matrix || Matrix.buildIdentity(4)
-        this.translateMatrix = params?.subMatrix?.translate || Matrix.buildIdentity(4)
-        this.rotateMatrix = params?.subMatrix?.rotate || Matrix.buildIdentity(4)
-        this.skewMatrix = params?.subMatrix?.skew || Matrix.buildIdentity(4)
-        this.scaleMatrix = params?.subMatrix?.scale || Matrix.buildIdentity(4)
+        this.matrix = params?.matrix || Matrix.BuildIdentity(4)
+        this.translateMatrix = params?.subMatrix?.translate || Matrix.BuildIdentity(4)
+        this.rotateMatrix = params?.subMatrix?.rotate || Matrix.BuildIdentity(4)
+        this.skewMatrix = params?.subMatrix?.skew || Matrix.BuildIdentity(4)
+        this.scaleMatrix = params?.subMatrix?.scale || Matrix.BuildIdentity(4)
         if (params?.matrix || params?.subMatrix) {
             this.isMatrixLatest = !!params?.matrix
             if (this.isMatrixLatest && hasSkewZ(this.matrix)) throw new Error("矩阵数据错误：matrix存在Z轴斜切");
@@ -106,7 +106,7 @@ export class Transform { // 变换
     transform(cols: Matrix | ColVector3D[] | Point3D[]) { // 对多个三维列向量（三维点）进行变换
         if (Array.isArray(cols)) cols = Matrix.FromCols(cols);
         const [m, n] = cols.dimension
-        if (m !== 3) throw new Error("点必须是3维向量");
+        if (m !== 3) throw new Error("点必须是3维列向量");
         if (!this.isMatrixLatest) this.updateMatrix();
         return this.matrix.clone().multiply(cols.clone().insertRows(new NumberArray2D([1, n], 1))).resize(3, n)
     }
@@ -271,7 +271,7 @@ export class Transform { // 变换
         return this
     }
 
-    // 绕任意轴旋转，axis为旋转轴的单位向量
+    // 绕任意轴旋转，axis为旋转轴
     rotate(params: {
         axis: ColVector3D,
         angle: number,
@@ -289,11 +289,12 @@ export class Transform { // 变换
         const c = Math.cos(params.angle)
         const s = Math.sin(params.angle)
         const t = 1 - c
+        // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
-            t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
-            t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
-            0, 0, 0, 1,
+            1 + t * (x**2 - 1),     z * s + x * y * t,      -y * s + x * z * t,     0,
+            -z * s + x * y * t,     1 + t * (y**2 - 1),     x * s + y * z * t,      0,
+            y * s + x * z * t,      -x * s + y * z * t,     1 + t * (z**2 - 1),     0,
+            0,                      0,                      0,                      1,
         ], true))
 
         if (params.mode === TransformMode.Local) {
@@ -307,7 +308,7 @@ export class Transform { // 变换
         return this
     }
 
-    // 绕任意不过原点的轴旋转，axis为旋转轴的单位向量，point为旋转轴上的一点
+    // 绕任意不过原点的轴旋转，axis为旋转轴，point为旋转轴上的一点
     rotateAt(params: {
         axis: ColVector3D,
         point: Point3D,
@@ -350,6 +351,42 @@ export class Transform { // 变换
         return !this.rotateMatrix.isIdentity
     }
 
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/skew#syntax
+    // 斜切
+    skew(params: {
+        skewAngle: ColVector2D,
+        mode?: TransformMode,
+    }) {
+        if (params.mode === undefined) params.mode = TransformMode.Global;
+
+        if ((params.mode === TransformMode.Local && !this.isSubMatrixLatest)
+            || (params.mode === TransformMode.Global && !this.isMatrixLatest)) {
+            this.updateMatrix()
+        }
+
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, Math.tan(params.skewAngle.x), 0, 0,
+            Math.tan(params.skewAngle.y), 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], true))
+
+        if (params.mode === TransformMode.Local) {
+            this.skewMatrix = matrix.multiply(this.skewMatrix)
+            this.isMatrixLatest = false
+        } else {
+            this.matrix = matrix.multiply(this.matrix)
+            this.isSubMatrixLatest = false
+        }
+
+        return this
+    }
+
+    hasSkew() { // 判断是否有斜切
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return !this.skewMatrix.isIdentity
+    }
+
     addTransform(transform: Transform) { // 叠加另一个变换（先执行本变换，再执行另一个变换）
         if (!transform.isMatrixLatest) transform.updateMatrix();
         if (!this.isMatrixLatest) this.updateMatrix();
@@ -358,44 +395,32 @@ export class Transform { // 变换
         return this
     }
 
-    decompose3DTranslate() { // 分解出平移的三维值
+    decomposeTranslate() { // 分解平移参数
         if (!this.isSubMatrixLatest) this.updateMatrix();
         const matrix = this.isMatrixLatest ? this.matrix : this.translateMatrix
-        return {
-            x: matrix.m03,
-            y: matrix.m13,
-            z: matrix.m23,
-        }
+        return matrix.col3.resize(3, 1)
     }
 
-    decomposeEulerZXY() { // 分解出欧拉角（ZXY序）的三维值
+    decomposeEuler() { // 分解欧拉角（ZXY序）参数
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return Transform.decomposeEulerZXY(this.rotateMatrix)
+        return Transform.DecomposeEuler(this.rotateMatrix)
     }
 
-    decompose3DScale() { // 分解出缩放的三维值
+    decomposeScale() { // 分解缩放参数
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return {
-            x: this.scaleMatrix.m00,
-            y: this.scaleMatrix.m11,
-            z: this.scaleMatrix.m22,
-        }
+        return this.scaleMatrix.col3.resize(3, 1)
     }
 
-    decomposeSkew() { // 分解出斜切的参数
+    decomposeSkew() { // 分解斜切参数
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return {
-            skewX: Math.atan(this.skewMatrix.m01),
-            skewY: Math.atan(this.skewMatrix.m10),
-        }
+        return new ColVector2D([Math.atan(this.skewMatrix.m01), Math.atan(this.skewMatrix.m10)])
     }
 
     // 旋转矩阵转欧拉角
     // 维基百科：https://en.wikipedia.org/wiki/Euler_angles
     // 欧拉角的“序”与实际操作顺序相反，例如ZXY序指的是先绕y轴旋转，再绕x轴旋转，最后绕z轴旋转
     // https://zhuanlan.zhihu.com/p/45404840?from=groupmessage
-    static decomposeEulerZXY(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
-        const m = matrix.data
+    static DecomposeEuler(matrix: Matrix) { // 通过旋转矩阵分解出欧拉角（ZXY序），返回值的单位为弧度
         const x = Math.asin(matrix.m21)
         let y, z
         if (x === Math.PI / 2 || x === -Math.PI / 2) {
@@ -405,55 +430,51 @@ export class Transform { // 变换
             y = Math.atan2(-matrix.m20, matrix.m22)
             z = Math.atan2(-matrix.m01, matrix.m11)
         }
-        return {
-            x: x,
-            y: y,
-            z: z,
-        }
+        return new ColVector3D([x, y, z])
     }
 
-    decompose3DWithEulerZXY() { // 分解出平移、欧拉角（ZXY序）、缩放、斜切的三维值
+    decompose() { // 分解出平移、欧拉角（ZXY序）、缩放、斜切的参数
         return {
-            translate: this.decompose3DTranslate(),
-            rotate: this.decomposeEulerZXY(),
-            scale: this.decompose3DScale(),
+            translate: this.decomposeTranslate(),
+            rotate: this.decomposeEuler(),
+            scale: this.decomposeScale(),
             skew: this.decomposeSkew(),
         }
     }
 
     clearRotation() { // 清除旋转操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.rotateMatrix = Matrix.buildIdentity(4)
+        this.rotateMatrix = Matrix.BuildIdentity(4)
         this.isMatrixLatest = false
         return this
     }
 
     clearSkew() { // 清除斜切操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.skewMatrix = Matrix.buildIdentity(4)
+        this.skewMatrix = Matrix.BuildIdentity(4)
         this.isMatrixLatest = false
         return this
     }
 
     clearScale() { // 清除缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.scaleMatrix = Matrix.buildIdentity(4)
+        this.scaleMatrix = Matrix.BuildIdentity(4)
         this.isMatrixLatest = false
         return this
     }
 
     clearRKS() { // 清除旋转、斜切、缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.rotateMatrix = Matrix.buildIdentity(4)
-        this.skewMatrix = Matrix.buildIdentity(4)
-        this.scaleMatrix = Matrix.buildIdentity(4)
+        this.rotateMatrix = Matrix.BuildIdentity(4)
+        this.skewMatrix = Matrix.BuildIdentity(4)
+        this.scaleMatrix = Matrix.BuildIdentity(4)
         this.isMatrixLatest = false
         return this
     }
 
     clearTranslate() { // 清除平移操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.translateMatrix = Matrix.buildIdentity(4)
+        this.translateMatrix = Matrix.BuildIdentity(4)
         this.isMatrixLatest = false
         return this
     }

@@ -36,11 +36,11 @@ export class Matrix { // 矩阵
         this.data = data
     }
 
-    static build(m: number, n: number, fillValue?: number) { // 构建m*n的矩阵
+    static Build(m: number, n: number, fillValue?: number) { // 构建m*n的矩阵
         return new Matrix(new NumberArray2D([m, n], fillValue))
     }
 
-    static buildIdentity(m: number, n?: number) { // 构建m*n的单位矩阵
+    static BuildIdentity(m: number, n?: number) { // 构建m*n的单位矩阵
         return new Matrix(buildIdentityArray(m, n))
     }
 

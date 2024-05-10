@@ -403,7 +403,7 @@ export class BaseCreator extends BaseTreeNode {
             }
 
             const w = this.attributes.width || 1
-            const scale = this.transform.decompose3DScale()
+            const scale = this.transform.decomposeScale()
             if (scale.x !== 1 || scale.y !== 1) {
                 // 按现有算法逆推，详见kcdesign-data/src/render/shadow.ts:shadowOri[ShadowPosition.Outer]
                 spread = 10000 * (scale.x - 1) * w / (19900 - w)
@@ -453,7 +453,7 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const {translate, rotate} = this.transform.decompose3DWithEulerZXY()
+        const {translate, rotate} = this.transform.decompose()
 
         // 设置xy
         shape.frame.x = translate.x
@@ -486,7 +486,7 @@ export class BaseCreator extends BaseTreeNode {
                 to = new Point2D(fillColor.linearGradient!.x2 / width, fillColor.linearGradient!.y2 / height)
                 colorType = GradientType.Linear
             } else {
-                const translate = fillColor.radialGradient!.transform.decompose3DTranslate()
+                const translate = fillColor.radialGradient!.transform.decomposeTranslate()
                 from = new Point2D(translate.x / width, translate.y / height)
 
                 const toVec = fillColor.radialGradient!.transform.transform(new ColVector3D([1, 0, 0]))
