@@ -812,7 +812,7 @@ export class PathEditor extends TransformHandler {
         if (index > -1 && segment > -1) {
             const __segment = (this.shape as PathShapeView).segments[segment];
             if (!__segment) {
-                return false;
+                return this.addSegmentForPen(down);
             }
 
             index = __segment.points.length;
