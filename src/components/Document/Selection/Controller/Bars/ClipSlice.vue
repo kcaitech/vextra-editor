@@ -127,11 +127,11 @@ onUnmounted(() => {
           class="point" rx="4" ry="4">
     </rect>
     <!--点序 for Dev-->
-    <text v-for="(p, i) in dots"
-          :key="i"
-          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">
-        {{ `${p.index}` }}
-    </text>
+<!--    <text v-for="(p, i) in dots"-->
+<!--          :key="i"-->
+<!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
+<!--        {{ `${p.index}` }}-->
+<!--    </text>-->
 </template>
 <style scoped lang="scss">
 .background-path {

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { adapt2Shape, CurvePoint, Matrix, PathShape, PathShapeView, ShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -10,6 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
 import { Asssit } from "@/context/assist";
+import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -75,6 +76,10 @@ function update() {
     props.context.path.set_segments(segments);
 
     buildMap();
+
+    if (livingPathVisible.value) {
+        modifyLivingPath();
+    }
 }
 
 const mapX = new Map<number, XY[]>();
@@ -145,6 +150,8 @@ function passiveUpdate() {
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
 
     props.context.path.set_segments(segments);
+
+    buildMap();
 }
 
 /**
@@ -186,7 +193,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
-                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                const __xy = { x: point.x, y: point.y };
+                pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
                 downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
@@ -218,7 +226,8 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
-                pathModifier.addPointForPen(last.segment, last.index + 1, point as CurvePoint);
+                const __xy = { x: point.x, y: point.y };
+                pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
                 downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
@@ -289,7 +298,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
             pathModifier = new PathEditor(props.context, event);
             pathModifier.createApiCaller();
-            const addRes = pathModifier.addSegmentForPen(point as CurvePoint);
+            const addRes = pathModifier.addSegmentForPen(preXY.value, point as CurvePoint);
 
             if (!addRes) {
                 return;
@@ -324,8 +333,8 @@ function checkStatus() {
     downXY = { x: e.x, y: e.y };
 
     const point = (props.context.selection.selectedShapes[0] as PathShapeView)
-        .segments[0]
-        .points[0] as CurvePoint;
+        ?.segments[0]
+        ?.points[0] as CurvePoint;
 
     path.setLastPoint({ point, index: 0, segment: 0 });
     path.select_point(segment, index);
@@ -453,7 +462,7 @@ function matrix_watcher(t: number) {
     }
 }
 
-function documentMove(e: MouseEvent) {
+function documentMove(e: MouseEvent) {  // 鼠标抬起的时候为什么也会触发这里？？？
     const __client = props.context.workspace.getContentXY(e);
 
     let delX = Infinity;
@@ -463,6 +472,10 @@ function documentMove(e: MouseEvent) {
     let DY = 0;
     let TX = 0;
     let TY = 0;
+
+    if (!mapX.size && !mapY.size) {
+        buildMap();
+    }
 
     const xs = Array.from(mapX.keys());
     const ys = Array.from(mapY.keys());
@@ -542,11 +555,9 @@ function modifyLivingPath() {
         return;
     }
 
-    const shape = adapt2Shape(props.context.selection.selectedShapes[0] as PathShapeView); // 异步问题需要处理
-
-
+    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
     const { segment, index } = path.lastPoint;
-    const previous = (shape as PathShape)?.pathsegs[segment]?.points[index];
+    const previous = (shape as PathShapeView)?.segments[segment]?.points[index];
 
     if (!previous || !path.isContacting) {
         return;
@@ -658,12 +669,12 @@ onUnmounted(() => {
     </g>
 
     <Handle :context="props.context"/>
-    <!--点序 for Dev-->
-    <text v-for="(p, i) in dots"
-          :key="i"
-          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">
-        {{ `${p.segment},${p.index}` }}
-    </text>
+    <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+    <!--    <text v-for="(p, i) in dots"-->
+    <!--          :key="i"-->
+    <!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
+    <!--        {{ `${p.segment},${p.index}` }}-->
+    <!--    </text>-->
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"

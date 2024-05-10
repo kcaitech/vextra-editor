@@ -17,7 +17,8 @@ export class Communication {
     private info: CommunicationInfo
     private worker: SharedWorker | undefined = undefined
     private channel: MessageChannel | undefined = undefined
-    private enabledWorker: boolean = typeof SharedWorker !== "undefined"
+    // private enabledWorker: boolean = typeof SharedWorker !== "undefined"
+    private enabledWorker: boolean = false
     protected onMessage: (data: any) => void = () => {}
     protected onClose: () => void = () => {}
     private isClosed: boolean = false

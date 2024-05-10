@@ -788,7 +788,7 @@ export class PathEditor extends TransformHandler {
         return addRes;
     }
 
-    addPointForPen(segment: number, index: number, down: XY, point?: CurvePoint) {
+    addPointForPen(segment: number, index: number, down: XY, point?: XY) {
         if (!this.asyncApiCaller || !this.shape) {
             return false;
         }
@@ -800,7 +800,7 @@ export class PathEditor extends TransformHandler {
         let xy;
 
         if (point) {
-            xy = point;
+            xy = { x: point.x, y: point.y };
         } else {
             const m = new Matrix(this.baseMatrix);
             m.multiAtLeft(this.context.workspace.matrix);
@@ -827,53 +827,6 @@ export class PathEditor extends TransformHandler {
 
         return addRes;
     }
-
-    // fixDownPoint(_xy: XY) {
-    //     this.buildMap(PathEditor.FULL_MAP);
-    //     const xy = { ..._xy };
-    //     let delX = Infinity;
-    //     let delY = Infinity;
-    //
-    //     let DX = 0;
-    //     let DY = 0;
-    //
-    //     const xs = Array.from(this.mapX.keys());
-    //     const ys = Array.from(this.mapY.keys());
-    //
-    //     const { x, y } = xy;
-    //
-    //     for (let j = 0; j < xs.length; j++) {
-    //         const dx = xs[j] - x;
-    //         const __dx = Math.abs(dx);
-    //
-    //         if (__dx < delX) {
-    //             delX = __dx;
-    //             DX = dx;
-    //         }
-    //     }
-    //
-    //     for (let k = 0; k < ys.length; k++) {
-    //         const dy = ys[k] - y;
-    //         const __dy = Math.abs(dy);
-    //
-    //         if (__dy < delY) {
-    //             delY = __dy;
-    //             DY = dy;
-    //         }
-    //     }
-    //
-    //     if (delX < PathEditor.DELTA) {
-    //         xy.x += DX;
-    //         console.log('fixedX')
-    //     }
-    //
-    //     if (delY < PathEditor.DELTA) {
-    //         xy.y += DY;
-    //         console.log('fixedY')
-    //     }
-    //
-    //     return xy;
-    // }
 
     addSegmentForPen(down: XY, point?: CurvePoint) {
         if (!this.asyncApiCaller || !this.shape) {
