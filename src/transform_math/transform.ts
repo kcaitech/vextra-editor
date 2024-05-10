@@ -23,6 +23,11 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
     multiply(matrix: Matrix) {
         return matrix.add(this.col3.deleteRow(3), [0, 3])
     }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof TranslateMatrix) return matrix;
+        return new TranslateMatrix(matrix.data)
+    }
 }
 
 export class RotateMatrix extends Matrix { // 旋转矩阵
@@ -46,6 +51,11 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
             .multiplyLeftSubMatrix(R0, [3, 1], [0, 3])
         return super.multiply(matrix)
     }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof RotateMatrix) return matrix;
+        return new RotateMatrix(matrix.data)
+    }
 }
 
 export class SkewMatrix extends Matrix { // 斜切矩阵
@@ -64,6 +74,11 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
         const result = matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
         if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
         return result
+    }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof SkewMatrix) return matrix;
+        return new SkewMatrix(matrix.data)
     }
 }
 
@@ -86,6 +101,11 @@ export class ScaleMatrix extends Matrix { // 缩放矩阵
             0, 0, 0, 1,
         ], true))
     }
+
+    static FromMatrix(matrix: Matrix) {
+        if (matrix instanceof ScaleMatrix) return matrix;
+        return new ScaleMatrix(matrix.data)
+    }
 }
 
 export class Transform { // 变换
@@ -106,15 +126,17 @@ export class Transform { // 变换
     isMatrixLatest: boolean = true // matrix为最新
     isSubMatrixLatest: boolean = true // T、R、K、S子矩阵是否为最新
 
-    updateMatrix() { // 根据matrix解算并更新T、R、K、S子矩阵，或根据T、R、K、S子矩阵生成matrix
+    updateMatrix() { // 根据matrix分解出T、R、K、S子矩阵，或根据T、R、K、S子矩阵计算出matrix
         if (this.isMatrixLatest && this.isSubMatrixLatest) return;
         // if (!this.isMatrixLatest && !this.isSubMatrixLatest) throw new Error("矩阵数据错误：isMatrixLatest与isSubMatrixLatest同时为false");
-        if (!this.isMatrixLatest) {
+        if (!this.isMatrixLatest) { // 根据matrix分解T、R、K、S子矩阵
             // matrix = T·R·K·S
             this.matrix = this.translateMatrix.clone().multiply(this.rotateMatrix).multiply(this.skewMatrix).multiply(this.scaleMatrix)
-        } else {
-            this.translateMatrix = Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col(3))
+        } else { // 根据T、R、K、S子矩阵计算matrix
+            // 平移
+            this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col(3)))
 
+            // 斜切
             const matrix3x3 = this.matrix.clone().resize([3, 3])
             const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
             const norm_xCrossY = (matrix3x3.col(0).cross(matrix3x3.col(1)) as Vector).norm // x轴与y轴叉积的模
@@ -122,25 +144,32 @@ export class Transform { // 变换
             if (angle < 0) angle += 2 * Math.PI;
             const skewXAngle = 0.5 * Math.PI - angle;
             const tanSkewX = Math.tan(skewXAngle)
-            this.skewMatrix = new Matrix(new NumberArray2D([4, 4], [
+            this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 1, tanSkewX, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1,
-            ], true))
+            ], true)))
 
+            // 缩放
             const xNorm = this.matrix.col(0).norm
             const yNorm = this.matrix.col(1).norm
             const zNorm = this.matrix.col(2).norm
-            this.scaleMatrix = new Matrix(new NumberArray2D([4, 4], [
+            this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
                 0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
                 0, 0, zNorm, 0,
                 0, 0, 0, 1,
-            ], true))
+            ], true)))
 
+            // 旋转
             // R = (T^-1)·Transform·(S^-1)·(K^-1)
-            this.rotateMatrix = this.translateMatrix.getInverse()!.multiply(this.matrix).multiply(this.scaleMatrix.getInverse()!).multiply(this.skewMatrix.getInverse()!)
+            this.rotateMatrix = RotateMatrix.FromMatrix(
+                this.translateMatrix.getInverse()!
+                    .multiply(this.matrix)
+                    .multiply(this.scaleMatrix.getInverse()!)
+                    .multiply(this.skewMatrix.getInverse()!)
+            )
         }
         this.isMatrixLatest = true
         this.isSubMatrixLatest = true
@@ -156,10 +185,10 @@ export class Transform { // 变换
         },
     }) {
         this.matrix = params?.matrix || Matrix.BuildIdentity([4, 4])
-        this.translateMatrix = params?.subMatrix?.translate || Matrix.BuildIdentity([4, 4])
-        this.rotateMatrix = params?.subMatrix?.rotate || Matrix.BuildIdentity([4, 4])
-        this.skewMatrix = params?.subMatrix?.skew || Matrix.BuildIdentity([4, 4])
-        this.scaleMatrix = params?.subMatrix?.scale || Matrix.BuildIdentity([4, 4])
+        this.translateMatrix = TranslateMatrix.FromMatrix(params?.subMatrix?.translate || Matrix.BuildIdentity([4, 4]))
+        this.rotateMatrix = RotateMatrix.FromMatrix(params?.subMatrix?.rotate || Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = SkewMatrix.FromMatrix(params?.subMatrix?.skew || Matrix.BuildIdentity([4, 4]))
+        this.scaleMatrix = ScaleMatrix.FromMatrix(params?.subMatrix?.scale || Matrix.BuildIdentity([4, 4]))
         if (params?.matrix || params?.subMatrix) {
             this.isMatrixLatest = !!params?.matrix
             if (this.isMatrixLatest && hasSkewZ(this.matrix)) throw new Error("矩阵数据错误：matrix存在Z轴斜切");
@@ -214,7 +243,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.translateMatrix = matrix.multiply(this.translateMatrix)
+            this.translateMatrix = TranslateMatrix.FromMatrix(matrix.multiply(this.translateMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -244,7 +273,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.scaleMatrix = matrix.multiply(this.scaleMatrix)
+            this.scaleMatrix = ScaleMatrix.FromMatrix(matrix.multiply(this.scaleMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -276,7 +305,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.rotateMatrix = RotateMatrix.FromMatrix(matrix.multiply(this.rotateMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -308,7 +337,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.rotateMatrix = RotateMatrix.FromMatrix(matrix.multiply(this.rotateMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -340,7 +369,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.rotateMatrix = RotateMatrix.FromMatrix(matrix.multiply(this.rotateMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -377,7 +406,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.rotateMatrix = matrix.multiply(this.rotateMatrix)
+            this.rotateMatrix = RotateMatrix.FromMatrix(matrix.multiply(this.rotateMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -450,7 +479,7 @@ export class Transform { // 变换
         ], true))
 
         if (params.mode === TransformMode.Local) {
-            this.skewMatrix = matrix.multiply(this.skewMatrix)
+            this.skewMatrix = SkewMatrix.FromMatrix(matrix.multiply(this.skewMatrix))
             this.isMatrixLatest = false
         } else {
             this.matrix = matrix.multiply(this.matrix)
@@ -534,37 +563,37 @@ export class Transform { // 变换
 
     clearRotation() { // 清除旋转操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.rotateMatrix = Matrix.BuildIdentity([4, 4])
+        this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
         return this
     }
 
     clearSkew() { // 清除斜切操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.skewMatrix = Matrix.BuildIdentity([4, 4])
+        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
         return this
     }
 
     clearScale() { // 清除缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.scaleMatrix = Matrix.BuildIdentity([4, 4])
+        this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
         return this
     }
 
     clearRKS() { // 清除旋转、斜切、缩放操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.rotateMatrix = Matrix.BuildIdentity([4, 4])
-        this.skewMatrix = Matrix.BuildIdentity([4, 4])
-        this.scaleMatrix = Matrix.BuildIdentity([4, 4])
+        this.rotateMatrix = RotateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.skewMatrix = SkewMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
+        this.scaleMatrix = ScaleMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
         return this
     }
 
     clearTranslate() { // 清除平移操作
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        this.translateMatrix = Matrix.BuildIdentity([4, 4])
+        this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 4]))
         this.isMatrixLatest = false
         return this
     }
