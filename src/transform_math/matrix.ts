@@ -539,7 +539,7 @@ export class Matrix { // 矩阵
     }
 
     getInverse(): Matrix | undefined { // 求逆矩阵（消元法），不修改原矩阵，返回新矩阵
-        if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
+        if (!this.isSquare) throw new Error("矩阵不是方阵，无逆矩阵");
 
         const m = this.size[0] // 矩阵的阶数
         const result = NumberArray2D.BuildIdentity(m) // 单位矩阵数组
@@ -627,8 +627,8 @@ export class Matrix { // 矩阵
         return rank
     }
 
-    determinant(): number | undefined { // 求矩阵的行列式（递归降阶法）
-        if (!this.isSquare) return; // 矩阵不是方阵，无行列式
+    determinant(): number { // 求矩阵的行列式（递归降阶法）
+        if (!this.isSquare) throw new Error("矩阵不是方阵，无行列式");
         const [m, n] = this.size // 矩阵的阶数
         if (m === 1) return this.m00; // 1阶矩阵的行列式
         if (m === 2) return this.m00 * this.m11 - this.m01 * this.m10; // 2阶矩阵的行列式
@@ -639,14 +639,13 @@ export class Matrix { // 矩阵
             const subMatrixData = this.data.clone().deleteRows(0).deleteCols(i) // 去掉第0行和第i列的子矩阵
             const subMatrix = new Matrix(subMatrixData) // 子矩阵
             const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
-            if (subDeterminant === undefined) return; // 子矩阵的行列式不存在，行列式不存在
             result += (i % 2 === 0 ? 1 : -1) * factor * subDeterminant // 递归计算行列式
         }
         return result
     }
 
-    getAdjoint(): Matrix | undefined { // 求矩阵的伴随矩阵
-        if (!this.isSquare) return; // 矩阵不是方阵，无伴随矩阵
+    getAdjoint(): Matrix { // 求矩阵的伴随矩阵
+        if (!this.isSquare) throw new Error("矩阵不是方阵，无伴随矩阵");
         const [m, n] = this.size // 矩阵的阶数
         const result = new NumberArray2D([m, n])
         for (let i = 0; i < m; i++) {
@@ -654,7 +653,6 @@ export class Matrix { // 矩阵
                 const subMatrixData = this.data.clone().deleteRows(i).deleteCols(j) // 去掉第i行第j列的子矩阵
                 const subMatrix = new Matrix(subMatrixData) // 子矩阵
                 const subDeterminant = subMatrix.determinant() // 子矩阵的行列式
-                if (subDeterminant === undefined) return; // 子矩阵的行列式不存在，伴随矩阵不存在
                 result.set([i, j], (i + j) % 2 === 0 ? subDeterminant : -subDeterminant) // 伴随矩阵的元素
             }
         }
