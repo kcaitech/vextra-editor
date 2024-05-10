@@ -1,4 +1,4 @@
-import {buildIdentityArray, ColVector, ColVector2D, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
+import {ColVector, ColVector2D, ColVector3D, Matrix, Point3D, Vector} from "./matrix"
 import {NumberArray2D} from "./number_array"
 
 function hasSkewZ(matrix: Matrix) { // 验证矩阵是否存在Z轴斜切
@@ -34,7 +34,7 @@ export class Transform { // 变换
         if (!this.isMatrixLatest) {
             this.matrix = this.translateMatrix.clone().multiply(this.rotateMatrix).multiply(this.skewMatrix).multiply(this.scaleMatrix)
         } else {
-            this.translateMatrix = this.matrix.col(3).insertCols(buildIdentityArray(4, 3), 0, true)
+            this.translateMatrix = this.matrix.col(3).insertCols(NumberArray2D.BuildIdentity(4, 3), 0, true)
 
             const matrix3x3 = this.matrix.clone().resize(3, 3)
             const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
@@ -55,7 +55,7 @@ export class Transform { // 变换
             const zNorm = this.matrix.col(2).norm
             this.scaleMatrix = new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
-                0, yNorm / Math.sqrt(tanSkewX**2 + 1), 0, 0,
+                0, yNorm / Math.sqrt(tanSkewX ** 2 + 1), 0, 0,
                 0, 0, zNorm, 0,
                 0, 0, 0, 1,
             ], true))
@@ -291,10 +291,10 @@ export class Transform { // 变换
         const t = 1 - c
         // https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d#syntax
         const matrix = new Matrix(new NumberArray2D([4, 4], [
-            1 + t * (x**2 - 1),     z * s + x * y * t,      -y * s + x * z * t,     0,
-            -z * s + x * y * t,     1 + t * (y**2 - 1),     x * s + y * z * t,      0,
-            y * s + x * z * t,      -x * s + y * z * t,     1 + t * (z**2 - 1),     0,
-            0,                      0,                      0,                      1,
+            1 + t * (x ** 2 - 1), z * s + x * y * t, -y * s + x * z * t, 0,
+            -z * s + x * y * t, 1 + t * (y ** 2 - 1), x * s + y * z * t, 0,
+            y * s + x * z * t, -x * s + y * z * t, 1 + t * (z ** 2 - 1), 0,
+            0, 0, 0, 1,
         ], true))
 
         if (params.mode === TransformMode.Local) {

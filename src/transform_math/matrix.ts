@@ -1,32 +1,4 @@
-import {NumberArray, NumberArray2D} from "./number_array"
-
-export function buildIdentityArray(m: number, n: number = m) { // 构建m*n数组，n默认为m，主元为1，其余元素为0
-    if (m === 2 && n === 2) {
-        return new NumberArray2D([2, 2], [
-            1, 0,
-            0, 1,
-        ], true)
-    }
-    if (m === 3 && n === 3) {
-        return new NumberArray2D([3, 3], [
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1,
-        ], true)
-    }
-    if (m === 4 && n === 4) {
-        return new NumberArray2D([4, 4], [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-        ], true)
-    }
-    const result = new NumberArray2D([m, n], 0)
-    const rank = Math.min(m, n)
-    for (let i = 0; i < rank; i++) result.set([i, i], 1);
-    return result
-}
+import {NumberArray2D} from "./number_array"
 
 export class Matrix { // 矩阵
     data: NumberArray2D
@@ -41,7 +13,7 @@ export class Matrix { // 矩阵
     }
 
     static BuildIdentity(m: number, n?: number) { // 构建m*n的单位矩阵
-        return new Matrix(buildIdentityArray(m, n))
+        return new Matrix(NumberArray2D.BuildIdentity(m, n))
     }
 
     get(indexes: number[]): number {
@@ -570,7 +542,7 @@ export class Matrix { // 矩阵
         if (!this.isSquare) return; // 矩阵不是方阵，无逆矩阵
 
         const m = this.dimension[0] // 矩阵的阶数
-        const result = buildIdentityArray(m) // 单位矩阵数组
+        const result = NumberArray2D.BuildIdentity(m) // 单位矩阵数组
         const data = this.data.clone() // 原矩阵的副本
 
         for (let i = 0; i < m; i++) {
@@ -764,7 +736,7 @@ export class Vector extends Matrix { // 向量
 
 export class ColVector extends Vector { // 列向量
     constructor(data: number[] | NumberArray2D) {
-        if (!(data instanceof NumberArray)) data = new NumberArray2D([data.length, 1], data, true);
+        if (!(data instanceof NumberArray2D)) data = new NumberArray2D([data.length, 1], data, true);
         super(data)
         if (data.dimensionLength[1] !== 1) throw new Error("列向量必须是n * 1的矩阵");
     }
@@ -885,7 +857,7 @@ export class ColVector4D extends ColVector { // 四维列向量
 
 export class RowVector extends Vector { // 行向量
     constructor(data: number[] | NumberArray2D) {
-        if (!(data instanceof NumberArray)) data = new NumberArray2D([1, data.length], data, true);
+        if (!(data instanceof NumberArray2D)) data = new NumberArray2D([1, data.length], data, true);
         super(data)
         if (data.dimensionLength[0] !== 1) throw new Error("行向量必须是1 * n的矩阵");
     }

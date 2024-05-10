@@ -94,6 +94,34 @@ export class NumberArray2D extends NumberArray { // 二维Number数组
         return new NumberArray2D(numberArray.dimensionLength as [number, number], numberArray.data, true)
     }
 
+    static BuildIdentity(m: number, n: number = m) { // 构建m*n数组，n默认为m，主元为1，其余元素为0
+        if (m === 2 && n === 2) {
+            return new NumberArray2D([2, 2], [
+                1, 0,
+                0, 1,
+            ], true)
+        }
+        if (m === 3 && n === 3) {
+            return new NumberArray2D([3, 3], [
+                1, 0, 0,
+                0, 1, 0,
+                0, 0, 1,
+            ], true)
+        }
+        if (m === 4 && n === 4) {
+            return new NumberArray2D([4, 4], [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ], true)
+        }
+        const result = new NumberArray2D([m, n], 0)
+        const rank = Math.min(m, n)
+        for (let i = 0; i < rank; i++) result.set([i, i], 1);
+        return result
+    }
+
     rows(m0: number, count?: number) { // 从第m0行开始，获取count行
         if (this.dimension !== 2) throw new Error("data必须是二维数组");
         const [m, n] = this.dimensionLength
