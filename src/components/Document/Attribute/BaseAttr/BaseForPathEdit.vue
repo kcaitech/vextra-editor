@@ -370,7 +370,7 @@ onUnmounted(() => {
             }
 
             .active {
-                background-color: #ffffff;
+                background-color: #ffffff !important;
             }
         }
 
