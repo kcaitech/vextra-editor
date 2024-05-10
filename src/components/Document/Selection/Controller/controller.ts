@@ -1,24 +1,24 @@
 import {
-    AsyncPathEditor,
-    ShapeView,
     adapt2Shape,
-    PathShapeView, CurvePoint, PathType,
+    AsyncPathEditor,
+    AsyncTransfer,
+    CurvePoint,
+    Matrix,
+    PathShapeView,
+    PathType,
+    ShapeView,
 } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
-import { ClientXY, PageXY } from "@/context/selection";
+import { ClientXY, PageXY, Selection } from "@/context/selection";
 import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import {
     add_blur_for_window,
     check_drag_action,
     down_while_is_text_editing,
-    gen_offset_points_map,
     is_ctrl_element,
     is_mouse_on_content,
     modify_down_position,
@@ -33,6 +33,7 @@ import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
+import { Action } from "@/context/tool";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -465,7 +466,25 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
+
         context.esctask.save('select-shape', exit);
+
+        if (workspace.is_path_edit_mode) {
+            context.esctask.save('path-edit', () => {
+                const achieve = workspace.is_path_edit_mode;
+                workspace.setPathEditMode(false);
+                return achieve;
+            });
+        }
+
+        const path = context.path;
+        if (context.tool.action === Action.Pen2 && path.isContacting) {
+            context.esctask.save('contact-status', () => {
+                const achieve = path.isContacting;
+                path.setContactStatus(false);
+                return achieve;
+            });
+        }
     }
 
     function dispose() {

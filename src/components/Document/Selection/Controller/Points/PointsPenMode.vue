@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { adapt2Shape, CurvePoint, Matrix, PathShape, PathShapeView, ShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -10,6 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
 import { Asssit } from "@/context/assist";
+import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -75,6 +76,10 @@ function update() {
     props.context.path.set_segments(segments);
 
     buildMap();
+
+    if (livingPathVisible.value) {
+        modifyLivingPath();
+    }
 }
 
 const mapX = new Map<number, XY[]>();
@@ -326,8 +331,8 @@ function checkStatus() {
     downXY = { x: e.x, y: e.y };
 
     const point = (props.context.selection.selectedShapes[0] as PathShapeView)
-        .segments[0]
-        .points[0] as CurvePoint;
+        ?.segments[0]
+        ?.points[0] as CurvePoint;
 
     path.setLastPoint({ point, index: 0, segment: 0 });
     path.select_point(segment, index);
@@ -455,7 +460,7 @@ function matrix_watcher(t: number) {
     }
 }
 
-function documentMove(e: MouseEvent) {
+function documentMove(e: MouseEvent) {  // 鼠标抬起的时候为什么也会触发这里？？？
     const __client = props.context.workspace.getContentXY(e);
 
     let delX = Infinity;
@@ -548,11 +553,9 @@ function modifyLivingPath() {
         return;
     }
 
-    const shape = adapt2Shape(props.context.selection.selectedShapes[0] as PathShapeView); // 异步问题需要处理
-
-
+    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
     const { segment, index } = path.lastPoint;
-    const previous = (shape as PathShape)?.pathsegs[segment]?.points[index];
+    const previous = (shape as PathShapeView)?.segments[segment]?.points[index];
 
     if (!previous || !path.isContacting) {
         return;

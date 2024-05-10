@@ -55,6 +55,7 @@ export function is_mixed(shapes: Shape[]) {
     if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
     return result;
 }
+
 export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
     shapes = shapes.filter(i => i instanceof RectShape);
     if (shapes.length === 1) {
@@ -85,14 +86,16 @@ export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
         }
     }
 }
+
 export function get_actions_constrainer_proportions(shapes: ShapeView[], value: boolean): BatchAction2[] {
-  const actions: BatchAction2[] = [];
-  for (let i = 0; i < shapes.length; i++) {
-    const shape = shapes[i];
-    actions.push({ target: shape, value })
-  }
-  return actions;
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        actions.push({ target: shape, value })
+    }
+    return actions;
 }
+
 export function get_actions_frame_x(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, x: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -122,6 +125,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
 
     return actions;
 }
+
 export function get_actions_frame_y(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -150,6 +154,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
 
     return actions;
 }
+
 export function get_actions_frame_w(shapes: Shape[], value: number, isLock: boolean) {
     const actions: FrameAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -164,6 +169,7 @@ export function get_actions_frame_w(shapes: Shape[], value: number, isLock: bool
     }
     return actions;
 }
+
 export function get_actions_frame_h(shapes: Shape[], value: number, isLock: boolean) {
     const actions: FrameAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -178,6 +184,7 @@ export function get_actions_frame_h(shapes: Shape[], value: number, isLock: bool
     }
     return actions;
 }
+
 export function get_actions_rotate(shapes: ShapeView[], value: number) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -186,6 +193,7 @@ export function get_actions_rotate(shapes: ShapeView[], value: number) {
     }
     return actions;
 }
+
 export function get_actions_flip_v(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -195,6 +203,7 @@ export function get_actions_flip_v(shapes: ShapeView[]) {
     }
     return actions;
 }
+
 export function get_actions_flip_h(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -204,6 +213,7 @@ export function get_actions_flip_h(shapes: ShapeView[]) {
     }
     return actions;
 }
+
 export function get_rotation(shape: ShapeView) {
     let rotation: number = Number((shape.rotation || 0).toFixed(2));
     if (is_straight(shape)) {
@@ -211,6 +221,7 @@ export function get_rotation(shape: ShapeView) {
     }
     return rotation;
 }
+
 export function get_straight_line_length(shape: ShapeView) {
     const points = (shape as PathShapeView).segments[0]?.points;
 
@@ -227,20 +238,22 @@ export function get_straight_line_length(shape: ShapeView) {
     const rb = m.computeCoord2(p2.x, p2.y);
     return Math.hypot(rb.x - lt.x, rb.y - lt.y);
 }
+
 export function is_straight(shape: ShapeView) {
     if (!(shape instanceof PathShapeView) || shape.type === ShapeType.Contact) {
         return false;
     }
-    if (shape.segments.length > 1) {
+    if (shape.segments.length !== 1) {
         return false;
     }
     const points = shape.segments[0]?.points;
 
-    if (points.length !== 2) {
+    if (!points || points.length !== 2) {
         return false;
     }
     return !points[0].hasFrom && !points[1].hasTo;
 }
+
 export function get_rotate_for_straight(shape: PathShapeView) {
     const points = shape.segments[0].points;
     const p1 = points[0];
@@ -251,6 +264,7 @@ export function get_rotate_for_straight(shape: PathShapeView) {
     const rb = m.computeCoord2(p2.x, p2.y);
     return Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
 }
+
 export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     let result: number[] = [];
     switch (type) {
@@ -271,11 +285,13 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     }
     return result;
 }
+
 export function is_rect(shape: ShapeView) {
     return shape.isClosed
         && (shape as any)?.points?.length === 4
         && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
 }
+
 export function get_box(shape: ShapeView) {
     const parent = shape.parent!;
     if (!parent) {
@@ -326,6 +342,7 @@ export function get_box(shape: ShapeView) {
 
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
+
 export function get_xy(shapes: ShapeView[], mixed: string) {
     const first_shape = shapes[0];
 
@@ -390,6 +407,7 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
     }
     return { x: fx, y: fy };
 }
+
 export function get_width(shapes: ShapeView[], mixed: string) {
     const first_shape = shapes[0];
 
@@ -417,6 +435,7 @@ export function get_width(shapes: ShapeView[], mixed: string) {
     }
     return first_width;
 }
+
 export function get_height(shapes: ShapeView[], mixed: string) {
     const first_shape = shapes[0];
 
@@ -442,6 +461,7 @@ export function get_height(shapes: ShapeView[], mixed: string) {
     }
     return first_height;
 }
+
 export function get_constrainer_proportions(shapes: ShapeView[]) {
     let constrainer_proportions = true;
     for (let i = 0, l = shapes.length; i < l; i++) {
@@ -454,6 +474,7 @@ export function get_constrainer_proportions(shapes: ShapeView[]) {
     }
     return constrainer_proportions;
 }
+
 export function get_shapes_rotation(shapes: ShapeView[], mixed: string) {
     const first_shape = shapes[0];
     let first_rotation: number | string = get_rotation(first_shape);
@@ -470,10 +491,10 @@ export function get_shapes_rotation(shapes: ShapeView[], mixed: string) {
 
 export function get_shapes_angle_counts(shapes: ShapeView[], mixed: string) {
     const polygon_shapes = shapes.filter(s => (s.type === ShapeType.Polygon || s.type === ShapeType.Star) && !s.data.haveEdit);
-    if(polygon_shapes.length === 0) return 0;
+    if (polygon_shapes.length === 0) return 0;
     const first_shape = polygon_shapes[0] as PolygonShapeView | StarShapeView;
     let first_counts: number | string = first_shape.data.counts;
-    
+
     for (let i = 1, l = polygon_shapes.length; i < l; i++) {
         const shape = polygon_shapes[i] as PolygonShapeView | StarShapeView;
         if (!is_equal(shape.data.counts, first_counts)) {
@@ -481,16 +502,16 @@ export function get_shapes_angle_counts(shapes: ShapeView[], mixed: string) {
             break;
         }
     }
-    
+
     return first_counts || 0;
 }
 
 export function get_shapes_inner_angle(shapes: ShapeView[], mixed: string) {
     const star_shapes = shapes.filter(s => s.type === ShapeType.Star && !s.data.haveEdit);
-    if(star_shapes.length === 0) return 0;
+    if (star_shapes.length === 0) return 0;
     const first_shape = star_shapes[0] as StarShapeView;
     let first_inner_angle: number | string = first_shape.data.innerAngle * 100;
-    
+
     for (let i = 1, l = star_shapes.length; i < l; i++) {
         const shape = star_shapes[i] as StarShapeView;
         if (!is_equal(shape.data.innerAngle * 100, first_inner_angle)) {
@@ -498,7 +519,7 @@ export function get_shapes_inner_angle(shapes: ShapeView[], mixed: string) {
             break;
         }
     }
-    
+
     return first_inner_angle || 0;
 }
 
@@ -525,7 +546,7 @@ export function get_actions_inner_angle(shapes: ShapeView[], offset: number) {
 export const showCounts = (shapes: ShapeView[]) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if((shape.type === ShapeType.Polygon || shape.type === ShapeType.Star) && !shape.data.haveEdit) {
+        if ((shape.type === ShapeType.Polygon || shape.type === ShapeType.Star) && !shape.data.haveEdit) {
             return true;
         }
     }
@@ -535,7 +556,7 @@ export const showCounts = (shapes: ShapeView[]) => {
 export const showInnerAngle = (shapes: ShapeView[]) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if(shape.type === ShapeType.Star && !shape.data.haveEdit) {
+        if (shape.type === ShapeType.Star && !shape.data.haveEdit) {
             return true;
         }
     }
