@@ -21,7 +21,7 @@ import {
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
