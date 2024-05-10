@@ -20,13 +20,13 @@ export class Transform { // 变换
     matrix: Matrix
 
     // 变换顺序：缩放、斜切、旋转、平移 -> Transform = T·R·K·S
-    translateMatrix: Matrix // 平移矩阵
-    rotateMatrix: Matrix // 旋转矩阵
-    skewMatrix: Matrix // 斜切矩阵
-    scaleMatrix: Matrix // 缩放矩阵
+    translateMatrix: Matrix // 平移矩阵 T
+    rotateMatrix: Matrix // 旋转矩阵 R
+    skewMatrix: Matrix // 斜切矩阵 K
+    scaleMatrix: Matrix // 缩放矩阵 S
 
     isMatrixLatest: boolean = true // matrix为最新
-    isSubMatrixLatest: boolean = true // 子矩阵是否为最新
+    isSubMatrixLatest: boolean = true // T、R、K、S子矩阵是否为最新
 
     updateMatrix() {
         if (this.isMatrixLatest && this.isSubMatrixLatest) return;
