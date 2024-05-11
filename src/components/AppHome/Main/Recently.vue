@@ -81,7 +81,7 @@
                             </svg>
                             <div class="text">
                                 {{ t('home.open_local_file') }}
-                                <span>(.sketch,.fig)</span>
+                                <span>(.sketch)</span>
                             </div>
                         </div>
                         <div class="right">
