@@ -140,7 +140,7 @@ var configureWebpack = (config) => {
     }
 
     if (IS_PRODUCTION) {
-        config.devtool = "nosources-source-map"
+        config.devtool = "hidden-source-map"
     }
 }
 
