@@ -21,7 +21,7 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
     }
 
     multiply(matrix: Matrix) {
-        return matrix.add(this.col3.deleteRow(3), [0, 3])
+        return Matrix.FromMatrix(matrix.add(this.col3.deleteRow(3), [0, 3]))
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -50,7 +50,7 @@ export class RotateMatrix extends Matrix { // 旋转矩阵
         const R0 = this.subMatrix([3, 3])
         matrix.multiplyLeftSubMatrix(R0)
             .multiplyLeftSubMatrix(R0, [3, 1], [0, 3])
-        return matrix
+        return Matrix.FromMatrix(matrix)
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -74,7 +74,7 @@ export class SkewMatrix extends Matrix { // 斜切矩阵
     multiply(matrix: Matrix) {
         const result = matrix.add(matrix.row1.multiplyByNumber(this.m01), [0, 0])
         if (!isZero(this.m10)) result.add(matrix.row0.multiplyByNumber(this.m10), [1, 0]);
-        return result
+        return Matrix.FromMatrix(result)
     }
 
     static FromMatrix(matrix: Matrix) {
@@ -124,8 +124,40 @@ export class Transform { // 变换
     skewMatrix: SkewMatrix // 斜切矩阵 K
     scaleMatrix: ScaleMatrix // 缩放矩阵 S
 
-    isMatrixLatest: boolean = true // matrix为最新
-    isSubMatrixLatest: boolean = true // T、R、K、S子矩阵是否为最新
+    // 分解操作的缓存
+    decomposeTranslateCache: ColVector3D | undefined = undefined
+    decomposeEulerCache: ColVector3D | undefined = undefined
+    decomposeScaleCache: ColVector3D | undefined = undefined
+    decomposeSkewCache: ColVector2D | undefined = undefined
+
+    clearDecomposeCache() {
+        this.decomposeTranslateCache = undefined
+        this.decomposeEulerCache = undefined
+        this.decomposeScaleCache = undefined
+        this.decomposeSkewCache = undefined
+    }
+
+    _isMatrixLatest: boolean = true // matrix为最新
+
+    get isMatrixLatest() {
+        return this._isMatrixLatest
+    }
+
+    set isMatrixLatest(value: boolean) {
+        if (!value) this.clearDecomposeCache();
+        this._isMatrixLatest = value
+    }
+
+    _isSubMatrixLatest: boolean = true // T、R、K、S子矩阵是否为最新
+
+    get isSubMatrixLatest() {
+        return this._isSubMatrixLatest
+    }
+
+    set isSubMatrixLatest(value: boolean) {
+        if (!value) this.clearDecomposeCache();
+        this._isSubMatrixLatest = value
+    }
 
     updateMatrix() { // 根据matrix分解出T、R、K、S子矩阵，或根据T、R、K、S子矩阵计算出matrix
         if (this.isMatrixLatest && this.isSubMatrixLatest) return;
@@ -250,6 +282,25 @@ export class Transform { // 变换
             this.matrix = matrix.multiply(this.matrix)
             this.isSubMatrixLatest = false
         }
+
+        return this
+    }
+
+    // 在本变换之前平移
+    preTranslate(params: {
+        vector: ColVector3D,
+    }) {
+        if (!this.isMatrixLatest) this.updateMatrix();
+
+        const matrix = new Matrix(new NumberArray2D([4, 4], [
+            1, 0, 0, params.vector.x,
+            0, 1, 0, params.vector.y,
+            0, 0, 1, params.vector.z,
+            0, 0, 0, 1,
+        ], true))
+
+        this.matrix.multiply(matrix)
+        this.isSubMatrixLatest = false
 
         return this
     }
@@ -426,7 +477,8 @@ export class Transform { // 变换
             this.updateMatrix()
         }
 
-        const [x, y, z] = params.axis.rawData
+        let [x, y, z] = params.axis.rawData
+        z = -z // z轴方向定义相反
         const c = Math.cos(params.angle)
         const s = Math.sin(params.angle)
         const t = 1 - c
@@ -476,13 +528,19 @@ export class Transform { // 变换
                 vector: diffTranslate,
             })
         } else {
+            this.updateMatrix()
             this.translate({
                 vector: params.point.getNegate() as ColVector3D,
+                mode: TransformMode.Local,
             })
+            this.updateMatrix()
             this.rotate(params)
+            this.updateMatrix()
             this.translate({
                 vector: params.point,
+                mode: TransformMode.Local,
             })
+            this.updateMatrix()
         }
 
 
@@ -574,49 +632,79 @@ export class Transform { // 变换
         return this
     }
 
+    addPreTransform(transform: Transform) { // 叠加另一个变换（先执行另一个变换，再执行本变换）
+        if (!transform.isMatrixLatest) transform.updateMatrix();
+        if (!this.isMatrixLatest) this.updateMatrix();
+        this.matrix = this.matrix.clone().multiply(transform.matrix)
+        this.isSubMatrixLatest = false
+        return this
+    }
+
     flipH() { // 水平翻转
         return this.scale({
             vector: new ColVector3D([-1, 1, 1]),
+            mode: TransformMode.Local,
         })
     }
 
     setFlipH(value: boolean) { // 设置水平翻转
-        const isFlipH = this.matrix.m00 < 0
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        const isFlipH = this.scaleMatrix.m00 < 0
         if (value === isFlipH) return this;
         return this.flipH()
+    }
+
+    get isFlipH() { // 是否水平翻转
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return this.scaleMatrix.m00 < 0
     }
 
     flipV() { // 垂直翻转
         return this.scale({
             vector: new ColVector3D([1, -1, 1]),
+            mode: TransformMode.Local,
         })
     }
 
     setFlipV(value: boolean) { // 设置垂直翻转
-        const isFlipV = this.matrix.m11 < 0
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        const isFlipV = this.scaleMatrix.m11 < 0
         if (value === isFlipV) return this;
         return this.flipV()
     }
 
+    get isFlipV() { // 是否垂直翻转
+        if (!this.isSubMatrixLatest) this.updateMatrix();
+        return this.scaleMatrix.m11 < 0
+    }
+
     decomposeTranslate() { // 分解平移参数
+        if (this.decomposeTranslateCache !== undefined) return this.decomposeTranslateCache;
         if (!this.isSubMatrixLatest) this.updateMatrix();
         const matrix = this.isMatrixLatest ? this.matrix : this.translateMatrix
-        return matrix.col3.deleteRow()
+        this.decomposeTranslateCache = matrix.col3.deleteRow()
+        return this.decomposeTranslateCache
     }
 
     decomposeEuler() { // 分解欧拉角（ZXY序）参数
+        if (this.decomposeEulerCache !== undefined) return this.decomposeEulerCache;
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return Transform.DecomposeEuler(this.rotateMatrix)
+        this.decomposeEulerCache = Transform.DecomposeEuler(this.rotateMatrix)
+        return this.decomposeEulerCache
     }
 
     decomposeScale() { // 分解缩放参数
+        if (this.decomposeScaleCache !== undefined) return this.decomposeScaleCache;
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return this.scaleMatrix.col3.deleteRow()
+        this.decomposeScaleCache = new ColVector3D([this.scaleMatrix.m00, this.scaleMatrix.m11, this.scaleMatrix.m22])
+        return this.decomposeScaleCache
     }
 
     decomposeSkew() { // 分解斜切参数
+        if (this.decomposeSkewCache !== undefined) return this.decomposeSkewCache;
         if (!this.isSubMatrixLatest) this.updateMatrix();
-        return new ColVector2D([Math.atan(this.skewMatrix.m01), Math.atan(this.skewMatrix.m10)])
+        this.decomposeSkewCache = new ColVector2D([Math.atan(this.skewMatrix.m01), Math.atan(this.skewMatrix.m10)])
+        return this.decomposeSkewCache
     }
 
     // 旋转矩阵转欧拉角

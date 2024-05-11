@@ -39,7 +39,7 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform} from "@/transform_math/transform"
+import {Transform, TransformMode} from "@/transform_math/transform"
 import {ColVector3D} from "@/transform_math/matrix"
 
 export class BaseCreator extends BaseTreeNode {
@@ -453,7 +453,11 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const {translate, rotate} = this.transform.decompose()
+        const {translate, rotate, scale} = this.transform.decompose()
+
+        // 设置缩放
+        shape.frame.width *= scale.x
+        shape.frame.height *= scale.y
 
         // 设置xy
         shape.frame.x = translate.x
@@ -462,9 +466,9 @@ export class BaseCreator extends BaseTreeNode {
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
 
-        // 设置翻转，绝对值大于179度时认为是翻转
-        shape.isFlippedVertical = Math.abs(rotate.x) * 180 / Math.PI > 179
-        shape.isFlippedHorizontal = Math.abs(rotate.y) * 180 / Math.PI > 179
+        // 设置翻转
+        shape.isFlippedVertical = this.transform.isFlipV
+        shape.isFlippedHorizontal = this.transform.isFlipH
     }
 
     updateShapeStyle() { // 设置shape的样式
@@ -566,7 +570,13 @@ export class BaseCreator extends BaseTreeNode {
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
-        if (x !== 0 || y !== 0) this.transform.translate({vector: new ColVector3D([x, y, 0])});
+        if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
+
+        // 根据shape的宽高添加平移，使中心点在原点
+        const width = this.shape!.frame.width
+        const height = this.shape!.frame.height
+        this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
+        this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()

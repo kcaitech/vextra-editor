@@ -30,6 +30,10 @@ export class Matrix { // 矩阵
         return new Matrix(NumberArray2D.BuildIdentity(size))
     }
 
+    static FromMatrix(matrix: Matrix) { // 从矩阵构建矩阵
+        return new Matrix(matrix.data)
+    }
+
     get(indexes: number[]): number {
         return this.data.get(indexes)
     }
@@ -589,7 +593,7 @@ export class Matrix { // 矩阵
     }
 
     multiplyLeft(matrix: Matrix) { // 矩阵左乘
-        this.data = matrix.clone().multiply(this).data
+        this.data = Matrix.FromMatrix(matrix.clone()).multiply(this).data
         return this
     }
 
@@ -607,7 +611,7 @@ export class Matrix { // 矩阵
         if (startRow < 0 || startCol < 0 || startRow + m1 > m0 || startCol + n1 > n0) throw new Error("子矩阵范围越界");
         if (n2 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
 
-        this.setSubMatrix(matrix.clone().multiply(this.subMatrix(size, start)), start)
+        this.setSubMatrix(Matrix.FromMatrix(matrix.clone()).multiply(this.subMatrix(size, start)), start)
 
         return this
     }
@@ -772,9 +776,9 @@ export class Matrix { // 矩阵
         const [m, n] = this.size
         for (let i = 0; i < n; i++) {
             let sum = 0
-            for (let j = 0; j < m; j++) sum += this.get([j, i]) ** 2
+            for (let j = 0; j < m; j++) sum += this.get([i, j]) ** 2;
             sum = Math.sqrt(sum)
-            for (let j = 0; j < m; j++) this.set([i, i], this.get([j, i]) / sum)
+            for (let j = 0; j < m; j++) this.set([i, j], this.get([i, j]) / sum);
         }
         return this
     }
