@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = 'release-1.0.5'; // 当前版本
+export const CURRENT_VERSION = 'release-1.0.6'; // 当前版本
 export const SCREEN_SIZE = {
     KEY: 'documentFullScreen',
     FULL: 'full',
