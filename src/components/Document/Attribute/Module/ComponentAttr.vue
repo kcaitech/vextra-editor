@@ -114,6 +114,7 @@ const addTextDialog = () => {
     addType.value = VariableType.Text;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
     close();
 }
 /**
@@ -124,6 +125,7 @@ const examplesToggle = () => {
     addType.value = VariableType.SymbolRef;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
     close();
 }
 const warn = ref(false);
@@ -202,7 +204,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative;margin-top: 12px;margin-bottom: 12px;box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <!--header-->
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
@@ -375,7 +377,6 @@ onUnmounted(() => {
 }
 
 .module_container {
-    padding: 6px 0;
     font-size: var(--font-default-fontsize);
 
     .module_attr_item {

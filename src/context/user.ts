@@ -98,6 +98,7 @@ interface Project {
 }
 
 interface DocInfo {
+    apply_list: any;
     document: Document
     user: DocUser
     document_favorites: Favorites

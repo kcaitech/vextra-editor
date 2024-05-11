@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+
 interface Porps {
     valid?: boolean;
     selected?: boolean;
+
+    width?: number;
+    height?: number;
 }
+
 defineProps<Porps>();
 
 const toolButtonEl = ref<HTMLDivElement>();
@@ -13,9 +18,12 @@ defineExpose({
 
 </script>
 <template>
-    <div ref="toolButtonEl"
-        :class="{ 'tool-button': true, 'tool-button-invalid': !!valid, 'tool-button-selected': !!selected }">
-        <slot />
+    <div ref="toolButtonEl" :style="{
+        width: (width ? 32 : width) + 'px',
+        height: (height ? 32 : height) + 'px'
+    }"
+         :class="{ 'tool-button': true, 'tool-button-invalid': !!valid, 'tool-button-selected': !!selected }">
+        <slot/>
     </div>
 </template>
 
@@ -25,8 +33,6 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    min-height: 28px;
     box-sizing: border-box;
     color: #ffffff;
     border-radius: 4px;

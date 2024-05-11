@@ -65,6 +65,7 @@ const ipt = () => {
 }
 
 function change(e: Event) {
+    is_select.value = false;
     if (!executed.value) return;
     executed.value = false;
     const value = opacityValue.value;
@@ -164,9 +165,20 @@ const focus = (e: Event) => {
         shapes.value = [...props.context.selection.selectedShapes];
         const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
         opacityValue.value = value;
-        opacityInput.value.select();
     }
 }
+const is_select = ref(false);
+function click() {
+    if (!opacityInput.value) return;
+    const el = opacityInput.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
+}
+
 const text_keyboard = (e: KeyboardEvent) => {
     if (e.code === "Enter" || e.code === "NumpadEnter") {
         opacityInput.value?.blur();
@@ -283,7 +295,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <input type="text" ref="opacityInput" class="input-text"
-                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
+                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @click="click" @focus="focus" @change="change" @blur="change"
                 @input="handleOPacity" @keydown="text_keyboard" />
         </div>
     </div>
@@ -293,7 +305,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px 8px 12px 8px;
+    padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 

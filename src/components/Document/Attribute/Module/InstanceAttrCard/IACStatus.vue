@@ -70,7 +70,8 @@ onMounted(getVattagValue);
     position: relative;
     display: flex;
     align-items: center;
-    height: 44px;
+    height: 32px;
+    margin-bottom: 8px;
 
     .state_item {
         display: flex;

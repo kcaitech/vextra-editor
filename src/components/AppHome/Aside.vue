@@ -1,4 +1,4 @@
-<script setup lang="ts" >
+<script setup lang="ts">
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
 import { Repository, CoopRepository, createDocument, DocEditor } from '@kcdesign/data';
@@ -566,6 +566,7 @@ onUnmounted(() => {
 })
 
 </script>
+
 <template>
     <div class="logo">
         <img class="logo-image" :src="logo" :alt="PROJECT_NAME" />
@@ -637,9 +638,9 @@ onUnmounted(() => {
                                                 <svg-icon icon-class="down" />
                                             </div>
                                             <div class="receive">
-                                                <svg t="1702388143460" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                                    xmlns="http://www.w3.org/2000/svg" p-id="20737" width="200"
-                                                    height="200">
+                                                <svg t="1702388143460" class="icon" viewBox="0 0 1024 1024"
+                                                    version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="20737"
+                                                    width="200" height="200">
                                                     <path
                                                         d="M896 896l-45.44-45.12A63.808 63.808 0 0 1 896 832a64 64 0 0 0 64-64V128a64 64 0 0 0-64-64H256a64 64 0 0 0-64 64v5.44c0 17.6-7.04 33.536-18.56 45.12L128 133.44V128A128 128 0 0 1 256 0h640a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128zM64 256v640a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H128a64 64 0 0 0-64 64z m704-128a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128H128A128 128 0 0 1 0 896V256a128 128 0 0 1 128-128h640z"
                                                         fill="#5A5A5A" p-id="20738"></path>
@@ -652,6 +653,7 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                 </template>
+
                                 <template v-for="(item, i) in projectShareList" :key="i">
                                     <div class="project" @click.stop="(e) => skipProject(item, e)"
                                         @mousedown.stop="(e) => rightMenu(item, e)"
@@ -661,18 +663,22 @@ onUnmounted(() => {
                                         <div v-else style="box-sizing: border-box;">
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
-                                                    <div class="fixed" @click.stop="shareFixed(i, item.project.id)">
+
+                                                <div class="fixed" @click.stop="shareFixed(i, item.project.id)">
+                                                    <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                         <svg-icon icon-class="fixed-icon"
                                                             style="color: rgba(24, 120, 245, 1);"></svg-icon>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip :content="'新建文件'" :offset="10">
-                                                    <div v-if="item.self_perm_type > 2" class="newfile"
-                                                        @click.stop="newProjectFile(item.project.id)">
+                                                    </Tooltip>
+                                                </div>
+
+
+                                                <div v-if="item.self_perm_type > 2" class="newfile"
+                                                    @click.stop="newProjectFile(item.project.id)">
+                                                    <Tooltip :content="'新建文件'" :offset="10">
                                                         <svg-icon icon-class="add"></svg-icon>
-                                                    </div>
-                                                </Tooltip>
+                                                    </Tooltip>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
@@ -682,6 +688,7 @@ onUnmounted(() => {
                         <el-collapse v-model="activeNames">
                             <el-collapse-item v-for="(data, index) in teamList" :key="data.team.id" :name="index"
                                 @click.stop="torouter(data.team.id, index)">
+
                                 <template #title>
                                     <div class="team-title"
                                         :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
@@ -707,6 +714,7 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                 </template>
+
                                 <template v-for="(item, i) in data.children" :key="i">
                                     <div class="project" @click.stop="(e) => skipProject(item, e)"
                                         @mousedown.stop="(e) => rightMenu(item, e)"
@@ -716,22 +724,27 @@ onUnmounted(() => {
                                         <div v-else>
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
-                                                    <div class="fixed" @click.stop="cancelFixed(index, i, item.project.id)">
+
+                                                <div class="fixed" @click.stop="cancelFixed(index, i, item.project.id)">
+                                                    <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                         <svg-icon icon-class="fixed-icon"
                                                             style="color: rgba(24, 120, 245, 1);"></svg-icon>
-                                                    </div>
-                                                </Tooltip>
-                                                <Tooltip :content="'新建文件'" :offset="10">
-                                                    <div v-if="item.self_perm_type > 2" class="newfile"
-                                                        @click.stop="newProjectFile(item.project.id)">
+                                                    </Tooltip>
+                                                </div>
+
+
+                                                <div v-if="item.self_perm_type > 2" class="newfile"
+                                                    @click.stop="newProjectFile(item.project.id)">
+                                                    <Tooltip :content="'新建文件'" :offset="10">
                                                         <svg-icon icon-class="add"></svg-icon>
-                                                    </div>
-                                                </Tooltip>
+                                                    </Tooltip>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </template>
+
                                 <template v-for="(target, n) in targetItem" :key="n">
                                     <div v-if="target.project.team_id === data.team.id" class="project"
                                         @click.stop="(e) => skipProject(target, e)"
@@ -740,12 +753,14 @@ onUnmounted(() => {
                                         <div style="box-sizing: border-box;">
                                             <div class="project_name">{{ target.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="'新建文件'" :offset="10">
-                                                    <div v-if="target.self_perm_type > 2" class="newfile"
-                                                        @click.stop="newProjectFile(target.project.id)">
+
+                                                <div v-if="target.self_perm_type > 2" class="newfile"
+                                                    @click.stop="newProjectFile(target.project.id)">
+                                                    <Tooltip :content="'新建文件'" :offset="10">
                                                         <svg-icon icon-class="add"></svg-icon>
-                                                    </div>
-                                                </Tooltip>
+                                                    </Tooltip>
+                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
@@ -760,22 +775,25 @@ onUnmounted(() => {
     </el-row>
     <div v-if="showoverlay" class="overlay">
         <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
-        <addProject v-if="projectcard" class="inner" :teamid="teamid" @close="showoverlay = false; projectcard = false" />
+        <addProject v-if="projectcard" class="inner" :teamid="teamid"
+            @close="showoverlay = false; projectcard = false" />
     </div>
-    <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
-        ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
-        @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
+    <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left"
+        @close="closeMenu" ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject"
+        @cancelFixed="menucancelFixed" @reName="inputCusname" @showMembergDialog="showMembergDialog"
+        @projectSetting="showSettingDialog">
     </TeamProjectMenu>
     <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
-        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
-        @confirm="DelProject"></ProjectDialog>
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
+        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
-        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible"
-        @confirm="ExitProject"></ProjectDialog>
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')"
+        @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
         :data="menuData" width="500px" @closeDialog="closeDialog" />
-    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
-        :currentProject="menuData" @closeDialog="closeDialog" @exitProject="exitProject" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer"
+        :projectMembergDialog="projectMembergDialog" :currentProject="menuData" @closeDialog="closeDialog"
+        @exitProject="exitProject" />
 </template>
 
 <style lang="scss" scoped>

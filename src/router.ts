@@ -1,12 +1,13 @@
-import { createRouter, createWebHashHistory,createWebHistory} from "vue-router";
-import { Component } from "vue-property-decorator";
+import { createRouter, createWebHashHistory, createWebHistory, NavigationGuardWithThis } from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
 
-declare module 'vue-router'{
-    interface RouteMeta{
-        transition?:string,
+declare module 'vue-router' {
+    interface RouteMeta {
+        transition?: string,
+        beforeEnter?: NavigationGuardWithThis<undefined> | NavigationGuardWithThis<undefined>[],
+        title?: string
     }
 }
 
@@ -34,13 +35,18 @@ const MobileHome = () => import('@/components/Mobile/index.vue')
 const PageViews = () => import('@/components/Mobile/PageViews.vue')
 const ProjectView = () => import('@/components/Mobile/ProjectView.vue')
 const ProjectFileView = () => import('@/components/Mobile/ProjectFileView.vue')
-const Privacy=()=>import('@/components/Mobile/MobliePrivacyolicy.vue')
-const Agreements=()=>import('@/components/Mobile/MoblieServiceagreement.vue')
-const Sharefile=()=>import('@/components/Mobile/ShareFile.vue')
-const Wxlogin=()=>import('@/components/Mobile/WxLogin.vue')
-const Mapply=()=>import('@/components/Mobile/Mapply.vue')
-const Msearch=()=>import('@/components/Mobile/Searchview.vue')
-
+const Privacy = () => import('@/components/Mobile/MobliePrivacyolicy.vue')
+const Agreements = () => import('@/components/Mobile/MoblieServiceagreement.vue')
+const Sharefile = () => import('@/components/Mobile/ShareFile.vue')
+const Wxlogin = () => import('@/components/Mobile/WxLogin.vue')
+const Mapply = () => import('@/components/Mobile/Mapply.vue')
+const Msearch = () => import('@/components/Mobile/Searchview.vue')
+const HomePage = () => import('@/components/Mobile/HomePage.vue')
+const MyFile = () => import('@/components/Mobile/MyFile.vue')
+const MyTeam = () => import('@/components/Mobile/Team.vue')
+const About = () => import('@/components/Mobile/About.vue')
+const Message = () => import('@/components/Mobile/MessageInfo.vue')
+const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
 let _t: any = i18n.global
 
 const children = [
@@ -49,6 +55,15 @@ const children = [
         name: 'recently',
         component: Recently,
         meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'recently') {
+                if (isMobileDevice()) {
+                    next('/m')
+                } else {
+                    next()
+                }
+            }
+        }
     },
     {
         path: 'star',
@@ -102,7 +117,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: navigator.userAgent.includes('miniProgram')?'Wxlogin':'login' },
+        redirect: { name: navigator.userAgent.includes('miniProgram') ? 'Wxlogin' : 'login' },
         children: [
             {
                 path: "introduction",
@@ -114,7 +129,7 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name')},
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name') },
 
             },
             {
@@ -129,7 +144,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true},
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true },
     },
     {
         path: "/home",
@@ -165,15 +180,28 @@ const routes = [
         meta: {
             requireAuth: true,
         },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'pageviews' && to.query.id) {
+                const id = to.query.id
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
+                if (newid !== id) {
+                    next({ ...to, query: { ...to.query, id: newid } });
+                } else {
+                    next();
+                }
+            } else {
+                next();
+            }
+        },
     },
     {
         path: "/files",
         name: "apphome",
         component: Apphome,
         redirect: '/files/recently',
-        children: children
+        children: children,
     },
-    {  
+    {
         path: "/wxlogin",
         name: "Wxlogin",
         component: Wxlogin,
@@ -185,8 +213,49 @@ const routes = [
         path: "/m",
         name: "mobilehome",
         component: MobileHome,
+        redirect: '/m/home',
+        children: [
+            {
+                path: "home",
+                name: "home",
+                component: HomePage,
+                meta: {
+                    requireAuth: true,
+                    title: '首页'
+                }
+            },
+            {
+                path: "file",
+                name: "file",
+                component: MyFile,
+                meta: {
+                    requireAuth: true,
+                    title: '我的文件'
+                }
+            },
+            {
+                path: "team",
+                name: "team",
+                component: MyTeam,
+                meta: {
+                    requireAuth: true,
+                    title: '团队'
+                }
+            },
+            {
+                path: "about",
+                name: "about",
+                component: About,
+                meta: {
+                    requireAuth: true,
+                    title: '我的'
+                }
+            },
+
+        ],
         meta: {
             requireAuth: true,
+            title: '首页'
         }
     },
     {
@@ -195,6 +264,7 @@ const routes = [
         component: ProjectView,
         meta: {
             requireAuth: true,
+            title: '团队'
         }
     },
     {
@@ -211,6 +281,16 @@ const routes = [
         component: Sharefile,
         meta: {
             requireAuth: true,
+            title: '分享'
+        }
+    },
+    {
+        path: "/member",
+        name: "member",
+        component: ShareMember,
+        meta: {
+            requireAuth: true,
+            title: '已加入分享的人'
         }
     },
     {
@@ -219,17 +299,33 @@ const routes = [
         component: Msearch,
         meta: {
             requireAuth: true,
+            title: '搜索'
+        }
+    },
+    {
+        path: "/message",
+        name: 'message',
+        component: Message,
+        meta: {
+            requireAuth: true,
+            title: '消息通知'
         }
     },
     {
         path: "/privacy",
         name: 'privacy',
         component: Privacy,
+        meta: {
+            title: '隐私政策'
+        }
     },
     {
         path: "/agreements",
         name: 'agreements',
         component: Agreements,
+        meta: {
+            title: '在线服务协议'
+        }
     },
     {
         path: "/join",

@@ -228,7 +228,7 @@ export class Clipboard {
 
             const points = points_map.get(shape.id);
             if (points) {
-                (shape as PathShape).points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
+                (shape as PathShape).pathsegs[0].points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
             }
         }
 

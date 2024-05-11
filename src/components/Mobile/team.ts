@@ -3,17 +3,18 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 export const useCounterStore = defineStore('team', () => {
-    const list = ref<any[] | string>('')
+    const teamlist = ref<any[]>([])
+    const projectlist = ref<any[]>([])
+    const tips = ref<string>('')
 
-    
 
     async function GetteamList() {
         try {
             const { code, data, message } = await user_api.GetteamList()
             if (code === 0) {
-                list.value = data
+                teamlist.value = data
             } else {
-                list.value = message
+                tips.value = message
             }
         } catch (error) {
             console.log(error);
@@ -24,15 +25,15 @@ export const useCounterStore = defineStore('team', () => {
         try {
             const { code, data, message } = await user_api.GetprojectLists()
             if (code === 0) {
-                list.value = data
+                projectlist.value = data
             } else {
-                list.value = message
+                tips.value = message
             }
             return data
         } catch (error) {
             console.log(error);
         }
     }
-    return { list, GetteamList, GetprojectLists }
+    return { teamlist, projectlist, tips, GetteamList, GetprojectLists }
 })
 

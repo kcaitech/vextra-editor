@@ -63,7 +63,6 @@ onMounted(get_value);
 .module_state_item {
     position: relative;
     display: flex;
-    min-height: 44px;
 
     .state_item {
         display: flex;

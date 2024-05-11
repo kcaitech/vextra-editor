@@ -30,6 +30,7 @@ import {
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 import Key from '@/components/common/Key.vue';
+import { v4 } from 'uuid';
 
 interface Props {
     context: Context
@@ -44,7 +45,8 @@ const saveExamplesToggle = () => {
 }
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
-    isInstanceShow.value = true
+    isInstanceShow.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
 }
 
 const resetMenu = ref(false)
@@ -141,9 +143,16 @@ const card_ref = ref<HTMLDivElement>();
 function edit_instance() {
     getDialogPosi(card_ref.value);
     isInstanceShow.value = true;
+    props.context.esctask.save(v4(), de_layer_is_show);
 }
 
-function save_layer_show(type: VariableType, name: string) {    
+function de_layer_is_show() {
+    const is_achieve_expected_results = isInstanceShow.value;
+    isInstanceShow.value = false;
+    return is_achieve_expected_results;
+}
+
+function save_layer_show(type: VariableType, name: string) {
     if (is_bind.value) {
         if (!sym_layer.value) return;
         // modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
@@ -205,7 +214,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div style="position: relative;" ref="atrrdialog">
         <TypeHeader :title="t('compos.compos_instance')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
@@ -249,9 +258,9 @@ onUnmounted(() => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
-            :symbol="sym_layer">
+            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
+            :dialog_posi="dialog_posi" :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+            @save-layer-show="save_layer_show" :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                     :context="props.context" :placeholder="t('compos.place_select_instance')" :selectId="selectId">
@@ -284,7 +293,7 @@ onUnmounted(() => {
     }
 
     .rele_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 
     .edit_svg {
@@ -303,7 +312,7 @@ onUnmounted(() => {
     }
 
     .edit_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 
     .reset_svg {
@@ -349,12 +358,14 @@ onUnmounted(() => {
     }
 
     .reset_svg:hover {
-        background-color: #EBEBEB;
+        background-color: #F5F5F5;
     }
 }
 
 .attr_con {
     display: flex;
+    margin-bottom: 2px;
+    margin-top: 6px;
     align-items: center;
     justify-content: space-between;
 }
@@ -363,9 +374,13 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     border-radius: 4px;
-    background-color: var(--grey-light);
-    width: calc(100% - 22px);
-    height: 30px;
+    background-color: #F5F5F5;
+    width: calc(100% - 32px);
+    height: 32px;
+
+    &:hover {
+        background-color: #EBEBEB;
+    }
 
     .module_name {
         display: flex;
@@ -427,16 +442,21 @@ onUnmounted(() => {
 }
 
 .delete {
-    flex: 0 0 22px;
+    flex: 0 0 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
 
     >svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &:hover {
+        background-color: #F5F5F5;
     }
 
     transition: .2s;

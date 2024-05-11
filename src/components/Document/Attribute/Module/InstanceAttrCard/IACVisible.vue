@@ -46,11 +46,11 @@ onMounted(get_value);
 <style lang="scss" scoped>
 .item-wrap {
     display: flex;
+    height: 28px;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     box-sizing: border-box;
-    margin-bottom: 8px;
 
     .name {
         max-width: 82px;

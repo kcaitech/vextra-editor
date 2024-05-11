@@ -48,6 +48,28 @@ export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: s
     }
 }
 
+const _escapeChars: { [key: string]: string } = {};
+_escapeChars['<'] = '&lt;';
+_escapeChars['>'] = '&gt;';
+_escapeChars['&'] = '&amp;';
+function escapeWebChar(text: string) {
+    const ret: string[] = [];
+    let i = 0, j = 0, len = text.length;
+    for (; i < len; ++i) {
+        const e = _escapeChars[text[i]];
+        if (e) {
+            if (i > j) ret.push(text.substring(j, i));
+            ret.push(e);
+            j = i + 1;
+        }
+    }
+    if (ret.length > 0) {
+        if (i > j) ret.push(text.substring(j, i));
+        return ret.join('');
+    }
+    return text;
+}
+
 function inner_elpatch(tar: EL, old: EL | undefined) {
     let _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
     const _tar = tar as EL & { el?: HTMLElement | SVGElement };
@@ -85,7 +107,7 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     // string
     if (!Array.isArray(_tar.elchilds)) {
         if (!_old || _old.elchilds !== _tar.elchilds) {
-            _tar.el.innerHTML = _tar.elchilds;
+            _tar.el.innerHTML = escapeWebChar(_tar.elchilds);
         }
         return;
     }

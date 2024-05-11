@@ -397,15 +397,34 @@ const selectColor = (e: FocusEvent) => {
             tableRowEnd: table.tableRowEnd,
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
-        },
-            (e.target as HTMLInputElement).select()
+        }
     }
+}
+const is_color_select = ref(false);
+const colorClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    el.select();
+    is_color_select.value = true;
 }
 const colorInput = (e: Event) => {
     if (colorBorder.value) {
         const value = (e.target as HTMLInputElement).value;
         colorValue.value = value;
     }
+}
+const is_alpha_select = ref(false);
+const alphaClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
 }
 const selectAlpha = (e: Event) => {
     if (alphaBorder.value) {
@@ -419,7 +438,6 @@ const selectAlpha = (e: Event) => {
             tableColEnd: table.tableColEnd
         }
     }
-    (e.target as HTMLInputElement).select();
 }
 const alphaInput = (e: Event) => {
     if (alphaBorder.value) {
@@ -718,8 +736,14 @@ async function onMouseDown(e: MouseEvent, index: number) {
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove, false);
     // document.addEventListener("pointerlockchange", lockChangeAlert, false);
-
+    document.addEventListener("pointerlockchange", pointerLockChange, false);
     showpoint.value = true
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        onMouseUp();
+    }
 }
 
 function lockChangeAlert() {
@@ -732,14 +756,8 @@ function lockChangeAlert() {
     }
 }
 
-let timer: any
 const selectBorderThicknes = (e: FocusEvent, index: number) => {
     isActived.value = index;
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-        (e.target as HTMLInputElement).select()
-        clearTimeout(timer)
-    }, 200);
 }
 
 
@@ -767,7 +785,7 @@ function onMouseMove(e: MouseEvent) {
     const table = props.context.tableSelection;
     if (borderThickness.value?.length) {
         let thickness = (getSideThickness(borders[index].border.sideSetting) || 0) + e.movementX;
-        if(thickness > 300) thickness = 300;
+        if (thickness > 300) thickness = 300;
         if (shapes.length === 1 && shape.type === ShapeType.Table && is_editing(table) && bordercellthickness_editor) {
             bordercellthickness_editor.execute(thickness < 0 ? 0 : thickness, id)
         } else {
@@ -780,8 +798,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-function onMouseUp(e: MouseEvent) {
-    e.stopPropagation()
+function onMouseUp() {
     document.exitPointerLock()
     showpoint.value = false
 
@@ -795,15 +812,17 @@ function onMouseUp(e: MouseEvent) {
         bordercellthickness_editor.close();
         bordercellthickness_editor = undefined
     }
+    document.removeEventListener("pointerlockchange", pointerLockChange, false);
 }
 
 function setThickness(e: Event, id: number) {
     let thickness = Number((e.target as HTMLInputElement).value);
+    (e.target as HTMLInputElement).blur();
     if (isNaN(thickness)) return;
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
-    if(thickness > 300) thickness = 300;
+    if (thickness > 300) thickness = 300;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -843,6 +862,20 @@ const thickness_value = (index: number, idx: number) => {
         }
     }
 }
+const is_stroke_select = ref(false);
+const strokeBlur = () => {
+    isActived.value = -1;
+    is_stroke_select.value = false;
+}
+const strokeClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_stroke_select.value) return;
+    el.select();
+    is_stroke_select.value = true;
+}
 
 </script>
 
@@ -881,14 +914,16 @@ const thickness_value = (index: number, idx: number) => {
                         <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
                             :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
                             :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                            @focus="selectColor($event)" @input="colorInput($event)" />
+                            @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
+                            @input="colorInput($event)" />
                         <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
                             v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
             t(`color.${b.border.gradient.gradientType}`)
         }}</span>
                         <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                            style="text-align: center;" :value="filterAlpha(b.border) + '%'"
-                            @change="e => onAlphaChange(b.border, idx)" @focus="selectAlpha" @input="alphaInput" />
+                            style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
+                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
+                            @focus="selectAlpha" @input="alphaInput" />
                     </div>
                     <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
                         :index="borders.length - idx - 1">
@@ -913,7 +948,7 @@ const thickness_value = (index: number, idx: number) => {
                             :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
                             @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
                         <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
-                            @change="setThickness($event, borders.length - idx - 1)" @blur="isActived = -1"
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur" @click="strokeClick"
                             @focus="selectBorderThicknes($event, idx)">
                     </div>
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
@@ -1020,6 +1055,7 @@ const thickness_value = (index: number, idx: number) => {
 
     .borders-container {
         padding: 6px 0;
+
         .border {
             width: 100%;
             display: flex;

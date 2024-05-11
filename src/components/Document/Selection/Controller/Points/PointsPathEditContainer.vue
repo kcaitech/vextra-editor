@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -60,6 +60,18 @@ function update() {
     props.context.path.set_segments(segments);
 }
 
+function updatePassive() {
+    dots.length = 0;
+    segments.length = 0;
+
+    init_matrix();
+
+    dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
+    segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
+
+    props.context.path.set_segments(segments);
+}
+
 /**
  * @description down下任意一个已有的编辑点
  */
@@ -68,8 +80,9 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         return;
     }
 
-    if (dbl_action()) { // m1458
+    if (dbl_action()) {
         modify_point_curve_mode(props.context, index);
+        return;
     }
 
     event.stopPropagation();
@@ -79,18 +92,20 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         path.adjust_points(segment, index)
     } else {
         if (!path.is_selected(segment, index)) {
-            path.select_point(segment, index);
+            path.select_point(segment, index, true);
         }
     }
 
     current_segment = segment;
     current_curve_point_index = index;
 
-    pathModifier = new PathEditor(props.context, event);
+    pathModifier = new PathEditor(props.context, event, PathEditor.BORDER_MAP, true);
     downXY = { x: event.x, y: event.y };
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+
+    props.context.workspace.setSelectionViewUpdater(false);
 
     move = point_mousemove;
 }
@@ -135,7 +150,6 @@ function point_mousemove(event: MouseEvent) {
 
     if (isDragging) {
         pathModifier?.execute(event);
-        return;
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
 
@@ -223,6 +237,8 @@ function point_mouseup(event: MouseEvent) {
     pathModifier?.fulfil();
     pathModifier = undefined;
 
+    props.context.workspace.setSelectionViewUpdater(true);
+
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', point_mouseup);
 }
@@ -282,19 +298,19 @@ function path_watcher(type: number) {
     }
 }
 
-function matrix_watcher(t: number) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
-}
-
 function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
-onMounted(() => {
-    props.context.workspace.watch(matrix_watcher);
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        updatePassive();
+    }
+}
 
+onMounted(() => {
     shape = props.context.selection.pathshape!;
     if (!shape) {
         return console.log('wrong shape');
@@ -304,15 +320,16 @@ onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
+    props.context.workspace.watch(workspaceWatcher);
 })
 
 onUnmounted(() => {
-    props.context.workspace.unwatch(matrix_watcher);
     props.context.path.unwatch(path_watcher);
 
     shape?.unwatch(update);
 
     window.removeEventListener('blur', window_blur);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 <template>
@@ -334,10 +351,10 @@ onUnmounted(() => {
     </g>
 
     <Handle :context="props.context"></Handle>
-    <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
-    <!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
-    <!--        {{ i }}-->
-    <!--    </text>-->
+<!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+<!--    <text v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }">-->
+<!--        {{ i }}-->
+<!--    </text>-->
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"

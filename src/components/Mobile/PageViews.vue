@@ -29,7 +29,6 @@ import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import { PROJECT_NAME } from "@/const";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
-import { genOptions } from '@/utils/common';
 
 
 const route = useRoute();
@@ -48,7 +47,7 @@ const showHint = ref(false);
 const canComment = ref(false);
 const curPage = shallowRef<PageView | undefined>(undefined);
 const showpagelist = ref<boolean>(false)
-const HEAD_HEIGHT = 44;
+const HEAD_HEIGHT = 0;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
 
 const fileName = ref<string>(PROJECT_NAME);
@@ -224,7 +223,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             fileName.value = file_name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
+            window.document.title = fileName.value;
             context = new Context(document, coopRepo);
             matrix.value = context.workspace.matrix;
             context.workspace.setDocumentPerm(perm);
@@ -597,7 +596,7 @@ const __anchor = (event: TouchEvent) => {
 
 function start(e: TouchEvent) {
     e.stopPropagation();
-    e.preventDefault();
+    // e.preventDefault();
     downTouchesLength = e.touches.length;
 
     if (downTouchesLength > 1) { // 只有多根手指才可能触发缩放
@@ -613,7 +612,11 @@ const MIN = 2;
 
 function move(e: TouchEvent) {
     e.stopPropagation();
-    e.preventDefault();
+    // e.preventDefault();
+
+    if (e.touches[0].clientX < 20) {
+        return
+    }
 
     const anchor = __anchor(e);
 
@@ -663,17 +666,39 @@ const backlink = computed(() => {
     return window.history.state.back ? true : false
 })
 
+const iconPosition = ref({
+    left: window.innerWidth - 68,
+    top: window.innerHeight - 68
+})
+
+function moveIcon(e: TouchEvent) {
+    e.stopPropagation()
+    e.preventDefault()
+    iconPosition.value.left = (e.touches[0].clientX - 24) < 20 ? 20 : (e.touches[0].clientX - 24) > (e.view?.window.innerWidth! - 68) ? (e.view?.window.innerWidth! - 68) : (e.touches[0].clientX - 24)
+    iconPosition.value.top = (e.touches[0].clientY - 24) < 20 ? 20 : (e.touches[0].clientY - 24) > (e.view?.window.innerHeight! - 68) ? (e.view?.window.innerHeight! - 68) : (e.touches[0].clientY - 24)
+}
+
+onMounted(() => {
+    if (localStorage.getItem('s-bar-pst')) {
+        const { L, T } = JSON.parse(localStorage.getItem('s-bar-pst') ?? '');
+        iconPosition.value.left = L
+        iconPosition.value.top = T
+    }
+})
+
+onUnmounted(() => {
+    let pst = { L: iconPosition.value.left, T: iconPosition.value.top }
+    localStorage.setItem('s-bar-pst', JSON.stringify(pst))
+})
+
 </script>
 
 <template>
     <div class="container">
-        <div class="status-bar">
+        <div class="status-bar" @touchmove.stop="moveIcon"
+            :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showpagelist = !showpagelist">
                 <svg-icon icon-class="menu-black"></svg-icon>
-            </div>
-            <span>{{ fileName }}</span>
-            <div class="back" @click="backlink ? router.go(-1) : router.replace({ path: '/m' })">
-                <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <transition name="fade">
@@ -702,7 +727,7 @@ const backlink = computed(() => {
 
 .fade-enter-from,
 .fade-leave-to {
-    transform: translateX(-300px);
+    transform: translateX(100%);
 }
 
 .container {
@@ -711,19 +736,21 @@ const backlink = computed(() => {
 }
 
 .status-bar {
-    position: relative;
+    position: fixed;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: v-bind('HEAD_HEIGHT_CSS');
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     background-color: #fff;
     box-sizing: border-box;
     box-shadow: 0 0 5px silver;
     z-index: 999;
 
     .back {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
         position: absolute;
         right: 8px;
 
@@ -735,10 +762,8 @@ const backlink = computed(() => {
     }
 
     .list {
-        width: 20px;
-        height: 20px;
-        position: absolute;
-        left: 8px;
+        width: 24px;
+        height: 24px;
 
         svg {
             width: 100%;
@@ -751,9 +776,9 @@ const backlink = computed(() => {
 
 .pagelist {
     position: absolute;
-    left: 0;
+    right: 0;
     width: 40%;
-    height: calc(100% - 44px);
+    height: 100%;
     background-color: #fff;
     z-index: 1;
 

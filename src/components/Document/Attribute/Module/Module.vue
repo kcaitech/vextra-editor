@@ -79,8 +79,6 @@ function symbolref() {
     }
 }
 
-
-
 </script>
 
 <template>
@@ -102,7 +100,7 @@ function symbolref() {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 }

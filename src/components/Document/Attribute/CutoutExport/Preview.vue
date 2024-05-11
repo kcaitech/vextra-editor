@@ -68,20 +68,19 @@ const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const background_color = ref<string>(DEFAULT_COLOR());
 let renderItems: Shape[] = reactive([]);
 const selectedShapes: Map<string, ShapeView> = new Map();
-const previewSvg = ref<SVGSVGElement>();
 const pngImage = ref();
 const renderSvgs = ref<SvgFormat[]>([]);
-const ImageUrls: Map<string, string> = new Map();
+const svgImageUrls: Map<string, string> = new Map();
 
 const pageCard = ref<PCard>();
 
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
-    getCanvasShape();
+    getMapUrl();
 }
 const _getCanvasShape = () => {
-    if(!isTriangle.value) return;
+    if (!isTriangle.value) return;
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
     if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {
@@ -113,22 +112,23 @@ const _getCanvasShape = () => {
         }
     }
     nextTick(() => {
-        getImageUrl();
-    });
+        getSvgUrl();
+    })
 }
 
-const getImageUrl = async () => {
+const getSvgUrl = async () => {
     const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
     if (pageCard.value?.pageSvg) {
         let format: ExportFormat;
         let id = '';
         let shape: ShapeView;
+        if (shapes.length > 1) return;
         if (shapes.length === 1) {
             shape = shapes[0];
             format = shape.exportOptions!.exportFormats[0];
             id = shape.id + format.id;
         } else {
-            const page = props.context.selection.selectedPage;
             if (!page || page.exportOptions!.exportFormats.length === 0) return;
             shape = page;
             format = page && page.exportOptions!.exportFormats[0];
@@ -137,17 +137,15 @@ const getImageUrl = async () => {
         const { width, height } = pageCard.value.pageSvg.viewBox.baseVal
         pageCard.value.pageSvg.setAttribute("width", `${width * format.scale}`);
         pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
-        if (format.fileFormat === ExportFileFormat.Png || format.fileFormat === ExportFileFormat.Jpg) {
-            await getPngImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-        } else if (format.fileFormat === ExportFileFormat.Svg) {
-            await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, ImageUrls, shape);
-        }        
-        pngImage.value = ImageUrls.get(id);
+        await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, svgImageUrls, shape);
+        pngImage.value = svgImageUrls.get(id);
+        const m_id = shapes.length ? shapes[0].id : page!.id;
+        props.context.workspace.setPageImg(m_id, { url: pngImage.value, width: width * format.scale, height: height * format.scale });
         reflush.value++;
     }
 }
 
-const getCanvasShape = debounce(_getCanvasShape, 250, { leading: true });
+const getCanvasShape = debounce(_getCanvasShape, 250);
 
 const getPosition = (shape: ShapeView) => {
     const p = shape.boundingBox()
@@ -228,7 +226,7 @@ const select_watcher = (t: number) => {
             isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
-        getCanvasShape();
+        getMapUrl();
         if (shapes.length === 1) {
             shape.value = shapes[0];
         } else if (shapes.length === 0) {
@@ -236,13 +234,13 @@ const select_watcher = (t: number) => {
         }
     }
     if (t === Selection.CHANGE_PAGE) {
-        getCanvasShape();
+        getMapUrl();
     }
 }
 
 const getShapesSvg = (shapes: ShapeView[]) => {
     if (shapes.length > 0) {
-        let renderItems: SvgFormat[] = [];
+        let r_Items: SvgFormat[] = [];
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
             let shapeItem: Shape[] = [];
@@ -262,7 +260,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 shapeItem = [s];
             }
             getPosition(shape);
-            renderItems.push(
+            r_Items.push(
                 {
                     id: shape.id + i,
                     width: width.value,
@@ -274,13 +272,13 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 }
             )
         }
-        renderSvgs.value = toRaw(renderItems);
+        renderSvgs.value = toRaw(r_Items);
     } else if (shapes.length === 0) {
-        let renderItems: SvgFormat[] = [];
+        let r_Items: SvgFormat[] = [];
         const page = props.context.selection.selectedPage;
         if (!page) return;
         const { x, y, width: _w, height: _h } = getPageBounds(page);
-        renderItems.push(
+        r_Items.push(
             {
                 id: page.id + 0,
                 width: _w,
@@ -291,17 +289,73 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 shapes: page.childs.map(s => adapt2Shape(s)).filter(s => s.type !== ShapeType.Cutout)
             }
         )
-        renderSvgs.value = toRaw(renderItems);
+        renderSvgs.value = toRaw(r_Items);
     }
     getCanvasShape();
 }
 
 defineExpose({ getShapesSvg, renderSvgs })
 const img = ref();
-const startDrag = (e: DragEvent) => {
+const startDrag = async (e: MouseEvent) => {
     if (img.value) {
-        e.dataTransfer!.setDragImage(img.value, img.value.clientWidth / 2, img.value.clientHeight / 2);
+        const shapes = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage;
+        if (!page) return;
+        const shape = shapes.length ? shapes[0] : page;
+        const format = shape.exportOptions!.exportFormats[0];
+        if (format.fileFormat === ExportFileFormat.Svg) {
+            e.target?.addEventListener("dragstart", () => drag)
+        } else {
+            toPng(shape.id, e, format.scale);
+        }
     }
+}
+const drag = (e: DragEvent) => {
+    e.dataTransfer!.setDragImage(img.value, img.value.clientWidth / 2, img.value.clientHeight / 2);
+}
+
+const toPng = (id: string, e: MouseEvent, scale: number) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    const info = props.context.workspace.getSvgImgInfo(id);
+    if (!context || !info) return;
+    canvas.width = info.width;
+    canvas.height = info.height;
+    const image = new Image();
+    image.src = info.url;
+    image.onload = () => {
+        context.drawImage(image, 0, 0);
+        const dataURL = canvas.toDataURL(`image/png`);
+        img.value.src = dataURL;
+        e.target?.addEventListener("dragstart", () => drag)
+        e.target?.addEventListener("dragend", () => dragend)
+    }
+}
+
+const dragend = () => {
+    getSvgUrl();
+}
+
+const getMapUrl = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    if (shapes.length === 0) {
+        const imgInfo = props.context.workspace.getSvgImgInfo(page.id);
+        if (imgInfo) {
+            pngImage.value = imgInfo.url;
+        } else {
+            getCanvasShape();
+        }
+    } else {
+        const imgInfo = props.context.workspace.getSvgImgInfo(shapes[0].id);
+        if (imgInfo) {
+            pngImage.value = imgInfo.url;
+        } else {
+            getCanvasShape();
+        }
+    }
+    reflush.value++;
 }
 
 watch(() => props.canvas_bg, (v) => {
@@ -314,7 +368,7 @@ watch(() => shape.value, (v, o) => {
 
 onMounted(() => {
     page_color();
-    _getCanvasShape();
+    getMapUrl();
     props.context.selection.watch(select_watcher);
 })
 onUnmounted(() => {
@@ -334,14 +388,13 @@ onUnmounted(() => {
         </div>
         <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
             :shapes="renderItems" :width="width" :height="height"></PageCard>
-        <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
+        <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
             <div class="preview-image" v-if="pngImage">
-                <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
+                <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
             </div>
         </div>
-        <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-            :reflush="reflush !== 0 ? reflush : undefined">
-            <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
+        <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage" :reflush="reflush">
+            <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
         </div>
     </div>
 </template>
