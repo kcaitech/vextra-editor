@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { PathShapeView, PathShapeView2, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
+import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
@@ -71,7 +71,7 @@ function update() {
     modify_radius_value();
 }
 
-function selection_wather(t: Number) {
+function selection_watcher(t: Number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }
@@ -139,6 +139,7 @@ function get_radius_for_shape(shape: ShapeView) {
             return mixed;
         }
     }
+
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;
         const points = s.points;
@@ -409,12 +410,12 @@ const pointerLockChange = () => {
 }
 
 onMounted(() => {
-    props.context.selection.watch(selection_wather);
+    props.context.selection.watch(selection_watcher);
     update();
     watch_shapes();
 });
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    props.context.selection.unwatch(selection_watcher);
 })
 </script>
 <template>

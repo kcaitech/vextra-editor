@@ -1211,4 +1211,24 @@ export class PathEditor extends TransformHandler {
             this.fulfil();
         }
     }
+
+    modifyClosedStatus(val: boolean) {
+        try {
+            if (!this.isInitMatrix) {
+                this.init();
+            }
+
+            if (!this.asyncApiCaller) {
+                this.createApiCaller();
+            }
+
+            if (!this.asyncApiCaller || !this.isInitMatrix) {
+                return;
+            }
+
+            (this.asyncApiCaller as PathModifier).modifyClosedStatus(this.shape, val);
+        } finally {
+            this.fulfil();
+        }
+    }
 }
