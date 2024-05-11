@@ -21,7 +21,7 @@ export const newFile = () => {
     router.push({ name: 'document' });
 }
 
-export const picker = new FilePicker('.sketch,.fig', (file) => {
+export const picker = new FilePicker('.sketch', (file) => {
     if (!file) return;
     let loader;
     const repo = new Repository();
