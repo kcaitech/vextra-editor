@@ -106,7 +106,7 @@ function shot() {
 }
 
 function showMenu(e: MouseEvent) {
-    const el = (e.target as Element)!.closest('.tool-button') as HTMLDivElement;
+    const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
     if (!el) {
         return;
     }
@@ -160,14 +160,15 @@ onUnmounted(() => {
 
 <template>
     <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
-        <ToolButton :selected="selected" @mouseenter.stop="enter" @mouseleave.stop="leave" @click="shot">
+        <div :class="{'path-button': true, 'path-button-selected':selected}" @mouseenter.stop="enter"
+             @mouseleave.stop="leave" @click="shot">
             <div class="svg-container">
                 <svg-icon :icon-class="pattern"></svg-icon>
             </div>
             <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
                 <svg-icon icon-class="white-down"></svg-icon>
             </div>
-        </ToolButton>
+        </div>
     </el-tooltip>
     <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
         <!--矩形-->
@@ -251,30 +252,58 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-.svg-container {
+.path-button {
     display: flex;
     align-items: center;
+    box-sizing: border-box;
+    color: #ffffff;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 48px;
+    height: 32px;
 
-    > svg {
-        width: 18px;
-        height: 18px;
+    .svg-container {
+        display: flex;
+        align-items: center;
+        flex: 10;
+        flex-direction: row-reverse;
+        height: 100%;
+
+        > svg {
+            width: 18px;
+            height: 18px;
+        }
     }
 
-}
+    .tool-pathshape-menu-trigger {
+        flex: 9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
 
-.tool-pathshape-menu-trigger {
-    margin-left: 4px;
-    transition: 0.2s;
+        > svg {
+            width: 12px;
+            height: 12px;
+            transition: 0.2s;
+        }
+    }
 
-    > svg {
-        width: 12px;
-        height: 12px;
+    .tool-pathshape-menu-trigger:hover {
+        > svg {
+            transform: translateY(2px);
+        }
     }
 }
 
-.tool-pathshape-menu-trigger:hover {
-    transform: translateY(2px);
+.path-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
+
+.path-button-selected {
+    background-color: var(--active-color) !important;
+}
+
 
 .popover-shape-tool {
     width: 158px;
