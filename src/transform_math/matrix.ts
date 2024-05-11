@@ -238,9 +238,9 @@ export class Matrix { // 矩阵
         return this
     }
 
-    forEach(callback: (value: number, row: number, column: number) => void) { // 遍历（横向优先）
+    forEach(callback: (value: number, indexes: [number, number]) => void) { // 遍历（横向优先）
         const [m, n] = this.size
-        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) callback(this.get([i, j]), i, j);
+        for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) callback(this.get([i, j]), [i, j]);
     }
 
     flat() { // 转为一维数组（横向优先）
@@ -505,7 +505,7 @@ export class Matrix { // 矩阵
         return this
     }
 
-    _getMultiply(matrix: Matrix) {
+    private _getMultiply(matrix: Matrix) {
         const [m0, n0] = this.size
         const [m1, n1] = matrix.size
         if (n0 !== m1) throw new Error("矩阵阶数不匹配，无法相乘");
