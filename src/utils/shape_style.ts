@@ -625,7 +625,11 @@ export function get_borders_corner(shapes: ShapeView[], index: number): false | 
     const corner = styleborders[index].cornerType;
     const mixed = shapes.every(shape => {
         const borders = shape.getBorders() || [];
-        return borders[index].cornerType === corner;
+        if(borders[index]) {
+            return borders[index].cornerType === corner;
+        }else {
+            return false;
+        }
     });
     if (mixed) {
         return corner;

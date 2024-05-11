@@ -119,7 +119,7 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 8px;
+    margin-top: 8px;
     width: 100%;
 
     .attr_con {

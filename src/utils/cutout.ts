@@ -156,7 +156,7 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const { x, y, width, height } = shape.frame;
     if (!childs) return { x, y, width, height };
     const shapes = flattenShapes(childs).filter(s => (s.type !== ShapeType.Group));
-    const group_bounds_points = getMaxMinPoints(shapes);
+    const group_bounds_points = getMaxMinPoints(shapes, shape);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
     return {
@@ -167,7 +167,7 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     }
 }
 
-const getMaxMinPoints = (shapes: ShapeView[]) => {
+const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
     const bounds_points = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -195,10 +195,6 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
         let p = shape.parent;
         if (p && p.type !== ShapeType.Page) {
             while (p) {
-                if (p.type === ShapeType.Page) {
-                    break;
-                }
-                if (!p) break;
                 const p_farme = p.frame;
                 max_point = {
                     x: max_point.x + p_farme.x,
@@ -208,7 +204,19 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
                     x: min_point.x + p_farme.x,
                     y: min_point.y + p_farme.y
                 }
-                p = p.parent;
+                break;
+            }
+        }
+        if (s && s.parent && s.parent.type !== ShapeType.Page) {
+            if (s.parent.type !== ShapeType.Group) {
+                max_point = {
+                    x: max_point.x + s.frame.x,
+                    y: max_point.y + s.frame.y
+                }
+                min_point = {
+                    x: min_point.x + s.frame.x,
+                    y: min_point.y + s.frame.y
+                }
             }
         }
         bounds_points.push(max_point, min_point);

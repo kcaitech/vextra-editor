@@ -210,7 +210,7 @@ const getValue = (value: Text | string | undefined) => {
 </script>
 <template>
     <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin-left: -8px;"></div>
-    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.text_content')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">

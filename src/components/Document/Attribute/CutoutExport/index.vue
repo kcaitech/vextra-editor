@@ -138,12 +138,6 @@ function updateData() {
             }
         }
     }
-    nextTick(() => {
-        if (preview.value) {
-            preview.value.getShapesSvg(selected);
-            renderSvgs = toRaw(preview.value.renderSvgs);
-        }
-    })
     reflush.value++;
 }
 
@@ -501,7 +495,6 @@ const page_unwatcher = () => {
 // hooks
 onMounted(() => {
     update_by_shapes();
-    showCheckbox();
     props.context.selection.watch(selection_watcher);
     page_watcher();
 });
