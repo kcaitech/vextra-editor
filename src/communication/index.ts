@@ -13,7 +13,8 @@ import * as communication from "./communication"
 
 declare const COMMUNICATION_WORKER_URL: string
 
-let enabledWorker = typeof SharedWorker !== "undefined"
+// let enabledWorker = typeof SharedWorker !== "undefined"
+let enabledWorker = false
 
 export class Communication {
     private info: CommunicationInfo
