@@ -272,9 +272,9 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="btns">
-            <div :class="{ 'path-status': true }" @click="modify_closed_status">
-                {{ btn_string_for_status }}
-            </div>
+            <!--            <div :class="{ 'path-status': true }" @click="modify_closed_status">-->
+            <!--                {{ btn_string_for_status }}-->
+            <!--            </div>-->
             <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>
@@ -390,7 +390,7 @@ onUnmounted(() => {
         }
 
         .exit {
-            width: 108px;
+            width: 100%;
             height: 100%;
             background-color: var(--active-color);
             color: var(--theme-color-anti);
