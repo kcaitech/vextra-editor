@@ -281,16 +281,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         transporter = new TranslateHandler(context, e, selection.selectedShapes);
-        // console.log('transporter:', transporter);
-
-        // context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 
         document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
-
-        // wheel = fourWayWheel(context, undefined, startPositionOnPage);
-        // workspace.setCtrl('controller');
     }
 
     async function mousemove(e: MouseEvent) {
@@ -300,20 +294,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            // if (isDragging && wheel && asyncTransfer) {
-            // speed = get_speed(t_e || e, e);
-            // t_e = e;
-
-            // let update_type = 0;
-
-            // const is_need_assit = wheel.is_inner(e);
-
-            // update_type = transform(startPosition, mousePosition, is_need_assit);
-
-            // wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
-
-            // modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-
             transporter?.execute(e);
 
         } else if (check_drag_action(startPosition, mousePosition)) {
@@ -331,24 +311,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             reset_assist_before_translate(context, shapes);
 
-            // offset_map = gen_offset_points_map(shapes, startPositionOnPage);
-
-            // asyncTransfer = context.editor
-            //     .controller()
-            //     .asyncTransfer(shapes, selection.selectedPage!);
-
-
-            // context.selection.setShapesSet(shapes);
-            // asyncTransfer.setEnvs(record_origin_env(shapes));
-            // const except_envs = find_except_envs(context, shapes, e);
-            // asyncTransfer.setExceptEnvs(except_envs);
-            // asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
-
             transporter?.createApiCaller();
-
-            // if (e.altKey) {
-            //     shapes = await paster_short(context, shapes, transporter!.asyncApiCaller!);
-            // }
 
             isDragging = true;
         }
@@ -467,23 +430,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         initController();
         workspace.contentEdit(false);
 
-        context.esctask.save('select-shape', exit);
-
-        if (workspace.is_path_edit_mode) {
-            context.esctask.save('path-edit', () => {
-                const achieve = workspace.is_path_edit_mode;
-                workspace.setPathEditMode(false);
-                return achieve;
-            });
-        }
-
-        const path = context.path;
-        if (context.tool.action === Action.Pen2 && path.isContacting) {
-            context.esctask.save('contact-status', () => {
-                const achieve = path.isContacting;
-                path.setContactStatus(false);
-                return achieve;
-            });
+        if (!context.esctask.has('select-shape')) {
+            context.esctask.save('select-shape', exit);
         }
     }
 

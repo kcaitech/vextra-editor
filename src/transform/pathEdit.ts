@@ -810,6 +810,13 @@ export class PathEditor extends TransformHandler {
 
         let addRes = false;
         if (index > -1 && segment > -1) {
+            const __segment = (this.shape as PathShapeView).segments[segment];
+            if (!__segment) {
+                return this.addSegmentForPen(down);
+            }
+
+            index = __segment.points.length;
+
             addRes = (this.asyncApiCaller as PathModifier)
                 .addPointForPen(this.shape, segment, index, xy);
 
@@ -1200,6 +1207,26 @@ export class PathEditor extends TransformHandler {
             }
 
             (this.asyncApiCaller as PathModifier).sortSegment(this.shape);
+        } finally {
+            this.fulfil();
+        }
+    }
+
+    modifyClosedStatus(val: boolean) {
+        try {
+            if (!this.isInitMatrix) {
+                this.init();
+            }
+
+            if (!this.asyncApiCaller) {
+                this.createApiCaller();
+            }
+
+            if (!this.asyncApiCaller || !this.isInitMatrix) {
+                return;
+            }
+
+            (this.asyncApiCaller as PathModifier).modifyClosedStatus(this.shape, val);
         } finally {
             this.fulfil();
         }

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
@@ -10,7 +10,6 @@ import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
 import { Asssit } from "@/context/assist";
-import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -32,7 +31,7 @@ const data: {
     segments: Segment[][]
 } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
-const dragActiveDis = 3;
+const dragActiveDis = 5;
 const new_high_light = ref<string>('');
 const add_rect = ref<string>('');
 let shape: ShapeView;
@@ -164,6 +163,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     event.stopPropagation();
 
+    downXY = { x: event.x, y: event.y };
 
     const path = props.context.path;
     const isContacting = path.isContacting;
@@ -195,7 +195,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
-                downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
         } else {
@@ -228,7 +227,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
-                downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
         }
@@ -262,6 +260,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 asyncEnvMount();
 
                 props.context.esctask.save('contact-status', () => {
+                    path.reset();
                     const achieve = props.context.path.isContacting;
                     props.context.path.setContactStatus(false);
                     return achieve;
@@ -284,6 +283,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             asyncEnvMount();
 
             props.context.esctask.save('contact-status', () => {
+                path.reset();
                 const achieve = props.context.path.isContacting;
                 props.context.path.setContactStatus(false);
                 return achieve;
@@ -307,12 +307,11 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             props.context.path.setContactStatus(true);
 
             props.context.esctask.save('contact-status', () => {
-                const achieve = props.context.path.isContacting;
-                props.context.path.setContactStatus(false);
+                path.reset();
+                const achieve = path.isContacting;
+                path.setContactStatus(false);
                 return achieve;
             });
-
-            downXY = { x: event.x, y: event.y };
 
             asyncEnvMount();
         }
@@ -341,6 +340,25 @@ function checkStatus() {
 
     passiveUpdate();
 
+    const workspace = props.context.workspace;
+
+    if (workspace.is_path_edit_mode) {
+        props.context.esctask.save('path-edit', () => {
+            const achieve = workspace.is_path_edit_mode;
+            workspace.setPathEditMode(false);
+            return achieve;
+        });
+    }
+
+    if (path.isContacting) {
+        props.context.esctask.save('contact-status', () => {
+            path.reset();
+            const achieve = path.isContacting;
+            path.setContactStatus(false);
+            return achieve;
+        });
+    }
+
     if (!e.buttons) { // Mac环境与Window环境下，这个判断结果会不同，很奇怪的机制
         handler?.fulfil();
         return;
@@ -355,6 +373,7 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
     if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
+        console.log('emit dragActiveDis');
         launch_bridging(event);
     }
 }
@@ -462,7 +481,8 @@ function matrix_watcher(t: number) {
     }
 }
 
-function documentMove(e: MouseEvent) {  // 鼠标抬起的时候为什么也会触发这里？？？
+function documentMove(e: MouseEvent) {
+    props.context.path.saveEvent(e);
     const __client = props.context.workspace.getContentXY(e);
 
     let delX = Infinity;
@@ -557,10 +577,19 @@ function modifyLivingPath() {
 
     const shape = props.context.selection.selectedShapes[0] as PathShapeView;
     const { segment, index } = path.lastPoint;
-    const previous = (shape as PathShapeView)?.segments[segment]?.points[index];
+    let previous = (shape as PathShapeView)?.segments[segment]?.points[index];
 
-    if (!previous || !path.isContacting) {
-        return;
+    if (!path.isContacting) return;
+
+    if (!previous) {
+        const __seg = (shape as PathShapeView)?.segments[segment];
+        if (__seg) {
+            previous = __seg.points[__seg.points.length - 1];
+        }
+
+        if (!previous) {
+            return;
+        }
     }
 
     const m = new Matrix(shape.matrix2Root());
@@ -583,6 +612,12 @@ function modifyLivingPath() {
  * training...
  */
 function down(e: MouseEvent) {
+    if (e.button !== 0) {
+        return;
+    }
+
+    downXY = { x: e.x, y: e.y };
+
     const keepOn = props.context.path.isContacting;
 
     if (keepOn) {
@@ -591,7 +626,6 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
-            downXY = { x: e.x, y: e.y };
             asyncEnvMount();
 
             e.stopPropagation();
@@ -608,12 +642,11 @@ function down(e: MouseEvent) {
         props.context.path.setContactStatus(true);
 
         props.context.esctask.save('contact-status', () => {
+            props.context.path.reset();
             const achieve = props.context.path.isContacting;
             props.context.path.setContactStatus(false);
             return achieve;
         });
-
-        downXY = { x: e.x, y: e.y };
 
         asyncEnvMount();
 
@@ -624,6 +657,74 @@ function down(e: MouseEvent) {
 function asyncEnvMount() {
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+}
+
+function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
+    if (e.buttons !== 0) return;
+    livingPathVisible.value = false;
+    preparePointVisible.value = false;
+
+    const path = props.context.path;
+
+    if (!path.lastPoint) {
+        return;
+    }
+
+    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
+    const { segment, index } = path.lastPoint;
+    let previous = (shape as PathShapeView)?.segments[segment]?.points[index];
+
+    if (!path.isContacting) return;
+
+    if (!previous) {
+        const __seg = (shape as PathShapeView)?.segments[segment];
+        if (__seg) {
+            previous = __seg.points[__seg.points.length - 1];
+        }
+
+        if (!previous) {
+            return;
+        }
+    }
+
+    const m = new Matrix(shape.matrix2Root());
+    m.preScale(shape.frame.width, shape.frame.height);
+    m.multiAtLeft(props.context.workspace.matrix);
+
+    const toSegment = (shape as PathShapeView)?.segments[segmentIndex];
+    if (!toSegment) {
+
+        return;
+
+    }
+    const toPoint = toSegment?.points[toIndex];
+    if (!toPoint) {
+        return;
+    }
+
+    const hasTo = toPoint.hasTo;
+    if (!hasTo) {
+        return;
+    }
+
+    const p1 = m.computeCoord3(previous);
+    const p2 = m.computeCoord3(toPoint);
+
+    if (previous.hasFrom && previous.fromX !== undefined && previous.fromY !== undefined) {
+        const c1 = m.computeCoord2(previous.fromX, previous.fromY);
+        if (hasTo) {
+            const c2 = m.computeCoord2(toPoint.toX || toPoint.x, toPoint.toY || toPoint.y);
+            livingPath.value = `M${p1.x} ${p1.y} C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p2.x} ${p2.y}`;
+        } else {
+            livingPath.value = `M${p1.x} ${p1.y} C${c1.x} ${c1.y} ${preXY.value.x} ${preXY.value.y} ${preXY.value.x} ${preXY.value.y}`;
+        }
+    } else {
+        livingPath.value = `M${p1.x} ${p1.y} L${preXY.value.x} ${preXY.value.y}`;
+    }
+
+    livingPathVisible.value = true;
+    props.context.assist.notify(Asssit.CLEAR);
+    e.stopPropagation();
 }
 
 onMounted(() => {
@@ -640,9 +741,20 @@ onMounted(() => {
     update();
 
     window.addEventListener('blur', window_blur);
-    props.context.path.watch(path_watcher);
+    const path = props.context.path;
+    path.watch(path_watcher);
 
     document.addEventListener('mousemove', documentMove);
+
+
+    if (path.isContacting && path.lastEvent) {
+        preXY.value = props.context.workspace.getContentXY(path.lastEvent);
+
+        modifyLivingPath();
+
+        preparePointVisible.value = true;
+    }
+
 })
 
 onUnmounted(() => {
@@ -654,6 +766,8 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 
     document.removeEventListener('mousemove', documentMove);
+
+    props.context.assist.notify(Asssit.CLEAR);
 })
 </script>
 <template>
@@ -678,6 +792,7 @@ onUnmounted(() => {
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
           class="point" rx="4" ry="4" data-area="controller-element"
           @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
+          @mousemove="(e) => fixPreLine(e,p.segment, p.index)"
           :class="{ point: true, selected: p.selected }"/>
     <rect
         v-if="preparePointVisible"

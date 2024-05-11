@@ -30,9 +30,9 @@ const previous = ref<boolean>(false);
 const previous_curve_point = ref<CurvePoint>();
 const previous_from = ref<boolean>(false);
 const previous_to = ref<boolean>(false);
-const previous_apex_location_from = reactive({ x: -10, y: -10 });
-const previous_apex_location_to = reactive({ x: -10, y: -10 });
-const previous_site = reactive({ x: -10, y: -10 });
+const previous_apex_location_from = reactive({x: -10, y: -10});
+const previous_apex_location_to = reactive({x: -10, y: -10});
+const previous_site = reactive({x: -10, y: -10});
 const __radius_pre_from = ref<number>(0);
 const __radius_pre_to = ref<number>(0);
 const previous_index = ref<number>(-1);
@@ -41,9 +41,9 @@ const current = ref<boolean>(false);
 const current_curve_point = ref<CurvePoint>();
 const current_from = ref<boolean>(false);
 const current_to = ref<boolean>(false);
-const apex_location_from = reactive({ x: -10, y: -10 });
-const apex_location_to = reactive({ x: -10, y: -10 });
-const site = reactive({ x: -10, y: -10 });
+const apex_location_from = reactive({x: -10, y: -10});
+const apex_location_to = reactive({x: -10, y: -10});
+const site = reactive({x: -10, y: -10});
 const __radius_current_from = ref<number>(0);
 const __radius_current_to = ref<number>(0);
 const current_index = ref<number>(-1);
@@ -52,9 +52,9 @@ const next = ref<boolean>(false);
 const next_curve_point = ref<CurvePoint>();
 const next_from = ref<boolean>(false);
 const next_to = ref<boolean>(false);
-const next_apex_location_from = reactive({ x: -10, y: -10 });
-const next_apex_location_to = reactive({ x: -10, y: -10 });
-const next_site = reactive({ x: -10, y: -10 });
+const next_apex_location_from = reactive({x: -10, y: -10});
+const next_apex_location_to = reactive({x: -10, y: -10});
+const next_site = reactive({x: -10, y: -10});
 const __radius_next_from = ref<number>(0);
 const __radius_next_to = ref<number>(0);
 const next_index = ref<number>(-1);
@@ -63,7 +63,7 @@ let inverse_matrix_at_down = new Matrix();
 let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
 let drag: boolean = false;
-let down_site: XY = { x: 0, y: 0 };
+let down_site: XY = {x: 0, y: 0};
 let down_index: number = -1;
 
 let is_bridging_action: boolean = false;
@@ -109,38 +109,43 @@ function update() {
     let __points: CurvePoint[] = [];
     let selected: number[] = [];
 
-    if (path_shape.pathType === PathType.Editable) {
-        const __segment = [...props.context.path.selectedPoints.keys()][0];
-        if (__segment < 0) {
-            return;
-        }
-        __points = (path_shape as PathShapeView)?.segments[__segment]?.points as CurvePoint[];
-
-        if (!__points) {
-            return;
-        }
-
-        selected = [...props.context.path.selectedPoints.values()][0] || [];
-
-        segment = __segment;
-    }
-
-    if (selected.length !== 1) {
+    if (path_shape.pathType !== PathType.Editable) {
         return;
     }
 
+    const __segment = [...props.context.path.selectedPoints.keys()].pop();
+    if (__segment === undefined || __segment < 0) {
+        return;
+    }
+    __points = (path_shape as PathShapeView)?.segments[__segment]?.points as CurvePoint[];
+
+    if (!__points?.length) {
+        return;
+    }
+
+    selected = [...props.context.path.selectedPoints.values()].pop() || [];
+
+    segment = __segment;
+
     // current
-    const index = selected[0];
+    const index = selected[selected.length - 1];
+    if (index < 0) {
+        return;
+    }
+
     const current_point = __points[index];
     if (!current_point) {
         return;
     }
+
     current_curve_point.value = current_point;
     current.value = true;
     current_index.value = index;
+
     const _p = m.computeCoord2(current_point.x, current_point.y);
     site.x = _p.x;
     site.y = _p.y;
+
     if (current_point.hasFrom && current_point.fromX !== undefined && current_point.fromY !== undefined) {
         current_from.value = true;
         const _cf = m.computeCoord2(current_point.fromX, current_point.fromY);
@@ -148,6 +153,7 @@ function update() {
         apex_location_from.y = _cf.y;
         __radius_current_from.value = __angle(site.x, site.y, apex_location_from.x, apex_location_from.y);
     }
+
     if (current_point.hasTo && current_point.toX !== undefined && current_point.toY !== undefined) {
         current_to.value = true;
         const _ct = m.computeCoord2(current_point.toX, current_point.toY);
@@ -245,9 +251,9 @@ function modify_down_site(e: MouseEvent) {
 }
 
 function move(e: MouseEvent) {
-    if (drag) {
+    if (drag && action_curve_point) {
         const root = props.context.workspace.root;
-        const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+        const xy = {x: e.clientX - root.x, y: e.clientY - root.y};
         const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
         const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
         const current_is_from = side === 'from';
@@ -255,7 +261,7 @@ function move(e: MouseEvent) {
         const to = current_is_from ? anther : current_handle_point;
 
         pathModifier?.execute4handle(down_index, side, from, to, segment);
-    } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
+    } else if (check_drag_action(down_site, {x: e.clientX, y: e.clientY})) {
         init_editor(e);
         drag = true;
     }
@@ -266,7 +272,7 @@ function pre_bridging() {
     if (!path_shape) {
         return;
     }
-    const { event } = props.context.path.bridging_events || {};
+    const {event} = props.context.path.bridging_events || {};
     if (!event) {
         bridging_completed();
         return;
@@ -318,8 +324,12 @@ function modify_side2(e: MouseEvent) {
 }
 
 function move2(e: MouseEvent) {
+    if (!action_curve_point) {
+        return;
+    }
+
     const root = props.context.workspace.root;
-    const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const xy = {x: e.clientX - root.x, y: e.clientY - root.y};
     const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
     const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
     const current_is_from = side === 'from';

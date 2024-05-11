@@ -481,7 +481,7 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
     if (event.repeat) {
         return;
     }
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Shape');
     }
     if (!permIsEdit(context)) return;
@@ -499,7 +499,7 @@ keydownHandler['Numpad1'] = function (event: KeyboardEvent, context: Context) {
     if (event.repeat) {
         return;
     }
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Shape');
     }
     if (!permIsEdit(context)) return;
@@ -518,7 +518,7 @@ keydownHandler['Digit2'] = function (event: KeyboardEvent, context: Context) {
     if (event.repeat) {
         return;
     }
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Comps');
     }
     if (event.shiftKey || event.altKey || is_ctrl) return;
@@ -536,7 +536,7 @@ keydownHandler['Numpad2'] = function (event: KeyboardEvent, context: Context) {
     if (event.repeat) {
         return;
     }
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Comps');
     }
     if (event.shiftKey || event.altKey || is_ctrl) return;
@@ -549,7 +549,7 @@ keydownHandler['Digit3'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     const is_ctrl = event.ctrlKey || event.metaKey;
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Comment');
     }
     if (event.shiftKey || event.altKey || is_ctrl) return;
@@ -561,7 +561,7 @@ keydownHandler['Numpad3'] = function (event: KeyboardEvent, context: Context) {
     if (event.repeat) {
         return;
     }
-    if(event.altKey) {
+    if (event.altKey) {
         context.navi.set_current_navi_module('Comment');
     }
     const is_ctrl = event.ctrlKey || event.metaKey;
