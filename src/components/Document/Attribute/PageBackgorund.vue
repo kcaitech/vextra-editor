@@ -58,8 +58,6 @@ function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
     if (!page.data.backgroundColor) {
-        // const editor = props.context.editor4Page(page);
-        // editor.setBackground(new Color(1, 239, 239, 239));
         const c = Page.defaultBGColor;
         init_value(c);
     } else {
@@ -137,9 +135,7 @@ onUnmounted(() => {
                 :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
             </ColorPicker>
             <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
-                @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
-            <!--            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"-->
-            <!--                @click="alpha_click" :step="1" ref="alpha_ele">-->
+                   @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
             <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
                 @click="alpha_click" ref="alpha_ele">
         </div>
