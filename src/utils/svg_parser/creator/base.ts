@@ -539,7 +539,7 @@ export class BaseCreator extends BaseTreeNode {
             else position = BorderPosition.Outer;
             let cornerType: CornerType
             const corner = this.localAttributes["stroke-linejoin"];
-            if(corner) {
+            if (corner) {
                 if (corner === "miter") cornerType = CornerType.Miter;
                 else if (corner === "round") cornerType = CornerType.Round;
                 else cornerType = CornerType.Bevel;
@@ -603,5 +603,10 @@ export class SvgCreator extends BaseCreator {
         const svgShape = this.shape as Artboard
         const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
         svgShape.childs.push(...childrenShapes)
+
+        // 二级元素跟随一级容器缩放
+        childrenShapes.forEach(item => {
+            item.resizingConstraint = 0;
+        })
     }
 }

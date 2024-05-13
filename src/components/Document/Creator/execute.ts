@@ -205,8 +205,6 @@ export class CreatorExecute extends TransformHandler {
         ws.notify(WorkSpace.MATRIX_TRANSFORMATION);
 
         this.livingPoint = ws.getRootXY(e);
-
-        console.log('livingPoint', this.livingPoint);
     }
 
     private passiveExecute() {
