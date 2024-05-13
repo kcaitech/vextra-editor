@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
-import { onMounted, onUnmounted, ref, toRaw, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
 import { Color, Page, PageView } from "@kcdesign/data";
@@ -67,8 +67,6 @@ function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
     if (!page.data.backgroundColor) {
-        // const editor = props.context.editor4Page(page);
-        // editor.setBackground(new Color(1, 239, 239, 239));
         const c = Page.defaultBGColor;
         init_value(c);
     } else {
@@ -154,8 +152,6 @@ onUnmounted(() => {
             </ColorPicker>
             <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele"
                    @click="clr_click" :spellcheck="false" @blur="is_color_select = false">
-            <!--            <input type="number" @change="(e: Event) => change_a(e)" :value="alpha_v" id="alpha" :max="100" :min="0"-->
-            <!--                @click="alpha_click" :step="1" ref="alpha_ele">-->
             <input @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`" id="alpha" @blur="is_alpha_select = false"
                    @click="alpha_click" ref="alpha_ele">
         </div>
