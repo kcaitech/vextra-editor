@@ -40,7 +40,6 @@ import { RouterView, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia';
 import { useMessage } from './message'
-import {logo} from '@/assets/h-logo2.svg'
 import { Base64 } from 'js-base64';
 
 const Data = useMessage()

@@ -3,10 +3,11 @@ import { Potrace } from "./potrace";
 const __caches: Map<string, string> = new Map();
 let __canvasElement: HTMLCanvasElement | undefined;
 
-export function getTextPath(font: string, fontSize: number, charCode: number): string {
+export function getTextPath(font: string, fontSize: number, italic: boolean, weight: number, charCode: number): string {
+
     const scale = 16;
     fontSize = Math.round(fontSize * scale);
-    const cacheId = font + "#" + fontSize + "#" + charCode;
+    const cacheId = font + "#" + fontSize + "#" + charCode + (italic ? '#i' : '') + '#' + weight;
     let path = __caches.get(cacheId);
     if (path) return path;
 
@@ -14,22 +15,24 @@ export function getTextPath(font: string, fontSize: number, charCode: number): s
         __canvasElement = document.createElement('canvas');
     }
     const canvasElement: HTMLCanvasElement = __canvasElement;
-    const width = fontSize;
-    const height = Math.round(fontSize * 1.1); // 有字符如：g，底部被截断
-    canvasElement.width = width;
-    canvasElement.height = height;
+
+    const size = Math.round(fontSize * 1.15); // 预留防止截断，如italic，g字符
+    // const width = size; // italic截断
+    // const height = size; // 有字符如：g，底部被截断
+    canvasElement.width = size;
+    canvasElement.height = size;
     const canvas = canvasElement.getContext('2d')!
     canvas.imageSmoothingEnabled = false;
 
-    canvas.font = '' + fontSize + 'px ' + font;
+    canvas.font = (italic ? 'italic ' : 'normal ') + weight + ' ' + fontSize + 'px ' + font;
     canvas.fillStyle = 'black'
     canvas.textAlign = 'left'
-    canvas.textBaseline = 'top'
-    canvas.fillText(String.fromCharCode(charCode), 0, 0)
+    canvas.textBaseline = 'alphabetic'
+    canvas.fillText(String.fromCharCode(charCode), 0, fontSize)
 
-    const imgdata: ImageData = canvas.getImageData(0, 0, width, height)
+    const imgdata: ImageData = canvas.getImageData(0, 0, size, size)
     const potrace = new Potrace(imgdata, () => { })
-    path = potrace.getSVGPath({x: 1 / scale, y: 1 / scale});
+    path = potrace.getSVGPath({ x: 1 / scale, y: 1 / scale }, { x: 0, y: ( - fontSize) / scale});//对齐哪里？
     __caches.set(cacheId, path);
 
     return path;
