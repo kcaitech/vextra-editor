@@ -42,7 +42,7 @@ const onRename = () => {
         if (nameInput.value) {
             if (inputSpan.value) {
                 inputSpan.value.innerHTML = props.name
-                inputWidth.value = inputSpan.value.offsetWidth + 2
+                inputWidth.value = inputSpan.value.offsetWidth + 5
             }
             (nameInput.value as HTMLInputElement).value = props.name.trim();
             nameInput.value.focus();
@@ -85,7 +85,7 @@ const onInputName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
     if (inputSpan.value) {
         inputSpan.value.innerHTML = value
-        inputWidth.value = inputSpan.value.offsetWidth + 2
+        inputWidth.value = inputSpan.value.offsetWidth + 5
     }
 }
 
@@ -190,7 +190,7 @@ function windowBlur() {
              :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">{{ props.name }}
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
+               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousedown.stop>
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0;" ref="inputSpan"></span>
     </div>
 </template>

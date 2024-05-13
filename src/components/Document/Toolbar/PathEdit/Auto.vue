@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import {Action} from "@/context/tool";
-import {useI18n} from 'vue-i18n'
+import { Action } from "@/context/tool";
+import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 
-const {t} = useI18n()
+const { t } = useI18n()
 const props = defineProps<{
     active: boolean
 }>();
@@ -18,7 +18,8 @@ function select(action: Action) {
 </script>
 <template>
     <Tooltip :content="`${t('home.object_selector')} &nbsp;&nbsp; V`">
-        <ToolButton ref="button" @click="() => {select(Action.AutoV)}" :selected="props.active">
+        <ToolButton ref="button" @click="() => {select(Action.AutoV)}" :selected="props.active" :width="32"
+                    :height="32">
             <div class="svg-container">
                 <svg-icon icon-class="drag"></svg-icon>
             </div>
@@ -27,8 +28,8 @@ function select(action: Action) {
 </template>
 <style scoped lang="scss">
 .svg-container {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;

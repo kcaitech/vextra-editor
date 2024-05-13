@@ -91,8 +91,6 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .module_container {
     font-size: var(--font-default-fontsize);
-    margin-bottom: 12px;
-    margin-top: 12px
 }
 
 .compos_state {

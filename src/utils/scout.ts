@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import {
-    BorderPosition,
     GroupShapeView,
     Matrix,
     PathShapeView,
@@ -49,41 +48,25 @@ export function scout(context: Context): Scout {
 
         let stroke = 14 / scale;
 
-        const isClosed = shape.isClosed;
+        let isClosed = true;
 
-        const borders = shape.getBorders();
-        // if (!borders.length) {
-        //     path.setAttributeNS(null, 'stroke', 'none');
-        // } else {
-        //     for (let i = 0; i < borders.length; i++) {
-        //         const border = borders[i];
-        //
-        //         let t = border.thickness;
-        //         if (border.position === BorderPosition.Outer) {
-        //             t *= 2;
-        //         }
-        //         if (border.position === BorderPosition.Inner) {
-        //             t = 0;
-        //         }
-        //         if (t > stroke) {
-        //             stroke = t;
-        //         }
-        //     }
-        //     path.setAttributeNS(null, 'stroke-width', `${stroke}`);
-        // }
-        if (!(shape instanceof PathShapeView && !isClosed)) {
-            stroke = 1;
+        if ((shape as PathShapeView)?.segments?.length) {
+            const segments = (shape as PathShapeView).segments;
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].isClosed) {
+                    isClosed = false;
+                    break;
+                }
+            }
         }
+
         path.setAttributeNS(null, 'stroke-width', `${stroke}`);
 
-        const result = (isClosed && (path as SVGGeometryElement).isPointInFill(SVGPoint)) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
-
-        if (result) {
-            context.selection.setHoverStroke(stroke * scale);
-            // context.selection.setHoverStroke(1);
+        if (isClosed) {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        } else {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
         }
-
-        return result;
     }
 
     function for_path_shape(shape: PathShapeView, path: SVGGeometryElement) {

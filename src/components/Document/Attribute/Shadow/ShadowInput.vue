@@ -21,9 +21,6 @@ const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 const selectValue = () => {
     isActived.value = true
-    if (input.value) {
-        input.value.select()
-    }
 }
 
 const onChange = () => {
@@ -116,6 +113,18 @@ function windowBlur() {
 
 function blur2() {
     isActived.value = false
+    is_select.value = false;
+}
+const is_select = ref(false);
+function click() {
+    if (!input.value) return;
+    const el = input.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
 }
 </script>
 
@@ -131,7 +140,7 @@ function blur2() {
                    :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-               :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
+               :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
                       :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>

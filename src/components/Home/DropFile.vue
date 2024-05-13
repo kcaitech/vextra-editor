@@ -20,7 +20,7 @@ const emit = defineEmits<{
     (e: 'pick', value: File): void;
 }>();
 
-const picker = new FilePicker('.sketch', (file) => {
+const picker = new FilePicker('.sketch,.fig', (file) => {
     emit('pick', file)
 });
 

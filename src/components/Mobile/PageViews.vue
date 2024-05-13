@@ -6,7 +6,7 @@ import { Context } from "@/context";
 import {
     CoopRepository,
     Document,
-    importDocument,
+    importRemote,
     IStorage, Matrix,
     Page,
     PageListItem,
@@ -146,7 +146,7 @@ const getUserInfo = async () => {
 
 let arr = ref<Array<SelectSource>>([])
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined; // eslint-disable-line
 
 const getDocumentInfo = async () => {
     try {
@@ -216,7 +216,7 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const d = await importDocument(storage, path, "", versionId, repo)
+        const d = await importRemote(storage, path, "", versionId, repo)
         const document = d.document;
         documentLoader = d.loader;
         if (document) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { CurvePoint, Matrix, PathShapeView, PathShapeView2, PathType, ShapeView } from '@kcdesign/data';
+import { CurvePoint, Matrix, PathShapeView, PathType, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch } from 'vue';
 import { XY } from "@/context/selection";
 import { Segment } from '@/utils/pathedit';
@@ -80,12 +80,7 @@ function finder_points() {
     }
 
     if (path_shape.pathType === PathType.Editable) {
-        const points = (path_shape as PathShapeView).points;
-
-        __exe(0, points, m42Dp);
-
-    } else if (path_shape.pathType === PathType.Multi) {
-        const segments = (path_shape as PathShapeView2).segments;
+        const segments = (path_shape as PathShapeView).segments;
         segments.forEach((segment, k) => {
             __exe(k, segment.points as CurvePoint[], m42Dp!);
         })
@@ -154,10 +149,7 @@ function remove_points() {
     }
 
     if (path_shape.pathType === PathType.Editable) {
-        const points = (path_shape as PathShapeView).points;
-        __exe(0, points, m42Dp);
-    } else if (path_shape.pathType === PathType.Multi) {
-        const segments = (path_shape as PathShapeView2).segments;
+        const segments = (path_shape as PathShapeView).segments;
         segments.forEach((segment, index) => {
             __exe(index, segment.points as CurvePoint[], m42Dp!);
         });

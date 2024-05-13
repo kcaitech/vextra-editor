@@ -1,25 +1,25 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ClientXY, PageXY } from '@/context/selection';
-import { Action } from '@/context/tool';
+import { ClientXY, PageXY, XY } from '@/context/selection';
+import { Action, Tool } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle, modifyXYByAlignSetting } from '@/utils/common';
 import { init_contact_shape, init_insert_shape, init_shape } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
-import { Wheel, fourWayWheel } from '@/utils/wheel';
+import { Wheel } from '@/utils/wheel';
 import {
+    adapt2Shape,
     Artboard,
     AsyncCreator,
     ContactForm,
-    ContactLineView,
+    ContactLineView, CurvePoint,
     GroupShape,
     Matrix,
     PageView,
     ShapeFrame,
     ShapeType,
-    ShapeView,
-    adapt2Shape
+    ShapeView
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -31,6 +31,8 @@ import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
 import { Asssit } from "@/context/assist";
+import { PathEditor } from "@/transform/pathEdit";
+import { PathShapeView } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -67,20 +69,61 @@ const posi = ref({ x: 0, y: 0 });
 const rootWidth = ref<number>(props.context.workspace.root.width);
 const cursor = ref<string>('');
 
+const mode = ref<'normal' | 'pen'>('normal');
+
+const dotXY = ref<XY>({ x: -10, y: -10 });
+let pathEditor: PathEditor | undefined;
+
 // #endregion
 function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
-    const action = props.context.tool.action;
     modify_page_xy_1(e);
     modify_client_xy_1(e);
+
+    if (mode.value === 'pen') {
+        pathEditor = new PathEditor(props.context, e);
+        pathEditor.createApiCaller(-1, -1, true);
+
+        const vec = pathEditor.createVec();
+        if (vec) {
+            const page = props.context.selection.selectedPage!;
+            props.context.nextTick(page, () => {
+                const _vec = page.getShape(vec.id);
+                if (!_vec) {
+                    return;
+                }
+
+                props.context.selection.selectShape(_vec);
+
+                props.context.workspace.setPathEditMode(true);
+
+                const path = props.context.path;
+
+                path.setContactStatus(true);
+                path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+
+                const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
+                if (point) {
+                    path.setLastPoint({ point, segment: 0, index: 0 });
+                }
+
+                mode.value = 'normal';
+            });
+        }
+        return;
+    }
+
+    const action = props.context.tool.action;
+
     if (action !== Action.AddComment) {
         commentInput.value = false;
     }
     if (action === Action.AddContact) {
         just_search = true;
     }
+
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
 }
@@ -100,6 +143,8 @@ function move(e: MouseEvent) {
 
 function move2(e: MouseEvent) {
     if (just_search || e.buttons === 0) {
+        dotXY.value = props.context.workspace.getContentXY(e);
+
         if (props.context.tool.action === Action.AddContact) {
             search_apex(e);
         }
@@ -121,6 +166,7 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
+
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
@@ -356,10 +402,6 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
     props.context.assist.notify(Asssit.CLEAR);
 }
 
-function wheelSetup() {
-    wheel = fourWayWheel(props.context, { rolling: undefined }, page_xy_1);
-}
-
 function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
@@ -399,8 +441,8 @@ function modify_new_shape_frame(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
 
-    if (asyncCreator) {
-        if (newShape && newShape.type === ShapeType.Contact) {
+    if (asyncCreator && newShape) {
+        if (newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
         } else {
             if (e.shiftKey) {
@@ -478,27 +520,44 @@ function windowBlur() {
 }
 
 function init() {
-    setTimeout(() => { // dom的进出事件竟然是先enter再leave，这边用定时器强行调整了一下init的顺序
+    let timer: any = setTimeout(() => {
         const action = props.context.tool.action;
         if (action === Action.AddComment) {
             props.context.cursor.setType('comment', 0);
+        } else if (action === Action.Pen) {
+            props.context.cursor.setType('pen', 0);
+            mode.value = 'pen';
         } else {
             props.context.cursor.setType('cross', 0)
         }
 
         cursor.value = props.context.cursor.type;
+        clearTimeout(timer);
+        timer = null;
     }, 20);
     props.context.assist.set_collect_target([], true);
-    props.context.selection.resetSelectShapes();
+    props.context.selection.unHoverShape();
+}
+
+function toolWatcher(t: number) {
+    const action = props.context.tool.action;
+    if (t === Tool.CHANGE_ACTION) {
+        mode.value = 'normal';
+        if (action === Action.Pen) {
+            mode.value = 'pen';
+        }
+    }
 }
 
 onMounted(() => {
     init();
     props.context.cursor.watch(cursor_watcher);
+    props.context.tool.watch(toolWatcher);
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
     props.context.cursor.unwatch(cursor_watcher);
+    props.context.tool.unwatch(toolWatcher);
     window.removeEventListener('blur', windowBlur);
 })
 </script>
@@ -511,6 +570,7 @@ onUnmounted(() => {
                       :matrix="props.context.workspace.matrix"
                       :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
+        <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -519,5 +579,17 @@ onUnmounted(() => {
     height: 100%;
     position: absolute;
     z-index: 9;
+
+    .dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        box-sizing: border-box;
+        border-radius: 50%;
+        background-color: #ffffff;
+        border: 1px solid var(--active-color);
+
+        pointer-events: none;
+    }
 }
 </style>

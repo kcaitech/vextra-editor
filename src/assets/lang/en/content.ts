@@ -5,6 +5,7 @@ export const shape: any = {
     line: 'Line',
     oval: 'Oval',
     rect: 'Rect',
+    path: 'Vector',
     artboard: 'Artboard',
     arrow: 'Arrow',
     text: 'text',
@@ -19,7 +20,9 @@ export const shape: any = {
     clip: "Clip",
     default: 'Default',
     pen: 'Pen',
-    pencil: 'Pencil'
+    pencil: 'Pencil',
+    polygon: 'Polygon',
+    star: 'Star',
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 

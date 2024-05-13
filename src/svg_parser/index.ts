@@ -1,6 +1,4 @@
-import { Context } from "@/context"
 import { Parser } from "./paser"
-import { XY } from "@/context/selection";
 
 export function parse(content: string) {
     const parser = new DOMParser()

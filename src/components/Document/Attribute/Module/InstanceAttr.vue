@@ -213,8 +213,8 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div>
-            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
+        <div style="padding-top: 8px;">
+            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '8px' : '0' }">
                 <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
                     :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
@@ -234,8 +234,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .instance-attr {
     width: 100%;
-    margin-bottom: 10px;
-    padding: 0 8px;
+    padding: 12px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
@@ -325,9 +324,7 @@ onUnmounted(() => {
     .visible-var-container {
         display: flex;
         width: 100%;
-        line-height: 20px;
-        margin-bottom: 6px;
-        margin-top: 6px;
+        align-items: center;
 
         .show {
             display: flex;
@@ -337,7 +334,7 @@ onUnmounted(() => {
             .title {
                 color: #595959;
                 width: 40%;
-                line-height: 20px;
+                line-height: 28px;
                 padding-right: 10px;
             }
 

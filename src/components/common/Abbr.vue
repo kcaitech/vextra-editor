@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
 import { computed } from 'vue';
@@ -72,6 +72,8 @@ onUnmounted(e);
         <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
             <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
         </svg>
+        <svg-icon v-else-if="props.shape.type === ShapeType.Image" :icon-class="icon_class" :fill="theme"
+            :stroke="theme"></svg-icon>
         <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
     </div>
 </template>
@@ -82,7 +84,7 @@ onUnmounted(e);
     display: flex;
     align-items: center;
 
-    > svg {
+    >svg {
         width: 13px;
         height: 13px;
     }

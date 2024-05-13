@@ -138,6 +138,13 @@ async function dragStart(e: MouseEvent, type: SideType) {
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage;
     borderthickness_editor = props.context.editor.controller().asyncBorderSideThickness(shapes, page!, type);
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if(!document.pointerLockElement) {
+        dragEnd();
+    }
 }
 
 const dragging = (e: MouseEvent, thickness: number | string) => {
@@ -162,6 +169,7 @@ const dragEnd = () => {
         borderthickness_editor.close();
         borderthickness_editor = undefined;
     }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 onMounted(() => {
@@ -176,7 +184,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <div class="border-style" style="margin-bottom: 6px;">
+        <div class="border-style">
             <div class="border">{{ t('attr.unilateral') }}</div>
             <div class="border-select">
                 <div class="all" :class="{ selected: select_side === SideType.Normal }"
@@ -204,7 +212,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <div class="border-style" style="margin-bottom: 6px;" v-if="select_side === SideType.Custom">
+        <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
             <div class="border"></div>
             <div class="border-custom">
                 <BorderCustomInput ticon="top" :shadowV="thickness_top"
@@ -217,7 +225,7 @@ onUnmounted(() => {
                 </BorderCustomInput>
             </div>
         </div>
-        <div class="border-style" v-if="select_side === SideType.Custom">
+        <div class="border-style" style="margin-top: 6px;" v-if="select_side === SideType.Custom">
             <div class="border"></div>
             <div class="border-custom">
                 <BorderCustomInput ticon="left" :shadowV="thickness_left"

@@ -89,10 +89,16 @@ function name_change(v: any) {
     isWarnNull.value = false;
 }
 const input = ref();
-const focus = () => {
-    if (input.value) {
-        input.value.select();
+
+const is_select = ref(false);
+function click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
     }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
 }
 
 function keyboard_watcher(e: KeyboardEvent) {
@@ -179,7 +185,7 @@ onUnmounted(() => {
                 <span style="color: #737373;">{{ t('compos.attr_name') }}</span>
                 <div>
                     <input ref="input" type="text" v-model="attrName" :placeholder="t('compos.attr_name_input')"
-                        @input="name_change" @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()">
+                        @input="name_change" @keydown.stop="keyboard_watcher" @change="validate()" @click="click" @blur="is_select = false">
                     <!-- <el-input v-model="attrName" ref="input" :placeholder="t('compos.attr_name_input')" @input="name_change"
                         @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()" /> -->
                 </div>

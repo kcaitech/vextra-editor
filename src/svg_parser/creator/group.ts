@@ -1,6 +1,7 @@
-import { creator as shapeCreator, GroupShape, Shape, } from "@kcdesign/data"
-import { BaseCreator } from "./base"
-import { getRectBox, mergeRectBox } from "../utils"
+import {creator as shapeCreator, GroupShape, Shape,} from "@kcdesign/data"
+import {BaseCreator} from "./base"
+import {getRectBox, mergeRectBox} from "../utils"
+import {ColVector3D} from "@/transform_math/matrix"
 
 // 将父元素的属性合并到子元素
 export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
@@ -71,7 +72,7 @@ export class GroupCreator extends BaseCreator {
 
         // 将子元素包围盒偏移至groupShape的左上角
         for (const child of children) {
-            child.creator.transform.translate(-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0)
+            child.creator.transform.translate({vector: new ColVector3D([-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0])})
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
