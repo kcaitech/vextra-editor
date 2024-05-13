@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
-import { onMounted, onUnmounted, ref, toRaw, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
 import { Color, Page, PageView } from "@kcdesign/data";
