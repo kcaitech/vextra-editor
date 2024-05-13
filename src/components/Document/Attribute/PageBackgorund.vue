@@ -63,7 +63,8 @@ function update() {
         const c = Page.defaultBGColor;
         init_value(c);
     } else {
-        init_value(page.data.backgroundColor);
+        const c = page.data.backgroundColor;
+        init_value(new Color(c.alpha, c.red, c.green, c.blue));
     }
 }
 function change_a(e: Event) {
