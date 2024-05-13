@@ -5,7 +5,7 @@ import { Action, Tool } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle, modifyXYByAlignSetting } from '@/utils/common';
-import { init_contact_shape, init_insert_shape, init_shape } from '@/utils/content';
+import { init_contact_shape, init_shape } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { Wheel } from '@/utils/wheel';
 import {
@@ -23,16 +23,17 @@ import {
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import CommentInput from './Content/CommentInput.vue';
+import CommentInput from '../Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
-import ContactInit from './Toolbar/ContactInit.vue';
+import ContactInit from '../Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
 import { Asssit } from "@/context/assist";
 import { PathEditor } from "@/transform/pathEdit";
 import { PathShapeView } from "@kcdesign/data";
+import { CreatorExecute } from "@/components/Document/Creator/execute";
 
 interface Props {
     context: Context
@@ -73,6 +74,8 @@ const mode = ref<'normal' | 'pen'>('normal');
 
 const dotXY = ref<XY>({ x: -10, y: -10 });
 let pathEditor: PathEditor | undefined;
+
+let creatorHdl: undefined | CreatorExecute = undefined;
 
 // #endregion
 function down(e: MouseEvent) {
@@ -124,18 +127,25 @@ function down(e: MouseEvent) {
         just_search = true;
     }
 
+    creatorHdl = new CreatorExecute(props.context, e);
+
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
 }
 
 function move(e: MouseEvent) {
     if (e.buttons === 1) {
-        if (newShape) {
-            modify_new_shape_frame(e);
-        } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
-            const __xy2 = props.context.workspace.getContentXY(e);
-            page_xy_2 = matrix1.computeCoord(__xy2);
-            gen_new_shape(e);
+        // if (newShape) {
+        if (isDrag) {
+            // modify_new_shape_frame(e);
+            creatorHdl?.modifyFrame(e);
+        // } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+        } else if (Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+            // const __xy2 = props.context.workspace.getContentXY(e);
+            // page_xy_2 = matrix1.computeCoord(__xy2);
+            // gen_new_shape(e);
+            creatorHdl?.createApiCaller();
+
             isDrag = true;
         }
     }
@@ -152,15 +162,16 @@ function move2(e: MouseEvent) {
 }
 
 function up(e: MouseEvent) {
-    if (isDrag && newShape) {
-        shapeCreateEnd();
-    } else if (!isDrag && props.context.tool.action.startsWith('add')) {
-        const action = props.context.tool.action;
-        if (action === Action.AddComment) return addComment(e);
-        if (action !== Action.AddContact && action !== Action.AddTable) {
-            init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
-        }
-    }
+    // if (isDrag && newShape) {
+    //     shapeCreateEnd();
+    // } else if (!isDrag && props.context.tool.action.startsWith('add')) {
+    //     const action = props.context.tool.action;
+    //     if (action === Action.AddComment) return addComment(e);
+    //     if (action !== Action.AddContact && action !== Action.AddTable) {
+    //         init_insert_shape(props.context, page_xy_1, t, e.shiftKey);
+    //     }
+    // }
+    creatorHdl?.fulfil();
     isDrag = false;
     just_search = false;
     document.removeEventListener("mousemove", move);
@@ -323,26 +334,26 @@ function modify_client_xy_1(e: MouseEvent) {
 }
 
 function correct_page_xy(x: number, y: number) {
-    const stickness = props.context.assist.stickness;
-    const target = props.context.assist.create_match({ x, y });
-    if (target) {
-        if (stickedX) {
-            if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
-            else x = sticked_x_v;
-        } else if (target.sticked_by_x) {
-            x = target.x;
-            sticked_x_v = x;
-            stickedX = true;
-        }
-        if (stickedY) {
-            if (Math.abs(y - sticked_y_v) >= stickness) stickedY = false;
-            else y = sticked_y_v;
-        } else if (target.sticked_by_y) {
-            y = target.y;
-            sticked_y_v = y;
-            stickedY = true;
-        }
-    }
+    // const stickness = props.context.assist.stickness;
+    // const target = props.context.assist.create_match({ x, y });
+    // if (target) {
+    //     if (stickedX) {
+    //         if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
+    //         else x = sticked_x_v;
+    //     } else if (target.sticked_by_x) {
+    //         x = target.x;
+    //         sticked_x_v = x;
+    //         stickedX = true;
+    //     }
+    //     if (stickedY) {
+    //         if (Math.abs(y - sticked_y_v) >= stickness) stickedY = false;
+    //         else y = sticked_y_v;
+    //     } else if (target.sticked_by_y) {
+    //         y = target.y;
+    //         sticked_y_v = y;
+    //         stickedY = true;
+    //     }
+    // }
     return { x, y }
 }
 
@@ -562,7 +573,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
+    <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
                       :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
                       :rootWidth="rootWidth"

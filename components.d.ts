@@ -94,7 +94,7 @@ declare module '@vue/runtime-core' {
     CreateImage: typeof import('./src/components/Document/Toolbar/Buttons/CreateImage.vue')['default']
     CreateTable: typeof import('./src/components/Document/Toolbar/Buttons/Table/CreateTable.vue')['default']
     CreateText: typeof import('./src/components/Document/Toolbar/Buttons/CreateText.vue')['default']
-    Creator: typeof import('./src/components/Document/Creator.vue')['default']
+    Creator: typeof import('./src/components/Document/Creator/Creator.vue')['default']
     Ctrl: typeof import('./src/components/Document/Selection/Controller/TextLite/Ctrl.vue')['default']
     CtrlComponent: typeof import('./src/components/Document/Selection/Controller/CtrlComponent.vue')['default']
     CtrlContact: typeof import('./src/components/Document/Selection/Controller/CtrlContact.vue')['default']
