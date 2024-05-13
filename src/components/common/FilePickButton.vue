@@ -1,5 +1,5 @@
 <template>
-  <input ref="input" @change="onFilePicked" type="file" accept=".sketch" style="display: none" />
+  <input ref="input" @change="onFilePicked" type="file" accept=".sketch,.fig" style="display: none" />
   <button @click="onClick">Open File</button>
 </template>
 
