@@ -10,7 +10,7 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import {
     Document,
-    importDocument,
+    importRemote,
     Repository,
     Page,
     CoopRepository,
@@ -322,7 +322,7 @@ const getUserInfo = async () => {
 }
 
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
 
 //获取文档信息
 const getDocumentInfo = async () => {
@@ -386,7 +386,7 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const d = await importDocument(storage, path, "", versionId, repo);
+        const d = await importRemote(storage, path, "", versionId, repo)
         const document = d.document;
         documentLoader = d.loader;
         if (document) {
@@ -810,7 +810,6 @@ onUnmounted(() => {
                 </ContentView>
             </template>
             <template #slot3>
-                <!--                @@@-->
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
                            @mouseenter="(e: Event) => { mouseenter('right') }"
                            @mouseleave="() => { mouseleave('right') }"

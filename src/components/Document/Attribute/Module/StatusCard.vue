@@ -81,7 +81,6 @@ const getVattagValue = () => {
     if (!shape) {
         return;
     }
-
     let val = get_tag_value(shape, props.data.variable);
 
     if (val === SymbolShape.Default_State) {
@@ -165,7 +164,7 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    min-height: 44px;
+    margin-top: 6px;
 
     .module_con {
         display: flex;
@@ -216,7 +215,7 @@ onUnmounted(() => {
 
             .input {
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 border-radius: 4px;
                 padding-left: 9px;
                 box-sizing: border-box;
@@ -256,7 +255,7 @@ onUnmounted(() => {
         padding-left: 9px;
         box-sizing: border-box;
         width: calc(100% - 58px);
-        height: 30px;
+        height: 32px;
 
         .el-input {
             font-size: var(--font-default-fontsize);

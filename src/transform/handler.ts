@@ -17,19 +17,22 @@ export class TransformHandler {
 
     page: PageView;
 
-    shiftStatus: boolean;
-    altStatus: boolean;
+    shiftStatus: boolean = false;
+    altStatus: boolean = false;
     alignPixel: boolean;
 
     asyncApiCaller: AsyncApiCaller | undefined;
 
-    constructor(context: Context, event: MouseEvent) {
+    constructor(context: Context, event?: MouseEvent) {
         this.context = context;
         this.workspace = context.workspace;
         this.page = context.selection.selectedPage!;
 
-        this.shiftStatus = event.shiftKey;
-        this.altStatus = event.altKey;
+        if (event) {
+            this.shiftStatus = event.shiftKey;
+            this.altStatus = event.altKey;
+        }
+
         this.alignPixel = context.user.isPixelAlignMent;
 
         this.beforeTransform();

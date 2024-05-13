@@ -19,7 +19,7 @@ import {
     ArrayOpSelection,
     isDiffStringArr,
     SNumber,
-    TableCellType, PathShapeView2
+    TableCellType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";

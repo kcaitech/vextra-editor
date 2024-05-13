@@ -262,6 +262,7 @@ function setColor(idx: number, clr: string, alpha: number) {
 
 function onColorChange(e: Event, idx: number) {
     let value = colorValue.value;
+    (e.target as HTMLInputElement).blur();
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
     }
@@ -279,9 +280,10 @@ function onColorChange(e: Event, idx: number) {
     }
 }
 
-function onAlphaChange(idx: number, fill: Fill) {
+function onAlphaChange(e: Event, idx: number, fill: Fill) {
     let value: any = alphaValue.value;
     if (!alphaFill.value) return;
+    (e.target as HTMLInputElement).blur();
     if (value?.slice(-1) === '%') {
         value = Number(value?.slice(0, -1))
         if (value >= 0) {
@@ -380,9 +382,18 @@ const selectColor = (e: FocusEvent) => {
             tableRowEnd: table.tableRowEnd,
             tableColStart: table.tableColStart,
             tableColEnd: table.tableColEnd
-        },
-            (e.target as HTMLInputElement).select()
+        }
     }
+}
+const is_color_select = ref(false);
+const colorClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    el.select();
+    is_color_select.value = true;
 }
 const colorInput = (e: Event) => {
     if (colorFill.value) {
@@ -390,9 +401,18 @@ const colorInput = (e: Event) => {
         colorValue.value = value;
     }
 }
+const is_alpha_select = ref(false);
+const alphaClick = (e: Event) => {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    el.select();
+    is_alpha_select.value = true;
+}
 const selectAlpha = (e: Event) => {
     if (alphaFill.value) {
-        (e.target as HTMLInputElement).select();
         shapes.value = [...props.context.selection.selectedShapes];
         const table = props.context.tableSelection;
         tableSelect.value = {
@@ -600,16 +620,16 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
                            :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                           @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)"
-                           @input="colorInput($event)"
+                           @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)" @click="colorClick"
+                           @input="colorInput($event)"  @blur="is_color_select = false"
                            :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                     <span class="colorFill" style="line-height: 14px;"
                           v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
                             t(`color.${f.fill.gradient.gradientType}`)
                         }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
-                           @change="(e) => onAlphaChange(idx, f.fill)" @focus="(e) => selectAlpha(e)"
-                           @input="alphaInput"
+                           @change="(e) => onAlphaChange(e, idx, f.fill)" @focus="(e) => selectAlpha(e)"
+                           @input="alphaInput"  @click="alphaClick" @blur="is_alpha_select = false"
                            :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                 </div>
                 <!--                <div class="temporary"></div>-->
@@ -655,13 +675,13 @@ onUnmounted(() => {
     .fills-container {
         padding: 6px 0;
         .fill {
-            height: 30px;
+            height: 32px;
             width: 100%;
             display: flex;
             flex-direction: row;
             // justify-content: space-between;
             align-items: center;
-            margin-top: 4px;
+            margin-top: 6px;
 
             .visibility {
                 flex: 0 0 14px;

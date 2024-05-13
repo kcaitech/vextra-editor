@@ -138,13 +138,13 @@ const onBold = (weight: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextBold(weight, 0, Infinity)
+            editor.setTextWeight(weight, 0, Infinity)
         } else {
-            editor.setTextBold(weight, textIndex, selectLength)
+            editor.setTextWeight(weight, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes, weight);
+        editor.setTextWeightMulti(props.textShapes, weight);
     }
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.bold = weight;
@@ -334,6 +334,7 @@ const sizeValue = ref('');
 const executed = ref(true);
 //输入框设置字体大小
 const setTextSize = () => {
+    is_size_select.value = false;
     if (!executed.value) return;
     executed.value = false;
     let value = sizeValue.value.trim();
@@ -384,14 +385,14 @@ const _textFormat = () => {
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
-        isBold.value = format.bold
+        isBold.value = format.weight
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
         if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-        if (format.boldIsMulti) weightMixed.value = true;
+        if (format.weightIsMulti) weightMixed.value = true;
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
         if (format.fontNameIsMulti) {
@@ -460,7 +461,7 @@ const _textFormat = () => {
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         textColor.value = format.color;
-        isBold.value = format.bold;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
@@ -478,7 +479,7 @@ const _textFormat = () => {
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.textBehaviour === 'unlikeness') selectText.value = '';
-        if (format.bold === 'unlikeness') weightMixed.value = true;
+        if (format.weight === 'unlikeness') weightMixed.value = true;
         if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
@@ -645,6 +646,7 @@ function getColorFromPicker(color: Color, type: string) {
 }
 
 function setColor(clr: string, alpha: number, type: string) {
+    if (clr.slice(0, 1) !== '#') clr = '#' + clr;
     const res = clr.match(Reg_HEX);
     if (!res) {
         message('danger', t('system.illegal_input'));
@@ -915,21 +917,18 @@ const selectSizeValue = () => {
         getTextShapes();
         const value = textSize.value.value;
         sizeValue.value = value;
-        textSize.value.select();
     }
 }
 const selectColorValue = () => {
     if (sizeColor.value) {
         executed.value = true;
         getTextShapes();
-        sizeColor.value.select();
     }
 }
 const selectAlphaValue = () => {
     if (alphaFill.value) {
         executed.value = true;
         getTextShapes();
-        alphaFill.value.select();
     }
 }
 const sizeAlphaInput = () => {
@@ -943,25 +942,16 @@ const selectHiglightColor = () => {
     if (higlightColor.value) {
         executed.value = true;
         getTextShapes();
-        higlightColor.value.select();
     }
 }
 const selectHiglighAlpha = () => {
     if (higlighAlpha.value) {
         executed.value = true;
         getTextShapes();
-        higlighAlpha.value.select();
     }
 }
 const getTextShapes = () => {
     shapes.value = props.textShapes;
-}
-
-const selectCharSpacing = () => {
-    charSpacing.value && charSpacing.value.select()
-}
-const selectLineHeight = () => {
-    lineHeight.value && lineHeight.value.select()
 }
 
 const filterAlpha = () => {
@@ -1009,7 +999,14 @@ const onMouseDown = async (e: MouseEvent, t: string) => {
     e.stopPropagation()
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener("mousemove", onMouseMove);
-    showpoint.value = true
+    showpoint.value = true;
+    document.addEventListener('pointerlockchange', pointerLockChange, false);
+}
+
+const pointerLockChange = () => {
+    if (!document.pointerLockElement) {
+        onMouseUp();
+    }
 }
 
 function updatePosition(movementX: number, movementY: number) {
@@ -1041,8 +1038,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-function onMouseUp(e: MouseEvent) {
-    e.stopPropagation()
+function onMouseUp() {
     document.exitPointerLock()
     showpoint.value = false
     document.removeEventListener("mousemove", onMouseMove);
@@ -1051,6 +1047,7 @@ function onMouseUp(e: MouseEvent) {
         textAttrEditor.close();
         textAttrEditor = undefined;
     }
+    document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 const text_selection_wather = (t: number) => {
@@ -1074,9 +1071,27 @@ const text_selection_wather = (t: number) => {
                 changeTextSize(Number(value) - 1);
             }
         }
-    } else if(t === Attribute.FRAME_CHANGE) {
+    } else if (t === Attribute.FRAME_CHANGE) {
         textFormat();
     }
+}
+
+const is_higligh_alpha_select = ref(false);
+const is_higligh_color_select = ref(false);
+const is_font_alpha_select = ref(false);
+const is_font_color_select = ref(false);
+const is_char_space_select = ref(false);
+const is_row_height_select = ref(false);
+const is_size_select = ref(false);
+
+function click(e: Event, variate: boolean) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (variate) return;
+    el.select();
+    variate = true;
 }
 
 // const stop = watch(() => props.dataChange, textFormat);
@@ -1135,7 +1150,8 @@ onUnmounted(() => {
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
                         <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
+                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize"
+                            @click="(e) => click(e, is_size_select)">
                         <div class="down" @click="onShowSize">
                             <svg-icon icon-class="down" style=""></svg-icon>
                         </div>
@@ -1158,14 +1174,16 @@ onUnmounted(() => {
                         <svg-icon icon-class="word-space"></svg-icon>
                     </div>
                     <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
-                        :placeholder="row_height" @focus="selectLineHeight" @input="handleSize">
+                        :placeholder="row_height" @input="handleSize" @click="(e) => click(e, is_row_height_select)"
+                        @blur="is_row_height_select = false">
                 </div>
                 <div class="interval jointly-text" style="padding-right: 0;">
                     <div @mousedown="(e) => onMouseDown(e, 'char-space')">
                         <svg-icon icon-class="row-height"></svg-icon>
                     </div>
                     <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
-                        @focus="selectCharSpacing" @input="handleSize">
+                        @input="handleSize" @click="(e) => click(e, is_char_space_select)"
+                        @blur="is_char_space_select = false">
                 </div>
             </div>
             <div class="text-bottom">
@@ -1260,11 +1278,13 @@ onUnmounted(() => {
                     <input ref="sizeColor" v-if="fillType !== FillType.Gradient" class="sizeColor"
                         @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue, false)"
-                        @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput" />
+                        @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput"
+                        @click="(e) => click(e, is_font_color_select)" @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
             gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
+                        @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
                         @input="sizeAlphaInput" />
                 </div>
                 <!--                <div style="width: 28px;height: 28px;margin-left: 5px;"></div>-->
@@ -1298,10 +1318,12 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
                         :value="toHex(highlight!.red, highlight!.green, highlight!.blue, false)"
-                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput" />
+                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput"
+                        @click="(e) => click(e, is_higligh_color_select)" @blur="is_higligh_color_select = false" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
                         :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"
-                        @input="higAlphaInput" />
+                        @input="higAlphaInput" @click="(e) => click(e, is_higligh_alpha_select)"
+                        @blur="is_higligh_alpha_select = false" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>

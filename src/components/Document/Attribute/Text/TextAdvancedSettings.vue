@@ -146,17 +146,19 @@ const isSelectText = () => {
   }
 }
 
-const selectCharSpacing = () => {
-  isActived1.value = true
-  charSpacing.value && charSpacing.value.select()
-}
-const selectLineHeight = () => {
-  isActived2.value = true
-  lineHeight.value && lineHeight.value.select()
-}
 const selectParaSpacing = () => {
   isActived3.value = true
-  paraSpacing.value && paraSpacing.value.select()
+}
+
+const is_select = ref(false);
+function click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -251,6 +253,7 @@ function blur2() {
   isActived1.value = false
   isActived2.value = false
   isActived3.value = false
+  is_select.value = false;
 }
 
 watchEffect(() => {
@@ -288,7 +291,7 @@ onUnmounted(() => {
             <div :class="{ actived: isActived3 }"
               style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
               <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
-                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%">
+                class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
             </div>
           </div>
           <div>

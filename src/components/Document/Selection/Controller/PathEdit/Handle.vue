@@ -5,8 +5,13 @@ import { Context } from "@/context";
 import { __angle, __anther_side_xy, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix, PathShapeView, PathShapeView2, PathType } from "@kcdesign/data";
-import { add_blur_for_window, add_move_and_up_for_document, remove_blur_from_window, remove_move_and_up_from_document } from "@/utils/mouse_interactive";
+import { Matrix, PathShapeView, PathType } from "@kcdesign/data";
+import {
+    add_blur_for_window,
+    add_move_and_up_for_document,
+    remove_blur_from_window,
+    remove_move_and_up_from_document
+} from "@/utils/mouse_interactive";
 import { CurvePoint } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { check_drag_action } from "@/utils/mouse";
@@ -15,6 +20,7 @@ import { PathEditor } from "@/transform/pathEdit";
 interface Props {
     context: Context
 }
+
 type ActionHandle = 'pre-to' | 'pre-from' | 'current-to' | 'current-from' | 'next-to' | 'next-from';
 const props = defineProps<Props>();
 
@@ -24,9 +30,9 @@ const previous = ref<boolean>(false);
 const previous_curve_point = ref<CurvePoint>();
 const previous_from = ref<boolean>(false);
 const previous_to = ref<boolean>(false);
-const previous_apex_location_from = reactive({ x: -10, y: -10 });
-const previous_apex_location_to = reactive({ x: -10, y: -10 });
-const previous_site = reactive({ x: -10, y: -10 });
+const previous_apex_location_from = reactive({x: -10, y: -10});
+const previous_apex_location_to = reactive({x: -10, y: -10});
+const previous_site = reactive({x: -10, y: -10});
 const __radius_pre_from = ref<number>(0);
 const __radius_pre_to = ref<number>(0);
 const previous_index = ref<number>(-1);
@@ -35,9 +41,9 @@ const current = ref<boolean>(false);
 const current_curve_point = ref<CurvePoint>();
 const current_from = ref<boolean>(false);
 const current_to = ref<boolean>(false);
-const apex_location_from = reactive({ x: -10, y: -10 });
-const apex_location_to = reactive({ x: -10, y: -10 });
-const site = reactive({ x: -10, y: -10 });
+const apex_location_from = reactive({x: -10, y: -10});
+const apex_location_to = reactive({x: -10, y: -10});
+const site = reactive({x: -10, y: -10});
 const __radius_current_from = ref<number>(0);
 const __radius_current_to = ref<number>(0);
 const current_index = ref<number>(-1);
@@ -46,9 +52,9 @@ const next = ref<boolean>(false);
 const next_curve_point = ref<CurvePoint>();
 const next_from = ref<boolean>(false);
 const next_to = ref<boolean>(false);
-const next_apex_location_from = reactive({ x: -10, y: -10 });
-const next_apex_location_to = reactive({ x: -10, y: -10 });
-const next_site = reactive({ x: -10, y: -10 });
+const next_apex_location_from = reactive({x: -10, y: -10});
+const next_apex_location_to = reactive({x: -10, y: -10});
+const next_site = reactive({x: -10, y: -10});
 const __radius_next_from = ref<number>(0);
 const __radius_next_to = ref<number>(0);
 const next_index = ref<number>(-1);
@@ -57,7 +63,7 @@ let inverse_matrix_at_down = new Matrix();
 let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
 let drag: boolean = false;
-let down_site: XY = { x: 0, y: 0 };
+let down_site: XY = {x: 0, y: 0};
 let down_index: number = -1;
 
 let is_bridging_action: boolean = false;
@@ -66,6 +72,8 @@ let _move: any;
 let _up: any;
 
 let pathModifier: PathEditor | undefined;
+
+let bridgeFromPen: boolean = false;
 
 function reset() {
     previous.value = false;
@@ -101,36 +109,43 @@ function update() {
     let __points: CurvePoint[] = [];
     let selected: number[] = [];
 
-    if (path_shape.pathType === PathType.Editable) {
-        __points = (path_shape as PathShapeView).points;
-        selected = props.context.path.selectedPoints.get(0) || [];
-    } else if (path_shape.pathType === PathType.Multi) {
-        const __segment =  [...props.context.path.selectedPoints.keys()][0];
-        if (__segment < 0) {
-            return;
-        }
-        __points = (path_shape as PathShapeView2)?.segments[__segment]?.points as CurvePoint[];
-        selected = [...props.context.path.selectedPoints.values()][0] || [];
-
-        segment = __segment;
-    }
-
-    if (selected.length !== 1) {
+    if (path_shape.pathType !== PathType.Editable) {
         return;
     }
 
+    const __segment = [...props.context.path.selectedPoints.keys()].pop();
+    if (__segment === undefined || __segment < 0) {
+        return;
+    }
+    __points = (path_shape as PathShapeView)?.segments[__segment]?.points as CurvePoint[];
+
+    if (!__points?.length) {
+        return;
+    }
+
+    selected = [...props.context.path.selectedPoints.values()].pop() || [];
+
+    segment = __segment;
+
     // current
-    const index = selected[0];
+    const index = selected[selected.length - 1];
+    if (index < 0) {
+        return;
+    }
+
     const current_point = __points[index];
     if (!current_point) {
         return;
     }
+
     current_curve_point.value = current_point;
     current.value = true;
     current_index.value = index;
+
     const _p = m.computeCoord2(current_point.x, current_point.y);
     site.x = _p.x;
     site.y = _p.y;
+
     if (current_point.hasFrom && current_point.fromX !== undefined && current_point.fromY !== undefined) {
         current_from.value = true;
         const _cf = m.computeCoord2(current_point.fromX, current_point.fromY);
@@ -138,6 +153,7 @@ function update() {
         apex_location_from.y = _cf.y;
         __radius_current_from.value = __angle(site.x, site.y, apex_location_from.x, apex_location_from.y);
     }
+
     if (current_point.hasTo && current_point.toX !== undefined && current_point.toY !== undefined) {
         current_to.value = true;
         const _ct = m.computeCoord2(current_point.toX, current_point.toY);
@@ -146,7 +162,12 @@ function update() {
         __radius_current_to.value = __angle(site.x, site.y, apex_location_to.x, apex_location_to.y);
     }
 
-    const { previous: __pre, next: __next, previous_index: _pi, next_index: _ni } = __round_curve_point(__points, index);
+    const {
+        previous: __pre,
+        next: __next,
+        previous_index: _pi,
+        next_index: _ni
+    } = __round_curve_point(__points, index);
 
     // previous
     if (__pre && __pre.id !== current_point.id) {
@@ -187,6 +208,7 @@ function modify_f_pointer(move: any, up: any) {
     _move = move;
     _up = up;
 }
+
 function modify_action_curve_point(side: ActionHandle) {
     if (side.startsWith('pre')) {
         action_curve_point = previous_curve_point.value!;
@@ -199,6 +221,7 @@ function modify_action_curve_point(side: ActionHandle) {
         down_index = next_index.value;
     }
 }
+
 function down(e: MouseEvent, side: ActionHandle) {
     e.stopPropagation();
     e.preventDefault();
@@ -209,9 +232,11 @@ function down(e: MouseEvent, side: ActionHandle) {
     add_move_and_up_for_document(move, up);
     modify_f_pointer(move, up);
 }
+
 function modify_inverse_matrix_at_down() {
     inverse_matrix_at_down = new Matrix(props.context.path.matrix_unit_to_root.inverse);
 }
+
 function modify_side(s: ActionHandle) {
     if (s.endsWith('from')) {
         side = 'from';
@@ -219,14 +244,16 @@ function modify_side(s: ActionHandle) {
         side = 'to';
     }
 }
+
 function modify_down_site(e: MouseEvent) {
     down_site.x = e.clientX;
     down_site.y = e.clientY;
 }
+
 function move(e: MouseEvent) {
-    if (drag) {
+    if (drag && action_curve_point) {
         const root = props.context.workspace.root;
-        const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+        const xy = {x: e.clientX - root.x, y: e.clientY - root.y};
         const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
         const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
         const current_is_from = side === 'from';
@@ -234,17 +261,18 @@ function move(e: MouseEvent) {
         const to = current_is_from ? anther : current_handle_point;
 
         pathModifier?.execute4handle(down_index, side, from, to, segment);
-    } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
+    } else if (check_drag_action(down_site, {x: e.clientX, y: e.clientY})) {
         init_editor(e);
         drag = true;
     }
 }
+
 function pre_bridging() {
     const path_shape = props.context.selection.pathshape;
     if (!path_shape) {
         return;
     }
-    const { event } = props.context.path.bridging_events || {};
+    const {event} = props.context.path.bridging_events || {};
     if (!event) {
         bridging_completed();
         return;
@@ -262,25 +290,46 @@ function pre_bridging() {
     update();
     modify_side2(event);
 }
+
 function init_editor(e: MouseEvent) {
-    pathModifier = new PathEditor(props.context, e);
-    pathModifier.createApiCaller();
+    const param = props.context.path.bridgeParam;
+    if (param) {
+        pathModifier = param.handler;
+        props.context.path.setBridgeParams(undefined);
+        bridgeFromPen = true;
+    } else {
+        pathModifier = new PathEditor(props.context, e, PathEditor.FULL_MAP);
+        pathModifier.createApiCaller();
+    }
 }
+
 function __pre() {
-    pathModifier?.execute4handlePre(down_index, segment);
+    if (bridgeFromPen) {
+        pathModifier?.execute4handlePreForPen(down_index, segment);
+
+    } else {
+        pathModifier?.execute4handlePre(down_index, segment);
+    }
 }
+
 function __distance(e: MouseEvent, p: XY) {
     const root = props.context.workspace.root;
     return Math.hypot(e.clientX - root.x - p.x, e.clientY - root.y - p.y);
 }
+
 function modify_side2(e: MouseEvent) {
     const distance_to_from = __distance(e, apex_location_from);
     const distance_to_to = __distance(e, apex_location_to);
     side = distance_to_from > distance_to_to ? 'to' : 'from';
 }
+
 function move2(e: MouseEvent) {
+    if (!action_curve_point) {
+        return;
+    }
+
     const root = props.context.workspace.root;
-    const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const xy = {x: e.clientX - root.x, y: e.clientY - root.y};
     const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
     const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
     const current_is_from = side === 'from';
@@ -288,10 +337,12 @@ function move2(e: MouseEvent) {
     const to = current_is_from ? anther : current_handle_point;
     pathModifier?.execute4handle(down_index, side, from, to, segment);
 }
+
 function bridging_completed() {
     props.context.path.bridging_completed();
     is_bridging_action = false;
 }
+
 function clear_state() {
     drag = false;
 
@@ -303,9 +354,11 @@ function clear_state() {
     }
     remove_move_and_up_from_document(_move, _up);
 }
+
 function up() {
     clear_state();
 }
+
 function path_selection_watcher(t: number) {
     switch (t) {
         case Path.SELECTION_CHANGE:
@@ -352,17 +405,17 @@ onUnmounted(() => {
     <g v-if="previous">
         <g v-if="previous_from">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_from.x"
-                :y2="previous_apex_location_from.y" class="line"></line>
+                  :y2="previous_apex_location_from.y" class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'pre-from') }"
-                :transform="`translate(${previous_apex_location_from.x}, ${previous_apex_location_from.y}) rotate(${__radius_pre_from}) translate(-3, -3)`">
+                  :transform="`translate(${previous_apex_location_from.x}, ${previous_apex_location_from.y}) rotate(${__radius_pre_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="previous_to">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_to.x"
-                :y2="previous_apex_location_to.y" class="line"></line>
+                  :y2="previous_apex_location_to.y" class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point"
-                :transform="`translate(${previous_apex_location_to.x}, ${previous_apex_location_to.y}) rotate(${__radius_pre_to}) translate(-3, -3)`"
-                @mousedown="(e) => { down(e, 'pre-to') }"></rect>
+                  :transform="`translate(${previous_apex_location_to.x}, ${previous_apex_location_to.y}) rotate(${__radius_pre_to}) translate(-3, -3)`"
+                  @mousedown="(e) => { down(e, 'pre-to') }"></rect>
         </g>
     </g>
     <!--  当前点  -->
@@ -370,13 +423,13 @@ onUnmounted(() => {
         <g v-if="current_from">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_from.x" :y2="apex_location_from.y" class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'current-from') }"
-                :transform="`translate(${apex_location_from.x}, ${apex_location_from.y}) rotate(${__radius_current_from}) translate(-3, -3)`">
+                  :transform="`translate(${apex_location_from.x}, ${apex_location_from.y}) rotate(${__radius_current_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="current_to">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_to.x" :y2="apex_location_to.y" class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'current-to') }"
-                :transform="`translate(${apex_location_to.x}, ${apex_location_to.y}) rotate(${__radius_current_to}) translate(-3, -3)`">
+                  :transform="`translate(${apex_location_to.x}, ${apex_location_to.y}) rotate(${__radius_current_to}) translate(-3, -3)`">
             </rect>
         </g>
     </g>
@@ -384,16 +437,16 @@ onUnmounted(() => {
     <g v-if="next">
         <g v-if="next_from">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_from.x" :y2="next_apex_location_from.y"
-                class="line"></line>
+                  class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'next-from') }"
-                :transform="`translate(${next_apex_location_from.x}, ${next_apex_location_from.y}) rotate(${__radius_next_from}) translate(-3, -3)`">
+                  :transform="`translate(${next_apex_location_from.x}, ${next_apex_location_from.y}) rotate(${__radius_next_from}) translate(-3, -3)`">
             </rect>
         </g>
         <g v-if="next_to">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_to.x" :y2="next_apex_location_to.y"
-                class="line"></line>
+                  class="line"></line>
             <rect x="0" y="0" width="6" height="6" class="point" @mousedown="(e) => { down(e, 'next-to') }"
-                :transform="`translate(${next_apex_location_to.x}, ${next_apex_location_to.y}) rotate(${__radius_next_to}) translate(-3, -3)`">
+                  :transform="`translate(${next_apex_location_to.x}, ${next_apex_location_to.y}) rotate(${__radius_next_to}) translate(-3, -3)`">
             </rect>
         </g>
     </g>

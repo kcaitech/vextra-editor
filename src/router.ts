@@ -1,11 +1,14 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter,createWebHistory} from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
+import isMobileDevice from "./utils/mobileDeviceChecker";
 import kcdesk from "@/kcdesk";
 
 declare module 'vue-router' {
     interface RouteMeta {
         transition?: string,
+        beforeEnter?: NavigationGuardWithThis<undefined> | NavigationGuardWithThis<undefined>[],
+        title?: string
     }
 }
 
@@ -39,8 +42,13 @@ const Sharefile = () => import('@/components/Mobile/ShareFile.vue')
 const Wxlogin = () => import('@/components/Mobile/WxLogin.vue')
 const Mapply = () => import('@/components/Mobile/Mapply.vue')
 const Msearch = () => import('@/components/Mobile/Searchview.vue')
-
-const _t: any = i18n.global
+const HomePage = () => import('@/components/Mobile/HomePage.vue')
+const MyFile = () => import('@/components/Mobile/MyFile.vue')
+const MyTeam = () => import('@/components/Mobile/Team.vue')
+const About = () => import('@/components/Mobile/About.vue')
+const Message = () => import('@/components/Mobile/MessageInfo.vue')
+const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
+let _t: any = i18n.global
 const productName = _t.t('product.name');
 
 enum Group {
@@ -48,13 +56,21 @@ enum Group {
     Document,
 }
 
-
 const apphome_children = [
     {
         path: 'recently',
         name: 'recently',
         component: Recently,
         meta: { title: _t.t('home.recently_opened') + ' - ' + productName },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'recently') {
+                if (isMobileDevice()) {
+                    next('/m')
+                } else {
+                    next()
+                }
+            }
+        }
     },
     {
         path: 'star',
@@ -136,7 +152,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true, group: Group.Home },
+        meta: { title: _t.t('system.btn_login') + ' - ' + productName, requireAuth: true },
     },
     {
         path: "/home",
@@ -180,6 +196,19 @@ const routes = [
             requireAuth: true,
             group: Group.Document
         },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'pageviews' && to.query.id) {
+                const id = to.query.id
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
+                if (newid !== id) {
+                    next({ ...to, query: { ...to.query, id: newid } });
+                } else {
+                    next();
+                }
+            } else {
+                next();
+            }
+        },
     },
     {
         path: "/files",
@@ -204,8 +233,49 @@ const routes = [
         path: "/m",
         name: "mobilehome",
         component: MobileHome,
+        redirect: '/m/home',
+        children: [
+            {
+                path: "home",
+                name: "home",
+                component: HomePage,
+                meta: {
+                    requireAuth: true,
+                    title: '首页'
+                }
+            },
+            {
+                path: "file",
+                name: "file",
+                component: MyFile,
+                meta: {
+                    requireAuth: true,
+                    title: '我的文件'
+                }
+            },
+            {
+                path: "team",
+                name: "team",
+                component: MyTeam,
+                meta: {
+                    requireAuth: true,
+                    title: '团队'
+                }
+            },
+            {
+                path: "about",
+                name: "about",
+                component: About,
+                meta: {
+                    requireAuth: true,
+                    title: '我的'
+                }
+            },
+
+        ],
         meta: {
             requireAuth: true,
+            title: '首页',
             group: Group.Home
         }
     },
@@ -215,6 +285,7 @@ const routes = [
         component: ProjectView,
         meta: {
             requireAuth: true,
+            title: '团队',
             group: Group.Home
         }
     },
@@ -233,6 +304,17 @@ const routes = [
         component: Sharefile,
         meta: {
             requireAuth: true,
+            title: '分享',
+            group: Group.Home
+        }
+    },
+    {
+        path: "/member",
+        name: "member",
+        component: ShareMember,
+        meta: {
+            requireAuth: true,
+            title: '已加入分享的人',
             group: Group.Home
         }
     },
@@ -242,6 +324,17 @@ const routes = [
         component: Msearch,
         meta: {
             requireAuth: true,
+            title: '搜索',
+            group: Group.Home
+        }
+    },
+    {
+        path: "/message",
+        name: 'message',
+        component: Message,
+        meta: {
+            requireAuth: true,
+            title: '消息通知',
             group: Group.Home
         }
     },
@@ -250,6 +343,7 @@ const routes = [
         name: 'privacy',
         component: Privacy,
         meta: {
+            title: '隐私政策',
             group: Group.Home
         }
     },
@@ -258,6 +352,7 @@ const routes = [
         name: 'agreements',
         component: Agreements,
         meta: {
+            title: '在线服务协议',
             group: Group.Home
         }
     },

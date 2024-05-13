@@ -28,23 +28,24 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-html {
+html,
+body {
     height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+    margin: 0;
+    padding: 0;
+    background-color: rgba(250, 250, 250, 1);
+    font-family: var(--font-family);
+    user-select: none; //禁止复制内容
+    position: relative;
+    overflow: hidden;
+    --webkit-overflow-scrolling: touch;
 
-    body {
-        min-height: -webkit-fill-available;
-        margin: 0;
-        padding: 0;
-        background-color: rgba(250, 250, 250, 1);
-        font-family: var(--font-family);
-        user-select: none; //禁止复制内容
-        position: relative;
-
-        &::-webkit-scrollbar {
-            height: 0;
-            width: 0;
-        }
+    &::-webkit-scrollbar {
+        height: 0;
+        width: 0;
     }
+
 }
 
 #app {

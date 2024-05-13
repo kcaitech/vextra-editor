@@ -34,7 +34,7 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
-import { parse as SVGParse } from "@/utils/svg_parser";
+import { parse as SVGParse } from "@/svg_parser";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -228,7 +228,7 @@ export class Clipboard {
 
             const points = points_map.get(shape.id);
             if (points) {
-                (shape as PathShape).points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
+                (shape as PathShape).pathsegs[0].points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
             }
         }
 

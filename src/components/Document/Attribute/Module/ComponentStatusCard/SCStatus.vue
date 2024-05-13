@@ -120,14 +120,14 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    //margin-bottom: 5px;
+    margin-top: 8px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 38px;
+        height: 32px;
         box-sizing: border-box;
     }
 

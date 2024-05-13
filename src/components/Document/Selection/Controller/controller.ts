@@ -1,24 +1,24 @@
 import {
-    AsyncPathEditor,
-    ShapeView,
     adapt2Shape,
-    PathShapeView, CurvePoint, PathType, PathShapeView2,
+    AsyncPathEditor,
+    AsyncTransfer,
+    CurvePoint,
+    Matrix,
+    PathShapeView,
+    PathType,
+    ShapeView,
 } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
-import { ClientXY, PageXY } from "@/context/selection";
+import { ClientXY, PageXY, Selection } from "@/context/selection";
 import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
-import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import {
     add_blur_for_window,
     check_drag_action,
     down_while_is_text_editing,
-    gen_offset_points_map,
     is_ctrl_element,
     is_mouse_on_content,
     modify_down_position,
@@ -33,6 +33,7 @@ import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
+import { Action } from "@/context/tool";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -145,9 +146,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         let firstPoint: CurvePoint | undefined = undefined;
 
         if (pathshape.pathType === PathType.Editable) {
-            firstPoint = (pathshape as PathShapeView).points[values[0][0]];
-        } else if (pathshape.pathType === PathType.Multi) {
-            const __points = (pathshape as PathShapeView2)?.segments[keys[0]]?.points;
+            const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
             if (!__points) {
                 return;
             }
@@ -282,16 +281,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         transporter = new TranslateHandler(context, e, selection.selectedShapes);
-        // console.log('transporter:', transporter);
-
-        // context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 
         document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
-
-        // wheel = fourWayWheel(context, undefined, startPositionOnPage);
-        // workspace.setCtrl('controller');
     }
 
     async function mousemove(e: MouseEvent) {
@@ -301,20 +294,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            // if (isDragging && wheel && asyncTransfer) {
-            // speed = get_speed(t_e || e, e);
-            // t_e = e;
-
-            // let update_type = 0;
-
-            // const is_need_assit = wheel.is_inner(e);
-
-            // update_type = transform(startPosition, mousePosition, is_need_assit);
-
-            // wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
-
-            // modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-
             transporter?.execute(e);
 
         } else if (check_drag_action(startPosition, mousePosition)) {
@@ -332,24 +311,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             reset_assist_before_translate(context, shapes);
 
-            // offset_map = gen_offset_points_map(shapes, startPositionOnPage);
-
-            // asyncTransfer = context.editor
-            //     .controller()
-            //     .asyncTransfer(shapes, selection.selectedPage!);
-
-
-            // context.selection.setShapesSet(shapes);
-            // asyncTransfer.setEnvs(record_origin_env(shapes));
-            // const except_envs = find_except_envs(context, shapes, e);
-            // asyncTransfer.setExceptEnvs(except_envs);
-            // asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
-
             transporter?.createApiCaller();
-
-            // if (e.altKey) {
-            //     shapes = await paster_short(context, shapes, transporter!.asyncApiCaller!);
-            // }
 
             isDragging = true;
         }
@@ -467,7 +429,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.save('select-shape', exit);
+
+        if (!context.esctask.has('select-shape')) {
+            context.esctask.save('select-shape', exit);
+        }
     }
 
     function dispose() {

@@ -3,13 +3,13 @@ import {
     CurvePoint,
     Matrix,
     PathShapeView,
-    PathShapeView2,
     PathType,
     WatchableObject
 } from "@kcdesign/data";
 import { Context } from ".";
 import { Segment } from "@/utils/pathedit";
 import { Action } from "./tool";
+import { PathEditor } from "@/transform/pathEdit";
 
 export type PointEditType = CurveMode | 'INVALID'
 
@@ -21,6 +21,7 @@ export class Path extends WatchableObject {
     static CLEAR_HIGH_LIGHT = 5;
     static BRIDGING = 6;
     static BRIDGING_COMPLETED = 7;
+    static CONTACT_STATUS_CHANGE = 8;
 
     private m_context: Context;
 
@@ -33,9 +34,27 @@ export class Path extends WatchableObject {
 
     private m_bridging_events: { segment: number, index: number, event: MouseEvent } | undefined = undefined;
 
+    private contacting: boolean = false;
+    private m_last_mouseevent: MouseEvent | undefined;
+
+    private bridgeParams: {
+        handler: PathEditor;
+        segment: number;
+        index: number;
+        e: MouseEvent;
+    } | undefined = undefined;
+
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    saveEvent(e?: MouseEvent) {
+        this.m_last_mouseevent = e;
+    }
+
+    get lastEvent() {
+        return this.m_last_mouseevent;
     }
 
     get selectedPoints() {
@@ -72,10 +91,8 @@ export class Path extends WatchableObject {
             }
 
             let max = 0;
-            if (pathType === 1) {
-                max = (pathShape as PathShapeView).points.length - 1;
-            } else if (pathType === 2) {
-                max = (pathShape as PathShapeView2).segments[segment]?.points?.length - 1;
+            if (pathType === PathType.Editable) {
+                max = (pathShape as PathShapeView).segments[segment]?.points?.length - 1;
             }
 
             if (max > -1) {
@@ -102,9 +119,60 @@ export class Path extends WatchableObject {
         return !!points?.length && points.findIndex((i) => i === index) > -1;
     }
 
-    select_point(segment: number, index: number) {
+    select_point(segmentIndex: number, index: number, deep = false) {
         this._reset();
-        this.selected_points.set(segment, [index]);
+
+
+        if (deep) {
+            const pathShape = this.m_context.selection.pathshape as PathShapeView;
+            if (!pathShape) {
+                return;
+            }
+
+            const point = pathShape?.segments[segmentIndex]?.points[index];
+
+            if (!point) {
+                return;
+            }
+
+            const frame = pathShape.frame;
+            const m = pathShape.matrix2Root();
+            m.preScale(frame.width, frame.height);
+            m.multiAtLeft(this.m_context.workspace.matrix);
+
+            const {x, y} = m.computeCoord3(point);
+
+            const segments = pathShape.segments;
+
+            const resultPoints = new Map<number, number[]>();
+
+            for (let i = 0; i < segments.length; i++) {
+                const points = segments[i].points;
+
+                let container = resultPoints.get(i);
+                if (!container) {
+                    container = [];
+                    resultPoints.set(i, container);
+                }
+
+                for (let j = 0; j < points.length; j++) {
+                    const __point = m.computeCoord3(points[j]);
+                    if (Math.abs(__point.x - x) <= 0.01 && Math.abs(__point.y - y) <= 0.01) {
+                        container.push(j);
+                    }
+                }
+            }
+
+            resultPoints.forEach((points, segmentIndex) => {
+                if (!points.length) {
+                    return;
+                }
+
+                this.selected_points.set(segmentIndex, points);
+            });
+        } else {
+            this.selected_points.set(segmentIndex, [index]);
+        }
 
         this.notify(Path.SELECTION_CHANGE);
     }
@@ -142,33 +210,6 @@ export class Path extends WatchableObject {
     is_selected_segs(segment: number, index: number) {
         const sides = this.selected_sides.get(segment);
         return !!sides?.length && sides.findIndex((i) => i === index) > -1;
-    }
-
-    push_after_sort_points(segment: number, index: number) {
-        const points = this.selected_points.get(segment);
-
-        if (!points?.length) {
-            return;
-        }
-
-        for (let i = points.length - 1; i > -1; i--) {
-            if (points[i] >= index) {
-                points[i]++;
-            }
-        }
-        points.push(index);
-
-        this.notify(Path.SELECTION_CHANGE);
-    }
-
-    reset_points() {
-        const need_notify = this.selected_points.size;
-
-        this.selected_points.clear();
-
-        if (need_notify) {
-            this.notify(Path.SELECTION_CHANGE);
-        }
     }
 
     get selectedSides() {
@@ -227,15 +268,6 @@ export class Path extends WatchableObject {
             this.selected_sides.set(k, Array.from(v.values()));
         })
         this.notify(Path.SELECTION_CHANGE);
-    }
-
-    reset_sides() {
-        const need_notify = this.selected_sides.size;
-        this.selected_sides.clear();
-
-        if (need_notify) {
-            this.notify(Path.SELECTION_CHANGE);
-        }
     }
 
     _reset() {
@@ -314,19 +346,7 @@ export class Path extends WatchableObject {
         }
 
         if (shape.pathType === PathType.Editable) {
-            const indexes = this.selected_points.get(0);
-            if (!indexes?.length) {
-                return  points;
-            }
-            const __points = (shape as PathShapeView).points;
-            for (let i = 0; i < indexes.length; i++) {
-                const p = __points[indexes[i]];
-                if (p) {
-                    points.push(p);
-                }
-            }
-        } else if (shape.pathType === PathType.Multi) {
-            const segments = (shape as PathShapeView2).segments;
+            const segments = (shape as PathShapeView).segments;
             this.selected_points.forEach((indexes, segment) => {
                 const __points = segments[segment]?.points as CurvePoint[];
 
@@ -344,5 +364,64 @@ export class Path extends WatchableObject {
         }
 
         return points;
+    }
+
+    get isSingleSelection() {
+        if (this.selected_sides.size) {
+            return false;
+        }
+        if (this.selected_points.size === 1) {
+            let result = false;
+            this.selected_points.forEach(s => {
+                result = s.length === 1;
+            })
+            return result;
+        } else {
+            return false;
+        }
+    }
+
+    get isContacting() {
+        return this.contacting;
+    }
+
+    setContactStatus(v: boolean) {
+        this.contacting = v;
+
+        if (!v) {
+            new PathEditor(this.m_context).sortSegment();
+        }
+
+        this.notify(Path.CONTACT_STATUS_CHANGE);
+    }
+
+    get bridgeParam() {
+        return this.bridgeParams;
+    }
+
+    setBridgeParams(p: { handler: PathEditor, segment: number, index: number, e: MouseEvent } | undefined) {
+        this.bridgeParams = p;
+    }
+
+    private m_last_point: { point: CurvePoint, segment: number, index: number } | undefined;
+
+    get lastPoint() {
+        return this.m_last_point;
+    }
+
+    setLastPoint(point: { point: CurvePoint, segment: number, index: number }) {
+        this.m_last_point = point;
+    }
+
+    private previous_path_id: string = '';
+
+    setPreviousPathId(id: string) {
+        this.previous_path_id = id;
+    }
+
+    get previousPathStyle() {
+        const page = this.m_context.selection.selectedPage!;
+        const shape = page.getShape(this.previous_path_id);
+        return shape?.style;
     }
 }

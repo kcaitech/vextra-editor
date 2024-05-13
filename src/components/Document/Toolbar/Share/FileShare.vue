@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watchEffect, computed } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watchEffect, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
+import * as user_api from '@/request/users'
+import Loading from '@/components/common/Loading.vue';
 
 enum permissions {
   noAuthority,
@@ -321,7 +323,24 @@ const shareSwitch = () => {
   }
 }
 
+const miniprogramcode = ref<string>()
+const showimg = ref<boolean>(false)
+
+async function GetminiProgramCode() {
+  const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent(docID + '') })
+  if (code === 0) {
+    miniprogramcode.value = data
+  }
+}
+
+const showImg = () => {
+  GetminiProgramCode()
+  showimg.value = !showimg.value
+}
+
+
 </script>
+
 <template>
   <el-card class="file-share-box-card" v-if="!founder && docInfo">
     <!-- 标题 -->
@@ -367,14 +386,32 @@ const shareSwitch = () => {
             </ul>
           </transition>
           <button class="copybnt" type="button" @click.stop="copyLink" :disabled="!value1 ? true : false">{{
-            t('share.copy_link') }}</button>
+    t('share.copy_link') }}</button>
+          <div class="share-wechat" @click="showImg">
+            <svg width="28px" height="28px" viewBox="0 0 16 16" fill="none">
+              <g clip-path="url(#clip0_961_215)">
+                <path
+                  d="M16 8C16 12.4185 12.4185 16 8 16C3.5815 16 0 12.4185 0 8C0 3.5815 3.5815 0 8 0C12.4185 0 16 3.5815 16 8Z"
+                  fill="#65AB48"></path>
+                <path
+                  d="M5.4785 6.371C5.227 6.371 5.0235 6.165 5.0235 5.9105C5.0235 5.656 5.227 5.45 5.4785 5.45C5.7295 5.45 5.9335 5.656 5.9335 5.9105C5.9335 6.165 5.7295 6.371 5.4785 6.371ZM8.2925 5.45C8.544 5.45 8.7475 5.656 8.7475 5.9105C8.7475 6.165 8.544 6.371 8.2925 6.371C8.041 6.371 7.8375 6.165 7.8375 5.9105C7.8375 5.656 8.041 5.45 8.2925 5.45ZM10.2985 6.2965C9.9235 4.9775 8.567 4 6.951 4C5.045 4 3.5 5.3585 3.5 7.0345C3.5 7.9845 3.996 8.8325 4.773 9.3885C4.906 9.484 4.443 10.1705 4.443 10.1705C4.443 10.1705 5.5315 9.8065 5.7105 9.867C6.05572 9.98196 6.41543 10.0476 6.779 10.062C6.73219 9.85053 6.70855 9.63459 6.7085 9.418C6.7085 7.6525 8.3 6.3255 10.2985 6.2955V6.2965ZM11.329 8.7905C11.117 8.7905 10.945 8.6165 10.945 8.402C10.945 8.1875 11.117 8.013 11.329 8.013C11.541 8.013 11.713 8.187 11.713 8.402C11.713 8.617 11.541 8.7905 11.329 8.7905ZM8.952 8.7905C8.74 8.7905 8.568 8.6165 8.568 8.402C8.568 8.1875 8.74 8.013 8.952 8.013C9.164 8.013 9.3365 8.187 9.3365 8.402C9.3365 8.617 9.1645 8.7905 8.952 8.7905ZM13 9.351C13 7.9355 11.695 6.788 10.0855 6.788C8.476 6.788 7.1705 7.9355 7.1705 9.351C7.1705 10.7665 8.4755 11.9145 10.0855 11.9145C10.4545 11.9145 10.808 11.854 11.133 11.744C11.2845 11.6925 12.2035 12 12.2035 12C12.2035 12 11.8125 11.42 11.925 11.3395C12.581 10.8695 13 10.1535 13 9.351Z"
+                  fill="white"></path>
+              </g>
+              <defs>
+                <clipPath id="clip0_961_215">
+                  <rect width="16" height="16" fill="white"></rect>
+                </clipPath>
+              </defs>
+            </svg>
+
+          </div>
         </div>
       </div>
     </div>
     <!-- 分享人 -->
     <div class="share_user">
-<!--      <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>-->
-        <span class="type">{{ t('share.people_who_have_joined_the_share') }}</span>
+      <!--      <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>-->
+      <span class="type">{{ t('share.people_who_have_joined_the_share') }}</span>
       <el-scrollbar height="300px" class="shared-by">
         <div class="scrollbar-demo-item">
           <div class="item-left">
@@ -429,10 +466,20 @@ const shareSwitch = () => {
       </el-scrollbar>
       <div class="project" v-if="docInfo.project !== null">项目中所有成员均可访问</div>
     </div>
+    <div class="wechat-code" v-if="showimg">
+      <svg-icon icon-class="close" @click.stop="showimg = !showimg"></svg-icon>
+      <span style="font-size: 15px;">通过小程序打开</span>
+      <img v-if="miniprogramcode" :src="miniprogramcode" alt="miniprogramcode">
+      <div v-else class="loading">
+        <Loading :size="20"></Loading>
+      </div>
+
+    </div>
   </el-card>
 
   <el-card class="file-share-box-card" v-if="founder && docInfo">
     <!-- 标题 -->
+
     <template #header>
       <div class="card-header">
         <div class="title">{{ t('share.file_sharing') }}</div>
@@ -463,7 +510,7 @@ const shareSwitch = () => {
       <div class="button bottom">
         <button class="copybnt" type="button" @click="copyLink"
           :disabled="docInfo.document.doc_type !== 0 ? false : true">{{
-            t('share.copy_link') }}</button>
+    t('share.copy_link') }}</button>
       </div>
     </div>
   </el-card>
@@ -519,6 +566,67 @@ const shareSwitch = () => {
   font-size: 13px;
   font-weight: 400;
   color: #8C8C8C;
+}
+
+.wechat-code {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background-color: #FFFFFF;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 50%;
+  border-radius: 6px;
+  box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  box-sizing: border-box;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    padding: 2px;
+    box-sizing: border-box;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: rgb(243, 243, 245);
+    }
+
+    &:active {
+      background-color: #EBEBEB;
+    }
+  }
+
+  img {
+    width: 50%;
+    height: 50%;
+  }
+
+  .loading {
+    width: 50%;
+    height: 50%;
+  }
+}
+
+.share-wechat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+
+  &:hover {
+    background-color: rgba(235, 235, 235, 1);
+    border-radius: 6px;
+  }
 }
 
 .copybnt {
