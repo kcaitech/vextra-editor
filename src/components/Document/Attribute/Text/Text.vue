@@ -138,13 +138,13 @@ const onBold = (weight: number) => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextBold(weight, 0, Infinity)
+            editor.setTextWeight(weight, 0, Infinity)
         } else {
-            editor.setTextBold(weight, textIndex, selectLength)
+            editor.setTextWeight(weight, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes, weight);
+        editor.setTextWeightMulti(props.textShapes, weight);
     }
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.bold = weight;
@@ -384,14 +384,14 @@ const _textFormat = () => {
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
-        isBold.value = format.bold
+        isBold.value = format.weight
         isTilt.value = format.italic || false
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
         if (format.italicIsMulti) weightMixed.value = true;
         if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-        if (format.boldIsMulti) weightMixed.value = true;
+        if (format.weightIsMulti) weightMixed.value = true;
         if (colorIsMulti.value) mixed.value = true;
         if (highlightIsMulti.value) higMixed.value = true;
         if (format.fontNameIsMulti) {
@@ -460,7 +460,7 @@ const _textFormat = () => {
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         textColor.value = format.color;
-        isBold.value = format.bold;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
@@ -478,7 +478,7 @@ const _textFormat = () => {
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
         if (format.textBehaviour === 'unlikeness') selectText.value = '';
-        if (format.bold === 'unlikeness') weightMixed.value = true;
+        if (format.weight === 'unlikeness') weightMixed.value = true;
         if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;

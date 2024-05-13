@@ -110,19 +110,19 @@ const onBold = (weight: number) => {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
         if (isSelectText()) {
-            editor.setTextBold(isBold.value, 0, Infinity)
+            editor.setTextWeight(isBold.value, 0, Infinity)
         } else {
-            editor.setTextBold(isBold.value, textIndex, selectLength)
+            editor.setTextWeight(isBold.value, textIndex, selectLength)
         }
     } else {
         const table = props.shape;
         const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextBold(isBold.value);
+            editor.setTextWeight(isBold.value);
         } else {
             const cell_selection = cellSelect(table_Selection)
-            editor.setTextBold(isBold.value, cell_selection);
+            editor.setTextWeight(isBold.value, cell_selection);
         }
     }
     textFormat();
@@ -396,14 +396,14 @@ const textFormat = (_t?: any) => {
         fonstSize.value = format.fontSize || 14;
         textColor.value = format.color;
         highlight.value = format.highlight;
-        isBold.value = format.bold;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor;
         gradient.value = format.gradient;
         fontWeight.value = fontWeightConvert(isBold.value, isTilt.value);
         if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
         if (format.italicIsMulti) weightMixed.value = true;
-        if (format.boldIsMulti) weightMixed.value = true;
+        if (format.weightIsMulti) weightMixed.value = true;
         if (format.fontNameIsMulti) {
             disableWeight.value = true;
             fontName.value = `${t('attr.more_value')}`
@@ -478,7 +478,7 @@ const textFormat = (_t?: any) => {
         fontName.value = format.fontName || 'PingFang SC';
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
-        isBold.value = format.bold;
+        isBold.value = format.weight;
         isTilt.value = format.italic || false;
         textColor.value = format.color;
         fillType.value = format.fillType || FillType.SolidColor;
@@ -504,7 +504,7 @@ const textFormat = (_t?: any) => {
         if (format.verAlign === 'unlikeness') selectVertical.value = '';
         if (format.color === 'unlikeness' || format.fillType === 'unlikeness') colorIsMulti.value = true;
         if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if (format.bold === 'unlikeness') weightMixed.value = true;
+        if (format.weight === 'unlikeness') weightMixed.value = true;
         if (format.italic === 'unlikeness') weightMixed.value = true;
         if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;

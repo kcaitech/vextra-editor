@@ -72,7 +72,7 @@ export class Potrace {
         }
 
         this._luminanceData = this._processLoadedImage(target);
-            callback.call(this);
+        callback.call(this);
         // this._luminanceData = this.loadImage(target, callback)
     }
 
@@ -98,7 +98,7 @@ export class Potrace {
      * @private
      */
     _bmToPathlist() {
-        const  self = this;
+        const self = this;
         let threshold = this._params.threshold;
         const blackOnWhite = this._params.blackOnWhite;
 
@@ -122,7 +122,7 @@ export class Potrace {
          * @private
          */
         function findNext(point: Point): boolean {
-            let  i = blackMap.pointToIndex(point);
+            let i = blackMap.pointToIndex(point);
 
             while (i < blackMap.size && blackMap.data[i] !== 1) {
                 i++;
@@ -135,7 +135,7 @@ export class Potrace {
         }
 
         function majority(x: number, y: number) {
-            let  i, a, ct;
+            let i, a, ct;
 
             for (i = 2; i < 5; i++) {
                 ct = 0;
@@ -156,7 +156,7 @@ export class Potrace {
         }
 
         function findPath(point: Point): Path & { sign?: string } {
-            const  path: Path & { sign?: string } = new Path();
+            const path: Path & { sign?: string } = new Path();
             let x = point.x,
                 y = point.y,
                 dirx = 0,
@@ -166,7 +166,7 @@ export class Potrace {
             path.sign = saveBlackMap.getValueAt(point.x, point.y) ? "+" : "-"; // 路径包含的是空白还是要填充的区域
 
             const turnPolicy = self._params.turnPolicy;
-            for (;;) {
+            for (; ;) {
                 path.pt.push(new Point(x, y));
                 if (x > path.maxX)
                     path.maxX = x;
@@ -185,8 +185,8 @@ export class Potrace {
                 if (x === point.x && y === point.y) // 回到起点
                     break;
 
-                const  l = blackMap.getValueAt(x + (dirx + diry - 1) / 2, y + (diry - dirx - 1) / 2);
-                const  r = blackMap.getValueAt(x + (dirx - diry - 1) / 2, y + (diry + dirx - 1) / 2);
+                const l = blackMap.getValueAt(x + (dirx + diry - 1) / 2, y + (diry - dirx - 1) / 2);
+                const r = blackMap.getValueAt(x + (dirx - diry - 1) / 2, y + (diry + dirx - 1) / 2);
 
                 if (r && !l) {
                     if (turnPolicy === Potrace.TURNPOLICY_RIGHT ||
@@ -216,7 +216,7 @@ export class Potrace {
         }
 
         function xorPath(path: Path) {
-            let  y1 = path.pt[0].y;
+            let y1 = path.pt[0].y;
 
             for (let i = 1, len = path.len; i < len; i++) {
                 const pt = path.pt[i];
@@ -253,15 +253,15 @@ export class Potrace {
      * @private
      */
     _processPath() {
-        const  self = this;
+        const self = this;
 
         function calcSums(path: Path & { x0?: number, y0?: number, sums?: Array<Sum> }) {
-            let  i, x, y;
+            let i, x, y;
             path.x0 = path.pt[0].x;
             path.y0 = path.pt[0].y;
 
             path.sums = [];
-            const  s = path.sums;
+            const s = path.sums;
             s.push(new Sum(0, 0, 0, 0, 0));
             for (i = 0; i < path.len; i++) {
                 x = path.pt[i].x - path.x0;
@@ -273,7 +273,7 @@ export class Potrace {
 
         function calcLon(path: Path & { lon?: Array<number> }) {
 
-            const  n = path.len,
+            const n = path.len,
                 pt = path.pt,
                 pivk = new Array(n),
                 nc = new Array(n),
@@ -282,13 +282,13 @@ export class Potrace {
 
             path.lon = new Array(n);
 
-            const  constraint = [new Point(), new Point()],
+            const constraint = [new Point(), new Point()],
                 cur = new Point(),
                 off = new Point(),
                 dk = new Point();
             let foundk;
 
-            let  i, j, k1, a, b, c, d, k = 0;
+            let i, j, k1, a, b, c, d, k = 0;
             for (i = n - 1; i >= 0; i--) {
                 if (pt[i].x != pt[k].x && pt[i].y != pt[k].y) {
                     k = i + 1;
@@ -309,7 +309,7 @@ export class Potrace {
 
                 k = nc[i];
                 k1 = i;
-                for (;;) {
+                for (; ;) {
                     foundk = 0;
                     dir = (3 + 3 * utils.sign(pt[k].x - pt[k1].x) +
                         utils.sign(pt[k].y - pt[k1].y)) / 2;
@@ -392,9 +392,9 @@ export class Potrace {
 
             function penalty3(path: Path & { sums?: Array<Sum> }, i: number, j: number) {
 
-                const  n = path.len, pt = path.pt, sums = path.sums!;
-                let  x, y, xy, x2, y2,
-                    k, 
+                const n = path.len, pt = path.pt, sums = path.sums!;
+                let x, y, xy, x2, y2,
+                    k,
                     r = 0;
                 if (j >= n) {
                     j -= n;
@@ -431,7 +431,7 @@ export class Potrace {
                 return Math.sqrt(s);
             }
 
-            let  i, j, k;
+            let i, j, k;
             const n = path.len,
                 pen = new Array(n + 1),
                 prev = new Array(n + 1),
@@ -503,7 +503,7 @@ export class Potrace {
 
             function pointslope(path: Path & { sums?: Array<Sum> }, i: number, j: number, ctr: Point, dir: Point) {
 
-                const  n = path.len, sums = path.sums!;
+                const n = path.len, sums = path.sums!;
                 let a, c, l, r = 0;
 
                 while (j >= n) {
@@ -560,11 +560,11 @@ export class Potrace {
                 }
             }
 
-            const  m = path.m!, po = path.po!, n = path.len, pt = path.pt,
+            const m = path.m!, po = path.po!, n = path.len, pt = path.pt,
                 x0 = path.x0!, y0 = path.y0!,
                 ctr = new Array(m), dir = new Array(m),
                 q = new Array(m),
-                v = new Array(3), 
+                v = new Array(3),
                 s = new Point();
             let d, i, j, k, l;
 
@@ -599,7 +599,7 @@ export class Potrace {
                 }
             }
 
-            let  Q, w, dx, dy, det, min, cand, xmin, ymin, z;
+            let Q, w, dx, dy, det, min, cand, xmin, ymin, z;
             for (i = 0; i < m; i++) {
                 Q = new Quad();
                 w = new Point();
@@ -615,7 +615,7 @@ export class Potrace {
                     }
                 }
 
-                for (;;) {
+                for (; ;) {
 
                     det = Q.at(0, 0) * Q.at(1, 1) - Q.at(0, 1) * Q.at(1, 0);
                     if (det !== 0.0) {
@@ -699,7 +699,7 @@ export class Potrace {
         }
 
         function reverse(path: Path) {
-            const  curve = path.curve, m = curve.n, v = curve.vertex;
+            const curve = path.curve, m = curve.n, v = curve.vertex;
 
             for (let i = 0, j = m - 1; i < j; i++, j--) {
                 const tmp = v[i];
@@ -709,9 +709,9 @@ export class Potrace {
         }
 
         function smooth(path: Path) {
-            const  m = path.curve.n, curve = path.curve;
+            const m = path.curve.n, curve = path.curve;
 
-            let  i, j, k, dd, denom, alpha,
+            let i, j, k, dd, denom, alpha,
                 p2, p3, p4;
 
             for (i = 0; i < m; i++) {
@@ -756,8 +756,8 @@ export class Potrace {
         function optiCurve(path: Path) {
 
             function opti_penalty(path: Path, i: number, j: number, res: Opti, opttolerance: number, convc: Array<number>, areac: Array<number>) {
-                const  m = path.curve.n, curve = path.curve, vertex = curve.vertex;
-                let k, k1, k2, 
+                const m = path.curve.n, curve = path.curve, vertex = curve.vertex;
+                let k, k1, k2,
                     area, d, d1, d2,
                     p1, p2, pt,
                     t;
@@ -884,7 +884,7 @@ export class Potrace {
                 return 0;
             }
 
-            const  curve = path.curve, m = curve.n, vert = curve.vertex,
+            const curve = path.curve, m = curve.n, vert = curve.vertex,
                 pt = new Array(m + 1),
                 pen = new Array(m + 1),
                 len = new Array(m + 1),
@@ -893,7 +893,7 @@ export class Potrace {
             let i, j, r,
                 i1, area, alpha;
 
-            const  convc = new Array(m), areac = new Array(m + 1);
+            const convc = new Array(m), areac = new Array(m + 1);
 
             for (i = 0; i < m; i++) {
                 if (curve.tag[i] == "CURVE") {
@@ -984,8 +984,8 @@ export class Potrace {
             path.curve = ocurve;
         }
 
-        for (let  i = 0; i < this._pathlist.length; i++) {
-            const  path: Path & { sign?: string } = this._pathlist[i];
+        for (let i = 0; i < this._pathlist.length; i++) {
+            const path: Path & { sign?: string } = this._pathlist[i];
             calcSums(path);
             calcLon(path);
             bestPolygon(path);
@@ -1010,7 +1010,7 @@ export class Potrace {
      */
     _validateParameters(params: PotraceOptions) {
         if (params && params.turnPolicy && Potrace.SUPPORTED_TURNPOLICY_VALUES.indexOf(params.turnPolicy) === -1) {
-            const  goodVals = '\'' + Potrace.SUPPORTED_TURNPOLICY_VALUES.join('\', \'') + '\'';
+            const goodVals = '\'' + Potrace.SUPPORTED_TURNPOLICY_VALUES.join('\', \'') + '\'';
 
             throw new Error('Bad turnPolicy value. Allowed values are: ' + goodVals);
         }
@@ -1027,15 +1027,15 @@ export class Potrace {
     }
 
     _processLoadedImage(image: ImageData) {
-        const  bitmap = new Bitmap(image.width, image.height);
-        const  pixels = image.data;
+        const bitmap = new Bitmap(image.width, image.height);
+        const pixels = image.data;
 
         const w = image.width;
         const h = image.height;
         for (let x = 0; x < w; x++) {
             for (let y = 0; y < h; y++) {
                 const idx = (y * w + x) * 4; // rgba
-                const  opacity = pixels[idx + 3] / 255,
+                const opacity = pixels[idx + 3] / 255,
                     r = 255 + (pixels[idx + 0] - 255) * opacity,
                     g = 255 + (pixels[idx + 1] - 255) * opacity,
                     b = 255 + (pixels[idx + 2] - 255) * opacity;
@@ -1052,7 +1052,7 @@ export class Potrace {
      * @param {Potrace~Options} newParams
      */
     setParameters(newParams: any) {
-        let  key, tmpOldVal;
+        let key, tmpOldVal;
 
         this._validateParameters(newParams);
 
@@ -1075,7 +1075,7 @@ export class Potrace {
      * @param {String} [fillColor] - overrides color from parameters
      * @returns {String}
      */
-    getPathTag(fillColor?: string, scale: { x: number, y: number } = { x: 1, y: 1 }) {
+    getPathTag(fillColor?: string, scale: { x: number, y: number } = { x: 1, y: 1 }, trans: { x: number, y: number } = { x: 0, y: 0 }) {
         fillColor = arguments.length === 0 ? this._params.color : fillColor;
 
         if (fillColor === Potrace.COLOR_AUTO) {
@@ -1088,10 +1088,10 @@ export class Potrace {
             this._processed = true;
         }
 
-        let  tag = '<path d="';
+        let tag = '<path d="';
 
         tag += this._pathlist.map(function (path) {
-            return utils.renderCurve(path.curve, scale);
+            return utils.renderCurve(path.curve, scale, trans);
         }).join(' ');
 
         tag += '" stroke="none" fill="' + fillColor + '" fill-rule="evenodd"/>';
@@ -1118,10 +1118,10 @@ export class Potrace {
      * Generates SVG image
      * @returns {String}
      */
-    getSVG(scale?: {x: number, y: number}) {
-        const  width = this._params.width || this._luminanceData!.width;
-        const  height = this._params.height || this._luminanceData!.height;
-        const  scale_ = scale ?? {
+    getSVG(scale?: { x: number, y: number }) {
+        const width = this._params.width || this._luminanceData!.width;
+        const height = this._params.height || this._luminanceData!.height;
+        const scale_ = scale ?? {
             x: this._params.width ? this._params.width / this._luminanceData!.width : 1,
             y: this._params.height ? this._params.height / this._luminanceData!.height : 1,
         };
@@ -1142,8 +1142,8 @@ export class Potrace {
      * Generates SVG path
      * @returns {String}
      */
-    getSVGPath(scale?: {x: number, y: number}) {
-        const  scale_ = scale ?? {
+    getSVGPath(scale: { x: number, y: number }, trans: { x: number, y: number }) {
+        const scale_ = scale ?? {
             x: this._params.width ? this._params.width / this._luminanceData!.width : 1,
             y: this._params.height ? this._params.height / this._luminanceData!.height : 1,
         };
@@ -1154,7 +1154,7 @@ export class Potrace {
             this._processed = true;
         }
         return this._pathlist.map(function (path) {
-            return utils.renderCurve(path.curve, scale_);
+            return utils.renderCurve(path.curve, scale_, trans);
         }).join(' ')
     }
 }
