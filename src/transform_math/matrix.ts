@@ -17,7 +17,10 @@ export function isOne(value: number) { // 判断是否为1，差值小于EPSILON
 export class Matrix { // 矩阵
     data: NumberArray2D
 
-    constructor(data: NumberArray2D) {
+    constructor(data: NumberArray2D);
+    constructor(size: [number, number], fillValue?: number | number[], skipFillValueCheck?: boolean);
+    constructor(data: NumberArray2D | [number, number], fillValue: number | number[] = 0, skipFillValueCheck = false) {
+        if (!(data instanceof NumberArray2D)) data = new NumberArray2D(data, fillValue, skipFillValueCheck);
         if (data.dimension !== 2) throw new Error("data必须是二维数组");
         this.data = data
     }

@@ -74,11 +74,12 @@ export class PathCreator extends BaseCreator {
         if (!d) return;
         const x = this.attributes.pathX || 0
         const y = this.attributes.pathY || 0
-        const width = this.attributes.width || 0
-        const height = this.attributes.height || 0
+        const width = Math.abs(x) + (this.attributes.width || 0)
+        const height = Math.abs(x) + (this.attributes.height || 0)
         const path = new Path(d);
-        path.translate(-x, -y);
-        this.transform.translate({vector: new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])})
+        // dev code
+        // path.translate(-x, -y);
+        this.transform.translate({vector: new ColVector3D([(this.attributes.x || 0), (this.attributes.y || 0), 0])})
         this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
     }
 }

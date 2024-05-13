@@ -49,7 +49,7 @@ export class GroupCreator extends BaseCreator {
         }
 
         const reservedAttributes = ["fill", "stroke"] // 保留属性，有则不会被子级替代
-        const isReserved = reservedAttributes.some(attr => attr in this.attributes)
+        const isReserved = reservedAttributes.some(attr => attr in this.attributes && (this.attributes as any)[attr])
         if (!isReserved && children.length === 1) { // 用子元素替代自身
             mergeAttributes(this, children[0].creator)
             this.replaceWithChildren()

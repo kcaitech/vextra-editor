@@ -39,7 +39,7 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform, TransformMode} from "@/transform_math/transform"
+import {Transform} from "@/transform_math/transform"
 import {ColVector3D} from "@/transform_math/matrix"
 
 export class BaseCreator extends BaseTreeNode {
@@ -422,15 +422,15 @@ export class BaseCreator extends BaseTreeNode {
 
         // 圆形
         const cx = this.localAttributes["cx"]
-        if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
         const cy = this.localAttributes["cy"]
-        if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy);
         const rx = this.localAttributes["rx"]
-        if (rx) this.attributes.rx = parseFloat(rx);
         const ry = this.localAttributes["ry"]
-        if (ry) this.attributes.ry = parseFloat(ry);
         const r = this.localAttributes["r"]
+        if (rx) this.attributes.rx = parseFloat(rx);
+        if (ry) this.attributes.ry = parseFloat(ry);
         if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
+        if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx) - parseFloat(r || rx || "0");
+        if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy) - parseFloat(r || ry || "0");
 
         // 直线
         const x1 = this.localAttributes["x1"]
@@ -453,15 +453,40 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const {translate, rotate, scale} = this.transform.decompose()
+        const {translate, rotate, skew, scale} = this.transform.decompose()
+        // dev code
+        // console.log("updateShapeAttrByTransform")
+        // console.log("translate", translate.toString())
+        // console.log("rotate", rotate.toString())
+        // console.log("skew", skew.toString())
+        // console.log("scale", scale.toString())
+        // console.log(new Transform({
+        //     matrix: new Matrix([4, 4], [
+        //         1, 0, 0, -50,
+        //         0, 1, 0, -50,
+        //         0, 0, 1, 0,
+        //         0, 0, 0, 1,
+        //     ])
+        // }).addTransform(this.transform).addTransform(new Transform({
+        //     matrix: new Matrix([4, 4], [
+        //         1, 0, 0, 50,
+        //         0, 1, 0, 50,
+        //         0, 0, 1, 0,
+        //         0, 0, 0, 1,
+        //     ])
+        // })).decompose())
 
         // 设置缩放
-        shape.frame.width *= scale.x
-        shape.frame.height *= scale.y
+        shape.frame.width *= Math.abs(scale.x)
+        shape.frame.height *= Math.abs(scale.y)
 
         // 设置xy
         shape.frame.x = translate.x
         shape.frame.y = translate.y
+        // dev code
+        // console.log(shape.name)
+        // console.log(translate.x, translate.y)
+        // console.log(shape)
 
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
@@ -572,11 +597,14 @@ export class BaseCreator extends BaseTreeNode {
         }
         if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
 
-        // 根据shape的宽高添加平移，使中心点在原点
-        const width = this.shape!.frame.width
-        const height = this.shape!.frame.height
-        this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
-        this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
+        // // dev code
+        // 抵消视图层在前后加的两次平移操作
+        // if (this.transform.hasRotation()) {
+        //     const width = this.shape!.frame.width
+        //     const height = this.shape!.frame.height
+        //     this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
+        //     this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
+        // }
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()

@@ -140,6 +140,13 @@ export function parseTransform(transformContent: string) {
         } else {
             console.log("不支持的变换函数", name, args)
         }
+        // dev code
+        // const res = transform.decompose()
+        // console.log("after", name, args)
+        // console.log("translate", res.translate.toString())
+        // console.log("rotate", res.rotate.toString())
+        // console.log("skew", res.skew.toString())
+        // console.log("scale", res.scale.toString())
     }
     return transform
 }
