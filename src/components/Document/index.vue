@@ -814,22 +814,6 @@ onUnmounted(() => {
         <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
-<style>
-:root {
-    /* top toolbar */
-    --top-toolbar-bg-color: var(--theme-color);
-    --top-toolbar-font-color: var(--theme-color-anti);
-    /* left navigation col */
-    --left-navi-bg-color: var(--theme-color-anti);
-    --left-navi-button-hover-color: var(--grey-light);
-    --left-navi-button-select-color: var(--grey-dark);
-    --left-navi-font-color: var(--theme-color);
-    /* right attribute col */
-    --right-attr-bg-color: var(--theme-color-anti);
-    /* center content area */
-    --center-content-bg-color: var(--grey-light);
-}
-</style>
 <style scoped lang="scss">
 .main {
     min-width: 460px;
