@@ -37,8 +37,6 @@ build.bat version-tag mode
 其中mode为空或为prod时编译生产环境镜像，为test时编译测试环境镜像
 例如：build.bat test-0.0.1-24 test，注意版本号不能与历史版本号混淆
 
-执行build.bat前注意修改utils\setting.ts中的production，为true时编译正式环境镜像，为false时编译测试环境镜像
-
 执行完毕后注意仔细查看打包时输出的信息，确认：
 （1）npm编译成功
 （2）docker镜像编译成功
