@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import { GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
@@ -254,7 +254,7 @@ export class TranslateHandler extends TransformHandler {
             [t, (t + b) / 2, b]
         );
 
-        this.context.assist.notify(Asssit.CLEAR);
+        this.context.assist.notify(Assist.CLEAR);
 
         let assistWork = false;
         if (assistResult) {
@@ -334,7 +334,7 @@ export class TranslateHandler extends TransformHandler {
 
             this.context.assist.multi_line_x = xs;
             this.context.assist.multi_line_y = ys;
-            this.context.assist.notify(Asssit.MULTI_LINE_ASSIST);
+            this.context.assist.notify(Assist.MULTI_LINE_ASSIST);
         }
     }
 

@@ -15,7 +15,7 @@ import {
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 
 type Base = {
     x: number;
@@ -468,9 +468,9 @@ export class PathEditor extends TransformHandler {
         }
 
         if (modified) {
-            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+            assist.notify(Assist.UPDATE_ASSIST_PATH);
         } else {
-            assist.notify(Asssit.CLEAR);
+            assist.notify(Assist.CLEAR);
         }
 
         return modified;
@@ -1069,9 +1069,9 @@ export class PathEditor extends TransformHandler {
                 }
             }
 
-            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+            assist.notify(Assist.UPDATE_ASSIST_PATH);
         } else {
-            assist.notify(Asssit.CLEAR);
+            assist.notify(Assist.CLEAR);
         }
 
         caller.execute4handle(this.shape, index, side, from, to, segment);

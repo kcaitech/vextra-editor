@@ -30,7 +30,7 @@ import ContactInit from '../Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
 import { debounce } from 'lodash';
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 import { PathEditor } from "@/transform/pathEdit";
 import { PathShapeView } from "@kcdesign/data";
 import { CreatorExecute } from "@/components/Document/Creator/execute";
@@ -410,7 +410,7 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
 
         asyncCreator.setFrame({ x, y });
     }
-    props.context.assist.notify(Asssit.CLEAR);
+    props.context.assist.notify(Assist.CLEAR);
 }
 
 function gen_new_shape(e: MouseEvent) {

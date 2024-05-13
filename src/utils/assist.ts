@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Asssit, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2 } from "@/context/assist";
+import { Assist, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2 } from "@/context/assist";
 import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { debounce } from "lodash";
@@ -531,8 +531,8 @@ export function pre_render_assist_line(context: Context, is_multi: boolean, shap
     } else {
         assist.setCPG(gen_match_points(shape, true));
     }
-    assist.notify(Asssit.UPDATE_ASSIST);
-    assist.notify(Asssit.UPDATE_MAIN_LINE);
+    assist.notify(Assist.UPDATE_ASSIST);
+    assist.notify(Assist.UPDATE_MAIN_LINE);
 }
 export class ActionEndGenerator {
     private stickedX: boolean = false;

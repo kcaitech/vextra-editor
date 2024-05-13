@@ -22,7 +22,7 @@ import { Navi } from "./navigate";
 import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
-import { Asssit } from "./assist";
+import { Assist } from "./assist";
 import { TeamWork } from "./teamwork";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
@@ -95,7 +95,7 @@ export class Context extends WatchableObject {
     private m_cursor: Cursor;
     private m_communication: Communication;
     private m_escstack: EscStack;
-    private m_assist: Asssit;
+    private m_assist: Assist;
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
@@ -125,7 +125,7 @@ export class Context extends WatchableObject {
         this.m_communication = new Communication();
         this.m_cursor = new Cursor(this); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
-        this.m_assist = new Asssit(this); // 辅助线相关
+        this.m_assist = new Assist(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
 
         this.m_component = new Component(this);

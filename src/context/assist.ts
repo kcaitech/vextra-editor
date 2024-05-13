@@ -110,7 +110,7 @@ export interface PageXY2 {
     p: PageXY
 }
 
-export class Asssit extends WatchableObject {
+export class Assist extends WatchableObject {
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;
@@ -340,7 +340,7 @@ export class Asssit extends WatchableObject {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
             this.m_nodes_y = this.m_y_axis.get(target.y) || [];
         }
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
         // console.log('单次匹配辅助点位(ms):', Date.now() - st);
         return target;
     }
@@ -381,7 +381,7 @@ export class Asssit extends WatchableObject {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
         }
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
         // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
@@ -420,7 +420,7 @@ export class Asssit extends WatchableObject {
                 id: 'ex'
             }]);
         }
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
         // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
@@ -462,7 +462,7 @@ export class Asssit extends WatchableObject {
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat(_self);
         }
 
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
 
         return target;
     }
@@ -502,7 +502,7 @@ export class Asssit extends WatchableObject {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat(_self);
         }
 
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
 
         return target;
     }
@@ -554,7 +554,7 @@ export class Asssit extends WatchableObject {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
         }
 
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
         return target;
     }
 
@@ -700,7 +700,7 @@ export class Asssit extends WatchableObject {
                 id: 'ex'
             }]);
         }
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Assist.UPDATE_ASSIST);
         const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
@@ -754,7 +754,7 @@ export class Asssit extends WatchableObject {
             target.y = pre_target2.y;
         }
 
-        this.notify(Asssit.UPDATE_ASSIST_PATH);
+        this.notify(Assist.UPDATE_ASSIST_PATH);
         return target;
     }
 
@@ -817,6 +817,6 @@ export class Asssit extends WatchableObject {
         this.multi_line_y = [];
         this.m_except.clear();
         this.m_current_pg = undefined;
-        this.notify(Asssit.CLEAR);
+        this.notify(Assist.CLEAR);
     }
 }

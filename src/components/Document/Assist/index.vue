@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Asssit, PageXY2 } from '@/context/assist';
+import { Assist, PageXY2 } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
@@ -29,16 +29,16 @@ let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = dat
 let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST) {
+    if (t === Assist.UPDATE_ASSIST) {
         render();
     }
-    else if (t === Asssit.MULTI_LINE_ASSIST) {
+    else if (t === Assist.MULTI_LINE_ASSIST) {
         renderMultiLine();
     }
-    else if (t === Asssit.UPDATE_MAIN_LINE) {
+    else if (t === Assist.UPDATE_MAIN_LINE) {
         update_main_line();
     }
-    else if (t === Asssit.CLEAR && assist.value) {
+    else if (t === Assist.CLEAR && assist.value) {
         clear();
     }
 }
