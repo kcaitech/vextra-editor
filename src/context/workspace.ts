@@ -86,6 +86,7 @@ export class WorkSpace extends WatchableObject {
     private m_controller: 'page' | 'controller' = 'page';
     private m_round: boolean = false;
     private m_font_name_list: { zh: string[], en: string[] } = { zh: [], en: [] };
+    private m_page_svg_img: Map<string, any> = new Map();
 
     private m_root: Root = {
         init: false,
@@ -394,5 +395,13 @@ export class WorkSpace extends WatchableObject {
 
     get fontNameList() {
         return this.m_font_name_list;
+    }
+
+    setPageImg(id: string, value: any) {
+        this.m_page_svg_img.set(id, value);
+    }
+
+    getSvgImgInfo(id: string) {
+        return this.m_page_svg_img.get(id);
     }
 }

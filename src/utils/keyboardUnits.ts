@@ -287,7 +287,6 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
     }
 
     if (context.workspace.is_path_edit_mode) {
-        context.path.setContactStatus(false);
         context.tool.setAction(Action.Pen2);
     } else {
         context.tool.setAction(Action.Pen); // 钢笔工具

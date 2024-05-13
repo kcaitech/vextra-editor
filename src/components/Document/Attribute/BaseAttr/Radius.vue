@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { PathShapeView, PathShapeView2, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
+import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
@@ -10,6 +10,7 @@ import { LockMouse } from "@/transform/lockMouse";
 import Tooltip from "@/components/common/Tooltip.vue";
 import { useI18n } from "vue-i18n";
 import { fixedZero } from '@/utils/common';
+
 const { t } = useI18n();
 
 interface Props {
@@ -71,7 +72,7 @@ function update() {
     modify_radius_value();
 }
 
-function selection_wather(t: Number) {
+function selection_watcher(t: Number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }
@@ -89,9 +90,7 @@ function modify_can_be_rect() {
     const selected = props.context.selection.selectedShapes;
 
     for (let i = 0, l = selected.length; i < l; i++) {
-        if (!(selected[i].radiusType === RadiusType.Rect)) {
-            return
-        }
+        if (selected[i].radiusType !== RadiusType.Rect) return;
     }
 
     if (need_reset) {
@@ -112,7 +111,8 @@ function get_radius_for_shape(shape: ShapeView) {
     if (shape.radiusType === RadiusType.Rect) {
         if (shape instanceof PathShapeView) {
             const s = shape as PathShapeView;
-            const points = s.points;
+
+            const points = s?.segments[0]?.points;
 
             if (!points?.length) {
                 return 0;
@@ -139,21 +139,33 @@ function get_radius_for_shape(shape: ShapeView) {
             return mixed;
         }
     }
+
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;
-        const points = s.points;
-
-        if (!points?.length) {
+        const segments = s.segments;
+        if (!segments.length) {
+            return 0;
+        }
+        const firstPoint = segments[0].points[0];
+        if (!firstPoint) {
             return 0;
         }
 
-        let _r = points[0].radius || s.fixedRadius || 0;
+        let _r = firstPoint.radius || s.fixedRadius || 0;
 
-        for (let i = 1, l = points.length; i < l; i++) {
-            if ((points[i].radius || s.fixedRadius || 0) !== _r) {
-                return mixed;
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            const points = segment.points;
+
+            if (!points?.length) continue;
+
+            for (let j = 0; j < points.length; j++) {
+                if ((points[j].radius || s.fixedRadius || 0) !== _r) {
+                    return mixed;
+                }
             }
         }
+
         return _r;
     } else {
         return shape.fixedRadius || 0;
@@ -194,10 +206,14 @@ function get_rect_shape_all_value(shape: ShapeView) {
     const rs = { lt: 0, rt: 0, rb: 0, lb: 0 };
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;
-        rs.lt = s.points[0]?.radius || s.fixedRadius || 0;
-        rs.rt = s.points[1]?.radius || s.fixedRadius || 0;
-        rs.rb = s.points[2]?.radius || s.fixedRadius || 0;
-        rs.lb = s.points[3]?.radius || s.fixedRadius || 0;
+        const points = s?.segments[0]?.points;
+        if (!points?.length) {
+            return rs;
+        }
+        rs.lt = points[0]?.radius || s.fixedRadius || 0;
+        rs.rt = points[1]?.radius || s.fixedRadius || 0;
+        rs.rb = points[2]?.radius || s.fixedRadius || 0;
+        rs.lb = points[3]?.radius || s.fixedRadius || 0;
     } else {
         const cornerRadius = (shape as SymbolView).cornerRadius;
         if (cornerRadius) {
@@ -403,43 +419,47 @@ function dragend() {
 }
 
 const pointerLockChange = () => {
-    if(!document.pointerLockElement) {
+    if (!document.pointerLockElement) {
         dragend();
     }
 }
 
 onMounted(() => {
-    props.context.selection.watch(selection_wather);
+    props.context.selection.watch(selection_watcher);
     update();
     watch_shapes();
 });
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    props.context.selection.unwatch(selection_watcher);
 })
 </script>
 <template>
     <div class="tr">
         <MdNumberInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
-            @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT" @dragend="dragend">
+                       @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT"
+                       @dragend="dragend">
         </MdNumberInput>
         <div class="space" v-if="!rect"></div>
         <MdNumberInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
-            :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart" @dragging="draggingRT"
-            @dragend="dragend"></MdNumberInput>
+                       :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart"
+                       @dragging="draggingRT"
+                       @dragend="dragend"></MdNumberInput>
         <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
             <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
                 <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
-                    :class="{ 'active': rect }"></svg-icon>
+                          :class="{ 'active': rect }"></svg-icon>
             </div>
         </Tooltip>
     </div>
     <div class="tr" v-if="rect">
         <MdNumberInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
-            :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart" @dragging="draggingLB"
-            @dragend="dragend"></MdNumberInput>
+                       :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart"
+                       @dragging="draggingLB"
+                       @dragend="dragend"></MdNumberInput>
         <MdNumberInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
-            :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart" @dragging="draggingRB"
-            @dragend="dragend"></MdNumberInput>
+                       :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart"
+                       @dragging="draggingRB"
+                       @dragend="dragend"></MdNumberInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
     <teleport to="body">
@@ -475,14 +495,14 @@ onUnmounted(() => {
         border: 1px solid #F0F0F0;
         padding: 9px;
 
-        >svg {
+        > svg {
             transition: 0.3s;
             color: #808080;
             width: 14px;
             height: 14px;
         }
 
-        >svg.active {
+        > svg.active {
             color: #FFFFFF;
         }
     }

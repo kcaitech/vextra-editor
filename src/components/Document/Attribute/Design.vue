@@ -317,7 +317,7 @@ onUnmounted(() => {
                     :page="props.context.selection.selectedPage"></PageBackgorund>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
-            <div v-else class="attr-wrapper">
+            <div v-if="shapes.length" class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
                     :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"

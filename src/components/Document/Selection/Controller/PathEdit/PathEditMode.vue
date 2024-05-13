@@ -187,10 +187,13 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.context.tool.setAction(Action.AutoV);
-    props.context.path.reset();
+    const path = props.context.path;
+    path.reset();
     window.removeEventListener('blur', window_blur);
 
     new PathEditor(props.context).sortSegment();
+    path.setContactStatus(false);
+    path.saveEvent(undefined);
 })
 </script>
 <template>

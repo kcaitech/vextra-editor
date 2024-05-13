@@ -35,6 +35,7 @@ export class Path extends WatchableObject {
     private m_bridging_events: { segment: number, index: number, event: MouseEvent } | undefined = undefined;
 
     private contacting: boolean = false;
+    private m_last_mouseevent: MouseEvent | undefined;
 
     private bridgeParams: {
         handler: PathEditor;
@@ -46,6 +47,14 @@ export class Path extends WatchableObject {
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    saveEvent(e?: MouseEvent) {
+        this.m_last_mouseevent = e;
+    }
+
+    get lastEvent() {
+        return this.m_last_mouseevent;
     }
 
     get selectedPoints() {
@@ -126,7 +135,12 @@ export class Path extends WatchableObject {
                 return;
             }
 
-            const { x, y } = point;
+            const frame = pathShape.frame;
+            const m = pathShape.matrix2Root();
+            m.preScale(frame.width, frame.height);
+            m.multiAtLeft(this.m_context.workspace.matrix);
+
+            const {x, y} = m.computeCoord3(point);
 
             const segments = pathShape.segments;
 
@@ -142,8 +156,8 @@ export class Path extends WatchableObject {
                 }
 
                 for (let j = 0; j < points.length; j++) {
-                    const __point = points[j];
-                    if (__point.x === x && __point.y === y) {
+                    const __point = m.computeCoord3(points[j]);
+                    if (Math.abs(__point.x - x) <= 0.01 && Math.abs(__point.y - y) <= 0.01) {
                         container.push(j);
                     }
                 }

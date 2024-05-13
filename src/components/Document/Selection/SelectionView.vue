@@ -87,9 +87,15 @@ function watchShapes() { // 监听选区相关shape的变化
 
 function shapesWatcher(...args: any) {
     // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
-    if (props.context.workspace.shouldSelectionViewUpdate && args.includes('layout')) {
-        update_by_shapes();
-        updateTrigger.value++;
+    if (props.context.workspace.shouldSelectionViewUpdate) {
+        if (args.includes('layout')) {
+            update_by_shapes();
+            updateTrigger.value++;
+        } else if (args.includes('destroy')) {
+            matrix.reset(props.matrix);
+            createShapeTracing();
+            createController2()
+        }
     }
 }
 
@@ -198,6 +204,39 @@ function createShapeTracing() {
 function createController() {
     // const s = Date.now();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
+    if (!selection.length) {
+        controller.value = false;
+        return;
+    }
+    modify_controller_frame(selection);
+    modify_controller_type(selection);
+    modify_rotate(selection);
+    modify_theme(selection);
+    tracing.value = false;
+    controller.value = true;
+    // console.log('控件绘制用时(ms):', Date.now() - s);
+}
+
+/**
+ * @description 创建控件
+ */
+function createController2() {
+    // const s = Date.now();
+    const selection: ShapeView[] = [];
+    let temp = props.context.selection.selectedShapes;
+    let adjust = false;
+    for (let i = 0; i < temp.length; i++) {
+        const shape = temp[i];
+        if (!shape || shape.m_isdistroyed) {
+            adjust = true;
+        } else {
+            selection.push(shape);
+        }
+    }
+    if (adjust) {
+        props.context.selection.rangeSelectShape(selection);
+        return;
+    }
     if (!selection.length) {
         controller.value = false;
         return;

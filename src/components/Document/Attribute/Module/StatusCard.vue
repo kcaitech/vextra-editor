@@ -81,7 +81,6 @@ const getVattagValue = () => {
     if (!shape) {
         return;
     }
-
     let val = get_tag_value(shape, props.data.variable);
 
     if (val === SymbolShape.Default_State) {

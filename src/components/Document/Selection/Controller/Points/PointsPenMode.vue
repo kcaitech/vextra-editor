@@ -31,7 +31,7 @@ const data: {
     segments: Segment[][]
 } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
-const dragActiveDis = 3;
+const dragActiveDis = 5;
 const new_high_light = ref<string>('');
 const add_rect = ref<string>('');
 let shape: ShapeView;
@@ -163,6 +163,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     event.stopPropagation();
 
+    downXY = { x: event.x, y: event.y };
 
     const path = props.context.path;
     const isContacting = path.isContacting;
@@ -194,7 +195,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
-                downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
         } else {
@@ -227,7 +227,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
-                downXY = { x: event.x, y: event.y };
                 asyncEnvMount();
             }
         }
@@ -314,8 +313,6 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 return achieve;
             });
 
-            downXY = { x: event.x, y: event.y };
-
             asyncEnvMount();
         }
     }
@@ -343,13 +340,6 @@ function checkStatus() {
 
     passiveUpdate();
 
-    if (!e.buttons) { // Mac环境与Window环境下，这个判断结果会不同，很奇怪的机制
-        handler?.fulfil();
-        return;
-    }
-
-    pathModifier = handler;
-    asyncEnvMount();
     const workspace = props.context.workspace;
 
     if (workspace.is_path_edit_mode) {
@@ -369,6 +359,13 @@ function checkStatus() {
         });
     }
 
+    if (!e.buttons) { // Mac环境与Window环境下，这个判断结果会不同，很奇怪的机制
+        handler?.fulfil();
+        return;
+    }
+
+    pathModifier = handler;
+    asyncEnvMount();
 }
 
 function point_mousemove(event: MouseEvent) {
@@ -376,6 +373,7 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
     if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
+        console.log('emit dragActiveDis');
         launch_bridging(event);
     }
 }
@@ -483,7 +481,8 @@ function matrix_watcher(t: number) {
     }
 }
 
-function documentMove(e: MouseEvent) {  // 鼠标抬起的时候为什么也会触发这里？？？
+function documentMove(e: MouseEvent) {
+    props.context.path.saveEvent(e);
     const __client = props.context.workspace.getContentXY(e);
 
     let delX = Infinity;
@@ -616,6 +615,9 @@ function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
+
+    downXY = { x: e.x, y: e.y };
+
     const keepOn = props.context.path.isContacting;
 
     if (keepOn) {
@@ -624,7 +626,6 @@ function down(e: MouseEvent) {
             pathModifier = new PathEditor(props.context, e);
             pathModifier.createApiCaller();
             pathModifier.addPointForPen(lastPoint.segment, lastPoint.index + 1, { ...preXY.value });
-            downXY = { x: e.x, y: e.y };
             asyncEnvMount();
 
             e.stopPropagation();
@@ -646,8 +647,6 @@ function down(e: MouseEvent) {
             props.context.path.setContactStatus(false);
             return achieve;
         });
-
-        downXY = { x: e.x, y: e.y };
 
         asyncEnvMount();
 
@@ -742,9 +741,20 @@ onMounted(() => {
     update();
 
     window.addEventListener('blur', window_blur);
-    props.context.path.watch(path_watcher);
+    const path = props.context.path;
+    path.watch(path_watcher);
 
     document.addEventListener('mousemove', documentMove);
+
+
+    if (path.isContacting && path.lastEvent) {
+        preXY.value = props.context.workspace.getContentXY(path.lastEvent);
+
+        modifyLivingPath();
+
+        preparePointVisible.value = true;
+    }
+
 })
 
 onUnmounted(() => {
@@ -756,6 +766,8 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 
     document.removeEventListener('mousemove', documentMove);
+
+    props.context.assist.notify(Asssit.CLEAR);
 })
 </script>
 <template>

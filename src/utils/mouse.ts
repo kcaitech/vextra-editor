@@ -6,6 +6,7 @@ import { WorkSpace } from "@/context/workspace";
 import { Comment } from "@/context/comment";
 import { scout_once, XYsBounding } from "@/utils/common";
 import { multi_select_shape } from "./listview";
+import { is_straight } from "@/utils/attri_setting";
 
 /**
  * @description 判断落点是否在content上
@@ -48,7 +49,7 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
         const type = shape.type;
         if (type === ShapeType.Cutout) {
             return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
-        } else if ((type === ShapeType.Contact || type === ShapeType.Line) && !shape.isClosed) {
+        } else if ((type === ShapeType.Contact || is_straight(shape))) {
             return selection.scout.isPointInShape(shape, workspace.getRootXY(e));
         } else {
             return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));

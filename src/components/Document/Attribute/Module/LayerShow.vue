@@ -156,7 +156,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">

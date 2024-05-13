@@ -9,6 +9,7 @@ import { Path, PointEditType } from "@/context/path";
 import { get_action_for_key_change, get_value_from_points } from "@/utils/pathedit";
 import { CurveMode, PathShapeView, PathType, ShapeView } from "@kcdesign/data";
 import { Selection } from "@/context/selection";
+import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
@@ -31,15 +32,6 @@ const t = useI18n().t;
 let path_shape: ShapeView | undefined = undefined;
 const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
-const disableToChangeCloseStatus = ref<boolean>(true);
-
-const check_is_unable_to_open_path = () => {
-    if (!path_shape) {
-        disableToChangeCloseStatus.value = true;
-        return;
-    }
-    return disableToChangeCloseStatus.value = (path_shape.pathType === PathType.Editable && (path_shape as PathShapeView).segments.length > 1);
-}
 
 function execute_change_xy(key: 'x' | 'y', val: any) {
     val = Number(val);
@@ -101,34 +93,32 @@ function calc() {
 function modify_path_closed_status() {
     path_close_status.value = true;
     btn_string_for_status.value = t('attr.de_close_path');
+
     if (!path_shape) {
         console.log('modify_path_closed_status: !path_shape');
         return;
     }
-    if (path_shape.pathType === PathType.Editable) {
-        (path_shape as PathShapeView).segments.forEach(segment => {
-            if (!segment.isClosed) {
-                path_close_status.value = false;
-                btn_string_for_status.value = t('attr.close_path');
-            }
-        })
+
+    const segments = (path_shape as PathShapeView)?.segments;
+    if (!segments?.length) return;
+
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        if (!segment.isClosed) {
+            path_close_status.value = false;
+            btn_string_for_status.value = t('attr.close_path');
+            break;
+        }
     }
 }
 
 function modify_closed_status() {
-    if (disableToChangeCloseStatus.value) {
-        return;
-    }
-
     if (!path_shape) {
         console.log('modify_closed_status: !path_shape');
         return;
     }
 
-    const __segment = path_shape.pathType === PathType.Editable ? -1 : 0;
-
-    const editor = props.context.editor4Shape(path_shape);
-    editor.setPathClosedStatus(!path_close_status.value, __segment);
+    new PathEditor(props.context).modifyClosedStatus(!path_close_status.value);
 }
 
 function modify_model_state() {
@@ -192,9 +182,6 @@ function update() {
 }
 
 function __update(...args: any) {
-    if (args.includes('length')) {
-        check_is_unable_to_open_path();
-    }
     modify_path_closed_status();
     get_current_curve_mode();
     calc();
@@ -211,8 +198,6 @@ function init_path_shape() {
     if (path_shape) {
         path_shape.watch(__update);
     }
-
-    check_is_unable_to_open_path();
 }
 
 function selection_watcher(t: number) {
@@ -225,7 +210,6 @@ function selection_watcher(t: number) {
             path_shape = t;
             path_shape.watch(__update);
         }
-        check_is_unable_to_open_path();
     }
 }
 
@@ -288,9 +272,9 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="btns">
-            <div :class="{ 'path-status': true, disabled: disableToChangeCloseStatus }" @click="modify_closed_status">
-                {{ btn_string_for_status }}
-            </div>
+            <!--            <div :class="{ 'path-status': true }" @click="modify_closed_status">-->
+            <!--                {{ btn_string_for_status }}-->
+            <!--            </div>-->
             <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>
@@ -406,7 +390,7 @@ onUnmounted(() => {
         }
 
         .exit {
-            width: 108px;
+            width: 100%;
             height: 100%;
             background-color: var(--active-color);
             color: var(--theme-color-anti);
