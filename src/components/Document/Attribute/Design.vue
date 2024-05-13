@@ -285,6 +285,7 @@ function toolWatcher(t: number) {
         frame.value = props.context.tool.action === Action.AddFrame;
     }
 }
+
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.selection.watch(selection_watcher);
@@ -314,20 +315,20 @@ onUnmounted(() => {
         <el-scrollbar height="100%">
             <div v-if="!shapes.length">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                    :page="props.context.selection.selectedPage"></PageBackgorund>
+                                :page="props.context.selection.selectedPage"></PageBackgorund>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-if="shapes.length" class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
-                    :trigger="reflush_trigger"></Arrange>
+                         :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
-                    :trigger="reflush_trigger"></ShapeBaseAttr>
+                               :trigger="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
-                    :selection-change="reflush_by_selection">
+                                     :selection-change="reflush_by_selection">
                 </ResizingConstraints>
                 <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
-                    :selection-change="reflush_by_selection" :trigger="reflush_trigger">
+                         :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
                 </Module>
@@ -339,11 +340,13 @@ onUnmounted(() => {
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
-                    :selection-change="reflush_by_selection" :trigger="reflush_trigger"
-                    :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
+                      :selection-change="reflush_by_selection" :trigger="reflush_trigger"
+                      :table-selection-change="reflush_by_table_selection"
+                      :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
-                    :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
-                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes" :context="props.context">
+                        :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
+                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
+                        :context="props.context">
                 </Shadow>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
