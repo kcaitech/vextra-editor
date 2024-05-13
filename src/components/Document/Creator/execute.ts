@@ -68,8 +68,10 @@ export class CreatorExecute extends TransformHandler {
         this.livingPoint = this.workspace.getRootXY(e); // 底版livingPoint
 
         // 修正livingPoint
-        // 1. 滚轮修正 --check
-        this.fixLivingPointByWheel(e);
+        // 1. 滚轮修正
+        console.log('modifyFrame - e.clientX:', e.clientX);
+        const fixedByWheel = this.fixLivingPointByWheel(e);
+
         // 2. 动态辅助修正
         const at = this.context.assist;
         const assist = at.alignXY(this.livingPoint);
@@ -77,6 +79,7 @@ export class CreatorExecute extends TransformHandler {
             this.updateHorFixedStatus(this.livingPoint.x, assist);
             this.updateVerFixedStatus(this.livingPoint.y, assist);
         }
+
         // 3. 键盘事件修正Shift、Alt
         this.__modifyFrame();
     }
@@ -114,8 +117,8 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private __wheel_timer: any = null;
-    readonly __wheel_step: number = 4;
-    readonly __wheel_frame: number = 40;
+    readonly __wheel_step: number = 16; // todo 改成16 16
+    readonly __wheel_frame: number = 16;
     private __direction: number = 0b0000; // 上 下 左 右
     private __direction_change = false;
 
@@ -171,6 +174,7 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private fixLivingPointByWheel(e: MouseEvent) {
+        console.log('=====outer interval clientX=====', e.clientX);
         this.modifyDirection(e);
         const delta = this.getDeltaByDirection();
 
@@ -179,23 +183,29 @@ export class CreatorExecute extends TransformHandler {
                 clearInterval(this.__wheel_timer);
                 this.__wheel_timer = null;
             }
-            return;
+            return false;
         }
+
+        const that = this;
 
         if (this.__wheel_timer) {
             if (this.__direction_change) {
                 clearInterval(this.__wheel_timer);
-
-                this.__wheel_timer = setInterval(() => {
-                    this.fixLivingPointByDelta(delta, e);
+                // continue 重新移动的时候怎么没进来啊，铁铁
+                this.__wheel_timer = setInterval(function () {
+                    // todo 闭包里面的鼠标事件没有得到更新
+                    that.fixLivingPointByDelta(delta, e);
                 }, this.__wheel_frame);
             }
 
         } else {
-            this.__wheel_timer = setInterval(() => {
-                this.fixLivingPointByDelta(delta, e);
+
+            this.__wheel_timer = setInterval(function () {
+                that.fixLivingPointByDelta(delta, e);
             }, this.__wheel_frame);
         }
+
+        return true;
     }
 
     private fixLivingPointByDelta(delta: { deltaX: number, deltaY: number }, e: MouseEvent) {
@@ -205,6 +215,8 @@ export class CreatorExecute extends TransformHandler {
         ws.notify(WorkSpace.MATRIX_TRANSFORMATION);
 
         this.livingPoint = ws.getRootXY(e);
+
+        console.log('inner interval clientX:', e.clientX);
     }
 
     private passiveExecute() {
