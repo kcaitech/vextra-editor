@@ -499,6 +499,7 @@ watch(fileName, (NewNanme) => {
             (window as any).uni.postMessage({
                 data: {
                     name: NewNanme,
+                    id:docInfo.value.document.id
                 }
             });
         }
@@ -518,8 +519,6 @@ onMounted(() => {
     })
 })
 onUnmounted(() => {
-    console.log(route);
-
     closeNetMsg();
     onUnloadForCommunication();
     context?.selection.unwatch(selectionWatcher);
