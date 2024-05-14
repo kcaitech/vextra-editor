@@ -108,7 +108,7 @@ svg {
     pointer-events: none;
 
     .white-line {
-        stroke: rgba(255, 255, 255, 0.7);
+        stroke: rgba(255, 255, 255, 1);
         stroke-width: 0.1px;
     }
 
