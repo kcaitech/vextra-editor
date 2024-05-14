@@ -7,6 +7,8 @@ import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 import { ScaleHandler } from "@/transform/scale";
+import { dbl_action } from "@/utils/mouse_interactive";
+import { startEdit } from "@/transform/pathEdit";
 
 interface Props {
     matrix: number[]
@@ -16,12 +18,18 @@ interface Props {
     theme: SelectionTheme
 }
 
+interface Emits {
+    (e: 'dblclick', event: MouseEvent): void;
+}
+
 interface Bar {
     path: string
     type: CtrlElementType
 }
 
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const matrix = new Matrix();
 const data: {
     paths: Bar[],
@@ -86,6 +94,11 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
 
     event.stopPropagation();
+
+    if (dbl_action()) {
+        emits('dblclick', event);
+        return startEdit(props.context);
+    }
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
@@ -181,8 +194,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(b, i) in paths" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-       @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+    <g
+        v-for="(b, i) in paths"
+        :key="i"
+        @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+        @mouseenter="() => bar_mouseenter(b.type)"
+        @mouseleave="bar_mouseleave"
+    >
         <path :d="b.path" class="main-path" :stroke="theme">
         </path>
         <path :d="b.path" class="assist-path">

@@ -16,6 +16,9 @@ import {
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 import { Assist } from "@/context/assist";
+import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
+import { forbidden_to_modify_frame } from "@/utils/common";
+import { permIsEdit } from "@/utils/permission";
 
 type Base = {
     x: number;
@@ -129,6 +132,39 @@ function point2curve3rd(point: XY, start: XY, c1: XY, c2: XY, end: XY) {
     const distance = Math.sqrt((point.x - xy.x) ** 2 + (point.y - xy.y) ** 2);
 
     return { distance, point: xy };
+}
+
+export function startEdit(context: Context) {
+    const selection = context.selection;
+    const workspace = context.workspace;
+
+    const selected = selection.selectedShapes;
+    if (selected.length !== 1) {
+        return;
+    }
+
+    const shape = selected[0];
+
+    if (is_layers_tree_unit(shape)) {
+        return;
+    }
+
+    if (context.tool.isLable) {
+        return;
+    }
+
+    if (shape.pathType) {
+        if (forbidden_to_modify_frame(shape) || !permIsEdit(context)) {
+            return;
+        }
+
+        workspace.setPathEditMode(true); // --开启对象编辑
+        context.esctask.save('path-edit', () => {
+            const al = workspace.is_path_edit_mode;
+            workspace.setPathEditMode(false);
+            return al;
+        });
+    }
 }
 
 export class PathEditor extends TransformHandler {

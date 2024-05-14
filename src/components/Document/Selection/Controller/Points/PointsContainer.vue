@@ -9,6 +9,8 @@ import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
 import { RotateHandler } from "@/transform/rotate";
+import { dbl_action } from "@/utils/mouse_interactive";
+import { startEdit } from "@/transform/pathEdit";
 
 interface Props {
     matrix: number[]
@@ -17,6 +19,10 @@ interface Props {
     axle: { x: number, y: number }
     cFrame: Point[]
     theme: SelectionTheme
+}
+
+interface Emits {
+    (e: 'dblclick', event: MouseEvent): void;
 }
 
 interface Dot {
@@ -28,6 +34,8 @@ interface Dot {
 }
 
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const matrix = new Matrix();
 const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
@@ -67,6 +75,11 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
 
     event.stopPropagation();
+
+    if (dbl_action()) {
+        emits('dblclick', event);
+        return startEdit(props.context);
+    }
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
