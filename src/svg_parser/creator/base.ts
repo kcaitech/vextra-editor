@@ -455,26 +455,22 @@ export class BaseCreator extends BaseTreeNode {
 
         const {translate, rotate, skew, scale} = this.transform.decompose()
         // dev code
-        // console.log("updateShapeAttrByTransform")
-        // console.log("translate", translate.toString())
-        // console.log("rotate", rotate.toString())
-        // console.log("skew", skew.toString())
-        // console.log("scale", scale.toString())
-        // console.log(new Transform({
-        //     matrix: new Matrix([4, 4], [
-        //         1, 0, 0, -50,
-        //         0, 1, 0, -50,
-        //         0, 0, 1, 0,
-        //         0, 0, 0, 1,
-        //     ])
-        // }).addTransform(this.transform).addTransform(new Transform({
-        //     matrix: new Matrix([4, 4], [
-        //         1, 0, 0, 50,
-        //         0, 1, 0, 50,
-        //         0, 0, 1, 0,
-        //         0, 0, 0, 1,
-        //     ])
-        // })).decompose())
+        // if (this.localAttributes["id"] === "组_59") {
+        //     console.log("组_59")
+        //     console.log("updateShapeAttrByTransform")
+        //     console.log("translate", translate.toString())
+        //     console.log("rotate", rotate.toString())
+        //     console.log("skew", skew.toString())
+        //     console.log("scale", scale.toString())
+        // }
+        // if (this.localAttributes["id"] === "路径_348") {
+        //     console.log("路径_348")
+        //     console.log("updateShapeAttrByTransform")
+        //     console.log("translate", translate.toString())
+        //     console.log("rotate", rotate.toString())
+        //     console.log("skew", skew.toString())
+        //     console.log("scale", scale.toString())
+        // }
 
         // 设置缩放
         shape.frame.width *= Math.abs(scale.x)

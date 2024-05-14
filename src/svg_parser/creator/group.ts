@@ -76,7 +76,11 @@ export class GroupCreator extends BaseCreator {
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
-        groupShape.frame.x += childesShapeBox.lt.x
-        groupShape.frame.y += childesShapeBox.lt.y
+        this.transform.preTranslate({vector: new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0])})
+        this.updateShapeAttrByTransform()
+        // dev code
+        // if (this.localAttributes["id"] === "组_59") {
+        //     console.log("组_59 groupShape", groupShape.frame.x, groupShape.frame.y, groupShape.frame.width, groupShape.frame.height)
+        // }
     }
 }
