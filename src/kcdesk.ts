@@ -4,9 +4,12 @@ interface IKcDesk {
     // os
     osOpenFile(localfile: string): Promise<File | undefined>;
 
+    // view
+    getViewId(): number;
+
     // files
     fileCloseSelf(): void; // 关闭自己
-
+    fileShow(viewid: number): void; // 切换文档
     fileOpen(id: string, name: string, args: string): void; // 打开文档或者切换到对应文档
     fileOpenLocal(filter: string): void; // 打开文档或者切换到对应文档
 

@@ -2,7 +2,7 @@ import { router } from "@/router";
 import { Context } from "@/context";
 import { Perm } from "@/context/workspace";
 import isMobileDevice from "./mobileDeviceChecker";
-
+import kcdesk from "@/kcdesk";
 
 //守卫白名单
 const whiteList = ['/', '/login', '/wxlogin', '/404', '/privacypolicy', '/serviceagreement']
@@ -26,10 +26,15 @@ router.beforeEach((to, from, next) => {
         if (whiteList.includes(to.path)) {
             next()
         } else {
+            if (kcdesk && kcdesk.getViewId() !== 0) {
+                kcdesk.fileShow(0); // 切换到首页登录
+                next(); // 继续吗？
+                return;
+            }
             if (to.meta.requireAuth) {
-                localStorage.setItem('perRoute', to.fullPath)
+                sessionStorage.setItem('perRoute', to.fullPath)
             } else {
-                localStorage.setItem('perRoute', '')
+                sessionStorage.setItem('perRoute', '')
             }
             if (navigator.userAgent.includes('miniProgram')) {
                 next('/wxlogin')

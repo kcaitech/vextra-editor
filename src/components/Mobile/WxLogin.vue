@@ -41,7 +41,7 @@ async function Login() {
                 localStorage.setItem('avatar', linfo.data.avatar)
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
-                const perRoute = localStorage.getItem('perRoute') || ''
+                const perRoute = sessionStorage.getItem('perRoute') || ''
                 if (perRoute) {
                     if (perRoute.includes('?')) {
                         const params = new URLSearchParams(perRoute.split('?')[1]);
