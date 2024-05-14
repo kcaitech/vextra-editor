@@ -7,7 +7,6 @@ import {
     GeneratorParams,
     GroupShapeView,
     Matrix,
-    Shape,
     ShapeFrame,
     ShapeView
 } from "@kcdesign/data";
@@ -17,7 +16,7 @@ export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
     private livingPoint: XY;
 
-    private action: Action = Action.AutoV;
+    readonly action: Action = Action.AutoV;
 
     private isCustomFrame: boolean = false;
 
@@ -55,7 +54,7 @@ export class CreatorExecute extends TransformHandler {
 
         this.downEnv = context.selection.getClosestContainer(fixed); // 确认落点环境
 
-        this.action = context.tool.action;
+        this.action = context.tool.action; // 记录点击时的动作类型，避免中途切换动作类型造成的影响
     }
 
     createApiCaller() {
@@ -215,59 +214,72 @@ export class CreatorExecute extends TransformHandler {
         this.__modifyFrame();
     }
 
-    private __modifyFrame() {
-        const fixedPoint = { ...this.fixedPoint };
-        const livingPoint = { ...this.livingPoint };
+    private __modifyFrame(once = false) {
+        const frame = this.frame;
 
-        if (this.altStatus) {
-            const __x = livingPoint.x - fixedPoint.x;
-            const __y = livingPoint.y - fixedPoint.y;
+        if (once) { // 单点创建图层
+            const m = new Matrix(this.downEnv.matrix2Root().inverse);
+            const xy = m.computeCoord3({ ...this.livingPoint });
+            frame.x = xy.x - 50;
+            frame.y = xy.y - 50;
 
-            fixedPoint.x = fixedPoint.x - __x;
-            fixedPoint.y = fixedPoint.y - __y;
-        }
+            this.fixedByUserConfig();
+        } else { // 自定义frame创建图层
+            const fixedPoint = { ...this.fixedPoint };
+            const livingPoint = { ...this.livingPoint };
 
-        if (this.shiftStatus) {
-            const h = Math.abs(livingPoint.y - fixedPoint.y);
-            const w = Math.abs(livingPoint.x - fixedPoint.x);
+            if (this.altStatus) {
+                const __x = livingPoint.x - fixedPoint.x;
+                const __y = livingPoint.y - fixedPoint.y;
 
-            if (h > w) {
-                livingPoint.x = livingPoint.x + ((h - w) * ((livingPoint.x - fixedPoint.x) / w));
-            } else {
-                livingPoint.y = livingPoint.y + ((w - h) * ((livingPoint.y - fixedPoint.y) / h));
+                fixedPoint.x = fixedPoint.x - __x;
+                fixedPoint.y = fixedPoint.y - __y;
             }
+
+            if (this.shiftStatus) {
+                const h = Math.abs(livingPoint.y - fixedPoint.y);
+                const w = Math.abs(livingPoint.x - fixedPoint.x);
+
+                if (h > w) {
+                    livingPoint.x = livingPoint.x + ((h - w) * ((livingPoint.x - fixedPoint.x) / w));
+                } else {
+                    livingPoint.y = livingPoint.y + ((w - h) * ((livingPoint.y - fixedPoint.y) / h));
+                }
+            }
+
+            const cx = fixedPoint.x < livingPoint.x;
+            const cy = fixedPoint.y < livingPoint.y;
+            const left = cx ? fixedPoint.x : livingPoint.x;
+            const right = cx ? livingPoint.x : fixedPoint.x;
+            const top = cy ? fixedPoint.y : livingPoint.y;
+            const bottom = cy ? livingPoint.y : fixedPoint.y;
+
+            frame.x = left;
+            frame.y = top;
+            frame.width = right - left;
+            frame.height = bottom - top;
+
+            this.fixedByUserConfig();
+
+            const m = new Matrix(this.downEnv.matrix2Root().inverse);
+            const xy = m.computeCoord3(frame);
+            frame.x = xy.x;
+            frame.y = xy.y;
         }
 
-        const cx = fixedPoint.x < livingPoint.x;
-        const cy = fixedPoint.y < livingPoint.y;
-        const left = cx ? fixedPoint.x : livingPoint.x;
-        const right = cx ? livingPoint.x : fixedPoint.x;
-        const top = cy ? fixedPoint.y : livingPoint.y;
-        const bottom = cy ? livingPoint.y : fixedPoint.y;
-
-        this.frame.x = left;
-        this.frame.y = top;
-        this.frame.width = right - left;
-        this.frame.height = bottom - top;
-
-        this.fixedByUserConfig();
-
-        const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3(this.frame);
-        this.frame.x = xy.x;
-        this.frame.y = xy.y;
         const transform = this.getTransform();
 
         const type = ResultByAction(this.action);
-        const namePrefix = this.workspace.t(`shape.${type}`);
 
         if (!type) {
             return;
         }
 
+        const namePrefix = this.workspace.t(`shape.${type}`);
+
         const params: GeneratorParams = {
             parent: this.downEnv as GroupShapeView,
-            frame: new ShapeFrame(this.frame.x, this.frame.y, this.frame.width, this.frame.height),
+            frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
             type,
             transform,
             namePrefix,
@@ -310,7 +322,6 @@ export class CreatorExecute extends TransformHandler {
                 f.height = 1;
             }
         }
-
     }
 
     private getTransform() {
@@ -374,10 +385,12 @@ export class CreatorExecute extends TransformHandler {
     fulfil() {
         if (this.isCustomFrame) {
             // 自定义frame
-
+            console.log('自定义frame');
         } else {
             // 点击建图
-
+            console.log('将点击创建图层');
+            this.createApiCaller();
+            this.__modifyFrame(true);
         }
 
         super.fulfil();
@@ -407,11 +420,12 @@ export class CreatorExecute extends TransformHandler {
     }
 
     protected keyup(event: KeyboardEvent) {
-        if (event.code === "ShiftLeft") {
+        const code = event.code;
+        if (code === "ShiftLeft") {
             this.shiftStatus = false;
             this.passiveExecute();
         }
-        if (event.code === "AltLeft") {
+        if (code === "AltLeft" || code === "AltRight") {
             this.altStatus = false;
             this.passiveExecute();
         }
