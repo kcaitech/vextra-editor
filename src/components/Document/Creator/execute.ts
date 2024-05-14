@@ -27,7 +27,7 @@ export class CreatorExecute extends TransformHandler {
     private verFixedStatus: boolean = false;
     private verFixedValue: number = Infinity;
 
-    private downEnv: ShapeView;
+    readonly downEnv: ShapeView;
     private frame: ShapeFrame = new ShapeFrame(0, 0, 100, 100);
 
     private shape: ShapeView | undefined;
@@ -69,8 +69,7 @@ export class CreatorExecute extends TransformHandler {
 
         // 修正livingPoint
         // 1. 滚轮修正
-        console.log('modifyFrame - e.clientX:', e.clientX);
-        const fixedByWheel = this.fixLivingPointByWheel(e);
+        this.fixLivingPointByWheel(e);
 
         // 2. 动态辅助修正
         const at = this.context.assist;
@@ -116,11 +115,11 @@ export class CreatorExecute extends TransformHandler {
         }
     }
 
+    // 滚轮
     private __wheel_timer: any = null;
-    readonly __wheel_step: number = 16; // todo 改成16 16
+    readonly __wheel_step: number = 10;
     readonly __wheel_frame: number = 16;
     private __direction: number = 0b0000; // 上 下 左 右
-    private __direction_change = false;
 
     private getDeltaByDirection() {
         const d = this.__direction;
@@ -152,7 +151,6 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private modifyDirection(e: MouseEvent) {
-        const saveDirection = this.__direction;
         const padding = 5;
         this.__direction = 0b0000;
         const xy = e;
@@ -169,12 +167,9 @@ export class CreatorExecute extends TransformHandler {
         if (xy.y > (root.bottom - padding)) {
             this.__direction = this.__direction | 0b0100;
         }
-
-        this.__direction_change = this.__direction !== saveDirection;
     }
 
     private fixLivingPointByWheel(e: MouseEvent) {
-        console.log('=====outer interval clientX=====', e.clientX);
         this.modifyDirection(e);
         const delta = this.getDeltaByDirection();
 
@@ -186,24 +181,17 @@ export class CreatorExecute extends TransformHandler {
             return false;
         }
 
+        this.fixLivingPointByDelta(delta, e);
+
         const that = this;
 
         if (this.__wheel_timer) {
-            if (this.__direction_change) {
-                clearInterval(this.__wheel_timer);
-                // continue 重新移动的时候怎么没进来啊，铁铁
-                this.__wheel_timer = setInterval(function () {
-                    // todo 闭包里面的鼠标事件没有得到更新
-                    that.fixLivingPointByDelta(delta, e);
-                }, this.__wheel_frame);
-            }
-
-        } else {
-
-            this.__wheel_timer = setInterval(function () {
-                that.fixLivingPointByDelta(delta, e);
-            }, this.__wheel_frame);
+            clearInterval(this.__wheel_timer);
         }
+
+        this.__wheel_timer = setInterval(function () {
+            that.fixLivingPointByDelta(delta, e);
+        }, this.__wheel_frame);
 
         return true;
     }
@@ -216,7 +204,7 @@ export class CreatorExecute extends TransformHandler {
 
         this.livingPoint = ws.getRootXY(e);
 
-        console.log('inner interval clientX:', e.clientX);
+        this.__modifyFrame();
     }
 
     private passiveExecute() {
