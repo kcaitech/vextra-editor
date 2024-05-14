@@ -16,6 +16,7 @@ import {
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
+import { collect } from "@/utils/artboardFn";
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
@@ -384,7 +385,7 @@ export class CreatorExecute extends TransformHandler {
         const frame = this.frame;
 
         const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3({ ...this.livingPoint });
+        const xy = m.computeCoord3(this.livingPoint);
         frame.x = xy.x - 50;
         frame.y = xy.y - 50;
 
@@ -410,7 +411,7 @@ export class CreatorExecute extends TransformHandler {
 
         if (type === ShapeType.Text) {
             params.frame.x += 50;
-            params.frame.y += 50;
+            params.frame.y += 38;
             params.frame.width = 20;
             params.frame.height = 24;
         }
@@ -437,6 +438,8 @@ export class CreatorExecute extends TransformHandler {
     }
 
     fulfil() {
+        const context = this.context;
+
         if (this.isCustomFrame) {
             // 自定义frame
             console.log('自定义frame');
@@ -445,16 +448,27 @@ export class CreatorExecute extends TransformHandler {
             console.log('将点击创建图层');
             this.createImmediate();
         }
+        const action = this.action;
 
-        super.fulfil();
+        if (action === Action.AddText) {
+            context.selection.setSelectionNewShapeStatus(true);
+            context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
+        } else if (action === Action.AddFrame) {
+            if (this.isCustomFrame) {
+                const children = collect(this.context);
+                (this.asyncApiCaller as CreatorApiCaller).collect(children);
+            }
+        }
 
-        this.context.cursor.reset();
-        this.context.tool.setAction(Action.AutoV);
+        context.tool.setAction(Action.AutoV);
 
         if (this.__wheel_timer) {
             clearInterval(this.__wheel_timer);
             this.__wheel_timer = null;
         }
+
+        super.fulfil();
+        context.cursor.reset();
     }
 
     protected keydown(event: KeyboardEvent) {
