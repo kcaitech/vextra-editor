@@ -110,6 +110,26 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 
+function dblFromPart(e: MouseEvent) {
+    if (e.button === 0 && !editing.value) {
+        const workspace = props.context.workspace;
+        if (props.context.navi.focusText) {
+            props.context.navi.set_focus_text();
+        }
+        editing.value = true;
+        workspace.contentEdit(editing.value);
+        props.context.cursor.setType('scan', 0);
+        const selection = props.context.textSelection;
+        workspace.setCtrl('controller');
+        const root = workspace.root
+        matrix.reset(props.matrix);
+        const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
+        downIndex = selection.locateText(xy.x, xy.y);
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    }
+}
+
 function onMouseMove(e: MouseEvent) {
     e.stopPropagation();
     if (!editing.value) return;
@@ -267,10 +287,10 @@ onBeforeUnmount(() => {
         </SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :theme="theme">
+                       :c-frame="props.controllerFrame" :theme="theme" @dblclick="dblFromPart">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :axle="axle" :theme="theme">
+                         :c-frame="props.controllerFrame" :axle="axle" :theme="theme" @dblclick="dblFromPart">
         </PointsContainer>
     </svg>
     <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
