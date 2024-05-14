@@ -3,14 +3,19 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action, ResultByAction } from "@/context/tool";
 import {
+    Color,
     CreatorApiCaller,
+    Fill,
+    FillType,
     GeneratorParams,
     GroupShapeView,
     Matrix,
     ShapeFrame,
+    ShapeType,
     ShapeView
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { v4 } from "uuid";
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
@@ -214,58 +219,49 @@ export class CreatorExecute extends TransformHandler {
         this.__modifyFrame();
     }
 
-    private __modifyFrame(once = false) {
+    private __modifyFrame() {
         const frame = this.frame;
 
-        if (once) { // 单点创建图层
-            const m = new Matrix(this.downEnv.matrix2Root().inverse);
-            const xy = m.computeCoord3({ ...this.livingPoint });
-            frame.x = xy.x - 50;
-            frame.y = xy.y - 50;
+        const fixedPoint = { ...this.fixedPoint };
+        const livingPoint = { ...this.livingPoint };
 
-            this.fixedByUserConfig();
-        } else { // 自定义frame创建图层
-            const fixedPoint = { ...this.fixedPoint };
-            const livingPoint = { ...this.livingPoint };
+        if (this.altStatus) {
+            const __x = livingPoint.x - fixedPoint.x;
+            const __y = livingPoint.y - fixedPoint.y;
 
-            if (this.altStatus) {
-                const __x = livingPoint.x - fixedPoint.x;
-                const __y = livingPoint.y - fixedPoint.y;
-
-                fixedPoint.x = fixedPoint.x - __x;
-                fixedPoint.y = fixedPoint.y - __y;
-            }
-
-            if (this.shiftStatus) {
-                const h = Math.abs(livingPoint.y - fixedPoint.y);
-                const w = Math.abs(livingPoint.x - fixedPoint.x);
-
-                if (h > w) {
-                    livingPoint.x = livingPoint.x + ((h - w) * ((livingPoint.x - fixedPoint.x) / w));
-                } else {
-                    livingPoint.y = livingPoint.y + ((w - h) * ((livingPoint.y - fixedPoint.y) / h));
-                }
-            }
-
-            const cx = fixedPoint.x < livingPoint.x;
-            const cy = fixedPoint.y < livingPoint.y;
-            const left = cx ? fixedPoint.x : livingPoint.x;
-            const right = cx ? livingPoint.x : fixedPoint.x;
-            const top = cy ? fixedPoint.y : livingPoint.y;
-            const bottom = cy ? livingPoint.y : fixedPoint.y;
-
-            frame.x = left;
-            frame.y = top;
-            frame.width = right - left;
-            frame.height = bottom - top;
-
-            this.fixedByUserConfig();
-
-            const m = new Matrix(this.downEnv.matrix2Root().inverse);
-            const xy = m.computeCoord3(frame);
-            frame.x = xy.x;
-            frame.y = xy.y;
+            fixedPoint.x = fixedPoint.x - __x;
+            fixedPoint.y = fixedPoint.y - __y;
         }
+
+        if (this.shiftStatus) {
+            const h = Math.abs(livingPoint.y - fixedPoint.y);
+            const w = Math.abs(livingPoint.x - fixedPoint.x);
+
+            if (h > w) {
+                livingPoint.x = livingPoint.x + ((h - w) * ((livingPoint.x - fixedPoint.x) / w));
+            } else {
+                livingPoint.y = livingPoint.y + ((w - h) * ((livingPoint.y - fixedPoint.y) / h));
+            }
+        }
+
+        const cx = fixedPoint.x < livingPoint.x;
+        const cy = fixedPoint.y < livingPoint.y;
+        const left = cx ? fixedPoint.x : livingPoint.x;
+        const right = cx ? livingPoint.x : fixedPoint.x;
+        const top = cy ? fixedPoint.y : livingPoint.y;
+        const bottom = cy ? livingPoint.y : fixedPoint.y;
+
+        frame.x = left;
+        frame.y = top;
+        frame.width = right - left;
+        frame.height = bottom - top;
+
+        this.fixedByUserConfig();
+
+        const m = new Matrix(this.downEnv.matrix2Root().inverse);
+        const xy = m.computeCoord3(frame);
+        frame.x = xy.x;
+        frame.y = xy.y;
 
         const transform = this.getTransform();
 
@@ -382,6 +378,64 @@ export class CreatorExecute extends TransformHandler {
         return result;
     }
 
+    private createImmediate() {
+        this.createApiCaller();
+
+        const frame = this.frame;
+
+        const m = new Matrix(this.downEnv.matrix2Root().inverse);
+        const xy = m.computeCoord3({ ...this.livingPoint });
+        frame.x = xy.x - 50;
+        frame.y = xy.y - 50;
+
+        this.fixedByUserConfig();
+
+        const type = ResultByAction(this.action);
+
+        if (!type) {
+            return;
+        }
+
+        const namePrefix = this.workspace.t(`shape.${type}`);
+
+        const params: GeneratorParams = {
+            parent: this.downEnv as GroupShapeView,
+            frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
+            type,
+            transform: this.getTransform(),
+            namePrefix,
+            isFixedRatio: this.shiftStatus,
+            shape: this.shape
+        };
+
+        if (type === ShapeType.Text) {
+            params.frame.x += 50;
+            params.frame.y += 50;
+            params.frame.width = 20;
+            params.frame.height = 24;
+        }
+
+        if (type === ShapeType.Artboard && this.downEnv.type === ShapeType.Page) {
+            params.fill = new Fill([0] as any, v4(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
+        }
+
+        const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
+
+        if (shape) {
+            const selection = this.context.selection;
+            this.context.nextTick(
+                selection.selectedPage!,
+                () => {
+                    const __s = selection.selectedPage!.getShape(shape.id);
+                    if (!__s) {
+                        return;
+                    }
+                    selection.selectShape(__s);
+                }
+            );
+        }
+    }
+
     fulfil() {
         if (this.isCustomFrame) {
             // 自定义frame
@@ -389,8 +443,7 @@ export class CreatorExecute extends TransformHandler {
         } else {
             // 点击建图
             console.log('将点击创建图层');
-            this.createApiCaller();
-            this.__modifyFrame(true);
+            this.createImmediate();
         }
 
         super.fulfil();
@@ -403,7 +456,6 @@ export class CreatorExecute extends TransformHandler {
             this.__wheel_timer = null;
         }
     }
-
 
     protected keydown(event: KeyboardEvent) {
         if (event.repeat) {
