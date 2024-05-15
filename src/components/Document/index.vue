@@ -44,7 +44,6 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
-import VersionDesc from "@/components/common/VersionDesc.vue";
 import { PROJECT_NAME } from "@/const";
 import kcdesk from '@/kcdesk';
 import { newFile2, openFile3 } from '@/utils/neworopen';
@@ -393,6 +392,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
+            kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
@@ -741,7 +741,7 @@ const stop = watch(() => null_context.value, (v) => {
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
-            clearTimeout(timer);
+            kcdesk?.fileSetName(file_name);
         }, 500)
     }
 })

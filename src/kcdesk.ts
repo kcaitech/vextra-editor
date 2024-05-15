@@ -17,6 +17,7 @@ interface IKcDesk {
     fileWatchList(watcher: (infos: { list: { name: string, viewid: number }[], active: number }) => void): void;
     fileClose(viewid: number): void; // 关闭文档
     fileShow(viewid: number): void; // 切换文档
+    fileSetName(viewid: number, name: string): void;
     // fileCloseSelf(): void;
 
     fileMove(viewid: number, index: number): void; // 移动文档位置
@@ -111,6 +112,11 @@ class KcDeskContext {
         return this._querys['prepare'] !== undefined;
     }
 
+    fileSetName(name: string) {
+        const viewid = this.getViewId();
+        if (viewid > 0) this._api.fileSetName(viewid, name);
+    }
+
     // 其它本地数据
 
 }
@@ -121,3 +127,18 @@ const _kcdesk = ((window as any)[_desk_guid]) as IKcDesk | undefined;
 const kcdesk = _kcdesk ? new KcDeskContext(_kcdesk) : undefined;
 export default kcdesk;
 
+// watch title
+// if (kcdesk) {
+//     const title = document.querySelector('title');
+//     if (title) {
+//         const observer = new MutationObserver(function () {
+//             const title = document.title.split(' ')[0];
+//             kcdesk.onTitleChange(title);
+//         });
+//         observer.observe(title, {
+//             subtree: true,
+//             characterData: true,
+//             childList: true,
+//         });
+//     }
+// }

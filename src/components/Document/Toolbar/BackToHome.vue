@@ -152,6 +152,7 @@ async function blur() {
                 ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
             }
             window.document.title = `${name.value} - ${t('product.name')}`;
+            kcdesk?.fileSetName(name.value);
             document.removeEventListener('keydown', enter);
         } catch (error) {
             console.log(error);
