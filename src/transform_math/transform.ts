@@ -30,6 +30,8 @@ export class TranslateMatrix extends Matrix { // 平移矩阵
     }
 }
 
+// 重写几个变换矩阵的部分方法，优化性能
+
 export class RotateMatrix extends Matrix { // 旋转矩阵
     getInverse(): Matrix | undefined {
         if (isZero(this.m20) && isZero(this.m21) && isZero(this.m02) && isZero(this.m12)) { // 退化为二维旋转矩阵
@@ -162,10 +164,10 @@ export class Transform { // 变换
     updateMatrix() { // 根据matrix分解出T、R、K、S子矩阵，或根据T、R、K、S子矩阵计算出matrix
         if (this.isMatrixLatest && this.isSubMatrixLatest) return;
         // if (!this.isMatrixLatest && !this.isSubMatrixLatest) throw new Error("矩阵数据错误：isMatrixLatest与isSubMatrixLatest同时为false");
-        if (!this.isMatrixLatest) { // 根据matrix分解T、R、K、S子矩阵
+        if (!this.isMatrixLatest) { // 根据T、R、K、S子矩阵计算matrix
             // matrix = T·R·K·S
             this.matrix = this.translateMatrix.clone().multiply(this.rotateMatrix).multiply(this.skewMatrix).multiply(this.scaleMatrix)
-        } else { // 根据T、R、K、S子矩阵计算matrix
+        } else { // 根据matrix分解T、R、K、S子矩阵
             // 平移
             this.translateMatrix = TranslateMatrix.FromMatrix(Matrix.BuildIdentity([4, 3]).insertCols(this.matrix.col(3)))
 
@@ -174,7 +176,12 @@ export class Transform { // 变换
             const xDotY = matrix3x3.col(0).dot(matrix3x3.col(1)) // x轴与y轴的点积
             const norm_xCrossY = (matrix3x3.col(0).cross(matrix3x3.col(1)) as Vector).norm // x轴与y轴叉积的模
             let angle = Math.atan2(norm_xCrossY, xDotY) // y轴相对x轴的夹角（逆时针为正）
-            if (angle < 0) angle += 2 * Math.PI;
+            // Y轴发生了翻转
+            let isYFlipped = false
+            if (angle < 0) {
+                isYFlipped = true
+                angle += Math.PI
+            }
             const skewXAngle = 0.5 * Math.PI - angle;
             const tanSkewX = Math.tan(skewXAngle)
             this.skewMatrix = SkewMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
@@ -186,7 +193,7 @@ export class Transform { // 变换
 
             // 缩放
             const xNorm = this.matrix.col(0).norm
-            const yNorm = this.matrix.col(1).norm
+            const yNorm = this.matrix.col(1).norm * (isYFlipped ? -1 : 1)
             const zNorm = this.matrix.col(2).norm
             this.scaleMatrix = ScaleMatrix.FromMatrix(new Matrix(new NumberArray2D([4, 4], [
                 xNorm, 0, 0, 0,
@@ -566,6 +573,12 @@ export class Transform { // 变换
         ], true)))
         this.isMatrixLatest = false
         return this
+    }
+
+    setRotateZ(angle: number) { // 仅绕z轴旋转
+        return this.setRotate({
+            euler: new ColVector3D([0, 0, angle]),
+        })
     }
 
     hasRotation() { // 判断是否有旋转
