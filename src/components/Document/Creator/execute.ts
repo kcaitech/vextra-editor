@@ -284,6 +284,10 @@ export class CreatorExecute extends TransformHandler {
             shape: this.shape
         };
 
+        if (this.action === Action.AddArrow) {
+            params.mark = true;
+        }
+
         const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 
         if (shape && !this.shape) {
