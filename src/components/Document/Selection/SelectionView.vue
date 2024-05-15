@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection, SelectionTheme } from "@/context/selection";
-import { Matrix, Path, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -15,7 +15,6 @@ import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
-import { is_straight } from "@/utils/attri_setting";
 
 export interface Point {
     x: number
@@ -86,7 +85,6 @@ function watchShapes() { // 监听选区相关shape的变化
 }
 
 function shapesWatcher(...args: any) {
-    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return; @@@
     if (props.context.workspace.shouldSelectionViewUpdate) {
         if (args.includes('layout')) {
             update_by_shapes();
@@ -150,7 +148,7 @@ function tool_watcher(t: number) {
     }
 }
 
-function modfiy_tracing_class(shape: ShapeView) {
+function modify_tracing_class(shape: ShapeView) {
     tracing_class.thick_stroke = false;
     tracing_class.hollow_fill = false;
 
@@ -194,7 +192,7 @@ function createShapeTracing() {
         tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
 
-        modfiy_tracing_class(hoveredShape);
+        modify_tracing_class(hoveredShape);
     }
 }
 
@@ -221,7 +219,6 @@ function createController() {
  * @description 创建控件
  */
 function createController2() {
-    // const s = Date.now();
     const selection: ShapeView[] = [];
     let temp = props.context.selection.selectedShapes;
     let adjust = false;
@@ -247,7 +244,6 @@ function createController2() {
     modify_theme(selection);
     tracing.value = false;
     controller.value = true;
-    // console.log('控件绘制用时(ms):', Date.now() - s);
 }
 
 function modify_controller_frame(shapes: ShapeView[]) {
@@ -293,11 +289,7 @@ function for_virtual(shape: ShapeView) {
 }
 
 function for_path_shape(shape: PathShapeView) {
-    if (is_straight(shape)) {
-        controllerType.value = ControllerType.Line;
-    } else {
-        controllerType.value = ControllerType.Rect;
-    }
+    controllerType.value = shape.isStraight ? ControllerType.Line : ControllerType.Rect;
 }
 
 function modify_controller_type(shapes: ShapeView[],) {
@@ -345,20 +337,10 @@ function modify_controller_type(shapes: ShapeView[],) {
 
 function modify_rotate(shapes: ShapeView[]) {
     if (shapes.length === 1) {
-        const shape = shapes[0];
-        if (shape instanceof PathShapeView) {
-            // todo for path
-            // const points = shape.points;
-            // const is_straight_1 = !points[0]?.hasFrom;
-            // const is_straight_2 = !points[1]?.hasTo;
-            // if (points.length === 2 && is_straight_1 && is_straight_2) {
-            //     rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
-            //     return;
-            // }
-        }
         rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[1]);
+    } else {
+        rotate.value = 0;
     }
-    rotate.value = 0;
 }
 
 function modify_theme(shapes: ShapeView[]) {
@@ -436,11 +418,8 @@ const isLableLine = ref(false);
 const lableLineStatus = () => {
     const isLable = props.context.tool.isLable;
     const interval = props.context.selection.is_interval;
-    if (isLable || interval) {
-        isLableLine.value = true;
-    } else {
-        isLableLine.value = false;
-    }
+
+    isLableLine.value = isLable || interval;
 }
 
 function page_watcher() {
