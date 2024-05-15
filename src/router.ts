@@ -61,7 +61,7 @@ const apphome_children = [
         path: 'recently',
         name: 'recently',
         component: Recently,
-        meta: { title: _t.t('home.recently_opened') + ' - ' + productName },
+        meta: { title: _t.t('home.recently_opened') + ' - ' + productName, group: Group.Home },
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'recently') {
                 if (isMobileDevice()) {
@@ -76,45 +76,50 @@ const apphome_children = [
         path: 'star',
         name: 'starfile',
         component: StarFile,
-        meta: { title: _t.t('home.star_file') + ' - ' + productName },
+        meta: { title: _t.t('home.star_file') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'myfile',
         name: 'meshare',
         component: MeShare,
-        meta: { title: _t.t('home.file_shared') + ' - ' + productName },
+        meta: { title: _t.t('home.file_shared') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'shared',
         name: 'shareme',
         component: ShareMe,
-        meta: { title: _t.t('home.shared_file_received') + ' - ' + productName },
+        meta: { title: _t.t('home.shared_file_received') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'trash',
         name: 'recyclebin',
-        component: MeShare
+        component: MeShare,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: 'team/:id',
         name: 'TeamPage',
         component: TeamPage,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
         path: 'project_shared',
         name: 'ProjectShare',
         component: ProjectShare,
-        meta: { title: _t.t('Createteam.sharetip') + ' - ' + productName },
+        meta: { title: _t.t('Createteam.sharetip') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'project/:id',
         name: 'ProjectPage',
         component: ProjectPage,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
 ]
@@ -152,7 +157,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + productName, requireAuth: true },
+        meta: { title: _t.t('system.btn_login') + ' - ' + productName, requireAuth: true, group: Group.Home },
     },
     {
         path: "/home",
