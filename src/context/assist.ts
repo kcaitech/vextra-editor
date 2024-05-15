@@ -129,7 +129,6 @@ export class Assist extends WatchableObject {
     private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
-    private m_path_pg: Map<number, PageXY2> = new Map(); // 路径编辑模式
 
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
@@ -192,14 +191,6 @@ export class Assist extends WatchableObject {
 
     get nodes_y() {
         return this.m_nodes_y;
-    }
-
-    get shape_in_view() {
-        return this.m_shape_inner;
-    }
-
-    is_shape_in_view(shape: Shape) {
-        return !!this.m_pg_inner.get(shape.id);
     }
 
     clear() {
@@ -310,81 +301,6 @@ export class Assist extends WatchableObject {
                 get_tree(shapes[i], this.m_except);
             }
         }
-    }
-
-    /**
-     * @description 拖拽单个图形
-     */
-    trans_match(offsetMap: PointsOffset, p: PageXY) {
-        // const st = Date.now();
-        if (!this.m_except.size) return;
-        this.m_nodes_x = [];
-        this.m_nodes_y = [];
-        this.m_current_pg = gen_match_points_by_map(offsetMap, p);
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
-        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
-        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
-        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
-            const cs = this.m_shape_inner[i];
-            if (this.m_except.get(cs.id)) continue;
-            const c_pg = this.m_pg_inner.get(cs.id);
-            if (!c_pg) continue;
-            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX, this.m_stickness);
-            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY, this.m_stickness);
-        }
-        if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
-            this.m_nodes_x = this.m_x_axis.get(target.x) || [];
-        }
-        if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
-            this.m_nodes_y = this.m_y_axis.get(target.y) || [];
-        }
-        this.notify(Assist.UPDATE_ASSIST);
-        // console.log('单次匹配辅助点位(ms):', Date.now() - st);
-        return target;
-    }
-
-    /**
-     * @description 拖拽多个图形
-     */
-    trans_match_multi(shapes: ShapeView[], offsetMap: PointsOffset, p: PageXY) {
-        // const st = Date.now();
-        if (!this.m_except.size) return;
-        this.m_nodes_x = [];
-        this.m_nodes_y = [];
-        const cache_map = this.m_context.workspace.cache_map;
-        if (cache_map) {
-            this.m_context.workspace.revert_frame_by_map(shapes[0]);
-        } else {
-            const frame = get_frame(shapes);
-            this.m_context.workspace.gen_chahe_map_by_shape_one(shapes[0], frame);
-            this.m_context.workspace.setCFrame(frame);
-        }
-        this.m_current_pg = gen_match_points_by_map(offsetMap, p);
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
-        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
-        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
-        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
-            const cs = this.m_shape_inner[i];
-            if (this.m_except.get(cs.id)) continue;
-            const c_pg = this.m_pg_inner.get(cs.id);
-            if (!c_pg) continue;
-            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX, this.m_stickness);
-            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY, this.m_stickness);
-        }
-        if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []);
-        }
-        if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
-        }
-        this.notify(Assist.UPDATE_ASSIST);
-        // const e = Date.now();
-        // console.log('单次匹配用时(ms):', e - st);
-        return target;
     }
 
     point_match(point: PageXY) {
@@ -668,94 +584,6 @@ export class Assist extends WatchableObject {
         }
 
         return assistResult;
-    }
-
-    create_match(p: PageXY) {
-        const st = Date.now();
-        if (!this.m_except.size) return;
-        this.m_nodes_x = [];
-        this.m_nodes_y = [];
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
-        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
-        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
-            const cs = this.m_shape_inner[i];
-            if (this.m_except.get(cs.id)) continue;
-            const c_pg = this.m_pg_inner.get(cs.id);
-            if (!c_pg) continue;
-            modify_pt_x4create(pre_target1, p, c_pg.apexX, this.m_stickness);
-            modify_pt_y4create(pre_target2, p, c_pg.apexY, this.m_stickness);
-        }
-        if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
-                p: { x: target.x, y: pre_target1.sy },
-                id: 'ex'
-            }]);
-        }
-        if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
-                p: { x: pre_target2.sx, y: target.y },
-                id: 'ex'
-            }]);
-        }
-        this.notify(Assist.UPDATE_ASSIST);
-        const e = Date.now();
-        // console.log('单次匹配用时(ms):', e - st);
-        return target;
-    }
-
-    edit_mode_match(point: XY, indexes: number[], offsetMap: XY[]) {
-        const indexes_set = new Set(indexes);
-
-        this.m_nodes_x = [];
-        this.m_nodes_y = [];
-
-        const calc_points = gen_match_points_by_map2(offsetMap, point);
-
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-        const pre_target1 = { x: 0, sy: 0, delta: undefined, index: -1 };
-        const pre_target2 = { y: 0, sx: 0, delta: undefined, index: -1 };
-
-        this.m_path_pg.forEach((v, k) => {
-            if (indexes_set.has(k)) {
-                return;
-            }
-
-            modify_pt_x_4_path_edit(pre_target1, v.p, calc_points, this.stickness);
-            modify_pt_y_4_path_edit(pre_target2, v.p, calc_points, this.stickness);
-        })
-
-
-        const offset_x = offsetMap[pre_target1.index];
-        if (offset_x) {
-            target.sticked_by_x = true;
-
-            this.m_nodes_x = [...(this.m_x_axis.get(pre_target1.x) || []), {
-                p: { x: pre_target1.x, y: pre_target1.sy },
-                id: 'ex'
-            }];
-
-            // target.x = pre_target1.x + offset_x.x;
-            target.x = pre_target1.x;
-        }
-
-        const offset_y = offsetMap[pre_target2.index];
-        if (offset_y) {
-            target.sticked_by_y = true;
-
-            this.m_nodes_y = [...(this.m_y_axis.get(pre_target2.y) || []), {
-                p: { x: pre_target2.sx, y: pre_target2.y },
-                id: 'ex'
-            }];
-
-            // target.y = pre_target2.y + offset_y.y;
-            target.y = pre_target2.y;
-        }
-
-        this.notify(Assist.UPDATE_ASSIST_PATH);
-        return target;
     }
 
     creator(point: XY) {

@@ -11,6 +11,7 @@ import { get_direction } from '@/utils/controllerFn';
 import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
+import { LineHandler } from "@/transform/line";
 
 interface Props {
     matrix: number[]
@@ -43,10 +44,13 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const dragActiveDis = 3;
-let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+let cur_ctrl_type: CtrlElementType = CtrlElementType.LineStart;
 let clear_stick = false
 let index = -1;
 let need_reset_cursor_after_transform = true;
+
+let lineHandle: LineHandler | undefined;
+let downXY: XY = { x: 0, y: 0 }
 
 function update() {
     matrix.reset(props.matrix);
@@ -54,24 +58,24 @@ function update() {
 }
 
 function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
     dots.length = 0;
+
     const f = props.shape.frame;
     const m = new Matrix(matrix);
     m.preScale(f.width, f.height);
+
     const points = (props.shape as PathShapeView)?.segments[0]?.points;
-    if (!points?.length || points.length < 2) {
-        console.log('points.length < 2');
+    if (!points[0] || !points[1]) {
         return;
     }
+
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);
+
     dots.push(...update_dot3([p1, p2]));
 }
 
-function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
+function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
     }
@@ -86,51 +90,32 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
         return;
     }
 
+    lineHandle = new LineHandler(props.context, event, ele);
+    downXY = event;
+
     cur_ctrl_type = ele;
 
-    set_status_on_down();
-
-    startPosition = props.context.workspace.getContentXY(event);
-    index = idx;
+    // set_status_on_down();
+    //
+    // startPosition = props.context.workspace.getContentXY(event);
+    // index = idx;
 
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
 
 function point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-    const mouseOnClient: ClientXY = workspace.getContentXY(event);
 
-    const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = mouseOnClient;
-    if (isDragging && asyncBaseAction) {
-        if (cur_ctrl_type.endsWith('rotate')) {
-            for_rotate(startPosition, mouseOnClient);
-        } else {
-            const action = props.context.tool.action;
-            let p2: PageXY = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
-            clear_stick = false;
-            if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-                p2 = get_t(index, p2);
-            }
-            if (clear_stick) {
-                scale2(asyncBaseAction, p2);
-            } else {
-                scale(asyncBaseAction, p2);
-            }
+    if (isDragging) {
+        lineHandle?.execute(event);
+    } else {
+        if (Math.hypot(downXY.x - event.x, downXY.y - event.y) > dragActiveDis) {
+            lineHandle?.createApiCaller();
+
+            isDragging = true;
         }
-        startPosition = { ...mouseOnClient };
-    } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status_before_action();
-
-        submatrix.reset(workspace.matrix.inverse);
-
-        asyncBaseAction = props.context.editor
-            .controller()
-            .asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-
-        isDragging = true;
     }
+
 }
 
 function get_t(index: number, p2: PageXY): PageXY {
@@ -249,11 +234,11 @@ function setCursor(t: CtrlElementType, active = false) {
 
     let deg = get_rotate_for_straight(props.shape as PathShapeView);
 
-    if (t === CtrlElementType.RectLT) {
+    if (t === CtrlElementType.LineStart) {
         deg = 0;
-    } else if (t === CtrlElementType.RectRB) {
+    } else if (t === CtrlElementType.LineEnd) {
         deg = 0;
-    } else if (t === CtrlElementType.RectLTR) {
+    } else if (t === CtrlElementType.LineStartR) {
         deg = deg - 180;
     }
 
@@ -321,21 +306,26 @@ function set_status_before_action() {
 }
 
 function clear_status() {
-    if (asyncBaseAction) {
-        asyncBaseAction = asyncBaseAction.close();
-    }
+    // if (asyncBaseAction) {
+    //     asyncBaseAction = asyncBaseAction.close();
+    // }
 
-    if (isDragging) {
-        props.context.assist.reset();
-        isDragging = false;
-    }
+    // if (isDragging) {
+    //     props.context.assist.reset();
+    //     isDragging = false;
+    // }
 
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.rotating(false);
-    workspace.setCtrl('page');
+    // const workspace = props.context.workspace;
+    // workspace.scaling(false);
+    // workspace.rotating(false);
+    // workspace.setCtrl('page');
 
-    props.context.cursor.cursor_freeze(false);
+    // props.context.cursor.cursor_freeze(false);
+    isDragging = false
+
+    lineHandle?.fulfil();
+    lineHandle = undefined;
+
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
@@ -362,12 +352,12 @@ onUnmounted(() => {
 </script>
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2, i)"
+        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
               @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
-        <g @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => point_mouseenter(p.type)"
+        <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
            @mouseleave="point_mouseleave">
-            <rect :x="p.extra.x" :y="p.extra.y" class="assit-rect"></rect>
+            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>
     </g>
@@ -384,7 +374,7 @@ onUnmounted(() => {
     fill: #ffffff;
 }
 
-.assit-rect {
+.assist-rect {
     width: 14px;
     height: 14px;
     fill: transparent;
