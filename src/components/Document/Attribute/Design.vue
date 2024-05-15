@@ -312,9 +312,8 @@ onUnmounted(() => {
 <template>
     <section id="Design">
         <el-scrollbar height="100%">
-            <div v-if="!shapes.length">
-                <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                    :page="props.context.selection.selectedPage"></PageBackgorund>
+            <div v-if="!shapes.length && props.context.selection.selectedPage">
+                <PageBackgorund :context="props.context" :page="props.context.selection.selectedPage"></PageBackgorund>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-if="shapes.length" class="attr-wrapper">
@@ -334,8 +333,8 @@ onUnmounted(() => {
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
-                      :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
-                      :context="props.context" :trigger="reflush_trigger"></Text>
+                    :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
+                    :context="props.context" :trigger="reflush_trigger"></Text>
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
@@ -343,7 +342,8 @@ onUnmounted(() => {
                     :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
                     :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
-                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes" :context="props.context">
+                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
+                    :context="props.context">
                 </Shadow>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>

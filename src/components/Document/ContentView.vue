@@ -46,6 +46,7 @@ import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradi
 import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
+import BatchExport from "./Cutout/BatchExport.vue";
 
 interface Props {
     context: Context
@@ -495,6 +496,7 @@ const editCommentShapePosition = async (data: any) => {
         console.log(err)
     }
 }
+
 //表格
 const closeModal = () => {
     cellSetting.value = false
@@ -515,6 +517,7 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
+const isvisible = ref(false);
 
 function menu_watcher(type?: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
@@ -524,6 +527,16 @@ function menu_watcher(type?: number, mount?: string) {
         cellStatus.value = mount;
         cellSetting.value = true;
     }
+    if (type === Menu.EXPORT_DIALOG) {
+        isvisible.value = props.context.menu.isExportDialog;
+        props.context.esctask.save(v4(), export_dialog_show);
+    }
+}
+
+const export_dialog_show = () => {
+    const is_achieve_expected_results = isvisible.value;
+    isvisible.value = false;
+    return is_achieve_expected_results;
 }
 
 function tool_watcher(type: number) {
@@ -685,23 +698,20 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }"
-         @dragover.prevent
-         :style="{ 'background-color': background_color }">
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
+        :style="{ 'background-color': background_color }">
         <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
-                     @closeLoading="closeLoading"/>
+            @closeLoading="closeLoading" />
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
-        <SelectionView :context="props.context" :matrix="matrix"/>
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
+        <SelectionView :context="props.context" :matrix="matrix" />
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
-                     :site="site"
-                     ref="contextMenuEl">
+            :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                                      :context="props.context" @close="contextMenuUnmount" :site="site"
-                                      :menu_over_left="menu_over_left">
+                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
@@ -709,10 +719,11 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <Creator v-if="creatorMode" :context="props.context"/>
+        <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
         <Grid :context="props.context"></Grid>
         <TempBoard :context="props.context"></TempBoard>
+        <BatchExport v-if="isvisible" :context="props.context"></BatchExport>
     </div>
 </template>
