@@ -5,7 +5,7 @@ import {
 } from "@kcdesign/data"
 import {BaseCreator} from "./base"
 import {BaseTreeNode} from "../tree"
-import {ColVector3D} from "@/transform_math/matrix"
+import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
 
 export class PathCreator extends BaseCreator {
     afterAllAdjust() {

@@ -1,7 +1,7 @@
 import {creator as shapeCreator, GroupShape, Shape,} from "@kcdesign/data"
 import {BaseCreator} from "./base"
 import {getRectBox, mergeRectBox} from "../utils"
-import {ColVector3D} from "@/transform_math/matrix"
+import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
 
 // 将父元素的属性合并到子元素
 export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
