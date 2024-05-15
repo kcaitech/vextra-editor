@@ -537,7 +537,7 @@ function init_doc() {
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     } else if (kcdesk && route.query.from === 'kcdesk') {
-        if (route.query.newdoc) {
+        if (route.query.newfile) {
             // 新建
             newFile2();
             init_doc();
