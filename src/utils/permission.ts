@@ -1,4 +1,4 @@
-import { router } from "@/router";
+import { router, Group } from "@/router";
 import { Context } from "@/context";
 import { Perm } from "@/context/workspace";
 import isMobileDevice from "./mobileDeviceChecker";
@@ -10,6 +10,19 @@ router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (to.meta.title) {
         document.title = to.meta.title as string;
+    }
+    if (kcdesk) {
+        if (kcdesk.isPrepareView()) {
+            next(false);
+            return;
+        }
+
+        if (from.meta.group === Group.Document && to.meta.group !== Group.Document) {
+            if (token) kcdesk.fileCloseSelf();
+            else kcdesk.fileShow(0);
+            next(false);
+            return;
+        }
     }
     //判断是否存在token且有效
     if (token) {
@@ -26,7 +39,7 @@ router.beforeEach((to, from, next) => {
         if (whiteList.includes(to.path)) {
             next()
         } else {
-            if (kcdesk && kcdesk.getViewId() !== 0) {
+            if (kcdesk && kcdesk.getViewId() > 0) {
                 kcdesk.fileShow(0); // 切换到首页登录
                 next(); // 继续吗？
                 return;

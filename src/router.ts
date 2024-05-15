@@ -51,7 +51,7 @@ const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
 let _t: any = i18n.global
 const productName = _t.t('product.name');
 
-enum Group {
+export enum Group {
     Home,
     Document,
 }
@@ -174,7 +174,7 @@ const routes = [
                 const id = to.query.id
                 const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : ''; // 去掉url中的空格
                 if (kcdesk && to.query.from !== 'kcdesk') {
-                    const name = window.sessionStorage.getItem("kcdesk_document_name") ?? "";
+                    const name = window.sessionStorage.getItem("open_document_name") ?? "";
                     kcdesk.fileOpen(newid, name, "");
                     next(false);
                 }
@@ -428,19 +428,5 @@ export const router = createRouter({
         }
     },
     routes: routes
-})
-
-
-router.beforeEach((to, from, next) => {
-    if (kcdesk && from.meta.group === Group.Document && to.meta.group !== Group.Document) {
-        // 显示出错页还是关闭当前页？？
-        // 显示个页面即将关闭？
-        // kcdesk.fileCloseSelf();
-        kcdesk.fileShow(0);
-        next(false);
-    }
-    else {
-        next();
-    }
 })
 
