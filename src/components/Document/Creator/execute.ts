@@ -9,7 +9,7 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
-    Matrix, PathShapeView,
+    Matrix,
     ShapeFrame,
     ShapeType,
     ShapeView
@@ -270,6 +270,10 @@ export class CreatorExecute extends TransformHandler {
                 isFixedRatio: false,
                 shape: this.shape
             };
+
+            if (this.action === Action.AddArrow) {
+                params.mark = true;
+            }
 
             const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 
