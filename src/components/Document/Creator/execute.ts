@@ -221,6 +221,72 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private __modifyFrame() {
+        const action = this.action;
+        if (action === Action.AddArrow || action === Action.AddLine) {
+            this.__extendForLine();
+        } else {
+            this.__extendFrame();
+        }
+    }
+
+    private __extendForLine() {
+        const frame = this.frame;
+        const fixedPoint = { ...this.fixedPoint };
+        const livingPoint = { ...this.livingPoint };
+
+        if (this.altStatus) {
+            // todo
+        }
+
+        if (this.shiftStatus) {
+            // todo
+        }
+
+
+        frame.width = 1;
+        frame.height = 1;
+        
+        const m = new Matrix(this.downEnv.matrix2Root().inverse);
+        const xy = m.computeCoord3(frame);
+        frame.x = xy.x;
+        frame.y = xy.y;
+
+        const transform = this.getTransform();
+
+        const type = ResultByAction(this.action);
+        if (!type) {
+            return;
+        }
+        const namePrefix = this.workspace.t(`shape.${type}`);
+
+        const params: GeneratorParams = {
+            parent: this.downEnv as GroupShapeView,
+            frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
+            type,
+            transform,
+            namePrefix,
+            isFixedRatio: false,
+            shape: this.shape
+        };
+
+        const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
+
+        if (shape && !this.shape) {
+            const selection = this.context.selection;
+            this.context.nextTick(
+                selection.selectedPage!,
+                () => {
+                    this.shape = selection.selectedPage!.getShape(shape.id);
+                    if (this.shape) {
+                        this.context.assist.set_trans_target([(this.shape)]);
+                        selection.selectShape(this.shape);
+                    }
+                }
+            );
+        }
+    }
+
+    private __extendFrame() {
         const frame = this.frame;
 
         const fixedPoint = { ...this.fixedPoint };
@@ -283,10 +349,6 @@ export class CreatorExecute extends TransformHandler {
             isFixedRatio: this.shiftStatus,
             shape: this.shape
         };
-
-        if (this.action === Action.AddArrow) {
-            params.mark = true;
-        }
 
         const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 

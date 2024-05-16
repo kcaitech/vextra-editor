@@ -33,7 +33,7 @@ import { debounce } from 'lodash';
 import { Assist } from "@/context/assist";
 import { PathEditor } from "@/transform/pathEdit";
 import { PathShapeView } from "@kcdesign/data";
-import { CreatorExecute } from "@/components/Document/Creator/execute";
+import { CreatorExecuter } from "@/components/Document/Creator/execute";
 
 interface Props {
     context: Context
