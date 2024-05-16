@@ -30,8 +30,9 @@ onBeforeUnmount(() => {
 <style lang="scss">
 html,
 body {
-    height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
+    height:100vh;
+    width: 100vw;
+    // min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
     background-color: rgba(250, 250, 250, 1);
@@ -39,7 +40,7 @@ body {
     user-select: none; //禁止复制内容
     position: relative;
     overflow: hidden;
-    --webkit-overflow-scrolling: touch;
+    // --webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {
         height: 0;

@@ -496,7 +496,7 @@ watch(fileName, (NewNanme) => {
     if (NewNanme) {
         miniprogram = navigator.userAgent.includes('miniProgram')
         if (miniprogram) {
-            (window as any).uni.postMessage({
+            (window as any).wx.miniProgram.postMessage({
                 data: {
                     name: NewNanme,
                     id:docInfo.value.document.id
@@ -712,7 +712,7 @@ onUnmounted(() => {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" />
+                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" :cutout="false" />
         </div>
     </div>
 </template>

@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, watchEffect } from 'vue';
 import { useRoute } from 'vue-router'
 import ProjectItem from './ProjectItem.vue';
 import { router } from '@/router';
@@ -24,9 +24,10 @@ const { projectlist } = storeToRefs(store)
 const { GetprojectLists } = store
 const route = useRoute()
 
-onMounted(async() => {
+
+onMounted(async () => {
     document.title = route.query.name as string
-   await GetprojectLists()
+    await GetprojectLists()
 })
 
 </script>

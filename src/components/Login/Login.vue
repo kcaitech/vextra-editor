@@ -35,7 +35,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
                 isLoading.value = false
-                const perRoute = localStorage.getItem('perRoute') || ''
+                const perRoute = sessionStorage.getItem('perRoute') || ''
                 if (perRoute) {
                     if (perRoute.includes('?')) {
                         const params = new URLSearchParams(perRoute.split('?')[1]);
@@ -115,7 +115,7 @@ function clickaffirm() {
                 localStorage.setItem('nickname', result.data.nickname)
                 localStorage.setItem('userId', result.data.id)
                 isLoading.value = false
-                const perRoute = localStorage.getItem('perRoute') || ''
+                const perRoute = sessionStorage.getItem('perRoute') || ''
                 if (perRoute) {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
@@ -317,7 +317,9 @@ onMounted(() => {
 </script>
 
 <template>
+
     <div class="bgiamge">
+        <svg-icon class="svg" icon-class="newlogo"></svg-icon>
         <div class="content">
             <div class="top">
                 <Describes></Describes>
@@ -396,9 +398,16 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     background-color: #ffffff;
-    background-image: url("@/assets/bgimg2.png");
+    background-image: url("@/assets/bgimg3.png");
     background-size: cover;
     background-repeat: no-repeat;
+    svg{
+        position: fixed;
+        top: 2%;
+        left: 3%;
+        width: 136px;
+        height: 36px;
+    }
 }
 
 .content {
@@ -414,12 +423,13 @@ onMounted(() => {
         height: 100%;
 
         .login {
+            position: relative;
+            top: -30px;
             width: 80%;
-            // height: 80%;
-            // max-height: 480px;
-            max-width: 400px;
+            height: 460px;
+            max-width: 360px;
             background: white;
-            border-radius: 32px;
+            border-radius: 10px;
             border: 1px solid #F0F0F0;
             box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
             box-sizing: border-box;
@@ -444,10 +454,10 @@ onMounted(() => {
 
                 .title {
                     font-size: 20px;
-                    font-weight: 600;
+                    font-weight: 500;
                     // margin-top: 74px;
                     // margin-bottom: 46px;
-                    color: rgba(67, 67, 67, 1);
+                    color:black;
                     opacity: 0.8;
                 }
 
