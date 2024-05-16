@@ -10,7 +10,7 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import {
     Document,
-    importDocument,
+    importRemote,
     Repository,
     Page,
     CoopRepository,
@@ -319,7 +319,7 @@ const getUserInfo = async () => {
 }
 
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
 
 //获取文档信息
 const getDocumentInfo = async () => {
@@ -383,7 +383,7 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const d = await importDocument(storage, path, "", versionId, repo);
+        const d = await importRemote(storage, path, "", versionId, repo)
         const document = d.document;
         documentLoader = d.loader;
         if (document) {
@@ -718,7 +718,7 @@ const stop = watch(() => null_context.value, (v) => {
         const _name = context?.data.name || '';
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - 墨师设计` : `${file_name} - 墨师设计`;
             clearTimeout(timer);
         }, 500)
     }
@@ -788,7 +788,6 @@ onUnmounted(() => {
                 </ContentView>
             </template>
             <template #slot3>
-                <!--                @@@-->
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
                            @mouseenter="(e: Event) => { mouseenter('right') }"
                            @mouseleave="() => { mouseleave('right') }"

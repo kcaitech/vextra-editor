@@ -22,7 +22,7 @@ import {
     BorderSideSetting,
     SideType,
 } from "@kcdesign/data"
-import { v4 as uuid } from "uuid"
+import {v4 as uuid} from "uuid"
 import {
     Attributes,
     FillColor,
@@ -38,9 +38,9 @@ import {
     parseTransform,
     RadialGradient
 } from "../utils"
-import { BaseTreeNode, TreeNodeTraverseHandler } from "../tree"
-import { Transform3D, TransformMode } from "../transform_3d"
-import { Matrix } from "../matrix"
+import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
+import {Transform, TransformMode} from "@/transform_math/transform"
+import {ColVector3D} from "@/transform_math/matrix"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -57,7 +57,7 @@ export class BaseCreator extends BaseTreeNode {
     localAttributes: Record<string, string> = {}
     isLocalAttributesParsed = false
     attributes: Attributes = {}
-    transform = new Transform3D()
+    transform = new Transform()
 
     shape: Shape | undefined = undefined
     style?: Style
@@ -185,7 +185,7 @@ export class BaseCreator extends BaseTreeNode {
         const d = this.localAttributes["d"]
         if (d) {
             this.attributes.d = d
-            const { x, y, width, height } = getPathBoxFromD(d)
+            const {x, y, width, height} = getPathBoxFromD(d)
             this.attributes.pathX = x
             this.attributes.pathY = y
             this.attributes.width = width
@@ -199,16 +199,7 @@ export class BaseCreator extends BaseTreeNode {
             this.attributes.transform = this.localAttributes["transform"] ?? undefined
             transform = this.attributes.transform
         }
-        if (transform) this.transform.addTransform(parseTransform(transform, {
-            transformMode: TransformMode.LocalSpecialOrigin,
-            origin: {
-                x: -(this.attributes.width || 0) / 2,
-                y: -(this.attributes.height || 0) / 2,
-                z: 0,
-            },
-            diffX: parseFloat(x) || 0,
-            diffY: parseFloat(y) || 0,
-        }));
+        if (transform) this.transform.addTransform(parseTransform(transform));
 
         // opacity
         const opacity = this.localAttributes["opacity"]
@@ -265,7 +256,7 @@ export class BaseCreator extends BaseTreeNode {
                         const cx = parseFloat(creator.localAttributes["cx"] || "0")
                         const cy = parseFloat(creator.localAttributes["cy"] || "0")
                         const r = parseFloat(creator.localAttributes["r"] || "1")
-                        const transform = new Transform3D()
+                        const transform = new Transform()
                         if (creator.localAttributes["gradientTransform"]) transform.addTransform(parseTransform(creator.localAttributes["gradientTransform"]));
                         const scaleArgs = getAllFunctionCallFromString(creator.localAttributes["gradientTransform"]).find(item => item[0] === "scale")?.[1].split(/,|\s+/).filter(arg => arg && arg.trim())
                         radialGradient = {
@@ -412,7 +403,7 @@ export class BaseCreator extends BaseTreeNode {
             }
 
             const w = this.attributes.width || 1
-            const scale = this.transform.decompose3DScale()
+            const scale = this.transform.decomposeScale()
             if (scale.x !== 1 || scale.y !== 1) {
                 // 按现有算法逆推，详见kcdesign-data/src/render/shadow.ts:shadowOri[ShadowPosition.Outer]
                 spread = 10000 * (scale.x - 1) * w / (19900 - w)
@@ -462,7 +453,11 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const { translate, rotate } = this.transform.decompose3DWithEulerZXY()
+        const {translate, rotate, scale} = this.transform.decompose()
+
+        // 设置缩放
+        shape.frame.width *= scale.x
+        shape.frame.height *= scale.y
 
         // 设置xy
         shape.frame.x = translate.x
@@ -471,9 +466,9 @@ export class BaseCreator extends BaseTreeNode {
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
 
-        // 设置翻转，绝对值大于179度时认为是翻转
-        shape.isFlippedVertical = Math.abs(rotate.x) * 180 / Math.PI > 179
-        shape.isFlippedHorizontal = Math.abs(rotate.y) * 180 / Math.PI > 179
+        // 设置翻转
+        shape.isFlippedVertical = this.transform.isFlipV
+        shape.isFlippedHorizontal = this.transform.isFlipH
     }
 
     updateShapeStyle() { // 设置shape的样式
@@ -495,11 +490,11 @@ export class BaseCreator extends BaseTreeNode {
                 to = new Point2D(fillColor.linearGradient!.x2 / width, fillColor.linearGradient!.y2 / height)
                 colorType = GradientType.Linear
             } else {
-                const translate = fillColor.radialGradient!.transform.decompose3DTranslate()
+                const translate = fillColor.radialGradient!.transform.decomposeTranslate()
                 from = new Point2D(translate.x / width, translate.y / height)
 
-                const toVec = fillColor.radialGradient!.transform.transform(Matrix.ColVec([1, 0, 0]))
-                to = new Point2D(toVec.data[0][0] / width, toVec.data[1][0] / height)
+                const toVec = fillColor.radialGradient!.transform.transform(new ColVector3D([1, 0, 0]))
+                to = new Point2D(toVec.data.get([0, 0]) / width, toVec.data.get([1, 0]) / height)
 
                 colorType = GradientType.Radial
                 // 按现有算法逆推，详见kcdesign-data/src/render/line_gradient.ts:render()->scaleY
@@ -575,7 +570,13 @@ export class BaseCreator extends BaseTreeNode {
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
-        if (x !== 0 || y !== 0) this.transform.translate(x, y, 0);
+        if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
+
+        // 根据shape的宽高添加平移，使中心点在原点
+        const width = this.shape!.frame.width
+        const height = this.shape!.frame.height
+        this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
+        this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()
