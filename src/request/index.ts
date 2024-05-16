@@ -2,6 +2,7 @@ import axios from 'axios'
 import { API_URL } from '@/settings';
 import { router } from '@/router'
 import { ElMessage } from 'element-plus'
+import kcdesk from '@/kcdesk';
 
 declare module "axios" {
     interface AxiosResponse<T = any> {
@@ -57,6 +58,7 @@ service.interceptors.response.use(function (response) {
                 router.push('/login')
             }
             localStorage.removeItem('token')
+            kcdesk?.setLogined(false);
         }
         return Promise.reject(response)
     }

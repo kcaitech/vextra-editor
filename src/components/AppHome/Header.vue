@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import Loading from '../common/Loading.vue';
 import Bus from '@/components/AppHome/bus';
+import kcdesk from '@/kcdesk';
 
 interface Props {
     items?: Array<object>,
@@ -179,6 +180,7 @@ function userinfo() {
 
 function loginout() {
     localStorage.clear()
+    kcdesk?.setLogined(false);
     router.push({ path: '/login' })
 }
 

@@ -1,35 +1,22 @@
 import i18n from '@/i18n'
 import { router } from './router';
 
-interface IKcDesk {
+// 要与kcdesktop同步
+interface Api4App {
     // os
     osOpenFile(localfile: string): Promise<File | undefined>;
-    osPlatform(): string;
-
-    // window
-    winClose(): void; // 关闭窗口
-    winMinimize(): void; // 最小化窗口
-    winToggleMaximize(): void; // 切换最大化
-    // getViewId(): number;
 
     // files
-    fileGetList(): Promise<{ list: { name: string, viewid: number }[], active: number }>; // 打开文件列表
-    fileWatchList(watcher: (infos: { list: { name: string, viewid: number }[], active: number }) => void): void;
     fileClose(viewid: number): void; // 关闭文档
     fileShow(viewid: number): void; // 切换文档
     fileSetName(viewid: number, name: string): void;
-    // fileCloseSelf(): void;
-
-    fileMove(viewid: number, index: number): void; // 移动文档位置
-    fileOffsetList(offset: number): void; // 文件列表偏移
-    fileGetListOffset(): number; // 文件列表偏移
     fileOpen(id: string, name: string, args: string): void; // 打开文档或者切换到对应文档
     fileOpenLocal(filter: string): void; // 打开文档或者切换到对应文档
-
-    setNewFileName(name: string): void;
     fileNew(): void;
 
+    setNewFileName(name: string): void;
     setRouterAcceptor(acceptor: (rout: { path: string, query: { [key: string]: any } }) => void): void;
+    setLogined(isLogined: boolean): void;
 }
 
 function getQuerys(): { [key: string]: any } {
@@ -50,10 +37,13 @@ function getQuerys(): { [key: string]: any } {
 class KcDeskContext {
     // 本地上下文
 
-    _api: IKcDesk;
+    _api: Api4App;
     _querys: { [key: string]: any };
     _routeacept: (rout: { path: string; query: { [key: string]: any; }; }) => void;
-    constructor(api: IKcDesk) {
+    _logined: boolean;
+
+
+    constructor(api: Api4App) {
         this._api = api;
 
         // init
@@ -79,6 +69,9 @@ class KcDeskContext {
 
         }
         this._api.setRouterAcceptor(this._routeacept);
+
+        this._logined = localStorage.getItem('token') !== undefined;
+        if (this._logined) this._api.setLogined(this._logined);
     }
     osOpenFile(localfile: string): Promise<File | undefined> {
         return this._api.osOpenFile(localfile);
@@ -117,13 +110,20 @@ class KcDeskContext {
         if (viewid > 0) this._api.fileSetName(viewid, name);
     }
 
+    setLogined(isLogined: boolean): void {
+        if (this._logined !== isLogined) {
+            this._api.setLogined(isLogined);
+            this._logined = isLogined;
+        }
+    }
+
     // 其它本地数据
 
 }
 
 
 const _desk_guid = '07444f3a-343d-45a7-bd37-635fc9a26871';
-const _kcdesk = ((window as any)[_desk_guid]) as IKcDesk | undefined;
+const _kcdesk = ((window as any)[_desk_guid]) as Api4App | undefined;
 const kcdesk = _kcdesk ? new KcDeskContext(_kcdesk) : undefined;
 export default kcdesk;
 
