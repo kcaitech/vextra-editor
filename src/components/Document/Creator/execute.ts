@@ -229,11 +229,17 @@ export class CreatorExecute extends TransformHandler {
 
     private __modifyFrame() {
         const action = this.action;
-        if (action === Action.AddArrow || action === Action.AddLine) {
+        if (action === Action.AddContact) {
+            this.__searchContact()
+        } else if (action === Action.AddArrow || action === Action.AddLine) {
             this.__extendLine();
         } else {
             this.__extendFrame();
         }
+    }
+
+    private __searchContact() {
+
     }
 
     private __extendLine() {
