@@ -453,7 +453,18 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const {translate, rotate, skew, scale} = this.transform.decompose()
+         const {translate, rotate, skew, scale} = this.transform.decompose()
+
+        // const {translate, rotate, skew, scale} = this.transform.clone()
+        //     .preTranslate({
+        //         vector: new ColVector3D([shape.frame.width / 2, shape.frame.height / 2, 0]),
+        //     })
+        //     .translate({
+        //         vector: new ColVector3D([-shape.frame.width / 2, -shape.frame.height / 2, 0]),
+        //         mode: TransformMode.Local,
+        //     })
+        //     .decompose()
+
         // dev code
         // if (this.localAttributes["id"] === "组_59") {
         //     console.log("组_59")
@@ -473,8 +484,13 @@ export class BaseCreator extends BaseTreeNode {
         // }
 
         // 设置缩放
-        shape.frame.width *= Math.abs(scale.x)
-        shape.frame.height *= Math.abs(scale.y)
+        // shape.frame.width *= Math.abs(scale.x)
+        // shape.frame.height *= Math.abs(scale.y)
+        // shape.scaleX = Math.abs(scale.x)
+        // shape.scaleY = Math.abs(scale.y)
+
+        // 设置斜切
+        // shape.skewX = skew.x * 180 / Math.PI
 
         // 设置xy
         shape.frame.x = translate.x
@@ -490,6 +506,9 @@ export class BaseCreator extends BaseTreeNode {
         // 设置翻转
         shape.isFlippedVertical = this.transform.isFlipV
         shape.isFlippedHorizontal = this.transform.isFlipH
+
+        // 设置transform矩阵
+        shape.__transform = this.transform.clone()
     }
 
     updateShapeStyle() { // 设置shape的样式
