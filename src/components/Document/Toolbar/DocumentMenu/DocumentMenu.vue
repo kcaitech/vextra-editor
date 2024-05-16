@@ -89,6 +89,11 @@ function rename() {
     popoverVisible.value = false;
 }
 
+const exportClick = () => {
+    props.context.menu.setExportDialog(true);
+    popoverVisible.value = false;
+}
+
 function close() {
     childMenuVisible.value = false;
     popoverVisible.value = false;
@@ -136,6 +141,7 @@ const isDisabled: any = computed(() => {
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
             <span @click="copiedFile" :class="{ 'disabled': without_editing_permissions }">{{t('fileMenu.create_copy') }}</span>
             <span @click="rename" :class="{ 'disabled': without_editing_permissions }">{{ t('fileMenu.rename') }}</span>
+            <span @click.stop="exportClick" >{{ t('cutoutExport.export_cutout') }}</span>
             <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
                 {{ t('fileMenu.view') }}
                 <div class="childMenu">

@@ -10,7 +10,9 @@ export const cutoutExport: any = {
     preview: '预览',
     defaule: '默认',
     ios_presets: 'iOS预设',
-    android_presets:'Android预设'
+    android_presets:'Android预设',
+    export_cutout: '导出切图',
+    repeat: '与其他切图重名'
 }
 
 
