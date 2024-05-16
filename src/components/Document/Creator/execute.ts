@@ -9,7 +9,7 @@ import {
     FillType,
     GeneratorParams,
     GroupShapeView,
-    Matrix,
+    Matrix, PathShapeView,
     ShapeFrame,
     ShapeType,
     ShapeView
@@ -17,6 +17,8 @@ import {
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
 import { collect } from "@/utils/artboardFn";
+import { round2half } from "@/transform/line";
+import { getHorizontalAngle } from "@/utils/common";
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
@@ -36,6 +38,9 @@ export class CreatorExecute extends TransformHandler {
     private frame: ShapeFrame = new ShapeFrame(0, 0, 100, 100);
 
     private shape: ShapeView | undefined;
+
+    readonly shapeType: ShapeType;
+    private namePrefix: string | undefined;
 
     constructor(context: Context, event: MouseEvent) {
         super(context, event);
@@ -61,6 +66,8 @@ export class CreatorExecute extends TransformHandler {
         this.downEnv = context.selection.getClosestContainer(fixed); // 确认落点环境
 
         this.action = context.tool.action; // 记录点击时的动作类型，避免中途切换动作类型造成的影响
+
+        this.shapeType = ResultByAction(this.action) || ShapeType.Rectangle;
     }
 
     createApiCaller() {
@@ -77,12 +84,12 @@ export class CreatorExecute extends TransformHandler {
         this.fixLivingPointByWheel(e);
 
         // 2. 动态辅助修正
-        const at = this.context.assist;
-        const assist = at.alignXY(this.livingPoint);
-        if (assist) {
-            this.updateHorFixedStatus(this.livingPoint.x, assist);
-            this.updateVerFixedStatus(this.livingPoint.y, assist);
-        }
+        // const at = this.context.assist;
+        // const assist = at.alignXY(this.livingPoint);
+        // if (assist) {
+        //     this.updateHorFixedStatus(this.livingPoint.x, assist);
+        //     this.updateVerFixedStatus(this.livingPoint.y, assist);
+        // }
 
         // 3. 键盘事件修正Shift、Alt
         this.__modifyFrame();
@@ -223,66 +230,139 @@ export class CreatorExecute extends TransformHandler {
     private __modifyFrame() {
         const action = this.action;
         if (action === Action.AddArrow || action === Action.AddLine) {
-            this.__extendForLine();
+            this.__extendLine();
         } else {
             this.__extendFrame();
         }
     }
 
-    private __extendForLine() {
-        const frame = this.frame;
-        const fixedPoint = { ...this.fixedPoint };
-        const livingPoint = { ...this.livingPoint };
+    private __extendLine() {
+        const type = this.shapeType;
 
-        if (this.altStatus) {
-            // todo
-        }
+        if (!this.shape) {
+            const frame = this.frame;
+            const fixedPoint = { ...this.fixedPoint };
 
-        if (this.shiftStatus) {
-            // todo
-        }
+            frame.x = fixedPoint.x;
+            frame.y = fixedPoint.y;
 
+            frame.width = 1;
+            frame.height = 1;
 
-        frame.width = 1;
-        frame.height = 1;
-        
-        const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3(frame);
-        frame.x = xy.x;
-        frame.y = xy.y;
+            const m = new Matrix(this.downEnv.matrix2Root().inverse);
+            const xy = m.computeCoord3(frame);
+            frame.x = xy.x;
+            frame.y = xy.y;
 
-        const transform = this.getTransform();
+            const transform = this.getTransform();
 
-        const type = ResultByAction(this.action);
-        if (!type) {
-            return;
-        }
-        const namePrefix = this.workspace.t(`shape.${type}`);
+            if (!this.namePrefix) {
+                this.namePrefix = this.workspace.t(`shape.${type}`);
+            }
+            const namePrefix = this.namePrefix!;
 
-        const params: GeneratorParams = {
-            parent: this.downEnv as GroupShapeView,
-            frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
-            type,
-            transform,
-            namePrefix,
-            isFixedRatio: false,
-            shape: this.shape
-        };
+            const params: GeneratorParams = {
+                parent: this.downEnv as GroupShapeView,
+                frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
+                type,
+                transform,
+                namePrefix,
+                isFixedRatio: false,
+                shape: this.shape
+            };
 
-        const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
+            const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 
-        if (shape && !this.shape) {
+            if (!shape) {
+                return;
+            }
+
             const selection = this.context.selection;
-            this.context.nextTick(
-                selection.selectedPage!,
-                () => {
+            this.context.nextTick(selection.selectedPage!, () => {
                     this.shape = selection.selectedPage!.getShape(shape.id);
-                    if (this.shape) {
-                        this.context.assist.set_trans_target([(this.shape)]);
-                        selection.selectShape(this.shape);
+                    if (!this.shape) {
+                        return;
                     }
+                    this.context.assist.set_trans_target([(this.shape)]);
+                    selection.selectShape(this.shape);
                 }
             );
+        } else {
+            const _start = { x: this.fixedPoint.x, y: this.fixedPoint.y + 0.5 };
+
+            let m = new Matrix(this.shape.matrix2Root());
+            m.preScale(this.frame.width, this.frame.height); // 可有可无
+
+            m = new Matrix(m.inverse);
+
+            const living = { ...this.livingPoint };
+            if (this.alignPixel) {
+                living.x = round2half(living.x);
+                living.y = round2half(living.y);
+            }
+
+            const start = m.computeCoord3(_start);
+            const end = m.computeCoord3(living);
+
+            if (this.shiftStatus) {
+                const angle = getHorizontalAngle(_start, living);
+                if (angle >= 0 && angle < 22.5) {
+                    end.y = start.y;
+                } else if (angle >= 22.5 && angle < 67.5) {
+                    const a = angle / 180;
+                    const __m = new Matrix();
+                    __m.rotate((0.25 - a) * Math.PI, start.x, start.y);
+                    const __end = __m.computeCoord3(end);
+
+                    end.x = __end.x;
+                    end.y = __end.y;
+                } else if (angle >= 67.5 && angle < 112.5) {
+                    end.x = start.x;
+                } else if (angle >= 112.5 && angle < 157.5) {
+                    const a = angle / 180;
+                    const __m = new Matrix();
+                    __m.rotate((0.75 - a) * Math.PI, start.x, start.y);
+                    const __end = __m.computeCoord3(end);
+
+                    end.x = __end.x;
+                    end.y = __end.y;
+                } else if (angle >= 157.5 && angle < 202.5) {
+                    end.y = start.y;
+                } else if (angle >= 202.5 && angle < 247.5) {
+                    const a = angle / 180;
+                    const __m = new Matrix();
+                    __m.rotate((1.25 - a) * Math.PI, start.x, start.y);
+                    const __end = __m.computeCoord3(end);
+
+                    end.x = __end.x;
+                    end.y = __end.y;
+                } else if (angle >= 247.5 && angle < 292.5) {
+                    const a = angle / 180;
+                    const __m = new Matrix();
+                    __m.rotate((1.5 - a) * Math.PI, start.x, start.y);
+                    const __end = __m.computeCoord3(end);
+
+                    end.x = __end.x;
+                    end.y = __end.y;
+                } else if (angle >= 292.5 && angle < 337.5) {
+                    const a = angle / 180;
+                    const __m = new Matrix();
+                    __m.rotate((1.75 - a) * Math.PI, start.x, start.y);
+                    const __end = __m.computeCoord3(end);
+
+                    end.x = __end.x;
+                    end.y = __end.y;
+                } else {
+                    end.y = start.y;
+                }
+            }
+
+            if (this.altStatus) {
+                start.x = 2 * start.x - end.x;
+                start.y = 2 * start.y - end.y;
+            }
+
+            (this.asyncApiCaller as CreatorApiCaller).extendLine(start, end);
         }
     }
 
