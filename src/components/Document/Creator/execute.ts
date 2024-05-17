@@ -3,7 +3,9 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action, ResultByAction } from "@/context/tool";
 import {
-    Color, ContactForm, ContactLineView,
+    Color,
+    ContactForm,
+    ContactLineView,
     CreatorApiCaller,
     Fill,
     FillType,
@@ -625,6 +627,8 @@ export class CreatorExecute extends TransformHandler {
     }
 
     private createImmediate() {
+        const action = this.action;
+
         this.createApiCaller();
 
         const frame = this.frame;
@@ -636,7 +640,7 @@ export class CreatorExecute extends TransformHandler {
 
         this.fixedByUserConfig();
 
-        const type = ResultByAction(this.action);
+        const type = ResultByAction(action);
 
         if (!type) {
             return;
@@ -684,14 +688,18 @@ export class CreatorExecute extends TransformHandler {
 
     fulfil() {
         const context = this.context;
-
+        const action = this.action;
         if (this.isCustomFrame) {
             // 自定义frame
         } else {
             // 点击建图
+            if (action === Action.AddLine || action === Action.AddArrow) {
+                super.fulfil();
+                return;
+            }
+
             this.createImmediate();
         }
-        const action = this.action;
 
         if (action === Action.AddText) {
             context.selection.setSelectionNewShapeStatus(true);
