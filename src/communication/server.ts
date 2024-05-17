@@ -87,8 +87,16 @@ export class Server {
             token: this.token,
         }))
         if (!await new Promise(resolve => {
+            let expired = false;
+            const timeoutid = setTimeout(() => {
+                expired = true;
+                console.log("init timeout")
+                resolve(false)
+            }, 3000)
             this.ws!.onmessage = (event: MessageEvent) => {
                 try {
+                    if (expired) return;
+                    clearTimeout(timeoutid);
                     const data = JSON.parse(event.data)
                     if (data.cmd_type !== ServerCmdType.InitResult
                         || typeof data.cmd_id !== "string" || data.cmd_id === ""
@@ -105,10 +113,6 @@ export class Server {
                     resolve(false)
                 }
             }
-            setTimeout(() => {
-                console.log("init timeout")
-                resolve(false)
-            }, 3000)
         })) {
             this.ws = undefined
             resolve(false)
