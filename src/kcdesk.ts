@@ -40,8 +40,8 @@ class KcDeskContext {
     _api: Api4App;
     _querys: { [key: string]: any };
     _routeacept: (rout: { path: string; query: { [key: string]: any; }; }) => void;
-    _logined: boolean;
-
+    // _logined: boolean;
+    _viewid: number;
 
     constructor(api: Api4App) {
         this._api = api;
@@ -70,15 +70,18 @@ class KcDeskContext {
         }
         this._api.setRouterAcceptor(this._routeacept);
 
-        this._logined = localStorage.getItem('token') !== undefined;
-        if (this._logined) this._api.setLogined(this._logined);
+        this._viewid = this._querys['viewid'] ? parseInt(this._querys['viewid']) : -1;
+        let _logined = !!localStorage.getItem('token');
+        if (_logined && this.getViewId() === 0) {
+            this._api.setLogined(_logined);
+        }
     }
     osOpenFile(localfile: string): Promise<File | undefined> {
         return this._api.osOpenFile(localfile);
     }
 
     getViewId(): number {
-        return this._querys['viewid'] || -1;
+        return this._viewid;
     }
     fileCloseSelf(): void {
         const viewid = this._querys['viewid'] || -1;
@@ -111,10 +114,10 @@ class KcDeskContext {
     }
 
     setLogined(isLogined: boolean): void {
-        if (this._logined !== isLogined) {
-            this._api.setLogined(isLogined);
-            this._logined = isLogined;
-        }
+        // if (this._logined !== isLogined) {
+        if (this.getViewId() === 0) this._api.setLogined(isLogined);
+        // this._logined = isLogined;
+        // }
     }
 
     // 其它本地数据
