@@ -129,7 +129,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: { name: navigator.userAgent.includes('miniProgram') ? 'Wxlogin' : 'login' },
+        redirect:'login',
         children: [
             {
                 path: "introduction",
@@ -246,7 +246,7 @@ const routes = [
                 component: HomePage,
                 meta: {
                     requireAuth: true,
-                    title: '首页'
+                    // title: '首页'
                 }
             },
             {
@@ -255,7 +255,7 @@ const routes = [
                 component: MyFile,
                 meta: {
                     requireAuth: true,
-                    title: '我的文件'
+                    // title: '我的文件'
                 }
             },
             {
@@ -264,7 +264,7 @@ const routes = [
                 component: MyTeam,
                 meta: {
                     requireAuth: true,
-                    title: '团队'
+                    // title: '团队'
                 }
             },
             {
@@ -273,7 +273,7 @@ const routes = [
                 component: About,
                 meta: {
                     requireAuth: true,
-                    title: '我的'
+                    // title: '我的'
                 }
             },
 
@@ -376,7 +376,8 @@ const routes = [
         component: Apply,
         meta: {
             requireAuth: true,
-            group: Group.Home
+            group: Group.Home,
+            title: '文档权限申请'
         }
     },
     {

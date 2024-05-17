@@ -68,15 +68,31 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
 )
 
 const openfile = (id: string) => {
-    router.push(({ name: 'pageviews', query: { id: id } }))
     const index = filteredList.value.findIndex(item => item.document.id === id)
     sessionStorage.setItem('scrollTop', index.toString())
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index2/index?doc_id=${id}`,
+        });
+    } else {
+        router.push(({ name: 'pageviews', query: { id: id } }))
+    }
 }
 
-const shareTo = async (id: string) => {
-    await router.push({ name: 'share', query: { id: id } })
+const shareTo = (id: string) => {
     const index = filteredList.value.findIndex(item => item.document.id === id)
     sessionStorage.setItem('scrollTop', index.toString())
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index1/index?go=share&id=${id}`,
+        });
+    } else {
+        router.push({ name: 'share', query: { id: id } })
+    }
 }
 
 const emits = defineEmits<{

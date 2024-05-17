@@ -1,6 +1,7 @@
 import { WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { v4 } from "uuid";
+import { set } from "lodash";
 export enum CellMenu {
   MultiSelect = 'multiCells', //多选单元格时
   SelectRow = 'row', //选中整行单元格
@@ -25,6 +26,7 @@ export class Menu extends WatchableObject {
   static OPEN_SHORTCUTS = 14;
   static WRITE_MEDIA = 15;
   static UPDATE_LOCATE = 16;
+  static EXPORT_DIALOG = 17;
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
@@ -35,6 +37,7 @@ export class Menu extends WatchableObject {
   private m_mulriple_i: number = 1
   private m_lable_menu_mounted: string = '';
   private m_cell_menu_type: CellMenu | undefined;
+  private m_export_dialog: boolean = false;
   constructor(context: Context) {
     super();
     this.m_context = context;
@@ -114,5 +117,14 @@ export class Menu extends WatchableObject {
   }
   setCellMenuType(type: CellMenu | undefined) {
     this.m_cell_menu_type = type;
+  }
+
+  get isExportDialog() {
+    return this.m_export_dialog;
+  }
+
+  setExportDialog(visible: boolean) {
+    this.m_export_dialog = visible;
+    this.notify(Menu.EXPORT_DIALOG);
   }
 }

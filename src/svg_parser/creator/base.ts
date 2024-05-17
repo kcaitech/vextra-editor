@@ -604,5 +604,10 @@ export class SvgCreator extends BaseCreator {
         const svgShape = this.shape as Artboard
         const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
         svgShape.childs.push(...childrenShapes)
+
+        // 二级元素跟随一级容器缩放
+        childrenShapes.forEach(item => {
+            item.resizingConstraint = 0;
+        })
     }
 }

@@ -5,7 +5,7 @@ import isMobileDevice from "./mobileDeviceChecker";
 import kcdesk from "@/kcdesk";
 
 //守卫白名单
-const whiteList = ['/', '/login', '/wxlogin', '/404', '/privacypolicy', '/serviceagreement']
+const whiteList = ['/', '/login', '/wxlogin', '/404', '/privacy', '/agreements', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (to.meta.title) {
@@ -26,7 +26,7 @@ router.beforeEach((to, from, next) => {
     }
     //判断是否存在token且有效
     if (token) {
-        if (to.path === '/login' || to.path === '/wxlogin') {
+        if (to.path === '/login') {
             if (isMobileDevice()) {
                 next('/m')
             } else {

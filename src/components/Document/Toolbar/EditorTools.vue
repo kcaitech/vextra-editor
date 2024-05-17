@@ -22,6 +22,7 @@ import { ElMessage } from "element-plus";
 import ToolButton from "./ToolButton.vue";
 import * as share_api from '@/request/share'
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
+import Export from "./Buttons/Export.vue";
 
 const { t } = useI18n();
 
@@ -164,6 +165,7 @@ function applyForEdit() {
                 :is_lable="isLable" :edit="isEdit"></Cursor>
         <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
         </Comment>
+        <Export :context="context" @select="select" :active="selected === Action.Export"></Export>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
                   :selected="selected"></PathEditTool>

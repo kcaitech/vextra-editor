@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import Loading from '../common/Loading.vue';
 import Bus from '@/components/AppHome/bus';
+import Border from "@/components/Document/Attribute/Border/Border.vue";
 import kcdesk from '@/kcdesk';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
     title?: string | undefined
     switch?: boolean
 }
+
 const props = withDefaults(defineProps<Props>(), {
     switch: true
 })
@@ -157,6 +159,7 @@ function closeclick() {
     })
 
 }
+
 let timer1: any
 watch(search, () => {
     clearTimeout(timer1)
@@ -250,43 +253,41 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         <div v-if="props.switch" class="search">
             <el-input ref="inputRef" v-model="search" size="large" :placeholder="search ? `正在搜索
                 ${search}` : `${t('system.placeholder')}`" @focus="showSearchHistory = true" @input="screenout"
-                @blur="showSearchHistory = false">
+                      @blur="showSearchHistory = false">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading :size="18" :color="'#1878F5'" />
+                        <Loading :size="18" :color="'#1878F5'"/>
                     </el-icon>
                     <el-icon v-else size="18">
                         <svg-icon icon-class="search-icon"
-                            :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
+                                  :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>
                     <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
-                        <Close />
+                        <Close/>
                     </el-icon>
 
-                    
+
                 </template>
             </el-input>
         </div>
         <div class="content">
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
-                    @click="showinform(bell!, 320)">
+                     @click="showinform(bell!, 320)">
                     <svg-icon :icon-class="showInForm ? 'bell-select' : 'bell'"></svg-icon>
                     <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
                     </div>
                 </div>
             </div>
             <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 120)">
-                <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler" fit="cover" :size="32">
-                    <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-                </el-avatar>
-                <el-avatar v-else fit="cover" :size="32"> {{ userName?.slice(0, 1) }} </el-avatar>
+                <img v-if="circleUrl" :src="circleUrl" alt="Avatar">
+                <div v-else>{{ userName?.slice(0, 1) }}</div>
             </div>
         </div>
         <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
-            @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
+                @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
         <Teleport to="body">
             <div v-if="menuUser" class="userinfo" :style="{ top: rect_y + 'px', left: rect_x + 'px' }">
                 <div @click="userinfo">
@@ -385,7 +386,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 height: 20px;
             }
 
-            >.num {
+            > .num {
                 position: absolute;
                 font-size: 10px;
                 top: 0px;
@@ -413,10 +414,25 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         .avatar-area {
             display: flex;
             cursor: pointer;
+            width: 32px;
+            height: 32px;
+            background-color: var(--active-color);
+            border-radius: 50%;
+            overflow: hidden;
 
-            .el-avatar {
-                background: #0004ff !important;
-                overflow: hidden;
+            > img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+
+            }
+
+            > div {
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                line-height: 32px;
+                color: var(--theme-color-anti);
                 font-weight: 700;
             }
         }
@@ -446,7 +462,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             background-color: rgba(243, 243, 245, 1);
         }
 
-        svg{
+        svg {
             width: 16px;
             height: 16px;
         }

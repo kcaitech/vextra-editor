@@ -230,35 +230,37 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
     const imgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
     imageUrl = imgUrl;
     img.src = imgUrl;
-    if (ctx && trim) {
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
-          if (alpha > 0) {
-            top = Math.min(top, y);
-            bottom = Math.max(bottom, y);
-            left = Math.min(left, x);
-            right = Math.max(right, x);
+    img.onload = () => {
+      if (ctx && trim) {
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
+            if (alpha > 0) {
+              top = Math.min(top, y);
+              bottom = Math.max(bottom, y);
+              left = Math.min(left, x);
+              right = Math.max(right, x);
+            }
           }
         }
+        const { x, y } = cloneSvg.viewBox.baseVal
+        const w = (right - left);
+        const h = (bottom - top);
+        cloneSvg.setAttribute("width", `${w}`);
+        cloneSvg.setAttribute("height", `${h}`);
+        cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);
+        // 创建一个新Canvas元素，用于存储裁剪后的图像
+        const newSvgString = new XMLSerializer().serializeToString(cloneSvg);
+        const newImgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(newSvgString)));
+        imageUrl = newImgUrl;
       }
-      const { x, y } = cloneSvg.viewBox.baseVal
-      const w = (right - left) + 2;
-      const h = (bottom - top) + 2;
-      cloneSvg.setAttribute("width", `${w}`);
-      cloneSvg.setAttribute("height", `${h}`);
-      cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);
-      // 创建一个新Canvas元素，用于存储裁剪后的图像
-      const newSvgString = new XMLSerializer().serializeToString(cloneSvg);
-      const newImgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(newSvgString)));
-      imageUrl = newImgUrl;
+      svgImageUrls.set(id, imageUrl);
+      document.body.removeChild(cloneSvg);
+      resolve();
     }
-    svgImageUrls.set(id, imageUrl);
-    document.body.removeChild(cloneSvg);
-    resolve();
   })
 }

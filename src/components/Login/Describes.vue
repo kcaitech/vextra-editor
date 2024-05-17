@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import avatar from '@/assets/pd-logo-svg.svg';
+import avatar from '@/assets/login-img.png';
 
 const { t } = useI18n();
 
@@ -8,20 +8,20 @@ const { t } = useI18n();
 
 <template>
   <div class="logo">
-    <img src="@/assets/logo.svg" alt="logo">
+    <img src="@/assets/logo-img.png" alt="logo">
   </div>
 </template>
 
 <style lang="scss" scoped>
 .logo {
   position: relative;
-  top: -60px;
-  width: 793px;
-  height: 197px;
+  left: -5%;
+  overflow: hidden;
+  box-sizing: border-box;
 
   img {
-    width: 100%;
-    height: 100%;
+    width: 966px;
+    height: 614px;
   }
 }
 

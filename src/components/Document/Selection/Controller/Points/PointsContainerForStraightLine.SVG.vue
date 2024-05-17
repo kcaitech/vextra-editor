@@ -9,6 +9,8 @@ import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { get_direction } from '@/utils/controllerFn';
 import { get_rotate_for_straight } from '@/utils/attri_setting';
+import { dbl_action } from "@/utils/mouse_interactive";
+import { startEdit } from "@/transform/pathEdit";
 
 interface Props {
     matrix: number[]
@@ -75,6 +77,10 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     }
 
     event.stopPropagation();
+
+    if (dbl_action()) {
+        return startEdit(props.context);
+    }
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;

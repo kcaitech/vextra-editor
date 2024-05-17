@@ -20,6 +20,7 @@ export const useMessage = defineStore('message', () => {
         })
     })
 
+    //获取文件申请列表
     function getApplyFile() {
         share_api.getApplyListAPI().then(({ code, data }) => {
             if (code === 0) {
@@ -34,6 +35,7 @@ export const useMessage = defineStore('message', () => {
     }
 
 
+    //获取团队申请列表
     function getApplyTeam() {
         team_api.getTeamApplyAPI().then(({ code, data }) => {
             if (code === 0) {
@@ -46,6 +48,7 @@ export const useMessage = defineStore('message', () => {
         })
     }
 
+    //获取项目申请列表
     function getApplyProject() {
         team_api.getTeamProjectApplyAPI().then(({ code, data }) => {
             if (code === 0) {
@@ -58,6 +61,8 @@ export const useMessage = defineStore('message', () => {
         })
     }
 
+
+    //获取自身申请团队列表
     function getNoticeTeam() {
         team_api.getTeamNoticeAPI().then(({ code, data }) => {
             if (code === 0) {
@@ -68,6 +73,7 @@ export const useMessage = defineStore('message', () => {
         })
     }
 
+    //获取自身申请项目列表
     function getNoticeProject() {
         team_api.getProjectNoticeAPI().then(({ code, data }) => {
             if (code === 0) {
