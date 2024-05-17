@@ -237,7 +237,8 @@ function sizeTostr(size: any) {
 }
 
 //右键打开或双击打开
-const openDocument = (id: string) => {
+const openDocument = (id: string, name: string) => {
+    window.sessionStorage.setItem("open_document_name", name);
     router.push({
         name: 'document',
         query: {

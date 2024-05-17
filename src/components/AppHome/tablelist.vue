@@ -131,7 +131,7 @@ const rowHandleClick = ({
         if (props.projectshare) {
             emits('dbclickopen', rowData)
         } else {
-            emits('dbclickopen', rowData.document.id)
+            emits('dbclickopen', rowData.document.id, rowData.document.name)
         }
 
     },

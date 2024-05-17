@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import { User } from '@/context/user'
 import isMobileDevice from '@/utils/mobileDeviceChecker'
+import kcdesk from '@/kcdesk'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -30,6 +31,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
         if (linfo) {
             if (linfo.code === 0 && linfo.data.token !== '') {
+                kcdesk?.setLogined(true);
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
                 localStorage.setItem('nickname', linfo.data.nickname)
@@ -109,7 +111,7 @@ function clickaffirm() {
     user_api.PostLogin({ code: Wxcode.value, invite_code: codevalue.value, id: userid.value }).then((result: any) => {
         if (result) {
             if (result.code === 0 && result.data.token !== '') {
-
+                kcdesk?.setLogined(true);
                 localStorage.setItem('token', result.data.token)
                 localStorage.setItem('avatar', result.data.avatar)
                 localStorage.setItem('nickname', result.data.nickname)

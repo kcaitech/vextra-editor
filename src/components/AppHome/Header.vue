@@ -9,6 +9,7 @@ import { router } from '@/router'
 import Loading from '../common/Loading.vue';
 import Bus from '@/components/AppHome/bus';
 import Border from "@/components/Document/Attribute/Border/Border.vue";
+import kcdesk from '@/kcdesk';
 
 interface Props {
     items?: Array<object>,
@@ -182,6 +183,7 @@ function userinfo() {
 
 function loginout() {
     localStorage.clear()
+    kcdesk?.setLogined(false);
     router.push({ path: '/login' })
 }
 

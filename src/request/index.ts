@@ -2,6 +2,7 @@ import axios from 'axios'
 import { API_URL } from '@/settings';
 import { router } from '@/router'
 import { ElMessage } from 'element-plus'
+import kcdesk from '@/kcdesk';
 
 declare module "axios" {
     interface AxiosResponse<T = any> {
@@ -33,30 +34,31 @@ service.interceptors.request.use(function (config) {
 // 响应拦截器
 let timer: any
 service.interceptors.response.use(function (response) {
-    const dataAxios = response.data || {}
+    const dataAxios = response?.data || {}
     if (dataAxios.code === 0) {
         return Promise.resolve(dataAxios)
-    } else if (dataAxios && dataAxios.code && dataAxios.code === 400) {
+    } else if (dataAxios.code === 400) {
         return Promise.resolve(dataAxios)
-    } else if (dataAxios && dataAxios.code && dataAxios.code === -1) {
+    } else if (dataAxios.code === -1) {
         return Promise.resolve(dataAxios)
-    }else if (dataAxios && dataAxios.code && dataAxios.code === 403) {
+    } else if (dataAxios.code === 403) {
         return Promise.resolve(dataAxios)
-    }  else {
-        if (dataAxios && dataAxios.code && dataAxios.code === 401) {
+    } else {
+        if (dataAxios.code === 401) {
             if (timer) {
                 clearTimeout(timer)
             }
             timer = setTimeout(() => {
-                ElMessage({ duration: 3000, message: '登录失效，请重新登录', type: 'info' })
-                clearTimeout(timer)
+                ElMessage({ duration: 3000, message: '登录失效，请重新登录', type: 'info' }) // todo i18n
+                timer = undefined;
             }, 500);
-            if(navigator.userAgent.includes('miniProgram')){
+            if (navigator.userAgent.includes('miniProgram')) {
                 router.push('/wxlogin')
-            }else{
+            } else {
                 router.push('/login')
             }
             localStorage.removeItem('token')
+            kcdesk?.setLogined(false);
         }
         return Promise.reject(response)
     }

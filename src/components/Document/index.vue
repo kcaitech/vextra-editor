@@ -44,8 +44,9 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
-import VersionDesc from "@/components/common/VersionDesc.vue";
 import { PROJECT_NAME } from "@/const";
+import kcdesk from '@/kcdesk';
+import { newFile2, openFile3 } from '@/utils/neworopen';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -77,7 +78,8 @@ const inited = ref(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 
-function screenSetting() {
+function switchFullScreen() {
+    if (kcdesk) return;
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
     if (isFullScreen === null) {
@@ -390,6 +392,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
+            kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
@@ -533,6 +536,25 @@ function init_doc() {
         upload(project_id);
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+    } else if (kcdesk && route.query.from === 'kcdesk') {
+        if (route.query.newfile) {
+            // 新建
+            newFile2();
+            init_doc();
+        } else if (route.query.localfile) {
+            // 打开本地文档
+            kcdesk.osOpenFile(route.query.localfile as string).then(file => {
+                if (file) {
+                    openFile3(file).then(() => {
+                        init_doc();
+                    }).catch(e => {
+                        console.error(e);
+                    })
+                } else {
+                    // ??
+                }
+            });
+        }
     } else {
         router.push('/files');
     }
@@ -719,6 +741,7 @@ const stop = watch(() => null_context.value, (v) => {
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - 墨师设计` : `${file_name} - 墨师设计`;
+            kcdesk?.fileSetName(file_name);
             clearTimeout(timer);
         }, 500)
     }
@@ -764,7 +787,7 @@ onUnmounted(() => {
 <template>
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
-        <div id="top" @dblclick="screenSetting" v-if="showTop">
+        <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
         <div id="visit">
