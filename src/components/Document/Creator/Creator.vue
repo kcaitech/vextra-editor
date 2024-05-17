@@ -187,7 +187,12 @@ const addComment = (e: MouseEvent) => {
     posi.value.x = x // 评论弹出框的位置坐标
     posi.value.y = y
     commentInput.value = true;
-    document.addEventListener('keydown', commentEsc);
+
+    props.context.esctask.save('comment-input-visible', () => {
+        const achieve = commentInput.value;
+        commentInput.value = false;
+        return achieve;
+    })
 }
 
 const getCommentInputXY = (e: MouseEvent) => {
@@ -196,12 +201,6 @@ const getCommentInputXY = (e: MouseEvent) => {
     commentPosition.y = xy.y;
     posi.value.x = x
     posi.value.y = y
-}
-const commentEsc = (e: KeyboardEvent) => {
-    if (e.code === 'Escape') {
-        document.removeEventListener('keydown', commentEsc);
-        commentInput.value = false;
-    }
 }
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
