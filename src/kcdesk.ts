@@ -3,6 +3,8 @@ import { router } from './router';
 
 // 要与kcdesktop同步
 interface Api4App {
+    // desk version
+    deskVersion(): number;
     // os
     osOpenFile(localfile: string): Promise<File | undefined>;
 
