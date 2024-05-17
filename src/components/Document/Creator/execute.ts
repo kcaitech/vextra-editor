@@ -3,7 +3,7 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action, ResultByAction } from "@/context/tool";
 import {
-    Color,
+    Color, ContactForm, ContactLineView,
     CreatorApiCaller,
     Fill,
     FillType,
@@ -19,6 +19,8 @@ import { v4 } from "uuid";
 import { collect } from "@/utils/artboardFn";
 import { round2half } from "@/transform/line";
 import { getHorizontalAngle } from "@/utils/common";
+import { get_contact_environment } from "@/utils/contact";
+import { debounce } from "lodash";
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
@@ -238,8 +240,95 @@ export class CreatorExecute extends TransformHandler {
         }
     }
 
-    private __searchContact() {
+    initContact(apex?: ContactForm) {
+        const frame = this.frame;
+        const fixedPoint = { ...this.fixedPoint };
 
+        frame.x = fixedPoint.x;
+        frame.y = fixedPoint.y;
+
+        const m = new Matrix(this.downEnv.matrix2Root().inverse);
+        const xy = m.computeCoord3(frame);
+        frame.x = xy.x;
+        frame.y = xy.y;
+
+        frame.width = 1;
+        frame.height = 1;
+
+        const transform = this.getTransform();
+        const namePrefix = this.workspace.t(`shape.${ShapeType.Contact}`);
+
+        const params: GeneratorParams = {
+            parent: this.downEnv as GroupShapeView,
+            frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
+            type: ShapeType.Contact,
+            transform,
+            namePrefix,
+            isFixedRatio: this.shiftStatus,
+            shape: this.shape
+        };
+
+        params.apex = apex;
+
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
+
+        const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
+
+        if (shape) {
+            const selection = this.context.selection;
+            this.context.nextTick(
+                selection.selectedPage!,
+                () => {
+                    this.shape = selection.selectedPage!.getShape(shape.id);
+                    if (!this.shape) {
+                        return;
+                    }
+                    this.context.assist.set_trans_target([(this.shape)]);
+                    selection.selectShape(this.shape);
+                }
+            );
+        }
+
+    }
+
+    contactTo(to: ContactForm, point: XY) {
+        if (!(this.shape instanceof ContactLineView)) {
+            return;
+        }
+
+        let m = this.shape.matrix2Root();
+        m.preScale(1, 1);
+        m = new Matrix(m.inverse);
+
+        (this.asyncApiCaller as CreatorApiCaller).contactTo(m.computeCoord3(this.livingPoint), to);
+    }
+
+    private __migrate(targetEnv: GroupShapeView) {
+        (this.asyncApiCaller as CreatorApiCaller).migrate(targetEnv)
+    }
+
+    private migrate = debounce(this.__migrate, 200);
+
+    private __searchContact() {
+        if (!(this.shape instanceof ContactLineView)) {
+            return;
+        }
+
+        let m = this.shape.matrix2Root();
+        m.preScale(1, 1);
+        m = new Matrix(m.inverse);
+
+        (this.asyncApiCaller as CreatorApiCaller).contactTo(m.computeCoord3(this.livingPoint));
+
+        const points = this.shape.getPoints();
+
+        const environment = get_contact_environment(this.context, this.shape, points)!;
+
+        if (this.shape.parent?.id !== environment.id) {
+            this.migrate(environment as GroupShapeView);
+        }
     }
 
     private __extendLine() {
@@ -598,10 +687,8 @@ export class CreatorExecute extends TransformHandler {
 
         if (this.isCustomFrame) {
             // 自定义frame
-            console.log('自定义frame');
         } else {
             // 点击建图
-            console.log('将点击创建图层');
             this.createImmediate();
         }
         const action = this.action;
