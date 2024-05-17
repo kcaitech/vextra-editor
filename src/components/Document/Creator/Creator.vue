@@ -140,7 +140,6 @@ function up(e: MouseEvent) {
 
     creatorHdl?.fulfil();
     creatorHdl = undefined;
-
     just_search = false;
 }
 

@@ -473,14 +473,6 @@ export class CreatorExecute extends TransformHandler {
         const fixedPoint = { ...this.fixedPoint };
         const livingPoint = { ...this.livingPoint };
 
-        if (this.altStatus) {
-            const __x = livingPoint.x - fixedPoint.x;
-            const __y = livingPoint.y - fixedPoint.y;
-
-            fixedPoint.x = fixedPoint.x - __x;
-            fixedPoint.y = fixedPoint.y - __y;
-        }
-
         if (this.shiftStatus) {
             const h = Math.abs(livingPoint.y - fixedPoint.y);
             const w = Math.abs(livingPoint.x - fixedPoint.x);
@@ -492,8 +484,17 @@ export class CreatorExecute extends TransformHandler {
             }
         }
 
-        const cx = fixedPoint.x < livingPoint.x;
+        if (this.altStatus) {
+            const __x = livingPoint.x - fixedPoint.x;
+            const __y = livingPoint.y - fixedPoint.y;
+
+            fixedPoint.x = fixedPoint.x - __x;
+            fixedPoint.y = fixedPoint.y - __y;
+        }
+
+        const cx = fixedPoint.x < livingPoint.x; // 是否为往右拓展
         const cy = fixedPoint.y < livingPoint.y;
+
         const left = cx ? fixedPoint.x : livingPoint.x;
         const right = cx ? livingPoint.x : fixedPoint.x;
         const top = cy ? fixedPoint.y : livingPoint.y;
@@ -506,12 +507,29 @@ export class CreatorExecute extends TransformHandler {
 
         this.fixedByUserConfig();
 
-        const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3(frame);
-        frame.x = xy.x;
-        frame.y = xy.y;
-
         const transform = this.getTransform();
+
+        if (transform.rotation || transform.flipV || transform.flipH) {
+            const target = this.downEnv.matrix2Root().inverseCoord(frame);
+            
+            const m = new Matrix();
+            const cx = frame.width / 2;
+            const cy = frame.height / 2;
+            m.trans(-cx, -cy);
+            if (transform.rotation) m.rotate(transform.rotation / 360 * 2 * Math.PI);
+            if (transform.flipH) m.flipHoriz();
+            if (transform.flipV) m.flipVert();
+            m.trans(cx, cy);
+            m.trans(frame.x, frame.y);
+
+            const current = m.computeCoord2(0, 0);
+            frame.x += (target.x - current.x);
+            frame.y += (target.y - current.y);
+        } else {
+            const target = this.downEnv.matrix2Root().inverseCoord(frame);
+            frame.x = target.x;
+            frame.y = target.y;
+        }
 
         const type = ResultByAction(this.action);
 
