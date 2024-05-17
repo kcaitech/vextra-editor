@@ -2,15 +2,7 @@
 import { Context } from '@/context';
 import { ClientXY, PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
-import {
-    adapt2Shape,
-    AsyncCreator,
-    ContactForm,
-    CurvePoint,
-    GroupShape,
-    PageView,
-    ShapeView
-} from '@kcdesign/data';
+import { ContactForm, CurvePoint } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from '../Content/CommentInput.vue';
@@ -18,7 +10,6 @@ import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
-import { debounce } from 'lodash';
 import { PathEditor } from "@/transform/pathEdit";
 import { PathShapeView } from "@kcdesign/data";
 import { CreatorExecute } from "./execute";
@@ -65,31 +56,32 @@ function down(e: MouseEvent) {
         pathEditor.createApiCaller(-1, -1, true);
 
         const vec = pathEditor.createVec();
-        if (vec) {
-            const page = props.context.selection.selectedPage!;
-            props.context.nextTick(page, () => {
-                const _vec = page.getShape(vec.id);
-                if (!_vec) {
-                    return;
-                }
-
-                props.context.selection.selectShape(_vec);
-
-                props.context.workspace.setPathEditMode(true);
-
-                const path = props.context.path;
-
-                path.setContactStatus(true);
-                path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
-
-                const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
-                if (point) {
-                    path.setLastPoint({ point, segment: 0, index: 0 });
-                }
-
-                mode.value = 'normal';
-            });
+        if (!vec) {
+            return;
         }
+        const page = props.context.selection.selectedPage!;
+        props.context.nextTick(page, () => {
+            const _vec = page.getShape(vec.id);
+            if (!_vec) {
+                return;
+            }
+
+            props.context.selection.selectShape(_vec);
+
+            props.context.workspace.setPathEditMode(true);
+
+            const path = props.context.path;
+
+            path.setContactStatus(true);
+            path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+
+            const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
+            if (point) {
+                path.setLastPoint({ point, segment: 0, index: 0 });
+            }
+
+            mode.value = 'normal';
+        });
         return;
     }
 
@@ -269,10 +261,6 @@ function contact_init(e: MouseEvent, apex?: ContactForm) {
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
 }
-
-const m = debounce((ac: AsyncCreator, environment: ShapeView | PageView) => {
-    ac.migrate(adapt2Shape(environment) as GroupShape);
-}, 200);
 
 // #endregion
 function e_contact_to(apex: ContactForm, p2: PageXY) {
