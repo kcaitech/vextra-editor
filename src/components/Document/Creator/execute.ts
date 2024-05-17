@@ -88,12 +88,18 @@ export class CreatorExecute extends TransformHandler {
         this.fixLivingPointByWheel(e);
 
         // 2. 动态辅助修正
-        // const at = this.context.assist;
-        // const assist = at.alignXY(this.livingPoint);
-        // if (assist) {
-        //     this.updateHorFixedStatus(this.livingPoint.x, assist);
-        //     this.updateVerFixedStatus(this.livingPoint.y, assist);
-        // }
+        const at = this.context.assist;
+        const assist = at.alignXY(this.livingPoint);
+        if (assist) {
+            this.updateHorFixedStatus(this.livingPoint.x, assist);
+            this.updateVerFixedStatus(this.livingPoint.y, assist);
+        }
+        if (this.horFixedStatus) {
+            this.livingPoint.x = this.horFixedValue;
+        }
+        if (this.verFixedStatus) {
+            this.livingPoint.y = this.verFixedValue;
+        }
 
         // 3. 键盘事件修正Shift、Alt
         this.__modifyFrame();
@@ -511,7 +517,7 @@ export class CreatorExecute extends TransformHandler {
 
         if (transform.rotation || transform.flipV || transform.flipH) {
             const target = this.downEnv.matrix2Root().inverseCoord(frame);
-            
+
             const m = new Matrix();
             const cx = frame.width / 2;
             const cy = frame.height / 2;
