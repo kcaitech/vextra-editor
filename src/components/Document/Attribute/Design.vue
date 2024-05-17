@@ -313,9 +313,8 @@ onUnmounted(() => {
 <template>
     <section id="Design">
         <el-scrollbar height="100%">
-            <div v-if="!shapes.length">
-                <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                                :page="props.context.selection.selectedPage"></PageBackgorund>
+            <div v-if="!shapes.length && props.context.selection.selectedPage">
+                <PageBackgorund :context="props.context" :page="props.context.selection.selectedPage"></PageBackgorund>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-if="shapes.length" class="attr-wrapper">

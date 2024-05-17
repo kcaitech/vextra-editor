@@ -6,7 +6,7 @@ import { Context } from "@/context";
 import {
     CoopRepository,
     Document,
-    importDocument,
+    importRemote,
     IStorage, Matrix,
     Page,
     PageListItem,
@@ -146,7 +146,7 @@ const getUserInfo = async () => {
 
 let arr = ref<Array<SelectSource>>([])
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importDocument>>['loader'] | undefined = undefined;
+let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined; // eslint-disable-line
 
 const getDocumentInfo = async () => {
     try {
@@ -216,7 +216,7 @@ const getDocumentInfo = async () => {
         }
         const path = docInfo.value.document.path;
         const versionId = docInfo.value.document.version_id ?? "";
-        const d = await importDocument(storage, path, "", versionId, repo)
+        const d = await importRemote(storage, path, "", versionId, repo)
         const document = d.document;
         documentLoader = d.loader;
         if (document) {
@@ -496,9 +496,10 @@ watch(fileName, (NewNanme) => {
     if (NewNanme) {
         miniprogram = navigator.userAgent.includes('miniProgram')
         if (miniprogram) {
-            (window as any).uni.postMessage({
+            (window as any).wx.miniProgram.postMessage({
                 data: {
                     name: NewNanme,
+                    id:docInfo.value.document.id
                 }
             });
         }
@@ -518,8 +519,6 @@ onMounted(() => {
     })
 })
 onUnmounted(() => {
-    console.log(route);
-
     closeNetMsg();
     onUnloadForCommunication();
     context?.selection.unwatch(selectionWatcher);
@@ -713,7 +712,7 @@ onUnmounted(() => {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" />
+                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" :cutout="false" />
         </div>
     </div>
 </template>

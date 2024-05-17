@@ -1,8 +1,11 @@
 <template>
     <div class="failed">
-        <button v-if="loginFailed" @click="againLogin">重新登录</button>
+        <button v-if="loginFailed" @click="againLogin">重新加载</button>
+        <div v-else class="container">
+            <div class="loading"></div>
+            <div class="content">正在加载</div>
+        </div>
     </div>
-
 </template>
 
 <script setup lang="ts">
@@ -22,70 +25,49 @@ const againLogin = () => {
     let miniprogram: any;
     miniprogram = navigator.userAgent.includes('miniProgram')
     if (miniprogram) {
-        (window as any).uni.redirectTo({
-            url: '/pages/index/index',
-        });
-        (window as any).uni.postMessage({
+        (window as any).wx.miniProgram.postMessage({
             data: {
-                login: 'false',
+                login: false,
             }
         });
+        (window as any).wx.miniProgram.redirectTo({
+            url: '/pages/index/index',
+        });
+
     }
 }
 
 async function Login() {
-    user_api.PostWxLogin({ code: route.query.code }).then((linfo: any) => {
+    await user_api.PostWxLogin({ code: route.query.code }).then((linfo: any) => {
         if (linfo) {
+            console.log(linfo);
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
-                const perRoute = localStorage.getItem('perRoute') || ''
-                if (perRoute) {
-                    if (perRoute.includes('?')) {
-                        const params = new URLSearchParams(perRoute.split('?')[1]);
-                        const path = perRoute.split('?')[0].replace('/', '');
-                        if (params.get('id') != null) {
-                            const id = params.get('id');
-                            const page_id = params.get('page_id');
-                            const query = params.get('page_id') ? { id, page_id } : { id };
-                            router.push({
-                                name: path,
-                                query
-                            })
+                let miniprogram: any;
+                miniprogram = navigator.userAgent.includes('miniProgram')
+                if (miniprogram) {
+                    (window as any).wx.miniProgram.redirectTo({
+                        url: '/pages/index1/index',
+                    });
+                    (window as any).wx.miniProgram.postMessage({
+                        data: {
+                            login: true,
                         }
-                        if (params.get('teamid') != null) {
-                            const key = params.get('key')
-                            const id = params.get('teamid')
-                            router.push({
-                                name: path,
-                                query: {
-                                    key: key,
-                                    teamid: id
-                                }
-                            })
-                        }
-                    } else {
-                        router.push({ path: perRoute })
-                    }
-                    localStorage.removeItem('perRoute')
-                }
-                else {
-                    router.push({ name: 'mobilehome' })
+                    })
                 }
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
-
+                loginFailed.value = true
             } else if (linfo.code === -1) {
                 ElMessage.error({ duration: 1500, message: '服务异常，请稍后再试' })
                 loginFailed.value = true
             }
         }
     }).catch((linfo: any) => {
-        if (linfo.data.code === -1) {
-            ElMessage.error(linfo.data.message)
-        }
+        alert(linfo)
         loginFailed.value = true
     })
 }
@@ -109,6 +91,42 @@ onMounted(() => {
         color: white;
         font-size: 13px;
         background-color: rgba(24, 120, 245, 1);
+    }
+}
+
+.container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading {
+    border: 2px solid transparent;
+    border-top: 2px solid blue;
+    border-left: 2px solid blue;
+    border-bottom: 2px solid blue;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    color: #000;
+    animation: spin 1s linear infinite;
+}
+
+.content {
+    margin-left: 8px;
+    font-size: 14px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
     }
 }
 </style>

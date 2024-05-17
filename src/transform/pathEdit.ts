@@ -16,7 +16,7 @@ import {
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
 import { Assist } from "@/context/assist";
-import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
+import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
 

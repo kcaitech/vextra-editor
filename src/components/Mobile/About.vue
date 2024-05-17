@@ -46,7 +46,15 @@ const data = ref([
 ])
 
 const goto = (name: string) => {
-    router.push({ name: name })
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index1/index?go=${name}`,
+        });
+    } else {
+        router.push({ name: name })
+    }
 }
 
 const OutLogin = () => {
@@ -55,13 +63,13 @@ const OutLogin = () => {
     let miniprogram: any;
     miniprogram = navigator.userAgent.includes('miniProgram')
     if (miniprogram) {
-        (window as any).uni.redirectTo({
-            url: '/pages/index/index',
-        });
-        (window as any).uni.postMessage({
+        (window as any).wx.miniProgram.postMessage({
             data: {
-                login: 'false',
+                login: false,
             }
+        });
+        (window as any).wx.miniProgram.redirectTo({
+            url: '/pages/index/index',
         });
     }
 }

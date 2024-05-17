@@ -77,7 +77,7 @@ const pageCard = ref<PCard>();
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
-    getMapUrl();
+    getCanvasShape();
 }
 const _getCanvasShape = () => {
     if (!isTriangle.value) return;
@@ -139,8 +139,6 @@ const getSvgUrl = async () => {
         pageCard.value.pageSvg.setAttribute("height", `${height * format.scale}`);
         await getSvgImageData(pageCard.value.pageSvg, props.trim_bg, id, format, svgImageUrls, shape);
         pngImage.value = svgImageUrls.get(id);
-        const m_id = shapes.length ? shapes[0].id : page!.id;
-        props.context.workspace.setPageImg(m_id, { url: pngImage.value, width: width * format.scale, height: height * format.scale });
         reflush.value++;
     }
 }
@@ -226,7 +224,7 @@ const select_watcher = (t: number) => {
             isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
-        getMapUrl();
+        getCanvasShape();
         if (shapes.length === 1) {
             shape.value = shapes[0];
         } else if (shapes.length === 0) {
@@ -234,7 +232,7 @@ const select_watcher = (t: number) => {
         }
     }
     if (t === Selection.CHANGE_PAGE) {
-        getMapUrl();
+        getCanvasShape();
     }
 }
 
@@ -296,71 +294,17 @@ const getShapesSvg = (shapes: ShapeView[]) => {
 
 defineExpose({ getShapesSvg, renderSvgs })
 const img = ref();
-const startDrag = async (e: MouseEvent) => {
-    if (img.value) {
-        const shapes = props.context.selection.selectedShapes;
-        const page = props.context.selection.selectedPage;
-        if (!page) return;
-        const shape = shapes.length ? shapes[0] : page;
-        const format = shape.exportOptions!.exportFormats[0];
-        if (format.fileFormat === ExportFileFormat.Svg) {
-            e.target?.addEventListener("dragstart", () => drag)
-        } else {
-            toPng(shape.id, e, format.scale);
-        }
-    }
+const startDrag = (e: MouseEvent) => {
+    e.target?.addEventListener("dragstart", () => drag)
 }
 const drag = (e: DragEvent) => {
     e.dataTransfer!.setDragImage(img.value, img.value.clientWidth / 2, img.value.clientHeight / 2);
 }
 
-const toPng = (id: string, e: MouseEvent, scale: number) => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const info = props.context.workspace.getSvgImgInfo(id);
-    if (!context || !info) return;
-    canvas.width = info.width;
-    canvas.height = info.height;
-    const image = new Image();
-    image.src = info.url;
-    image.onload = () => {
-        context.drawImage(image, 0, 0);
-        const dataURL = canvas.toDataURL(`image/png`);
-        img.value.src = dataURL;
-        e.target?.addEventListener("dragstart", () => drag)
-        e.target?.addEventListener("dragend", () => dragend)
-    }
-}
-
-const dragend = () => {
-    getSvgUrl();
-}
-
-const getMapUrl = () => {
-    const shapes = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    if (shapes.length === 0) {
-        const imgInfo = props.context.workspace.getSvgImgInfo(page.id);
-        if (imgInfo) {
-            pngImage.value = imgInfo.url;
-        } else {
-            getCanvasShape();
-        }
-    } else {
-        const imgInfo = props.context.workspace.getSvgImgInfo(shapes[0].id);
-        if (imgInfo) {
-            pngImage.value = imgInfo.url;
-        } else {
-            getCanvasShape();
-        }
-    }
-    reflush.value++;
-}
-
 watch(() => props.canvas_bg, (v) => {
     page_color();
 })
+
 watch(() => shape.value, (v, o) => {
     o && o.unwatch(getCanvasShape);
     v && v.watch(getCanvasShape);
@@ -368,7 +312,7 @@ watch(() => shape.value, (v, o) => {
 
 onMounted(() => {
     page_color();
-    getMapUrl();
+    _getCanvasShape();
     props.context.selection.watch(select_watcher);
 })
 onUnmounted(() => {

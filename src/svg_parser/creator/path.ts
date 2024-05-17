@@ -3,8 +3,9 @@ import {
     Path,
     ShapeFrame,
 } from "@kcdesign/data"
-import { BaseCreator } from "./base"
-import { BaseTreeNode } from "../tree"
+import {BaseCreator} from "./base"
+import {BaseTreeNode} from "../tree"
+import {ColVector3D} from "@/transform_math/matrix"
 
 export class PathCreator extends BaseCreator {
     afterAllAdjust() {
@@ -77,7 +78,7 @@ export class PathCreator extends BaseCreator {
         const height = this.attributes.height || 0
         const path = new Path(d);
         path.translate(-x, -y);
-        this.transform.translate(x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0)
+        this.transform.translate({vector: new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])})
         this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
     }
 }

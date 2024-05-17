@@ -6,7 +6,6 @@ import { ClientXY, PageXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
-import { Action } from '@/context/tool';
 import { get_direction } from '@/utils/controllerFn';
 import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";

@@ -1,6 +1,6 @@
 import { FilePicker } from '@/components/common/filepicker';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { Repository, CoopRepository, Document, createDocument, DocEditor, importSketch } from '@kcdesign/data';
+import { Repository, CoopRepository, Document, createDocument, DocEditor, importSketch, importFigma } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
 import i18n from '@/i18n'
 import { router } from '@/router'
@@ -23,9 +23,15 @@ export const newFile = () => {
 
 export const picker = new FilePicker('.sketch', (file) => {
     if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
+    let loader;
     const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
+    if (file.name.endsWith('.fig')) {
+        loader = importFigma(file, repo);
+    } else {
+        const lzdata = new LzDataLocal(new Zip(file));
+        loader = importSketch(file.name, lzdata, repo);
+    }
+    loader.then((document: Document) => {
         window.document.title = document.name;
         const coopRepo = new CoopRepository(document, repo);
         (window as any).skrepo = coopRepo;

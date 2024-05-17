@@ -44,13 +44,23 @@ watch(() => props.data, () => {
 })
 
 const skipproject = (id: number, name: string) => {
-    router.push({
-        name: 'projectview',
-        query: {
-            id: id,
-            name: name
-        }
-    })
+
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('miniProgram')
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index1/index?go=team&id=${id}&name=${name}`,
+        });
+    } else {
+        router.push({
+            name: 'projectview',
+            query: {
+                id: id,
+                name: name
+            }
+        })
+    }
+
 }
 
 </script>

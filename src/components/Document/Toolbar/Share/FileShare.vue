@@ -327,7 +327,7 @@ const miniprogramcode = ref<string>()
 const showimg = ref<boolean>(false)
 
 async function GetminiProgramCode() {
-  const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent(docID + '') })
+  const { data, code } = await user_api.GetminiProgramCode({ scene: `id=${encodeURIComponent(docInfo.value?.document.id as string)}` })
   if (code === 0) {
     miniprogramcode.value = data
   }
