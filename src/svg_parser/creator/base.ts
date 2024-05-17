@@ -170,6 +170,16 @@ export class BaseCreator extends BaseTreeNode {
             }
         }
 
+        // viewBox
+        if (this.htmlElement.tagName === "svg") {
+            const viewBox = this.localAttributes["viewBox"]
+            if (viewBox) {
+                const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
+                this.attributes.width = viewBoxSplitRes[2]
+                this.attributes.height = viewBoxSplitRes[3]
+            }
+        }
+
         // x、y
         const x = this.localAttributes["x"]
         if (x) this.attributes.x = parseFloat(x);
@@ -426,9 +436,18 @@ export class BaseCreator extends BaseTreeNode {
         const rx = this.localAttributes["rx"]
         const ry = this.localAttributes["ry"]
         const r = this.localAttributes["r"]
-        if (rx) this.attributes.rx = parseFloat(rx);
-        if (ry) this.attributes.ry = parseFloat(ry);
-        if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
+        if (rx) {
+            this.attributes.rx = parseFloat(rx)
+            this.attributes.width = this.attributes.rx * 2
+        }
+        if (ry) {
+            this.attributes.ry = parseFloat(ry)
+            this.attributes.height = this.attributes.ry * 2
+        }
+        if (r) {
+            this.attributes.rx = this.attributes.ry = parseFloat(r)
+            this.attributes.width = this.attributes.height = this.attributes.rx * 2
+        }
         if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx) - parseFloat(r || rx || "0");
         if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy) - parseFloat(r || ry || "0");
 
@@ -466,27 +485,20 @@ export class BaseCreator extends BaseTreeNode {
             })
             .decompose()
 
-        // dev code
-        // if (this.localAttributes["id"] === "组_59") {
-        //     console.log("组_59")
+        // // dev code
+        // if (this.localAttributes["r"] === "118.386824") {
+        //     console.log("r=118.386824")
         //     console.log("updateShapeAttrByTransform")
         //     console.log("translate", translate.toString())
         //     console.log("rotate", rotate.toString())
         //     console.log("skew", skew.toString())
         //     console.log("scale", scale.toString())
-        // }
-        // if (this.localAttributes["id"] === "路径_348") {
-        //     console.log("路径_348")
-        //     console.log("updateShapeAttrByTransform")
-        //     console.log("translate", translate.toString())
-        //     console.log("rotate", rotate.toString())
-        //     console.log("skew", skew.toString())
-        //     console.log("scale", scale.toString())
+        //     console.log("shape.frame", shape.frame.width, shape.frame.height)
         // }
 
         // 设置缩放
-        shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x)
-        shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y)
+        shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
         // shape.scaleX = Math.abs(scale.x)
         // shape.scaleY = Math.abs(scale.y)
 
@@ -628,16 +640,7 @@ export class SvgCreator extends BaseCreator {
     viewBox: [number, number, number, number] | undefined
 
     createShape() {
-        const viewBox = this.localAttributes["viewBox"]
-        if (viewBox) {
-            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
-            if (viewBoxSplitRes.length === 4) {
-                this.viewBox = viewBoxSplitRes as [number, number, number, number]
-            }
-        }
-        const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
-        const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
-        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
+        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, this.attributes.width || 0, this.attributes.height || 0))
     }
 
     afterChildrenCreateShape(): void {
