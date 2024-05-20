@@ -42,33 +42,9 @@ function assist_watcher(t: number) {
         render();
     } else if (t === Assist.MULTI_LINE_ASSIST) {
         renderMultiLine();
-    } else if (t === Assist.UPDATE_MAIN_LINE) {
-        update_main_line();
     } else if (t === Assist.CLEAR && assist.value) {
         clear();
     }
-}
-
-function update_main_line() {
-    const cpg = props.context.assist.CPG;
-    if (!cpg) return;
-    clear4main_line();
-    const ns_x = minus_nodes_x(props.context.assist.nodes_x);
-    const ns_y = minus_nodes_y(props.context.assist.nodes_y);
-
-    const matrix = props.context.workspace.matrix;
-
-    if (ns_x.length) { // 绘制x轴线
-        ax = ns_x[0].x;
-        nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.computeCoord3(n));
-        lineX = render_line_x(nodesX);
-    }
-    if (ns_y.length) { // 绘制y轴线
-        ay = ns_y[0].y;
-        nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.computeCoord3(n));
-        lineY = render_line_y(nodesY);
-    }
-    // console.log('更新主辅助线:', Date.now() - s1);
 }
 
 function renderMultiLine() {

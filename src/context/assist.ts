@@ -59,7 +59,6 @@ export class Assist extends WatchableObject {
     readonly m_context: Context;
 
     static UPDATE_ASSIST = 1;
-    static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;
     static UPDATE_ASSIST_PATH = 4;
     static MULTI_LINE_ASSIST = 7;
@@ -71,7 +70,6 @@ export class Assist extends WatchableObject {
     private m_x_axis: Map<number, PageXY2[]> = new Map();
     private m_y_axis: Map<number, PageXY2[]> = new Map();
     private m_except: Map<string, ShapeView> = new Map();
-    private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
 
@@ -100,10 +98,6 @@ export class Assist extends WatchableObject {
 
     get nodesY2() {
         return this.m_nodes_y2;
-    }
-
-    get CPG() {
-        return this.m_current_pg;
     }
 
     get except() {
@@ -207,15 +201,8 @@ export class Assist extends WatchableObject {
         }
     }
 
-    set_collect_target_force(shapes: ShapeView[], collect_immediate = false) {
-        this.m_collect_target = shapes;
-        if (collect_immediate) {
-            this.collect();
-        }
-    }
-
     collect() {
-        const s = Date.now();
+        // const s = Date.now();
         const page = this.m_context.selection.selectedPage;
         if (page) {
             this.clear();
@@ -227,8 +214,8 @@ export class Assist extends WatchableObject {
                     .concat(finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
             }
         }
-        const e = Date.now();
-        console.log('点位收集用时(ms):', e - s);
+        // const e = Date.now();
+        // console.log('点位收集用时(ms):', e - s);
     }
 
     set_trans_target(shapes: ShapeView[]) {
@@ -249,7 +236,6 @@ export class Assist extends WatchableObject {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        // this.m_current_pg = gen_match_points(s);  // *
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
@@ -461,13 +447,10 @@ export class Assist extends WatchableObject {
         return target;
     }
 
-
     alignPoints(livingXs: number[], livingYs: number[]) {
         if (!this.m_except.size) {
             return;
         }
-        // this.m_nodes_x = [];
-        // this.m_nodes_y = [];
 
         this.multi_line_x = [];
         this.multi_line_y = [];
@@ -510,71 +493,15 @@ export class Assist extends WatchableObject {
             assistResult.dx = dx;
             assistResult.sticked_by_x = true;
             assistResult.targetX = targetX;
-
-            // this.m_nodes_x = this.m_x_axis.get(targetX) || [];
-            // this.multi_line_x = [targetX];
         }
 
         if (Math.abs(dy) < this.stickness) {
             assistResult.dy = dy;
             assistResult.sticked_by_y = true;
             assistResult.targetY = targetY;
-
-            // this.m_nodes_y = this.m_y_axis.get(targetY) || [];
-            // this.multi_line_y = [targetY];
         }
 
         return assistResult;
-    }
-
-    creator(point: XY) {
-        if (!this.m_except.size) {
-            return;
-        }
-
-        this.m_nodes_x = [];
-        this.m_nodes_y = [];
-
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-
-        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
-        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
-
-        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
-            const shape = this.m_shape_inner[i];
-            if (this.m_except.get(shape.id)) {
-                continue;
-            }
-
-            const c_pg = this.m_pg_inner.get(shape.id);
-            if (!c_pg) {
-                continue;
-            }
-
-            modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
-            modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
-        }
-
-        const _self = { id: 'self', p: { x: point.x, y: point.y } };
-        if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x;
-            target.sticked_by_x = true;
-
-            _self.p.x = target.x;
-
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([_self]);
-        }
-
-        if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y;
-            target.sticked_by_y = true;
-
-            _self.p.y = target.y;
-
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
-        }
-
-        return target;
     }
 
     reset() {
@@ -585,7 +512,6 @@ export class Assist extends WatchableObject {
         this.multi_line_x = [];
         this.multi_line_y = [];
         this.m_except.clear();
-        this.m_current_pg = undefined;
         this.notify(Assist.CLEAR);
     }
 }

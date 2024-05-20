@@ -17,7 +17,8 @@ export function is_equal(a: number, b: number) {
  * @description 收集时使用
  */
 export function collect_point_group(host: ShapeView, align: boolean): PointGroup1 {
-    const m = host.matrix2Root(), f = host.frame;
+    const m = host.matrix2Root();
+    const f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
@@ -60,25 +61,6 @@ export function collect_point_group(host: ShapeView, align: boolean): PointGroup
     return pg;
 }
 
-/**
- * @description 比对时使用
- */
-export function gen_match_points(host: ShapeView, multi?: boolean): PointGroup2 {
-    const m = host.matrix2Root(), f = host.frame;
-    const lt = m.computeCoord2(0, 0);
-    const rb = m.computeCoord2(f.width, f.height);
-    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
-    const rt = m.computeCoord2(f.width, 0);
-    const lb = m.computeCoord2(0, f.height);
-    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
-    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
-    if (multi) {
-        pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
-    }
-    return pg;
-}
-
 export interface PointsOffset {
     lt: PageXY
     rb: PageXY
@@ -88,19 +70,25 @@ export interface PointsOffset {
 }
 
 export function isShapeOut(context: Context, shape: Shape | ShapeView) {
-    const { x, y, bottom, right } = context.workspace.root;
-    const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
-    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, {
-        x: 0,
-        y: height
-    }];
-    for (let i = 0; i < 4; i++) point[i] = m.computeCoord3(point[i]);
-    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
+
+    const w = shape.frame.width;
+    const h = shape.frame.height;
+
+    const point: { x: number, y: number }[] = [
+        m.computeCoord2(0, 0),
+        m.computeCoord2(w, 0),
+        m.computeCoord2(w, h),
+        m.computeCoord2(0, h)
+    ];
+
+    const { width, height } = context.workspace.root;
+
+    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > width ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
-        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
+        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > height;
 }
 
 export function finder(context: Context, scope: ShapeView, all_pg: Map<string, PointGroup1>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
@@ -146,6 +134,8 @@ export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
     context.assist.set_stickness(5 / new_matrix.m00);
 }
+
+export const collect_once = debounce(_collect, 100);
 
 export function alignXFromPointGroup(dx: number, xs: number[], livingXs: number[]) {
     let livingD = dx;
@@ -198,7 +188,9 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
         const x = apexX[i]
         const delta = Math.abs(x - p.x);
         if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
-            pre_target1.delta = delta, pre_target1.x = x, pre_target1.sy = p.y;
+            pre_target1.delta = delta;
+            pre_target1.x = x;
+            pre_target1.sy = p.y;
         }
     }
 }
@@ -208,7 +200,9 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
-            pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
+            pre_target2.delta = delta;
+            pre_target2.y = y;
+            pre_target2.sx = p.x;
         }
     }
 }
@@ -219,13 +213,6 @@ export function get_tree(shape: ShapeView, init: Map<string, ShapeView>) {
         const cs = (shape).childs;
         if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
     }
-}
-
-export const collect_once = debounce(_collect, 100);
-
-interface Point {
-    x: number
-    y: number
 }
 
 /**
