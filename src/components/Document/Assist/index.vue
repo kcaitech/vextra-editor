@@ -50,9 +50,6 @@ function assist_watcher(t: number) {
 }
 
 function update_main_line() {
-    console.log('update_main_line - 1512');
-    // const s1 = Date.now();
-
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     clear4main_line();
@@ -69,13 +66,6 @@ function update_main_line() {
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
         nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.computeCoord3(n));
-        console.log('nodesY before align:', nodesY);
-        if (props.context.user.isPixelAlignMent) {
-            for (let i = 0; i < nodesY.length; i++) {
-                nodesY[i].y = Math.round(nodesY[i].y);
-            }
-        }
-        console.log('nodesY after align:', nodesY);
         lineY = render_line_y(nodesY);
     }
     // console.log('更新主辅助线:', Date.now() - s1);
@@ -88,7 +78,6 @@ function renderMultiLine() {
 }
 
 function render() {
-    console.log('render - 1512');
     // const s = Date.now();
     clear();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
@@ -102,13 +91,6 @@ function render() {
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
         points_to_client(ns_y, props.context.workspace.matrix, nodesY);
-        console.log('nodesY before align:', nodesY);
-        if (props.context.user.isPixelAlignMent) {
-            for (let i = 0; i < nodesY.length; i++) {
-                nodesY[i].y = Math.round(nodesY[i].y);
-            }
-        }
-        console.log('nodesY after align:', nodesY);
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
@@ -152,13 +134,8 @@ function getExLineY() {
         }
         points = points.concat(_y.pre);
         const _points = [];
-        const align = props.context.user.isPixelAlignMent;
         for (let i = 0; i < points.length; i++) {
-            const __p = points[i];
-            if (align) {
-                __p.y = Math.round(__p.y);
-            }
-            _points.push(m.computeCoord3(__p));
+            _points.push(m.computeCoord3(points[i]));
         }
 
         exNodesY = exNodesY.concat(_points);
