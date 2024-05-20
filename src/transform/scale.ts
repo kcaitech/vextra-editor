@@ -201,29 +201,37 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private livingPointAlignByAssist() {
-        if (!this.shapes.length) {
+        const len = this.shapes.length;
+
+        if (!len) {
             return;
         }
 
-        if (!(this.shapes.length === 1 && this.shapes[0].rotation)) {
-            if (this.ctrlElementType === CtrlElementType.RectRight) {
+        if (this.ctrlElementType === CtrlElementType.RectRight) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleRightOrLeft();
+            } else {
                 this.fixToAlignWhileModifyRightOrLeft();
-            } else if (this.ctrlElementType === CtrlElementType.RectLeft) {
+            }
+        } else if (this.ctrlElementType === CtrlElementType.RectLeft) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleRightOrLeft();
+            } else {
                 this.fixToAlignWhileModifyRightOrLeft();
-            } else if (this.ctrlElementType === CtrlElementType.RectTop) {
-                this.fixToAlignWhileModifyTopOrBottom();
-            } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+            }
+        } else if (this.ctrlElementType === CtrlElementType.RectTop) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleTopOrBottom();
+            } else {
                 this.fixToAlignWhileModifyTopOrBottom();
             }
-        }
-
-        if (this.ctrlElementType === CtrlElementType.RectLT) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectRT) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectRB) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectLB) {
+        } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleTopOrBottom();
+            } else {
+                this.fixToAlignWhileModifyTopOrBottom();
+            }
+        } else {
             this.fixToAlignWhileModifyPoint();
         }
 
@@ -264,6 +272,34 @@ export class ScaleHandler extends TransformHandler {
         } else if (assistResult.sticked_by_y) {
             this.verFixedStatus = true;
             this.verFixedValue = assistResult.y;
+        }
+    }
+
+    private fixToAlignWhileModifySingleRightOrLeft() {
+        const shape = this.shapes[0];
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            return;
+        }
+
+        if (base.baseWidth === base.boxWidth) {
+            this.fixToAlignWhileModifyRightOrLeft();
+        } else if (base.baseWidth === base.boxHeight) {
+            this.fixToAlignWhileModifyTopOrBottom();
+        }
+    }
+
+    private fixToAlignWhileModifySingleTopOrBottom() {
+        const shape = this.shapes[0];
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            return;
+        }
+
+        if (base.baseHeight === base.boxHeight) {
+            this.fixToAlignWhileModifyTopOrBottom();
+        } else if (base.baseHeight === base.boxWidth) {
+            this.fixToAlignWhileModifyRightOrLeft();
         }
     }
 
