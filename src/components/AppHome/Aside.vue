@@ -15,7 +15,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 import logo from '@/assets/h-logo3.svg';
-import min_logo from '@/assets/favicon.svg';
+import min_logo from '@/assets/logo108x108.png';
 import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();

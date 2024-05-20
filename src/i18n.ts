@@ -1,7 +1,14 @@
 // https://juejin.cn/post/7029609093539037197
 import { createI18n } from 'vue-i18n'
+
+function fixLocale(locale: string) {
+    locale = locale.toLowerCase();
+    if (locale.startsWith('zh')) return 'zh';
+    return 'en';
+}
+const locale = localStorage.getItem('locale') || navigator.language || 'en';
 const i18n = createI18n({
-    locale: localStorage.getItem('locale') || 'zh',
+    locale: fixLocale(locale),
     legacy: false,
     //this.$i18n.locale // 通过切换locale的值来实现语言切换
     messages: {//引入语言包
