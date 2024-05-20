@@ -135,7 +135,14 @@ keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyE'] = function (event: KeyboardEvent, context: Context) {
-
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if(is_ctrl && event.shiftKey) {
+        event.preventDefault();
+        if(!permIsEdit(context)) {
+            context.tool.setAction(Action.Export);
+        }
+        context.menu.setExportDialog(true);
+    }
 }
 
 keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
@@ -143,7 +150,6 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
 
     if (ctrlKey || metaKey) {
         event.preventDefault();
-
         context.navi.notify(Navi.TO_SEARCH); // 图层搜索
         return;
     }

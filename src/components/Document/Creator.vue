@@ -405,14 +405,13 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
 function gen_new_shape(e: MouseEvent) {
     const _xy = props.context.workspace.getContentXY(e);
     const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
-    let width = Math.abs(x - page_xy_1.x);
-    let height = Math.abs(y - page_xy_1.y);
+    let width = Math.abs(x - page_xy_1.x) || 1;
+    let height = Math.abs(y - page_xy_1.y) || 1;
 
     if (props.context.user.isPixelAlignMent) {
         width = Math.max(1, width);
         height = Math.max(1, height);
     }
-
     const shapeFrame = new ShapeFrame(page_xy_1.x, page_xy_1.y, width, height);
 
     if (props.context.tool.action === Action.AddContact) {
@@ -564,13 +563,12 @@ onUnmounted(() => {
 <template>
     <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
-                      :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
-                      :rootWidth="rootWidth"
-                      @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
-                      :matrix="props.context.workspace.matrix"
-                      :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+            :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
+            @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
+            :matrix="props.context.workspace.matrix" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed"
+            :posi="posi"></CommentInput>
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
-        <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
+        <div v-if="mode === 'pen'" class="dot" :style="{ left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px' }"></div>
     </div>
 </template>
 <style scoped lang="scss">

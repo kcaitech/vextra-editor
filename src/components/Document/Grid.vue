@@ -108,12 +108,12 @@ svg {
     pointer-events: none;
 
     .white-line {
-        stroke: rgba(255, 255, 255, 0.9);
+        stroke: rgba(255, 255, 255, 1);
         stroke-width: 0.1px;
     }
 
     .black-line {
-        stroke: rgba(0, 0, 0, 0.3);
+        stroke: rgba(0, 0, 0, 0.7);
         stroke-width: 0.1px;
     }
 }

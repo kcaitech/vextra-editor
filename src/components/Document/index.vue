@@ -718,7 +718,7 @@ const stop = watch(() => null_context.value, (v) => {
         const _name = context?.data.name || '';
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - MossDesign` : `${file_name} - MossDesign`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - 墨师设计` : `${file_name} - 墨师设计`;
             clearTimeout(timer);
         }, 500)
     }
@@ -813,22 +813,6 @@ onUnmounted(() => {
         <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
-<style>
-:root {
-    /* top toolbar */
-    --top-toolbar-bg-color: var(--theme-color);
-    --top-toolbar-font-color: var(--theme-color-anti);
-    /* left navigation col */
-    --left-navi-bg-color: var(--theme-color-anti);
-    --left-navi-button-hover-color: var(--grey-light);
-    --left-navi-button-select-color: var(--grey-dark);
-    --left-navi-font-color: var(--theme-color);
-    /* right attribute col */
-    --right-attr-bg-color: var(--theme-color-anti);
-    /* center content area */
-    --center-content-bg-color: var(--grey-light);
-}
-</style>
 <style scoped lang="scss">
 .main {
     min-width: 460px;

@@ -25,6 +25,7 @@ export enum Action {
     Pencil = 'add-free-path',
     Polygon = 'add-polygon',
     Star = 'add-star',
+    Export = 'export',
 }
 
 const A2R = new Map([

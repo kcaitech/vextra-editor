@@ -23,6 +23,7 @@ function changeFontSize(el: any) {
         }
     }
 }
+
 onMounted(() => {
     const el = document.querySelectorAll('h1')
     const el2 = document.querySelectorAll('h2')
@@ -40,7 +41,6 @@ onMounted(() => {
     color: #333333;
     max-width: 880px;
     letter-spacing: 1px;
-    overflow: hidden;
     padding: 0 12px;
 }
 </style>

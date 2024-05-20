@@ -1,14 +1,14 @@
 <script setup lang='ts'>
-import {Context} from '@/context';
-import {CtrlElementType, Matrix, ShapeView} from '@kcdesign/data';
-import {ColVector, ColVector3D, Matrix as Matrix2} from '@kcdesign/data/dist/basic/matrix2';
-import {NumberArray2D} from '@kcdesign/data/dist/basic/number_array';
-import {onMounted, onUnmounted, reactive, watch} from 'vue';
-import {ClientXY, SelectionTheme, XY} from '@/context/selection';
-import {Point} from '../../SelectionView.vue';
-import {forbidden_to_modify_frame} from '@/utils/common';
-import {get_transform, modify_rotate_before_set} from '../Points/common';
-import {ScaleHandler} from "@/transform/scale";
+import { Context } from '@/context';
+import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { ClientXY, SelectionTheme, XY } from '@/context/selection';
+import { Point } from '../../SelectionView.vue';
+import { forbidden_to_modify_frame } from '@/utils/common';
+import { get_transform, modify_rotate_before_set } from '../Points/common';
+import { ScaleHandler } from "@/transform/scale";
+import { dbl_action } from "@/utils/mouse_interactive";
+import { startEdit } from "@/transform/pathEdit";
 
 interface Props {
     matrix: number[]
@@ -18,19 +18,25 @@ interface Props {
     theme: SelectionTheme
 }
 
+interface Emits {
+    (e: 'dblclick', event: MouseEvent): void;
+}
+
 interface Bar {
     path: string
     type: CtrlElementType
 }
 
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const matrix = new Matrix();
 const data: {
     paths: Bar[],
     dashes: string[]
-} = reactive({paths: [], dashes: []});
-const {paths, dashes} = data;
-let startPosition: ClientXY = {x: 0, y: 0};
+} = reactive({ paths: [], dashes: [] });
+const { paths, dashes } = data;
+let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 
@@ -44,7 +50,7 @@ const types = [
 let need_reset_cursor_after_transform = true;
 
 let scaler: ScaleHandler | undefined = undefined;
-let downXY: XY = {x: 0, y: 0};
+let downXY: XY = { x: 0, y: 0 };
 
 function update() {
     matrix.reset(props.matrix);
@@ -69,20 +75,6 @@ function update_dot_path() {
         const path = get_bar_path(apex[i], apex[i + 1]);
         paths.push({ path, type: types[i] });
     }
-
-    // const transform = props.shape.getTransform()
-    // console.log(props.shape, transform.toString())
-    // const points = transform.transform(new Matrix2(new NumberArray2D([3, 4], [
-    //     0, frame.width, frame.width, 0,
-    //     0, 0, frame.height, frame.height,
-    //     0, 0, 0, 0,
-    // ]))).cols()
-    // points.push(new ColVector([0, 0, 0]))
-    //
-    // for (let i = 0; i < points.length - 1; i++) {
-    //     const path = get_bar_path(points[i], points[i + 1]);
-    //     paths.push({path, type: types[i]});
-    // }
 }
 
 function get_bar_path(s: {
@@ -102,6 +94,11 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
 
     event.stopPropagation();
+
+    if (dbl_action()) {
+        emits('dblclick', event);
+        return startEdit(props.context);
+    }
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
@@ -136,7 +133,7 @@ function bar_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
-    const {rotate, isFlippedHorizontal, isFlippedVertical} = get_transform(props.shape);
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     let deg = rotate;
 
     if (t === CtrlElementType.RectTop) {
@@ -197,8 +194,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(b, i) in paths" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-       @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+    <g
+        v-for="(b, i) in paths"
+        :key="i"
+        @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+        @mouseenter="() => bar_mouseenter(b.type)"
+        @mouseleave="bar_mouseleave"
+    >
         <path :d="b.path" class="main-path" :stroke="theme">
         </path>
         <path :d="b.path" class="assist-path">

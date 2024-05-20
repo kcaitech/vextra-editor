@@ -13,6 +13,8 @@ interface Props {
     context: Context
     data: PageView
     matrix: Matrix
+
+    cutout?: boolean
 }
 const props = defineProps<Props>();
 const matrixWithFrame = new Matrix();
@@ -144,7 +146,7 @@ onUnmounted(() => {
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
         :width="width" :height="height" :viewBox="viewbox"></svg>
-    <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
+    <ShapeCutout v-if="cutout" :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
