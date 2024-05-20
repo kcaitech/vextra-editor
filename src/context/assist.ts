@@ -1,21 +1,11 @@
-import { GroupShape, Matrix, Shape, ShapeView, WatchableObject, adapt2Shape } from "@kcdesign/data";
-import { PageXY, Selection, XY } from "./selection";
+import { ShapeView, WatchableObject } from "@kcdesign/data";
+import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
     finder,
-    get_frame,
     get_tree,
-    modify_pt_x,
-    modify_pt_x4create,
     modify_pt_x4p,
-    modify_pt_y,
-    modify_pt_y4create,
     modify_pt_y4p,
-    gen_match_points_by_map,
-    PointsOffset,
-    gen_match_points_by_map2,
-    modify_pt_x_4_path_edit,
-    modify_pt_y_4_path_edit,
     alignXFromPointGroup,
     alignYFromPointGroup
 } from "@/utils/assist";
@@ -48,38 +38,6 @@ export interface PointGroup2 {
     right?: number
 }
 
-export type PointType = 'lt' | 'rt' | 'rb' | 'lb' | 'pivot';
-
-export interface PT1 {
-    x: number
-    sy: number
-    align: Align
-    delta: number | undefined
-}
-
-export interface PT2 {
-    y: number
-    sx: number
-    align: Align
-    delta: number | undefined
-}
-
-export interface PT1_2 {
-    x: number
-    sy: number
-    align: Align
-    delta: number | undefined
-    ex: PageXY2[]
-}
-
-export interface PT2_2 {
-    y: number
-    sx: number
-    align: Align
-    delta: number | undefined
-    ex: PageXY2[]
-}
-
 export interface PT4P1 {
     x: number
     sy: number
@@ -92,35 +50,22 @@ export interface PT4P2 {
     delta: number | undefined
 }
 
-enum Align {
-    LT_X = 'lt_x',
-    RT_X = 'rt_x',
-    C_X = 'c_x',
-    RB_X = 'rb_x',
-    LB_X = 'lb_x',
-    LT_Y = 'lt_y',
-    RT_Y = 'rt_y',
-    C_Y = 'c_y',
-    RB_Y = 'rb_y',
-    LB_Y = 'lb_y'
-}
-
 export interface PageXY2 {
     id: string
     p: PageXY
 }
 
 export class Assist extends WatchableObject {
+    readonly m_context: Context;
+
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;
     static UPDATE_ASSIST_PATH = 4;
-    static UPDATE_MAIN_LINE_PATH = 5;
-    static STICKNESS = 6;
     static MULTI_LINE_ASSIST = 7;
     private m_stickness: number = 5;
     private m_collect_target: ShapeView[] = [];
-    private m_context: Context;
+
     private m_shape_inner: ShapeView[] = [];
     private m_pg_inner: Map<string, PointGroup1> = new Map();
     private m_x_axis: Map<number, PageXY2[]> = new Map();
@@ -159,10 +104,6 @@ export class Assist extends WatchableObject {
 
     get CPG() {
         return this.m_current_pg;
-    }
-
-    setCPG(pg: PointGroup2) {
-        this.m_current_pg = pg;
     }
 
     get except() {
@@ -274,7 +215,7 @@ export class Assist extends WatchableObject {
     }
 
     collect() {
-        // const s = Date.now();
+        const s = Date.now();
         const page = this.m_context.selection.selectedPage;
         if (page) {
             this.clear();
@@ -286,8 +227,8 @@ export class Assist extends WatchableObject {
                     .concat(finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
             }
         }
-        // const e = Date.now();
-        // console.log('点位收集用时(ms):', e - s);
+        const e = Date.now();
+        console.log('点位收集用时(ms):', e - s);
     }
 
     set_trans_target(shapes: ShapeView[]) {
