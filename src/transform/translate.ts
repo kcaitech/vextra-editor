@@ -8,13 +8,6 @@ import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 
-type OriginEnv = {
-    env: ShapeView;
-    index: number;
-}
-
-type OriginEnvs = Map<string, OriginEnv>;
-
 type BaseFrame4Trans = {
     rootXY: XY;
     x: number;
@@ -40,7 +33,7 @@ export class TranslateHandler extends TransformHandler {
     boxOffsetLivingPointX: number = 0;
     boxOffsetLivingPointY: number = 0;
 
-    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
+    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 }; // 影子盒子
 
     baseFrames4trans: Map<string, BaseFrame4Trans> = new Map();
 
@@ -51,13 +44,10 @@ export class TranslateHandler extends TransformHandler {
     verFixed: boolean = false;
     verFixedValue: number = 0;
 
-    currentEnvId: string = '';
-    exceptEnvs: ShapeView[] = [];
-    originEnvs: OriginEnvs = new Map();
     shapesSet: Set<string> = new Set();
 
     shapesBackup: ShapeView[] = [];
-    coping: boolean = false;
+    coping: boolean = false; // 数据拷贝中
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
@@ -192,9 +182,15 @@ export class TranslateHandler extends TransformHandler {
                 bottom = rootXY.y;
             }
 
-            const points = [{ x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }];
+            const points = [
+                m.computeCoord2(frame.width, 0),
+                m.computeCoord2(frame.width, frame.height),
+                m.computeCoord2(0, frame.height)
+            ];
+
             for (let i = 0; i < 3; i++) {
-                const p = m.computeCoord3(points[i]);
+                const p = points[i];
+
                 if (p.x < left) {
                     left = p.x;
                 }
@@ -210,7 +206,7 @@ export class TranslateHandler extends TransformHandler {
             }
         }
 
-        this.originSelectionBox = {
+        const box = {
             x: left,
             y: top,
             right,
@@ -218,6 +214,18 @@ export class TranslateHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
+
+        if (this.alignPixel) { // 给影子数据取整
+            box.x = Math.round(box.x);
+            box.y = Math.round(box.y);
+            box.right = Math.round(box.right);
+            box.bottom = Math.round(box.bottom);
+            box.width = Math.round(box.width);
+            box.height = Math.round(box.height);
+        }
+
+        this.originSelectionBox = box;
+
         this.livingBox = { ...this.originSelectionBox };
 
         this.baseFrames4trans.forEach(base => {
