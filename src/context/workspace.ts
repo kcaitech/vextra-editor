@@ -67,6 +67,7 @@ export class WorkSpace extends WatchableObject {
     static NEW_ENV_MATRIX_CHANGE = 27;
     static TABLE_TEXT_GRADIENT_UPDATE = 28;
     static ROOT_UPDATE = 29;
+    static RULE = 30;
 
     private context: Context;
     private m_matrix: Matrix = new Matrix();

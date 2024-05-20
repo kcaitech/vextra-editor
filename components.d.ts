@@ -262,6 +262,7 @@ declare module '@vue/runtime-core' {
     RightTabs: typeof import('./src/components/Document/Attribute/RightTabs.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Rule: typeof import('./src/components/Document/Rule/index.vue')['default']
     Sash: typeof import('./src/components/common/Sash.vue')['default']
     Saving: typeof import('./src/components/Document/Toolbar/Saving.vue')['default']
     Scale: typeof import('./src/components/Document/Toolbar/Scale.vue')['default']
