@@ -207,25 +207,15 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        if (this.ctrlElementType === CtrlElementType.RectRight) {
+        const cet = this.ctrlElementType;
+
+        if (cet === CtrlElementType.RectRight || cet === CtrlElementType.RectLeft) {
             if (len === 1) {
                 this.fixToAlignWhileModifySingleRightOrLeft();
             } else {
                 this.fixToAlignWhileModifyRightOrLeft();
             }
-        } else if (this.ctrlElementType === CtrlElementType.RectLeft) {
-            if (len === 1) {
-                this.fixToAlignWhileModifySingleRightOrLeft();
-            } else {
-                this.fixToAlignWhileModifyRightOrLeft();
-            }
-        } else if (this.ctrlElementType === CtrlElementType.RectTop) {
-            if (len === 1) {
-                this.fixToAlignWhileModifySingleTopOrBottom();
-            } else {
-                this.fixToAlignWhileModifyTopOrBottom();
-            }
-        } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+        } else if (cet === CtrlElementType.RectTop || cet === CtrlElementType.RectBottom) {
             if (len === 1) {
                 this.fixToAlignWhileModifySingleTopOrBottom();
             } else {
