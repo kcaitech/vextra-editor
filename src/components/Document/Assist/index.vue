@@ -4,7 +4,6 @@ import { Assist, PageXY2 } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { get_p_form_pg_by_x, get_p_form_pg_by_y } from '@/utils/assist';
 
 interface Props {
     context: Context
@@ -133,15 +132,6 @@ function clear() {
     assist.value = false;
 }
 
-function clear4main_line() {
-    ax = 0;
-    ay = 0;
-    nodesX.length = 0;
-    nodesY.length = 0;
-    lineX = '';
-    lineY = '';
-}
-
 /**
  * @description 去除重复的点
  */
@@ -217,7 +207,9 @@ function sort_nodes_y(nodes: PageXY[]): PageXY[] {
 
 function checkBeforeRender() {
     let shouldUpdate = true;
-
+    {
+        shouldUpdate = Math.random() > 0.5;
+    }
     return shouldUpdate;
 }
 

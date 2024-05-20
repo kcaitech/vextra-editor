@@ -219,7 +219,6 @@ export class Assist extends WatchableObject {
     }
 
     set_trans_target(shapes: ShapeView[]) {
-        this.m_context.workspace.clear_cache_map();
         this.collect();
         this.m_except.clear();
         if (shapes.length === 1) {

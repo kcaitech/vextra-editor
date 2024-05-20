@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { PageXY2, PointGroup1, PointGroup2, PT4P1, PT4P2 } from "@/context/assist";
+import { PageXY2, PointGroup1, PT4P1, PT4P2 } from "@/context/assist";
 import { PageXY } from "@/context/selection";
 import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { debounce } from "lodash";
@@ -213,30 +213,4 @@ export function get_tree(shape: ShapeView, init: Map<string, ShapeView>) {
         const cs = (shape).childs;
         if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
     }
-}
-
-/**
- * @description 根据x值在点图中寻找与之相等的点
- */
-export function get_p_form_pg_by_x(pg: PointGroup2, x: number): PageXY[] {
-    const result: PageXY[] = [];
-    if (is_equal(pg.lt.x, x)) result.push(pg.lt);
-    if (is_equal(pg.rt.x, x)) result.push(pg.rt);
-    if (is_equal(pg.rb.x, x)) result.push(pg.rb);
-    if (is_equal(pg.lb.x, x)) result.push(pg.lb);
-    if (is_equal(pg.pivot.x, x)) result.push(pg.pivot);
-    return result;
-}
-
-/**
- * @description 根据y值在点图中寻找与之相等的点
- */
-export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
-    const result: PageXY[] = [];
-    if (is_equal(pg.lt.y, y)) result.push(pg.lt);
-    if (is_equal(pg.rt.y, y)) result.push(pg.rt);
-    if (is_equal(pg.rb.y, y)) result.push(pg.rb);
-    if (is_equal(pg.lb.y, y)) result.push(pg.lb);
-    if (is_equal(pg.pivot.y, y)) result.push(pg.pivot);
-    return result;
 }
