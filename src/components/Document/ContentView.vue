@@ -557,8 +557,6 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
         path_edit_mode.value = props.context.workspace.is_path_edit_mode;
-    } else if (type === WorkSpace.RULE) {
-        ruleVisible.value = !ruleVisible.value;
     }
 }
 
