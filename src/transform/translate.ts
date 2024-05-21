@@ -40,10 +40,6 @@ export class TranslateHandler extends TransformHandler {
 
     offsetX: number = 0;
     offsetY: number = 0;
-    horFixed: boolean = false;
-    horFixedValue: number = 0;
-    verFixed: boolean = false;
-    verFixedValue: number = 0;
 
     shapesSet: Set<string> = new Set();
 
@@ -287,34 +283,19 @@ export class TranslateHandler extends TransformHandler {
 
         const assistResult = this.context.assist.alignPoints(livingXs, livingYs);
 
-        this.context.assist.notify(Assist.CLEAR);
-
-        let assistWork = false;
-        if (assistResult) {
-            this.updateHorFixedStatus(l, assistResult);
-            this.updateVerFixedStatus(t, assistResult);
-
-            if (this.horFixed) {
-                this.livingBox.x += this.offsetX;
-                assistWork = true;
-            }
-            if (this.verFixed) {
-                this.livingBox.y += this.offsetY;
-                assistWork = true;
-            }
+        if (!assistResult) {
+            return;
         }
 
-        if (assistWork) {
-            l += this.offsetX;
-            t += this.offsetY;
+        this.context.assist.multi_line_x = [];
+        this.context.assist.multi_line_y = [];
+
+        let assistWork = false;
+        if (assistResult.sticked_by_x) {
+            this.livingBox.x += assistResult.dx;
+            l += assistResult.dx;
             r = l + width;
-            b = t + height;
-
-            // this.workspace.notify(999, { l, r, t, b });
-
-            const cx = (l + r) / 2;
-            const cy = (t + b) / 2;
-            const xs: { x: number, pre: XY[] }[] = [
+            this.context.assist.multi_line_x = [
                 {
                     x: l,
                     pre: [
@@ -328,16 +309,17 @@ export class TranslateHandler extends TransformHandler {
                         { x: r, y: t },
                         { x: r, y: b }
                     ]
-                },
-                {
-                    x: cx,
-                    pre: [
-                        { x: cx, y: cy }
-                    ]
                 }
             ]
 
-            const ys: { y: number, pre: XY[] }[] = [
+            assistWork = true;
+        }
+
+        if (assistResult.sticked_by_y) {
+            this.livingBox.y += assistResult.dy;
+            t += assistResult.dy;
+            b = t + height;
+            this.context.assist.multi_line_y = [
                 {
                     y: t,
                     pre: [
@@ -352,62 +334,16 @@ export class TranslateHandler extends TransformHandler {
                         { x: r, y: b }
 
                     ]
-                },
-                {
-                    y: cy,
-                    pre: [
-                        { x: cx, y: cy }
-                    ]
-                },
+                }
             ]
 
-            this.context.assist.multi_line_x = xs;
-            this.context.assist.multi_line_y = ys;
+            assistWork = true;
+        }
+
+        if (assistWork) {
             this.context.assist.notify(Assist.MULTI_LINE_ASSIST);
-        }
-    }
-
-    private updateHorFixedStatus(livingX: number, assistResult: {
-        targetX: number,
-        sticked_by_x: boolean,
-        dx: number
-    }) {
-        const stickness = this.context.assist.stickness;
-        if (this.horFixed) {
-            if (Math.abs(livingX - this.horFixedValue) >= stickness) {
-                this.horFixed = false;
-            } else {
-                if (Math.abs(assistResult.dx) < Math.abs(this.offsetX)) {
-                    this.horFixedValue = livingX;
-                }
-                this.offsetX = assistResult.dx;
-            }
-        } else if (assistResult.sticked_by_x) {
-            this.horFixed = true;
-            this.horFixedValue = livingX;
-            this.offsetX = assistResult.dx;
-        }
-    }
-
-    private updateVerFixedStatus(livingY: number, assistResult: {
-        targetY: number,
-        sticked_by_y: boolean,
-        dy: number
-    }) {
-        const stickness = this.context.assist.stickness;
-        if (this.verFixed) {
-            if (Math.abs(livingY - this.verFixedValue) >= stickness) {
-                this.verFixed = false;
-            } else {
-                if (assistResult.dy < this.offsetY) {
-                    this.verFixedValue = livingY;
-                }
-                this.offsetY = assistResult.dy;
-            }
-        } else if (assistResult.sticked_by_y) {
-            this.verFixed = true;
-            this.verFixedValue = livingY;
-            this.offsetY = assistResult.dy;
+        } else {
+            this.context.assist.notify(Assist.CLEAR);
         }
     }
 
