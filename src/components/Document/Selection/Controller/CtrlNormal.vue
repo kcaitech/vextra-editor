@@ -203,7 +203,7 @@ watchEffect(updateControllerView);
 </template>
 <style lang='scss' scoped>
 .hidden {
-    //opacity: 0;
+    opacity: 0;
 }
 
 svg {
