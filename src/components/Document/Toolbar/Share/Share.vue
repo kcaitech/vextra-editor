@@ -79,7 +79,7 @@ onMounted(() => {
 
 <template>
   <div class="container" @dblclick.stop>
-    <button class="share" @click.stop="onShare">分享</button>
+    <button class="share" @click.stop="onShare">{{ t('home.share') }}</button>
   </div>
   <Teleport to="body">
     <div v-if="showFileShare" class="overlay">

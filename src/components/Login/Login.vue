@@ -9,6 +9,7 @@ import { ElMessage } from 'element-plus'
 import { User } from '@/context/user'
 import isMobileDevice from '@/utils/mobileDeviceChecker'
 import kcdesk from '@/kcdesk'
+import { locale } from '@/locale'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -332,13 +333,16 @@ onMounted(() => {
                             v-loading="isLoading">
                         </div>
                         <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
-                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
+                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode"
+                                alt="code">
                         </div>
-                        <div class="tips">
-                            <span>{{ t('system.login_read') }}</span>
-                            <span @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS')
+                        <div class="tips" :lang="locale">
+                            <span class="tips_content">{{ t('system.login_read') }}</span>
+                            <span class="tips_button" @click.prevent="handleOpenNewWindow('serviceagreement')">{{
+                                t('system.read_TOS')
                                 }}</span>
-                            <span @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy')
+                            <span class="tips_button" @click.prevent="handleOpenNewWindow('privacypolicy')">{{
+                                t('system.read_Privacy')
                                 }}</span>
                         </div>
                     </div>
@@ -346,7 +350,7 @@ onMounted(() => {
                         <div class="back" @click.stop="loginshow = true">
                             <svg-icon icon-class="back-icon"></svg-icon>
                         </div>
-                        <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
+                        <span class="invitation_code">{{ t('home.invitation_code_tips') }}</span>
                         <div class="inputs">
                             <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
                                 :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
@@ -359,8 +363,8 @@ onMounted(() => {
                         </div>
 
                         <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
-                    t('percenter.affirm')
-                            }}</button>
+                            t('percenter.affirm')
+                        }}</button>
                     </div>
                 </div>
             </div>
@@ -370,22 +374,6 @@ onMounted(() => {
 </template>
 
 <style lang='scss' scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
-    transition: all 0.25s ease-out;
-}
-
-.slide-up-enter-from {
-    opacity: 0;
-    transform: translateY(-16px);
-}
-
-.slide-up-leave-to {
-    opacity: 0;
-    transform: translateY(16px);
-}
-
-
 .login_container_hover {
     background-color: #00000030;
     line-height: 300px;
@@ -403,7 +391,8 @@ onMounted(() => {
     background-image: url("@/assets/bgimg3.png");
     background-size: cover;
     background-repeat: no-repeat;
-    svg{
+
+    svg {
         position: fixed;
         top: 2%;
         left: 3%;
@@ -452,8 +441,6 @@ onMounted(() => {
                     height: 200px;
                 }
 
-
-
                 .title {
                     font-size: 20px;
                     font-weight: 500;
@@ -464,19 +451,35 @@ onMounted(() => {
                 }
 
                 .tips {
-                    display: flex;
+                    display: grid;
                     gap: 4px;
                     font-size: 13px;
                     font-weight: 500;
                     color: rgb(146 146 146);
-                    // margin-top: 24px;
+                    align-items: center;
+                    justify-items: center;
+                    grid-template-columns: auto auto;
+                    grid-template-rows: auto;
+                    grid-template-areas:
+                        "header header"
+                        "auto auto";
 
-                    span:nth-child(n + 2) {
+                    .tips_content {
+                        grid-area: header;
+                    }
+
+                    .tips_button {
                         cursor: pointer;
                         color: #1878f5;
                         font-weight: 500;
                         opacity: 0.6;
                     }
+                }
+
+                .tips:lang(zh) {
+                    grid-template-columns: auto auto auto auto;
+                    grid-template-areas:
+                        "header header auto auto";
                 }
             }
 
@@ -513,7 +516,7 @@ onMounted(() => {
                     }
                 }
 
-                .Invitation_code {
+                .invitation_code {
                     font-size: 20px;
                     font-weight: 600;
                     color: rgba(67, 67, 67, 1);

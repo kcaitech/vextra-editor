@@ -56,7 +56,7 @@ export const apply = {
     not_passed: 'The application failed, please modify the information or contact the creator and re-apply',
     project_apply: 'Application to join project',
     project: 'project',
-    team: 'team',
+    team: 'Team',
     team_apply: 'Join team application',
-    fill: 'Fill'
+    file: 'File'
 }

@@ -1,16 +1,7 @@
 // https://juejin.cn/post/7029609093539037197
 import { createI18n } from 'vue-i18n'
+import { locale } from './locale';
 
-function fixLocale(locale: string) {
-    locale = locale.toLowerCase();
-    if (locale.startsWith('zh')) return 'zh';
-    return 'en';
-}
-/*
-在css中使用
-https://www.w3.org/International/questions/qa-css-lang.zh-hans.html
-**/
-export const locale = fixLocale(localStorage.getItem('locale') || navigator.language || 'en');
 const i18n = createI18n({
     locale,
     legacy: false,

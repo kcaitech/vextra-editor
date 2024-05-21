@@ -145,14 +145,14 @@ const { applyList, totalList } = storeToRefs(Data)
 const { t } = useI18n()
 const elwidth = ref()
 const elleft = ref()
-const fillnum = computed(() => {
+const filenum = computed(() => {
     return applyList.value.filter((item: any) => item.apply.status === 0).length > 0
 })
 const teamnum = computed(() => {
     return totalList.value.filter((item: any) => item.request.status === 0).length > 0
 })
 
-const items = [{ title: t('apply.fill'), num: fillnum.value }, { title: t('apply.team'), num: teamnum.value }]
+const items = [{ title: t('apply.file'), num: filenum.value }, { title: t('apply.team'), num: teamnum.value }]
 const itemid = ref<number>(Number(sessionStorage.getItem('message-tab')) || 0)
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const permissionTeam = ref([`${t('share.readOnly')}`, `${t('share.editable')}`])

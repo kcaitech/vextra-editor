@@ -619,10 +619,10 @@ const product_name = t('product.name');
                 </div>
                 <div class="newteam-container">
                     <div class="left">
-                        <span>团队</span>
+                        <span>{{ t('Createteam.team') }}</span>
                     </div>
                     <div class="right" @click.stop="showteamcard">
-                        <Tooltip :content="'创建团队'" :offset="10">
+                        <Tooltip :content="t('Createteam.add_team')" :offset="10">
                             <svg-icon icon-class="add"></svg-icon>
                         </Tooltip>
                     </div>
