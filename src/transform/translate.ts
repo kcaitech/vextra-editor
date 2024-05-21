@@ -7,6 +7,7 @@ import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
+import { round2half } from "@/transform/line";
 
 type BaseFrame4Trans = {
     rootXY: XY;
@@ -455,8 +456,21 @@ export class TranslateHandler extends TransformHandler {
                 __root2parentMatrixCache.set(parent.id, m);
             }
 
-            const tx = isAlign ? Math.round(base.offsetLivingPointX + livingX) : base.offsetLivingPointX + livingX;
-            const ty = isAlign ? Math.round(base.offsetLivingPointY + livingY) : base.offsetLivingPointY + livingY;
+            const __tx = base.offsetLivingPointX + livingX;
+            const __ty = base.offsetLivingPointY + livingY;
+
+            let tx = __tx;
+            let ty = __ty;
+
+            if (isAlign) {
+                if (shape.isStraight) {
+                    tx = round2half(tx);
+                    ty = round2half(ty);
+                } else {
+                    tx = Math.round(tx);
+                    ty = Math.round(ty);
+                }
+            }
 
             const targetXY = m.computeCoord2(tx, ty);
 
