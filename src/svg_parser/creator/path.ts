@@ -75,8 +75,13 @@ export class PathCreator extends BaseCreator {
         const y = this.attributes.pathY || 0
         const width = this.attributes.width || 0
         const height = this.attributes.height || 0
+
         const path = new Path(d)
+
         path.translate(-x, -y)
+        let diffTranslate = new ColVector3D([x, y, 0])
+        diffTranslate = this.transform.clone().clearTranslate().transform(diffTranslate).col0
+
         // dev code
         // if (this.localAttributes["node-id"] === "123") {
         //     console.log("node-id=123", -x, -y)
@@ -84,8 +89,12 @@ export class PathCreator extends BaseCreator {
         // if (this.localAttributes["id"] === "路径_348") {
         //     console.log("路径_348 path transform", this.transform.toString())
         // }
-        this.transform.translate({vector: new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])})
-        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
+
+        const x1 = diffTranslate.x + (this.attributes.x || 0)
+        const y1 = diffTranslate.y + (this.attributes.y || 0)
+        this.transform.translate({vector: new ColVector3D([x1, y1, 0])})
+        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x1, y1, width, height), path, this.style)
+
         // dev code
         // if (this.localAttributes["id"] === "路径_348") {
         //     console.log("路径_348 path", x, y, width, height, this.transform.toString())
