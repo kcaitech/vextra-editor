@@ -276,25 +276,38 @@ export class TranslateHandler extends TransformHandler {
             b = Math.round(b);
         }
 
-        // this.workspace.notify(999, { l, r, t, b });
-
         let livingXs = [l, (l + r) / 2, r];
         let livingYs = [t, (t + b) / 2, b]
 
         const assistResult = this.context.assist.alignPoints(livingXs, livingYs);
+        this.context.assist.notify(Assist.CLEAR);
 
         if (!assistResult) {
             return;
         }
 
-        this.context.assist.multi_line_x = [];
-        this.context.assist.multi_line_y = [];
+        let assistXWork = false;
+        let assistYWork = false;
 
-        let assistWork = false;
         if (assistResult.sticked_by_x) {
             this.livingBox.x += assistResult.dx;
             l += assistResult.dx;
             r = l + width;
+            assistXWork = true;
+        }
+
+        if (assistResult.sticked_by_y) {
+            this.livingBox.y += assistResult.dy;
+            t += assistResult.dy;
+            b = t + height;
+
+            assistYWork = true;
+        }
+
+        const cx = (l + r) / 2;
+        const cy = (t + b) / 2;
+
+        if (assistXWork) {
             this.context.assist.multi_line_x = [
                 {
                     x: l,
@@ -309,16 +322,19 @@ export class TranslateHandler extends TransformHandler {
                         { x: r, y: t },
                         { x: r, y: b }
                     ]
+                },
+                {
+                    x: cx,
+                    pre: [
+                        { x: cx, y: cy }
+                    ]
                 }
             ]
-
-            assistWork = true;
+        } else {
+            this.context.assist.multi_line_x = [];
         }
 
-        if (assistResult.sticked_by_y) {
-            this.livingBox.y += assistResult.dy;
-            t += assistResult.dy;
-            b = t + height;
+        if (assistYWork) {
             this.context.assist.multi_line_y = [
                 {
                     y: t,
@@ -334,16 +350,20 @@ export class TranslateHandler extends TransformHandler {
                         { x: r, y: b }
 
                     ]
+                },
+                {
+                    y: cy,
+                    pre: [
+                        { x: cx, y: cy }
+                    ]
                 }
             ]
-
-            assistWork = true;
+        } else {
+            this.context.assist.multi_line_y = [];
         }
 
-        if (assistWork) {
+        if (assistXWork || assistYWork) {
             this.context.assist.notify(Assist.MULTI_LINE_ASSIST);
-        } else {
-            this.context.assist.notify(Assist.CLEAR);
         }
     }
 
