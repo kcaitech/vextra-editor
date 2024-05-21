@@ -250,6 +250,7 @@ export class TranslateHandler extends TransformHandler {
     private updateBoxByAssist() {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
+
         this.livingBox.right = this.livingBox.x + this.livingBox.width;
         this.livingBox.bottom = this.livingBox.y + this.livingBox.height;
 
@@ -258,10 +259,19 @@ export class TranslateHandler extends TransformHandler {
         let r = this.livingBox.right;
         let b = this.livingBox.bottom;
 
-        const assistResult = this.context.assist.alignPoints(
-            [l, (l + r) / 2, r],
-            [t, (t + b) / 2, b]
-        );
+        if (this.alignPixel) {
+            l = Math.round(l);
+            t = Math.round(t);
+            r = Math.round(r);
+            b = Math.round(b);
+        }
+
+        // this.workspace.notify(999, { l, r, t, b });
+
+        let livingXs = [l, (l + r) / 2, r];
+        let livingYs = [t, (t + b) / 2, b]
+
+        const assistResult = this.context.assist.alignPoints(livingXs, livingYs);
 
         this.context.assist.notify(Assist.CLEAR);
 
@@ -290,23 +300,21 @@ export class TranslateHandler extends TransformHandler {
             }
         }
         if (assistWork) {
-            const right = this.livingBox.x + this.livingBox.width;
-            const bottom = this.livingBox.y + this.livingBox.height;
-            const cx = (this.livingBox.x + right) / 2;
-            const cy = (this.livingBox.y + bottom) / 2;
+            const cx = (l + r) / 2;
+            const cy = (t + b) / 2;
             const xs: { x: number, pre: XY[] }[] = [
                 {
-                    x: this.livingBox.x,
+                    x: l,
                     pre: [
-                        { x: this.livingBox.x, y: this.livingBox.y },
-                        { x: this.livingBox.x, y: bottom }
+                        { x: l, y: t },
+                        { x: l, y: b }
                     ]
                 },
                 {
-                    x: right,
+                    x: r,
                     pre: [
-                        { x: right, y: this.livingBox.y },
-                        { x: right, y: bottom }
+                        { x: r, y: t },
+                        { x: r, y: b }
                     ]
                 },
                 {
@@ -319,17 +327,17 @@ export class TranslateHandler extends TransformHandler {
 
             const ys: { y: number, pre: XY[] }[] = [
                 {
-                    y: this.livingBox.y,
+                    y: t,
                     pre: [
-                        { x: this.livingBox.x, y: this.livingBox.y },
-                        { x: right, y: this.livingBox.y }
+                        { x: l, y: t },
+                        { x: r, y: t }
                     ]
                 },
                 {
-                    y: bottom,
+                    y: b,
                     pre: [
-                        { x: this.livingBox.x, y: bottom },
-                        { x: right, y: bottom }
+                        { x: l, y: b },
+                        { x: r, y: b }
 
                     ]
                 },
