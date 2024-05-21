@@ -251,8 +251,22 @@ export class TranslateHandler extends TransformHandler {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
 
-        this.livingBox.right = this.livingBox.x + this.livingBox.width;
-        this.livingBox.bottom = this.livingBox.y + this.livingBox.height;
+        if (this.shiftStatus) {
+            const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
+            const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
+
+            if (dx > dy) {
+                this.livingBox.y = this.originSelectionBox.y;
+            } else {
+                this.livingBox.x = this.originSelectionBox.x;
+            }
+        }
+
+        const width = this.livingBox.width;
+        const height = this.livingBox.height;
+
+        this.livingBox.right = this.livingBox.x + width;
+        this.livingBox.bottom = this.livingBox.y + height;
 
         let l = this.livingBox.x;
         let t = this.livingBox.y;
@@ -289,17 +303,15 @@ export class TranslateHandler extends TransformHandler {
                 assistWork = true;
             }
         }
-        if (this.shiftStatus) {
-            const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
-            const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
 
-            if (dx > dy) {
-                this.livingBox.y = this.originSelectionBox.y;
-            } else {
-                this.livingBox.x = this.originSelectionBox.x;
-            }
-        }
         if (assistWork) {
+            l += this.offsetX;
+            t += this.offsetY;
+            r = l + width;
+            b = t + height;
+
+            // this.workspace.notify(999, { l, r, t, b });
+
             const cx = (l + r) / 2;
             const cy = (t + b) / 2;
             const xs: { x: number, pre: XY[] }[] = [

@@ -198,12 +198,12 @@ watchEffect(updateControllerView);
         <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"
                    :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"
                    :theme="theme"></component>
-        <!--        <path :d="testPathData" stroke="black" stroke-width="2" fill="none"/>-->
+        <!--        <path :d="testPathData" stroke="green" stroke-width="1" fill="none"/>-->
     </svg>
 </template>
 <style lang='scss' scoped>
 .hidden {
-    opacity: 0;
+    //opacity: 0;
 }
 
 svg {
