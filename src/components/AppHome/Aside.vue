@@ -16,7 +16,6 @@ import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSettin
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 import logo from '@/assets/h-logo3.svg';
 import min_logo from '@/assets/logo108x108.png';
-import { PROJECT_NAME } from "@/const";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -565,12 +564,14 @@ onUnmounted(() => {
     }
 })
 
+const product_name = t('product.name');
+
 </script>
 
 <template>
     <div class="logo">
-        <img class="logo-image" :src="logo" :alt="PROJECT_NAME" />
-        <img class="mini_logo-image" :src="min_logo" :alt="PROJECT_NAME" style="display: none;" />
+        <img class="logo-image" :src="logo" :alt="product_name" />
+        <img class="mini_logo-image" :src="min_logo" :alt="product_name" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>

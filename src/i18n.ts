@@ -6,9 +6,13 @@ function fixLocale(locale: string) {
     if (locale.startsWith('zh')) return 'zh';
     return 'en';
 }
-const locale = localStorage.getItem('locale') || navigator.language || 'en';
+/*
+在css中使用
+https://www.w3.org/International/questions/qa-css-lang.zh-hans.html
+**/
+export const locale = fixLocale(localStorage.getItem('locale') || navigator.language || 'en');
 const i18n = createI18n({
-    locale: fixLocale(locale),
+    locale,
     legacy: false,
     //this.$i18n.locale // 通过切换locale的值来实现语言切换
     messages: {//引入语言包

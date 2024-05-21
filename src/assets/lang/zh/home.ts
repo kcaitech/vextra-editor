@@ -1,9 +1,4 @@
 import { BorderPosition } from "@kcdesign/data"
-import { PROJECT_NAME } from "@/const";
-
-export const product = {
-    name: PROJECT_NAME
-}
 
 export const system = {
     incorrect_input: '输入有误！',
@@ -47,7 +42,6 @@ export const system = {
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',
     'read_Privacy': '隐私协议',
-    'product_name': PROJECT_NAME,
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
     'login_footer': '©2024 珠海市旷才科技有限公司',
     'placeholder': '搜索文件',

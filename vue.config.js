@@ -155,7 +155,7 @@ var exports = defineConfig({
             return definitions
         }),
         config.plugin('html').tap((args) => {
-         args[0].title="墨师设计"
+         args[0].title=""
          return args
         })
     },

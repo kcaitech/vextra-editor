@@ -27,7 +27,6 @@ import { Selection, XY } from "@/context/selection";
 import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
-import { PROJECT_NAME } from "@/const";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
 
 
@@ -50,7 +49,8 @@ const showpagelist = ref<boolean>(false)
 const HEAD_HEIGHT = 0;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
 
-const fileName = ref<string>(PROJECT_NAME);
+const product_name = t('product.name');
+const fileName = ref<string>(product_name);
 
 const emit = defineEmits<{
     (e: 'closeLoading'): void;
