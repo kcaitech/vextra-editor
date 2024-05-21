@@ -75,9 +75,12 @@ export class PathCreator extends BaseCreator {
         const y = this.attributes.pathY || 0
         const width = this.attributes.width || 0
         const height = this.attributes.height || 0
-        const path = new Path(d);
-        path.translate(-x, -y);
+        const path = new Path(d)
+        path.translate(-x, -y)
         // dev code
+        // if (this.localAttributes["node-id"] === "123") {
+        //     console.log("node-id=123", -x, -y)
+        // }
         // if (this.localAttributes["id"] === "路径_348") {
         //     console.log("路径_348 path transform", this.transform.toString())
         // }

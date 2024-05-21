@@ -459,6 +459,11 @@ export type Attributes = { // 保存元素的一些属性
     d?: string,
     pathX?: number,
     pathY?: number,
+
+    // polyline
+    pointsToPathD?: string,
+    polylineX?: number,
+    polylineY?: number,
 }
 
 const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")
