@@ -4,7 +4,6 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
-import { fixed } from "@/textpath/utils";
 
 export function round2half(f: number) {
     if (f === 0) return 0;
@@ -80,12 +79,6 @@ export class LineHandler extends TransformHandler {
 
             this.center = { x: (_start.x + _end.x) / 2, y: (_start.y + _end.y) / 2 };
         }
-
-        if (this.ctrlElement.endsWith('rotate')) {
-            this.workspace.rotating(true);
-        } else {
-            this.workspace.scaling(true);
-        }
     }
 
     protected keydown(event: KeyboardEvent) {
@@ -114,7 +107,12 @@ export class LineHandler extends TransformHandler {
     createApiCaller() {
         this.asyncApiCaller = new LineHandleApiCaller(this.context.coopRepo, this.context.data, this.page, this.lineShape);
 
-        this.workspace.rotating(true);
+        if (this.ctrlElement.endsWith('rotate')) {
+            this.workspace.rotating(true);
+        } else {
+            this.workspace.scaling(true);
+        }
+
         this.workspace.setSelectionViewUpdater(false);
     }
 
@@ -124,6 +122,7 @@ export class LineHandler extends TransformHandler {
         } else {
             this.workspace.scaling(false);
         }
+
         this.workspace.setSelectionViewUpdater(true);
 
         super.fulfil();
