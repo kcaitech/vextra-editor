@@ -411,8 +411,6 @@ export class ScaleHandler extends TransformHandler {
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(target);
 
-        // this.fixRefer(shape, _targetXY);
-
         if (isWidthFromZero) {
             if (targetFlipH) {
                 _targetXY.x--;
