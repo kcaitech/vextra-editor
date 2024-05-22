@@ -13,6 +13,7 @@ import {LineCreator} from "./creator/line"
 import {TextCreator} from "./creator/text"
 import {ImageCreator} from "./creator/image"
 import {Polyline} from "./creator/polyline"
+import {UseCreator} from "./creator/use"
 
 export class Parser {
     svgRoot: Element
@@ -45,6 +46,8 @@ export class Parser {
             creatorConstruction = ImageCreator
         } else if (node.tagName === "polyline" || node.tagName === "polygon") {
             creatorConstruction = Polyline
+        } else if (node.tagName === "use") {
+            creatorConstruction = UseCreator
         } else {
             creatorConstruction = NoneCreator
         }
@@ -60,7 +63,7 @@ export class Parser {
         return children
     }
 
-    parse(): Shape | undefined {
+    parse(filename?: string): Shape | undefined {
         // 创建creator树
         const stack0 = [this.svgRoot]
         while (stack0.length) {
@@ -99,6 +102,8 @@ export class Parser {
             afterSiblingDo: BaseCreator.method("afterSiblingCreateShape"),
             afterAllDo: BaseCreator.method("afterAllCreateShape"),
         })
+
+        if (rootCreator.shape && filename) rootCreator.shape.name = filename;
 
         return rootCreator.shape
     }
