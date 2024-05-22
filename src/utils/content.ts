@@ -487,6 +487,8 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
             const parseResult = parse_svg.parse(svg as string);
 
             if (parseResult.shape) {
+                parseResult.shape.name = file.name;
+
                 if (xy) {
                     parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;
                     parseResult.shape.frame.y = xy.y - parseResult.shape.frame.height / 2;
@@ -1391,10 +1393,10 @@ export function computeString(str: string) {
 }
 
 /**
- * 
+ *
  * @description 放大
- * @param context 
- * @returns 
+ * @param context
+ * @returns
  */
 export const magnify = (context: Context) => {
     const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
@@ -1406,10 +1408,10 @@ export const magnify = (context: Context) => {
 }
 
 /**
- * 
+ *
  * @description 缩小
- * @param context 
- * @returns 
+ * @param context
+ * @returns
  */
 export const lessen = (context: Context) => {
     const scale_sizes = [0.02, 0.04, 0.08, 0.14, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256];
