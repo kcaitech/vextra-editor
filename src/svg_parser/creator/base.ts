@@ -265,12 +265,25 @@ export class BaseCreator extends BaseTreeNode {
                         }
                     })
                     if (creator.htmlElement?.tagName === "linearGradient") {
-                        const x1 = parseFloat(creator.localAttributes["x1"] || "0")
-                        const y1 = parseFloat(creator.localAttributes["y1"] || "0")
-                        const x2 = parseFloat(creator.localAttributes["x2"] || "1")
-                        const y2 = parseFloat(creator.localAttributes["y2"] || "0")
+                        let x1: string | number = creator.localAttributes["x1"] || "0"
+                        if (x1.includes("%")) x1 = parseFloat(x1.replace("%", "")) / 100;
+                        else x1 = parseFloat(x1);
+
+                        let y1: string | number = creator.localAttributes["y1"] || "0"
+                        if (y1.includes("%")) y1 = parseFloat(y1.replace("%", "")) / 100;
+                        else y1 = parseFloat(y1);
+
+                        let x2: string | number = creator.localAttributes["x2"] || "1"
+                        if (x2.includes("%")) x2 = parseFloat(x2.replace("%", "")) / 100;
+                        else x2 = parseFloat(x2);
+
+                        let y2: string | number = creator.localAttributes["y2"] || "0"
+                        if (y2.includes("%")) y2 = parseFloat(y2.replace("%", "")) / 100;
+                        else y2 = parseFloat(y2);
+
                         const parentX = parseFloat(this.localAttributes["x"] || "0")
                         const parentY = parseFloat(this.localAttributes["y"] || "0")
+
                         linearGradient = {
                             x1: x1 - parentX,
                             y1: y1 - parentY,
@@ -280,6 +293,7 @@ export class BaseCreator extends BaseTreeNode {
                             stops: stops,
                         }
                         colorType = "linearGradient"
+
                     } else if (creator.htmlElement?.tagName === "radialGradient") {
                         const cx = parseFloat(creator.localAttributes["cx"] || "0")
                         const cy = parseFloat(creator.localAttributes["cy"] || "0")
@@ -325,11 +339,16 @@ export class BaseCreator extends BaseTreeNode {
         if (!fill) fill = this.localAttributes["fill"];
 
         const fillAttrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
-        // 默认填充黑色
         if (!fill && this.attributes[fillAttrName] === undefined
             && this.htmlElement?.tagName !== "svg" && this.htmlElement?.tagName !== "g"
         ) {
-            fill = "black"
+            // 寻找祖先元素的fill
+            let node = this.htmlElement.node.parentElement
+            while (node) {
+                fill = ((node as any).creator as BaseCreator).localAttributes[fillAttrName]
+                if (fill) break;
+                node = node.parentElement
+            }
         }
 
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
