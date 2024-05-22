@@ -47,6 +47,12 @@ export class LineHandler extends TransformHandler {
 
     private livingPoint: XY;
 
+    // align
+    private horFixedStatus: boolean = false;
+    private horFixedValue: number = Infinity;
+    private verFixedStatus: boolean = false;
+    private verFixedValue: number = Infinity;
+
     constructor(context: Context, event: MouseEvent, ctrlElementType: CtrlElementType) {
         super(context, event);
         this.referencePoint = this.workspace.getRootXY(event);
@@ -100,8 +106,50 @@ export class LineHandler extends TransformHandler {
     }
 
     private fixByAssist() {
-        // const assist = this.assist.alignXY(this.livingPoint);
+        const assist = this.context.assist.alignXY(this.livingPoint);
+        if (assist) {
+            this.updateHorFixedStatus(this.livingPoint.x, assist);
+            this.updateVerFixedStatus(this.livingPoint.y, assist);
+        }
+        
+        if (this.horFixedStatus) {
+            this.livingPoint.x = this.horFixedValue;
+        }
+        if (this.verFixedStatus) {
+            this.livingPoint.y = this.verFixedValue;
+        }
+    }
 
+    private updateHorFixedStatus(livingX: number, assistResult: { x: number, sticked_by_x: boolean }) {
+        const stickness = this.context.assist.stickness;
+        if (this.horFixedStatus) {
+            if (Math.abs(livingX - this.horFixedValue) >= stickness) {
+                this.horFixedStatus = false;
+            } else {
+                if (this.horFixedValue !== assistResult.x) {
+                    this.horFixedValue = assistResult.x;
+                }
+            }
+        } else if (assistResult.sticked_by_x) {
+            this.horFixedStatus = true;
+            this.horFixedValue = assistResult.x;
+        }
+    }
+
+    private updateVerFixedStatus(livingY: number, assistResult: { y: number, sticked_by_y: boolean }) {
+        const stickness = this.context.assist.stickness;
+        if (this.verFixedStatus) {
+            if (Math.abs(livingY - this.verFixedValue) >= stickness) {
+                this.verFixedStatus = false;
+            } else {
+                if (this.verFixedValue !== assistResult.y) {
+                    this.verFixedValue = assistResult.y;
+                }
+            }
+        } else if (assistResult.sticked_by_y) {
+            this.verFixedStatus = true;
+            this.verFixedValue = assistResult.y;
+        }
     }
 
     createApiCaller() {
