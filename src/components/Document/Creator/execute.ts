@@ -89,7 +89,17 @@ export class CreatorExecute extends TransformHandler {
 
         // 2. 动态辅助修正
         const at = this.context.assist;
-        const assist = at.alignXY(this.livingPoint);
+        const __living = { ...this.livingPoint };
+        if (this.alignPixel) {
+            if (this.action === Action.AddArrow || this.action === Action.AddLine) {
+                __living.x = round2half(__living.x);
+                __living.y = round2half(__living.y);
+            } else {
+                __living.x = Math.round(__living.x);
+                __living.y = Math.round(__living.y);
+            }
+        }
+        const assist = at.alignXY(__living);
         if (assist) {
             this.updateHorFixedStatus(this.livingPoint.x, assist);
             this.updateVerFixedStatus(this.livingPoint.y, assist);

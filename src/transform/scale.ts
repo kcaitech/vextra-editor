@@ -26,11 +26,11 @@ export class ScaleHandler extends TransformHandler {
     readonly ctrlElementType: CtrlElementType;
 
     private livingPoint: XY;
-    private relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
+    private relativeFlip: { fh: boolean, fv: boolean } = {fh: false, fv: false};
     private fixedRatioWhileScaling: boolean = false;
 
     // base frame
-    private originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
+    private originSelectionBox: FrameLike = {x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0};
     private baseFrames: BaseFrames = new Map();
 
     // align
@@ -299,7 +299,13 @@ export class ScaleHandler extends TransformHandler {
         const y1 = this.originSelectionBox.y;
         const y2 = this.originSelectionBox.bottom;
 
-        const target = this.context.assist.alignX(this.livingPoint, [{ x, y: y1 }, { x, y: y2 }]);
+        const assist = {...this.livingPoint};
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+
+        const target = this.context.assist.alignX(assist, [{x, y: y1}, {x, y: y2}]);
         if (!target) {
             return;
         }
@@ -312,7 +318,13 @@ export class ScaleHandler extends TransformHandler {
         const x1 = this.originSelectionBox.x;
         const x2 = this.originSelectionBox.right;
 
-        const assistResult = this.context.assist.alignY(this.livingPoint, [{ x: x1, y }, { x: x2, y }]);
+        const assist = {...this.livingPoint};
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+
+        const assistResult = this.context.assist.alignY(assist, [{x: x1, y}, {x: x2, y}]);
         if (!assistResult) {
             return;
         }
@@ -321,7 +333,12 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private fixToAlignWhileModifyPoint() {
-        const assistResult = this.context.assist.alignXY(this.livingPoint);
+        let assist = {...this.livingPoint};
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+        const assistResult = this.context.assist.alignXY(assist);
         if (!assistResult) {
             return;
         }
@@ -380,9 +397,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseX, baseY, baseWidth, baseHeight } = base;
+        const {baseX, baseY, baseWidth, baseHeight} = base;
 
         const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
         let w = baseWidth - pointOnShape.x;
@@ -406,7 +423,7 @@ export class ScaleHandler extends TransformHandler {
             transformedMatrix,
             isWidthFromZero,
             targetFlipH
-        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
 
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(target);
@@ -443,9 +460,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseX, baseY, baseWidth, baseHeight } = base;
+        const {baseX, baseY, baseWidth, baseHeight} = base;
 
         const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
 
@@ -467,7 +484,7 @@ export class ScaleHandler extends TransformHandler {
             needFlipV,
             targetRotation,
             transformedMatrix
-        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
 
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(0, pointOnShape.y));
@@ -500,7 +517,7 @@ export class ScaleHandler extends TransformHandler {
 
         const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
 
-        const { baseX, baseY, baseWidth, baseHeight } = base;
+        const {baseX, baseY, baseWidth, baseHeight} = base;
 
         let w = baseWidth;
         let h = baseHeight - pointOnShape.y;
@@ -522,7 +539,7 @@ export class ScaleHandler extends TransformHandler {
             transformedMatrix,
             isHeightFromZero,
             targetFlipV
-        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
 
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord3(pointOnShape));
@@ -563,7 +580,7 @@ export class ScaleHandler extends TransformHandler {
 
         const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
 
-        const { baseX, baseY, baseWidth, baseHeight } = base;
+        const {baseX, baseY, baseWidth, baseHeight} = base;
 
         let w = baseWidth;
         let h = pointOnShape.y;
@@ -583,7 +600,7 @@ export class ScaleHandler extends TransformHandler {
             needFlipV,
             targetRotation,
             transformedMatrix
-        } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
 
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(pointOnShape.x, 0));
@@ -731,9 +748,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseWidth, baseHeight } = base;
+        const {baseWidth, baseHeight} = base;
 
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
@@ -754,7 +771,7 @@ export class ScaleHandler extends TransformHandler {
             __livingPoint = this.toRoot.computeCoord3(pointOnShape);
         }
 
-        const { x, y } = __livingPoint;
+        const {x, y} = __livingPoint;
 
         const root2parent = new Matrix(this.parent2root.inverse);
 
@@ -784,7 +801,7 @@ export class ScaleHandler extends TransformHandler {
             isHeightFromZero,
             targetFlipV,
             targetFlipH
-        } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: base.baseX, y: base.baseY}, w, h);
 
         if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
             const floatX = shape.parent.frame.x % 1;
@@ -840,9 +857,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseWidth, baseHeight } = base;
+        const {baseWidth, baseHeight} = base;
 
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
@@ -863,7 +880,7 @@ export class ScaleHandler extends TransformHandler {
             __livingPoint = this.toRoot.computeCoord3(pointOnShape);
         }
 
-        const { x, y } = __livingPoint;
+        const {x, y} = __livingPoint;
 
         const root2parent = new Matrix(this.parent2root.inverse);
         const toParent = this.toParent;
@@ -899,7 +916,7 @@ export class ScaleHandler extends TransformHandler {
             isWidthFromZero,
             isHeightFromZero,
             targetFlipV
-        } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: base.baseX, y: base.baseY}, w, h);
 
         if (deOffset) {
             transformedMatrix.trans(floatX, floatY);
@@ -939,9 +956,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseWidth, baseHeight } = base;
+        const {baseWidth, baseHeight} = base;
 
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
@@ -976,7 +993,7 @@ export class ScaleHandler extends TransformHandler {
             transformedMatrix,
             isWidthFromZero,
             isHeightFromZero
-        } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: base.baseX, y: base.baseY}, w, h);
 
         const root2parent = new Matrix(this.parent2root.inverse);
 
@@ -1017,9 +1034,9 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        let __livingPoint = { ...this.livingPoint };
+        let __livingPoint = {...this.livingPoint};
 
-        const { baseWidth, baseHeight } = base;
+        const {baseWidth, baseHeight} = base;
 
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
@@ -1040,7 +1057,7 @@ export class ScaleHandler extends TransformHandler {
             __livingPoint = this.toRoot.computeCoord3(pointOnShape);
         }
 
-        const { x, y } = __livingPoint;
+        const {x, y} = __livingPoint;
         const parent2root = this.parent2root;
         const toParent = this.toParent;
         const target = parent2root.inverseCoord(x, y);
@@ -1059,7 +1076,7 @@ export class ScaleHandler extends TransformHandler {
             isHeightFromZero,
             isWidthFromZero,
             targetFlipH
-        } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
+        } = this.__modifyTransform(shape, {x: base.baseX, y: base.baseY}, w, h);
 
         const xy1 = transformedMatrix.computeCoord(0, isHeightFromZero ? 0 : targetHeight);
 
@@ -1214,8 +1231,8 @@ export class ScaleHandler extends TransformHandler {
             this.relativeFlip.fh = !this.relativeFlip.fh;
         }
 
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: this.livingPoint.x, y: box.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: this.livingPoint.x, y: box.y};
 
         if (isFixedRatio) {
             const _height = box.height * scaleY - box.height;
@@ -1239,8 +1256,8 @@ export class ScaleHandler extends TransformHandler {
             this.relativeFlip.fh = !this.relativeFlip.fh;
         }
 
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: box.x, y: box.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: box.x, y: box.y};
         if (isFixedRatio) {
             const _height = box.height * (Math.abs(scaleY) - 1);
             referencePoint2.y -= _height / 2;
@@ -1263,8 +1280,8 @@ export class ScaleHandler extends TransformHandler {
             this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: box.x, y: this.livingPoint.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: box.x, y: this.livingPoint.y};
 
         if (isFixedRatio) {
             const _width = box.width * scaleX - box.width;
@@ -1288,8 +1305,8 @@ export class ScaleHandler extends TransformHandler {
             this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: box.x, y: box.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: box.x, y: box.y};
 
         if (isFixedRatio) {
             const _width = (scaleX - 1) * box.width;
@@ -1317,8 +1334,8 @@ export class ScaleHandler extends TransformHandler {
         }
 
         const isFixedRatio = this.isFixedRatio();
-        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
-        const referencePoint2 = { x: this.livingPoint.x, y: this.livingPoint.y };
+        const referencePoint1 = {x: this.originSelectionBox.x, y: this.originSelectionBox.y};
+        const referencePoint2 = {x: this.livingPoint.x, y: this.livingPoint.y};
 
         if (isFixedRatio) {
             if (scaleX > scaleY) {
@@ -1350,8 +1367,8 @@ export class ScaleHandler extends TransformHandler {
         }
 
         const isFixedRatio = this.isFixedRatio();
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: box.x, y: this.livingPoint.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: box.x, y: this.livingPoint.y};
 
         if (isFixedRatio) {
             if (scaleX > scaleY) {
@@ -1392,8 +1409,8 @@ export class ScaleHandler extends TransformHandler {
             this.relativeFlip.fv = !this.relativeFlip.fv;
         }
 
-        const referencePoint1 = { x: this.originSelectionBox.x, y: this.originSelectionBox.y };
-        const referencePoint2 = { x: box.x, y: box.y };
+        const referencePoint1 = {x: this.originSelectionBox.x, y: this.originSelectionBox.y};
+        const referencePoint2 = {x: box.x, y: box.y};
 
         const transformUnits = this.generateTransformUnits(referencePoint1, referencePoint2, scaleX, scaleY, needFlipH, needFlipV);
 
@@ -1416,8 +1433,8 @@ export class ScaleHandler extends TransformHandler {
         }
 
         const isFixedRatio = this.isFixedRatio();
-        const referencePoint1 = { x: box.x, y: box.y };
-        const referencePoint2 = { x: this.livingPoint.x, y: box.y };
+        const referencePoint1 = {x: box.x, y: box.y};
+        const referencePoint2 = {x: this.livingPoint.x, y: box.y};
 
         if (isFixedRatio) {
             if (scaleX > scaleY) {
