@@ -371,28 +371,6 @@ export class ScaleHandler extends TransformHandler {
         transformedXY.y = baseY + (targetXY.y - transformedXY.y);
     }
 
-    /**
-     * @description 修正根部浮点数导致的上梁不正下梁歪
-     * todo 临时方案，还需要优化
-     */
-    private fixRefer(shape: ShapeView, refer: XY) {
-        if (!this.alignPixel) {
-            return;
-        }
-        const parent = shape.parent!;
-        if (parent.type !== ShapeType.Page) {
-            return;
-        }
-        const floatX = parent.frame.x % 1;
-        if (floatX) {
-            refer.x += floatX;
-        }
-        const floatY = parent.frame.y % 1;
-        if (floatY) {
-            refer.y += floatY;
-        }
-    }
-
     private __execute4singleLeft() {
         const shape = this.shapes[0];
 
@@ -433,7 +411,7 @@ export class ScaleHandler extends TransformHandler {
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(target);
 
-        this.fixRefer(shape, _targetXY);
+        // this.fixRefer(shape, _targetXY);
 
         if (isWidthFromZero) {
             if (targetFlipH) {
@@ -496,7 +474,7 @@ export class ScaleHandler extends TransformHandler {
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(0, pointOnShape.y));
 
-        this.fixRefer(shape, _targetXY);
+        // this.fixRefer(shape, _targetXY);
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -551,7 +529,7 @@ export class ScaleHandler extends TransformHandler {
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord3(pointOnShape));
 
-        this.fixRefer(shape, _targetXY);
+        // this.fixRefer(shape, _targetXY);
 
         if (isHeightFromZero) {
             if (targetFlipV) {
@@ -612,7 +590,7 @@ export class ScaleHandler extends TransformHandler {
         const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(pointOnShape.x, 0));
 
-        this.fixRefer(shape, _targetXY);
+        // this.fixRefer(shape, _targetXY);
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -730,7 +708,7 @@ export class ScaleHandler extends TransformHandler {
         };
     }
 
-    private __getTargetXY(target: XY, refer: XY, base: Box) {
+    private __getTargetXY(shape: ShapeView, target: XY, refer: XY, base: Box) {
         const alignPixel = this.alignPixel && !this.rotation;
         if (alignPixel) {
             target.x = Math.round(target.x);
@@ -780,10 +758,11 @@ export class ScaleHandler extends TransformHandler {
 
         const { x, y } = __livingPoint;
 
-        const parent2root = this.parent2root;
+        const root2parent = new Matrix(this.parent2root.inverse);
+
         const toParent = this.toParent;
 
-        const target = parent2root.inverseCoord(x, y);
+        const target = root2parent.computeCoord2(x, y);
         const saverb = toParent.computeCoord2(baseWidth, baseHeight);
 
         const matrixarr = toParent.toArray();
@@ -809,9 +788,16 @@ export class ScaleHandler extends TransformHandler {
             targetFlipH
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
-        const xy1 = transformedMatrix.computeCoord(0, 0);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
 
-        this.fixRefer(shape, xy1);
+            if (floatX || floatY) {
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
+
+        const xy1 = transformedMatrix.computeCoord(0, 0);
 
         if (isWidthFromZero) {
             if (targetFlipH) {
@@ -829,7 +815,7 @@ export class ScaleHandler extends TransformHandler {
             }
         }
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         const transformUnits: ScaleUnit[] = [];
         transformUnits.push({
@@ -881,10 +867,23 @@ export class ScaleHandler extends TransformHandler {
 
         const { x, y } = __livingPoint;
 
-        const parent2root = this.parent2root;
+        const root2parent = new Matrix(this.parent2root.inverse);
         const toParent = this.toParent;
 
-        const target = parent2root.inverseCoord(x, y);
+        let deOffset = false;
+        let floatX = 0;
+        let floatY = 0;
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            floatX = shape.parent.frame.x % 1;
+            floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                root2parent.trans(floatX, floatY);
+                deOffset = true;
+            }
+        }
+
+        const target = root2parent.computeCoord2(x, y);
         const xy2 = toParent.inverseCoord(target.x, target.y);
         const savelb = toParent.computeCoord2(0, baseHeight);
 
@@ -901,13 +900,14 @@ export class ScaleHandler extends TransformHandler {
             transformedMatrix,
             isWidthFromZero,
             isHeightFromZero,
-            targetFlipH,
             targetFlipV
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
-        const xy1 = transformedMatrix.computeCoord(isWidthFromZero ? 0 : targetWidth, 0);
+        if (deOffset) {
+            transformedMatrix.trans(floatX, floatY);
+        }
 
-        this.fixRefer(shape, xy1);
+        const xy1 = transformedMatrix.computeCoord(isWidthFromZero ? 0 : targetWidth, 0);
 
         if (isHeightFromZero) {
             if (targetFlipV) {
@@ -917,7 +917,7 @@ export class ScaleHandler extends TransformHandler {
             }
         }
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -944,7 +944,6 @@ export class ScaleHandler extends TransformHandler {
         let __livingPoint = { ...this.livingPoint };
 
         const { baseWidth, baseHeight } = base;
-
 
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
@@ -981,14 +980,22 @@ export class ScaleHandler extends TransformHandler {
             isHeightFromZero
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
+        const root2parent = new Matrix(this.parent2root.inverse);
+
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                transformedMatrix.trans(floatX, floatY);
+                root2parent.trans(floatX, floatY);
+            }
+        }
+
         const xy1 = transformedMatrix.computeCoord2(isWidthFromZero ? 0 : targetWidth, isHeightFromZero ? 0 : targetHeight);
+        const target = root2parent.computeCoord2(__livingPoint.x, __livingPoint.y);
 
-        this.fixRefer(shape, xy1);
-
-        const target = this.parent2root.inverseCoord(__livingPoint.x, __livingPoint.y);
-
-
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -1066,9 +1073,9 @@ export class ScaleHandler extends TransformHandler {
             }
         }
 
-        this.fixRefer(shape, xy1);
+        // this.fixRefer(shape, xy1);
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -1082,7 +1089,6 @@ export class ScaleHandler extends TransformHandler {
             targetRotation
         }]);
     }
-
 
     private __execute4multi() {
         if (this.ctrlElementType === CtrlElementType.RectLeft) {
