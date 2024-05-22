@@ -39,14 +39,14 @@ export class LineHandler extends TransformHandler {
     readonly lineShape: PathShapeView;
     readonly referencePoint: XY;
     readonly ctrlElement: CtrlElementType;
-    readonly center: XY;
+    readonly center: XY; // root 空间
     readonly baseStart: CurvePoint;
     readonly baseEnd: CurvePoint;
+    readonly matrix: Matrix;
+    readonly inverse: Matrix;
+    readonly assist: Assist;
 
     private livingPoint: XY;
-    private assist: Assist;
-    private matrix: Matrix;
-    private inverse: Matrix;
 
     constructor(context: Context, event: MouseEvent, ctrlElementType: CtrlElementType) {
         super(context, event);
@@ -75,7 +75,16 @@ export class LineHandler extends TransformHandler {
         if (!start || !end) {
             this.center = { x: 0, y: 0 };
         } else {
-            this.center = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+            const _start = this.matrix.computeCoord3(start);
+            const _end = this.matrix.computeCoord3(end);
+
+            this.center = { x: (_start.x + _end.x) / 2, y: (_start.y + _end.y) / 2 };
+        }
+
+        if (this.ctrlElement.endsWith('rotate')) {
+            this.workspace.rotating(true);
+        } else {
+            this.workspace.scaling(true);
         }
     }
 
@@ -102,25 +111,6 @@ export class LineHandler extends TransformHandler {
 
     }
 
-    private getAngle() {
-        const living = this.inverse.computeCoord3(this.livingPoint);
-
-        let angle = getHorizontalAngle(this.center, living);
-
-        if (this.shiftStatus) {
-            const ex = angle % 15;
-
-            if (ex < 7.5) {
-                angle -= ex;
-            } else {
-                angle = angle - ex + 15;
-            }
-        }
-
-        console.log('angle:', angle);
-        // continue
-    }
-
     createApiCaller() {
         this.asyncApiCaller = new LineHandleApiCaller(this.context.coopRepo, this.context.data, this.page, this.lineShape);
 
@@ -129,7 +119,11 @@ export class LineHandler extends TransformHandler {
     }
 
     fulfil() {
-        this.workspace.rotating(false);
+        if (this.ctrlElement.endsWith('rotate')) {
+            this.workspace.rotating(false);
+        } else {
+            this.workspace.scaling(false);
+        }
         this.workspace.setSelectionViewUpdater(true);
 
         super.fulfil();
@@ -157,25 +151,20 @@ export class LineHandler extends TransformHandler {
     private __execute() {
         this.fixByAssist();
 
-        const x = round2half(this.livingPoint.x);
-        const y = round2half(this.livingPoint.y);
-
-        const _xy = this.inverse.computeCoord2(x, y);
-
         if (this.ctrlElement === CtrlElementType.LineStart) {
-            this.__execute4lineStart();
+            this.execute4lineStart();
         } else if (this.ctrlElement === CtrlElementType.LineEnd) {
-            this.__execute4lineEnd();
+            this.execute4lineEnd();
         } else if (this.ctrlElement === CtrlElementType.LineStartR) {
-            this.getAngle();
+            this.execute4lineStartRotate();
         } else if (this.ctrlElement === CtrlElementType.LineEndR) {
-            this.getAngle();
+            this.execute4lineEndRotate();
         }
 
         this.updateCtrlView();
     }
 
-    private __execute4lineStart() {
+    private execute4lineStart() {
         const __end = this.lineShape.segments[0].points[1];
         if (!__end) return;
 
@@ -200,7 +189,7 @@ export class LineHandler extends TransformHandler {
         (this.asyncApiCaller as LineHandleApiCaller).execute(start, end);
     }
 
-    private __execute4lineEnd() {
+    private execute4lineEnd() {
         const __start = this.lineShape.segments[0].points[0];
         if (!__start) return;
 
@@ -288,5 +277,75 @@ export class LineHandler extends TransformHandler {
         _fixed.y = __f.y;
         _living.x = __l.x;
         _living.y = __l.y;
+    }
+
+    private execute4lineStartRotate() {
+        const center = this.center;
+        let angle = getHorizontalAngle(center, this.livingPoint);
+
+        if (this.shiftStatus) {
+            const ex = angle % 15;
+
+            if (ex < 7.5) {
+                angle -= ex;
+            } else {
+                angle = angle - ex + 15;
+            }
+        }
+
+        const arc = (angle / 180) * Math.PI;
+
+        let start = this.matrix.computeCoord3(this.baseStart);
+        let end = this.matrix.computeCoord3(this.baseEnd);
+
+        const arcS = (getHorizontalAngle(center, start) / 180) * Math.PI;
+        const arcE = (getHorizontalAngle(center, end) / 180) * Math.PI;
+
+        const m1 = new Matrix();
+        m1.rotate(arc - arcS, center.x, center.y);
+        m1.multiAtLeft(this.inverse);
+        start = m1.computeCoord3(start);
+
+        const m2 = new Matrix();
+        m2.rotate(arc - arcE + Math.PI, center.x, center.y);
+        m2.multiAtLeft(this.inverse);
+        end = m2.computeCoord3(end);
+
+        (this.asyncApiCaller as LineHandleApiCaller).execute(start, end);
+    }
+
+    private execute4lineEndRotate() {
+        const center = this.center;
+        let angle = getHorizontalAngle(center, this.livingPoint);
+
+        if (this.shiftStatus) {
+            const ex = angle % 15;
+
+            if (ex < 7.5) {
+                angle -= ex;
+            } else {
+                angle = angle - ex + 15;
+            }
+        }
+
+        const arc = (angle / 180) * Math.PI;
+
+        let start = this.matrix.computeCoord3(this.baseStart);
+        let end = this.matrix.computeCoord3(this.baseEnd);
+
+        const arcS = (getHorizontalAngle(center, start) / 180) * Math.PI;
+        const arcE = (getHorizontalAngle(center, end) / 180) * Math.PI;
+
+        const m1 = new Matrix();
+        m1.rotate(arc - arcS + Math.PI, center.x, center.y);
+        m1.multiAtLeft(this.inverse);
+        start = m1.computeCoord3(start);
+
+        const m2 = new Matrix();
+        m2.rotate(arc - arcE, center.x, center.y);
+        m2.multiAtLeft(this.inverse);
+        end = m2.computeCoord3(end);
+
+        (this.asyncApiCaller as LineHandleApiCaller).execute(start, end);
     }
 }
