@@ -271,6 +271,31 @@ onUnmounted(() => {
 })
 
 
+const copyImg = (e: MouseEvent) => {
+  const img = e.target as HTMLImageElement
+  const canvas = document.createElement('canvas');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = img.width + 'px'
+  canvas.style.height = img.height + 'px'
+  canvas.width = img.width * dpr;
+  canvas.height = img.height * dpr;
+  // canvas绘制上下文
+  const context = canvas.getContext('2d');
+  // 图片绘制
+  context?.drawImage(img, 0, 0, img.width * dpr, img.height * dpr);
+  // 转为Blob数据
+  canvas.toBlob(blob => {
+    // 使用剪切板API进行复制
+    const data = [new ClipboardItem({
+      ['image/png']: blob as Blob
+    })];
+    navigator.clipboard.write(data).then(res => {
+      ElMessage.closeAll()
+      ElMessage({type:"success",message:"复制成功"})
+    });
+  });
+}
+
 
 const openSelect = () => {
   if (authority.value) authority.value = false
@@ -468,12 +493,13 @@ const showImg = () => {
     </div>
     <div class="wechat-code" v-if="showimg">
       <svg-icon icon-class="close" @click.stop="showimg = !showimg"></svg-icon>
-      <span style="font-size: 15px;">通过小程序打开</span>
-      <img v-if="miniprogramcode" :src="miniprogramcode" alt="miniprogramcode">
+      
+      <span style="font-size: 15px;">微信"扫一扫"，转发给好友</span>
+      <img v-if="miniprogramcode" style="cursor: pointer;" :src="miniprogramcode" alt="miniprogramcode" @click="copyImg">
       <div v-else class="loading">
         <Loading :size="20"></Loading>
       </div>
-
+      <span style="font-size: 13px;color: #c8c8c8;">点击小程序码复制</span>
     </div>
   </el-card>
 

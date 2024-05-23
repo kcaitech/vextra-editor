@@ -208,10 +208,27 @@ watchEffect(() => {
 const miniprogramcode = ref<string>()
 
 async function GetminiProgramCode() {
-    const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent("home") })
-    if (code === 0) {
-        miniprogramcode.value = data
+    const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
+    console.log(perRoute);
+
+    if (perRoute.includes('document') || perRoute.includes('pageviews')) {
+        if (perRoute.includes('?')) {
+            const params = new URLSearchParams(perRoute.split('?')[1]);
+            if (params.get('id')?.split(' ')[0] != null) {
+                const id = params.get('id')?.split(' ')[0];
+                const { data, code } = await user_api.GetminiProgramCode({ scene: `id=${encodeURIComponent(id as string)}` })
+                if (code === 0) {
+                    miniprogramcode.value = data
+                }
+            }
+        }
+    } else {
+        const { data, code } = await user_api.GetminiProgramCode({ scene: "Home" })
+        if (code === 0) {
+            miniprogramcode.value = data
+        }
     }
+
 }
 
 onMounted(() => {
@@ -332,7 +349,8 @@ onMounted(() => {
                             v-loading="isLoading">
                         </div>
                         <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
-                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
+                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode"
+                                alt="code">
                         </div>
                         <div class="tips">
                             <span>{{ t('system.login_read') }}</span>
@@ -403,7 +421,8 @@ onMounted(() => {
     background-image: url("@/assets/bgimg3.png");
     background-size: cover;
     background-repeat: no-repeat;
-    svg{
+
+    svg {
         position: fixed;
         top: 2%;
         left: 3%;
@@ -459,7 +478,7 @@ onMounted(() => {
                     font-weight: 500;
                     // margin-top: 74px;
                     // margin-bottom: 46px;
-                    color:black;
+                    color: black;
                     opacity: 0.8;
                 }
 

@@ -75,6 +75,7 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
+const fileName = ref<string>(PROJECT_NAME);
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -391,6 +392,7 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
+            fileName.value = file_name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
             kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
@@ -747,6 +749,17 @@ const stop = watch(() => null_context.value, (v) => {
     }
 })
 
+watch(fileName, (NewNanme) => {
+    if (NewNanme) {
+        (window as any).wx.miniProgram.postMessage({
+            data: {
+                name: NewNanme,
+                id: docInfo.value.document.id
+            }
+        });
+    }
+})
+
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload);
     window.addEventListener('unload', onUnload);
@@ -788,34 +801,32 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context"/>
+            <Toolbar :context="context!" v-if="!loading && !null_context" />
         </div>
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-                      v-if="inited && !null_context"
-                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-                      :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
+            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                            @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
-                            @showNavigation="showHiddenLeft"
-                            :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
+
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                             @closeLoading="closeLoading">
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                    @closeLoading="closeLoading">
                 </ContentView>
             </template>
+
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
-                           @mouseenter="(e: Event) => { mouseenter('right') }"
-                           @mouseleave="() => { mouseleave('right') }"
-                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
-                           @showAttrbute="showHiddenRight">
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
             </template>
         </ColSplitView>
@@ -825,7 +836,7 @@ onUnmounted(() => {
         </div>
         <div v-if="showHint" class="notification">
             <el-icon :size="13">
-                <Warning/>
+                <Warning />
             </el-icon>
             <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
             <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
@@ -833,9 +844,10 @@ onUnmounted(() => {
             <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
         </div>
         <Bridge v-if="bridge" :context="context!"></Bridge>
-        <HelpEntrance v-if="!null_context" :context="context!"/>
+        <HelpEntrance v-if="!null_context" :context="context!" />
     </div>
 </template>
+
 <style scoped lang="scss">
 .main {
     min-width: 460px;
@@ -956,7 +968,7 @@ onUnmounted(() => {
         border-radius: 4px;
 
         .loading-spinner {
-            > svg {
+            >svg {
                 width: 15px;
                 height: 15px;
                 color: #000;
