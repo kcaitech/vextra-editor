@@ -699,6 +699,13 @@ export class CreatorExecute extends TransformHandler {
             params.frame.height = 24;
         }
 
+        if (action === Action.AddLine || action === Action.AddArrow) {
+            params.frame.x += 50;
+            params.frame.y += 49.5;
+            params.frame.width = 100;
+            params.frame.height = 1;
+        }
+
         if (type === ShapeType.Artboard && this.downEnv.type === ShapeType.Page) {
             params.fill = new Fill([0] as any, v4(), true, FillType.SolidColor, new Color(1, 255, 255, 255));
         }
@@ -727,11 +734,6 @@ export class CreatorExecute extends TransformHandler {
             // 自定义frame
         } else {
             // 点击建图
-            if (action === Action.AddLine || action === Action.AddArrow) {
-                super.fulfil();
-                return;
-            }
-
             this.createImmediate();
         }
 
