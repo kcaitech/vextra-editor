@@ -44,7 +44,6 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
-import { PROJECT_NAME } from "@/const";
 import kcdesk from '@/kcdesk';
 import { newFile2, openFile3 } from '@/utils/neworopen';
 
@@ -322,7 +321,7 @@ const getUserInfo = async () => {
 
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
-
+const product_name = t('product.name');
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -391,7 +390,7 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
             kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
@@ -740,7 +739,7 @@ const stop = watch(() => null_context.value, (v) => {
         const _name = context?.data.name || '';
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - 墨师设计` : `${file_name} - 墨师设计`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
             kcdesk?.fileSetName(file_name);
             clearTimeout(timer);
         }, 500)

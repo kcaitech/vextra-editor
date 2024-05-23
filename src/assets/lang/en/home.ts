@@ -1,9 +1,4 @@
 import { BorderPosition } from "@kcdesign/data";
-import { PROJECT_NAME } from "@/const";
-
-export const product = {
-    name: 'MossDesign'
-}
 
 export const system = {
     incorrect_input: 'Incorrect input!',
@@ -47,7 +42,6 @@ export const system = {
     'login_read': 'Scanning code indicates that you have read and agreed',
     'read_TOS': 'Service Agreement',
     'read_Privacy': 'Privacy Agreement',
-    'product_name': PROJECT_NAME,
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
     'login_footer': 'Zhuhai Kuangcai Technology Co., Ltd',
     'placeholder': 'Search file',
@@ -68,7 +62,7 @@ export const system = {
     sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
-    piexl: 'Pixel Round',
+    pixel: 'Pixel Round',
     grid: 'Pixel grid',
     uploadMediaFail: 'Image upload failed'
 }
@@ -109,7 +103,7 @@ export const home = {
     file_star_marking: 'File has been marked star, can be viewed in the star list!',
     rect: 'Rectangle',
     picture: 'Picture',
-    comment: 'Add comment',
+    comment: 'Comments',
     groups: 'Group up',
     ungroup: 'Ungroup',
     search_layer: 'Search layer',
@@ -168,7 +162,7 @@ export const search = {
 
 
 export const navi = {
-    shape: 'Shape',
+    shape: 'Shapes',
     comps: 'Compnents',
     resource: 'Resource',
     page: 'Page',
@@ -181,12 +175,13 @@ export const navi = {
 export const frame = {
     custom: 'Custom',
     phone: 'Phone',
-    tablet: 'Tablet',
+    pad: 'Pad',
     deskdop: 'Deskdop',
     presentation: 'Presentation',
     watch: 'Watch',
     paper: 'Paper',
-    social_media: 'Social media'
+    social_media: 'Social media',
+    slide: 'Slide'
 }
 
 export const fileMenu = {
@@ -334,7 +329,7 @@ export const comment = {
     a_few_reply: 'reply',
     month: 'month',
     day: 'day',
-    no_comment: 'No current comments',
+    no_comment: 'No comments',
     comments_hide: 'Comments are set to hide',
     show_comments: 'Show comments',
     input_no_perm: 'No permission to comment'

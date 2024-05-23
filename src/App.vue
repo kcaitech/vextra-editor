@@ -3,7 +3,8 @@ import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
 import { onBeforeUnmount, onMounted } from "vue";
 import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
-import { PROJECT_NAME } from "@/const";
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
@@ -13,8 +14,19 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
     }
 }
 
+document.title = t('product.name') + ' - ' + t('product.subtitle');
+
+const description = document.createElement('meta');
+description.name = "description";
+description.content = t('product.description');
+document.head.append(description);
+
+const keywords = document.createElement('meta');
+keywords.name = "keywords";
+keywords.content = t('product.keywords');
+document.head.append(keywords);
+
 onMounted(() => {
-    document.title = PROJECT_NAME;
     startRefreshTokenTask();
 })
 

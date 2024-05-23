@@ -1,4 +1,4 @@
-import { createRouter,createWebHistory} from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
@@ -129,7 +129,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect:'login',
+        redirect: 'login',
         children: [
             {
                 path: "introduction",
@@ -157,7 +157,11 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + productName, requireAuth: true, group: Group.Home },
+        meta: {
+            // title: _t.t('system.btn_login') + ' - ' + productName,
+            requireAuth: true,
+            group: Group.Home
+        },
     },
     {
         path: "/home",
