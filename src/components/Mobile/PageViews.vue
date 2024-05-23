@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@/router';
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
@@ -672,7 +672,7 @@ function move(e: TouchEvent) {
 }
 
 function end(e: TouchEvent) {
-    showpagelist.value = false
+    // showpagelist.value = false
     if (e.touches.length) {
         preAnchor = __anchor(e);
     }
@@ -706,18 +706,36 @@ onUnmounted(() => {
     localStorage.setItem('s-bar-pst', JSON.stringify(pst))
 })
 
+function scrollIntoView() {
+    const item = document.querySelectorAll('.list-item');
+    const el = document.querySelector('.pagelist');
+    const idx = arr.value.findIndex(item => item.data.value === curPage.value?.id)
+    if (item) {
+        el?.scrollTo({ top: idx * 44 })
+    }
+}
+
+const showEl = () => {
+    showpagelist.value = !showpagelist.value
+    if (showpagelist.value) {
+        nextTick(() => {
+            scrollIntoView()
+        })
+    }
+}
+
 </script>
 
 <template>
     <div class="container">
         <div class="status-bar" @touchmove.stop="moveIcon"
             :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
-            <div class="list" @click="showpagelist = !showpagelist">
+            <div class="list" @click="showEl">
                 <svg-icon icon-class="menu-black"></svg-icon>
             </div>
         </div>
         <transition name="fade">
-            <div v-if="showpagelist" class="pagelist">
+            <div v-if="showpagelist" class="pagelist" @touchstart.stop @touchmove.stop @touchend.stop>
                 <div class="list-item" v-for="page in arr" :key="page.id"
                     @click.stop="switchPage(page.data.value as string)">
                     <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
@@ -726,7 +744,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </transition>
-        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end">
+        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist =false">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
                 :matrix="(matrix as Matrix)" @closeLoading="closeLoading" :cutout="false" />
         </div>
@@ -742,7 +760,7 @@ onUnmounted(() => {
 
 .fade-enter-from,
 .fade-leave-to {
-    transform: translateX(100%);
+    transform: translateY(100%);
 }
 
 .container {
@@ -790,11 +808,14 @@ onUnmounted(() => {
 }
 
 .pagelist {
-    position: absolute;
-    right: 0;
-    width: 40%;
-    height: 100%;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 50%;
     background-color: #fff;
+    border-radius: 12px;
+    overflow-y: scroll;
+    box-sizing: border-box;
     z-index: 1;
 
     .list-item {

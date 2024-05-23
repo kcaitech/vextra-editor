@@ -74,7 +74,7 @@ const back = (index: string) => {
             }
             break;
         case '9':
-            router.push({ name: 'project_share' });
+            router.push({ name: 'ProjectShare'});
             break;
         default:
             router.push({ name: 'recently' });
@@ -212,6 +212,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 })
 </script>
+
 <template>
     <div class="container" @dblclick.stop>
         <div class="home" @click="home" v-if="!kcdesk">
