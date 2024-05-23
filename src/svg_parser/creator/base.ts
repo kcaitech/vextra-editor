@@ -266,20 +266,16 @@ export class BaseCreator extends BaseTreeNode {
                     })
                     if (creator.htmlElement?.tagName === "linearGradient") {
                         let x1: string | number = creator.localAttributes["x1"] || "0"
-                        if (x1.includes("%")) x1 = parseFloat(x1.replace("%", "")) / 100;
-                        else x1 = parseFloat(x1);
+                        x1 = x1.includes("%") ? parseFloat(x1.replace("%", "")) / 100 : parseFloat(x1)
 
                         let y1: string | number = creator.localAttributes["y1"] || "0"
-                        if (y1.includes("%")) y1 = parseFloat(y1.replace("%", "")) / 100;
-                        else y1 = parseFloat(y1);
+                        y1 = y1.includes("%") ? parseFloat(y1.replace("%", "")) / 100 : parseFloat(y1);
 
                         let x2: string | number = creator.localAttributes["x2"] || "1"
-                        if (x2.includes("%")) x2 = parseFloat(x2.replace("%", "")) / 100;
-                        else x2 = parseFloat(x2);
+                        x2 = x2.includes("%") ? parseFloat(x2.replace("%", "")) / 100 : parseFloat(x2);
 
                         let y2: string | number = creator.localAttributes["y2"] || "0"
-                        if (y2.includes("%")) y2 = parseFloat(y2.replace("%", "")) / 100;
-                        else y2 = parseFloat(y2);
+                        y2 = y2.includes("%") ? parseFloat(y2.replace("%", "")) / 100 : parseFloat(y2);
 
                         const parentX = parseFloat(this.localAttributes["x"] || "0")
                         const parentY = parseFloat(this.localAttributes["y"] || "0")
