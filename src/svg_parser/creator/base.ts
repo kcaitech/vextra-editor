@@ -384,15 +384,19 @@ export class BaseCreator extends BaseTreeNode {
         const stroke = this.localAttributes["stroke"]
         const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item)) || [0, 0]
         if (stroke) {
-            const fillColor = parseFillColor(stroke, 1)
-            if (fillColor) this.attributes.stroke = {
-                colorType: fillColor.colorType,
-                linearGradient: fillColor.linearGradient,
-                radialGradient: fillColor.radialGradient,
-                color: fillColor.color,
-                dashArray: dashArray,
-                position: "center",
-            };
+            const strokeColor = parseFillColor(stroke, 1)
+            const strokeOpacity = parseFloat(this.localAttributes["stroke-opacity"] || "1")
+            if (strokeColor) {
+                if (strokeColor.color) strokeColor.color.a *= strokeOpacity;
+                this.attributes.stroke = {
+                    colorType: strokeColor.colorType,
+                    linearGradient: strokeColor.linearGradient,
+                    radialGradient: strokeColor.radialGradient,
+                    color: strokeColor.color,
+                    dashArray: dashArray,
+                    position: "center",
+                }
+            }
         }
         // stroke-width
         const strokeWidth = this.localAttributes["stroke-width"]

@@ -555,7 +555,7 @@ export class CreatorExecute extends TransformHandler {
 
         const namePrefix = this.workspace.t(`shape.${type}`);
 
-        if (isNaN(frame.x) || isNaN(frame.y) || isNaN(frame.width) || isNaN(frame.height)) {
+        if (frame.width === 0 || frame.height === 0 || isNaN(frame.x) || isNaN(frame.y) || isNaN(frame.width) || isNaN(frame.height)) {
             return;
         }
 
