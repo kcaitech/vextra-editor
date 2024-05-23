@@ -721,7 +721,7 @@ export function get_actions_blur_delete(shapes: ShapeView[]) {
     return actions;
 }
 
-export function get_actions_blur_modify(shapes: ShapeView[], value: number) {
+export function get_actions_blur_modify(shapes: ShapeView[], value: any) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;

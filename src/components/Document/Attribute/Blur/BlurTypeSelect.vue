@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Menu } from '@/context/menu';
+import { hidden_selection } from '@/utils/content';
+import { get_actions_blur_modify } from '@/utils/shape_style';
 import { Blur, BlurType, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const props = defineProps<{
@@ -11,11 +12,23 @@ const props = defineProps<{
     shapes: ShapeView[]
 }>();
 const isMenu = ref(false);
+const menu = ref<HTMLDivElement>();
+const blurOptions = [
+    BlurType.Gaussian,
+    BlurType.Background,
+];
+const items = ref<HTMLDivElement[]>();
 const activeItem = ref(props.blur.type);
 const showMenu = () => {
     if (isMenu.value) return isMenu.value = false;
     activeItem.value = props.blur.type;
     isMenu.value = true;
+    nextTick(() => {
+        if (menu.value && items.value) {
+            const index = blurOptions.findIndex(item => item === activeItem.value);
+            menu.value.style.top = `${-items.value[index].offsetTop}px`;
+        }
+    })
     document.addEventListener('click', handleClick);
 }
 
@@ -25,7 +38,13 @@ const close = () => {
 }
 
 const toggleType = (type: BlurType) => {
-
+    const actions = get_actions_blur_modify(props.shapes, type);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapeBlurType(actions);
+    }
+    hidden_selection(props.context);
 }
 
 const handleClick = (e: MouseEvent) => {
@@ -51,13 +70,14 @@ onUnmounted(() => {
         <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
             <svg-icon icon-class="down" />
         </div>
-        <div class="select_menu" v-if="isMenu" >
-            <div class="item" @click="toggleType(BlurType.Gaussian)" @mouseenter="activeItem = BlurType.Gaussian"
-                :class="{ 'active-item': activeItem === BlurType.Gaussian }">
-                <div class="text">{{ t(`blur.${BlurType.Gaussian}`) }}</div>
+        <div class="select_menu" ref="menu" v-if="isMenu">
+            <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
+                @mouseenter="activeItem = item"
+                :class="{ 'active-item': activeItem === item }">
+                <div class="text">{{ t(`blur.${item}`) }}</div>
                 <div class="icon">
-                    <svg-icon v-if="blur.type === BlurType.Gaussian"
-                        :icon-class="activeItem === BlurType.Gaussian ? 'white-select' : 'page-select'"></svg-icon>
+                    <svg-icon v-if="blur.type === item"
+                        :icon-class="activeItem === item ? 'white-select' : 'page-select'"></svg-icon>
                 </div>
             </div>
         </div>
@@ -74,7 +94,6 @@ onUnmounted(() => {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding: 9px 8px;
     color: #000000;
 
     &:hover {
@@ -86,6 +105,7 @@ onUnmounted(() => {
     .context {
         flex: 1;
         height: 100%;
+        padding-left: 8px;
         display: flex;
         align-items: center;
     }
@@ -94,7 +114,7 @@ onUnmounted(() => {
         width: 24px;
         height: 24px;
         border-radius: 4px;
-        // margin-right: 3px;
+        margin-right: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -107,7 +127,6 @@ onUnmounted(() => {
 
     .select_menu {
         position: absolute;
-        top: -4px;
         left: 0px;
         width: 100%;
         border-radius: 4px;
@@ -158,4 +177,5 @@ onUnmounted(() => {
     .text {
         color: #fff;
     }
-}</style>
+}
+</style>
