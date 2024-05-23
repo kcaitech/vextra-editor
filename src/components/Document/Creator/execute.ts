@@ -671,7 +671,9 @@ export class CreatorExecute extends TransformHandler {
     private createImmediate() {
         const action = this.action;
 
-        this.createApiCaller();
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
 
         const frame = this.frame;
 

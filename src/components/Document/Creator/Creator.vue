@@ -20,7 +20,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const dragActiveDis = 4;
+const dragActiveDis = 5;
 const t = useI18n().t;
 let isDrag: boolean = false;
 let just_search: boolean = false;
@@ -86,6 +86,10 @@ function down(e: MouseEvent) {
     }
 
     const action = props.context.tool.action;
+
+    if (creatorHdl) {
+        return;
+    }
 
     if (action !== Action.AddComment) {
         commentInput.value = false;
@@ -271,7 +275,7 @@ function cursor_watcher(t: number, type: string) {
     }
 }
 
-function clear() {
+function windowBlur() {
     creatorHdl?.fulfil();
 
     creatorHdl = undefined;
@@ -279,10 +283,6 @@ function clear() {
     just_search = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
-}
-
-function windowBlur() {
-    clear();
 }
 
 function init() {
