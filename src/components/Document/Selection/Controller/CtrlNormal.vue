@@ -160,6 +160,9 @@ const pointVisible = computed(() => {
 })
 const is_enter = ref(false);
 const mouseenter = () => {
+    if (props.context.workspace.transforming) {
+        return;
+    }
     is_enter.value = true;
 }
 
