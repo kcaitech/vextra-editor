@@ -1243,6 +1243,17 @@ export class ScaleHandler extends TransformHandler {
             __m.trans(cx, cy);
             __m.trans(baseFrame.baseX, baseFrame.baseY);
 
+            if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+                const floatX = shape.parent.frame.x % 1;
+                const floatY = shape.parent.frame.y % 1;
+
+                if (floatX || floatY) {
+                    targetXY.x += floatX;
+                    targetXY.y += floatY;
+                    __m.trans(floatX, floatY);
+                }
+            }
+
             const _targetXY = __m.computeCoord2(0, 0);
             targetXY = m.computeCoord3(targetXY);
 
