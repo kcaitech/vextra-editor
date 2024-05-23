@@ -28,6 +28,7 @@ export const system = {
     'fit_canvas': '适应画布',
     'show_many_cursor': '显示多人光标',
     'show_comment': '显示评论',
+    'show_cutout': '显示切图',
     'show_ruler': '显示标尺',
     'show_pixel_network': '显示像素网络',
     'hide_operation_interface': '隐藏操作界面',

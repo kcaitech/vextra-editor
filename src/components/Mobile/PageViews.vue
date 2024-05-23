@@ -677,6 +677,7 @@ function end(e: TouchEvent) {
         preAnchor = __anchor(e);
     }
 }
+
 const backlink = computed(() => {
     return window.history.state.back ? true : false
 })
@@ -729,7 +730,7 @@ const showEl = () => {
 <template>
     <div class="container">
         <div class="status-bar" @touchmove.stop="moveIcon"
-            :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
+             :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
                 <svg-icon icon-class="menu-black"></svg-icon>
             </div>
@@ -737,7 +738,7 @@ const showEl = () => {
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist" @touchstart.stop @touchmove.stop @touchend.stop>
                 <div class="list-item" v-for="page in arr" :key="page.id"
-                    @click.stop="switchPage(page.data.value as string)">
+                     @click.stop="switchPage(page.data.value as string)">
                     <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
                     </div>
                     <div class="pagename">{{ page.data.content }}</div>
@@ -746,7 +747,7 @@ const showEl = () => {
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist =false">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
-                :matrix="(matrix as Matrix)" @closeLoading="closeLoading" :cutout="false" />
+                         :matrix="(matrix as Matrix)" @closeLoading="closeLoading" no-cutout/>
         </div>
     </div>
 </template>
