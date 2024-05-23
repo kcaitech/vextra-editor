@@ -351,6 +351,7 @@ export class ScaleHandler extends TransformHandler {
         if (!this.shapes.length) {
             return;
         }
+        console.log('livingX', this.livingPoint.x);
         if (this.shapes.length === 1) {
             this.__execute4single();
         } else {
