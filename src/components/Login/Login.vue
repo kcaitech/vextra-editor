@@ -156,10 +156,27 @@ watchEffect(() => {
 const miniprogramcode = ref<string>()
 
 async function GetminiProgramCode() {
-    const { data, code } = await user_api.GetminiProgramCode({ scene: encodeURIComponent("home") })
-    if (code === 0) {
-        miniprogramcode.value = data
+    const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
+    console.log(perRoute);
+
+    if (perRoute.includes('document') || perRoute.includes('pageviews')) {
+        if (perRoute.includes('?')) {
+            const params = new URLSearchParams(perRoute.split('?')[1]);
+            if (params.get('id')?.split(' ')[0] != null) {
+                const id = params.get('id')?.split(' ')[0];
+                const { data, code } = await user_api.GetminiProgramCode({ scene: `id=${encodeURIComponent(id as string)}` })
+                if (code === 0) {
+                    miniprogramcode.value = data
+                }
+            }
+        }
+    } else {
+        const { data, code } = await user_api.GetminiProgramCode({ scene: "Home" })
+        if (code === 0) {
+            miniprogramcode.value = data
+        }
     }
+
 }
 
 onMounted(() => {

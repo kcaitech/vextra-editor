@@ -45,7 +45,7 @@ router.beforeEach((to, from, next) => {
                 return;
             }
             if (to.meta.requireAuth) {
-                sessionStorage.setItem('perRoute', to.fullPath)
+                sessionStorage.setItem('perRoute', encodeURIComponent(to.fullPath))
             } else {
                 sessionStorage.setItem('perRoute', '')
             }

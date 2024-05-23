@@ -177,7 +177,23 @@ const getDocumentInfo = async () => {
                 ElMessage.error({ duration: 3000, message: docKeyRes.message })
                 return;
             } else {
-                router.push("/m");
+                let miniprogram: any;
+
+                miniprogram = navigator.userAgent.includes('miniProgram')
+                if (miniprogram) {
+                    (window as any).wx.miniProgram.postMessage({
+                        data: {
+                            file: false,
+                        }
+                    });
+                    (window as any).wx.miniProgram.navigateBack({
+                        delta: 1,
+                    });
+
+                } else {
+                    router.push("/m");
+                }
+
                 ElMessage.error({ duration: 3000, message: docInfoRes.message })
                 return;
             }
@@ -499,7 +515,7 @@ watch(fileName, (NewNanme) => {
             (window as any).wx.miniProgram.postMessage({
                 data: {
                     name: NewNanme,
-                    id:docInfo.value.document.id
+                    id: docInfo.value.document.id
                 }
             });
         }
