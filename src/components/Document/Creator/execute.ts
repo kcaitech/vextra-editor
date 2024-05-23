@@ -101,8 +101,8 @@ export class CreatorExecute extends TransformHandler {
         }
         const assist = at.alignXY(__living);
         if (assist) {
-            this.updateHorFixedStatus(this.livingPoint.x, assist);
-            this.updateVerFixedStatus(this.livingPoint.y, assist);
+            this.updateHorFixedStatus(__living.x, assist);
+            this.updateVerFixedStatus(__living.y, assist);
         }
         if (this.horFixedStatus) {
             this.livingPoint.x = this.horFixedValue;

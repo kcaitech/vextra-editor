@@ -114,8 +114,8 @@ export class LineHandler extends TransformHandler {
         const assist = this.context.assist.alignXY(at);
 
         if (assist) {
-            this.updateHorFixedStatus(this.livingPoint.x, assist);
-            this.updateVerFixedStatus(this.livingPoint.y, assist);
+            this.updateHorFixedStatus(at.x, assist);
+            this.updateVerFixedStatus(at.y, assist);
         }
 
         if (this.horFixedStatus) {
