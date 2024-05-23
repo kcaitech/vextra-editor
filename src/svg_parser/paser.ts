@@ -2,16 +2,18 @@ import {
     Shape,
     ResourceMgr,
 } from "@kcdesign/data"
-import { v4 as uuid } from "uuid"
-import { BaseCreator, SvgCreator } from "./creator/base"
-import { NoneCreator } from "./creator/none"
-import { GroupCreator } from "./creator/group"
-import { PathCreator } from "./creator/path"
-import { RectCreator } from "./creator/rect"
-import { EllipseCreator } from "./creator/ellipse"
-import { LineCreator } from "./creator/line"
-import { TextCreator } from "./creator/text"
-import { ImageCreator } from "./creator/image"
+import {v4 as uuid} from "uuid"
+import {BaseCreator, SvgCreator} from "./creator/base"
+import {NoneCreator} from "./creator/none"
+import {GroupCreator} from "./creator/group"
+import {PathCreator} from "./creator/path"
+import {RectCreator} from "./creator/rect"
+import {EllipseCreator} from "./creator/ellipse"
+import {LineCreator} from "./creator/line"
+import {TextCreator} from "./creator/text"
+import {ImageCreator} from "./creator/image"
+import {Polyline} from "./creator/polyline"
+import {UseCreator} from "./creator/use"
 
 export class Parser {
     svgRoot: Element
@@ -42,6 +44,10 @@ export class Parser {
             creatorConstruction = TextCreator
         } else if (node.tagName === "image") {
             creatorConstruction = ImageCreator
+        } else if (node.tagName === "polyline" || node.tagName === "polygon") {
+            creatorConstruction = Polyline
+        } else if (node.tagName === "use") {
+            creatorConstruction = UseCreator
         } else {
             creatorConstruction = NoneCreator
         }
@@ -57,7 +63,7 @@ export class Parser {
         return children
     }
 
-    parse(): Shape | undefined {
+    parse(filename?: string): Shape | undefined {
         // 创建creator树
         const stack0 = [this.svgRoot]
         while (stack0.length) {

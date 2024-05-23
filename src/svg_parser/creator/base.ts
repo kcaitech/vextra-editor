@@ -39,8 +39,8 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform, TransformMode} from "@/transform_math/transform"
-import {ColVector3D} from "@/transform_math/matrix"
+import {Transform, TransformMode} from "@kcdesign/data/dist/basic/transform"
+import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -181,15 +181,43 @@ export class BaseCreator extends BaseTreeNode {
         const height = this.localAttributes["height"]
         if (height) this.attributes.height = parseFloat(height);
 
+        // viewBox
+        if (this.htmlElement.tagName === "svg") {
+            const viewBox = this.localAttributes["viewBox"]
+            if (viewBox) {
+                const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
+                this.attributes.width = viewBoxSplitRes[2]
+                this.attributes.height = viewBoxSplitRes[3]
+            }
+        }
+
         // path
         const d = this.localAttributes["d"]
+        const isPath = this.htmlElement.tagName === "path"
         if (d) {
             this.attributes.d = d
             const {x, y, width, height} = getPathBoxFromD(d)
             this.attributes.pathX = x
             this.attributes.pathY = y
-            this.attributes.width = width
-            this.attributes.height = height
+            if (isPath) {
+                this.attributes.width = width
+                this.attributes.height = height
+            }
+        }
+
+        // polyline
+        const points = this.localAttributes["points"]
+        const isPolyline = this.htmlElement.tagName === "polyline" || this.htmlElement.tagName === "polygon"
+        const pointsToPathD = shapeCreator.polylinePointsToPathD(points, this.htmlElement.tagName === "polyline")
+        if (pointsToPathD) {
+            this.attributes.pointsToPathD = pointsToPathD
+            const {x, y, width, height} = getPathBoxFromD(pointsToPathD)
+            this.attributes.polylineX = x
+            this.attributes.polylineY = y
+            if (isPolyline) {
+                this.attributes.width = width
+                this.attributes.height = height
+            }
         }
 
         // transform
@@ -237,12 +265,25 @@ export class BaseCreator extends BaseTreeNode {
                         }
                     })
                     if (creator.htmlElement?.tagName === "linearGradient") {
-                        const x1 = parseFloat(creator.localAttributes["x1"] || "0")
-                        const y1 = parseFloat(creator.localAttributes["y1"] || "0")
-                        const x2 = parseFloat(creator.localAttributes["x2"] || "1")
-                        const y2 = parseFloat(creator.localAttributes["y2"] || "0")
+                        let x1: string | number = creator.localAttributes["x1"] || "0"
+                        if (x1.includes("%")) x1 = parseFloat(x1.replace("%", "")) / 100;
+                        else x1 = parseFloat(x1);
+
+                        let y1: string | number = creator.localAttributes["y1"] || "0"
+                        if (y1.includes("%")) y1 = parseFloat(y1.replace("%", "")) / 100;
+                        else y1 = parseFloat(y1);
+
+                        let x2: string | number = creator.localAttributes["x2"] || "1"
+                        if (x2.includes("%")) x2 = parseFloat(x2.replace("%", "")) / 100;
+                        else x2 = parseFloat(x2);
+
+                        let y2: string | number = creator.localAttributes["y2"] || "0"
+                        if (y2.includes("%")) y2 = parseFloat(y2.replace("%", "")) / 100;
+                        else y2 = parseFloat(y2);
+
                         const parentX = parseFloat(this.localAttributes["x"] || "0")
                         const parentY = parseFloat(this.localAttributes["y"] || "0")
+
                         linearGradient = {
                             x1: x1 - parentX,
                             y1: y1 - parentY,
@@ -252,6 +293,7 @@ export class BaseCreator extends BaseTreeNode {
                             stops: stops,
                         }
                         colorType = "linearGradient"
+
                     } else if (creator.htmlElement?.tagName === "radialGradient") {
                         const cx = parseFloat(creator.localAttributes["cx"] || "0")
                         const cy = parseFloat(creator.localAttributes["cy"] || "0")
@@ -297,15 +339,25 @@ export class BaseCreator extends BaseTreeNode {
         if (!fill) fill = this.localAttributes["fill"];
 
         const fillAttrName = this.htmlElement?.tagName === "text" ? "textFill" : "fill"
-        // 默认填充黑色
         if (!fill && this.attributes[fillAttrName] === undefined
             && this.htmlElement?.tagName !== "svg" && this.htmlElement?.tagName !== "g"
         ) {
-            fill = "black"
+            // 寻找祖先元素的fill
+            let node = this.htmlElement.node.parentElement
+            while (node) {
+                fill = ((node as any).creator as BaseCreator).localAttributes[fillAttrName]
+                if (fill) break;
+                node = node.parentElement
+            }
+            if (!fill) fill = "black";
         }
 
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
         let fillColor = parseFillColor(fill, fillOpacity)
+        // dev code
+        // if (this.localAttributes["id"] === "路径-14") {
+        //     console.log(fillColor)
+        // }
 
         let fillAttrValue
         if (fillColor) {
@@ -422,23 +474,40 @@ export class BaseCreator extends BaseTreeNode {
 
         // 圆形
         const cx = this.localAttributes["cx"]
-        if (cx) this.attributes.x = this.attributes.cx = parseFloat(cx);
         const cy = this.localAttributes["cy"]
-        if (cy) this.attributes.y = this.attributes.cy = parseFloat(cy);
         const rx = this.localAttributes["rx"]
-        if (rx) this.attributes.rx = parseFloat(rx);
         const ry = this.localAttributes["ry"]
-        if (ry) this.attributes.ry = parseFloat(ry);
         const r = this.localAttributes["r"]
-        if (r) this.attributes.rx = this.attributes.ry = parseFloat(r);
+        const isCircle = this.htmlElement.tagName === "ellipse" || this.htmlElement.tagName === "circle"
+        if (rx) {
+            this.attributes.rx = parseFloat(rx)
+            if (isCircle) this.attributes.width = this.attributes.rx * 2;
+        }
+        if (ry) {
+            this.attributes.ry = parseFloat(ry)
+            if (isCircle) this.attributes.height = this.attributes.ry * 2;
+        }
+        if (r) {
+            this.attributes.rx = this.attributes.ry = parseFloat(r)
+            if (isCircle) this.attributes.width = this.attributes.height = this.attributes.rx * 2;
+        }
+        if (cx) {
+            this.attributes.cx = parseFloat(cx) - parseFloat(r || rx || "0");
+            if (isCircle) this.attributes.x = this.attributes.cx;
+        }
+        if (cy) {
+            this.attributes.cy = parseFloat(cy) - parseFloat(r || ry || "0");
+            if (isCircle) this.attributes.y = this.attributes.cy;
+        }
 
         // 直线
+        const isLine = this.htmlElement.tagName === "line"
         const x1 = this.localAttributes["x1"]
         if (x1) this.attributes.x1 = parseFloat(x1);
-        if (!this.attributes.x) this.attributes.x = this.attributes.x1;
+        if (isLine && !this.attributes.x) this.attributes.x = this.attributes.x1;
         const y1 = this.localAttributes["y1"]
         if (y1) this.attributes.y1 = parseFloat(y1);
-        if (!this.attributes.y) this.attributes.y = this.attributes.y1;
+        if (isLine && !this.attributes.y) this.attributes.y = this.attributes.y1;
         const x2 = this.localAttributes["x2"]
         if (x2) this.attributes.x2 = parseFloat(x2);
         const y2 = this.localAttributes["y2"]
@@ -453,15 +522,63 @@ export class BaseCreator extends BaseTreeNode {
         const shape = this.shape
         if (!shape) return;
 
-        const {translate, rotate, scale} = this.transform.decompose()
+        let {translate, rotate, skew, scale} = this.transform.decompose()
+        // 最终的宽高
+        const w1 = shape.frame.width * scale.x
+        const h1 = shape.frame.height * scale.y
+
+        // dev code
+        // if (this.htmlElement?.tagName === "rect") {
+        //     console.log("rect")
+        //     console.log("updateShapeAttrByTransform before")
+        //     console.log("translate", translate.toString())
+        //     console.log("rotate", rotate.toString())
+        //     console.log("skew", skew.toString())
+        //     console.log("scale", scale.toString())
+        //     console.log("shape.frame", shape.frame.width, shape.frame.height)
+        // }
+
+        // 抵消视图层在前后加的两次平移操作
+        if (this.transform.hasRotation()) {
+            const res = this.transform.clone().preTranslate({
+                vector: new ColVector3D([w1 / 2, h1 / 2, 0]),
+            }).translate({
+                vector: new ColVector3D([-w1 / 2, -h1 / 2, 0]),
+                mode: TransformMode.Local,
+            }).decompose()
+            translate = res.translate
+            rotate = res.rotate
+            skew = res.skew
+            scale = res.scale
+        }
+
+        // dev code
+        // if (this.htmlElement?.tagName === "rect") {
+        //     console.log("rect")
+        //     console.log("updateShapeAttrByTransform after")
+        //     console.log("translate", translate.toString())
+        //     console.log("rotate", rotate.toString())
+        //     console.log("skew", skew.toString())
+        //     console.log("scale", scale.toString())
+        //     console.log("shape.frame", shape.frame.width, shape.frame.height)
+        // }
 
         // 设置缩放
-        shape.frame.width *= scale.x
-        shape.frame.height *= scale.y
+        shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
+        // shape.scaleX = Math.abs(scale.x)
+        // shape.scaleY = Math.abs(scale.y)
+
+        // 设置斜切
+        // shape.skewX = skew.x * 180 / Math.PI
 
         // 设置xy
         shape.frame.x = translate.x
         shape.frame.y = translate.y
+        // dev code
+        // console.log(shape.name)
+        // console.log(translate.x, translate.y)
+        // console.log(shape)
 
         // 设置旋转
         shape.rotation = rotate.z * 180 / Math.PI
@@ -486,8 +603,8 @@ export class BaseCreator extends BaseTreeNode {
             const height = this.attributes.height || 1
 
             if (fillColor.colorType === "linearGradient") {
-                from = new Point2D(fillColor.linearGradient!.x1 / width, fillColor.linearGradient!.y1 / height)
-                to = new Point2D(fillColor.linearGradient!.x2 / width, fillColor.linearGradient!.y2 / height)
+                from = new Point2D(fillColor.linearGradient!.x1, fillColor.linearGradient!.y1)
+                to = new Point2D(fillColor.linearGradient!.x2, fillColor.linearGradient!.y2)
                 colorType = GradientType.Linear
             } else {
                 const translate = fillColor.radialGradient!.transform.decomposeTranslate()
@@ -501,8 +618,10 @@ export class BaseCreator extends BaseTreeNode {
                 elipseLength = fillColor.radialGradient!.scales[1] / fillColor.radialGradient!.scales[0] * height / width
             }
 
-            const stops = gradient.stops.map((item, i) =>
-                new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+            const stops = gradient.stops.map((item, i) => {
+                    item.color.a *= item.opacity
+                    return new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+                }
             ) as BasicArray<Stop>
 
             return new Gradient(from, to, colorType, stops as BasicArray<Stop>, elipseLength, opacity)
@@ -572,11 +691,14 @@ export class BaseCreator extends BaseTreeNode {
         }
         if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
 
-        // 根据shape的宽高添加平移，使中心点在原点
-        const width = this.shape!.frame.width
-        const height = this.shape!.frame.height
-        this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
-        this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
+        // // dev code
+        // 抵消视图层在前后加的两次平移操作
+        // if (this.transform.hasRotation()) {
+        //     const width = this.shape!.frame.width
+        //     const height = this.shape!.frame.height
+        //     this.transform.preTranslate({vector: new ColVector3D([width / 2, height / 2, 0])})
+        //     this.transform.translate({vector: new ColVector3D([-width / 2, -height / 2, 0]), mode: TransformMode.Local})
+        // }
 
         this.updateShapeAttrByTransform()
         this.updateShapeStyle()
@@ -587,27 +709,45 @@ export class SvgCreator extends BaseCreator {
     viewBox: [number, number, number, number] | undefined
 
     createShape() {
-        const viewBox = this.localAttributes["viewBox"]
-        if (viewBox) {
-            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
-            if (viewBoxSplitRes.length === 4) {
-                this.viewBox = viewBoxSplitRes as [number, number, number, number]
-            }
-        }
-        const width = (this.viewBox ? this.viewBox[2] : this.attributes.width) || 0
-        const height = (this.viewBox ? this.viewBox[3] : this.attributes.height) || 0
-        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, width, height))
+        this.shape = shapeCreator.newArtboard("容器", new ShapeFrame(0, 0, this.attributes.width || 0, this.attributes.height || 0))
     }
 
     afterChildrenCreateShape(): void {
         if (!this.shape) return;
+
+        // 处理viewBox
+        const viewBox = this.localAttributes["viewBox"]
+        if (viewBox) {
+            const viewBoxSplitRes = viewBox.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item))
+            if (viewBoxSplitRes.length >= 4) {
+                const [dx, dy, w0, h0] = viewBoxSplitRes
+                const w = this.attributes.width || 0
+                const h = this.attributes.height || 0
+                const scaleX = w0 === 0 ? 1 : (w / w0)
+                const scaleY = h0 === 0 ? 1 : (h / h0)
+                if (scaleX !== 1 || scaleY !== 1) for (const item of this.children) {
+                    // item.transform.scale({
+                    //     vector: new ColVector3D([scaleX, scaleY, 1]),
+                    //     mode: TransformMode.Global,
+                    // })
+                }
+                if (dx !== 0 || dy !== 0) for (const item of this.children) {
+                    item.transform.translate({
+                        vector: new ColVector3D([dx, dy, 0]),
+                        mode: TransformMode.Local,
+                    })
+                }
+                if (scaleX !== 1 || scaleY !== 1 || dx !== 0 || dy !== 0) for (const item of this.children) {
+                    item.updateShapeAttrByTransform()
+                }
+            }
+        }
+
+        // 插入子元素
         const svgShape = this.shape as Artboard
         const childrenShapes = this.children.filter(item => item.shape).map(item => item.shape!)
         svgShape.childs.push(...childrenShapes)
 
-        // 二级元素跟随一级容器缩放
-        childrenShapes.forEach(item => {
-            item.resizingConstraint = 0;
-        })
+        for (const item of childrenShapes) item.resizingConstraint = 0; // 子元素跟随缩放
     }
 }
