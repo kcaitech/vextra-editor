@@ -555,6 +555,10 @@ export class CreatorExecute extends TransformHandler {
 
         const namePrefix = this.workspace.t(`shape.${type}`);
 
+        if (isNaN(frame.x) || isNaN(frame.y) || isNaN(frame.width) || isNaN(frame.height)) {
+            return;
+        }
+
         const params: GeneratorParams = {
             parent: this.downEnv as GroupShapeView,
             frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
