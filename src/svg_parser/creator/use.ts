@@ -20,12 +20,12 @@ export class UseCreator extends BaseCreator {
         this.attributes = {
             ...creator.attributes,
             ...this.attributes,
-            useCreator: creator,
+            useTargetCreator: creator,
         }
         this.htmlElement!.tagName = creator.htmlElement!.tagName
     }
 
     createShape() {
-        this.attributes.useCreator!.createShape.call(this)
+        this.attributes.useTargetCreator!.createShape.call(this)
     }
 }

@@ -466,7 +466,7 @@ export type Attributes = { // 保存元素的一些属性
     polylineX?: number,
     polylineY?: number,
 
-    useCreator?: BaseCreator,
+    useTargetCreator?: BaseCreator,
 }
 
 const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")
