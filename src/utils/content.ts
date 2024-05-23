@@ -487,7 +487,7 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
             const parseResult = parse_svg.parse(svg as string);
 
             if (parseResult.shape) {
-                parseResult.shape.name = file.name;
+                parseResult.shape.name = file.name.replace(".svg", "");
 
                 if (xy) {
                     parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;

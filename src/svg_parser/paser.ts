@@ -103,8 +103,6 @@ export class Parser {
             afterAllDo: BaseCreator.method("afterAllCreateShape"),
         })
 
-        if (rootCreator.shape && filename) rootCreator.shape.name = filename;
-
         return rootCreator.shape
     }
 }

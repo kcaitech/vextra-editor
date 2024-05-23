@@ -349,6 +349,7 @@ export class BaseCreator extends BaseTreeNode {
                 if (fill) break;
                 node = node.parentElement
             }
+            if (!fill) fill = "black";
         }
 
         const fillOpacity = parseFloat(this.localAttributes["fill-opacity"]) || 1
