@@ -4,7 +4,10 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix } from '@kcdesign/data';
+import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Block, Tool } from "@/context/tool";
+import { XY } from "@/context/selection";
+import { XYsBounding } from "@/utils/common";
 
 const props = defineProps<{
     context: Context
@@ -14,12 +17,200 @@ interface Scale {
     offset: number;
     data: number;
     opacity: number;
-
 }
 
 const ruleVisible = ref<boolean>(false);
 const scalesHor = ref<Scale[]>([]);
 const scalesVer = ref<Scale[]>([]);
+
+
+function getContainer(shape: ShapeView) {
+    let p = shape.parent;
+    while (p) {
+        if (p.isContainer) break;
+        p = shape.parent;
+    }
+    return p;
+}
+
+function getMatrix2Container(shape: ShapeView) {
+    const container = getContainer(shape)!;
+    let m = new Matrix(shape.matrix2Parent());
+    let p = shape.parent;
+    while (p && (p.id !== container.id)) {
+        m.multiAtLeft(p.matrix2Parent());
+        p = p.parent;
+    }
+
+    return m;
+}
+
+function generateBlocksForRule() {
+    const ctx = props.context;
+    // 大于50咱们就不做细节更新了，可以考虑直接把controllerFrame作为结果；
+    const shapes = ctx.selection.selectedShapes;
+    if (ctx.user.isRuleVisible && ctx.selection.selectedShapes.length && ctx.selection.selectedShapes.length < 50) {
+        const parentContainer = new Map<string, ShapeView>();
+        // 先确认坐标系
+        let env;
+        let id;
+
+        for (let i = 0; i < shapes.length; i++) {
+            const parent = getContainer(shapes[i])!;
+            id = parent.id;
+            if (parentContainer.has(parent.id)) {
+                env = ctx.selection.selectedPage!;
+                break;
+            }
+
+            parentContainer.set(parent.id, parent);
+        }
+        if (!env) {
+            env = parentContainer.get(id || '') || ctx.selection.selectedPage!;
+        }
+
+        let isNotUnderRoot = env !== ctx.selection.selectedPage!;
+
+        const matrix = new Matrix(ctx.workspace.matrix);
+        matrix.trans(-20, -20);
+        const inverse = new Matrix(matrix);
+
+        const blocksX: Block[] = [];
+        const blocksY: Block[] = [];
+
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+
+            const m2parent = getMatrix2Container(shape);
+
+            const parent = getContainer(shape)!;
+            const parent2root = parent.matrix2Root();
+
+            const m2root = new Matrix(m2parent);
+            m2root.multiAtLeft(parent2root);
+
+            const points: XY[] = [];
+            const points2env: XY[] = [];
+            const frame = shape.frame;
+            if (shape.isStraight) {
+                m2root.preScale(frame.width, frame.height);
+                const [start, end] = (shape as PathShapeView)?.segments[0]?.points;
+                if (!start || !end) {
+                    continue;
+                }
+                points.push(m2root.computeCoord3(start), m2root.computeCoord3(end));
+                if (isNotUnderRoot) {
+                    m2parent.preScale(frame.width, frame.height);
+                    points2env.push(m2root.computeCoord3(start), m2root.computeCoord3(end));
+                }
+            } else {
+                points.push(
+                    m2root.computeCoord2(0, 0),
+                    m2root.computeCoord2(frame.width, 0),
+                    m2root.computeCoord2(frame.width, frame.height),
+                    m2root.computeCoord2(0, frame.height)
+                );
+
+                if (isNotUnderRoot) {
+                    points2env.push(
+                        m2parent.computeCoord2(0, 0),
+                        m2parent.computeCoord2(frame.width, 0),
+                        m2parent.computeCoord2(frame.width, frame.height),
+                        m2parent.computeCoord2(0, frame.height)
+                    );
+                }
+            }
+
+            const { left, top, right, bottom } = XYsBounding(points);
+            let leftEnv = left;
+            let topEnv = top;
+            let rightEnv = right;
+            let bottomEnv = bottom;
+
+            if (isNotUnderRoot) {
+                const { left, top, right, bottom } = XYsBounding(points2env);
+                leftEnv = left;
+                topEnv = top;
+                rightEnv = right;
+                bottomEnv = bottom;
+            }
+
+            {
+                const offsetStart = inverse.computeCoord2(left, 0).x;
+                const offsetEnd = inverse.computeCoord2(right, 0).x;
+
+                const block: Block = {
+                    start: left,
+                    end: right,
+                    dataStart: left,
+                    dataEnd: right,
+                    offsetStart,
+                    offsetEnd
+                };
+
+                if (isNotUnderRoot) {
+                    block.dataStart = leftEnv;
+                    block.dataEnd = rightEnv;
+                }
+
+                blocksX.push(block);
+            }
+
+            {
+                const offsetStart = inverse.computeCoord2(0, top).y;
+                const offsetEnd = inverse.computeCoord2(0, bottom).y;
+                const block: Block = {
+                    start: top,
+                    end: bottom,
+                    dataStart: top,
+                    dataEnd: bottom,
+                    offsetStart,
+                    offsetEnd
+                };
+
+                if (isNotUnderRoot) {
+                    block.dataStart = topEnv;
+                    block.dataEnd = bottomEnv;
+                }
+
+                blocksY.push(block);
+            }
+        }
+
+        ctx.tool.setBlocks(mergeBlocks(blocksX), mergeBlocks(blocksY));
+    }
+}
+
+function mergeBlocks(blocks: Block[]) {
+    const len = blocks.length;
+    if (len < 2) {
+        return blocks;
+    }
+
+    blocks.sort((a, b) => {
+        if (a.start > b.start) {
+            return 1
+        } else {
+            return -1;
+        }
+    });
+
+    const result: Block[] = [blocks[0]];
+
+    for (let i = 1; i < blocks.length; i++) {
+        const block = blocks[i];
+        const last = result[result.length - 1];
+
+        if (block.start > last.end) {
+            result.push(block);
+        } else {
+            last.end = Math.max(block.end, last.end);
+            last.dataEnd = Math.max(block.dataEnd, last.dataEnd);
+        }
+    }
+
+    return result;
+}
 
 function render() {
     const hor = scalesHor.value;
@@ -119,11 +310,19 @@ function userWatcher(t: number) {
     }
 }
 
+function toolWatcher(t: number) {
+    if (t === Tool.BLOCKS_CHANGE) {
+        generateBlocksForRule();
+    }
+}
+
 onMounted(() => {
+    props.context.tool.watch(toolWatcher);
     props.context.workspace.watch(workspaceWatcher);
     props.context.user.watch(userWatcher);
 })
 onUnmounted(() => {
+    props.context.tool.unwatch(toolWatcher);
     props.context.workspace.unwatch(workspaceWatcher);
     props.context.user.unwatch(userWatcher);
 })

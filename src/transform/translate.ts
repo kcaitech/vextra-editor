@@ -7,6 +7,7 @@ import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
+import { Tool } from "@/context/tool";
 
 type OriginEnv = {
     env: ShapeView;
@@ -456,6 +457,10 @@ export class TranslateHandler extends TransformHandler {
             const y = shape.frame.y + (targetXY.y - _targetXY.y);
 
             transformUnits.push({ shape, x, y });
+        }
+
+        if (this.context.user.isRuleVisible) {
+            this.context.tool.notify(Tool.BLOCKS_CHANGE);
         }
 
         (this.asyncApiCaller as Transporter).execute(transformUnits);

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { Selection, SelectionTheme } from "@/context/selection";
+import { Selection, SelectionTheme, XY } from "@/context/selection";
 import { Matrix, Path, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
-import { Action, Tool } from "@/context/tool";
+import { Action, Block, Tool } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";

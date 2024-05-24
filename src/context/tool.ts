@@ -46,6 +46,17 @@ const A2R = new Map([
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 
+export interface Block {
+    start: number;
+    end: number;
+
+    dataStart: number;
+    dataEnd: number;
+
+    offsetStart: number;
+    offsetEnd: number;
+}
+
 export class Tool extends WatchableObject {
     static CHANGE_ACTION = 1;
     static GROUP = 2;
@@ -59,6 +70,7 @@ export class Tool extends WatchableObject {
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
+    static BLOCKS_CHANGE = 12;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -68,6 +80,8 @@ export class Tool extends WatchableObject {
     private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
+    private m_blocks_hor: Block[] = [];
+    private m_blocks_ver: Block[] = [];
 
     constructor(context: Context) {
         super();
@@ -183,5 +197,14 @@ export class Tool extends WatchableObject {
 
     get uniqueID() {
         return uuid();
+    }
+
+    get blocks() {
+        return { ver: this.m_blocks_ver, hor: this.m_blocks_hor };
+    }
+
+    setBlocks(hor: Block[], ver: Block[]) {
+        this.m_blocks_hor = hor;
+        this.m_blocks_ver = ver;
     }
 }
