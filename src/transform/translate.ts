@@ -2,19 +2,13 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import { GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
+import { round2half } from "@/transform/line";
 import { Tool } from "@/context/tool";
-
-type OriginEnv = {
-    env: ShapeView;
-    index: number;
-}
-
-type OriginEnvs = Map<string, OriginEnv>;
 
 type BaseFrame4Trans = {
     rootXY: XY;
@@ -41,24 +35,17 @@ export class TranslateHandler extends TransformHandler {
     boxOffsetLivingPointX: number = 0;
     boxOffsetLivingPointY: number = 0;
 
-    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
+    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 }; // 影子盒子
 
     baseFrames4trans: Map<string, BaseFrame4Trans> = new Map();
 
     offsetX: number = 0;
     offsetY: number = 0;
-    horFixed: boolean = false;
-    horFixedValue: number = 0;
-    verFixed: boolean = false;
-    verFixedValue: number = 0;
 
-    currentEnvId: string = '';
-    exceptEnvs: ShapeView[] = [];
-    originEnvs: OriginEnvs = new Map();
     shapesSet: Set<string> = new Set();
 
     shapesBackup: ShapeView[] = [];
-    coping: boolean = false;
+    coping: boolean = false; // 数据拷贝中
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
@@ -193,9 +180,15 @@ export class TranslateHandler extends TransformHandler {
                 bottom = rootXY.y;
             }
 
-            const points = [{ x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }];
+            const points = [
+                m.computeCoord2(frame.width, 0),
+                m.computeCoord2(frame.width, frame.height),
+                m.computeCoord2(0, frame.height)
+            ];
+
             for (let i = 0; i < 3; i++) {
-                const p = m.computeCoord3(points[i]);
+                const p = points[i];
+
                 if (p.x < left) {
                     left = p.x;
                 }
@@ -211,7 +204,7 @@ export class TranslateHandler extends TransformHandler {
             }
         }
 
-        this.originSelectionBox = {
+        const box = {
             x: left,
             y: top,
             right,
@@ -219,6 +212,18 @@ export class TranslateHandler extends TransformHandler {
             width: right - left,
             height: bottom - top,
         };
+
+        if (this.alignPixel) { // 给影子数据取整
+            box.x = Math.round(box.x);
+            box.y = Math.round(box.y);
+            box.right = Math.round(box.right);
+            box.bottom = Math.round(box.bottom);
+            box.width = Math.round(box.width);
+            box.height = Math.round(box.height);
+        }
+
+        this.originSelectionBox = box;
+
         this.livingBox = { ...this.originSelectionBox };
 
         this.baseFrames4trans.forEach(base => {
@@ -242,35 +247,7 @@ export class TranslateHandler extends TransformHandler {
     private updateBoxByAssist() {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
-        this.livingBox.right = this.livingBox.x + this.livingBox.width;
-        this.livingBox.bottom = this.livingBox.y + this.livingBox.height;
 
-        let l = this.livingBox.x;
-        let t = this.livingBox.y;
-        let r = this.livingBox.right;
-        let b = this.livingBox.bottom;
-
-        const assistResult = this.context.assist.alignPoints(
-            [l, (l + r) / 2, r],
-            [t, (t + b) / 2, b]
-        );
-
-        this.context.assist.notify(Asssit.CLEAR);
-
-        let assistWork = false;
-        if (assistResult) {
-            this.updateHorFixedStatus(l, assistResult);
-            this.updateVerFixedStatus(t, assistResult);
-
-            if (this.horFixed) {
-                this.livingBox.x += this.offsetX;
-                assistWork = true;
-            }
-            if (this.verFixed) {
-                this.livingBox.y += this.offsetY;
-                assistWork = true;
-            }
-        }
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
             const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
@@ -281,24 +258,70 @@ export class TranslateHandler extends TransformHandler {
                 this.livingBox.x = this.originSelectionBox.x;
             }
         }
-        if (assistWork) {
-            const right = this.livingBox.x + this.livingBox.width;
-            const bottom = this.livingBox.y + this.livingBox.height;
-            const cx = (this.livingBox.x + right) / 2;
-            const cy = (this.livingBox.y + bottom) / 2;
-            const xs: { x: number, pre: XY[] }[] = [
+
+        const width = this.livingBox.width;
+        const height = this.livingBox.height;
+
+        this.livingBox.right = this.livingBox.x + width;
+        this.livingBox.bottom = this.livingBox.y + height;
+
+        let l = this.livingBox.x;
+        let t = this.livingBox.y;
+        let r = this.livingBox.right;
+        let b = this.livingBox.bottom;
+
+        if (this.alignPixel) {
+            l = Math.round(l);
+            t = Math.round(t);
+            r = Math.round(r);
+            b = Math.round(b);
+        }
+
+        let livingXs = [l, (l + r) / 2, r];
+        let livingYs = [t, (t + b) / 2, b]
+
+        const assistResult = this.context.assist.alignPoints(livingXs, livingYs);
+        this.context.assist.notify(Assist.CLEAR);
+
+        if (!assistResult) {
+            return;
+        }
+
+        let assistXWork = false;
+        let assistYWork = false;
+
+        if (assistResult.sticked_by_x) {
+            this.livingBox.x += assistResult.dx;
+            l += assistResult.dx;
+            r = l + width;
+            assistXWork = true;
+        }
+
+        if (assistResult.sticked_by_y) {
+            this.livingBox.y += assistResult.dy;
+            t += assistResult.dy;
+            b = t + height;
+
+            assistYWork = true;
+        }
+
+        const cx = (l + r) / 2;
+        const cy = (t + b) / 2;
+
+        if (assistXWork) {
+            this.context.assist.multi_line_x = [
                 {
-                    x: this.livingBox.x,
+                    x: l,
                     pre: [
-                        { x: this.livingBox.x, y: this.livingBox.y },
-                        { x: this.livingBox.x, y: bottom }
+                        { x: l, y: t },
+                        { x: l, y: b }
                     ]
                 },
                 {
-                    x: right,
+                    x: r,
                     pre: [
-                        { x: right, y: this.livingBox.y },
-                        { x: right, y: bottom }
+                        { x: r, y: t },
+                        { x: r, y: b }
                     ]
                 },
                 {
@@ -308,20 +331,24 @@ export class TranslateHandler extends TransformHandler {
                     ]
                 }
             ]
+        } else {
+            this.context.assist.multi_line_x = [];
+        }
 
-            const ys: { y: number, pre: XY[] }[] = [
+        if (assistYWork) {
+            this.context.assist.multi_line_y = [
                 {
-                    y: this.livingBox.y,
+                    y: t,
                     pre: [
-                        { x: this.livingBox.x, y: this.livingBox.y },
-                        { x: right, y: this.livingBox.y }
+                        { x: l, y: t },
+                        { x: r, y: t }
                     ]
                 },
                 {
-                    y: bottom,
+                    y: b,
                     pre: [
-                        { x: this.livingBox.x, y: bottom },
-                        { x: right, y: bottom }
+                        { x: l, y: b },
+                        { x: r, y: b }
 
                     ]
                 },
@@ -330,56 +357,14 @@ export class TranslateHandler extends TransformHandler {
                     pre: [
                         { x: cx, y: cy }
                     ]
-                },
+                }
             ]
-
-            this.context.assist.multi_line_x = xs;
-            this.context.assist.multi_line_y = ys;
-            this.context.assist.notify(Asssit.MULTI_LINE_ASSIST);
+        } else {
+            this.context.assist.multi_line_y = [];
         }
-    }
 
-    private updateHorFixedStatus(livingX: number, assistResult: {
-        targetX: number,
-        sticked_by_x: boolean,
-        dx: number
-    }) {
-        const stickness = this.context.assist.stickness;
-        if (this.horFixed) {
-            if (Math.abs(livingX - this.horFixedValue) >= stickness) {
-                this.horFixed = false;
-            } else {
-                if (Math.abs(assistResult.dx) < Math.abs(this.offsetX)) {
-                    this.horFixedValue = livingX;
-                }
-                this.offsetX = assistResult.dx;
-            }
-        } else if (assistResult.sticked_by_x) {
-            this.horFixed = true;
-            this.horFixedValue = livingX;
-            this.offsetX = assistResult.dx;
-        }
-    }
-
-    private updateVerFixedStatus(livingY: number, assistResult: {
-        targetY: number,
-        sticked_by_y: boolean,
-        dy: number
-    }) {
-        const stickness = this.context.assist.stickness;
-        if (this.verFixed) {
-            if (Math.abs(livingY - this.verFixedValue) >= stickness) {
-                this.verFixed = false;
-            } else {
-                if (assistResult.dy < this.offsetY) {
-                    this.verFixedValue = livingY;
-                }
-                this.offsetY = assistResult.dy;
-            }
-        } else if (assistResult.sticked_by_y) {
-            this.verFixed = true;
-            this.verFixedValue = livingY;
-            this.offsetY = assistResult.dy;
+        if (assistXWork || assistYWork) {
+            this.context.assist.notify(Assist.MULTI_LINE_ASSIST);
         }
     }
 
@@ -448,8 +433,21 @@ export class TranslateHandler extends TransformHandler {
                 __root2parentMatrixCache.set(parent.id, m);
             }
 
-            const tx = isAlign ? Math.round(base.offsetLivingPointX + livingX) : base.offsetLivingPointX + livingX;
-            const ty = isAlign ? Math.round(base.offsetLivingPointY + livingY) : base.offsetLivingPointY + livingY;
+            const __tx = base.offsetLivingPointX + livingX;
+            const __ty = base.offsetLivingPointY + livingY;
+
+            let tx = __tx;
+            let ty = __ty;
+
+            if (isAlign) {
+                if (shape.isStraight) {
+                    tx = round2half(tx);
+                    ty = round2half(ty);
+                } else {
+                    tx = Math.round(tx);
+                    ty = Math.round(ty);
+                }
+            }
 
             const targetXY = m.computeCoord2(tx, ty);
 

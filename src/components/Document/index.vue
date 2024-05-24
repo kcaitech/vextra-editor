@@ -74,6 +74,7 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
+const fileName = ref<string>(t('product.name'));
 let uninstall_keyboard_units: () => void = () => {
 };
 
@@ -338,7 +339,10 @@ const getDocumentInfo = async () => {
                     return;
                 }
                 if (docKeyRes.message === "无访问权限") {
-                    const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
+                    const query = route.query.page_id ? {
+                        id: route.query.id,
+                        page_id: route.query.page_id.slice(0, 8)
+                    } : { id: route.query.id };
                     router.push({
                         name: "apply",
                         query: query,
@@ -358,7 +362,10 @@ const getDocumentInfo = async () => {
         const docKeyData = docKeyRes.data;
         const perm = docInfoData.document_permission.perm_type;
         if (perm === 0) { // 无权限
-            const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
+            const query = route.query.page_id ? {
+                id: route.query.id,
+                page_id: route.query.page_id.slice(0, 8)
+            } : { id: route.query.id };
             router.push({
                 name: "apply",
                 query: query,
@@ -390,7 +397,8 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
+            fileName.value = file_name;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${t('product.name')}` : `${file_name} - ${t('product.name')}`;
             kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
@@ -746,6 +754,17 @@ const stop = watch(() => null_context.value, (v) => {
     }
 })
 
+watch(fileName, (NewNanme) => {
+    if (NewNanme) {
+        (window as any).wx.miniProgram.postMessage({
+            data: {
+                name: NewNanme,
+                id: docInfo.value.document.id
+            }
+        });
+    }
+})
+
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload);
     window.addEventListener('unload', onUnload);
@@ -803,12 +822,14 @@ onUnmounted(() => {
                             :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
+
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
                              @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                              @closeLoading="closeLoading">
                 </ContentView>
             </template>
+
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
                            @mouseenter="(e: Event) => { mouseenter('right') }"
@@ -835,6 +856,7 @@ onUnmounted(() => {
         <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
+
 <style scoped lang="scss">
 .main {
     min-width: 460px;

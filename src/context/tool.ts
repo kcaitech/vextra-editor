@@ -71,6 +71,7 @@ export class Tool extends WatchableObject {
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
     static BLOCKS_CHANGE = 12;
+    static CUTOUT_VISIBLE = 13;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -82,6 +83,7 @@ export class Tool extends WatchableObject {
     private m_lable_status: boolean = false;
     private m_blocks_hor: Block[] = [];
     private m_blocks_ver: Block[] = [];
+    private m_cutout_visible = true;
 
     constructor(context: Context) {
         super();
@@ -138,6 +140,15 @@ export class Tool extends WatchableObject {
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
+    }
+
+    get isCutoutVisible() {
+        return this.m_cutout_visible;
+    }
+
+    setCutoutVisible(v: boolean) {
+        this.m_cutout_visible = v;
+        this.notify(Tool.CUTOUT_VISIBLE);
     }
 
     get frameSize(): { size: { width: number, height: number }, name: string } {

@@ -284,7 +284,7 @@ const routes = [
         ],
         meta: {
             requireAuth: true,
-            title: '首页',
+            title: '墨师设计',
             group: Group.Home
         }
     },

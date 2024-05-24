@@ -27,7 +27,7 @@ export const system = {
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',
     'show_many_cursor': 'Show others cursor',
-    'show_comment': 'Show comment',
+    'show_comment': 'Show Cutout',
     'show_ruler': 'show ruler',
     'show_pixel_network': 'Show grid',
     'hide_operation_interface': 'Hide UI',

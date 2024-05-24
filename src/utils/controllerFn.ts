@@ -107,6 +107,7 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
+
 export function gen_offset_map(shape: ShapeView, down: PageXY) {
     const m = shape.matrix2Root()
     const f = shape.frame;
@@ -131,6 +132,7 @@ export function pre_translate(context: Context, shapes: ShapeView[]) {
     context.assist.set_trans_target(shapes);
     context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
+
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
     if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
     else if (update_type === 2) startPosition.y = mousePosition.y;
@@ -171,6 +173,7 @@ export function end_transalte(context: Context) {
     context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
+
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
     const action = context.tool.action;
@@ -303,11 +306,11 @@ export class DirectionCalc {
     }
 }
 
-export function is_symbol_class(shape: Shape) {
+export function is_symbol_class(shape: Shape | ShapeView) {
     return shape.isVirtualShape
         || [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type)
-        || (function (shape: Shape) {
-            let p: Shape | undefined = shape;
+        || (function (shape: Shape | ShapeView) {
+            let p: Shape | ShapeView | undefined = shape;
             while (p) {
                 if (ShapeType.Symbol === p.type) {
                     return true;

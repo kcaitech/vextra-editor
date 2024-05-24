@@ -59,7 +59,7 @@ export class Communication {
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
 
-        console.log("this.enabledWorker", enabledWorker)
+        // console.log("this.enabledWorker", enabledWorker)
         if (enabledWorker) {
             this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
             this.channel = undefined

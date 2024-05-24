@@ -9,7 +9,7 @@ import { Segment, get_segments } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 
 interface Props {
     context: Context
@@ -544,9 +544,9 @@ function documentMove(e: MouseEvent) {
     }
 
     if (modified) {
-        assist.notify(Asssit.UPDATE_ASSIST_PATH);
+        assist.notify(Assist.UPDATE_ASSIST_PATH);
     } else {
-        assist.notify(Asssit.CLEAR);
+        assist.notify(Assist.CLEAR);
     }
 
     preXY.value = __client;
@@ -723,7 +723,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
     }
 
     livingPathVisible.value = true;
-    props.context.assist.notify(Asssit.CLEAR);
+    props.context.assist.notify(Assist.CLEAR);
     e.stopPropagation();
 }
 
@@ -767,7 +767,7 @@ onUnmounted(() => {
 
     document.removeEventListener('mousemove', documentMove);
 
-    props.context.assist.notify(Asssit.CLEAR);
+    props.context.assist.notify(Assist.CLEAR);
 })
 </script>
 <template>

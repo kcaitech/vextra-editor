@@ -58,7 +58,7 @@ const total = computed(() => {
 
 const changetab = (tab: string) => {
     activebnt.value = tab;
-    router.push({ name: tab })
+    router.replace({ name: tab })
 }
 
 const toSearch = () => {

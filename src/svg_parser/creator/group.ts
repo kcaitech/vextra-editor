@@ -1,7 +1,7 @@
 import {creator as shapeCreator, GroupShape, Shape,} from "@kcdesign/data"
 import {BaseCreator} from "./base"
 import {getRectBox, mergeRectBox} from "../utils"
-import {ColVector3D} from "@/transform_math/matrix"
+import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
 
 // 将父元素的属性合并到子元素
 export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
@@ -49,7 +49,7 @@ export class GroupCreator extends BaseCreator {
         }
 
         const reservedAttributes = ["fill", "stroke"] // 保留属性，有则不会被子级替代
-        const isReserved = reservedAttributes.some(attr => attr in this.attributes)
+        const isReserved = reservedAttributes.some(attr => attr in this.attributes && (this.attributes as any)[attr])
         if (!isReserved && children.length === 1) { // 用子元素替代自身
             mergeAttributes(this, children[0].creator)
             this.replaceWithChildren()
@@ -67,6 +67,8 @@ export class GroupCreator extends BaseCreator {
         const childesShapeBox = mergeRectBox(...childShapeBoxes) // 合并所有子元素的包围盒
 
         // 根据子元素包围盒更新groupShape的宽高
+        this.attributes.width = childesShapeBox.w
+        this.attributes.height = childesShapeBox.h
         groupShape.frame.width = childesShapeBox.w
         groupShape.frame.height = childesShapeBox.h
 
@@ -76,7 +78,11 @@ export class GroupCreator extends BaseCreator {
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
-        groupShape.frame.x += childesShapeBox.lt.x
-        groupShape.frame.y += childesShapeBox.lt.y
+        this.transform.preTranslate({vector: new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0])})
+        this.updateShapeAttrByTransform()
+        // dev code
+        // if (this.localAttributes["id"] === "组_59") {
+        //     console.log("组_59 groupShape", groupShape.frame.x, groupShape.frame.y, groupShape.frame.width, groupShape.frame.height)
+        // }
     }
 }
