@@ -1,9 +1,5 @@
 import { BlendMode, BorderPosition } from "@kcdesign/data"
 
-export const product = {
-    name: '墨师设计'
-}
-
 export const system = {
     incorrect_input: '输入有误！',
     'illegal_input': '输入不合法！',

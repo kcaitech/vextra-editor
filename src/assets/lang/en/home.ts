@@ -1,9 +1,5 @@
 import { BlendMode, BorderPosition } from "@kcdesign/data";
 
-export const product = {
-    name: 'MossDesign'
-}
-
 export const system = {
     incorrect_input: 'Incorrect input!',
     'illegal_input': 'illegal input!',
