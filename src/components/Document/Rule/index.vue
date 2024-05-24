@@ -22,7 +22,8 @@ interface Scale {
 const ruleVisible = ref<boolean>(false);
 const scalesHor = ref<Scale[]>([]);
 const scalesVer = ref<Scale[]>([]);
-
+const blocksHor = ref<Block[]>([]);
+const blocksVer = ref<Block[]>([]);
 
 function getContainer(shape: ShapeView) {
     let p = shape.parent;
@@ -46,6 +47,8 @@ function getMatrix2Container(shape: ShapeView) {
 }
 
 function generateBlocksForRule() {
+    blocksHor.value.length = 0;
+    blocksVer.value.length = 0;
     const ctx = props.context;
     // 大于50咱们就不做细节更新了，可以考虑直接把controllerFrame作为结果；
     const shapes = ctx.selection.selectedShapes;
@@ -177,7 +180,9 @@ function generateBlocksForRule() {
             }
         }
 
-        ctx.tool.setBlocks(mergeBlocks(blocksX), mergeBlocks(blocksY));
+
+        blocksHor.value = mergeBlocks(blocksX);
+        blocksVer.value = mergeBlocks(blocksY)
     }
 }
 
@@ -187,13 +192,7 @@ function mergeBlocks(blocks: Block[]) {
         return blocks;
     }
 
-    blocks.sort((a, b) => {
-        if (a.start > b.start) {
-            return 1
-        } else {
-            return -1;
-        }
-    });
+    blocks.sort((a, b) => a.start > b.start ? 1 : -1);
 
     const result: Block[] = [blocks[0]];
 
@@ -206,6 +205,7 @@ function mergeBlocks(blocks: Block[]) {
         } else {
             last.end = Math.max(block.end, last.end);
             last.dataEnd = Math.max(block.dataEnd, last.dataEnd);
+            last.offsetEnd = Math.max(block.offsetEnd, last.offsetEnd);
         }
     }
 
@@ -300,6 +300,7 @@ function getOpacity(distance: number) {
 
 function workspaceWatcher(t: number) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
+        generateBlocksForRule();
         render();
     }
 }
@@ -341,6 +342,12 @@ onUnmounted(() => {
                 </div>
                 <div class="dot"></div>
             </div>
+            <div v-for="(b, i) in blocksHor"
+                 :key="i"
+                 :style="{transform: `translateX(${b.offsetStart}px)`, width: (b.offsetEnd - b.offsetStart) + 'px'}"
+                 class="block"
+            >
+            </div>
         </div>
         <div class="d-ver">
             <div v-for="(s, i) in scalesVer"
@@ -353,17 +360,25 @@ onUnmounted(() => {
                 </div>
                 <div class="dot"></div>
             </div>
+            <div v-for="(b, i) in blocksVer"
+                 :key="i"
+                 :style="{transform: `translateY(${b.offsetStart}px)`, height: (b.offsetEnd - b.offsetStart) + 'px'}"
+                 class="block"
+            >
+            </div>
         </div>
     </div>
 </template>
 <style scoped lang="scss">
 .rule-container {
     --color: #DADADA;
+    --block-back: rgba(24, 120, 245, 0.25);
 
     width: 100%;
     height: 100%;
     pointer-events: none;
     position: relative;
+    font-weight: 700;
 
     .contact-block {
         width: 20px;
@@ -398,12 +413,22 @@ onUnmounted(() => {
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
+
+
+            .dot {
+                width: 1px;
+                height: 4px;
+                background-color: var(--color);
+            }
         }
 
-        .dot {
-            width: 1px;
-            height: 4px;
-            background-color: var(--color);
+
+        .block {
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--block-back);
         }
     }
 
@@ -444,6 +469,14 @@ onUnmounted(() => {
                 height: 1px;
                 background-color: var(--color);
             }
+        }
+
+        > .block {
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--block-back);
         }
     }
 }
