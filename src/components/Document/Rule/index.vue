@@ -18,10 +18,14 @@ interface Scale {
 }
 
 const ruleVisible = ref<boolean>(false);
-const scalesHor = ref<Scale[]>([])
+const scalesHor = ref<Scale[]>([]);
+const scalesVer = ref<Scale[]>([]);
 
 function render() {
-    scalesHor.value.length = 0;
+    const hor = scalesHor.value;
+    const ver = scalesVer.value;
+    hor.length = 0;
+    ver.length = 0;
     ruleVisible.value = props.context.user.isRuleVisible;
 
     if (!ruleVisible.value) {
@@ -35,22 +39,36 @@ function render() {
     matrix.trans(-20, -20);
 
     const inverse = new Matrix(matrix.inverse);
-    const {width, height} = props.context.workspace.root;
+    const { width, height } = props.context.workspace.root;
 
     const scale = getScale(percent);
 
     let startX = inverse.computeCoord2(0, 0).x;
-    let endX = inverse.computeCoord2(width + 20, 0).x;
+    let endX = inverse.computeCoord2(width, 0).x;
 
     startX -= startX % scale;
     endX += scale - endX % scale;
 
-    for (let x = startX; x < endX; x += scale) {
-        const offset = matrix.computeCoord2(x, 0).x - 24.5;
+    let startY = inverse.computeCoord2(0, 0).y;
+    let endY = inverse.computeCoord2(0, height).y;
 
-        let scale: Scale = {data: x, opacity: getOpacity(offset), offset};
-        scalesHor.value.push(scale);
+    startY -= startY % scale;
+    endY += scale - endY % scale;
+
+    for (let data = startX; data < endX; data += scale) {
+        const offset = matrix.computeCoord2(data, 0).x - 24.95;
+
+        let scale: Scale = { data, opacity: getOpacity(offset), offset };
+        hor.push(scale);
     }
+
+    for (let data = startY; data < endY; data += scale) {
+        const offset = matrix.computeCoord2(0, data).y - 24.95;
+
+        let scale: Scale = { data, opacity: getOpacity(offset), offset };
+        ver.push(scale);
+    }
+
 }
 
 function getScale(percent: number) {
@@ -125,11 +143,24 @@ onUnmounted(() => {
                 <div class="dot"></div>
             </div>
         </div>
-        <div class="d-ver"></div>
+        <div class="d-ver">
+            <div v-for="(s, i) in scalesVer"
+                 :key="i"
+                 :style="{transform: `translateY(${s.offset}px)`, opacity: s.opacity}"
+                 class="scale"
+            >
+                <div class="scale-number">
+                    {{ s.data }}
+                </div>
+                <div class="dot"></div>
+            </div>
+        </div>
     </div>
 </template>
 <style scoped lang="scss">
 .rule-container {
+    --color: #DADADA;
+
     width: 100%;
     height: 100%;
     pointer-events: none;
@@ -162,7 +193,7 @@ onUnmounted(() => {
             width: 50px;
             height: 100%;
             font-size: 10px;
-            color: grey;
+            color: var(--color);
 
             display: flex;
             flex-direction: column;
@@ -173,7 +204,7 @@ onUnmounted(() => {
         .dot {
             width: 1px;
             height: 4px;
-            background-color: grey;
+            background-color: var(--color);
         }
     }
 
@@ -186,6 +217,35 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-right: 1px solid var(--grey);
         background-color: var(--theme-color-anti);
+        overflow: hidden;
+
+        > .scale {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+
+            font-size: 10px;
+            color: var(--color);
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+
+            writing-mode: vertical-lr;
+
+            .scale-number {
+                transform: rotate(180deg);
+            }
+
+            .dot {
+                width: 4px;
+                height: 1px;
+                background-color: var(--color);
+            }
+        }
     }
 }
 </style>
