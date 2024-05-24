@@ -457,11 +457,9 @@ export class TranslateHandler extends TransformHandler {
             transformUnits.push({ shape, x, y });
         }
 
-        if (this.context.user.isRuleVisible) {
-            this.context.nextTick(this.page, () => {
-                this.context.tool.notify(Tool.BLOCKS_CHANGE);
-            })
-        }
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.BLOCKS_CHANGE);
+        });
 
         (this.asyncApiCaller as Transporter).execute(transformUnits);
     }

@@ -129,6 +129,7 @@ function selectionWatcher(t: number) { // selection的部分动作可触发更�
         matrix.reset(props.matrix);
         createController();
         watchShapes();
+        props.context.tool.notify(Tool.BLOCKS_CHANGE);
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
         createShapeTracing();

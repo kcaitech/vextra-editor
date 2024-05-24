@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
@@ -406,7 +405,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .rule-container {
-    --color: #DADADA;
+    --color: #CCC;
     --block-back: rgba(24, 120, 245, 0.25);
 
     width: 100%;
