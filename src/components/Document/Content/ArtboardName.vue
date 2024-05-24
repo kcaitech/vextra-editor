@@ -136,7 +136,7 @@ function down(e: MouseEvent) {
         window.addEventListener('blur', windowBlur);
     } else if (e.button === 2) {
         e.stopPropagation();
-        props.context.workspace.downArboardTitle(e);
+        props.context.workspace.downArtboardTitle(e);
     }
 }
 

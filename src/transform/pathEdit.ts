@@ -15,7 +15,7 @@ import {
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Path } from "@/context/path";
-import { Asssit } from "@/context/assist";
+import { Assist } from "@/context/assist";
 import { is_layers_tree_unit } from "@/utils/scout";
 import { forbidden_to_modify_frame } from "@/utils/common";
 import { permIsEdit } from "@/utils/permission";
@@ -504,9 +504,9 @@ export class PathEditor extends TransformHandler {
         }
 
         if (modified) {
-            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+            assist.notify(Assist.UPDATE_ASSIST_PATH);
         } else {
-            assist.notify(Asssit.CLEAR);
+            assist.notify(Assist.CLEAR);
         }
 
         return modified;
@@ -1105,9 +1105,9 @@ export class PathEditor extends TransformHandler {
                 }
             }
 
-            assist.notify(Asssit.UPDATE_ASSIST_PATH);
+            assist.notify(Assist.UPDATE_ASSIST_PATH);
         } else {
-            assist.notify(Asssit.CLEAR);
+            assist.notify(Assist.CLEAR);
         }
 
         caller.execute4handle(this.shape, index, side, from, to, segment);

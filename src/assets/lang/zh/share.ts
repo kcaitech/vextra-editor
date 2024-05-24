@@ -57,7 +57,7 @@ export const apply = {
     project: '项目',
     team: '团队',
     team_apply: '加入团队申请',
-    fill: '文件',
+    file: '文件',
     apply_team: '申请加入团队：',
     apply_project: '申请加入项目：'
 }

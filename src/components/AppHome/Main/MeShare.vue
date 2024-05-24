@@ -1,8 +1,8 @@
-
 <template>
     <div class="title">
         <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         <div class="left">
+
             <div ref="myfile" @click="highlight(true, $event, '/files/myfile')"
                 :style="{ color: active ? '#333333' : '#777777' }">
                 {{ t('home.file_shared') }}</div>
@@ -28,7 +28,8 @@
                 @refreshDoc="refreshDoc" :nulldata="nulldata" />
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
-            @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
+            @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument"
+            @moveFillAddress="moveFillAddress" />
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
         </MoveProjectFill>
@@ -177,14 +178,25 @@ function sizeTostr(size: any) {
     return size
 }
 
+
+
 //右键打开或双击列表打开
-const openDocument = (id: string) => {
-    router.push({
-        name: 'document',
-        query: {
-            id: id
-        }
-    })
+const openDocument = (id: string, name: string) => {
+    window.sessionStorage.setItem("open_document_name", name);
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('MiniProgramEnv');
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index2/index?doc_id=${id}`,
+        });
+    } else {
+        router.push({
+            name: 'document',
+            query: {
+                id: id
+            }
+        })
+    }
 }
 
 //标星入口
@@ -293,7 +305,6 @@ watch(() => route.name, () => {
 })
 
 
-
 onMounted(() => {
     getDoucment();
     if (route.name === "recyclebin") {
@@ -318,6 +329,7 @@ onUnmounted(() => {
 })
 
 </script>
+
 <style lang="scss" scoped>
 .overlay {
     position: absolute;

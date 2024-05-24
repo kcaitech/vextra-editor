@@ -2,20 +2,22 @@
 import { Matrix, PageView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
+
 interface Props {
     context: Context
     data: PageView
     matrix: Matrix
 
-    cutout?: boolean
+    noCutout?: boolean
 }
+
 const props = defineProps<Props>();
 const matrixWithFrame = new Matrix();
 const reflush = ref(0);
@@ -25,25 +27,32 @@ const pagesvg = ref<HTMLElement>();
 const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
+const cutoutVisible = ref<boolean>(true);
 
 const emit = defineEmits<{
     (e: 'closeLoading'): void;
 }>();
 
+const show_c = computed<boolean>(() => {
+    return !props.noCutout && cutoutVisible.value;
+})
+
 function pageViewRegister(mount: boolean) {
     if (mount) {
         const temp = v4().split('-');
-        const id = temp[temp.length - 1] || 'pageview';
-        rootId.value = id;
+        rootId.value = temp[temp.length - 1] || 'pageview';
     } else {
         rootId.value = 'pageview';
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
+
 function _collect(t?: any) {
     if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
+
 const collect = debounce(_collect, 240);
+
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
@@ -55,6 +64,7 @@ function page_watcher() {
 
     reflush.value++;
 }
+
 function modifySize() {
     width.value = Math.ceil(Math.max(100, width.value));
     if (width.value % 2) {
@@ -90,9 +100,15 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     }
 })
 const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
+
 function tool_watcher(t?: number) {
-    if (t === Tool.TITILE_VISIBLE) show_t.value = props.context.tool.isShowTitle;
+    if (t === Tool.TITILE_VISIBLE) {
+        show_t.value = props.context.tool.isShowTitle;
+    } else if (t === Tool.CUTOUT_VISIBLE) {
+        cutoutVisible.value = props.context.tool.isCutoutVisible;
+    }
 }
+
 onMounted(() => {
     props.data.watch(page_watcher);
     props.data.data.__collect.watch(collect);
@@ -145,8 +161,9 @@ onUnmounted(() => {
 
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
-        :width="width" :height="height" :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="cutout" :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
+         :width="width" :height="height" :viewBox="viewbox"></svg>
+    <ShapeCutout v-if="show_c" :context="props.context" :data="data" :matrix="props.matrix"
+                 :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">

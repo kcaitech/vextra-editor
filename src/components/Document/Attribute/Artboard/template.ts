@@ -1,3 +1,7 @@
+import i18n from '@/i18n'
+// @ts-ignore
+const t = i18n.global.t;
+
 export interface TL {
     name: string;
     width: number;
@@ -9,9 +13,11 @@ interface Template {
     children: TL[];
 }
 
+const slide = t('frame.slide');
+
 export const templates: Template[] = [
     {
-        title: '手机',
+        title: t('frame.phone'),
         children: [
             {
                 name: 'iPhone 14&15 Pro Max',
@@ -66,7 +72,7 @@ export const templates: Template[] = [
         ]
     },
     {
-        title: '平板',
+        title: t('frame.pad'),
         children: [
             {
                 name: 'iPad 10.2”',
@@ -96,7 +102,7 @@ export const templates: Template[] = [
         ]
     },
     {
-        title: '桌面',
+        title: t('frame.deskdop'),
         children: [
             {
                 name: 'Desktop',
@@ -126,22 +132,22 @@ export const templates: Template[] = [
         ]
     },
     {
-        title: '幻灯片',
+        title: slide,
         children: [
             {
-                name: '幻灯片 16:9',
+                name: slide + ' 16:9',
                 width: 1920,
                 height: 1080
             },
             {
-                name: '幻灯片 4:3',
+                name: slide + ' 4:3',
                 width: 1024,
                 height: 768
             }
         ]
     },
     {
-        title: '手表',
+        title: t('frame.watch'),
         children: [
             {
                 name: 'Apple Watch 40mm',
@@ -171,7 +177,7 @@ export const templates: Template[] = [
         ]
     },
     {
-        title: '纸张',
+        title: t('frame.paper'),
         children: [
             {
                 name: 'A2',
@@ -201,7 +207,7 @@ export const templates: Template[] = [
         ]
     },
     {
-        title: '社交媒体',
+        title: t('frame.social_media'),
         children: [
             {
                 name: '公众号封面 2.35:1',

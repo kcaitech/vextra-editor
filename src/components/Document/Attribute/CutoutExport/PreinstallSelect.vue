@@ -34,7 +34,7 @@ onUnmounted(() => {
 <template>
     <div class="per_select_menu" @mouseup.stop>
         <div class="item" @click="defaultItem">
-            <div class="text">{{t('cutoutExport.defaule')}}</div>
+            <div class="text">{{t('cutoutExport.default')}}</div>
         </div>
         <div class="item" @click="iosPreinstall">
             <div class="text">{{t('cutoutExport.ios_presets')}}</div>

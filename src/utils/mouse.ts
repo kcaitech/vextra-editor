@@ -292,20 +292,6 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
 }
 
 /**
- * @description 获取移动辅助中心对象点图
- */
-export function gen_assist_target(context: Context, shapes: ShapeView[], is_multi: boolean, offset_map: any, pe: {
-    x: number,
-    y: number
-}) {
-    if (is_multi) {
-        return context.assist.trans_match_multi(shapes, offset_map, pe);
-    } else {
-        return context.assist.trans_match(offset_map, pe);
-    }
-}
-
-/**
  * @description 是否摆脱辅助吸附
  */
 export function is_rid_stick(context: Context, a: number, b: number) {

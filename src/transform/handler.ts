@@ -60,10 +60,12 @@ export class TransformHandler {
 
 
     fulfil() {
+        const context = this.context;
+
         this.asyncApiCaller?.commit();
-        this.context.assist.reset();
+        context.assist.reset();
         this.workspace.setCtrl('page');
-        this.context.cursor.cursor_freeze(false);
+        context.cursor.cursor_freeze(false);
 
         document.removeEventListener('keydown', this.__keydown);
         document.removeEventListener('keyup', this.__keyup);

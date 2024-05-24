@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid"
+import {v4 as uuid} from "uuid"
 import {
     ClientCmd,
     ClientCmdType,
@@ -9,8 +9,9 @@ import {
     ServerCmd,
     ServerCmdType
 } from "@/communication/types"
-import { COMMUNICATION_URL } from "@/settings"
-import { Tunnel } from "@/communication/tunnel"
+import {COMMUNICATION_URL} from "@/settings"
+import {Tunnel} from "@/communication/tunnel"
+import {checkPromiseStatus, PromiseStatus} from "@/communication/utils"
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -27,8 +28,10 @@ export class Server {
     isConnecting: boolean = false
     connectPromise: Promise<boolean> | undefined = undefined
     isClosed: boolean = false
-    onNetworkOnline: () => void = () => {}
-    onNetworkOffline: () => void = () => {}
+    onNetworkOnline: () => void = () => {
+    }
+    onNetworkOffline: () => void = () => {
+    }
     isFirstConnect: boolean = true // 首次连接成功后置为false
     id: string = ""
     lastReceiveHeartbeatTime: number = 0
@@ -37,7 +40,8 @@ export class Server {
     receiveHeartbeatTimer?: number
     offlineTimer?: number
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
-    onConnected: () => void = () => {}
+    onConnected: () => void = () => {
+    }
 
     constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>) {
         this.token = token
@@ -52,7 +56,8 @@ export class Server {
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;
         this.closeWs()
         this.isConnecting = true
-        let resolve: (value: boolean) => void = () => {}
+        let resolve: (value: boolean) => void = () => {
+        }
         this.connectPromise = new Promise<boolean>(r => resolve = r)
         try {
             await new Promise<void>((resolve, reject) => {
@@ -86,7 +91,7 @@ export class Server {
         this.ws!.send(JSON.stringify({
             token: this.token,
         }))
-        if (!await new Promise(resolve => {
+        const onMessagePromise: Promise<boolean> = new Promise(resolve => {
             this.ws!.onmessage = (event: MessageEvent) => {
                 try {
                     const data = JSON.parse(event.data)
@@ -105,11 +110,13 @@ export class Server {
                     resolve(false)
                 }
             }
-            setTimeout(() => {
+            setTimeout(async () => {
+                if (await checkPromiseStatus(onMessagePromise) !== PromiseStatus.Pending) return;
                 console.log("init timeout")
                 resolve(false)
             }, 3000)
-        })) {
+        })
+        if (!await onMessagePromise) {
             this.ws = undefined
             resolve(false)
             this.isConnecting = false
@@ -133,7 +140,7 @@ export class Server {
             this._onNetworkOnline()
         }
         this.onConnected()
-        console.log("server connect success")
+        // console.log("server connect success")
         return true
     }
 
@@ -150,7 +157,7 @@ export class Server {
     }
 
     closeWs() {
-        console.log("server closeWs")
+        // console.log("server closeWs")
         this.isConnected = false
         if (this.ws) {
             this.ws.onopen = null

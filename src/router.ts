@@ -1,7 +1,8 @@
-import { createRouter, createWebHashHistory, createWebHistory, NavigationGuardWithThis } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 import i18n from "./i18n";
 import _ from "lodash";
 import isMobileDevice from "./utils/mobileDeviceChecker";
+import kcdesk from "@/kcdesk";
 
 declare module 'vue-router' {
     interface RouteMeta {
@@ -48,13 +49,19 @@ const About = () => import('@/components/Mobile/About.vue')
 const Message = () => import('@/components/Mobile/MessageInfo.vue')
 const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
 let _t: any = i18n.global
+const productName = _t.t('product.name');
 
-const children = [
+export enum Group {
+    Home,
+    Document,
+}
+
+const apphome_children = [
     {
         path: 'recently',
         name: 'recently',
         component: Recently,
-        meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.recently_opened') + ' - ' + productName, group: Group.Home },
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'recently') {
                 if (isMobileDevice()) {
@@ -69,45 +76,50 @@ const children = [
         path: 'star',
         name: 'starfile',
         component: StarFile,
-        meta: { title: _t.t('home.star_file') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.star_file') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'myfile',
         name: 'meshare',
         component: MeShare,
-        meta: { title: _t.t('home.file_shared') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.file_shared') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'shared',
         name: 'shareme',
         component: ShareMe,
-        meta: { title: _t.t('home.shared_file_received') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('home.shared_file_received') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'trash',
         name: 'recyclebin',
-        component: MeShare
+        component: MeShare,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: 'team/:id',
         name: 'TeamPage',
         component: TeamPage,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
         path: 'project_shared',
         name: 'ProjectShare',
         component: ProjectShare,
-        meta: { title: _t.t('Createteam.sharetip') + ' - ' + _t.t('product.name') },
+        meta: { title: _t.t('Createteam.sharetip') + ' - ' + productName, group: Group.Home },
     },
     {
         path: 'project/:id',
         name: 'ProjectPage',
         component: ProjectPage,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
 ]
@@ -117,7 +129,7 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect:'login',
+        redirect: 'login',
         children: [
             {
                 path: "introduction",
@@ -129,41 +141,53 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name') },
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + productName },
 
             },
             {
                 path: "serviceagreement",
                 name: "serviceagreement",
                 component: Serviceagreement,
-                meta: { title: _t.t('system.read_TOS') + ' - ' + _t.t('product.name') },
+                meta: { title: _t.t('system.read_TOS') + ' - ' + productName },
             },
-        ]
+        ],
+        meta: { group: Group.Home }
     },
     {
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name'), requireAuth: true },
+        meta: {
+            // title: _t.t('system.btn_login') + ' - ' + productName,
+            requireAuth: true,
+            group: Group.Home
+        },
     },
     {
         path: "/home",
         name: "home",
         component: HomeVue,
         props: true,
+        meta: { group: Group.Home }
     },
     {
         path: "/document",
         name: "document",
         component: DocumentVue,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Document
         },
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'document' && to.query.id) {
                 const id = to.query.id
-                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
-                if (newid !== id) {
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : ''; // 去掉url中的空格
+                if (kcdesk && to.query.from !== 'kcdesk') {
+                    const name = window.sessionStorage.getItem("open_document_name") ?? "";
+                    kcdesk.fileOpen(newid, name, "");
+                    next(false);
+                }
+                else if (newid !== id) {
                     next({ ...to, query: { ...to.query, id: newid } });
                 } else {
                     next();
@@ -179,6 +203,7 @@ const routes = [
         component: PageViews,
         meta: {
             requireAuth: true,
+            group: Group.Document
         },
         beforeEnter: (to: any, from: any, next: any) => {
             if (to.name === 'pageviews' && to.query.id) {
@@ -199,7 +224,10 @@ const routes = [
         name: "apphome",
         component: Apphome,
         redirect: '/files/recently',
-        children: children,
+        children: apphome_children,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: "/wxlogin",
@@ -207,6 +235,7 @@ const routes = [
         component: Wxlogin,
         meta: {
             requireAuth: true,
+            group: Group.Home
         },
     },
     {
@@ -255,7 +284,8 @@ const routes = [
         ],
         meta: {
             requireAuth: true,
-            // title: '首页'
+            title: '墨师设计',
+            group: Group.Home
         }
     },
     {
@@ -264,7 +294,8 @@ const routes = [
         component: ProjectView,
         meta: {
             requireAuth: true,
-            title: '团队'
+            title: '团队',
+            group: Group.Home
         }
     },
     {
@@ -273,6 +304,7 @@ const routes = [
         component: ProjectFileView,
         meta: {
             requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -281,7 +313,8 @@ const routes = [
         component: Sharefile,
         meta: {
             requireAuth: true,
-            title: '分享'
+            title: '分享',
+            group: Group.Home
         }
     },
     {
@@ -290,7 +323,8 @@ const routes = [
         component: ShareMember,
         meta: {
             requireAuth: true,
-            title: '已加入分享的人'
+            title: '已加入分享的人',
+            group: Group.Home
         }
     },
     {
@@ -299,7 +333,8 @@ const routes = [
         component: Msearch,
         meta: {
             requireAuth: true,
-            title: '搜索'
+            title: '搜索',
+            group: Group.Home
         }
     },
     {
@@ -308,7 +343,8 @@ const routes = [
         component: Message,
         meta: {
             requireAuth: true,
-            title: '消息通知'
+            title: '消息通知',
+            group: Group.Home
         }
     },
     {
@@ -316,7 +352,8 @@ const routes = [
         name: 'privacy',
         component: Privacy,
         meta: {
-            title: '隐私政策'
+            title: '隐私政策',
+            group: Group.Home
         }
     },
     {
@@ -324,7 +361,8 @@ const routes = [
         name: 'agreements',
         component: Agreements,
         meta: {
-            title: '在线服务协议'
+            title: '在线服务协议',
+            group: Group.Home
         }
     },
     {
@@ -332,7 +370,8 @@ const routes = [
         name: "join",
         component: joinTeam,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -341,6 +380,7 @@ const routes = [
         component: Apply,
         meta: {
             requireAuth: true,
+            group: Group.Home,
             title: '文档权限申请'
         }
     },
@@ -349,7 +389,8 @@ const routes = [
         name: "mapply",
         component: Mapply,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
@@ -357,13 +398,17 @@ const routes = [
         name: "projectApply",
         component: projectApply,
         meta: {
-            requireAuth: true
+            requireAuth: true,
+            group: Group.Home
         }
     },
     {
         path: "/pcenter",
         name: "per_center",
-        component: per_center
+        component: per_center,
+        meta: {
+            group: Group.Home
+        }
     },
     {
         path: '/catchAll(.*)/:catchAll(.*)',

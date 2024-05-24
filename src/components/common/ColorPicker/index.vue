@@ -1798,7 +1798,7 @@ onUnmounted(() => {
                 width: 100%;
 
                 .header {
-                    width: 48px;
+                    // width: 48px;
                     height: 14px;
                     font-family: HarmonyOS Sans;
                     font-size: 12px;

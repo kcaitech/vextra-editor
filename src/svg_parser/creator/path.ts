@@ -5,12 +5,11 @@ import {
 } from "@kcdesign/data"
 import {BaseCreator} from "./base"
 import {BaseTreeNode} from "../tree"
-import {ColVector3D} from "@/transform_math/matrix"
+import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
 
 export class PathCreator extends BaseCreator {
     afterAllAdjust() {
-        // 识别本节点是否为边框部分
-        if (this.attributes.fill || !this.attributes.stroke) return;
+        if (this.attributes.fill || !this.attributes.stroke) return; // 本节点不是边框
 
         const svgRoot = this.root?.htmlElement?.root
         if (!svgRoot) return;
@@ -38,8 +37,8 @@ export class PathCreator extends BaseCreator {
             if (el) {
                 const creator = (el as any).creator as BaseCreator
                 if (creator instanceof PathCreator && creator.localAttributes["d"] === this.localAttributes["d"]) {
-                    fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined
-                    if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
+                    fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined // 父节点的兄弟节点
+                    if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => { // 父节点的兄弟节点的子节点
                         prev.push(...cur.children)
                         return prev
                     }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
@@ -48,8 +47,8 @@ export class PathCreator extends BaseCreator {
         } else { // 中心
             position = "center"
             fillPart = this.siblings().find(findFillPart) as PathCreator | undefined
-            if (!fillPart) fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined;
-            if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => {
+            if (!fillPart) fillPart = this.parent?.siblings().find(findFillPart) as PathCreator | undefined; // 父节点的兄弟节点
+            if (!fillPart) fillPart = this.parent?.siblings().reduce((prev, cur) => { // 父节点的兄弟节点的子节点
                 prev.push(...cur.children)
                 return prev
             }, [] as BaseTreeNode[]).find(findFillPart) as PathCreator | undefined;
@@ -76,9 +75,29 @@ export class PathCreator extends BaseCreator {
         const y = this.attributes.pathY || 0
         const width = this.attributes.width || 0
         const height = this.attributes.height || 0
-        const path = new Path(d);
-        path.translate(-x, -y);
-        this.transform.translate({vector: new ColVector3D([x + (this.attributes.x || 0), y + (this.attributes.y || 0), 0])})
-        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x, y, width, height), path, this.style)
+
+        const path = new Path(d)
+
+        path.translate(-x, -y)
+        let diffTranslate = new ColVector3D([x, y, 0])
+        diffTranslate = this.transform.clone().clearTranslate().transform(diffTranslate).col0
+
+        // dev code
+        // if (this.localAttributes["node-id"] === "123") {
+        //     console.log("node-id=123", -x, -y)
+        // }
+        // if (this.localAttributes["id"] === "路径_348") {
+        //     console.log("路径_348 path transform", this.transform.toString())
+        // }
+
+        const x1 = diffTranslate.x + (this.attributes.x || 0)
+        const y1 = diffTranslate.y + (this.attributes.y || 0)
+        this.transform.translate({vector: new ColVector3D([x1, y1, 0])})
+        this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x1, y1, width, height), path, this.style)
+
+        // dev code
+        // if (this.localAttributes["id"] === "路径_348") {
+        //     console.log("路径_348 path", x, y, width, height, this.transform.toString())
+        // }
     }
 }

@@ -149,7 +149,7 @@ function down(e: MouseEvent) {
         document.addEventListener('mouseup', up);
         window.addEventListener('blur', windowBlur);
     } else if (e.button === 2) { // 右键是打开菜单
-        props.context.workspace.downArboardTitle(e);
+        props.context.workspace.downArtboardTitle(e);
     }
 }
 
