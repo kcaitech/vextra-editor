@@ -254,6 +254,7 @@ declare module '@vue/runtime-core' {
     Recently: typeof import('./src/components/AppHome/Main/Recently.vue')['default']
     Rect: typeof import('./src/components/Document/Toolbar/Buttons/Rect.vue')['default']
     RecycleBin: typeof import('./src/components/AppHome/Main/RecycleBin.vue')['default']
+    ReferLine: typeof import('./src/components/Document/Rule/ReferLine.vue')['default']
     RenderCutout: typeof import('./src/components/Document/Cutout/renderCutout.vue')['default']
     Report: typeof import('./src/components/Help/Report.vue')['default']
     ResizingConstraint: typeof import('./src/components/Document/Attribute/ResizingConstraint/index.vue')['default']

@@ -24,6 +24,11 @@ const scalesHor = ref<Scale[]>([]);
 const scalesVer = ref<Scale[]>([]);
 const blocksHor = ref<Block[]>([]);
 const blocksVer = ref<Block[]>([]);
+const refersHor = ref<number[]>([]);
+const refersVer = ref<number[]>([]);
+
+const contentWidth = ref<number>(100);
+const contentHeight = ref<number>(100);
 
 function getContainer(shape: ShapeView) {
     let p = shape.parent;
@@ -215,8 +220,14 @@ function mergeBlocks(blocks: Block[]) {
 function render() {
     const hor = scalesHor.value;
     const ver = scalesVer.value;
+    const refH = refersHor.value;
+    const refV = refersVer.value;
     hor.length = 0;
     ver.length = 0;
+
+    refH.length = 0;
+    refV.length = 0;
+
     ruleVisible.value = props.context.user.isRuleVisible;
 
     if (!ruleVisible.value) {
@@ -231,6 +242,9 @@ function render() {
 
     const inverse = new Matrix(matrix.inverse);
     const { width, height } = props.context.workspace.root;
+
+    contentWidth.value = width;
+    contentHeight.value = height;
 
     const scale = getScale(percent);
 
@@ -260,6 +274,16 @@ function render() {
         ver.push(scale);
     }
 
+    // todo 此处为测试数据
+    refH.push(-2800, -3750, -4000);
+    refV.push(-4000, -4900);
+
+    for (let i = 0; i < refH.length; i++) {
+        refH[i] = matrix.computeCoord2(refH[i], 0).x - 0.25;
+    }
+    for (let i = 0; i < refV.length; i++) {
+        refV[i] = matrix.computeCoord2(0, refV[i]).y - 0.25;
+    }
 }
 
 function getScale(percent: number) {
@@ -348,6 +372,11 @@ onUnmounted(() => {
                  class="block"
             >
             </div>
+            <div v-for="(l, i) in refersHor"
+                 :key="i"
+                 :style="{transform: `translateX(${l}px)`, height: contentHeight + 'px'}"
+                 class="lineX"
+            />
         </div>
         <div class="d-ver">
             <div v-for="(s, i) in scalesVer"
@@ -366,6 +395,12 @@ onUnmounted(() => {
                  class="block"
             >
             </div>
+            <div
+                v-for="(l, i) in refersVer"
+                :key="i"
+                :style="{transform: `translateY(${l}px)`, width: contentWidth+ 'px'}"
+                class="lineY"
+            />
         </div>
     </div>
 </template>
@@ -379,6 +414,8 @@ onUnmounted(() => {
     pointer-events: none;
     position: relative;
     font-weight: 700;
+
+    overflow: hidden;
 
     .contact-block {
         width: 20px;
@@ -398,7 +435,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-bottom: 1px solid var(--grey);
         background-color: var(--theme-color-anti);
-        overflow: hidden;
+        overflow-x: clip;
 
         > .scale {
             position: absolute;
@@ -430,6 +467,15 @@ onUnmounted(() => {
             left: 0;
             background-color: var(--block-back);
         }
+
+        .lineX {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.5px;
+            height: 4000px;
+            background-color: #ff4400;
+        }
     }
 
     .d-ver {
@@ -441,7 +487,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-right: 1px solid var(--grey);
         background-color: var(--theme-color-anti);
-        overflow: hidden;
+        overflow-y: clip;
 
         > .scale {
             position: absolute;
@@ -477,6 +523,15 @@ onUnmounted(() => {
             top: 0;
             left: 0;
             background-color: var(--block-back);
+        }
+
+        .lineY {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4000px;
+            height: 0.5px;
+            background-color: #ff4400;
         }
     }
 }
