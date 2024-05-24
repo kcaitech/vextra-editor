@@ -1306,7 +1306,7 @@ onUnmounted(() => {
                         @change="(e) => onColorChange(e, 'color')" @click="(e) => click(e, is_font_color_select)"
                         @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false" />
@@ -1327,8 +1327,8 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{
-            t('attr.font_color')
-        }}
+                        t('attr.font_color')
+                        }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -1377,7 +1377,7 @@ onUnmounted(() => {
             </div>
         </div>
         <teleport to="body">
-            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px'}">
+            <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
             </div>
         </teleport>
     </div>
@@ -1661,6 +1661,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            text-wrap: nowrap;
 
             .color {
                 background-color: var(--input-background);

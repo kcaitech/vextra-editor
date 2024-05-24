@@ -148,7 +148,7 @@ const getName = (item: any) => {
               fontWeight: activeName === 'fill' ? 600 : '',
               color: activeName === 'fill' ? 'rgba(0, 0, 0, 1)' : ''
             }">
-              {{ t('apply.fill') }}
+              {{ t('apply.file') }}
             </span>
           </span>
         </template>

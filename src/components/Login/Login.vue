@@ -2,12 +2,13 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/request/users'
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue'
+import { nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
-import { User } from '@/context/user'
 import isMobileDevice from '@/utils/mobileDeviceChecker'
+import kcdesk from '@/kcdesk'
+import { locale } from '@/locale'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -17,7 +18,6 @@ const userid = ref('')
 const Wxcode = ref('')
 const codeerror = ref<boolean>(false)
 const inputfocus = ref<any>([])
-const isComposing = ref<boolean>(false)
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") return
@@ -30,6 +30,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
         if (linfo) {
             if (linfo.code === 0 && linfo.data.token !== '') {
+                kcdesk?.setLogined(true);
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
                 localStorage.setItem('nickname', linfo.data.nickname)
@@ -99,57 +100,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 login.addEventListener('load', function () {
                     isLoading.value = false
                 })
-            })
-        }
-
-    })
-}
-
-function clickaffirm() {
-    user_api.PostLogin({ code: Wxcode.value, invite_code: codevalue.value, id: userid.value }).then((result: any) => {
-        if (result) {
-            if (result.code === 0 && result.data.token !== '') {
-
-                localStorage.setItem('token', result.data.token)
-                localStorage.setItem('avatar', result.data.avatar)
-                localStorage.setItem('nickname', result.data.nickname)
-                localStorage.setItem('userId', result.data.id)
-                isLoading.value = false
-                const perRoute = sessionStorage.getItem('perRoute') || ''
-                if (perRoute) {
-                    const params = new URLSearchParams(perRoute.split('?')[1]);
-                    const path = perRoute.split('?')[0].replace('/', '');
-                    const id = params.get('id');
-                    const page_id = params.get('page_id');
-                    const query = params.get('page_id') ? { id, page_id } : { id };
-                    router.push({
-                        name: path,
-                        query
-                    })
-                } else {
-                    if (isMobileDevice()) {
-                        router.push({ name: 'mobilehome' })
-                    } else {
-                        router.push({ name: 'apphome' })
-                    }
-
-                }
-            } else if (result.code === 400) {
-                codeerror.value = true
-            }
-        }
-    }).catch((result: any) => {
-        if (result.data.code === -1) {
-            loginshow.value = true
-            nextTick(() => {
-                ElMessage.error({ duration: 1500, message: result.data.message })
-                isLoading.value = true
-                wxcode()
-                const login: any = document.querySelector('iframe')
-                login.addEventListener('load', function () {
-                    isLoading.value = false
-                })
-                login.removeEventListener('load', function () { })
             })
         }
 
@@ -237,66 +187,6 @@ const inputvalues = reactive([
     { value: "" },
 ])
 
-let timer: any
-const keydownevent = (index: number) => {
-    if (0 < index) {
-        timer = setTimeout(() => {
-            (inputfocus.value[index - 1] as HTMLInputElement).focus()
-            clearTimeout(timer)
-        }, 0);
-        if (codeerror.value) {
-            codeerror.value = false
-        }
-    }
-}
-
-const inputevent = (e: Event, index: number) => {
-    const inputs = document.querySelectorAll('.inputitem')
-    if (isComposing.value) return
-    if ((e.target! as HTMLInputElement).value === " ") {
-        inputvalues[index].value = ''
-        return
-    }
-    if (index < inputs.length - 1 && (e.target! as HTMLInputElement).value !== "") {
-        (inputs[index + 1] as HTMLInputElement).focus()
-    }
-}
-
-const allValuesFilled = computed(() => {
-    return inputvalues.every(item => item.value !== "")
-})
-
-const codevalue = computed(() => {
-    return inputvalues.reduce((accumulator, item) => accumulator + item.value, "")
-})
-
-const handleCompositionStart = () => {
-    isComposing.value = true
-}
-
-const handleCompositionEnd = (e: any, index: number) => {
-    isComposing.value = false
-    inputvalues[index].value = ""
-    inputfocus.value[index].focus()
-}
-
-const pasteEvent = async (e: any) => {
-    e.preventDefault();
-    try {
-        let pasteContent = e.clipboardData.getData('text/plain') || await navigator.clipboard.readText();
-        if (pasteContent && pasteContent.length > 8) {
-            pasteContent = pasteContent.slice(0, 8)
-        }
-        for (let i = 0; i < pasteContent.length; i++) {
-            inputvalues[i].value = pasteContent[i]
-        }
-        inputfocus.value[pasteContent.length - 1].focus()
-    } catch (error) {
-        console.error('Unable to read clipboard data:', error);
-    }
-
-}
-
 function changesize(e: HTMLElement) {
     if (window.innerWidth > window.innerHeight) {
         e.style.aspectRatio = '8/6'
@@ -323,42 +213,22 @@ onMounted(() => {
         <div class="content">
             <div class="top">
                 <Describes></Describes>
-                <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
-                    <div class="login-page" v-if="loginshow">
-                        <div class="title">{{ t('system.wx_login') }}</div>
-                        <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
-                            v-loading="isLoading">
-                        </div>
-                        <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
-                            <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
-                        </div>
-                        <div class="tips">
-                            <span>{{ t('system.login_read') }}</span>
-                            <span @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS')
-                                }}</span>
-                            <span @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy')
-                                }}</span>
-                        </div>
+                <div class="login-page">
+                    <div class="title">{{ t('system.wx_login') }}</div>
+                    <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
+                        v-loading="isLoading">
                     </div>
-                    <div class="login-code" v-else>
-                        <div class="back" @click.stop="loginshow = true">
-                            <svg-icon icon-class="back-icon"></svg-icon>
-                        </div>
-                        <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
-                        <div class="inputs">
-                            <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
-                                :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
-                                @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
-                                @compositionend="handleCompositionEnd($event, index)"
-                                @keydown.delete="keydownevent(index)" @paste="pasteEvent($event)" />
-                            <Transition name="slide-up">
-                                <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
-                            </Transition>
-                        </div>
-
-                        <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
-                    t('percenter.affirm')
-                            }}</button>
+                    <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
+                        <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
+                    </div>
+                    <div class="tips" :lang="locale">
+                        <span class="tips_content">{{ t('system.login_read') }}</span>
+                        <span class="tips_button" @click.prevent="handleOpenNewWindow('serviceagreement')">{{
+                            t('system.read_TOS')
+                        }}</span>
+                        <span class="tips_button" @click.prevent="handleOpenNewWindow('privacypolicy')">{{
+                            t('system.read_Privacy')
+                        }}</span>
                     </div>
                 </div>
             </div>
@@ -368,22 +238,6 @@ onMounted(() => {
 </template>
 
 <style lang='scss' scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
-    transition: all 0.25s ease-out;
-}
-
-.slide-up-enter-from {
-    opacity: 0;
-    transform: translateY(-16px);
-}
-
-.slide-up-leave-to {
-    opacity: 0;
-    transform: translateY(16px);
-}
-
-
 .login_container_hover {
     background-color: #00000030;
     line-height: 300px;
@@ -401,7 +255,8 @@ onMounted(() => {
     background-image: url("@/assets/bgimg3.png");
     background-size: cover;
     background-repeat: no-repeat;
-    svg{
+
+    svg {
         position: fixed;
         top: 2%;
         left: 3%;
@@ -422,7 +277,9 @@ onMounted(() => {
         width: 100%;
         height: 100%;
 
-        .login {
+
+        .login-page {
+
             position: relative;
             top: -30px;
             width: 80%;
@@ -437,148 +294,160 @@ onMounted(() => {
             transition: transform 0.5s;
             aspect-ratio: 8/9.6;
 
-            .login-page {
-                display: flex;
-                flex-direction: column;
-                flex-wrap: nowrap;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: space-evenly;
+
+            #login_container {
+                width: 200px;
+                height: 200px;
+            }
+
+            .title {
+                font-size: 20px;
+                font-weight: 500;
+                // margin-top: 74px;
+                // margin-bottom: 46px;
+                color:black;
+                opacity: 0.8;
+            }
+
+            .tips {
+                display: grid;
+                gap: 4px;
+                font-size: 13px;
+                font-weight: 500;
+                color: rgb(146 146 146);
                 align-items: center;
-                height: 100%;
-                justify-content: space-evenly;
+                justify-items: center;
+                grid-template-columns: auto auto;
+                grid-template-rows: auto;
+                grid-template-areas:
+                    "header header"
+                    "auto auto";
 
-                #login_container {
-                    width: 200px;
-                    height: 200px;
+                .tips_content {
+                    grid-area: header;
                 }
 
-
-
-                .title {
-                    font-size: 20px;
+                .tips_button {
+                    cursor: pointer;
+                    color: #1878f5;
                     font-weight: 500;
-                    // margin-top: 74px;
-                    // margin-bottom: 46px;
-                    color:black;
-                    opacity: 0.8;
-                }
-
-                .tips {
-                    display: flex;
-                    gap: 4px;
-                    font-size: 13px;
-                    font-weight: 500;
-                    color: rgb(146 146 146);
-                    // margin-top: 24px;
-
-                    span:nth-child(n + 2) {
-                        cursor: pointer;
-                        color: #1878f5;
-                        font-weight: 500;
-                        opacity: 0.6;
-                    }
+                    opacity: 0.6;
                 }
             }
 
-            .login-code {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-around;
-                align-items: center;
-                transform-style: preserve-3d;
-                transform: rotateY(180deg);
+            .tips:lang(zh) {
+                grid-template-columns: auto auto auto auto;
+                grid-template-areas:
+                    "header header auto auto";
+            }
+        }
 
-                .back {
-                    width: 28px;
-                    height: 28px;
-                    position: absolute;
-                    top: 20px;
-                    left: 16px;
-                    padding: 4px;
-                    border-radius: 6px;
-                    box-sizing: border-box;
+        .login-code {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
 
-                    &:hover {
-                        background-color: rgba(240, 240, 240, 1);
-                    }
+            .back {
+                width: 28px;
+                height: 28px;
+                position: absolute;
+                top: 20px;
+                left: 16px;
+                padding: 4px;
+                border-radius: 6px;
+                box-sizing: border-box;
 
-                    &:active {
-                        background-color: rgba(243, 243, 245, 1);
-                    }
-
-                    svg {
-                        width: 100%;
-                        height: 100%;
-                    }
+                &:hover {
+                    background-color: rgba(240, 240, 240, 1);
                 }
 
-                .Invitation_code {
-                    font-size: 20px;
-                    font-weight: 600;
-                    color: rgba(67, 67, 67, 1);
-                    // margin: 74px 0 106px 0;
+                &:active {
+                    background-color: rgba(243, 243, 245, 1);
                 }
 
-                .inputs {
-                    position: relative;
-                    display: flex;
-                    justify-content: space-evenly;
-                    width: 344px;
+                svg {
                     width: 100%;
-
-                    // margin-bottom: 56px;
-
-
-
-                    input {
-                        width: 36px;
-                        height: 48px;
-                        border-radius: 6px;
-                        font-size: 24px;
-                        font-weight: 600;
-                        color: rgba(0, 0, 0, 1);
-                        text-align: center;
-                        background-color: rgba(235, 235, 235, 1);
-                        border: 1px solid #EBEBEB;
-                        box-sizing: border-box;
-                        outline: none;
-                    }
+                    height: 100%;
                 }
+            }
 
-                .code_error_tips {
-                    position: absolute;
-                    top: 58px;
-                    font-size: 12px;
-                    font-weight: 400;
-                    color: rgba(234, 0, 0, 1);
+            .invitation_code {
+                font-size: 20px;
+                font-weight: 600;
+                color: rgba(67, 67, 67, 1);
+                // margin: 74px 0 106px 0;
+            }
 
-                }
+            .inputs {
+                position: relative;
+                display: flex;
+                justify-content: space-evenly;
+                width: 344px;
+                width: 100%;
 
-                .affirm {
-                    // width: 344px;
-                    width: 80%;
-                    height: 44px;
-                    font-size: 14px;
-                    border: none;
+                // margin-bottom: 56px;
+
+
+
+                input {
+                    width: 36px;
+                    height: 48px;
                     border-radius: 6px;
-                    background-color: rgba(24, 120, 245, 1);
-                    color: white;
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: rgba(0, 0, 0, 1);
                     text-align: center;
+                    background-color: rgba(235, 235, 235, 1);
+                    border: 1px solid #EBEBEB;
+                    box-sizing: border-box;
                     outline: none;
+                }
+            }
 
-                    &:hover {
-                        background-color: rgba(66, 154, 255, 1);
-                    }
+            .code_error_tips {
+                position: absolute;
+                top: 58px;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(234, 0, 0, 1);
 
-                    &:active {
-                        background-color: rgba(10, 89, 207, 1);
-                    }
+            }
 
-                    &[disabled] {
-                        background-color: rgba(189, 226, 255, 1);
-                    }
+            .affirm {
+                // width: 344px;
+                width: 80%;
+                height: 44px;
+                font-size: 14px;
+                border: none;
+                border-radius: 6px;
+                background-color: rgba(24, 120, 245, 1);
+                color: white;
+                text-align: center;
+                outline: none;
+
+                &:hover {
+                    background-color: rgba(66, 154, 255, 1);
+                }
+
+                &:active {
+                    background-color: rgba(10, 89, 207, 1);
+                }
+
+                &[disabled] {
+                    background-color: rgba(189, 226, 255, 1);
                 }
             }
         }
     }
+
 }
 </style>

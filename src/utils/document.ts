@@ -4,6 +4,7 @@ import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { Document } from "@kcdesign/data";
 import * as user_api from '@/request/users'
 import { message } from "@/utils/message";
+import kcdesk from "@/kcdesk";
 
 /**
  * @description 文档内创建一个新的文档，并在跳转新标签页之后打开新文档
@@ -19,8 +20,12 @@ export async function new_file(context: Context, filename: string, pagename: str
   editor.insert(0, page);
   const doc_id = await upload_file(context, nd);
   if (!doc_id) return false;
-  const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
-  window.open(url);
+  if (kcdesk) {
+    kcdesk.fileOpen(doc_id, filename, "");
+  } else {
+    const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
+    window.open(url);
+  }
   return true;
 }
 async function upload_file(context: Context, data: Document) {
@@ -50,7 +55,12 @@ export async function copy_file(id: string) {
   const { code, data } = await user_api.Copyfile({ doc_id: id });
   const doc_id = data?.document?.id;
   if (code !== 0 || !doc_id) return false;
-  const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
-  window.open(url);
+
+  if (kcdesk) {
+    kcdesk.fileOpen(doc_id, data.document.name, "");
+  } else {
+    const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
+    window.open(url);
+  }
   return true;
 }

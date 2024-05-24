@@ -15,8 +15,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 import logo from '@/assets/h-logo3.svg';
-import min_logo from '@/assets/favicon.svg';
-import { PROJECT_NAME } from "@/const";
+import min_logo from '@/assets/logo108x108.png';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -565,12 +564,14 @@ onUnmounted(() => {
     }
 })
 
+const product_name = t('product.name');
+
 </script>
 
 <template>
     <div class="logo">
-        <img class="logo-image" :src="logo" :alt="PROJECT_NAME" />
-        <img class="mini_logo-image" :src="min_logo" :alt="PROJECT_NAME" style="display: none;" />
+        <img class="logo-image" :src="logo" :alt="product_name" />
+        <img class="mini_logo-image" :src="min_logo" :alt="product_name" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>
@@ -618,10 +619,10 @@ onUnmounted(() => {
                 </div>
                 <div class="newteam-container">
                     <div class="left">
-                        <span>团队</span>
+                        <span>{{ t('Createteam.team') }}</span>
                     </div>
                     <div class="right" @click.stop="showteamcard">
-                        <Tooltip :content="'创建团队'" :offset="10">
+                        <Tooltip :content="t('Createteam.add_team')" :offset="10">
                             <svg-icon icon-class="add"></svg-icon>
                         </Tooltip>
                     </div>
