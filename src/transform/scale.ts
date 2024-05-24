@@ -22,10 +22,9 @@ type Box = {
 type BaseFrames = Map<string, Box>;
 
 export class ScaleHandler extends TransformHandler {
-    private shapes: ShapeView[];
+    readonly shapes: ShapeView[];
+    readonly ctrlElementType: CtrlElementType;
 
-    private ctrlElementType: CtrlElementType;
-    private fixedPoint: XY;
     private livingPoint: XY;
     private relativeFlip: { fh: boolean, fv: boolean } = { fh: false, fv: false };
     private fixedRatioWhileScaling: boolean = false;
@@ -56,7 +55,6 @@ export class ScaleHandler extends TransformHandler {
 
         this.ctrlElementType = ctrlElementType;
         this.livingPoint = this.workspace.getRootXY(event);
-        this.fixedPoint = { ...this.livingPoint };
         this.getBaseFrames();
 
         this.context.assist.set_collect_target(selected);
@@ -196,34 +194,35 @@ export class ScaleHandler extends TransformHandler {
         this.fixedRatioWhileScaling = false;
     }
 
+    /**
+     * @description 锁定宽高比例
+     */
     private isFixedRatio() {
         return this.fixedRatioWhileScaling || this.shiftStatus;
     }
 
     private livingPointAlignByAssist() {
-        if (!this.shapes.length) {
+        const len = this.shapes.length;
+
+        if (!len) {
             return;
         }
 
-        if (!(this.shapes.length === 1 && this.shapes[0].rotation)) {
-            if (this.ctrlElementType === CtrlElementType.RectRight) {
+        const cet = this.ctrlElementType;
+
+        if (cet === CtrlElementType.RectRight || cet === CtrlElementType.RectLeft) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleRightOrLeft();
+            } else {
                 this.fixToAlignWhileModifyRightOrLeft();
-            } else if (this.ctrlElementType === CtrlElementType.RectLeft) {
-                this.fixToAlignWhileModifyRightOrLeft();
-            } else if (this.ctrlElementType === CtrlElementType.RectTop) {
-                this.fixToAlignWhileModifyTopOrBottom();
-            } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
+            }
+        } else if (cet === CtrlElementType.RectTop || cet === CtrlElementType.RectBottom) {
+            if (len === 1) {
+                this.fixToAlignWhileModifySingleTopOrBottom();
+            } else {
                 this.fixToAlignWhileModifyTopOrBottom();
             }
-        }
-
-        if (this.ctrlElementType === CtrlElementType.RectLT) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectRT) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectRB) {
-            this.fixToAlignWhileModifyPoint();
-        } else if (this.ctrlElementType === CtrlElementType.RectLB) {
+        } else {
             this.fixToAlignWhileModifyPoint();
         }
 
@@ -267,12 +266,46 @@ export class ScaleHandler extends TransformHandler {
         }
     }
 
+    private fixToAlignWhileModifySingleRightOrLeft() {
+        const shape = this.shapes[0];
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            return;
+        }
+
+        if (base.baseWidth === base.boxWidth) {
+            this.fixToAlignWhileModifyRightOrLeft();
+        } else if (base.baseWidth === base.boxHeight) {
+            this.fixToAlignWhileModifyTopOrBottom();
+        }
+    }
+
+    private fixToAlignWhileModifySingleTopOrBottom() {
+        const shape = this.shapes[0];
+        const base = this.baseFrames.get(shape.id);
+        if (!base) {
+            return;
+        }
+
+        if (base.baseHeight === base.boxHeight) {
+            this.fixToAlignWhileModifyTopOrBottom();
+        } else if (base.baseHeight === base.boxWidth) {
+            this.fixToAlignWhileModifyRightOrLeft();
+        }
+    }
+
     private fixToAlignWhileModifyRightOrLeft() {
         const x = this.livingPoint.x;
         const y1 = this.originSelectionBox.y;
         const y2 = this.originSelectionBox.bottom;
 
-        const target = this.context.assist.alignX(this.livingPoint, [{ x, y: y1 }, { x, y: y2 }]);
+        const assist = { ...this.livingPoint };
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+
+        const target = this.context.assist.alignX(assist, [{ x, y: y1 }, { x, y: y2 }]);
         if (!target) {
             return;
         }
@@ -285,7 +318,13 @@ export class ScaleHandler extends TransformHandler {
         const x1 = this.originSelectionBox.x;
         const x2 = this.originSelectionBox.right;
 
-        const assistResult = this.context.assist.alignY(this.livingPoint, [{ x: x1, y }, { x: x2, y }]);
+        const assist = { ...this.livingPoint };
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+
+        const assistResult = this.context.assist.alignY(assist, [{ x: x1, y }, { x: x2, y }]);
         if (!assistResult) {
             return;
         }
@@ -294,13 +333,18 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private fixToAlignWhileModifyPoint() {
-        const assistResult = this.context.assist.alignXY(this.livingPoint);
+        let assist = { ...this.livingPoint };
+        if (this.alignPixel) {
+            assist.x = Math.round(assist.x);
+            assist.y = Math.round(assist.y);
+        }
+        const assistResult = this.context.assist.alignXY(assist);
         if (!assistResult) {
             return;
         }
 
-        this.updateHorFixedStatus(this.livingPoint.x, assistResult);
-        this.updateVerFixedStatus(this.livingPoint.y, assistResult);
+        this.updateHorFixedStatus(assist.x, assistResult);
+        this.updateVerFixedStatus(assist.y, assistResult);
     }
 
     private __execute() {
@@ -344,28 +388,6 @@ export class ScaleHandler extends TransformHandler {
         transformedXY.y = baseY + (targetXY.y - transformedXY.y);
     }
 
-    /**
-     * @description 修正根部浮点数导致的上梁不正下梁歪
-     * 临时方案，还需要优化
-     */
-    private fixRefer(shape: ShapeView, refer: XY) {
-        if (!this.alignPixel) {
-            return;
-        }
-        const parent = shape.parent!;
-        if (parent.type !== ShapeType.Page) {
-            return;
-        }
-        const floatX = parent.frame.x % 1;
-        if (floatX) {
-            refer.x += floatX;
-        }
-        const floatY = parent.frame.y % 1;
-        if (floatY) {
-            refer.y += floatY;
-        }
-    }
-
     private __execute4singleLeft() {
         const shape = this.shapes[0];
 
@@ -398,13 +420,31 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isWidthFromZero,
+            targetFlipH
         } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
-
-        const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(target);
 
-        this.fixRefer(shape, _targetXY);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                targetXY.x += floatX;
+                targetXY.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+
+        if (isWidthFromZero) {
+            if (targetFlipH) {
+                _targetXY.x--;
+            } else {
+                _targetXY.x++;
+            }
+        }
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -455,11 +495,18 @@ export class ScaleHandler extends TransformHandler {
             targetRotation,
             transformedMatrix
         } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
-
-        const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(0, pointOnShape.y));
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
 
-        this.fixRefer(shape, _targetXY);
+            if (floatX || floatY) {
+                targetXY.x += floatX;
+                targetXY.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -506,13 +553,32 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isHeightFromZero,
+            targetFlipV
         } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
 
-        const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord3(pointOnShape));
 
-        this.fixRefer(shape, _targetXY);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                targetXY.x += floatX;
+                targetXY.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
+
+        if (isHeightFromZero) {
+            if (targetFlipV) {
+                _targetXY.y--;
+            } else {
+                _targetXY.y++;
+            }
+        }
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -561,11 +627,19 @@ export class ScaleHandler extends TransformHandler {
             targetRotation,
             transformedMatrix
         } = this.__modifyTransform(shape, { x: baseX, y: baseY }, w, h);
-
-        const _targetXY = transformedMatrix.computeCoord2(0, 0);
         const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(pointOnShape.x, 0));
 
-        this.fixRefer(shape, _targetXY);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                targetXY.x += floatX;
+                targetXY.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
+        const _targetXY = transformedMatrix.computeCoord2(0, 0);
 
         this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
 
@@ -632,14 +706,18 @@ export class ScaleHandler extends TransformHandler {
 
         const alignPixel = this.alignPixel && !this.rotation; // 暂定有角度的时候就不进行对齐像素
 
+        let isWidthFromZero = false;
+        let isHeightFromZero = false;
         if (alignPixel) {
             width = Math.round(width);
             height = Math.round(height);
             if (width === 0) {
                 width = 1;
+                isWidthFromZero = true;
             }
             if (height === 0) {
                 height = 1;
+                isHeightFromZero = true;
             }
         }
         let targetRotation = this.rotation;
@@ -671,18 +749,25 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix: m1
+            transformedMatrix: m1,
+            isWidthFromZero,
+            isHeightFromZero,
+            targetFlipH,
+            targetFlipV
         };
     }
 
-    private __getTargetXY(target: XY, refer: XY, base: Box) {
+    private __getTargetXY(shape: ShapeView, target: XY, refer: XY, base: Box) {
         const alignPixel = this.alignPixel && !this.rotation;
         if (alignPixel) {
             target.x = Math.round(target.x);
             target.y = Math.round(target.y);
         }
+
         const dx = target.x - refer.x;
         const dy = target.y - refer.y;
+
+        // console.log('tx&rx', target.x, refer.x);
 
         return {
             x: base.baseX + dx,
@@ -724,10 +809,11 @@ export class ScaleHandler extends TransformHandler {
 
         const { x, y } = __livingPoint;
 
-        const parent2root = this.parent2root;
+        const root2parent = new Matrix(this.parent2root.inverse);
+
         const toParent = this.toParent;
 
-        const target = parent2root.inverseCoord(x, y);
+        const target = root2parent.computeCoord2(x, y);
         const saverb = toParent.computeCoord2(baseWidth, baseHeight);
 
         const matrixarr = toParent.toArray();
@@ -746,14 +832,43 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isWidthFromZero,
+            isHeightFromZero,
+            targetFlipV,
+            targetFlipH
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
+
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                target.x += floatX;
+                target.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
 
         const xy1 = transformedMatrix.computeCoord(0, 0);
 
-        this.fixRefer(shape, xy1);
+        if (isWidthFromZero) {
+            if (targetFlipH) {
+                xy1.x--;
+            } else {
+                xy1.x++;
+            }
+        }
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        if (isHeightFromZero) {
+            if (targetFlipV) {
+                xy1.y--;
+            } else {
+                xy1.y++;
+            }
+        }
+
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         const transformUnits: ScaleUnit[] = [];
         transformUnits.push({
@@ -805,10 +920,23 @@ export class ScaleHandler extends TransformHandler {
 
         const { x, y } = __livingPoint;
 
-        const parent2root = this.parent2root;
+        const root2parent = new Matrix(this.parent2root.inverse);
         const toParent = this.toParent;
 
-        const target = parent2root.inverseCoord(x, y);
+        let deOffset = false;
+        let floatX = 0;
+        let floatY = 0;
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            floatX = shape.parent.frame.x % 1;
+            floatY = shape.parent.frame.y % 1;
+
+            if (floatX || floatY) {
+                root2parent.trans(floatX, floatY);
+                deOffset = true;
+            }
+        }
+
+        const target = root2parent.computeCoord2(x, y);
         const xy2 = toParent.inverseCoord(target.x, target.y);
         const savelb = toParent.computeCoord2(0, baseHeight);
 
@@ -822,14 +950,29 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isWidthFromZero,
+            isHeightFromZero,
+            targetFlipV
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
-        const xy1 = transformedMatrix.computeCoord(targetWidth, 0);
+        if (deOffset) {
+            target.x += floatX;
+            target.y += floatY;
+            transformedMatrix.trans(floatX, floatY);
+        }
 
-        this.fixRefer(shape, xy1);
+        const xy1 = transformedMatrix.computeCoord(isWidthFromZero ? 0 : targetWidth, 0);
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        if (isHeightFromZero) {
+            if (targetFlipV) {
+                xy1.y--;
+            } else {
+                xy1.y++;
+            }
+        }
+
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -857,7 +1000,6 @@ export class ScaleHandler extends TransformHandler {
 
         const { baseWidth, baseHeight } = base;
 
-
         if (this.isFixedRatio()) {
             const toRootInverse = new Matrix(this.toRoot.inverse);
             const pointOnShape = toRootInverse.computeCoord3(__livingPoint);
@@ -881,7 +1023,6 @@ export class ScaleHandler extends TransformHandler {
 
         let w = __xy.x;
         let h = __xy.y;
-        const target = this.parent2root.inverseCoord(__livingPoint.x, __livingPoint.y);
 
         const {
             targetWidth,
@@ -889,14 +1030,27 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isWidthFromZero,
+            isHeightFromZero
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
-        const xy1 = transformedMatrix.computeCoord(targetWidth, targetHeight);
+        const root2parent = new Matrix(this.parent2root.inverse);
 
-        this.fixRefer(shape, xy1);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+            if (floatX || floatY) {
+                transformedMatrix.trans(floatX, floatY);
+                root2parent.trans(floatX, floatY);
+            }
+        }
+
+        const xy1 = transformedMatrix.computeCoord2(isWidthFromZero ? 0 : targetWidth, isHeightFromZero ? 0 : targetHeight);
+        const target = root2parent.computeCoord2(__livingPoint.x, __livingPoint.y);
+
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -958,14 +1112,34 @@ export class ScaleHandler extends TransformHandler {
             needFlipH,
             needFlipV,
             targetRotation,
-            transformedMatrix
+            transformedMatrix,
+            isHeightFromZero,
+            isWidthFromZero,
+            targetFlipH
         } = this.__modifyTransform(shape, { x: base.baseX, y: base.baseY }, w, h);
 
-        const xy1 = transformedMatrix.computeCoord(0, targetHeight);
+        if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+            const floatX = shape.parent.frame.x % 1;
+            const floatY = shape.parent.frame.y % 1;
 
-        this.fixRefer(shape, xy1);
+            if (floatX || floatY) {
+                target.x += floatX;
+                target.y += floatY;
+                transformedMatrix.trans(floatX, floatY);
+            }
+        }
 
-        const targetXY = this.__getTargetXY(target, xy1, base);
+        const xy1 = transformedMatrix.computeCoord(0, isHeightFromZero ? 0 : targetHeight);
+
+        if (isWidthFromZero) {
+            if (targetFlipH) {
+                xy1.x--;
+            } else {
+                xy1.x++;
+            }
+        }
+
+        const targetXY = this.__getTargetXY(shape, target, xy1, base);
 
         (this.asyncApiCaller as Scaler).execute([{
             shape,
@@ -979,7 +1153,6 @@ export class ScaleHandler extends TransformHandler {
             targetRotation
         }]);
     }
-
 
     private __execute4multi() {
         if (this.ctrlElementType === CtrlElementType.RectLeft) {
@@ -1069,6 +1242,17 @@ export class ScaleHandler extends TransformHandler {
             }
             __m.trans(cx, cy);
             __m.trans(baseFrame.baseX, baseFrame.baseY);
+
+            if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+                const floatX = shape.parent.frame.x % 1;
+                const floatY = shape.parent.frame.y % 1;
+
+                if (floatX || floatY) {
+                    targetXY.x += floatX;
+                    targetXY.y += floatY;
+                    __m.trans(floatX, floatY);
+                }
+            }
 
             const _targetXY = __m.computeCoord2(0, 0);
             targetXY = m.computeCoord3(targetXY);

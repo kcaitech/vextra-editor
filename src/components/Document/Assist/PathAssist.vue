@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Asssit } from '@/context/assist';
+import { Assist } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
@@ -28,9 +28,9 @@ const data = reactive<Data>({
 let { lineX, nodesX, lineY, nodesY } = data;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST_PATH) {
+    if (t === Assist.UPDATE_ASSIST_PATH) {
         render();
-    } else if (t === Asssit.CLEAR && assist.value) {
+    } else if (t === Assist.CLEAR && assist.value) {
         clear();
     }
 }

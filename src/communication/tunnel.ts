@@ -41,14 +41,14 @@ export class Tunnel {
     }
 
     async start(): Promise<boolean> {
-        console.log("start", this.info)
+        // console.log("start", this.info)
         const cmdId = await this.sendToServer(ClientCmdType.OpenTunnel, { data: this.info.data }, true)
-        console.log("start cmdId", this.info, cmdId)
+        // console.log("start cmdId", this.info, cmdId)
         if (!cmdId) return false;
         const getCmdResultPromise = this.getCmdResult(cmdId)
         const timeoutPromise = new Promise<undefined>(resolve => setTimeout(() => resolve(undefined), 3000))
         const cmdResult = await Promise.race([getCmdResultPromise, timeoutPromise])
-        console.log("start getCmdResultPromise", this.info, cmdResult)
+        // console.log("start getCmdResultPromise", this.info, cmdResult)
         if (!cmdResult || typeof cmdResult.data.tunnel_id !== "string" || cmdResult.data.tunnel_id === "") return false;
         this.tunnelId = cmdResult.data.tunnel_id
         return true
@@ -56,7 +56,7 @@ export class Tunnel {
 
     async receiveFromClient(event: MessageEvent) {
         const data = event.data as ClientPostData
-        console.log("receiveFromClient", this.tunnelId, data)
+        // console.log("receiveFromClient", this.tunnelId, data)
         if (data.close) {
             this.close(true, false)
             return

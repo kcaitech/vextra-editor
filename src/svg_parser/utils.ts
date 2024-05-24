@@ -1,7 +1,8 @@
 import {Color, Shadow,} from "@kcdesign/data"
-import {Transform} from "@/transform_math/transform"
-import {ColVector3D, Matrix, Point3D} from "@/transform_math/matrix"
-import {NumberArray2D} from "@/transform_math/number_array"
+import {Transform} from "@kcdesign/data/dist/basic/transform"
+import {ColVector3D, Matrix, Point3D} from "@kcdesign/data/dist/basic/matrix2"
+import {NumberArray2D} from "@kcdesign/data/dist/basic/number_array"
+import {BaseCreator} from "./creator/base"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -140,6 +141,13 @@ export function parseTransform(transformContent: string) {
         } else {
             console.log("不支持的变换函数", name, args)
         }
+        // dev code
+        // const res = transform.decompose()
+        // console.log("after", name, args)
+        // console.log("translate", res.translate.toString())
+        // console.log("rotate", res.rotate.toString())
+        // console.log("skew", res.skew.toString())
+        // console.log("scale", res.scale.toString())
     }
     return transform
 }
@@ -452,6 +460,13 @@ export type Attributes = { // 保存元素的一些属性
     d?: string,
     pathX?: number,
     pathY?: number,
+
+    // polyline
+    pointsToPathD?: string,
+    polylineX?: number,
+    polylineY?: number,
+
+    useCreator?: BaseCreator,
 }
 
 const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")

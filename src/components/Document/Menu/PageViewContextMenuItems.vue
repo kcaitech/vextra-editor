@@ -32,7 +32,6 @@ import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { string_by_sys } from '@/utils/common';
-import { copyAsPNG as _copyAsPNG } from "@/utils/content"
 import { Navi } from '@/context/navigate';
 
 const { t } = useI18n();
@@ -52,6 +51,7 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
+const isCutout = ref<boolean>(props.context.tool.isCutoutVisible);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
@@ -245,6 +245,13 @@ function comment() {
     const status = props.context.comment.isVisibleComment;
     isComment.value = !status;
     props.context.comment.setVisibleComment(isComment.value);
+    emit('close');
+}
+
+function cutout() {
+    const status = props.context.tool.isCutoutVisible;
+    isCutout.value = !status;
+    props.context.tool.setCutoutVisible(isCutout.value);
     emit('close');
 }
 
@@ -519,9 +526,6 @@ onUnmounted(() => {
             <span>{{ t('system.copyAs') }}</span>
             <svg-icon icon-class="down"></svg-icon>
             <div v-if="copyAs" class="copyAs">
-                <!--                <div class="sub-item" @click="copyAsPNG">-->
-                <!--                    复制SVG代码-->
-                <!--                </div>-->
                 <div class="sub-item" @click="copyAsPNG">
                     <span>{{ t('clipboard.copyAsPNG') }}</span>
                     <span class="shortkey">
@@ -600,6 +604,12 @@ onUnmounted(() => {
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
+        </div>
+        <div class="check" v-if="props.items.includes('cutout')" @click="cutout" @mouseenter="mouseenter('cutout')"
+             @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'cutout' ? 'white-select' : 'page-select'"
+                      v-show="isCutout"></svg-icon>
+            <span>{{ t('system.show_cutout') }}</span>
         </div>
         <!-- 界面显示 -->
         <div class="line" v-if="props.items.includes('ruler')"></div>

@@ -37,7 +37,7 @@ import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
-import Creator from './Creator.vue';
+import Creator from './Creator/Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';

@@ -150,8 +150,8 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
         point: { x: lt.x - bit_v, y: lt.y - bit_v },
         extra: { x: lt.x - bit_v_d, y: lt.y - bit_v_d },
         r: { p: r1, transform: transform1 },
-        type: CtrlElementType.RectLT,
-        type2: CtrlElementType.RectLTR
+        type: CtrlElementType.LineStart,
+        type2: CtrlElementType.LineStartR
     };
     const r3 = get_r_path2(rb);
     let transform3 = `translate(${rb.x}px, ${rb.y}px)`;
@@ -160,8 +160,8 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
         point: { x: rb.x - bit_v, y: rb.y - bit_v },
         extra: { x: rb.x - bit_v_d, y: rb.y - bit_v_d },
         r: { p: r3, transform: transform3 },
-        type: CtrlElementType.RectRB,
-        type2: CtrlElementType.RectRBR
+        type: CtrlElementType.LineEnd,
+        type2: CtrlElementType.LineEndR
     };
     return [path_obj_1, path_obj_3];
 }
