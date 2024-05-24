@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
 import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView, TableCellView } from "@kcdesign/data";
-import { importGradient } from "@kcdesign/data/dist/data/baseimport";
+import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
 
 export type GradientFrom = 'fills' | 'borders' | 'text' | 'table_text';

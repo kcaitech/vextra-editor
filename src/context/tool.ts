@@ -1,7 +1,7 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { uuid } from "@kcdesign/data/dist/basic/uuid";
+import { v4 as uuid } from "uuid"
 
 export enum Action {
     Auto = 'auto',
