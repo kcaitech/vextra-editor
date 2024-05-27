@@ -28,6 +28,7 @@ import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
+import Loading from "@/components/common/Loading.vue";
 
 
 const route = useRoute();
@@ -37,7 +38,7 @@ let context: Context | undefined;
 const permType = ref<number>();
 const docInfo: any = ref({});
 const noNetwork = ref(false)
-const loading = ref<boolean>(false);
+const loading = ref<boolean>(true);
 const null_context = ref<boolean>(true);
 const isRead = ref(false);
 const isEdit = ref(true);
@@ -254,7 +255,6 @@ const getDocumentInfo = async () => {
                 router.push("/m");
                 return;
             }
-            loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
@@ -469,7 +469,7 @@ function closeNetMsg() {
 }
 
 const closeLoading = () => {
-    emit('closeLoading');
+    loading.value = false;
 }
 
 const matrix = ref<Matrix>(new Matrix() as any);
