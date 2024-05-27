@@ -728,7 +728,8 @@ const showEl = () => {
 </script>
 
 <template>
-    <div class="container">
+    <div class="container1">
+        <Loading v-if="loading" :size="20"></Loading>
         <div class="status-bar" @touchmove.stop="moveIcon"
              :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
@@ -767,7 +768,8 @@ const showEl = () => {
     transform: translateY(100%);
 }
 
-.container {
+.container1 {
+    // position: relative;
     width: 100%;
     height: 100%;
 }
@@ -783,7 +785,7 @@ const showEl = () => {
     background-color: #fff;
     box-sizing: border-box;
     box-shadow: 0 0 5px silver;
-    z-index: 999;
+    z-index: 1;
 
     .back {
         width: 24px;
