@@ -38,6 +38,7 @@ const close = () => {
 }
 
 const toggleType = (type: BlurType) => {
+    if (type === BlurType.Background) return;
     const actions = get_actions_blur_modify(props.shapes, type);
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -72,8 +73,8 @@ onUnmounted(() => {
         </div>
         <div class="select_menu" ref="menu" v-if="isMenu">
             <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
-                @mouseenter="activeItem = item"
-                :class="{ 'active-item': activeItem === item }">
+                :style="{ opacity: item === BlurType.Background ? '0.3' : '1' }" @mouseenter="activeItem = BlurType.Gaussian"
+                :class="{ 'active-item': activeItem === item && activeItem !== BlurType.Background }">
                 <div class="text">{{ t(`blur.${item}`) }}</div>
                 <div class="icon">
                     <svg-icon v-if="blur.type === item"
