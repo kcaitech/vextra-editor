@@ -153,12 +153,10 @@ watchEffect(() => {
     }
 })
 
-const miniprogramcode = ref<string>()
+const miniprogramcode = ref<string>('')
 
 async function GetminiProgramCode() {
     const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
-    console.log(perRoute);
-
     if (perRoute.includes('document') || perRoute.includes('pageviews')) {
         if (perRoute.includes('?')) {
             const params = new URLSearchParams(perRoute.split('?')[1]);
@@ -215,7 +213,7 @@ function changesize(e: HTMLElement) {
 onMounted(() => {
 
     if (isMobileDevice()) {
-        const el = document.querySelector('.login') as HTMLElement
+        const el = document.querySelector('.login-page') as HTMLElement
         window.onresize = () => { changesize(el) }
         changesize(el)
     }
