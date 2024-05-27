@@ -343,8 +343,8 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        this.updateHorFixedStatus(this.livingPoint.x, assistResult);
-        this.updateVerFixedStatus(this.livingPoint.y, assistResult);
+        this.updateHorFixedStatus(assist.x, assistResult);
+        this.updateVerFixedStatus(assist.y, assistResult);
     }
 
     private __execute() {

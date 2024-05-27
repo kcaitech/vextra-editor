@@ -56,7 +56,7 @@ export class LineHandler extends TransformHandler {
     constructor(context: Context, event: MouseEvent, ctrlElementType: CtrlElementType) {
         super(context, event);
         this.referencePoint = this.workspace.getRootXY(event);
-        this.livingPoint = {...this.referencePoint};
+        this.livingPoint = { ...this.referencePoint };
 
         this.lineShape = context.selection.selectedShapes[0] as PathShapeView;
         this.assist = context.assist;
@@ -78,12 +78,12 @@ export class LineHandler extends TransformHandler {
         this.baseEnd = end as CurvePoint;
 
         if (!start || !end) {
-            this.center = {x: 0, y: 0};
+            this.center = { x: 0, y: 0 };
         } else {
             const _start = this.matrix.computeCoord3(start);
             const _end = this.matrix.computeCoord3(end);
 
-            this.center = {x: (_start.x + _end.x) / 2, y: (_start.y + _end.y) / 2};
+            this.center = { x: (_start.x + _end.x) / 2, y: (_start.y + _end.y) / 2 };
         }
     }
 
@@ -106,7 +106,7 @@ export class LineHandler extends TransformHandler {
     }
 
     private fixByAssist() {
-        const at = {...this.livingPoint};
+        const at = { ...this.livingPoint };
         if (this.alignPixel) {
             at.x = round2half(at.x);
             at.y = round2half(at.y);
@@ -114,8 +114,8 @@ export class LineHandler extends TransformHandler {
         const assist = this.context.assist.alignXY(at);
 
         if (assist) {
-            this.updateHorFixedStatus(this.livingPoint.x, assist);
-            this.updateVerFixedStatus(this.livingPoint.y, assist);
+            this.updateHorFixedStatus(at.x, assist);
+            this.updateVerFixedStatus(at.y, assist);
         }
 
         if (this.horFixedStatus) {
@@ -221,7 +221,7 @@ export class LineHandler extends TransformHandler {
         const __end = this.lineShape.segments[0].points[1];
         if (!__end) return;
 
-        const end = {x: __end.x, y: __end.y};
+        const end = { x: __end.x, y: __end.y };
 
         let x, y;
 
@@ -246,7 +246,7 @@ export class LineHandler extends TransformHandler {
         const __start = this.lineShape.segments[0].points[0];
         if (!__start) return;
 
-        const start = {x: __start.x, y: __start.y};
+        const start = { x: __start.x, y: __start.y };
 
         let x, y;
 

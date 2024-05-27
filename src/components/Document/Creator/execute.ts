@@ -101,8 +101,8 @@ export class CreatorExecute extends TransformHandler {
         }
         const assist = at.alignXY(__living);
         if (assist) {
-            this.updateHorFixedStatus(this.livingPoint.x, assist);
-            this.updateVerFixedStatus(this.livingPoint.y, assist);
+            this.updateHorFixedStatus(__living.x, assist);
+            this.updateVerFixedStatus(__living.y, assist);
         }
         if (this.horFixedStatus) {
             this.livingPoint.x = this.horFixedValue;
@@ -569,6 +569,10 @@ export class CreatorExecute extends TransformHandler {
             shape: this.shape
         };
 
+        if (type === ShapeType.Text) {
+            params.textFormat = this.context.textSelection.getTextAttr;
+        }
+
         const shape = (this.asyncApiCaller as CreatorApiCaller).generator(params);
 
         if (shape && !this.shape) {
@@ -667,7 +671,9 @@ export class CreatorExecute extends TransformHandler {
     private createImmediate() {
         const action = this.action;
 
-        this.createApiCaller();
+        if (!this.asyncApiCaller) {
+            this.createApiCaller();
+        }
 
         const frame = this.frame;
 
@@ -701,6 +707,7 @@ export class CreatorExecute extends TransformHandler {
             params.frame.y += 38;
             params.frame.width = 20;
             params.frame.height = 24;
+            params.textFormat = this.context.textSelection.getTextAttr;
         }
 
         if (action === Action.AddLine || action === Action.AddArrow) {
