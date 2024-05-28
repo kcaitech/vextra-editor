@@ -3,14 +3,15 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, PageView, PathShapeView, ShapeView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
 
 const props = defineProps<{
-    context: Context
+    context: Context;
+    page: PageView;
 }>();
 
 interface Scale {
@@ -24,11 +25,6 @@ const scalesHor = ref<Scale[]>([]);
 const scalesVer = ref<Scale[]>([]);
 const blocksHor = ref<Block[]>([]);
 const blocksVer = ref<Block[]>([]);
-const refersHor = ref<number[]>([]);
-const refersVer = ref<number[]>([]);
-
-const contentWidth = ref<number>(100);
-const contentHeight = ref<number>(100);
 
 const SCALE_SPACE = 80;
 
@@ -349,41 +345,136 @@ function render(sim = false) {
     modifyScaleOpacity();
 }
 
+const linesHor = ref<ReferLineView[]>([]);
+const linesVer = ref<ReferLineView[]>([]);
+
 /**
  * @description 更新参考线
  * 调用场景：Root空间发生变化、指定容器发生变化
  * todo 监听指定容器和Page
  */
 function renderRefLine() {
+    linesHor.value.length = 0;
+    linesVer.value.length = 0;
+
+    const page = props.page;
     const ctx = props.context;
+    const horLines = page.horReferLines || [];
+    const verLines = page.verReferLines || [];
+    const mapX = new Map<string, number[]>();
+    const mapY = new Map<string, number[]>();
 
-    const refH = refersHor.value;
-    const refV = refersVer.value;
-    refH.length = 0;
-    refV.length = 0;
+    const pageX: number[] = [];
+    const pageY: number[] = [];
 
-    if (!ctx.user.isRuleVisible) {
-        return;
+    for (let i = 0; i < horLines.length; i++) {
+        const r = horLines[i];
+        if (!r.referId) {
+            pageX.push(r.offset);
+        } else {
+            let __mx = mapX.get(r.referId);
+            if (!__mx) {
+                __mx = [];
+                mapX.set(r.referId, __mx);
+            }
+            __mx.push(r.offset);
+        }
     }
 
-    const { width, height } = props.context.workspace.root;
-
-    contentWidth.value = width;
-    contentHeight.value = height;
-
-    // todo 此处为测试数据
-    refH.push(-2800, -3750, -4000);
-    refV.push(-4000, -4900);
-
-    const matrix = new Matrix(ctx.workspace.matrix);
-    matrix.trans(-20, -20);
-
-    for (let i = 0; i < refH.length; i++) {
-        refH[i] = matrix.computeCoord2(refH[i], 0).x - 0.25;
+    for (let i = 0; i < verLines.length; i++) {
+        const r = verLines[i];
+        if (!r.referId) {
+            pageY.push(r.offset);
+        } else {
+            let __my = mapY.get(r.referId);
+            if (!__my) {
+                __my = [];
+                mapY.set(r.referId, __my);
+            }
+            __my.push(r.offset);
+        }
     }
-    for (let i = 0; i < refV.length; i++) {
-        refV[i] = matrix.computeCoord2(0, refV[i]).y - 0.25;
+    const root = ctx.workspace.root;
+    mapX.forEach((offsets, key) => {
+        const target = page.getShape(key);
+        if (!target || !target.isNoTransform() || target.parent?.id === page.id) {
+            return;
+        }
+        const m = target.matrix2Root();
+        m.multiAtLeft(props.context.workspace.matrix);
+
+        for (let i = 0; i < offsets.length; i++) {
+            const offset = offsets[i];
+            const p1 = m.computeCoord2(offset, 0);
+            const p2 = m.computeCoord2(offset, target.frame.height);
+
+            const dashPath = [
+                `M${p1.x} 0 L${p1.x} ${p1.y}`,
+                `M${p2.x} ${p2.y} L${p2.x} ${root.height}`
+            ];
+            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
+
+            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+        }
+
+        const yOffsets = mapY.get(key);
+        if (!yOffsets) {
+            return;
+        }
+
+        for (let i = 0; i < yOffsets.length; i++) {
+            const offset = yOffsets[i];
+            const p1 = m.computeCoord2(0, offset);
+            const p2 = m.computeCoord2(target.frame.width, offset);
+
+            const dashPath = [
+                `M0 ${p1.y} L${p1.x} ${p1.y}`,
+                `M${p2.x} ${p2.y} L${root.width} ${p2.y}`
+            ];
+            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
+
+            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+        }
+        mapY.delete(key);
+    })
+
+    mapY.forEach((offsets, key) => {
+        const target = page.getShape(key);
+        if (!target || !target.isNoTransform() || target.parent?.id === page.id) {
+            return;
+        }
+        const m = target.matrix2Root();
+        m.multiAtLeft(props.context.workspace.matrix);
+
+        for (let i = 0; i < offsets.length; i++) {
+            const offset = offsets[i];
+            const p1 = m.computeCoord2(0, offset);
+            const p2 = m.computeCoord2(target.frame.width, offset);
+
+            const dashPath = [
+                `M0 ${p1.y} L${p1.x} ${p1.y}`,
+                `M${p2.x} ${p2.y} L${root.width} ${p2.y}`
+            ];
+            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
+
+            linesVer.value.push({ dashPath, path, theme: '#ff2200' });
+        }
+    })
+
+    const inverse = new Matrix(ctx.workspace.matrix.inverse);
+    for (let i = 0; i < pageX.length; i++) {
+        const x = inverse.computeCoord2(pageX[i], 0).x;
+        const path = [`M${x} 0 L${x} ${root.height}`];
+        linesVer.value.push({ dashPath: [], path, theme: '#ff2200' });
     }
+    for (let i = 0; i < pageY.length; i++) {
+        const y = inverse.computeCoord2(0, pageY[i]).y;
+        const path = [`M0 ${y} L${root.width} ${y}`];
+        linesVer.value.push({ dashPath: [], path, theme: '#ff2200' });
+    }
+
+    referLineStatusChange();
+    referLineFocusChange();
 }
 
 /**
@@ -443,12 +534,20 @@ function toolWatcher(t: number) {
         render();
     } else if (t === Tool.RULE_RENDER_SIM) {
         render(true);
+    } else if (t === Tool.HOVER_REFER_CHANGE) {
+        referLineStatusChange();
+    } else if (t === Tool.REFER_FOCUS_CHANGE) {
+        referLineFocusChange();
     }
 }
 
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         render();
+        const ctx = props.context;
+        if (ctx.selection.selectedShapes.length) {
+            ctx.tool.selectLine(undefined);
+        }
     }
 }
 
@@ -456,23 +555,145 @@ function formatNumber(v: number) {
     return Math.abs(v % 1) > 0.01 ? v.toFixed(2) : Math.round(v);
 }
 
+function moveStop(e: MouseEvent) {
+    if (!e.buttons) {
+        e.stopPropagation();
+    }
+}
+
+let move: any;
+
+function downHor(e: MouseEvent) {
+    document.addEventListener('mousemove', moveHor);
+    document.addEventListener('mouseup', upCommon);
+    window.addEventListener("blur", blur);
+
+    move = moveHor;
+}
+
+function moveHor(e: MouseEvent) {
+
+}
+
+function downVer(e: MouseEvent) {
+    document.addEventListener('mousemove', moveVer);
+    document.addEventListener('mouseup', upCommon);
+    window.addEventListener("blur", blur);
+
+    move = moveVer;
+}
+
+function moveVer(e: MouseEvent) {
+
+}
+
+function upCommon(e: MouseEvent) {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', upCommon);
+    window.removeEventListener("blur", blur);
+}
+
+function blur() {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', upCommon);
+    window.removeEventListener("blur", blur);
+}
+
+function pageWatcher(...args: any) {
+    console.log('args', args);
+}
+
+interface ReferLineView {
+    theme: string;
+    dashPath: string[];
+    path: string[];
+}
+
+const hovered = ref<ReferLineView | undefined>();
+let __hovered: ['ver' | 'hor', number] | undefined;
+const selected = ref<ReferLineView | undefined>();
+let __selected: ['ver' | 'hor', number] | undefined;
+
+function referLineStatusChange() {
+    hovered.value = undefined;
+    __hovered = undefined;
+    const hover = props.context.tool.hoveredLine;
+    if (!hover) {
+        return;
+    }
+    __hovered = hover;
+    const [direction, index] = hover;
+    if (direction === 'hor') {
+        hovered.value = linesHor.value[index];
+    } else {
+        hovered.value = linesVer.value[index];
+    }
+}
+
+function referLineFocusChange() {
+    selected.value = undefined;
+    __selected = undefined;
+    const select = props.context.tool.selectedLine;
+    if (!select) {
+        return;
+    }
+    __selected = select;
+    const [direction, index] = select;
+    if (direction === 'hor') {
+        selected.value = linesHor.value[index];
+    } else {
+        selected.value = linesVer.value[index];
+    }
+    if (selected.value) {
+        props.context.selection.resetSelectShapes();
+    }
+}
+
+function downHover(e: MouseEvent) {
+    if (e.button !== 0 || !__hovered) {
+        return;
+    }
+    e.stopPropagation();
+    props.context.tool.selectLine([...__hovered]);
+}
+
 onMounted(() => {
     props.context.tool.watch(toolWatcher);
     props.context.workspace.watch(workspaceWatcher);
     props.context.selection.watch(selectionWatcher);
     props.context.user.watch(userWatcher);
+    props.page.watch(pageWatcher);
 })
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
     props.context.workspace.unwatch(workspaceWatcher);
     props.context.selection.unwatch(selectionWatcher);
     props.context.user.unwatch(userWatcher);
+    props.page.unwatch(pageWatcher);
 })
 </script>
 <template>
     <div v-if="ruleVisible" class="rule-container">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+            <g v-for="(lh, i) in linesHor" :key="i">
+                <path v-for="(lhs, _i) in lh.path" :d="lhs" :key="_i" :stroke="lh.theme"/>
+            </g>
+            <g v-if="hovered">
+                <path v-for="(lhd, _i) in hovered.dashPath" :d="lhd" :key="_i" stroke="red" stroke-width="1.2"
+                      stroke-dasharray="3 3"/>
+                <path :d="hovered.path[0]" stroke="red" stroke-width="1.2"/>
+                <path :d="hovered.path[0]" stroke="transparent" stroke-width="14" @mousedown="downHover"
+                      style="pointer-events: auto"/>
+            </g>
+            <g v-if="selected">
+                <path v-for="(lhd, _i) in selected.dashPath" :d="lhd" :key="_i" stroke="#3387f5" stroke-width="1.5"
+                      stroke-dasharray="3 3"/>
+                <path :d="selected.path[0]" stroke="#3387f5" stroke-width="1.2"/>
+                <path :d="selected.path[0]" stroke="transparent" stroke-width="14" style="pointer-events: auto"/>
+            </g>
+        </svg>
         <div class="contact-block"></div>
-        <div class="d-hor">
+        <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
             <div v-for="(s, i) in scalesHor"
                  :key="i"
                  :style="{transform: `translateX(${s.offset}px)`, opacity: s.opacity}"
@@ -491,13 +712,8 @@ onUnmounted(() => {
                 <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
                 <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
             </div>
-            <div v-for="(l, i) in refersHor"
-                 :key="i"
-                 :style="{transform: `translateX(${l}px)`, height: contentHeight + 'px'}"
-                 class="lineX"
-            />
         </div>
-        <div class="d-ver">
+        <div class="d-ver" @mousemove="moveStop" @mousedown="downVer">
             <div v-for="(s, i) in scalesVer"
                  :key="i"
                  :style="{transform: `translateY(${s.offset}px)`, opacity: s.opacity}"
@@ -516,12 +732,6 @@ onUnmounted(() => {
                 <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
                 <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
             </div>
-            <div
-                v-for="(l, i) in refersVer"
-                :key="i"
-                :style="{transform: `translateY(${l}px)`, width: contentWidth+ 'px'}"
-                class="lineY"
-            />
         </div>
     </div>
 </template>
@@ -538,6 +748,13 @@ onUnmounted(() => {
 
     overflow: hidden;
 
+    > svg {
+        pointer-events: none;
+        position: absolute;
+        z-index: 1;
+        overflow: visible;
+    }
+
     .contact-block {
         width: 20px;
         height: 20px;
@@ -545,6 +762,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-right: 1px solid var(--grey);
         border-bottom: 1px solid var(--grey);
+        position: absolute;
     }
 
     .d-hor {
@@ -557,8 +775,11 @@ onUnmounted(() => {
         border-bottom: 1px solid var(--grey);
         background-color: var(--theme-color-anti);
         overflow-x: clip;
+        pointer-events: auto;
+        cursor: row-resize;
 
         > .scale {
+            pointer-events: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -566,12 +787,10 @@ onUnmounted(() => {
             height: 100%;
             font-size: 10px;
             color: var(--color);
-
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-
 
             .dot {
                 width: 1px;
@@ -580,8 +799,8 @@ onUnmounted(() => {
             }
         }
 
-
         .block {
+            pointer-events: none;
             height: 100%;
             position: absolute;
             top: 0;
@@ -606,6 +825,7 @@ onUnmounted(() => {
         }
 
         .lineX {
+            pointer-events: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -625,8 +845,11 @@ onUnmounted(() => {
         border-right: 1px solid var(--grey);
         background-color: var(--theme-color-anti);
         overflow-y: clip;
+        pointer-events: auto;
+        cursor: col-resize;
 
         > .scale {
+            pointer-events: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -655,6 +878,7 @@ onUnmounted(() => {
         }
 
         > .block {
+            pointer-events: none;
             width: 100%;
             position: absolute;
             top: 0;
@@ -681,6 +905,7 @@ onUnmounted(() => {
         }
 
         .lineY {
+            pointer-events: none;
             position: absolute;
             top: 0;
             left: 0;

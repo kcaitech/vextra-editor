@@ -73,6 +73,8 @@ export class Tool extends WatchableObject {
     static CUTOUT_VISIBLE = 13;
     static RULE_RENDER = 14;
     static RULE_RENDER_SIM = 15;
+    static HOVER_REFER_CHANGE = 16;
+    static REFER_FOCUS_CHANGE = 17;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -82,8 +84,6 @@ export class Tool extends WatchableObject {
     private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
-    private m_blocks_hor: Block[] = [];
-    private m_blocks_ver: Block[] = [];
     private m_cutout_visible = true;
 
     constructor(context: Context) {
@@ -211,12 +211,59 @@ export class Tool extends WatchableObject {
         return uuid();
     }
 
-    get blocks() {
-        return { ver: this.m_blocks_ver, hor: this.m_blocks_hor };
+    private m_hover_line: ['ver' | 'hor', number] | undefined;
+    private m_selected_line: ['ver' | 'hor', number] | undefined;
+    private m_h_line: string[] = [];
+    private m_v_line: string[] = [];
+
+    setHLine(ls: string[]) {
+        this.m_h_line = ls;
     }
 
-    setBlocks(hor: Block[], ver: Block[]) {
-        this.m_blocks_hor = hor;
-        this.m_blocks_ver = ver;
+    setVLine(ls: string[]) {
+        this.m_v_line = ls;
+    }
+
+    scout(e: MouseEvent) {
+        const __scout = this.m_context.selection.scout;
+        const p = this.m_context.workspace.getContentXY(e);
+        let hls = this.m_h_line;
+        for (let i = 0; i < hls.length; i++) {
+            if (__scout.isPointInStroke(hls[i], p)) {
+                this.hoverLine(['hor', i]);
+                return true;
+            }
+        }
+        let vls = this.m_v_line;
+        for (let i = 0; i < vls.length; i++) {
+            if (__scout.isPointInStroke(vls[i], p)) {
+                this.hoverLine(['ver', i]);
+                return true;
+            }
+        }
+        this.hoverLine(undefined);
+        return false;
+    }
+
+    hoverLine(line: ['ver' | 'hor', number] | undefined) {
+        if (this.m_selected_line && line && this.m_selected_line.toString() === line.toString()) {
+            return;
+        }
+        this.m_hover_line = line;
+        this.notify(Tool.HOVER_REFER_CHANGE);
+    }
+
+    selectLine(line: ['ver' | 'hor', number] | undefined) {
+        this.m_selected_line = line;
+        this.notify(Tool.REFER_FOCUS_CHANGE);
+        this.hoverLine(undefined);
+    }
+
+    get selectedLine() {
+        return this.m_selected_line;
+    }
+
+    get hoveredLine() {
+        return this.m_hover_line;
     }
 }

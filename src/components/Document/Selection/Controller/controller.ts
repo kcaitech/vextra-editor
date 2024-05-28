@@ -268,6 +268,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             pre_to_translate(e);
         } else {
             selection.resetSelectShapes();
+            context.tool.selectLine(undefined);
         }
     }
 

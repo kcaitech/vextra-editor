@@ -194,12 +194,21 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
 }
 
 function search(e: MouseEvent) { // 常规图形检索
-    if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
+    const ctx = props.context;
+    if (ctx.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
-    const { x, y } = workspace.value.root;
+    const { x, y } = ctx.workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
-    selectShapes(props.context, shapes);
+
+    if (ctx.user.isRuleVisible && !e.shiftKey) {
+        if (ctx.tool.scout(e)) {
+            ctx.selection.unHoverShape();
+            return;
+        }
+    }
+
+    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    selectShapes(ctx, shapes);
 }
 
 const search_once = debounce(search, 350) // 连续操作结尾处调用
@@ -728,6 +737,6 @@ onUnmounted(() => {
         <Grid :context="props.context"></Grid>
         <TempBoard :context="props.context"></TempBoard>
         <BatchExport v-if="isvisible" :context="props.context"></BatchExport>
-        <Rule :context="props.context"></Rule>
+        <Rule :context="props.context" :page="(props.page as PageView)"></Rule>
     </div>
 </template>
