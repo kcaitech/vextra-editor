@@ -94,6 +94,7 @@ function generateBlocksForRule() {
         let offsetY = 0;
 
         const matrix = new Matrix(ctx.workspace.matrix);
+        const m00 = matrix.m00;
 
         if (coordinateEnv.id !== props.context.selection.selectedPage!.id) { // 如果不是根坐标系，则需要变换到特定坐标系
             const frame = coordinateEnv.frame;
@@ -110,9 +111,8 @@ function generateBlocksForRule() {
             offsetY += box.top;
         }
 
-        matrix.trans(offsetX - 20, offsetY - 20);
+        matrix.trans(offsetX * m00 - 20, offsetY * m00 - 20);
         const inverse = new Matrix(matrix);
-
         for (let i = 0; i < shapes.length; i++) {
             const shape = shapes[i];
 
