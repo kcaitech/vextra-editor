@@ -458,7 +458,7 @@ export class TranslateHandler extends TransformHandler {
         }
 
         this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.BLOCKS_CHANGE);
+            this.context.tool.notify(Tool.RULE_RENDER_SIM);
         });
 
         (this.asyncApiCaller as Transporter).execute(transformUnits);
@@ -471,8 +471,10 @@ export class TranslateHandler extends TransformHandler {
             return;
         }
 
+        const ctx = this.context;
+
         const pe = this.livingPoint;
-        const target_parent = this.context.selection.getEnvForMigrate(pe);
+        const target_parent = ctx.selection.getEnvForMigrate(pe);
 
         if (target_parent.id === t.current_env_id) {
             return;
@@ -483,14 +485,17 @@ export class TranslateHandler extends TransformHandler {
         const o_env = except.find(v => v.id === target_parent.id);
 
         if (o_env) {
-            t.backToStartEnv(o_env.data, this.context.workspace.t('compos.dlt'));
+            t.backToStartEnv(o_env.data, ctx.workspace.t('compos.dlt'));
         } else {
             const tp = adapt2Shape(target_parent) as GroupShape;
             const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
-            t.migrate(tp, _shapes, this.context.workspace.t('compos.dlt'));
+            t.migrate(tp, _shapes, ctx.workspace.t('compos.dlt'));
         }
 
-        this.context.assist.set_collect_target(this.shapes, true);
+        ctx.nextTick(ctx.selection.selectedPage!, () => {
+            ctx.tool.notify(Tool.RULE_RENDER);
+            ctx.assist.set_collect_target(this.shapes, true);
+        })
     }
 
     migrateOnce = debounce(this.__migrate, 160);

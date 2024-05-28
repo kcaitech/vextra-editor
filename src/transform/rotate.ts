@@ -216,7 +216,7 @@ export class RotateHandler extends TransformHandler {
         }
 
         this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.BLOCKS_CHANGE);
+            this.context.tool.notify(Tool.RULE_RENDER);
         });
     }
 
