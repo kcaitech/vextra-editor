@@ -283,8 +283,8 @@ function render(sim = false) {
         getCoordinate(); // 确定坐标环境
         // console.log('ENV 一定不能错:', coordinateEnv.name);
         let matrix = new Matrix(props.context.workspace.matrix);
-
-        const percent = Math.round(matrix.m00 * 100);
+        const m00 = matrix.m00;
+        const percent = Math.round(m00 * 100);
         const scale = getScaleUnit(percent); // 获取坐标刻度，无论在哪个环境，刻度只跟当前视图缩放比例关联
 
         matrix.trans(-20, -20);
@@ -299,7 +299,7 @@ function render(sim = false) {
                 m2r.computeCoord2(0, frame.height)
             ]
             const box = XYsBounding(points);
-            matrix.trans(box.left, box.top);
+            matrix.trans(box.left * m00, box.top * m00);
         }
 
         const inverse = new Matrix(matrix.inverse);
