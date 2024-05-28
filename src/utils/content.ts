@@ -843,9 +843,9 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         }
     } else {
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+            contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title', "cutout"];
         } else {
-            contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+            contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title', "cutout"];
         }
     }
     return contextMenuItems;

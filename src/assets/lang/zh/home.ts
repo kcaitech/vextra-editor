@@ -1,9 +1,4 @@
 import { BorderPosition } from "@kcdesign/data"
-import { PROJECT_NAME } from "@/const";
-
-export const product = {
-    name: PROJECT_NAME
-}
 
 export const system = {
     incorrect_input: '输入有误！',
@@ -33,6 +28,7 @@ export const system = {
     'fit_canvas': '适应画布',
     'show_many_cursor': '显示多人光标',
     'show_comment': '显示评论',
+    'show_cutout': '显示切图',
     'show_ruler': '显示标尺',
     'show_pixel_network': '显示像素网络',
     'hide_operation_interface': '隐藏操作界面',
@@ -47,7 +43,6 @@ export const system = {
     'login_read': '扫码表示已阅读并同意',
     'read_TOS': '服务协议',
     'read_Privacy': '隐私协议',
-    'product_name': PROJECT_NAME,
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
     'login_footer': '©2024 珠海市旷才科技有限公司',
     'placeholder': '搜索文件',
@@ -181,12 +176,13 @@ export const navi = {
 export const frame = {
     custom: '自定义',
     phone: '手机',
-    tablet: '平板',
+    pad: '平板',
     deskdop: '桌面',
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
-    social_media: '社交媒体'
+    social_media: '社交媒体',
+    slide: '幻灯片'
 }
 
 export const fileMenu = {

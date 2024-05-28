@@ -124,13 +124,22 @@ function sizeTostr(size: any) {
 
 
 //右键打开或双击打开
-const openDocument = (id: string) => {
-    router.push({
-        name: 'document',
-        query: {
-            id: id
-        }
-    })
+const openDocument = (id: string, name: string) => {
+    window.sessionStorage.setItem("open_document_name", name);
+    let miniprogram: any;
+    miniprogram = navigator.userAgent.includes('MiniProgramEnv');
+    if (miniprogram) {
+        (window as any).wx.miniProgram.navigateTo({
+            url: `/pages/index2/index?doc_id=${id}`,
+        });
+    } else {
+        router.push({
+            name: 'document',
+            query: {
+                id: id
+            }
+        })
+    }
 }
 
 //标星入口

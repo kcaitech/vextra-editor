@@ -39,8 +39,8 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform, TransformMode} from "@kcdesign/data/dist/basic/transform"
-import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
+import {Transform, TransformMode} from "@kcdesign/data"
+import {ColVector3D} from "@kcdesign/data"
 
 export class BaseCreator extends BaseTreeNode {
     context: any

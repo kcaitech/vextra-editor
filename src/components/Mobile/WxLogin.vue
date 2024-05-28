@@ -42,22 +42,20 @@ async function Login() {
         if (linfo) {
             console.log(linfo);
             if (linfo.code === 0 && linfo.data.token !== '') {
-                localStorage.setItem('token', linfo.data.token)
-                localStorage.setItem('avatar', linfo.data.avatar)
-                localStorage.setItem('nickname', linfo.data.nickname)
-                localStorage.setItem('userId', linfo.data.id)
-                let miniprogram: any;
-                miniprogram = navigator.userAgent.includes('miniProgram')
-                if (miniprogram) {
-                    (window as any).wx.miniProgram.redirectTo({
-                        url: '/pages/index1/index',
-                    });
-                    (window as any).wx.miniProgram.postMessage({
-                        data: {
-                            login: true,
-                        }
-                    })
-                }
+                localStorage.setItem('token', linfo.data.token);
+                localStorage.setItem('avatar', linfo.data.avatar);
+                localStorage.setItem('nickname', linfo.data.nickname);
+                localStorage.setItem('userId', linfo.data.id);
+
+                (window as any).wx.miniProgram.redirectTo({
+                    url: '/pages/index1/index',
+                });
+                (window as any).wx.miniProgram.postMessage({
+                    data: {
+                        login: true,
+                    }
+                })
+
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
                 loginFailed.value = true

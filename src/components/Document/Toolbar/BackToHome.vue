@@ -14,6 +14,7 @@ import { Tool } from '@/context/tool';
 import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
+import kcdesk from "@/kcdesk";
 
 const route = useRoute();
 
@@ -73,7 +74,7 @@ const back = (index: string) => {
             }
             break;
         case '9':
-            router.push({ name: 'project_share' });
+            router.push({ name: 'ProjectShare'});
             break;
         default:
             router.push({ name: 'recently' });
@@ -151,6 +152,7 @@ async function blur() {
                 ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
             }
             window.document.title = `${name.value} - ${t('product.name')}`;
+            kcdesk?.fileSetName(name.value);
             document.removeEventListener('keydown', enter);
         } catch (error) {
             console.log(error);
@@ -210,9 +212,10 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 })
 </script>
+
 <template>
     <div class="container" @dblclick.stop>
-        <div class="home" @click="home">
+        <div class="home" @click="home" v-if="!kcdesk">
             <svg-icon icon-class="home"></svg-icon>
         </div>
         <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>

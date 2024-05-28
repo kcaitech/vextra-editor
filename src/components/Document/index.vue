@@ -44,8 +44,8 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
-import VersionDesc from "@/components/common/VersionDesc.vue";
-import { PROJECT_NAME } from "@/const";
+import kcdesk from '@/kcdesk';
+import { newFile2, openFile3 } from '@/utils/neworopen';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -74,10 +74,12 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
+const fileName = ref<string>(t('product.name'));
 let uninstall_keyboard_units: () => void = () => {
 };
 
-function screenSetting() {
+function switchFullScreen() {
+    if (kcdesk) return;
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
     if (isFullScreen === null) {
@@ -320,7 +322,7 @@ const getUserInfo = async () => {
 
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
-
+const product_name = t('product.name');
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -337,7 +339,10 @@ const getDocumentInfo = async () => {
                     return;
                 }
                 if (docKeyRes.message === "无访问权限") {
-                    const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
+                    const query = route.query.page_id ? {
+                        id: route.query.id,
+                        page_id: route.query.page_id.slice(0, 8)
+                    } : { id: route.query.id };
                     router.push({
                         name: "apply",
                         query: query,
@@ -357,7 +362,10 @@ const getDocumentInfo = async () => {
         const docKeyData = docKeyRes.data;
         const perm = docInfoData.document_permission.perm_type;
         if (perm === 0) { // 无权限
-            const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
+            const query = route.query.page_id ? {
+                id: route.query.id,
+                page_id: route.query.page_id.slice(0, 8)
+            } : { id: route.query.id };
             router.push({
                 name: "apply",
                 query: query,
@@ -389,7 +397,9 @@ const getDocumentInfo = async () => {
         if (document) {
             const coopRepo = new CoopRepository(document, repo);
             const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${PROJECT_NAME}` : `${file_name} - ${PROJECT_NAME}`;
+            fileName.value = file_name;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${t('product.name')}` : `${file_name} - ${t('product.name')}`;
+            kcdesk?.fileSetName(file_name);
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm);
             getDocumentAuthority();
@@ -533,6 +543,25 @@ function init_doc() {
         upload(project_id);
         localStorage.setItem('project_id', '');
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+    } else if (kcdesk && route.query.from === 'kcdesk') {
+        if (route.query.newfile) {
+            // 新建
+            newFile2();
+            init_doc();
+        } else if (route.query.localfile) {
+            // 打开本地文档
+            kcdesk.osOpenFile(route.query.localfile as string).then(file => {
+                if (file) {
+                    openFile3(file).then(() => {
+                        init_doc();
+                    }).catch(e => {
+                        console.error(e);
+                    })
+                } else {
+                    // ??
+                }
+            });
+        }
     } else {
         router.push('/files');
     }
@@ -718,9 +747,21 @@ const stop = watch(() => null_context.value, (v) => {
         const _name = context?.data.name || '';
         const file_name = docInfo.value.document?.name || _name;
         const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - 墨师设计` : `${file_name} - 墨师设计`;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
+            kcdesk?.fileSetName(file_name);
             clearTimeout(timer);
         }, 500)
+    }
+})
+
+watch(fileName, (NewNanme) => {
+    if (NewNanme) {
+        (window as any).wx.miniProgram.postMessage({
+            data: {
+                name: NewNanme,
+                id: docInfo.value.document.id
+            }
+        });
     }
 })
 
@@ -764,7 +805,7 @@ onUnmounted(() => {
 <template>
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
-        <div id="top" @dblclick="screenSetting" v-if="showTop">
+        <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context!" v-if="!loading && !null_context"/>
         </div>
         <div id="visit">
@@ -781,12 +822,14 @@ onUnmounted(() => {
                             :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
+
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
                              @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                              @closeLoading="closeLoading">
                 </ContentView>
             </template>
+
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
                            @mouseenter="(e: Event) => { mouseenter('right') }"
@@ -813,6 +856,7 @@ onUnmounted(() => {
         <HelpEntrance v-if="!null_context" :context="context!"/>
     </div>
 </template>
+
 <style scoped lang="scss">
 .main {
     min-width: 460px;

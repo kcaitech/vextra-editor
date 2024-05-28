@@ -9,6 +9,8 @@ import { router } from '@/router'
 import Loading from '../common/Loading.vue';
 import Bus from '@/components/AppHome/bus';
 import Border from "@/components/Document/Attribute/Border/Border.vue";
+import kcdesk from '@/kcdesk';
+import { locale } from '@/locale';
 
 interface Props {
     items?: Array<object>,
@@ -182,6 +184,7 @@ function userinfo() {
 
 function loginout() {
     localStorage.clear()
+    kcdesk?.setLogined(false);
     router.push({ path: '/login' })
 }
 
@@ -251,19 +254,19 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         <div v-if="props.switch" class="search">
             <el-input ref="inputRef" v-model="search" size="large" :placeholder="search ? `正在搜索
                 ${search}` : `${t('system.placeholder')}`" @focus="showSearchHistory = true" @input="screenout"
-                      @blur="showSearchHistory = false">
+                @blur="showSearchHistory = false">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading :size="18" :color="'#1878F5'"/>
+                        <Loading :size="18" :color="'#1878F5'" />
                     </el-icon>
                     <el-icon v-else size="18">
                         <svg-icon icon-class="search-icon"
-                                  :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
+                            :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>
                     <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
-                        <Close/>
+                        <Close />
                     </el-icon>
 
 
@@ -273,7 +276,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         <div class="content">
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
-                     @click="showinform(bell!, 320)">
+                    @click="showinform(bell!, 320)">
                     <svg-icon :icon-class="showInForm ? 'bell-select' : 'bell'"></svg-icon>
                     <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
                     </div>
@@ -285,16 +288,16 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             </div>
         </div>
         <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
-                @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
+            @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
         <Teleport to="body">
-            <div v-if="menuUser" class="userinfo" :style="{ top: rect_y + 'px', left: rect_x + 'px' }">
+            <div v-if="menuUser" class="userinfo" :style="{ top: rect_y + 'px', left: rect_x + 'px' }" :lang="locale">
                 <div @click="userinfo">
                     <svg-icon icon-class="user"></svg-icon>
-                    {{ t('system.personal_center') }}
+                    <span>{{ t('system.personal_center') }}</span>
                 </div>
                 <div @click="loginout">
                     <svg-icon icon-class="exit"></svg-icon>
-                    {{ t('system.login_out') }}
+                    <span>{{ t('system.login_out') }}</span>
                 </div>
             </div>
         </Teleport>
@@ -384,7 +387,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 height: 20px;
             }
 
-            > .num {
+            >.num {
                 position: absolute;
                 font-size: 10px;
                 top: 0px;
@@ -418,14 +421,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             border-radius: 50%;
             overflow: hidden;
 
-            > img {
+            >img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
 
             }
 
-            > div {
+            >div {
                 width: 100%;
                 height: 100%;
                 text-align: center;
@@ -447,10 +450,13 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     font-size: 13px;
     width: 120px;
     overflow: visible;
-
+    
     div {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: auto;
+        grid-template-areas: "icon text text";
         padding: 8px 12px;
-        display: flex;
         align-items: center;
         justify-content: space-evenly;
         height: 40px;
@@ -461,8 +467,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         }
 
         svg {
+            grid-area: icon;
             width: 16px;
             height: 16px;
+        }
+
+        span {
+            grid-area: text;
+            text-wrap: nowrap;
         }
     }
 
@@ -477,6 +489,10 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         border-bottom: 7px solid #ffffff;
         filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.12));
 
+    }
+
+    :lang(en) {
+        font-size: 11px;
     }
 }
 </style>

@@ -174,6 +174,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 let hidden_holder: any = null;
+
 function modify_selection_hidden() {
     if (hidden_holder) {
         clearTimeout(hidden_holder);
@@ -187,11 +188,13 @@ function modify_selection_hidden() {
 
     selection_hidden.value = true;
 }
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
     hidden_holder = null;
 }
+
 function mouseenter() {
     if (editing.value) props.context.cursor.setType('scan', 0);
 }
@@ -240,7 +243,7 @@ function selectionWatcher(...args: any[]) {
 
 function check_status() {
     if (props.context.selection.isNewShapeSelection) {
-        be_editor();
+        be_editor(0);
         props.context.selection.setSelectionNewShapeStatus(false);
     }
 }
@@ -277,13 +280,16 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-        :viewBox=genViewBox(bounds) :width="width" :height="height"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown" overflow="visible"
-        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         data-area="controller"
+         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+         :viewBox=genViewBox(bounds) :width="width" :height="height"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown"
+         overflow="visible"
+         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)">
+                    :main-notify="Selection.CHANGE_TEXT"
+                    :selection="props.context.selection.getTextSelection(props.shape)">
         </SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
@@ -294,7 +300,8 @@ onBeforeUnmount(() => {
         </PointsContainer>
     </svg>
     <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
+               :main-notify="Selection.CHANGE_TEXT"
+               :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
 .hidden {

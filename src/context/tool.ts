@@ -1,7 +1,7 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { uuid } from "@kcdesign/data/dist/basic/uuid";
+import { v4 as uuid } from "uuid"
 
 export enum Action {
     Auto = 'auto',
@@ -59,6 +59,7 @@ export class Tool extends WatchableObject {
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
+    static CUTOUT_VISIBLE = 12;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -68,6 +69,7 @@ export class Tool extends WatchableObject {
     private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
+    private m_cutout_visible = true;
 
     constructor(context: Context) {
         super();
@@ -124,6 +126,15 @@ export class Tool extends WatchableObject {
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
+    }
+
+    get isCutoutVisible() {
+        return this.m_cutout_visible;
+    }
+
+    setCutoutVisible(v: boolean) {
+        this.m_cutout_visible = v;
+        this.notify(Tool.CUTOUT_VISIBLE);
     }
 
     get frameSize(): { size: { width: number, height: number }, name: string } {
