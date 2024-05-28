@@ -10,7 +10,7 @@ export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     if (!parentShape || !childShape) return;
 
     // 合并transform
-    child.transform = parent.transform.clone().addTransform(child.transform)
+    child.transform = child.transform.addTransform(parent.transform) // 先执行子级，再执行父级
     child.updateShapeAttrByTransform()
     // 合并透明度
     if (parent.attributes.opacity) {
