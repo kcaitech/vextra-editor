@@ -8,6 +8,7 @@ import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
+import { ReferLineHandler } from "@/components/Document/Rule/refer";
 
 const props = defineProps<{
     context: Context;
@@ -138,7 +139,7 @@ function generateBlocksForRule() {
                 );
             }
 
-            const { left, top, right, bottom } = XYsBounding(points);
+            const {left, top, right, bottom} = XYsBounding(points);
 
 
             // 计算客户端视图偏移值
@@ -303,7 +304,7 @@ function render(sim = false) {
         }
 
         const inverse = new Matrix(matrix.inverse);
-        const { width, height } = props.context.workspace.root;
+        const {width, height} = props.context.workspace.root;
 
         const hor = scalesHor.value;
         const ver = scalesVer.value;
@@ -327,14 +328,14 @@ function render(sim = false) {
         for (let data = startX; data < endX; data += scale) {
             const offset = matrix.computeCoord2(data, 0).x - 24.95;
 
-            let scale: Scale = { data, opacity: getOpacity(offset), offset };
+            let scale: Scale = {data, opacity: getOpacity(offset), offset};
             hor.push(scale);
         }
 
         for (let data = startY; data < endY; data += scale) {
             const offset = matrix.computeCoord2(0, data).y - 24.95;
 
-            let scale: Scale = { data, opacity: getOpacity(offset), offset };
+            let scale: Scale = {data, opacity: getOpacity(offset), offset};
             ver.push(scale);
         }
     }
@@ -414,7 +415,7 @@ function renderRefLine() {
             ];
             const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
 
-            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+            linesHor.value.push({dashPath, path, theme: '#ff2200'});
         }
 
         const yOffsets = mapY.get(key);
@@ -433,7 +434,7 @@ function renderRefLine() {
             ];
             const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
 
-            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+            linesHor.value.push({dashPath, path, theme: '#ff2200'});
         }
         mapY.delete(key);
     })
@@ -457,20 +458,21 @@ function renderRefLine() {
             ];
             const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
 
-            linesVer.value.push({ dashPath, path, theme: '#ff2200' });
+            linesVer.value.push({dashPath, path, theme: '#ff2200'});
         }
     })
 
-    const inverse = new Matrix(ctx.workspace.matrix.inverse);
+    const matrix = new Matrix(ctx.workspace.matrix);
     for (let i = 0; i < pageX.length; i++) {
-        const x = inverse.computeCoord2(pageX[i], 0).x;
-        const path = [`M${x} 0 L${x} ${root.height}`];
-        linesVer.value.push({ dashPath: [], path, theme: '#ff2200' });
+        console.log()
+        const y = matrix.computeCoord2(0, pageX[i]).y;
+        const path = [`M0 ${y} L${root.width} ${y}`];
+        linesHor.value.push({dashPath: [], path, theme: '#ff2200'});
     }
     for (let i = 0; i < pageY.length; i++) {
-        const y = inverse.computeCoord2(0, pageY[i]).y;
-        const path = [`M0 ${y} L${root.width} ${y}`];
-        linesVer.value.push({ dashPath: [], path, theme: '#ff2200' });
+        const x = matrix.computeCoord2(pageY[i], 0).x;
+        const path = [`M${x} 0 L${x} ${root.height}`];
+        linesVer.value.push({dashPath: [], path, theme: '#ff2200'});
     }
 
     referLineStatusChange();
@@ -556,14 +558,22 @@ function formatNumber(v: number) {
 }
 
 function moveStop(e: MouseEvent) {
-    if (!e.buttons) {
+    if (e.button !== 0) {
         e.stopPropagation();
     }
 }
 
 let move: any;
+let referLineHandler: ReferLineHandler | undefined;
+let isDrag = false;
 
 function downHor(e: MouseEvent) {
+    if (e.button !== 0) {
+        return;
+    }
+    e.stopPropagation();
+    props.context.tool.selectLine(undefined);
+    referLineHandler = new ReferLineHandler(props.context, e, "hor");
     document.addEventListener('mousemove', moveHor);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -572,7 +582,15 @@ function downHor(e: MouseEvent) {
 }
 
 function moveHor(e: MouseEvent) {
-
+    if (isDrag) {
+        referLineHandler?.execute(e);
+    } else {
+        const y = props.context.workspace.getContentXY(e).y;
+        if (y >= 20) {
+            isDrag = true;
+            referLineHandler?.createApiCaller();
+        }
+    }
 }
 
 function downVer(e: MouseEvent) {
@@ -587,20 +605,27 @@ function moveVer(e: MouseEvent) {
 
 }
 
-function upCommon(e: MouseEvent) {
+function clear() {
+    isDrag = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', upCommon);
     window.removeEventListener("blur", blur);
+    referLineHandler?.fulfil();
+    referLineHandler = undefined;
+}
+
+function upCommon(e: MouseEvent) {
+    clear();
 }
 
 function blur() {
-    document.removeEventListener('mousemove', move);
-    document.removeEventListener('mouseup', upCommon);
-    window.removeEventListener("blur", blur);
+    clear();
 }
 
 function pageWatcher(...args: any) {
-    console.log('args', args);
+    if (args.includes('horReferLines') || args.includes('verReferLines')) {
+        renderRefLine();
+    }
 }
 
 interface ReferLineView {
