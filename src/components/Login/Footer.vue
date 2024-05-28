@@ -28,7 +28,7 @@ const iszh = locale === 'zh';
             <span class="lines">|</span>
             <a class="gongan" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44049102496973"
                 target="_blank">
-                <img :src="gongan" alt="gongan">
+                <img :src="gongan" alt="gongan" width="12px" height="12px">
                 <span>粤公网安备44049102496973号</span>
             </a>
         </div>
