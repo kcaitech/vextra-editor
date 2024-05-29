@@ -565,6 +565,8 @@ export class BaseCreator extends BaseTreeNode {
         // }
 
         // 设置缩放
+        // shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        // shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
         // shape.scaleX = Math.abs(scale.x)
         // shape.scaleY = Math.abs(scale.y)
         shape.size.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
