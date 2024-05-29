@@ -344,7 +344,7 @@ onUnmounted(() => {
                 <div class="icon" @click="showMenu" ref="trigger">
                     <div class="mode_box">{{ selectedMixMode ? t(`opacity.${selectedMixMode}`) : t('attr.more_value') }}
                     </div>
-                    <svg-icon icon-class="down"></svg-icon>
+                    <svg-icon icon-class="arrow2"></svg-icon>
                 </div>
                 <div ref="popover" class="popover-f" v-if="popoverVisible">
                     <div class="item" style="opacity: 0.3;" v-if="!selectedMixMode">
@@ -394,10 +394,9 @@ onUnmounted(() => {
     }
 
     .icon {
-        width: 90px;
-        height: 30px;
+        height: 26px;
         display: flex;
-        padding: 0 8px;
+        padding: 0 5px;
         justify-content: space-between;
         align-items: center;
         color: #000000;
@@ -412,12 +411,13 @@ onUnmounted(() => {
 
         .mode_box {
             flex: 1;
+            margin-right: 3px;
             box-sizing: border-box;
         }
 
         >svg {
-            width: 14px;
-            height: 14px;
+            width: 10px;
+            height: 10px;
         }
     }
 
@@ -426,26 +426,27 @@ onUnmounted(() => {
         right: 0px;
         color: #000000;
         z-index: 999;
-        width: 112px;
+        width: 104px;
         height: auto;
         font-size: var(--font-default-fontsize);
         background-color: #fff;
-        box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        box-shadow:  0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 4px;
+        border: 1px solid #F5F5F5;
         outline: none;
-        padding: 6px 0;
+        padding: 4px 0;
 
         .line {
             width: 100%;
-            height: 8px;
-            border-bottom: 1px solid #f0f0f0;
-            margin-bottom: 8px;
+            height: 4px;
+            border-bottom: 1px solid #EBEBEB;
+            margin-bottom: 4px;
             box-sizing: border-box;
         }
 
         .item {
             width: 100%;
-            height: 30px;
+            height: 32px;
             padding-right: var(--default-padding);
             display: flex;
             flex-direction: row;
@@ -453,7 +454,7 @@ onUnmounted(() => {
             box-sizing: border-box;
 
             >div {
-                width: 30px;
+                width: 32px;
                 height: 100%;
                 display: flex;
                 align-items: center;

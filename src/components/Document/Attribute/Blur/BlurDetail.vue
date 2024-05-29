@@ -278,7 +278,8 @@ onUpdated(() => {
     width: 12px;
     height: 12px;
     border-radius: 6px;
-    background-color: #000;
+    background-color: #fff;
+    box-shadow: 1px 1px 6px 1px rgba(0, 0, 0, 0.12);
     box-sizing: border-box;
     cursor: pointer;
 }
