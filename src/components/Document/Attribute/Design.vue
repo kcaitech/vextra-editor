@@ -25,6 +25,7 @@ import { TableSelection } from '@/context/tableselection';
 import { flattenShapes } from '@/utils/cutout';
 import ArtboardTemplate from "@/components/Document/Attribute/Artboard/ArtboardTemplate.vue";
 import { Action, Tool } from "@/context/tool";
+import BlurVue from "./Blur/index.vue"
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -319,15 +320,15 @@ onUnmounted(() => {
             </div>
             <div v-if="shapes.length" class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes" :selection-change="reflush_by_selection"
-                         :trigger="reflush_trigger"></Arrange>
+                    :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
-                               :trigger="reflush_trigger"></ShapeBaseAttr>
+                    :trigger="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
-                                     :selection-change="reflush_by_selection">
+                    :selection-change="reflush_by_selection">
                 </ResizingConstraints>
                 <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
-                         :selection-change="reflush_by_selection" :trigger="reflush_trigger">
+                    :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
                 </Module>
@@ -339,14 +340,14 @@ onUnmounted(() => {
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
-                      :selection-change="reflush_by_selection" :trigger="reflush_trigger"
-                      :table-selection-change="reflush_by_table_selection"
-                      :cells-trigger="reflush_cells_trigger"></Fill>
+                    :selection-change="reflush_by_selection" :trigger="reflush_trigger"
+                    :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
                         :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
                         :context="props.context">
                 </Shadow>
+                <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context"></BlurVue>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
         </el-scrollbar>
