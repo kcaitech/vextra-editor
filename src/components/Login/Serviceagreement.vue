@@ -39,9 +39,9 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .content {
+    margin: auto;
     color: #333333;
     max-width: 880px;
     letter-spacing: 1px;
-    padding: 0 12px;
 }
 </style>

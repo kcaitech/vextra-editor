@@ -1,18 +1,82 @@
 <template>
     <div class="main-content">
-        <div v-for="index in 5" :key="index" :class="'container'" :id="'container' + index">
-            <div class="box-content" :id="'box-content' + index"></div>
+        <div class="top">
+            <div class="content">
+                <div class="title">随时都可写 什么都能画</div>
+                <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
+                    让每一个参与者都能高效参与的设计工具</div>
+                <div class="login">免费体验</div>
+            </div>
         </div>
+        <div class="moss">
+            <div class="content">
+                <img class="bg" :src="softui" alt="UI">
+                <img class="bg-1" :src="zjk" alt="zujianku">
+                <img class="bg-2" :src="tc" alt="tianchong">
+                <img class="bg-3" :src="dc" alt="daochu">
+            </div>
+
+        </div>
+        <div class="design">
+            <div class="lunbo">
+                <img :src="gangbi" alt="gangbi">
+            </div>
+            <div class="wenan">
+                <div class="title">专业UI设计功能</div>
+                <div class="description">专业的矢量编辑工具，满足精细化编辑；高效的组件功能，
+                    并且兼容Sketch、Figma(<span>开发中，敬请期待</span>)等主流文件格式，无缝进行文件迁移</div>
+                <div class="login">立即免费体验</div>
+            </div>
+        </div>
+        <div class="cooperation">
+            <div class="lunbo">
+                <img :src="cooperation" alt="cooperation">
+            </div>
+            <div class="wenan">
+                <div class="title">团队实时协作</div>
+                <div class="description">链接邀请，在线实时协同，随时都能获取最新稿件；
+                    文档定点评论，高效沟通，让思维随时碰撞出新的火花；
+                    设计师轻松交付，切图资源、布局参数，工程师信手拈来</div>
+                <div class="login">立即免费体验</div>
+            </div>
+        </div>
+        <div class="platform">
+            <div class="top">
+                <div class="title">跨终端 无缝衔接</div>
+                <div class="description">多端数据实时同步，随时随地编辑创作</div>
+            </div>
+            <div class="bottom">
+                <img :src="kuaduan" alt="kuaduan">
+            </div>
+        </div>
+        <div class="bottom">
+            <div class="content">
+                <div class="title">每个参与者都能高效参与的设计工具</div>
+                <div class="login">免费体验</div>
+            </div>
+        </div>
+
+        <!-- <div v-for="index in 5" :key="index" :class="'container'" :id="'container' + index">
+            <div class="box-content" :id="'box-content' + index"></div>
+        </div> -->
     </div>
-    <div class="meun">
+    <!-- <div class="meun">
         <ul class="meunlist">
             <li v-for=" index in 5" :key="index" :class="{ select: selectid === ('#container' + index) }"
                 @click="scrollToSection('#container' + index)"></li>
         </ul>
-    </div>
+    </div> -->
 </template>
+
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import softui from '@/assets/softui.svg'
+import zjk from '@/assets/ui-zjk.svg'
+import tc from '@/assets/ui-tc.svg'
+import dc from '@/assets/ui-dc.svg'
+import gangbi from '@/assets/des-gb.svg'
+import cooperation from '@/assets/cooperation.svg'
+import kuaduan from '@/assets/kuaduan.svg'
 
 const selectid = ref('')
 const Elements = ref<any>()
@@ -126,109 +190,382 @@ onMounted(() => {
     Elements.value = containerElements
 })
 </script>
+
 <style lang="scss" scoped>
-.select {
-    background-color: blue;
-    border: 1px solid blue !important;
+.moss {}
+
+.top,
+.bottom {
+    display: flex;
+    width: 100%;
+    // height: 313px;
+    box-sizing: border-box;
+
+    .content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin: auto;
+
+        .title {
+            margin-top: 48px;
+            font-size: 72px;
+            color: #1F1F1F;
+
+        }
+
+        .title:nth-child(1) {
+            font-size: 40px;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #262626;
+            margin-top: 24px;
+            max-width: 560px;
+            text-align: center;
+        }
+
+        .login {
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 256px;
+            height: 56px;
+            border-radius: 10px;
+            background-color: #1878F5;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 500;
+            margin-top: 45px;
+        }
+
+        .login:nth-child(1) {
+            margin-bottom: 103px;
+        }
+    }
+}
+
+.top{
+    background-color:#F4F8FB ;
 }
 
 
-
-.main-content {
-    background-color: #99999976;
-    overflow: hidden;
+.moss,
+.design,
+.cooperation,
+.platform {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
 
-    .container {
-        min-height: calc(100vh - 56px);
-        display: flex;
+    .content {
+        width: 100%;
+        margin: 5% 15%;
+        max-width: 1200px;
+        position: relative;
 
-        button {
-            height: 40px;
-            width: 80px;
-            border: 1px solid black;
-            border-radius: 4px;
-            background-color: transparent;
-            cursor: pointer;
+        .bg {
+            width: 100%;
+        }
 
-            &:hover {
-                border: 1px solid #9775fa;
-                color: #9775fa;
+        .bg-1 {
+            position: absolute;
+            top: 2%;
+            left: -27%;
+            width: 45%;
+        }
+
+        .bg-2 {
+            position: absolute;
+            top: 1%;
+            right: -25%;
+            width: 45%;
+        }
+
+        .bg-3 {
+            position: absolute;
+            top: 32%;
+            right: -27%;
+            width: 45%;
+        }
+    }
+
+    .lunbo,
+    .wenan {
+        width: 48%;
+        max-width: 746px;
+
+        img {
+            width: 100%;
+        }
+
+        .title {
+            font-size: 68px;
+            font-weight: 400;
+            color: #1F1F1F;
+            white-space: nowrap;
+        }
+
+        .description {
+            margin-top: 32px;
+            font-size: 17px;
+            line-height: 34px;
+            color: #262626;
+
+            span {
+                color: #8C8C8C;
             }
         }
 
-        &:nth-child(1) {
-            // background-color: olive;
-            align-items: center;
-            position: relative;
-        }
-
-        &:nth-child(2) {
-            // background-color: sandybrown;
-            justify-content: center;
-            position: relative;
-        }
-
-        &:nth-child(3) {
-            // background-color: seagreen;
-            align-items: center;
-            justify-content: space-around;
-            position: relative;
-        }
-
-        &:nth-child(4) {
-            // background-color: aqua;
-            align-items: center;
-            justify-content: space-evenly;
-            flex-direction: column;
-            position: relative;
-        }
-
-        &:nth-child(5) {
-            // background-color: blue;
-            justify-content: center;
-            align-items: flex-end;
-            position: relative;
+        .login {
+            margin-top: 122px;
+            font-size: 21px;
+            font-weight: 500;
+            color: #1878F5;
         }
     }
-}
 
-
-.box-content {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 10%;
-    width: 20%;
-    height: 20%;
-    background-color: #e0e0e07c;
-    transition: transform 0.5s ease-in-out;
-}
-
-
-.meun {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 20px;
-
-    .meunlist {
-        margin: 0;
-        padding: 0;
-    }
-
-    .meunlist li {
-        list-style: none;
-        width: 12px;
-        height: 12px;
-        margin-top: 8px;
-        border-radius: 50%;
-        border: 1px solid rgb(86, 44, 255);
-        cursor: pointer;
+    .wenan {
+        display: flex;
+        flex-direction: column;
+        margin: auto 0;
+        padding: 0 3%;
         box-sizing: border-box;
+    }
 
-        &:hover {
-            border: 2px solid rgb(86, 44, 255);
+    .top {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .title {
+            font-size: 68px;
+            font-weight: 400;
+            color: #1F1F1F;
+        }
+
+        .description {
+            margin: 32px 0 24px 0;
+            font-size: 19px;
+            color: #262626;
+        }
+    }
+
+    .bottom {
+        width: 70%;
+        max-width: 1360px;
+
+        img {
+            width: 100%;
+        }
+    }
+}
+
+.moss,.design,
+.cooperation,
+.platform {
+    padding: 4% 0;
+    background:#F4F8FB;
+}
+.design,.platform{
+    background-color: #fff;
+}
+
+.cooperation {
+    flex-direction: row-reverse;
+    background-color: #F4F7FB;
+}
+
+.platform {
+    flex-direction: column;
+}
+
+
+
+@media (max-width:1024px) {
+    .top {
+        .content {
+            .title {
+                font-size: 56px;
+                margin-top: 32px;
+            }
+
+            .description {
+                font-size: 18px;
+            }
+
+
+        }
+    }
+
+    .design,
+    .cooperation {
+
+        .lunbo,
+        .wenan {
+            width: 48%;
+
+            .title {
+                font-size: 48px;
+                // margin-top: 20px;
+            }
+
+            .description {
+                font-size: 16px;
+            }
+
+            .login {
+                font-size: 18px;
+                margin-top: 30px;
+            }
+        }
+    }
+
+    .platform {
+        .top {
+            .title {
+                font-size: 56px;
+            }
+
+            .description {
+                font-size: 18px;
+            }
+        }
+    }
+}
+
+@media (max-width:800px) {
+    .top {
+        .content {
+            .title {
+                font-size: 40px;
+                margin-top: 24px;
+            }
+
+            .description {
+                font-size: 14px;
+                max-width: 480px;
+            }
+
+            .login {
+                font-size: 16px;
+                height: 50px;
+                width: 200px;
+            }
+        }
+    }
+
+
+    .design,
+    .cooperation {
+        flex-direction: column;
+
+        .lunbo,
+        .wenan {
+            width: 96%;
+            padding: 0;
+
+            .title {
+                font-size: 30px;
+                margin-top: 20px;
+            }
+
+            .description {
+                font-size: 14px;
+            }
+
+            .login {
+                font-size: 16px;
+                margin-top: 20px;
+            }
+        }
+    }
+
+    .platform {
+        .top {
+            .title {
+                font-size: 40px;
+            }
+
+            .description {
+                margin: 24px 0 12px 0;
+                font-size: 16px;
+            }
+        }
+
+        .bottom {
+            width: 100%;
+        }
+    }
+}
+
+
+@media (max-width:480px) {
+    .top {
+        .content {
+            .title {
+                font-size: 30px;
+                margin-top: 16px;
+            }
+
+            .description {
+                font-size: 14px;
+                max-width: 400px;
+            }
+
+            .login {
+                margin-top: 30px;
+                font-size: 16px;
+                height: 40px;
+                width: 120px;
+            }
+        }
+    }
+
+    .design,
+    .cooperation {
+        flex-direction: column;
+
+        .lunbo,
+        .wenan {
+            width: 96%;
+            padding: 0;
+
+            .title {
+                font-size: 30px;
+                margin-top: 20px;
+            }
+
+            .description {
+                font-size: 14px;
+            }
+
+            .login {
+                font-size: 16px;
+                margin-top: 20px;
+            }
+        }
+    }
+
+    .platform {
+        .top {
+            .title {
+                font-size: 30px;
+            }
+
+            .description {
+                margin: 24px 0 12px 0;
+                font-size: 14px;
+            }
+        }
+
+        .bottom {
+            width: 100%;
         }
     }
 }
