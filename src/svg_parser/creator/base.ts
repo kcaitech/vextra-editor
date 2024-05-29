@@ -41,6 +41,7 @@ import {
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
 import {Transform, TransformMode} from "@kcdesign/data"
 import {ColVector3D} from "@kcdesign/data"
+import {getShapeTransform2, updateShapeTransformBy2} from "@kcdesign/data"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -564,8 +565,8 @@ export class BaseCreator extends BaseTreeNode {
         // }
 
         // 设置缩放
-        shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
-        shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
+        shape.size.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        shape.size.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
         // shape.scaleX = Math.abs(scale.x)
         // shape.scaleY = Math.abs(scale.y)
 
@@ -573,19 +574,26 @@ export class BaseCreator extends BaseTreeNode {
         // shape.skewX = skew.x * 180 / Math.PI
 
         // 设置xy
-        shape.frame.x = translate.x
-        shape.frame.y = translate.y
+        // shape.transform.translateX = translate.x
+        // shape.transform.translateY = translate.y
         // dev code
         // console.log(shape.name)
         // console.log(translate.x, translate.y)
         // console.log(shape)
 
         // 设置旋转
-        shape.rotation = rotate.z * 180 / Math.PI
+        // shape.rotation = rotate.z * 180 / Math.PI
 
         // 设置翻转
-        shape.isFlippedVertical = this.transform.isFlipV
-        shape.isFlippedHorizontal = this.transform.isFlipH
+        // shape.isFlippedVertical = this.transform.isFlipV
+        // shape.isFlippedHorizontal = this.transform.isFlipH
+
+        const transform2 = getShapeTransform2(shape)
+        transform2.setTranslate({vector: new ColVector3D([translate.x, translate.y, 0])})
+        transform2.setRotateZ(rotate.z)
+        transform2.setFlipH(this.transform.isFlipH)
+        transform2.setFlipV(this.transform.isFlipV)
+        updateShapeTransformBy2(shape, transform2)
     }
 
     updateShapeStyle() { // 设置shape的样式
