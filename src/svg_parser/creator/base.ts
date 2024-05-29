@@ -565,17 +565,19 @@ export class BaseCreator extends BaseTreeNode {
         // }
 
         // 设置缩放
-        shape.size.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
-        shape.size.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
+        // shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        // shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
         // shape.scaleX = Math.abs(scale.x)
         // shape.scaleY = Math.abs(scale.y)
+        shape.size.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        shape.size.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
 
         // 设置斜切
         // shape.skewX = skew.x * 180 / Math.PI
 
         // 设置xy
-        // shape.transform.translateX = translate.x
-        // shape.transform.translateY = translate.y
+        // shape.frame.x = translate.x
+        // shape.frame.y = translate.y
         // dev code
         // console.log(shape.name)
         // console.log(translate.x, translate.y)
