@@ -1,6 +1,9 @@
 import { ReferUnit } from "@/components/Document/Rule/refer";
 import { PageView, ShapeView } from "@kcdesign/data";
 
+/**
+ * @description 容器内参考线渲染机
+ */
 export class ReferUnderContainerHandler {
     private readonly m_units: ReferUnit[];
     private readonly m_page: PageView;
@@ -75,7 +78,7 @@ export class ReferUnderContainerHandler {
             }
         })
 
-        console.log('update:', URCM.size, WUM.size);
+        console.log('RENDER TARGET CHANGE:', URCM.size, WUM.size); // 更新了渲染容器对象
     }
 
     clearContainerWatcher() {
