@@ -249,7 +249,7 @@ onMounted(() => {
                     </div>
                 </div>
             </div>
-            <Footer></Footer>
+            <!-- <Footer></Footer> -->
         </div>
     </div>
 </template>

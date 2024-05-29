@@ -16,15 +16,16 @@ const skipTotarget = (i: string) => {
     switch (i) {
         case "产品介绍":
             router.push({ path: '/' })
+            window.scrollY=300
             break;
         case "关于我们":
             router.push({ path: '/' })
             break;
         case "服务条款":
-            router.push({ path: '/serviceagreement' })
+            router.push({ path: 'serviceagreement' })
             break;
         case "隐私协议":
-            router.push({ path: '/privacypolicy' })
+            router.push({ path: 'privacypolicy' })
             break;
         case "邮箱: contact@kcaitech.com":
             router.push({ path: '/' })

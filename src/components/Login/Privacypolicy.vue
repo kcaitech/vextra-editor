@@ -1,5 +1,8 @@
 <template>
-    <div class="content" v-html="htmlContent(Markdowncontent)"></div>
+    <AgreementBaseComponent>
+        <div class="content" v-html="htmlContent(Markdowncontent)"></div>
+    </AgreementBaseComponent>
+   
 </template>
 
 <script setup lang="ts">
@@ -7,6 +10,7 @@ import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/privacypolicy.md"
 import { onMounted } from "vue";
 import isMobileDevice from '@/utils/mobileDeviceChecker'
+import AgreementBaseComponent from '@/components/Login/AgreementBaseComponent.vue';
 
 function changeFontSize(el: any) {
     for (let index = 0; index < el.length; index++) {

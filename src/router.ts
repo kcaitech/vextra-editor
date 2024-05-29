@@ -431,10 +431,11 @@ export const router = createRouter({
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition
-        }
-        return {
-            top: 0,
-            behavior: 'smooth'
+        } else {
+            return {
+                top: 0,
+                behavior: 'smooth'
+            }
         }
     },
     routes: routes

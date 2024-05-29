@@ -1,6 +1,7 @@
 <template>
+   <AgreementBaseComponent>
     <div class="main-content">
-        <div class="top">
+        <div class="start">
             <div class="content">
                 <div class="title">随时都可写 什么都能画</div>
                 <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
@@ -49,7 +50,7 @@
                 <img :src="kuaduan" alt="kuaduan">
             </div>
         </div>
-        <div class="bottom">
+        <div class="end">
             <div class="content">
                 <div class="title">每个参与者都能高效参与的设计工具</div>
                 <div class="login">免费体验</div>
@@ -60,6 +61,8 @@
             <div class="box-content" :id="'box-content' + index"></div>
         </div> -->
     </div>
+   </AgreementBaseComponent>
+  
     <!-- <div class="meun">
         <ul class="meunlist">
             <li v-for=" index in 5" :key="index" :class="{ select: selectid === ('#container' + index) }"
@@ -77,6 +80,7 @@ import dc from '@/assets/ui-dc.svg'
 import gangbi from '@/assets/des-gb.svg'
 import cooperation from '@/assets/cooperation.svg'
 import kuaduan from '@/assets/kuaduan.svg'
+import AgreementBaseComponent from '@/components/Login/AgreementBaseComponent.vue';
 
 const selectid = ref('')
 const Elements = ref<any>()
@@ -192,10 +196,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.moss {}
-
-.top,
-.bottom {
+.start,
+.end {
     display: flex;
     width: 100%;
     // height: 313px;
@@ -215,20 +217,16 @@ onMounted(() => {
 
         }
 
-        .title:nth-child(1) {
-            font-size: 40px;
-        }
-
         .description {
             font-size: 18px;
             color: #262626;
             margin-top: 24px;
             max-width: 560px;
             text-align: center;
+            line-height: 27px;
         }
 
         .login {
-
             display: flex;
             align-items: center;
             justify-content: center;
@@ -241,17 +239,29 @@ onMounted(() => {
             font-weight: 500;
             margin-top: 45px;
         }
-
-        .login:nth-child(1) {
-            margin-bottom: 103px;
-        }
     }
 }
 
-.top{
-    background-color:#F4F8FB ;
+.start {
+    background-color: #F4F8FB;
 }
 
+.end {
+    .content {
+        .title {
+            font-size: 60px;
+            margin-top: 70px;
+        }
+
+        .login {
+            margin-bottom: 103px;
+        }
+    }
+
+    background-image: url("@/assets/end-bg.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
 
 .moss,
 .design,
@@ -357,7 +367,7 @@ onMounted(() => {
     }
 
     .bottom {
-        width: 70%;
+        width: 100%;
         max-width: 1360px;
 
         img {
@@ -366,14 +376,23 @@ onMounted(() => {
     }
 }
 
-.moss,.design,
+.moss,
+.design,
 .cooperation,
 .platform {
     padding: 4% 0;
-    background:#F4F8FB;
+    background: #F4F8FB;
 }
-.design,.platform{
+
+.design,
+.platform {
     background-color: #fff;
+}
+
+.moss {
+    background-image: url("@/assets/softui-bg.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 .cooperation {
@@ -386,9 +405,20 @@ onMounted(() => {
 }
 
 
+@media (min-width:1200px) {
+
+    .moss,
+    .design,
+    .cooperation,
+    .platform {
+        padding: 0;
+        height: calc(100vh - 64px);
+    }
+}
+
 
 @media (max-width:1024px) {
-    .top {
+    .start {
         .content {
             .title {
                 font-size: 56px;
@@ -399,6 +429,11 @@ onMounted(() => {
                 font-size: 18px;
             }
 
+            .login {
+                font-size: 18px;
+                height: 50px;
+                width: 200px;
+            }
 
         }
     }
@@ -437,10 +472,26 @@ onMounted(() => {
             }
         }
     }
+
+    .end {
+        .content {
+            .title {
+                font-size: 40px !important;
+            }
+
+            .login {
+                margin-bottom: 60px !important;
+                font-size: 18px;
+                height: 50px;
+                width: 200px;
+            }
+        }
+
+    }
 }
 
 @media (max-width:800px) {
-    .top {
+    .start {
         .content {
             .title {
                 font-size: 40px;
@@ -499,17 +550,33 @@ onMounted(() => {
         }
 
         .bottom {
-            width: 100%;
+            width: 123%;
         }
+    }
+
+    .end {
+        .content {
+            .title {
+                font-size: 30px !important;
+            }
+
+            .login {
+                margin-bottom: 40px !important;
+                font-size: 16px;
+                height: 50px;
+                width: 200px;
+            }
+        }
+
     }
 }
 
 
 @media (max-width:480px) {
-    .top {
+    .start {
         .content {
             .title {
-                font-size: 30px;
+                font-size: 24px;
                 margin-top: 16px;
             }
 
@@ -537,7 +604,7 @@ onMounted(() => {
             padding: 0;
 
             .title {
-                font-size: 30px;
+                font-size: 20px;
                 margin-top: 20px;
             }
 
@@ -555,18 +622,33 @@ onMounted(() => {
     .platform {
         .top {
             .title {
-                font-size: 30px;
+                font-size: 20px;
             }
 
             .description {
-                margin: 24px 0 12px 0;
+                margin: 16px 0 8px 0;
                 font-size: 14px;
             }
         }
 
         .bottom {
-            width: 100%;
+            width: 123%;
         }
     }
-}
-</style>
+
+    .end {
+        .content {
+            .title {
+                font-size: 20px !important;
+            }
+
+            .login {
+                margin-bottom: 40px !important;
+                font-size: 16px;
+                height: 40px;
+                width: 120px;
+            }
+        }
+
+    }
+}</style>
