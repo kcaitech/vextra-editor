@@ -590,12 +590,12 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
-        const transform2 = getShapeTransform2(shape)
+        const transform2 = getShapeTransform2(shape.transform)
         transform2.setTranslate({vector: new ColVector3D([translate.x, translate.y, 0])})
         transform2.setRotateZ(rotate.z)
         transform2.setFlipH(this.transform.isFlipH)
         transform2.setFlipV(this.transform.isFlipV)
-        updateShapeTransformBy2(shape, transform2)
+        updateShapeTransformBy2(shape.transform, transform2)
     }
 
     updateShapeStyle() { // 设置shape的样式
