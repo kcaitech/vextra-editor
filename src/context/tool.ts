@@ -60,7 +60,7 @@ export class Tool extends WatchableObject {
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
-    static TITILE_VISIBLE = 5;
+    static TITLE_VISIBLE = 5;
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
@@ -139,7 +139,7 @@ export class Tool extends WatchableObject {
 
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
-        this.notify(Tool.TITILE_VISIBLE);
+        this.notify(Tool.TITLE_VISIBLE);
     }
 
     get isCutoutVisible() {
@@ -260,5 +260,15 @@ export class Tool extends WatchableObject {
 
     get hoveredLine() {
         return this.m_hover_line;
+    }
+
+    private m_allow_update_refer_line: boolean = true;
+
+    get isAllowUpdateReferLine() {
+        return this.m_allow_update_refer_line;
+    }
+
+    modifyReferLineUpdaterStatus(val: boolean) {
+        this.m_allow_update_refer_line = val;
     }
 }

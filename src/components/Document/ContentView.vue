@@ -400,7 +400,7 @@ function onMouseMove_CV(e: MouseEvent) {
                 select(e);
             }
         } else if (e.buttons === 0) {
-            if (action === Action.AutoV || action === Action.AutoK) {
+            if (action === Action.AutoV) {
                 search(e); // 图形检索(hover)
             }
         }

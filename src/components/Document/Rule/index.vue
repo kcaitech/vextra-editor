@@ -8,7 +8,8 @@ import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { XY } from "@/context/selection";
 import { XYsBounding } from "@/utils/common";
-import { ReferLineHandler } from "@/components/Document/Rule/refer";
+import { ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
+import { ReferUnderContainerHandler } from "@/components/Document/Rule/pageWatcher";
 
 const props = defineProps<{
     context: Context;
@@ -139,7 +140,7 @@ function generateBlocksForRule() {
                 );
             }
 
-            const {left, top, right, bottom} = XYsBounding(points);
+            const { left, top, right, bottom } = XYsBounding(points);
 
 
             // 计算客户端视图偏移值
@@ -304,7 +305,7 @@ function render(sim = false) {
         }
 
         const inverse = new Matrix(matrix.inverse);
-        const {width, height} = props.context.workspace.root;
+        const { width, height } = props.context.workspace.root;
 
         const hor = scalesHor.value;
         const ver = scalesVer.value;
@@ -328,14 +329,14 @@ function render(sim = false) {
         for (let data = startX; data < endX; data += scale) {
             const offset = matrix.computeCoord2(data, 0).x - 24.95;
 
-            let scale: Scale = {data, opacity: getOpacity(offset), offset};
+            let scale: Scale = { data, opacity: getOpacity(offset), offset };
             hor.push(scale);
         }
 
         for (let data = startY; data < endY; data += scale) {
             const offset = matrix.computeCoord2(0, data).y - 24.95;
 
-            let scale: Scale = {data, opacity: getOpacity(offset), offset};
+            let scale: Scale = { data, opacity: getOpacity(offset), offset };
             ver.push(scale);
         }
     }
@@ -360,11 +361,12 @@ function renderRefLine() {
 
     const page = props.page;
     const ctx = props.context;
-    const horLines = page.horReferLines || [];
+
+    const horLines = page.horReferLines || []; // 页面内的参考线数据
     const verLines = page.verReferLines || [];
+
     const mapX = new Map<string, number[]>();
     const mapY = new Map<string, number[]>();
-
     const pageX: number[] = [];
     const pageY: number[] = [];
 
@@ -398,7 +400,49 @@ function renderRefLine() {
     const root = ctx.workspace.root;
     mapX.forEach((offsets, key) => {
         const target = page.getShape(key);
-        if (!target || !target.isNoTransform() || target.parent?.id === page.id) {
+        if (!target || !target.isNoTransform() || target.parent?.id !== page.id) {
+            return;
+        }
+        const m = target.matrix2Root();
+        m.multiAtLeft(props.context.workspace.matrix);
+
+        for (let i = 0; i < offsets.length; i++) {
+            const offset = offsets[i];
+            const p1 = m.computeCoord2(0, offset);
+            const p2 = m.computeCoord2(target.frame.width, offset);
+
+            const dashPath = [
+                `M0 ${p1.y} L${p1.x} ${p1.y}`,
+                `M${p2.x} ${p2.y} L${root.width} ${p2.y}`
+            ];
+            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
+            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+        }
+
+        const yOffsets = mapY.get(key);
+        if (!yOffsets) {
+            return;
+        }
+
+        for (let i = 0; i < yOffsets.length; i++) {
+            const offset = yOffsets[i];
+            const p1 = m.computeCoord2(offset, 0);
+            const p2 = m.computeCoord2(offset, target.frame.height);
+
+            const dashPath = [
+                `M${p1.x} 0 L${p1.x} ${p1.y}`,
+                `M${p2.x} ${p2.y} L${p2.x} ${root.height}`
+            ];
+            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
+
+            linesHor.value.push({ dashPath, path, theme: '#ff2200' });
+        }
+        mapY.delete(key);
+    })
+
+    mapY.forEach((offsets, key) => {
+        const target = page.getShape(key);
+        if (!target || !target.isNoTransform() || target.parent?.id !== page.id) {
             return;
         }
         const m = target.matrix2Root();
@@ -415,50 +459,7 @@ function renderRefLine() {
             ];
             const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
 
-            linesHor.value.push({dashPath, path, theme: '#ff2200'});
-        }
-
-        const yOffsets = mapY.get(key);
-        if (!yOffsets) {
-            return;
-        }
-
-        for (let i = 0; i < yOffsets.length; i++) {
-            const offset = yOffsets[i];
-            const p1 = m.computeCoord2(0, offset);
-            const p2 = m.computeCoord2(target.frame.width, offset);
-
-            const dashPath = [
-                `M0 ${p1.y} L${p1.x} ${p1.y}`,
-                `M${p2.x} ${p2.y} L${root.width} ${p2.y}`
-            ];
-            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
-
-            linesHor.value.push({dashPath, path, theme: '#ff2200'});
-        }
-        mapY.delete(key);
-    })
-
-    mapY.forEach((offsets, key) => {
-        const target = page.getShape(key);
-        if (!target || !target.isNoTransform() || target.parent?.id === page.id) {
-            return;
-        }
-        const m = target.matrix2Root();
-        m.multiAtLeft(props.context.workspace.matrix);
-
-        for (let i = 0; i < offsets.length; i++) {
-            const offset = offsets[i];
-            const p1 = m.computeCoord2(0, offset);
-            const p2 = m.computeCoord2(target.frame.width, offset);
-
-            const dashPath = [
-                `M0 ${p1.y} L${p1.x} ${p1.y}`,
-                `M${p2.x} ${p2.y} L${root.width} ${p2.y}`
-            ];
-            const path = [`M${p1.x} ${p1.y} L${p2.x} ${p2.y}`];
-
-            linesVer.value.push({dashPath, path, theme: '#ff2200'});
+            linesVer.value.push({ dashPath, path, theme: '#ff2200' });
         }
     })
 
@@ -467,12 +468,12 @@ function renderRefLine() {
         console.log()
         const y = matrix.computeCoord2(0, pageX[i]).y;
         const path = [`M0 ${y} L${root.width} ${y}`];
-        linesHor.value.push({dashPath: [], path, theme: '#ff2200'});
+        linesHor.value.push({ dashPath: [], path, theme: '#ff2200' });
     }
     for (let i = 0; i < pageY.length; i++) {
         const x = matrix.computeCoord2(pageY[i], 0).x;
         const path = [`M${x} 0 L${x} ${root.height}`];
-        linesVer.value.push({dashPath: [], path, theme: '#ff2200'});
+        linesVer.value.push({ dashPath: [], path, theme: '#ff2200' });
     }
 
     referLineStatusChange();
@@ -594,6 +595,12 @@ function moveHor(e: MouseEvent) {
 }
 
 function downVer(e: MouseEvent) {
+    if (e.button !== 0) {
+        return;
+    }
+    e.stopPropagation();
+    props.context.tool.selectLine(undefined);
+    referLineHandler = new ReferLineHandler(props.context, e, "ver");
     document.addEventListener('mousemove', moveVer);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -602,7 +609,15 @@ function downVer(e: MouseEvent) {
 }
 
 function moveVer(e: MouseEvent) {
-
+    if (isDrag) {
+        referLineHandler?.execute(e);
+    } else {
+        const x = props.context.workspace.getContentXY(e).x;
+        if (x >= 20) {
+            isDrag = true;
+            referLineHandler?.createApiCaller();
+        }
+    }
 }
 
 function clear() {
@@ -622,7 +637,17 @@ function blur() {
     clear();
 }
 
-function pageWatcher(...args: any) {
+const lineUnits = ref<ReferUnit[]>([]);
+
+/**
+ * @description 容器内参考线操作机
+ */
+const referUnderContainerHandler = new ReferUnderContainerHandler(lineUnits.value as ReferUnit[], props.page);
+
+const pageWatcher = (...args: any) => {
+    if (args.length === 1 && args[0] === 'childs') {
+        referUnderContainerHandler.updateUnderRootContainerMap();
+    }
     if (args.includes('horReferLines') || args.includes('verReferLines')) {
         renderRefLine();
     }
@@ -688,6 +713,7 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
+    referUnderContainerHandler.updateUnderRootContainerMap();
 })
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
@@ -695,6 +721,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.user.unwatch(userWatcher);
     props.page.unwatch(pageWatcher);
+    referUnderContainerHandler.clearContainerWatcher();
 })
 </script>
 <template>
@@ -702,6 +729,9 @@ onUnmounted(() => {
         <svg width="100" height="100" viewBox="0 0 100 100">
             <g v-for="(lh, i) in linesHor" :key="i">
                 <path v-for="(lhs, _i) in lh.path" :d="lhs" :key="_i" :stroke="lh.theme"/>
+            </g>
+            <g v-for="(lv, i) in linesVer" :key="i">
+                <path v-for="(lvs, _i) in lv.path" :d="lvs" :key="_i" :stroke="lv.theme"/>
             </g>
             <g v-if="hovered">
                 <path v-for="(lhd, _i) in hovered.dashPath" :d="lhd" :key="_i" stroke="red" stroke-width="1.2"
@@ -711,13 +741,13 @@ onUnmounted(() => {
                       style="pointer-events: auto"/>
             </g>
             <g v-if="selected">
-                <path v-for="(lhd, _i) in selected.dashPath" :d="lhd" :key="_i" stroke="#3387f5" stroke-width="1.5"
+                <path v-for="(lhd, _i) in selected.dashPath" :d="lhd" :key="_i" stroke="#ff2200" stroke-width="1"
                       stroke-dasharray="3 3"/>
-                <path :d="selected.path[0]" stroke="#3387f5" stroke-width="1.2"/>
+                <path :d="selected.path[0]" stroke="#ff2200" stroke-width="1"/>
                 <path :d="selected.path[0]" stroke="transparent" stroke-width="14" style="pointer-events: auto"/>
             </g>
         </svg>
-        <div class="contact-block"></div>
+        <div class="contact-block"/>
         <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
             <div v-for="(s, i) in scalesHor"
                  :key="i"
@@ -776,7 +806,7 @@ onUnmounted(() => {
     > svg {
         pointer-events: none;
         position: absolute;
-        z-index: 1;
+        z-index: 10;
         overflow: visible;
     }
 
@@ -802,6 +832,7 @@ onUnmounted(() => {
         overflow-x: clip;
         pointer-events: auto;
         cursor: row-resize;
+        z-index: 9;
 
         > .scale {
             pointer-events: none;
@@ -824,7 +855,7 @@ onUnmounted(() => {
             }
         }
 
-        .block {
+        > .block {
             pointer-events: none;
             height: 100%;
             position: absolute;
@@ -848,16 +879,6 @@ onUnmounted(() => {
                 transform: translateX(108%);
             }
         }
-
-        .lineX {
-            pointer-events: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0.5px;
-            height: 4000px;
-            background-color: #ff4400;
-        }
     }
 
     .d-ver {
@@ -872,6 +893,7 @@ onUnmounted(() => {
         overflow-y: clip;
         pointer-events: auto;
         cursor: col-resize;
+        z-index: 9;
 
         > .scale {
             pointer-events: none;
@@ -927,16 +949,6 @@ onUnmounted(() => {
                 bottom: 0;
                 transform: translateY(108%) rotate(180deg);
             }
-        }
-
-        .lineY {
-            pointer-events: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4000px;
-            height: 0.5px;
-            background-color: #ff4400;
         }
     }
 }
