@@ -78,7 +78,7 @@ export class GroupCreator extends BaseCreator {
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
-        this.transform.preTranslate({vector: new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0])})
+        this.transform.preTranslate(new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0]))
         this.updateShapeAttrByTransform()
         // dev code
         // if (this.localAttributes["id"] === "组_59") {

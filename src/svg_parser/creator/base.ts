@@ -41,7 +41,7 @@ import {
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
 import {Transform, TransformMode} from "@kcdesign/data"
 import {ColVector3D} from "@kcdesign/data"
-import {getShapeTransform2, updateShapeTransformBy2} from "@kcdesign/data"
+import {makeShapeTransform2By1, updateShapeTransformBy2} from "@kcdesign/data"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -541,9 +541,7 @@ export class BaseCreator extends BaseTreeNode {
 
         // 抵消视图层在前后加的两次平移操作
         if (this.transform.hasRotation()) {
-            const res = this.transform.clone().preTranslate({
-                vector: new ColVector3D([w1 / 2, h1 / 2, 0]),
-            }).translate({
+            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate({
                 vector: new ColVector3D([-w1 / 2, -h1 / 2, 0]),
                 mode: TransformMode.Local,
             }).decompose()
@@ -590,8 +588,8 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
-        const transform2 = getShapeTransform2(shape.transform)
-        transform2.setTranslate({vector: new ColVector3D([translate.x, translate.y, 0])})
+        const transform2 = makeShapeTransform2By1(shape.transform)
+        transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
         transform2.setFlipH(this.transform.isFlipH)
         transform2.setFlipV(this.transform.isFlipV)
@@ -699,7 +697,7 @@ export class BaseCreator extends BaseTreeNode {
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
-        if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
+        if (x !== 0 || y !== 0) this.transform.preTranslate(new ColVector3D([x, y, 0]));
 
         // // dev code
         // 抵消视图层在前后加的两次平移操作
