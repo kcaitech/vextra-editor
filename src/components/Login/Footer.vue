@@ -59,6 +59,7 @@ const skipTotarget = (i: string) => {
             <RouterLink to="/serviceagreement">{{ t('system.read_TOS') }}</RouterLink>
             <span class="lines">|</span>
             <RouterLink to="/privacypolicy">{{ t('system.read_Privacy') }}</RouterLink>
+<<<<<<< HEAD
             <div class="zhfooter" v-if="iszh">
                 <span class="lines">|</span>
                 <a class="icp" href="https://beian.miit.gov.cn/" target="_blank">
@@ -71,6 +72,20 @@ const skipTotarget = (i: string) => {
                     <span>粤公网安备44049102496973号</span>
                 </a>
             </div>
+=======
+        </span>
+        <div class="zhfooter" v-if="iszh">
+            <span class="lines">|</span>
+            <a class="icp" href="https://beian.miit.gov.cn/" target="_blank">
+                <span>{{ t('system.license_key') }}</span>
+            </a>
+            <span class="lines">|</span>
+            <a class="gongan" href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=44049102496973"
+                target="_blank">
+                <img :src="gongan" alt="gongan" width="12px" height="12px">
+                <span>粤公网安备44049102496973号</span>
+            </a>
+>>>>>>> c9c6112e88fe758fbbcf2a62a44a2bc7e6f10358
         </div>
     </div>
 </template>

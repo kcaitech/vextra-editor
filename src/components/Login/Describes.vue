@@ -8,7 +8,7 @@ const { t } = useI18n();
 
 <template>
   <div class="logo">
-    <img src="@/assets/logo-img.png" alt="logo">
+    <img src="@/assets/logo-img.png" alt="logo" width="966px" height="614px">
   </div>
 </template>
 
@@ -18,11 +18,6 @@ const { t } = useI18n();
   left: -5%;
   overflow: hidden;
   box-sizing: border-box;
-
-  img {
-    width: 966px;
-    height: 614px;
-  }
 }
 
 @media (max-width:880px) {
