@@ -1,6 +1,6 @@
 标尺与参考线@ZRX
 
-* 建立坐标空间建立与绘制：【ScaleRenderer】
+* 坐标空间的建立与绘制：【ScaleRenderer】
     · 标尺刻度显示；
     · 图层区间方块；
 
