@@ -12,6 +12,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 let IS_PRODUCTION = process.env.BUILD_ENV === 'production'
 
+console.log("BUILD_ENV: ", process.env.BUILD_ENV)
+
 let envSuffix = !IS_PRODUCTION ? process.env.ENV_SUFFIX : "";
 if (envSuffix) {
     if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
