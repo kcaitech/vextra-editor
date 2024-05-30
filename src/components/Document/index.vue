@@ -415,7 +415,6 @@ const getDocumentInfo = async () => {
                 return;
             }
             perm < 3 && showHiddenRight();
-            loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
