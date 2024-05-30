@@ -3,6 +3,9 @@ import { Context } from "@/context";
 import { PageView, GuideAxis } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
+/**
+ * @description 页面下参考线渲染机 V1.0
+ */
 export class RootReferHandler {
     private m_lines: ReferUnit;
     private m_context: Context;
@@ -22,6 +25,7 @@ export class RootReferHandler {
         const matrix = this.m_context.workspace.matrix;
         const root = this.m_context.workspace.root;
         const lines = this.m_lines.lines;
+
         if (index > -1) {
             // todo 暂时没有比较好的局部更新方案
         } else { // 全量更新
@@ -46,7 +50,6 @@ export class RootReferHandler {
                 }
                 lines.push({ axis, offset, start, end, path: genPath(start, end) });
             }
-            // console.log('==PAGE-ROOT-RENDER==', lines.length);
         }
     }
 }
