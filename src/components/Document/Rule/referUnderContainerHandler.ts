@@ -19,14 +19,14 @@ export class ReferUnderContainerHandler {
     }
 
     // 已监听的Container对象
-    underRootContainerMap = new Map<string, ShapeView>();
+    private underRootContainerMap = new Map<string, ShapeView>();
     // 对象监听卸载函数集合
-    watcherUninstallerMap = new Map<string, () => void>();
+    private watcherUninstallerMap = new Map<string, () => void>();
 
     /**
      * @description 更新指定Container的参考线绘制
      */
-    updateContainerLineRender(id: string, args: any) {
+    private updateContainerLineRender(id: string, args: any) {
         if (!(args && args?.includes('layout'))) {
             return;
         }
@@ -48,6 +48,66 @@ export class ReferUnderContainerHandler {
         }
 
         this.updateReferUnit(unit);
+    }
+
+    /**
+     * @description 为指定Container生成参考线
+     */
+    private generateUnit(shape: ShapeView) {
+        const unit: ReferUnit = {shape: shape, id: shape.id, lines: []};
+
+        this.m_units.push(unit);
+
+        this.updateReferUnit(unit);
+    }
+
+    private updateReferUnit(unit: ReferUnit) {
+        const shape = unit.shape;
+
+        // 清空当前容器下的线
+        unit.lines.length = 0;
+
+        const ctx = this.m_context;
+
+        // 如果当前容器不在客户端可视范围内或者当前容器存在角度则不进行绘制
+        if (isShapeOut(ctx, shape) || (shape.rotation || 0) % 180) {
+            return;
+        }
+
+        const matrix = shape.matrix2Root();
+        matrix.multiAtLeft(ctx.workspace.matrix);
+
+        const frame = shape.frame;
+        const root = ctx.workspace.root;
+
+        const guides = (shape as ArtboradView).guides || [];
+        for (let i = 0; i < guides.length; i++) {
+            const guide = guides[i];
+
+            let start: XY;
+            let end: XY;
+
+            const axis = guide.axis;
+            const offset = guide.offset;
+
+            if (axis === GuideAxis.X) {
+                if (offset < 0 || offset > frame.width) continue;
+
+                start = matrix.computeCoord2(offset, 0);
+                end = matrix.computeCoord2(offset, frame.height);
+
+                if (start.x <= 20 || start.x >= root.width) continue; // 超出可视范围不绘制
+            } else {
+                if (offset < 0 || offset > frame.height) continue;
+
+                start = matrix.computeCoord2(0, offset);
+                end = matrix.computeCoord2(frame.width, offset);
+
+                if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
+            }
+
+            unit.lines.push({axis, offset, start, end, path: genPath(start, end)});
+        }
     }
 
     /**
@@ -92,14 +152,17 @@ export class ReferUnderContainerHandler {
             }
         })
 
-        const temp = [...this.m_units];
-        this.m_units.length = 0;
+        const units = this.m_units;
+        const temp = [...units];
         const added = new Set<string>();
+
+        units.length = 0;
+
         // 在这个过程中，把更新监听对象前有的Unit直接push回去
         for (let i = 0; i < temp.length; i++) {
             const c = temp[i];
             if (URCM.has(c.id)) {
-                this.m_units.push(c);
+                units.push(c);
                 added.add(c.id);
             }
         }
@@ -111,7 +174,8 @@ export class ReferUnderContainerHandler {
             }
         })
 
-        console.log('RENDER TARGET CHANGE:', URCM.size, WUM.size, this.m_units.length, this.m_units); // 更新了渲染容器对象
+        // 更新了渲染容器对象
+        console.log('RENDER TARGET CHANGE:', URCM.size, WUM.size, this.m_units.length, this.m_units);
     }
 
     /**
@@ -122,51 +186,5 @@ export class ReferUnderContainerHandler {
             stopFunc();
         })
         this.watcherUninstallerMap.clear();
-    }
-
-    /**
-     * @description 为指定Container生成参考线
-     */
-    generateUnit(shape: ShapeView) {
-        const unit: ReferUnit = { shape: shape, id: shape.id, lines: [] };
-        this.m_units.push(unit);
-        this.updateReferUnit(unit);
-    }
-
-    updateReferUnit(unit: ReferUnit) {
-        const shape = unit.shape;
-        unit.lines.length = 0;
-        if (isShapeOut(this.m_context, shape) || !shape.isNoTransform()) { // 可视区域外不需要绘制
-            return;
-        }
-
-        const matrix = shape.matrix2Root();
-        matrix.multiAtLeft(this.m_context.workspace.matrix);
-
-        const frame = shape.frame;
-        const root = this.m_context.workspace.root;
-        const guides = (shape as ArtboradView).guides || [];
-        for (let i = 0; i < guides.length; i++) {
-            const guide = guides[i];
-            let start: XY;
-            let end: XY;
-            const axis = guide.axis;
-            if (axis === GuideAxis.X) {
-                if (guide.offset < 0) continue;
-
-                start = matrix.computeCoord2(guide.offset, 0);
-                end = matrix.computeCoord2(guide.offset, frame.height);
-
-                if (start.x <= 20 || start.x >= root.width) continue; // 超出可视范围不绘制
-            } else {
-                if (guide.offset < 0) continue;
-
-                start = matrix.computeCoord2(0, guide.offset);
-                end = matrix.computeCoord2(frame.width, guide.offset);
-
-                if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
-            }
-            unit.lines.push({ axis, offset: guide.offset, start, end, path: genPath(start, end) });
-        }
     }
 }
