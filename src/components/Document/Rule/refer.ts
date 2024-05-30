@@ -1,15 +1,23 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
-import { Matrix, ReferHandleApiCaller, ShapeType, ShapeView } from "@kcdesign/data";
+import {
+    adapt2Shape,
+    ArtboradView,
+    GuideAxis,
+    Matrix,
+    ReferHandleApiCaller,
+    ShapeView
+} from "@kcdesign/data";
 import { Tool } from "@/context/tool";
 import { debounce } from "lodash";
 import { XY } from "@/context/selection";
 
 export interface Line {
-    axis: "X" | "Y"
+    axis: GuideAxis;
     offset: number;
     start: XY;
     end: XY;
+    path: string;
 }
 
 export interface ReferUnit {
@@ -18,15 +26,28 @@ export interface ReferUnit {
     lines: Line[]
 }
 
-export class ReferLineHandler extends TransformHandler {
-    readonly m_direction: "hor" | "ver";
-    readonly tool: Tool;
-    private m_index: number = -1;
+export function genPath(start: XY, end: XY) {
+    return `M${start.x} ${start.y} L${end.x} ${end.y}`;
+}
 
-    constructor(context: Context, event: MouseEvent, direction: "hor" | "ver") {
+export class ReferLineHandler extends TransformHandler {
+    readonly m_axis: GuideAxis;
+    readonly tool: Tool;
+    private m_current_env: ShapeView;
+    private m_index: number;
+
+    constructor(context: Context, event: MouseEvent, axis: GuideAxis, env?: ShapeView, index?: number) {
         super(context, event);
-        this.m_direction = direction;
+        this.m_axis = axis;
         this.tool = context.tool;
+
+        if (env) {
+            this.m_current_env = env;
+        } else {
+            this.m_current_env = this.page;
+        }
+
+        this.m_index = index ?? -1;
     }
 
     createApiCaller() {
@@ -39,91 +60,52 @@ export class ReferLineHandler extends TransformHandler {
         super.fulfil();
     }
 
-    execute(event: MouseEvent) {
-        const isSelected = this.context.tool.selectedLine;
-        if (!isSelected) {
-            let offset;
-
-            if (this.m_direction === 'hor') {
-                offset = this.workspace.getRootXY(event).y;
-            } else {
-                offset = this.workspace.getRootXY(event).x;
-            }
-            const cid = (this.asyncApiCaller as ReferHandleApiCaller).create(this.m_direction, offset);
-            if (cid !== undefined) {
-                this.m_index = cid;
-                this.context.tool.selectLine([this.m_direction, cid]);
-            }
-        } else if (this.m_index > -1) {
-            let offsetClient;
-            let offset;
-            const ref = (this.asyncApiCaller as ReferHandleApiCaller).referId;
-            const target = this.page.getShape(ref);
-            if (this.m_direction === 'hor') {
-                offset = this.workspace.getRootXY(event).y;
-                offsetClient = this.workspace.getContentXY(event).y
-
-                if (target) {
-                    const m = new Matrix(target.matrix2Root().inverse);
-                    offset = m.computeCoord2(0, offset).y;
-                }
-            } else {
-                offsetClient = this.workspace.getContentXY(event).x
-                offset = this.workspace.getRootXY(event).x;
-
-                if (target) {
-                    const m = new Matrix(target.matrix2Root().inverse);
-                    offset = m.computeCoord2(offset, 0).x;
-                }
-            }
-
-            this.migrate(event);
-
-            (this.asyncApiCaller as ReferHandleApiCaller).modifyOffset(this.m_direction, this.m_index, offset, offsetClient < 20);
+    /**
+     * @description 默认都在Page下创建
+     * @param event
+     */
+    create(event: MouseEvent) {
+        let offset;
+        if (this.m_axis === GuideAxis.X) {
+            offset = this.workspace.getRootXY(event).x;
+        } else {
+            offset = this.workspace.getRootXY(event).y;
         }
+        this.m_index = (this.asyncApiCaller as ReferHandleApiCaller).create(this.m_axis, offset);
     }
 
-    private __migrate(event: MouseEvent) {
-        const ctx = this.context;
-
-        const pe = this.workspace.getRootXY(event)
-        let target_parent = ctx.selection.getEnvForMigrate(pe);
-        let ref = target_parent.id;
-
-        if (target_parent.id === this.page.id) {
-            ref = '';
-        }
-
-        const rh = this.asyncApiCaller as ReferHandleApiCaller;
-
-        if (ref === rh.referId || (ref && target_parent.parent?.type !== ShapeType.Page) || !target_parent.isNoTransform()) {
+    modifyOffset(event: MouseEvent) {
+        const index = this.m_index;
+        const currentEnv = this.m_current_env as ArtboradView;
+        const gui = currentEnv?.guides?.[index];
+        if (!gui) {
+            // 不存在这条线
             return;
         }
+        const axis = this.m_axis;
+        const rootXY = this.workspace.getRootXY(event);
 
         let offset;
 
-        if (this.m_direction === 'hor') {
-            offset = this.workspace.getRootXY(event).y;
-
-            if (ref) {
-                const m = new Matrix(target_parent.matrix2Root().inverse);
-                offset = m.computeCoord2(0, offset).y;
+        if (currentEnv.id === this.page.id) {
+            if (axis === GuideAxis.X) {
+                offset = rootXY.x;
+            } else {
+                offset = rootXY.y;
             }
         } else {
-            offset = this.workspace.getRootXY(event).x;
-
-            if (ref) {
-                const m = new Matrix(target_parent.matrix2Root().inverse);
-                offset = m.computeCoord2(offset, 0).x;
+            const m = new Matrix(currentEnv.matrix2Root().inverse);
+            if (axis === GuideAxis.X) {
+                offset = m.computeCoord3(rootXY).x;
+            } else {
+                offset = m.computeCoord3(rootXY).y;
             }
         }
+        (this.asyncApiCaller as ReferHandleApiCaller).modifyOffset(adapt2Shape(currentEnv), index, offset, false);
+    }
 
-        rh.modifyOffset(this.m_direction, this.m_index, offset, false);
-        rh.modifyReferId(this.m_direction, this.m_index, ref);
-
-        ctx.nextTick(ctx.selection.selectedPage!, () => {
-            ctx.tool.notify(Tool.RULE_RENDER);
-        })
+    private __migrate(event: MouseEvent) {
+        // todo
     }
 
     migrateOnce = debounce(this.__migrate, 10);

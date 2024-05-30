@@ -1,6 +1,6 @@
-import { ReferUnit } from "@/components/Document/Rule/refer";
+import { genPath, ReferUnit } from "@/components/Document/Rule/refer";
 import { Context } from "@/context";
-import { PageView, GuideAxis, BasicArray, Guide } from "@kcdesign/data";
+import { PageView, GuideAxis } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
 export class RootReferHandler {
@@ -23,10 +23,11 @@ export class RootReferHandler {
         const root = this.m_context.workspace.root;
         const lines = this.m_lines.lines;
         if (index > -1) {
-            // todo 暂时没有局部更新的方案
+            // todo 暂时没有比较好的局部更新方案
         } else { // 全量更新
             lines.length = 0;
             const guides = this.m_page.guides || [];
+            console.log('=FOR RENDER=', guides)
             for (let i = 0; i < guides.length; i++) {
                 const guide = guides[i];
                 let offset;
@@ -36,15 +37,15 @@ export class RootReferHandler {
                 if (axis === GuideAxis.X) {
                     offset = matrix.computeCoord2(guide.offset, 0).x;
                     if (offset <= 20 || offset >= root.width) continue; // 超出可视范围不绘制
-                    start = {x: offset, y: 0};
-                    end = {x: offset, y: root.height};
+                    start = { x: offset, y: 0 };
+                    end = { x: offset, y: root.height };
                 } else {
                     offset = matrix.computeCoord2(0, guide.offset).y;
                     if (offset <= 20 || offset >= root.height) continue; // 超出可视范围不绘制
-                    start = {x: 0, y: offset};
-                    end = {x: root.width, y: offset};
+                    start = { x: 0, y: offset };
+                    end = { x: root.width, y: offset };
                 }
-                lines.push({axis, offset, start, end});
+                lines.push({ axis, offset, start, end, path: genPath(start, end) });
             }
         }
     }

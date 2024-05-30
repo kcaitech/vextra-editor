@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { PageView } from '@kcdesign/data';
+import { GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -31,12 +31,12 @@ const scaleRenderer = new ScaleRenderer(props.context, props.page, scalesHor.val
  * @description 绘制容器内参考线
  */
 const lineUnits = ref<ReferUnit[]>([]);
-const referUnderContainerHandler = new ReferUnderContainerHandler(lineUnits.value as ReferUnit[], props.page);
+const referUnderContainerHandler = new ReferUnderContainerHandler(props.context, lineUnits.value as ReferUnit[], props.page);
 
 /**
  * @description 绘制root下参考线
  */
-const rootLines = ref<ReferUnit>({id: props.page.id, lines: [], shape: props.page});
+const rootLines = ref<ReferUnit>({ id: props.page.id, lines: [], shape: props.page });
 const rootReferHandler = new RootReferHandler(props.context, props.page, rootLines.value as ReferUnit);
 
 const pageWatcher = (...args: any) => {
@@ -100,8 +100,7 @@ function downHor(e: MouseEvent) {
         return;
     }
     e.stopPropagation();
-    props.context.tool.selectLine(undefined);
-    referLineHandler = new ReferLineHandler(props.context, e, "hor");
+    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.Y);
     document.addEventListener('mousemove', moveHor);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -111,12 +110,13 @@ function downHor(e: MouseEvent) {
 
 function moveHor(e: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.execute(e);
+        referLineHandler?.modifyOffset(e);
     } else {
         const y = props.context.workspace.getContentXY(e).y;
         if (y >= 20) {
             isDrag = true;
             referLineHandler?.createApiCaller();
+            referLineHandler?.create(e);
         }
     }
 }
@@ -127,7 +127,7 @@ function downVer(e: MouseEvent) {
     }
     e.stopPropagation();
     props.context.tool.selectLine(undefined);
-    referLineHandler = new ReferLineHandler(props.context, e, "ver");
+    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
     document.addEventListener('mousemove', moveVer);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -137,12 +137,13 @@ function downVer(e: MouseEvent) {
 
 function moveVer(e: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.execute(e);
+        referLineHandler?.modifyOffset(e);
     } else {
         const x = props.context.workspace.getContentXY(e).x;
         if (x >= 20) {
             isDrag = true;
             referLineHandler?.createApiCaller();
+            referLineHandler?.create(e);
         }
     }
 }
@@ -184,7 +185,10 @@ onUnmounted(() => {
 <template>
     <div v-if="ruleVisible" class="rule-container">
         <svg width="100" height="100" viewBox="0 0 100 100">
-
+            <g v-for="(unit, key) in lineUnits" :key="key">
+                <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="red"/>
+            </g>
+            <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="red"/>
         </svg>
         <div class="contact-block"/>
         <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
