@@ -10,15 +10,15 @@ const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin');
 
-let envSuffix = process.env.ENV_SUFFIX;
+let IS_PRODUCTION = process.env.BUILD_ENV === 'production'
+
+let envSuffix = !IS_PRODUCTION ? process.env.ENV_SUFFIX : "";
 if (envSuffix) {
     if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
     if (envSuffix[envSuffix.length - 1] !== '/') envSuffix += '/';
 } else {
     envSuffix = '/';
 }
-
-let IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 var configureWebpack = (config) => {
     if (IS_PRODUCTION) {
