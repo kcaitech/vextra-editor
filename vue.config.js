@@ -1,11 +1,11 @@
-const { defineConfig } = require('@vue/cli-service')
+const {defineConfig} = require('@vue/cli-service')
 const path = require('path')
 const fs = require('fs')
 const crypto = require('crypto')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
-const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
+const {ElementPlusResolver} = require('unplugin-vue-components/resolvers')
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin');
@@ -37,6 +37,8 @@ var configureWebpack = (config) => {
 
     config.entry.app = ['./src/web.main.ts']
     config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
+
+    config.resolve.mainFields = ['module', 'browser', 'main']
 
     const iconspath = path.resolve('src/assets/icons');
     config.module.rules.forEach(element => {
@@ -101,10 +103,10 @@ var configureWebpack = (config) => {
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
-        }.js`
+    }.js`
     config.plugins = [
-        AutoImport({ resolvers: [ElementPlusResolver()] }),
-        Components({ resolvers: [ElementPlusResolver()] }),
+        AutoImport({resolvers: [ElementPlusResolver()]}),
+        Components({resolvers: [ElementPlusResolver()]}),
         new CopyWebpackPlugin({
             patterns: [{
                 from: communicationWorkerSourcePath,
@@ -153,10 +155,10 @@ var exports = defineConfig({
                 __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
             })
             return definitions
-        }),
+        })
         config.plugin('html').tap((args) => {
-         args[0].title=""
-         return args
+            args[0].title = ""
+            return args
         })
     },
     transpileDependencies: true,
