@@ -52,6 +52,7 @@ function workspaceWatcher(t: number) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
         scaleRenderer.render();
         rootReferHandler.render();
+        referUnderContainerHandler.updateByMatrix();
     }
 }
 
@@ -186,9 +187,9 @@ onUnmounted(() => {
     <div v-if="ruleVisible" class="rule-container">
         <svg width="100" height="100" viewBox="0 0 100 100">
             <g v-for="(unit, key) in lineUnits" :key="key">
-                <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="red"/>
+                <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
             </g>
-            <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="red"/>
+            <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
         </svg>
         <div class="contact-block"/>
         <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">

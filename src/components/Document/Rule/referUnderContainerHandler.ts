@@ -1,5 +1,5 @@
 import { genPath, ReferUnit } from "@/components/Document/Rule/refer";
-import { ArtboradView, GuideAxis, PageView, ShapeView } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, isNoTransform, PageView, ShapeView } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
@@ -48,35 +48,83 @@ export class ReferUnderContainerHandler {
         }
 
         const { shape, lines } = unit;
-        if (isShapeOut(this.m_context, shape)) {
+        lines.length = 0;
+
+        if (isShapeOut(this.m_context, shape) || !shape.isNoTransform()) {
             return;
         }
-        lines.length = 0;
 
         const matrix = shape.matrix2Root();
         matrix.multiAtLeft(this.m_context.workspace.matrix);
-        const root = shape.frame;
+
+        const frame = shape.frame;
+        const root = this.m_context.workspace.root;
         const guides = (shape as ArtboradView).guides || [];
         for (let i = 0; i < guides.length; i++) {
             const guide = guides[i];
-            let offset;
             let start: XY;
             let end: XY;
             const axis = guide.axis;
             if (axis === GuideAxis.X) {
-                offset = matrix.computeCoord2(guide.offset, 0).x;
-                if (offset <= 20 || offset >= root.width) continue; // 超出可视范围不绘制
-                start = { x: offset, y: 0 };
-                end = { x: offset, y: root.height };
+                if (guide.offset < 0) continue;
+
+                start = matrix.computeCoord2(guide.offset, 0);
+                end = matrix.computeCoord2(guide.offset, frame.height);
+
+                if (start.x <= 20 || start.x >= root.width) continue; // 超出可视范围不绘制
             } else {
-                offset = matrix.computeCoord2(0, guide.offset).y;
-                if (offset <= 20 || offset >= root.height) continue; // 超出可视范围不绘制
-                start = { x: 0, y: offset };
-                end = { x: root.width, y: offset };
+                if (guide.offset < 0) continue;
+
+                start = matrix.computeCoord2(0, guide.offset);
+                end = matrix.computeCoord2(frame.width, guide.offset);
+
+                if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
             }
-            lines.push({ axis, offset, start, end, path: genPath(start, end) });
+            lines.push({ axis, offset: guide.offset, start, end, path: genPath(start, end) });
         }
-        console.log('=REPAINT=', shape.name);
+        // console.log('=REPAINT=', shape.name);
+    }
+
+    updateByMatrix() {
+        for (let i = 0; i < this.m_units.length; i++) {
+            const unit = this.m_units[i];
+            const { shape, lines } = unit;
+
+            lines.length = 0;
+
+            if (isShapeOut(this.m_context, shape) || !shape.isNoTransform()) {
+                continue;
+            }
+
+            const matrix = shape.matrix2Root();
+            matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+            const frame = shape.frame;
+            const root = this.m_context.workspace.root;
+            const guides = (shape as ArtboradView).guides || [];
+            for (let i = 0; i < guides.length; i++) {
+                const guide = guides[i];
+                let start: XY;
+                let end: XY;
+                const axis = guide.axis;
+                if (axis === GuideAxis.X) {
+                    if (guide.offset < 0) continue;
+
+                    start = matrix.computeCoord2(guide.offset, 0);
+                    end = matrix.computeCoord2(guide.offset, frame.height);
+
+                    if (start.x <= 20 || start.x >= root.width) continue; // 超出可视范围不绘制
+                } else {
+                    if (guide.offset < 0) continue;
+
+                    start = matrix.computeCoord2(0, guide.offset);
+                    end = matrix.computeCoord2(frame.width, guide.offset);
+
+                    if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
+                }
+                lines.push({ axis, offset: guide.offset, start, end, path: genPath(start, end) });
+            }
+        }
     }
 
     /**

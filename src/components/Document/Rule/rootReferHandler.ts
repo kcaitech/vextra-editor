@@ -27,7 +27,6 @@ export class RootReferHandler {
         } else { // 全量更新
             lines.length = 0;
             const guides = this.m_page.guides || [];
-            console.log('=FOR RENDER=', guides)
             for (let i = 0; i < guides.length; i++) {
                 const guide = guides[i];
                 let offset;
@@ -47,6 +46,7 @@ export class RootReferHandler {
                 }
                 lines.push({ axis, offset, start, end, path: genPath(start, end) });
             }
+            // console.log('==PAGE-ROOT-RENDER==', lines.length);
         }
     }
 }
