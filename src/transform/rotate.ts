@@ -1,13 +1,16 @@
 import {
     adapt2Shape,
     ColVector3D,
-    Matrix, Matrix2,
+    Matrix,
+    Matrix2,
     RotateUnit,
     Rotator,
     ShapeType,
     ShapeView,
     Transform,
     TransformMode,
+    Point3D,
+    Point2D2,
 } from "@kcdesign/data";
 import {FrameLike, TransformHandler} from "./handler";
 import {XY} from "@/context/selection";
@@ -44,6 +47,7 @@ export class RotateHandler extends TransformHandler {
     baseData: BaseData4Rotate = new Map();
 
     beginTransform2List: Transform[] = [];
+    beginCenterList: Point3D[] = [];
     beginTransform2ForSelection: Transform = new Transform();
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
@@ -225,11 +229,30 @@ export class RotateHandler extends TransformHandler {
             ])
         });
 
+        // 开始旋转时所有shape的中心点列表
+        this.beginCenterList = this.shapes.map(shape => shape.transform2.transform(new Point3D([
+            shape.size.width / 2,
+            shape.size.height / 2,
+            0,
+        ])).col0);
+        console.log(this.beginCenterList[0].toString())
+
         // 开始旋转时所有shape的transform2列表
-        this.beginTransform2List = this.shapes.map(shape => shape.transform2.clone().translate({
-            vector: new ColVector3D([-this.originSelectionBox.x, -this.originSelectionBox.y, 0]),
-            mode: TransformMode.Local,
-        }));
+        // this.beginTransform2List = this.shapes.map(shape => shape.transform2.clone().translate({
+        //     vector: new ColVector3D([-this.originSelectionBox.x, -this.originSelectionBox.y, 0]),
+        //     mode: TransformMode.Local,
+        // }));
+        this.beginTransform2List = this.shapes.map((shape, i) => {
+            const transform2 = shape.transform2.clone();
+            // 0度时的左上角坐标
+            const ltPoint = this.beginCenterList[i].clone().subtract(new Point3D([
+                shape.size.width / 2,
+                shape.size.height / 2,
+                0,
+            ]));
+            // 设为0度，并且左上角设为ltPoint
+            return transform2.clearRotation().setTranslate(ltPoint);
+        });
     }
 
     private __execute() {
@@ -292,18 +315,25 @@ export class RotateHandler extends TransformHandler {
         const currentRotate = (adapt2Shape(shape).rotation || 0);
         const targetRotate = currentRotate + deg;
 
-        const beginTransform2 = this.beginTransform2List[0];
-        beginTransform2.setRotateZ(targetRotate * Math.PI / 180);
-        const translate = beginTransform2.clone().preTranslate(
-            new ColVector3D([-base.width / 2, -base.height / 2, 0])
-        ).translate({
-            vector: new ColVector3D([
-                base.width / 2 + this.originSelectionBox.x,
-                base.height / 2 + this.originSelectionBox.y,
-                0,
+        const beginTransform2 = this.beginTransform2List[0].clone();
+        const translate = beginTransform2.rotateZAt({
+            point: new Point2D2([
+                this.beginCenterList[0].x,
+                this.beginCenterList[0].y,
             ]),
+            angle: targetRotate * Math.PI / 180,
             mode: TransformMode.Local,
         }).decomposeTranslate();
+        // const translate = beginTransform2.clone().preTranslate(
+        //     new ColVector3D([-base.width / 2, -base.height / 2, 0])
+        // ).translate({
+        //     vector: new ColVector3D([
+        //         base.width / 2 + this.originSelectionBox.x,
+        //         base.height / 2 + this.originSelectionBox.y,
+        //         0,
+        //     ]),
+        //     mode: TransformMode.Local,
+        // }).decomposeTranslate();
 
         (this.asyncApiCaller as Rotator).execute4multi([{
             shape,
