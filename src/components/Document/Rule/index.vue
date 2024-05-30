@@ -158,7 +158,7 @@ function clear() {
     referLineHandler = undefined;
 }
 
-function upCommon(e: MouseEvent) {
+function upCommon() {
     clear();
 }
 
@@ -172,6 +172,7 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
+
     referUnderContainerHandler.updateUnderRootContainerMap();
 })
 onUnmounted(() => {
@@ -180,6 +181,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.user.unwatch(userWatcher);
     props.page.unwatch(pageWatcher);
+
     referUnderContainerHandler.clearContainerWatcher();
 })
 </script>
