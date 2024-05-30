@@ -1,14 +1,19 @@
 import { ReferUnit } from "@/components/Document/Rule/refer";
-import { PageView, ShapeView } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, PageView, ShapeView } from "@kcdesign/data";
+import { isShapeOut } from "@/utils/assist";
+import { Context } from "@/context";
+import { XY } from "@/context/selection";
 
 /**
  * @description 容器内参考线渲染机
  */
 export class ReferUnderContainerHandler {
+    private readonly m_context: Context;
     private readonly m_units: ReferUnit[];
     private readonly m_page: PageView;
 
-    constructor(units: ReferUnit[], page: PageView) {
+    constructor(context: Context, units: ReferUnit[], page: PageView) {
+        this.m_context = context;
         this.m_units = units;
         this.m_page = page;
     }
@@ -43,7 +48,35 @@ export class ReferUnderContainerHandler {
         }
 
         // todo 更新指定容器下的参考线
-        // const {shape, lines} = unit;
+        const {shape, lines} = unit;
+        if (isShapeOut(this.m_context, shape)) {
+            return;
+        }
+        lines.length = 0;
+
+        const matrix = shape.matrix2Root();
+        matrix.multiAtLeft(this.m_context.workspace.matrix);
+        const root = this.m_context.workspace.root;
+        const guides = (shape as ArtboradView).guides || [];
+        for (let i = 0; i < guides.length; i++) {
+            const guide = guides[i];
+            let offset;
+            let start: XY;
+            let end: XY;
+            const axis = guide.axis;
+            if (axis === GuideAxis.X) {
+                offset = matrix.computeCoord2(guide.offset, 0).x;
+                if (offset <= 20 || offset >= root.width) continue; // 超出可视范围不绘制
+                start = {x: offset, y: 0};
+                end = {x: offset, y: root.height};
+            } else {
+                offset = matrix.computeCoord2(0, guide.offset).y;
+                if (offset <= 20 || offset >= root.height) continue; // 超出可视范围不绘制
+                start = {x: 0, y: offset};
+                end = {x: root.width, y: offset};
+            }
+            lines.push({axis, offset, start, end});
+        }
     }
 
     /**
@@ -86,5 +119,9 @@ export class ReferUnderContainerHandler {
             stopFunc();
         })
         this.watcherUninstallerMap.clear();
+    }
+
+    renderAll() {
+
     }
 }
