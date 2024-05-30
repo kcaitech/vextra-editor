@@ -50,6 +50,7 @@ import {
 import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
+import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
 
 interface Props {
     context: Context
@@ -476,7 +477,7 @@ function mousemove4Dot(e: MouseEvent) {
         } else if (y < saturationY) {
             dotPosition.top = -(DOT_SIZE / 2);
         } else {
-            dotPosition.top =  HUE_HEIGHT - (DOT_SIZE / 2)
+            dotPosition.top = HUE_HEIGHT - (DOT_SIZE / 2)
         }
 
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
@@ -894,7 +895,7 @@ const gradient_line = ref<HTMLDivElement>();
 
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
-    if(sleep) return;
+    if (sleep) return;
     stop_els.value.length = 0;
     if (!props.gradient || props.fillType !== FillType.Gradient) {
         return;
@@ -1271,77 +1272,78 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 饱和度 -->
-            <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
-                <div class="white"></div>
-                <div class="black"></div>
-                <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
-            </div>
-            <!-- 常用色 -->
-            <div class="typical-container">
-                <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
-            </div>
-            <div class="controller">
-                <div class="eyedropper">
-                    <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
-                </div>
-                <div class="sliders-container" ref="sliders">
-                    <!-- 色相 -->
-                    <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
-                        <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>
-                    </div>
-                    <!-- 透明度 -->
-                    <div class="alpha-bacground">
-                        <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                            <div class="alphaIndicator" ref="alphaIndicator"
-                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- model & values -->
-            <div class="input-container">
-                <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
-                <div class="values">
-                    <div class="wrap">
-                        <div class="value">
-                            <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                                                                           @click="(e) => inputClick(e, idx)"/>
-                            </div>
-                        </div>
-                        <div class="label">
-                            <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- 最近使用 -->
-            <div class="recently-container" v-if="recent.length">
-                <div class="inner">
-                    <div class="header">{{ t('color.recently') }}</div>
-                    <div class="typical-container">
-                        <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- 文档使用 -->
-            <div class="dc-container" v-if="document_colors.length">
-                <div class="inner">
-                    <div class="header">{{ t('color.documentc') }}</div>
-                    <div class="documentc-container" @wheel.stop>
-                        <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                             @click="() => setColor(c.color as any)"
-                             :title="t('color.times').replace('xx', c.times.toString())"
-                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!--            <div class="saturation" @mousedown.stop="e => setDotPosition(e)"-->
+            <!--                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">-->
+            <!--                <div class="white"></div>-->
+            <!--                <div class="black"></div>-->
+            <!--                <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>-->
+            <!--            </div>-->
+            <!--            &lt;!&ndash; 常用色 &ndash;&gt;-->
+            <!--            <div class="typical-container">-->
+            <!--                <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"-->
+            <!--                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>-->
+            <!--            </div>-->
+            <!--            <div class="controller">-->
+            <!--                <div class="eyedropper">-->
+            <!--                    <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>-->
+            <!--                </div>-->
+            <!--                <div class="sliders-container" ref="sliders">-->
+            <!--                    &lt;!&ndash; 色相 &ndash;&gt;-->
+            <!--                    <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">-->
+            <!--                        <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>-->
+            <!--                    </div>-->
+            <!--                    &lt;!&ndash; 透明度 &ndash;&gt;-->
+            <!--                    <div class="alpha-bacground">-->
+            <!--                        <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"-->
+            <!--                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">-->
+            <!--                            <div class="alphaIndicator" ref="alphaIndicator"-->
+            <!--                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">-->
+            <!--                            </div>-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+            <!--            &lt;!&ndash; model & values &ndash;&gt;-->
+            <!--            <div class="input-container">-->
+            <!--                <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>-->
+            <!--                <div class="values">-->
+            <!--                    <div class="wrap">-->
+            <!--                        <div class="value">-->
+            <!--                            <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"-->
+            <!--                                                                                           @click="(e) => inputClick(e, idx)"/>-->
+            <!--                            </div>-->
+            <!--                        </div>-->
+            <!--                        <div class="label">-->
+            <!--                            <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+            <!--            &lt;!&ndash; 最近使用 &ndash;&gt;-->
+            <!--            <div class="recently-container" v-if="recent.length">-->
+            <!--                <div class="inner">-->
+            <!--                    <div class="header">{{ t('color.recently') }}</div>-->
+            <!--                    <div class="typical-container">-->
+            <!--                        <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"-->
+            <!--                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+            <!--            &lt;!&ndash; 文档使用 &ndash;&gt;-->
+            <!--            <div class="dc-container" v-if="document_colors.length">-->
+            <!--                <div class="inner">-->
+            <!--                    <div class="header">{{ t('color.documentc') }}</div>-->
+            <!--                    <div class="documentc-container" @wheel.stop>-->
+            <!--                        <div class="block" v-for="(c, idx) in document_colors" :key="idx"-->
+            <!--                             @click="() => setColor(c.color as any)"-->
+            <!--                             :title="t('color.times').replace('xx', c.times.toString())"-->
+            <!--                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </div>-->
+            <PatternFill/>
         </div>
     </div>
 </template>
