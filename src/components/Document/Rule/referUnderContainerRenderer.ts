@@ -7,7 +7,7 @@ import { XY } from "@/context/selection";
 /**
  * @description 容器内参考线渲染机 V1.0
  */
-export class ReferUnderContainerHandler {
+export class ReferUnderContainerRenderer {
     private readonly m_context: Context;
     private readonly m_units: ReferUnit[];
     private readonly m_page: PageView;

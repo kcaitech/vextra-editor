@@ -7,7 +7,7 @@ import { GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
-import { ReferUnderContainerHandler } from "@/components/Document/Rule/referUnderContainerHandler";
+import { ReferUnderContainerRenderer } from "@/components/Document/Rule/referUnderContainerRenderer";
 import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
 
@@ -31,7 +31,7 @@ const scaleRenderer = new ScaleRenderer(props.context, props.page, scalesHor.val
  * @description 绘制容器内参考线
  */
 const lineUnits = ref<ReferUnit[]>([]);
-const referUnderContainerHandler = new ReferUnderContainerHandler(props.context, lineUnits.value as ReferUnit[], props.page);
+const referUnderContainerRenderer = new ReferUnderContainerRenderer(props.context, lineUnits.value as ReferUnit[], props.page);
 
 /**
  * @description 绘制root下参考线
@@ -41,7 +41,7 @@ const rootReferHandler = new RootReferHandler(props.context, props.page, rootLin
 
 const pageWatcher = (...args: any) => {
     if (args.length === 1 && args[0] === 'childs') {
-        referUnderContainerHandler.updateUnderRootContainerMap();
+        referUnderContainerRenderer.updateUnderRootContainerMap();
     }
     if (args.includes('guides')) {
         rootReferHandler.render();
@@ -52,7 +52,7 @@ function workspaceWatcher(t: number) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
         scaleRenderer.render();
         rootReferHandler.render();
-        referUnderContainerHandler.updateByMatrix();
+        referUnderContainerRenderer.updateByMatrix();
     }
 }
 
@@ -173,7 +173,7 @@ onMounted(() => {
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
 
-    referUnderContainerHandler.updateUnderRootContainerMap();
+    referUnderContainerRenderer.updateUnderRootContainerMap();
 })
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
@@ -182,7 +182,7 @@ onUnmounted(() => {
     props.context.user.unwatch(userWatcher);
     props.page.unwatch(pageWatcher);
 
-    referUnderContainerHandler.clearContainerWatcher();
+    referUnderContainerRenderer.clearContainerWatcher();
 })
 </script>
 <template>
