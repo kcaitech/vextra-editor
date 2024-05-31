@@ -11,7 +11,8 @@
         · 记录操作的参考线类型(ver、hor);
         · 可以考虑隐藏控件(借用translate的特性)；
     · 工作机 execute：
-        · 需要支持Alt操作；
+        · 需要支持Alt操作；   // todo
+        · 需要支持方向键微调； // todo
         · 创建；
         · 修改Offset；
         · 迁移：在容器、Symbol、页面中迁移(容器、Symbol必须为页面直接子元素)；
@@ -29,7 +30,7 @@
         · RuleMounted时对Page进行监听
             · 【childs】类型：整理需要更新的Container,只更新这些需要更新的Container；
             · 【guides】类型：更新页面下所有参考线；
-        · RuleMounted时对WorkSpaceMatrix进行监听；
+        · RuleMounted时对WorkSpaceMatrix进行监听
             · 对地图上的所有点进行线性转换，转换过程中注意端点极值；
 
 * 参考线鼠标查找
@@ -39,7 +40,9 @@
 
 * 参考线选区
     · 只允许一条参考线被选择或者Hover，当参考线选择时，取消所有图层的选择；
+    · 选区的更新与取消； // todo
 
-* 参考线吸附
-    · 冒泡吸附
+* 参考线吸附 // todo
+    · 冒泡吸附；
+    · 吸附成功对触发线条加深颜色
 

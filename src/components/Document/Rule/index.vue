@@ -197,7 +197,9 @@ function downHover(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
+    props.context.selection.resetSelectShapes();
     e.stopPropagation();
+
     // 选择一条参考线
     // if (hovered.value.valid) {
     //     selected.value.valid = true;
