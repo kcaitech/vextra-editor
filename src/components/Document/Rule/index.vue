@@ -114,7 +114,6 @@ function toolWatcher(t: number) {
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
-        const ctx = props.context;
     }
 }
 
@@ -160,7 +159,7 @@ function downVer(e: MouseEvent) {
     }
     e.stopPropagation();
 
-    // referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
+    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
 
     document.addEventListener('mousemove', moveVer);
     document.addEventListener('mouseup', upCommon);
@@ -171,7 +170,7 @@ function downVer(e: MouseEvent) {
 
 function moveVer(e: MouseEvent) {
     if (isDrag) {
-        // referLineHandler?.modifyOffset(e);
+        referLineHandler?.modifyOffset(e);
     } else {
         const x = props.context.workspace.getContentXY(e).x;
         if (x >= 20) {

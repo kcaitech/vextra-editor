@@ -91,10 +91,10 @@ export class ReferLineFinder {
 
                     if (line.axis === GuideAxis.X) {
                         hovered.offset = formatNumber(line.offset);
-                        hovered.transform = `translateX(${line.start.x + 10}px)`;
+                        hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                     } else {
                         hovered.offset = formatNumber(line.offset);
-                        hovered.transform = `translateY(${line.start.y + 10}px)`
+                        hovered.transform = `translateY(${line.start.y + 10}px)`;
                     }
 
                     const clientS = line.start;
@@ -146,7 +146,7 @@ export class ReferLineFinder {
 
                 if (line.axis === GuideAxis.X) {
                     hovered.offset = formatNumber(line.offset);
-                    hovered.transform = `translateX(${line.start.x + 10}px)`;
+                    hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                 } else {
                     hovered.offset = formatNumber(line.offset);
                     hovered.transform = `translateY(${line.start.y + 10}px)`
