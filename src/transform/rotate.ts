@@ -46,9 +46,9 @@ export class RotateHandler extends TransformHandler {
     originSelectionBox: FrameLike = {x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0};
     baseData: BaseData4Rotate = new Map();
 
-    beginTransform2List: Transform[] = [];
-    beginCenterList: Point3D[] = [];
-    beginTransform2ForSelection: Transform = new Transform();
+    beginTransformList: Transform[] = []; // 开始旋转时所有shape的Transform
+    beginTransformForSelection: Transform = new Transform();  // 开始旋转时选区的Transform
+    parentToRootTransformMap: Map<ShapeView, Transform> = new Map(); // parent到root的Transform
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
         super(context, event);
@@ -130,6 +130,7 @@ export class RotateHandler extends TransformHandler {
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
+            shape.matrix2Root().computeCoord2(shape.frame.x, shape.frame.y);
 
             const parent = shape.parent!;
 
@@ -219,8 +220,7 @@ export class RotateHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        // 开始旋转时选区的transform2
-        this.beginTransform2ForSelection = new Transform({
+        this.beginTransformForSelection = new Transform({
             matrix: new Matrix2([4, 4], [
                 1, 0, 0, this.originSelectionBox.x,
                 0, 1, 0, this.originSelectionBox.y,
@@ -228,30 +228,21 @@ export class RotateHandler extends TransformHandler {
                 0, 0, 0, 1,
             ])
         });
-
-        // 开始旋转时所有shape的中心点列表
-        this.beginCenterList = this.shapes.map(shape => shape.transform2.transform(new Point3D([
-            shape.size.width / 2,
-            shape.size.height / 2,
-            0,
-        ])).col0);
-        console.log(this.beginCenterList[0].toString())
-
-        // 开始旋转时所有shape的transform2列表
-        // this.beginTransform2List = this.shapes.map(shape => shape.transform2.clone().translate({
-        //     vector: new ColVector3D([-this.originSelectionBox.x, -this.originSelectionBox.y, 0]),
-        //     mode: TransformMode.Local,
-        // }));
-        this.beginTransform2List = this.shapes.map((shape, i) => {
-            const transform2 = shape.transform2.clone();
-            // 0度时的左上角坐标
-            const ltPoint = this.beginCenterList[i].clone().subtract(new Point3D([
-                shape.size.width / 2,
-                shape.size.height / 2,
-                0,
-            ]));
-            // 设为0度，并且左上角设为ltPoint
-            return transform2.clearRotation().setTranslate(ltPoint);
+        this.beginTransformList = this.shapes.map(shape => {
+            let parent2RootTransform = this.parentToRootTransformMap.get(shape.parent!);
+            if (!parent2RootTransform) {
+                const parent2RootMatrix = shape.parent!.matrix2Root();
+                parent2RootTransform = new Transform({
+                    matrix: new Matrix2([4, 4], [
+                        parent2RootMatrix.m00, parent2RootMatrix.m01, 0, parent2RootMatrix.m02,
+                        parent2RootMatrix.m10, parent2RootMatrix.m11, 0, parent2RootMatrix.m12,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1,
+                    ]),
+                });
+                this.parentToRootTransformMap.set(shape.parent!, parent2RootTransform);
+            }
+            return shape.transform2.clone().addTransform(parent2RootTransform).addTransform(this.beginTransformForSelection.getInverse());
         });
     }
 
@@ -315,24 +306,23 @@ export class RotateHandler extends TransformHandler {
         const currentRotate = (adapt2Shape(shape).rotation || 0);
         const targetRotate = currentRotate + deg;
 
-        const beginTransform2 = this.beginTransform2List[0].clone();
-        const translate = beginTransform2.rotateZAt({
+        const beginRotation = this.beginTransformList[0].decomposeEuler().z * 180 / Math.PI;
+        const translate = this.beginTransformList[0].clone().rotateZAt({
             point: new Point2D2([
-                this.beginCenterList[0].x,
-                this.beginCenterList[0].y,
+                shape.size.width / 2,
+                shape.size.width / 2,
             ]),
-            angle: targetRotate * Math.PI / 180,
+            angle: (targetRotate - beginRotation) * Math.PI / 180,
             mode: TransformMode.Local,
-        }).decomposeTranslate();
-        // const translate = beginTransform2.clone().preTranslate(
-        //     new ColVector3D([-base.width / 2, -base.height / 2, 0])
-        // ).translate({
-        //     vector: new ColVector3D([
-        //         base.width / 2 + this.originSelectionBox.x,
-        //         base.height / 2 + this.originSelectionBox.y,
-        //         0,
+        }).addTransform(this.beginTransformForSelection).addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse()).decomposeTranslate();
+
+        // const translate = this.beginTransformList[0].clone().rotateZAt({
+        //     point: new Point2D2([
+        //         this.beginCenterList[0].x,
+        //         this.beginCenterList[0].y,
         //     ]),
-        //     mode: TransformMode.Local,
+        //     angle: (targetRotate - beginRotation) * Math.PI / 180,
+        //     mode: TransformMode.Global,
         // }).decomposeTranslate();
 
         (this.asyncApiCaller as Rotator).execute4multi([{
@@ -362,11 +352,12 @@ export class RotateHandler extends TransformHandler {
             }
         }
 
-        const beginTransform2ForSelection = this.beginTransform2ForSelection.clone();
-        beginTransform2ForSelection.setRotateZ(deg * Math.PI / 180).preTranslate(
-            new ColVector3D([-this.originSelectionBox.width / 2, -this.originSelectionBox.height / 2, 0])
-        ).translate({
-            vector: new ColVector3D([this.originSelectionBox.width / 2, this.originSelectionBox.height / 2, 0]),
+        const beginTransformForSelection = this.beginTransformForSelection.clone().rotateZAt({
+            point: new Point2D2([
+                this.originSelectionBox.width / 2,
+                this.originSelectionBox.height / 2,
+            ]),
+            angle: deg * Math.PI / 180,
             mode: TransformMode.Local,
         });
 
@@ -425,16 +416,16 @@ export class RotateHandler extends TransformHandler {
             const dx = common.x - self.x;
             const dy = common.y - self.y;
 
-            const beginTransform2 = this.beginTransform2List[i];
-            const transform2 = beginTransform2.clone();
-            transform2.addTransform(beginTransform2ForSelection);
-            const translate = transform2.decomposeTranslate();
+            const decomposeRes = this.beginTransformList[i].clone()
+                .addTransform(beginTransformForSelection)
+                .addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse())
+                .decompose();
 
             rotateUnits.push({
                 shape,
-                x: translate.x,
-                y: translate.y,
-                targetRotate,
+                x: decomposeRes.translate.x,
+                y: decomposeRes.translate.y,
+                targetRotate: decomposeRes.rotate.z * 180 / Math.PI,
             })
         }
 
