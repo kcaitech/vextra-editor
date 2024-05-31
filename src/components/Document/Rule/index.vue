@@ -10,7 +10,7 @@ import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document
 import { ReferUnderContainerRenderer } from "@/components/Document/Rule/referUnderContainerRenderer";
 import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
-import { ActiveGuide, LineTheme, ReferLineFinder } from "@/components/Document/Rule/referLineFinder";
+import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 
 const props = defineProps<{
     context: Context;
@@ -48,13 +48,14 @@ const selected = ref<ActiveGuide>({
     index: -1,
     env: props.page,
     path: [],
-    theme: LineTheme.Normal,
+    theme: LineTheme.Active,
     visible: true,
     start: { x: 0, y: 0 },
     end: { x: 0, y: 0 },
     axis: GuideAxis.X,
     offset: 0,
-    transform: ''
+    transform: '',
+    desc: 0
 });
 const hovered = ref<ActiveGuide>({
     valid: false,
@@ -67,9 +68,10 @@ const hovered = ref<ActiveGuide>({
     end: { x: 0, y: 0 },
     axis: GuideAxis.X,
     offset: 0,
-    transform: ''
+    transform: '',
+    desc: 0
 })
-const referLineFinder = new ReferLineFinder(
+const referLineSelection = new ReferLineSelection(
     props.context,
     lineUnits.value as ReferUnit[],
     rootLines.value as ReferUnit,
@@ -92,6 +94,7 @@ function workspaceWatcher(t: number) {
         scaleRenderer.render();
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
+        // referLineSelection.updateReferSelection();
     }
 }
 
@@ -190,6 +193,28 @@ function clear() {
     referLineHandler = undefined;
 }
 
+function downHover(e: MouseEvent) {
+    if (e.button !== 0) {
+        return;
+    }
+    e.stopPropagation();
+    // 选择一条参考线
+    // if (hovered.value.valid) {
+    //     selected.value.valid = true;
+    //     selected.value.visible = true;
+    //
+    //     selected.value.index = hovered.value.index;
+    //     selected.value.env = hovered.value.env;
+    //     selected.value.path = hovered.value.path;
+    //     selected.value.start = hovered.value.start;
+    //     selected.value.end = hovered.value.end;
+    //
+    //     selected.value.axis = hovered.value.axis;
+    //     selected.value.offset = hovered.value.offset;
+    //     selected.value.transform = hovered.value.transform;
+    // }
+}
+
 function upCommon() {
     clear();
 }
@@ -204,7 +229,7 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
-    props.context.tool.setReferFiner(referLineFinder.search.bind(referLineFinder));
+    props.context.tool.setReferFiner(referLineSelection.search.bind(referLineSelection));
 
     referUnderContainerRenderer.updateUnderRootContainerMap();
 })
@@ -225,8 +250,8 @@ onUnmounted(() => {
                 <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
             </g>
             <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
-            <g v-if="hovered.valid" :class="hovered.axis === GuideAxis.X ? 'x-line' :'y-line'">
-                <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.offset }}</text>
+            <g v-if="hovered.valid" :class="hovered.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downHover">
+                <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.desc }}</text>
                 <path
                     v-for="(p, i) in hovered.path"
                     :key="i"
@@ -235,6 +260,17 @@ onUnmounted(() => {
                     :stroke-dasharray="p.dash ? '3, 3' : 'none'"
                 />
                 <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
+            </g>
+            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downHover">
+                <text class="offset-desc" :style="{transform: selected.transform }">{{ selected.offset }}</text>
+                <path
+                    v-for="(p, i) in selected.path"
+                    :key="i"
+                    :d="p.data"
+                    :stroke="selected.theme"
+                    :stroke-dasharray="p.dash ? '3, 3' : 'none'"
+                />
+                <path v-for="(p, i) in selected.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
             </g>
         </svg>
         <div class="contact-block"/>

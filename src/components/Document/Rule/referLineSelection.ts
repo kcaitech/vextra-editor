@@ -1,4 +1,4 @@
-import { GuideAxis, Matrix, ShapeView } from "@kcdesign/data";
+import { GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
 import { scout, Scout } from "@/utils/scout";
@@ -25,11 +25,12 @@ export interface ActiveGuide {
     start: XY;
     end: XY;
     axis: GuideAxis;
-    offset: number | string;
+    offset: number;
     transform: string;
+    desc: number | string;
 }
 
-export class ReferLineFinder {
+export class ReferLineSelection {
     readonly m_scout: Scout;
     private m_context: Context;
     private m_line_units: ReferUnit[];
@@ -90,10 +91,10 @@ export class ReferLineFinder {
                     hovered.axis = line.axis;
 
                     if (line.axis === GuideAxis.X) {
-                        hovered.offset = formatNumber(line.offset);
+                        hovered.desc = formatNumber(line.offset);
                         hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                     } else {
-                        hovered.offset = formatNumber(line.offset);
+                        hovered.desc = formatNumber(line.offset);
                         hovered.transform = `translateY(${line.start.y + 10}px)`;
                     }
 
@@ -145,11 +146,11 @@ export class ReferLineFinder {
                 hovered.axis = line.axis;
 
                 if (line.axis === GuideAxis.X) {
-                    hovered.offset = formatNumber(line.offset);
+                    hovered.desc = formatNumber(line.offset);
                     hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                 } else {
-                    hovered.offset = formatNumber(line.offset);
-                    hovered.transform = `translateY(${line.start.y + 10}px)`
+                    hovered.desc = formatNumber(line.offset);
+                    hovered.transform = `translateY(${line.start.y + 10}px)`;
                 }
 
                 const clientS = line.start;
@@ -171,5 +172,90 @@ export class ReferLineFinder {
         }
 
         return false;
+    }
+
+    updateReferSelection() {
+        const selected = this.m_selected_guide;
+        if (selected.valid) {
+
+            const offset = selected.offset;
+            const env = selected.env;
+
+            selected.path.length = 0;
+
+            if (env.type === ShapeType.Page) {
+                const root = this.m_context.workspace.root;
+                const matrix = this.m_context.workspace.matrix
+
+                if (selected.axis === GuideAxis.X) {
+                    selected.start = matrix.computeCoord2(offset, 0);
+                    selected.end = matrix.computeCoord2(offset, root.height);
+
+                    if (selected.start.x < 20 || selected.start.x > root.width) {
+                        return;
+                    }
+
+                    selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+                } else {
+                    selected.start = matrix.computeCoord2(0, offset);
+                    selected.end = matrix.computeCoord2(root.width, offset);
+
+                    if (selected.start.y < 20 || selected.start.y > root.height) {
+                        return;
+                    }
+
+                    selected.transform = `translateY(${selected.start.y + 10}px)`;
+                }
+
+                const path: Path = { dash: false, data: '' };
+                path.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+            } else {
+                const root = this.m_context.workspace.root;
+                const frame = env.frame;
+
+                const matrix = env.matrix2Root();
+                matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                const path1: Path = { dash: true, data: '' };
+                const path2: Path = { dash: false, data: '' };
+                const path3: Path = { dash: true, data: '' };
+
+                if (selected.axis === GuideAxis.X) {
+                    selected.start = matrix.computeCoord2(offset, 0);
+                    selected.end = matrix.computeCoord2(offset, frame.height);
+
+                    if (selected.start.x < 20 || selected.start.x > root.width) {
+                        return;
+                    }
+
+                    selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+
+                    const clientS = { x: selected.start.x, y: 0 };
+                    const clientE = { x: selected.start.x, y: root.height };
+
+                    path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                    path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+                    path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
+                } else {
+                    selected.start = matrix.computeCoord2(0, offset);
+                    selected.end = matrix.computeCoord2(root.width, offset);
+
+                    if (selected.start.y < 20 || selected.start.y > root.height) {
+                        return;
+                    }
+
+                    selected.transform = `translateY(${selected.start.y + 10}px)`;
+
+                    const clientS = { x: 0, y: selected.start.y };
+                    const clientE = { x: root.width, y: selected.start.y };
+
+                    path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                    path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+                    path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
+                }
+
+                selected.path.push(path2, path1, path3);
+            }
+        }
     }
 }

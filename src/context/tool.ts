@@ -1,7 +1,7 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { ReferLineFinder } from "@/components/Document/Rule/referLineFinder";
+import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { XY } from "@/context/selection";
 
 export enum Action {
