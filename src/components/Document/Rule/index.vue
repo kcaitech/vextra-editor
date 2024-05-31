@@ -6,10 +6,11 @@ import { WorkSpace } from "@/context/workspace";
 import { GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
-import { ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
+import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
 import { ReferUnderContainerRenderer } from "@/components/Document/Rule/referUnderContainerRenderer";
 import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
+import { ActiveGuide, LineTheme, ReferLineFinder } from "@/components/Document/Rule/referLineFinder";
 
 const props = defineProps<{
     context: Context;
@@ -38,6 +39,44 @@ const referUnderContainerRenderer = new ReferUnderContainerRenderer(props.contex
  */
 const rootLines = ref<ReferUnit>({ id: props.page.id, lines: [], shape: props.page });
 const rootReferHandler = new RootReferHandler(props.context, props.page, rootLines.value as ReferUnit);
+
+/**
+ * @description 参考线选区
+ */
+const selected = ref<ActiveGuide>({
+    valid: false,
+    index: -1,
+    env: props.page,
+    path: [],
+    theme: LineTheme.Normal,
+    visible: true,
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: 0 },
+    axis: GuideAxis.X,
+    offset: 0,
+    transform: ''
+});
+const hovered = ref<ActiveGuide>({
+    valid: false,
+    index: -1,
+    env: props.page,
+    path: [],
+    theme: LineTheme.Normal,
+    visible: true,
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: 0 },
+    axis: GuideAxis.X,
+    offset: 0,
+    transform: ''
+})
+const referLineFinder = new ReferLineFinder(
+    props.context,
+    lineUnits.value as ReferUnit[],
+    rootLines.value as ReferUnit,
+    selected.value as ActiveGuide,
+    hovered.value as ActiveGuide
+);
+
 
 const pageWatcher = (...args: any) => {
     if (args.length === 1 && args[0] === 'childs') {
@@ -76,14 +115,7 @@ function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
         const ctx = props.context;
-        if (ctx.selection.selectedShapes.length) {
-            ctx.tool.selectLine(undefined);
-        }
     }
-}
-
-function formatNumber(v: number) {
-    return Math.abs(v % 1) > 0.01 ? v.toFixed(2) : Math.round(v);
 }
 
 function moveStop(e: MouseEvent) {
@@ -127,8 +159,9 @@ function downVer(e: MouseEvent) {
         return;
     }
     e.stopPropagation();
-    props.context.tool.selectLine(undefined);
-    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
+
+    // referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
+
     document.addEventListener('mousemove', moveVer);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -138,7 +171,7 @@ function downVer(e: MouseEvent) {
 
 function moveVer(e: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.modifyOffset(e);
+        // referLineHandler?.modifyOffset(e);
     } else {
         const x = props.context.workspace.getContentXY(e).x;
         if (x >= 20) {
@@ -172,6 +205,7 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
+    props.context.tool.setReferFiner(referLineFinder.search.bind(referLineFinder));
 
     referUnderContainerRenderer.updateUnderRootContainerMap();
 })
@@ -192,6 +226,17 @@ onUnmounted(() => {
                 <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
             </g>
             <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
+            <g v-if="hovered.valid">
+                <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.offset }}</text>
+                <path
+                    v-for="(p, i) in hovered.path"
+                    :key="i"
+                    :d="p.data"
+                    :stroke="hovered.theme"
+                    :stroke-dasharray="p.dash ? '3, 3' : 'none'"
+                    :class="hovered.axis === GuideAxis.X ? 'hor-line' :'ver-line'"
+                />
+            </g>
         </svg>
         <div class="contact-block"/>
         <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
@@ -254,6 +299,19 @@ onUnmounted(() => {
         position: absolute;
         z-index: 10;
         overflow: visible;
+
+        .offset-desc {
+            font-size: 10px;
+            fill: #ff4400;
+        }
+
+        .hor-line {
+            cursor: row-resize !important;
+        }
+
+        .ver-line {
+            cursor: col-resize !important;
+        }
     }
 
     .contact-block {

@@ -31,6 +31,10 @@ export function genPath(start: XY, end: XY) {
     return `M${start.x} ${start.y} L${end.x} ${end.y}`;
 }
 
+export function formatNumber(v: number) {
+    return Math.abs(v % 1) > 0.01 ? v.toFixed(2) : Math.round(v);
+}
+
 export class ReferLineHandler extends TransformHandler {
     readonly m_axis: GuideAxis;
     readonly tool: Tool;

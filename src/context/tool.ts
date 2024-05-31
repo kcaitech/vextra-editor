@@ -1,6 +1,8 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
+import { ReferLineFinder } from "@/components/Document/Rule/referLineFinder";
+import { XY } from "@/context/selection";
 
 export enum Action {
     Auto = 'auto',
@@ -206,69 +208,13 @@ export class Tool extends WatchableObject {
         this.notify(Tool.LABLE_CHANGE);
     }
 
-    private m_hover_line: ['ver' | 'hor', number] | undefined;
-    private m_selected_line: ['ver' | 'hor', number] | undefined;
-    private m_h_line: string[] = [];
-    private m_v_line: string[] = [];
+    private m_refer_finer: ((xy: XY) => boolean) | undefined;
 
-    setHLine(ls: string[]) {
-        this.m_h_line = ls;
+    setReferFiner(func: (xy: XY) => boolean) {
+        this.m_refer_finer = func;
     }
 
-    setVLine(ls: string[]) {
-        this.m_v_line = ls;
-    }
-
-    scout(e: MouseEvent) {
-        const __scout = this.m_context.selection.scout;
-        const p = this.m_context.workspace.getContentXY(e);
-        let hls = this.m_h_line;
-        for (let i = 0; i < hls.length; i++) {
-            if (__scout.isPointInStroke(hls[i], p)) {
-                this.hoverLine(['hor', i]);
-                return true;
-            }
-        }
-        let vls = this.m_v_line;
-        for (let i = 0; i < vls.length; i++) {
-            if (__scout.isPointInStroke(vls[i], p)) {
-                this.hoverLine(['ver', i]);
-                return true;
-            }
-        }
-        this.hoverLine(undefined);
-        return false;
-    }
-
-    hoverLine(line: ['ver' | 'hor', number] | undefined) {
-        if (this.m_selected_line && line && this.m_selected_line.toString() === line.toString()) {
-            return;
-        }
-        this.m_hover_line = line;
-        this.notify(Tool.HOVER_REFER_CHANGE);
-    }
-
-    selectLine(line: ['ver' | 'hor', number] | undefined) {
-        this.m_selected_line = line;
-        this.notify(Tool.REFER_FOCUS_CHANGE);
-        this.hoverLine(undefined);
-    }
-
-    get selectedLine() {
-        return this.m_selected_line;
-    }
-
-    get hoveredLine() {
-        return this.m_hover_line;
-    }
-
-    private m_allow_update_refer_line: boolean = true;
-
-    get isAllowUpdateReferLine() {
-        return this.m_allow_update_refer_line;
-    }
-
-    modifyReferLineUpdaterStatus(val: boolean) {
-        this.m_allow_update_refer_line = val;
+    get referFinder() {
+        return this.m_refer_finer
     }
 }

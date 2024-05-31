@@ -201,7 +201,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
 
     if (ctx.user.isRuleVisible && !e.shiftKey) {
-        if (ctx.tool.scout(e)) {
+        if (ctx.tool.referFinder?.(xy)) {
             ctx.selection.unHoverShape();
             return;
         }

@@ -132,7 +132,7 @@ export class ReferUnderContainerRenderer {
 
         URCM.clear();
 
-        for (let i = 0; i < children.length; i++) {
+        for (let i = children.length - 1; i > -1 ; i--) {
             const c = children[i];
             if (!c.isContainer || (c.rotation || 0) % 180) {
                 continue;
@@ -173,6 +173,8 @@ export class ReferUnderContainerRenderer {
                 this.generateUnit(shape);
             }
         })
+
+        // todo 若需要保证参考线的优先顺序，需要对URCM进行层级排序，但正常场景下几乎不会存在顺序问题，所以出于性能考虑先不排
 
         // 更新了渲染容器对象
         console.log('RENDER TARGET CHANGE:', URCM.size, WUM.size, this.m_units.length, this.m_units);
