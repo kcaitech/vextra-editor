@@ -120,15 +120,18 @@ function selectionWatcher(t: number) {
     }
 }
 
+/**
+ * @description 参考线的创建与编辑
+ */
+let move: any;
+let referLineHandler: ReferLineHandler | undefined;
+let isDrag = false;
+
 function moveStop(e: MouseEvent) {
     if (e.button !== 0) {
         e.stopPropagation();
     }
 }
-
-let move: any;
-let referLineHandler: ReferLineHandler | undefined;
-let isDrag = false;
 
 function downHor(e: MouseEvent) {
     if (e.button !== 0) {
@@ -200,7 +203,7 @@ function downHover(e: MouseEvent) {
     props.context.selection.resetSelectShapes();
     e.stopPropagation();
 
-    // 选择一条参考线
+    // 更新选区
     // if (hovered.value.valid) {
     //     selected.value.valid = true;
     //     selected.value.visible = true;

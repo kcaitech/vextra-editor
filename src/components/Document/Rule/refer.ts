@@ -38,6 +38,7 @@ export function formatNumber(v: number) {
 export class ReferLineHandler extends TransformHandler {
     readonly m_axis: GuideAxis;
     readonly tool: Tool;
+
     private m_current_env: ShapeView;
     private m_index: number;
     private livingXY: XY = { x: 0, y: 0 };
@@ -70,9 +71,11 @@ export class ReferLineHandler extends TransformHandler {
     private envSearch() {
         let env = this.page;
         const children = this.page.childs;
+
+        // 按层级从上到下寻找
         for (let i = children.length - 1; i > -1; i--) {
             const child = children[i];
-            if (!child.isContainer || !child.isNoTransform() || isShapeOut(this.context, child)) {
+            if (!child.isContainer || (child.rotation || 0) % 180 || isShapeOut(this.context, child)) {
                 continue
             }
 
@@ -81,12 +84,13 @@ export class ReferLineHandler extends TransformHandler {
                 return child;
             }
         }
+
+        // 保底是在页面环境内
         return env;
     }
 
     /**
      * @description 默认都在Page下创建
-     * @param event
      */
     create(event: MouseEvent) {
         let offset;
@@ -95,26 +99,35 @@ export class ReferLineHandler extends TransformHandler {
         } else {
             offset = this.workspace.getRootXY(event).y;
         }
+
         this.m_index = (this.asyncApiCaller as ReferHandleApiCaller).create(this.m_axis, offset);
     }
 
     modifyOffset(event: MouseEvent) {
         this.livingXY = this.workspace.getRootXY(event);
+
         const __root_xy = this.livingXY;
+
+        if (this.context.user.isPixelAlignMent) {
+            // 取整
+            __root_xy.x = Math.round(__root_xy.x);
+            __root_xy.y = Math.round(__root_xy.y);
+        }
+
+        console.log('__this.m_index:', this.m_index);
 
         const index = this.m_index;
         const currentEnv = this.m_current_env as ArtboradView;
+
         const gui = currentEnv?.guides?.[index];
         if (!gui) {
             // 不存在这条线
             return;
         }
+
         const axis = this.m_axis;
 
-        this.migrate();
-
         let offset;
-
         if (currentEnv.id === this.page.id) {
             if (axis === GuideAxis.X) {
                 offset = __root_xy.x;
@@ -123,14 +136,19 @@ export class ReferLineHandler extends TransformHandler {
             }
         } else {
             const m = new Matrix(currentEnv.matrix2Root().inverse);
+
             if (axis === GuideAxis.X) {
                 offset = m.computeCoord3(__root_xy).x;
             } else {
                 offset = m.computeCoord3(__root_xy).y;
             }
+
+            console.log('=offset=', offset);
         }
 
-        (this.asyncApiCaller as ReferHandleApiCaller).modifyOffset(adapt2Shape(currentEnv), index, offset, false);
+        (this.asyncApiCaller as ReferHandleApiCaller).modifyOffset(currentEnv, index, offset, false);
+
+        this.migrate();
     }
 
     private __migrate() {
@@ -140,6 +158,7 @@ export class ReferLineHandler extends TransformHandler {
         }
         if (env.id === this.page.id) {
             // to page
+
             return;
         }
 
@@ -181,7 +200,8 @@ export class ReferLineHandler extends TransformHandler {
         this.m_index = result.index
     }
 
-    migrateOnce = debounce(this.__migrate, 20);
+    // migrateOnce = debounce(this.__migrate, 20); // 延时迁移
+    migrateOnce = this.__migrate;
 
     migrate() {
         this.migrateOnce();
