@@ -226,7 +226,7 @@ onUnmounted(() => {
                 <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
             </g>
             <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
-            <g v-if="hovered.valid">
+            <g v-if="hovered.valid" :class="hovered.axis === GuideAxis.X ? 'x-line' :'y-line'">
                 <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.offset }}</text>
                 <path
                     v-for="(p, i) in hovered.path"
@@ -234,8 +234,8 @@ onUnmounted(() => {
                     :d="p.data"
                     :stroke="hovered.theme"
                     :stroke-dasharray="p.dash ? '3, 3' : 'none'"
-                    :class="hovered.axis === GuideAxis.X ? 'hor-line' :'ver-line'"
                 />
+                <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
             </g>
         </svg>
         <div class="contact-block"/>
@@ -300,17 +300,25 @@ onUnmounted(() => {
         z-index: 10;
         overflow: visible;
 
-        .offset-desc {
-            font-size: 10px;
-            fill: #ff4400;
-        }
 
-        .hor-line {
+        .y-line {
+            pointer-events: auto;
             cursor: row-resize !important;
+
+            .offset-desc {
+                fill: #ff4400;
+                font-size: 10px;
+            }
         }
 
-        .ver-line {
+        .x-line {
+            pointer-events: auto;
             cursor: col-resize !important;
+
+            .offset-desc {
+                fill: #ff4400;
+                font-size: 10px;
+            }
         }
     }
 

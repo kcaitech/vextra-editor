@@ -66,6 +66,7 @@ export class ReferLineFinder {
 
         hovered.valid = false;
 
+        // 先查找容器里的参考线
         const units = this.m_line_units;
         for (let ui = 0; ui < units.length; ui++) {
             const unit = units[ui];
@@ -80,8 +81,11 @@ export class ReferLineFinder {
                 if (isT(xy, s, e)) {
                     hovered.valid = true;
                     hovered.env = unit.shape;
+                    hovered.index = l;
+
                     hovered.start = line.start;
                     hovered.end = line.end;
+
                     hovered.theme = LineTheme.Deep;
                     hovered.axis = line.axis;
 
@@ -93,12 +97,10 @@ export class ReferLineFinder {
                         hovered.transform = `translateY(${line.start.y + 10}px)`
                     }
 
-                    const ctx = this.m_context;
-
                     const clientS = line.start;
                     const clientE = line.end;
 
-                    const root = ctx.workspace.root;
+                    const root = this.m_context.workspace.root;
 
                     const path1: Path = { dash: true, data: '' };
                     const path2: Path = { dash: false, data: '' };
@@ -115,12 +117,59 @@ export class ReferLineFinder {
                     }
 
                     hovered.path.length = 0;
-                    hovered.path.push(path1, path2, path3);
+                    hovered.path.push(path2, path1, path3);
 
                     return true;
                 }
             }
         }
+
+        // 再查找Root下的参考线
+        const rootUnit = this.m_root_units;
+        const rootLines = rootUnit.lines;
+        for (let l = 0; l < rootLines.length; l++) {
+            const line = rootLines[l];
+
+            const s = matrix.computeCoord3(line.start);
+            const e = matrix.computeCoord3(line.end);
+
+            if (isT(xy, s, e)) {
+                hovered.valid = true;
+                hovered.env = rootUnit.shape;
+                hovered.index = l;
+
+                hovered.start = line.start;
+                hovered.end = line.end;
+
+                hovered.theme = LineTheme.Deep;
+                hovered.axis = line.axis;
+
+                if (line.axis === GuideAxis.X) {
+                    hovered.offset = formatNumber(line.offset);
+                    hovered.transform = `translateX(${line.start.x + 10}px)`;
+                } else {
+                    hovered.offset = formatNumber(line.offset);
+                    hovered.transform = `translateY(${line.start.y + 10}px)`
+                }
+
+                const clientS = line.start;
+                const clientE = line.end;
+
+                const path: Path = { dash: false, data: '' };
+
+                if (line.axis === GuideAxis.X) {
+                    path.data = `M${clientS.x} ${clientS.y} L${clientE.x} ${clientE.y}`;
+                } else {
+                    path.data = `M${clientS.x} ${clientS.y} L${clientE.x} ${clientE.y}`;
+                }
+
+                hovered.path.length = 0;
+                hovered.path.push(path);
+
+                return true;
+            }
+        }
+
         return false;
     }
 }
