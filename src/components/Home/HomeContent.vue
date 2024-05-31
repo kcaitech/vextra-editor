@@ -1,226 +1,159 @@
 <template>
-   <AgreementBaseComponent>
-    <div class="main-content">
-        <div class="start">
-            <div class="content">
-                <div class="title">随时都可写 什么都能画</div>
-                <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
-                    让每一个参与者都能高效参与的设计工具</div>
-                <div class="login">免费体验</div>
+    <AgreementBaseComponent>
+        <div class="main-content">
+            <div class="start">
+                <div class="content">
+                    <div class="title">随时都可写 什么都能画</div>
+                    <!-- <div class="title"><img :src="start" alt="title"></div> -->
+                    <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
+                        <br>
+                        让每一个参与者都能高效参与的设计工具</div>
+                    <div class="login" @click.stop="router.push({ name: 'login' })">免费体验</div>
+                </div>
+            </div>
+            <div class="moss-container">
+                <div class="moss">
+                    <div class="content">
+                        <img class="bg" :src="softui" alt="UI">
+                        <!-- <img class="bg-1" :src="zjk" alt="zujianku">
+                    <img class="bg-2" :src="tc" alt="tianchong">
+                    <img class="bg-3" :src="dc" alt="daochu"> -->
+                    </div>
+                </div>
+            </div>
+            <div class="design-container">
+                <div class="design">
+                    <div class="lunbo">
+                        <img :src="gangbi" alt="gangbi">
+                        <img :src="zjgn" alt="zjgn">
+                        <img :src="gsjr" alt="gsjr">
+                    </div>
+                    <div class="wenan">
+                        <div class="title">专业UI设计功能</div>
+                        <!-- <div class="title"><img :src="design" alt="title"></div> -->
+                        <div class="description">专业的矢量编辑工具，满足精细化编辑；高效的组件功能，
+                            <br>
+                            并且兼容Sketch、Figma(<span>开发中，敬请期待</span>)等主流文件格式，
+                            <br>
+                            无缝进行文件迁移</div>
+                        <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
+                    </div>
+                </div>
+            </div>
+            <div class="cooperation-container">
+                <div class="cooperation">
+                    <div class="image">
+                        <img :src="cooperation" alt="cooperation">
+                    </div>
+                    <div class="content">
+                        <div class="title">团队实时协作</div>
+                        <div class="description">链接邀请，在线实时协同，随时都能获取最新稿件；
+                            <br>
+                            文档定点评论，高效沟通，让思维随时碰撞出新的火花；
+                            <br>
+                            设计师轻松交付，切图资源、布局参数，工程师信手拈来</div>
+                        <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
+                    </div>
+                </div>
+            </div>
+            <div class="platform-container">
+                <div class="platform">
+                    <div class="top">
+                        <div class="title">跨终端 无缝衔接</div>
+                        <div class="description">多端数据实时同步，随时随地编辑创作</div>
+                    </div>
+                    <div class="bottom">
+                        <img :src="kuaduan" alt="kuaduan">
+                    </div>
+                </div>
+            </div>
+            <div class="end">
+                <div class="content">
+                    <div class="title">每个参与者都能高效参与的设计工具</div>
+                    <div class="login" @click.stop="router.push({ name: 'login' })">免费体验</div>
+                </div>
             </div>
         </div>
-        <div class="moss">
-            <div class="content">
-                <img class="bg" :src="softui" alt="UI">
-                <img class="bg-1" :src="zjk" alt="zujianku">
-                <img class="bg-2" :src="tc" alt="tianchong">
-                <img class="bg-3" :src="dc" alt="daochu">
-            </div>
-
-        </div>
-        <div class="design">
-            <div class="lunbo">
-                <img :src="gangbi" alt="gangbi">
-            </div>
-            <div class="wenan">
-                <div class="title">专业UI设计功能</div>
-                <div class="description">专业的矢量编辑工具，满足精细化编辑；高效的组件功能，
-                    并且兼容Sketch、Figma(<span>开发中，敬请期待</span>)等主流文件格式，无缝进行文件迁移</div>
-                <div class="login">立即免费体验</div>
-            </div>
-        </div>
-        <div class="cooperation">
-            <div class="lunbo">
-                <img :src="cooperation" alt="cooperation">
-            </div>
-            <div class="wenan">
-                <div class="title">团队实时协作</div>
-                <div class="description">链接邀请，在线实时协同，随时都能获取最新稿件；
-                    文档定点评论，高效沟通，让思维随时碰撞出新的火花；
-                    设计师轻松交付，切图资源、布局参数，工程师信手拈来</div>
-                <div class="login">立即免费体验</div>
-            </div>
-        </div>
-        <div class="platform">
-            <div class="top">
-                <div class="title">跨终端 无缝衔接</div>
-                <div class="description">多端数据实时同步，随时随地编辑创作</div>
-            </div>
-            <div class="bottom">
-                <img :src="kuaduan" alt="kuaduan">
-            </div>
-        </div>
-        <div class="end">
-            <div class="content">
-                <div class="title">每个参与者都能高效参与的设计工具</div>
-                <div class="login">免费体验</div>
-            </div>
-        </div>
-
-        <!-- <div v-for="index in 5" :key="index" :class="'container'" :id="'container' + index">
-            <div class="box-content" :id="'box-content' + index"></div>
-        </div> -->
-    </div>
-   </AgreementBaseComponent>
-  
-    <!-- <div class="meun">
-        <ul class="meunlist">
-            <li v-for=" index in 5" :key="index" :class="{ select: selectid === ('#container' + index) }"
-                @click="scrollToSection('#container' + index)"></li>
-        </ul>
-    </div> -->
+    </AgreementBaseComponent>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import softui from '@/assets/softui.svg'
-import zjk from '@/assets/ui-zjk.svg'
-import tc from '@/assets/ui-tc.svg'
-import dc from '@/assets/ui-dc.svg'
+import softui from '@/assets/moss-ui.svg'
 import gangbi from '@/assets/des-gb.svg'
 import cooperation from '@/assets/cooperation.svg'
 import kuaduan from '@/assets/kuaduan.svg'
+import zjgn from '@/assets/zjgn.svg'
+import gsjr from '@/assets/gsjr.svg'
 import AgreementBaseComponent from '@/components/Login/AgreementBaseComponent.vue';
-
-const selectid = ref('')
-const Elements = ref<any>()
-
-let timer: any
-const scrollToSection = (selector: string) => {
-    const targetElement = document.querySelector(selector)
-    if (targetElement) {
-        observer.disconnect() //停止观察，避免手动点击小圆点和观察回调命中小圆点的方法冲突，导致小圆点选中状态异常
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        selectid.value = selector
-    }
-    timer = setTimeout(() => {
-        startObserving(Elements.value) //延迟0.5秒后重启观察
-        clearTimeout(timer)
-    }, 500);
-}
-
-
-let thresholdSets = [];
-
-for (let i = 0; i <= 1.0; i += 0.01) {
-    thresholdSets.push(i);
-}
-
-const RatioNumber = (num: number) => {
-    switch (true) {
-        case num >= 0.95:
-            return 1;
-        case num >= 0.85:
-            return 0.9;
-        case num >= 0.75:
-            return 0.8;
-        case num >= 0.65:
-            return 0.7;
-        case num >= 0.55:
-            return 0.6;
-        case num >= 0.45:
-            return 0.5;
-        case num >= 0.35:
-            return 0.4;
-        case num >= 0.25:
-            return 0.3;
-        case num >= 0.15:
-            return 0.2;
-        case num >= 0.05:
-            return 0.1;
-        default:
-            return 0;
-    }
-}
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        const el1 = document.querySelector('#box-content1')! as HTMLElement
-        const el2 = document.querySelector('#box-content2')! as HTMLElement
-        const el3 = document.querySelector('#box-content3')! as HTMLElement
-        const el4 = document.querySelector('#box-content4')! as HTMLElement
-        const el5 = document.querySelector('#box-content5')! as HTMLElement
-        if (entry.target.id === 'container1') {
-            if (entry.isIntersecting) {
-                if (entry.intersectionRatio === 0) return
-                el1.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
-            }
-        }
-        if (entry.target.id === 'container2') {
-            if (entry.isIntersecting) {
-                if (entry.intersectionRatio === 0) return
-                el2.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
-
-            }
-        }
-        if (entry.target.id === 'container3') {
-            if (entry.isIntersecting) {
-                if (entry.intersectionRatio === 0) return
-                el3.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
-
-            }
-        }
-        if (entry.target.id === 'container4') {
-            if (entry.isIntersecting) {
-                if (entry.intersectionRatio === 0) return
-                el4.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
-
-            }
-        }
-        if (entry.target.id === 'container5') {
-            if (entry.isIntersecting) {
-                if (entry.intersectionRatio === 0) return
-                el5.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
-            }
-        }
-        if (entry.intersectionRatio >= 0.5) {
-            selectid.value = '#' + entry.target.id
-        }
-    });
-
-}, { root: null, threshold: thresholdSets });
-
-const startObserving = (elements: any) => {
-    elements.forEach((el: any) => {
-        if (el as HTMLElement) {
-            observer.observe(el);
-        }
-    })
-}
+import { router } from '@/router';
 
 onMounted(() => {
-    const containerElements = document.querySelectorAll('.container')
-    startObserving(containerElements)
-    Elements.value = containerElements
+    const els = document.querySelector(".design .lunbo")
+    let i = 0
+    setInterval(() => {
+        if (i > 2) return i = 0
+        els?.scrollTo({ top: 0, left: els.clientWidth * i - 1 })
+        i++
+    }, 3000)
 })
 </script>
 
 <style lang="scss" scoped>
+.main-content {
+    display: flex;
+    flex-direction: column;
+
+    .moss-container,
+    .design-container,
+    .cooperation-container,
+    .platform-container {
+        display: flex;
+        width: 100%;
+        min-width: 1152px;
+    }
+
+    .moss-container {
+        background-color: #F4F8FB;
+        background-image: url("@/assets/softui-bg.svg");
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .design-container,
+    .platform-container {
+        background-color: #fff;
+    }
+
+    .cooperation-container {
+        background-color: #F4F8FB;
+    }
+}
+
 .start,
 .end {
     display: flex;
     width: 100%;
-    // height: 313px;
-    box-sizing: border-box;
+    min-width: 1152px;
 
     .content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
         margin: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+        height: 100%;
+        max-width: 1440px;
+        min-width: 1152px;
 
         .title {
-            margin-top: 48px;
-            font-size: 72px;
+            font-family: 'zihunbiantaoti';
             color: #1F1F1F;
-
         }
 
         .description {
-            font-size: 18px;
             color: #262626;
-            margin-top: 24px;
             max-width: 560px;
             text-align: center;
             line-height: 27px;
@@ -231,89 +164,92 @@ onMounted(() => {
             align-items: center;
             justify-content: center;
             width: 256px;
-            height: 56px;
+            min-height: 56px;
             border-radius: 10px;
             background-color: #1878F5;
             color: #fff;
             font-size: 18px;
             font-weight: 500;
-            margin-top: 45px;
         }
     }
 }
 
 .start {
+    height: 313px;
     background-color: #F4F8FB;
-}
 
-.end {
-    .content {
-        .title {
-            font-size: 60px;
-            margin-top: 70px;
-        }
-
-        .login {
-            margin-bottom: 103px;
-        }
+    .content .title {
+        margin-top: 48px;
+        font-size: 72px;
     }
 
-    background-image: url("@/assets/end-bg.svg");
-    background-repeat: no-repeat;
-    background-size: cover;
+    .content .description {
+        margin-top: 24px;
+        font-size: 18px;
+    }
+
+    .content .login {
+        margin-top: 45px;
+    }
 }
 
 .moss,
 .design,
 .cooperation,
 .platform {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin: auto;
     width: 100%;
+    max-width: 1440px;
+    height: 940px;
+}
 
+.moss {
     .content {
         width: 100%;
-        margin: 5% 15%;
-        max-width: 1200px;
-        position: relative;
+        height: 100%;
 
         .bg {
             width: 100%;
-        }
-
-        .bg-1 {
-            position: absolute;
-            top: 2%;
-            left: -27%;
-            width: 45%;
-        }
-
-        .bg-2 {
-            position: absolute;
-            top: 1%;
-            right: -25%;
-            width: 45%;
-        }
-
-        .bg-3 {
-            position: absolute;
-            top: 32%;
-            right: -27%;
-            width: 45%;
+            height: 100%;
         }
     }
+}
 
-    .lunbo,
-    .wenan {
-        width: 48%;
-        max-width: 746px;
+.design {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .lunbo {
+        width: 746px;
+        height: 620px;
+        display: flex;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
 
         img {
             width: 100%;
+            height: 100%;
         }
 
+    }
+
+    .wenan {
+        width: 614px;
+        height: 620px;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        padding: 0 0 0 76px;
+        box-sizing: border-box;
+
         .title {
+            font-family: 'zihunbiantaoti';
+            margin-top: 87px;
             font-size: 68px;
             font-weight: 400;
             color: #1F1F1F;
@@ -332,20 +268,100 @@ onMounted(() => {
         }
 
         .login {
+            position: relative;
             margin-top: 122px;
             font-size: 21px;
             font-weight: 500;
+            line-height: 42px;
             color: #1878F5;
+
+            &::after {
+                content: "";
+                position: absolute;
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-bottom: 10px solid #1878F5;
+                transform: translateX(8px) translateY(17px) rotate(90deg);
+                animation: huitan 3s infinite both;
+            }
         }
     }
 
-    .wenan {
+}
+
+.cooperation {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    align-items: center;
+
+    .image {
+        width: 746px;
+        height: 620px;
+        box-sizing: border-box;
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+
+    }
+
+    .content {
+        width: 614px;
+        height: 620px;
         display: flex;
         flex-direction: column;
-        margin: auto 0;
-        padding: 0 3%;
         box-sizing: border-box;
+        padding: 0 76px 0 0px;
+        box-sizing: border-box;
+
+        .title {
+            font-family: 'zihunbiantaoti';
+            margin-top: 87px;
+            font-size: 68px;
+            font-weight: 400;
+            color: #1F1F1F;
+            white-space: nowrap;
+        }
+
+        .description {
+            margin-top: 32px;
+            font-size: 17px;
+            line-height: 34px;
+            color: #262626;
+
+            span {
+                color: #8C8C8C;
+            }
+        }
+
+        .login {
+            position: relative;
+            margin-top: 122px;
+            font-size: 21px;
+            font-weight: 500;
+            line-height: 42px;
+            color: #1878F5;
+
+            &::after {
+                content: "";
+                position: absolute;
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-bottom: 10px solid #1878F5;
+                transform: translateX(8px) translateY(17px) rotate(90deg);
+                animation: huitan 3s infinite both;
+            }
+        }
     }
+}
+
+.platform {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
 
     .top {
         display: flex;
@@ -354,6 +370,7 @@ onMounted(() => {
         justify-content: center;
 
         .title {
+            font-family: 'zihunbiantaoti';
             font-size: 68px;
             font-weight: 400;
             color: #1F1F1F;
@@ -368,287 +385,246 @@ onMounted(() => {
 
     .bottom {
         width: 100%;
+        height: 100%;
         max-width: 1360px;
+        min-width: 1152px;
+        max-height: 684px;
+        min-height: 684px;
+
 
         img {
             width: 100%;
+            height: 100%;
         }
     }
 }
 
-.moss,
-.design,
-.cooperation,
-.platform {
-    padding: 4% 0;
-    background: #F4F8FB;
-}
-
-.design,
-.platform {
-    background-color: #fff;
-}
-
-.moss {
-    background-image: url("@/assets/softui-bg.svg");
+.end {
+    height: 380px;
+    background-image: url("@/assets/end-bg.svg");
     background-repeat: no-repeat;
     background-size: cover;
-}
 
-.cooperation {
-    flex-direction: row-reverse;
-    background-color: #F4F7FB;
-}
+    .content .title {
+        font-size: 68px;
+    }
 
-.platform {
-    flex-direction: column;
-}
-
-
-@media (min-width:1200px) {
-
-    .moss,
-    .design,
-    .cooperation,
-    .platform {
-        padding: 0;
-        height: calc(100vh - 64px);
+    .content .login {
+        margin: 57px 0 103px 0;
     }
 }
 
 
-@media (max-width:1024px) {
-    .start {
-        .content {
-            .title {
-                font-size: 56px;
-                margin-top: 32px;
-            }
-
-            .description {
-                font-size: 18px;
-            }
-
-            .login {
-                font-size: 18px;
-                height: 50px;
-                width: 200px;
-            }
-
-        }
+@keyframes huitan {
+    0% {
+        transform: translate(8px, 17px) rotate(90deg);
     }
 
-    .design,
-    .cooperation {
-
-        .lunbo,
-        .wenan {
-            width: 48%;
-
-            .title {
-                font-size: 48px;
-                // margin-top: 20px;
-            }
-
-            .description {
-                font-size: 16px;
-            }
-
-            .login {
-                font-size: 18px;
-                margin-top: 30px;
-            }
-        }
+    10% {
+        transform: translate(14px, 17px) rotate(90deg);
     }
 
-    .platform {
-        .top {
-            .title {
-                font-size: 56px;
-            }
-
-            .description {
-                font-size: 18px;
-            }
-        }
+    20% {
+        transform: translate(5px, 17px) rotate(90deg);
     }
 
-    .end {
-        .content {
-            .title {
-                font-size: 40px !important;
-            }
-
-            .login {
-                margin-bottom: 60px !important;
-                font-size: 18px;
-                height: 50px;
-                width: 200px;
-            }
-        }
-
-    }
-}
-
-@media (max-width:800px) {
-    .start {
-        .content {
-            .title {
-                font-size: 40px;
-                margin-top: 24px;
-            }
-
-            .description {
-                font-size: 14px;
-                max-width: 480px;
-            }
-
-            .login {
-                font-size: 16px;
-                height: 50px;
-                width: 200px;
-            }
-        }
+    30% {
+        transform: translate(14px, 17px) rotate(90deg);
     }
 
-
-    .design,
-    .cooperation {
-        flex-direction: column;
-
-        .lunbo,
-        .wenan {
-            width: 96%;
-            padding: 0;
-
-            .title {
-                font-size: 30px;
-                margin-top: 20px;
-            }
-
-            .description {
-                font-size: 14px;
-            }
-
-            .login {
-                font-size: 16px;
-                margin-top: 20px;
-            }
-        }
+    40% {
+        transform: translate(5px, 17px) rotate(90deg);
     }
 
-    .platform {
-        .top {
-            .title {
-                font-size: 40px;
-            }
-
-            .description {
-                margin: 24px 0 12px 0;
-                font-size: 16px;
-            }
-        }
-
-        .bottom {
-            width: 123%;
-        }
-    }
-
-    .end {
-        .content {
-            .title {
-                font-size: 30px !important;
-            }
-
-            .login {
-                margin-bottom: 40px !important;
-                font-size: 16px;
-                height: 50px;
-                width: 200px;
-            }
-        }
-
+    50% {
+        transform: translate(8px, 17px) rotate(90deg);
     }
 }
 
 
-@media (max-width:480px) {
-    .start {
-        .content {
-            .title {
-                font-size: 24px;
-                margin-top: 16px;
+@media (max-width:1440px) {
+    .main-content {
+
+        .moss-container,
+        .design-container,
+        .cooperation-container,
+        .platform-container {
+
+            .moss,
+            .design,
+            .cooperation,
+            .platform {
+                max-width: 1200px;
+                height: 784px;
             }
 
-            .description {
-                font-size: 14px;
-                max-width: 400px;
+            .platform {
+                height: 940px;
             }
 
-            .login {
-                margin-top: 30px;
-                font-size: 16px;
-                height: 40px;
-                width: 120px;
+            .design {
+                .lunbo {
+                    width: 662px;
+                    height: 550px;
+                }
+
+                .wenan {
+                    width: 538px;
+                    height: 550px;
+                    padding: 0 0 0 66px;
+
+
+                    .title {
+                        margin-top: 76px;
+                        font-size: 60px;
+                    }
+
+                    .description {
+                        margin-top: 28px;
+                        font-size: 15px;
+                        line-height: 30px;
+                    }
+
+                    .login {
+                        margin-top: 106px;
+                        font-size: 18px;
+                    }
+                }
+
+            }
+
+            .cooperation {
+
+
+                .image {
+                    width: 662px;
+                    height: 550px;
+                }
+
+                .content {
+                    width: 538px;
+                    height: 550px;
+                    padding: 0 66px 0 0px;
+
+                    .title {
+                        margin-top: 76px;
+                        font-size: 60px;
+                    }
+
+                    .description {
+                        margin-top: 28px;
+                        font-size: 15px;
+                        line-height: 30px;
+                    }
+
+                    .login {
+                        margin-top: 106px;
+                        font-size: 18px;
+                    }
+                }
+            }
+
+            .platform {
+                .bottom {
+                    width: 1152px;
+                    height: 940px;
+                }
             }
         }
     }
 
-    .design,
-    .cooperation {
-        flex-direction: column;
+}
 
-        .lunbo,
-        .wenan {
-            width: 96%;
-            padding: 0;
+@media (max-width:1152px) {
+    .main-content {
 
-            .title {
-                font-size: 20px;
-                margin-top: 20px;
+        .moss-container,
+        .design-container,
+        .cooperation-container,
+        .platform-container {
+
+            .moss,
+            .design,
+            .cooperation,
+            .platform {
+                min-width: 1072px;
+                height: 700px;
             }
 
-            .description {
-                font-size: 14px;
+            .platform {
+                height: 940px;
             }
 
-            .login {
-                font-size: 16px;
-                margin-top: 20px;
+            .design {
+                .lunbo {
+                    width: 596px;
+                    height: 495px;
+                }
+
+                .wenan {
+                    width: 484px;
+                    height: 495px;
+                    padding: 0 0 0 60px;
+
+
+                    .title {
+                        margin-top: 68px;
+                        font-size: 54px;
+                    }
+
+                    .description {
+                        margin-top: 26px;
+                        font-size: 14px;
+                        line-height: 30px;
+                    }
+
+                    .login {
+                        margin-top: 96px;
+                        font-size: 16.55px;
+                    }
+                }
+
+            }
+
+            .cooperation {
+
+
+                .image {
+                    width: 596px;
+                    height: 495px;
+                }
+
+                .content {
+                    width: 484px;
+                    height: 495px;
+                    padding: 0 60px 0 0px;
+
+                    .title {
+                        margin-top: 68px;
+                        font-size: 54px;
+                    }
+
+                    .description {
+                        margin-top: 26px;
+                        font-size: 14px;
+                        line-height: 30px;
+                    }
+
+                    .login {
+                        margin-top: 96px;
+                        font-size: 16.55px;
+                    }
+                }
+            }
+
+            .platform {
+                .bottom {
+                    width: 1152px;
+                    height: 684px;
+                }
             }
         }
     }
 
-    .platform {
-        .top {
-            .title {
-                font-size: 20px;
-            }
-
-            .description {
-                margin: 16px 0 8px 0;
-                font-size: 14px;
-            }
-        }
-
-        .bottom {
-            width: 123%;
-        }
-    }
-
-    .end {
-        .content {
-            .title {
-                font-size: 20px !important;
-            }
-
-            .login {
-                margin-bottom: 40px !important;
-                font-size: 16px;
-                height: 40px;
-                width: 120px;
-            }
-        }
-
-    }
-}</style>
+}
+</style>

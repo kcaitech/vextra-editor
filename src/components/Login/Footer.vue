@@ -140,6 +140,8 @@ const skipTotarget = (i: string) => {
 }
 
 .footer {
+    width: 100%;
+    min-width: 1152px;
     background-color: #ffffff;
 
 
