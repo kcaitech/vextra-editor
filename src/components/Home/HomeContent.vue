@@ -97,6 +97,7 @@ const autoplay = ref<HTMLElement>()
 
 let timer: any
 function autoPlay() {
+    if (!autoplay.value) return
     let i = 0
     timer = setInterval(() => {
         autoplay.value?.scrollTo({ top: 0, left: autoplay.value.clientWidth * i })
@@ -376,11 +377,11 @@ onUnmounted(() => {
 }
 
 .platform {
-    @include flex(flex-end,column );
+    @include flex(flex-end, column);
 
     .top {
-        @include flex(center,column );
-       
+        @include flex(center, column);
+
         .title {
             font-family: 'zihunbiantaoti';
             font-size: 68px;
