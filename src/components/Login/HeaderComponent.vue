@@ -52,6 +52,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+
 .header-container {
     display: flex;
     position: sticky;
@@ -84,6 +85,7 @@ onMounted(() => {
                 width: 140px;
 
                 .login {
+                    cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;

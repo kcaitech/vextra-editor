@@ -7,7 +7,8 @@
                     <!-- <div class="title"><img :src="start" alt="title"></div> -->
                     <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
                         <br>
-                        让每一个参与者都能高效参与的设计工具</div>
+                        让每一个参与者都能高效参与的设计工具
+                    </div>
                     <div class="login" @click.stop="router.push({ name: 'login' })">免费体验</div>
                 </div>
             </div>
@@ -23,10 +24,11 @@
             </div>
             <div class="design-container">
                 <div class="design">
-                    <div class="lunbo">
+                    <div ref="autoplay" class="lunbo">
                         <img :src="gangbi" alt="gangbi">
                         <img :src="zjgn" alt="zjgn">
                         <img :src="gsjr" alt="gsjr">
+                        <img :src="gangbi" alt="gangbi">
                     </div>
                     <div class="wenan">
                         <div class="title">专业UI设计功能</div>
@@ -35,7 +37,8 @@
                             <br>
                             并且兼容Sketch、Figma(<span>开发中，敬请期待</span>)等主流文件格式，
                             <br>
-                            无缝进行文件迁移</div>
+                            无缝进行文件迁移
+                        </div>
                         <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
                     </div>
                 </div>
@@ -51,7 +54,8 @@
                             <br>
                             文档定点评论，高效沟通，让思维随时碰撞出新的火花；
                             <br>
-                            设计师轻松交付，切图资源、布局参数，工程师信手拈来</div>
+                            设计师轻松交付，切图资源、布局参数，工程师信手拈来
+                        </div>
                         <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
                     </div>
                 </div>
@@ -87,19 +91,80 @@ import zjgn from '@/assets/zjgn.svg'
 import gsjr from '@/assets/gsjr.svg'
 import AgreementBaseComponent from '@/components/Login/AgreementBaseComponent.vue';
 import { router } from '@/router';
+import { onUnmounted } from 'vue';
 
-onMounted(() => {
-    const els = document.querySelector(".design .lunbo")
+const autoplay = ref<HTMLElement>()
+
+let timer: any
+function autoPlay() {
     let i = 0
-    setInterval(() => {
-        if (i > 2) return i = 0
-        els?.scrollTo({ top: 0, left: els.clientWidth * i - 1 })
+    timer = setInterval(() => {
+        autoplay.value?.scrollTo({ top: 0, left: autoplay.value.clientWidth * i })
+        if (i === (autoplay.value!.children.length - 1)) {
+            const timer = setTimeout(() => {
+                autoplay.value!.style.scrollBehavior = 'auto'
+                autoplay.value?.scrollTo({ top: 0, left: 0 });
+                autoplay.value!.style.scrollBehavior = ''
+                i = 1
+                clearTimeout(timer)
+            }, 1000);
+        }
         i++
     }, 3000)
+}
+
+onMounted(() => {
+    autoPlay()
 })
+
+onUnmounted(() => {
+    clearInterval(timer)
+})
+
 </script>
 
 <style lang="scss" scoped>
+@mixin login {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 256px;
+    min-height: 56px;
+    border-radius: 10px;
+    background-color: #1878F5;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+@mixin login-link {
+    cursor: pointer;
+    position: relative;
+    margin-top: 122px;
+    font-size: 21px;
+    font-weight: 500;
+    line-height: 42px;
+    color: #1878F5;
+
+    &::after {
+        content: "";
+        position: absolute;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-bottom: 10px solid #1878F5;
+        transform: translateX(8px) translateY(17px) rotate(90deg);
+        animation: huitan 3s infinite both;
+    }
+}
+
+@mixin flex($justify, $direction) {
+    display: flex;
+    align-items: center;
+    justify-content: $justify;
+    flex-direction: $direction;
+}
+
 .main-content {
     display: flex;
     flex-direction: column;
@@ -138,10 +203,7 @@ onMounted(() => {
 
     .content {
         margin: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
+        @include flex(flex-end, column);
         width: 100%;
         height: 100%;
         max-width: 1440px;
@@ -160,16 +222,7 @@ onMounted(() => {
         }
 
         .login {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 256px;
-            min-height: 56px;
-            border-radius: 10px;
-            background-color: #1878F5;
-            color: #fff;
-            font-size: 18px;
-            font-weight: 500;
+            @include login
         }
     }
 }
@@ -216,9 +269,7 @@ onMounted(() => {
 }
 
 .design {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    @include flex(center, row);
 
     .lunbo {
         width: 746px;
@@ -268,32 +319,14 @@ onMounted(() => {
         }
 
         .login {
-            position: relative;
-            margin-top: 122px;
-            font-size: 21px;
-            font-weight: 500;
-            line-height: 42px;
-            color: #1878F5;
-
-            &::after {
-                content: "";
-                position: absolute;
-                border-left: 7px solid transparent;
-                border-right: 7px solid transparent;
-                border-bottom: 10px solid #1878F5;
-                transform: translateX(8px) translateY(17px) rotate(90deg);
-                animation: huitan 3s infinite both;
-            }
+            @include login-link
         }
     }
 
 }
 
 .cooperation {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: center;
-    align-items: center;
+    @include flex(center, row-reverse);
 
     .image {
         width: 746px;
@@ -337,38 +370,17 @@ onMounted(() => {
         }
 
         .login {
-            position: relative;
-            margin-top: 122px;
-            font-size: 21px;
-            font-weight: 500;
-            line-height: 42px;
-            color: #1878F5;
-
-            &::after {
-                content: "";
-                position: absolute;
-                border-left: 7px solid transparent;
-                border-right: 7px solid transparent;
-                border-bottom: 10px solid #1878F5;
-                transform: translateX(8px) translateY(17px) rotate(90deg);
-                animation: huitan 3s infinite both;
-            }
+            @include login-link
         }
     }
 }
 
 .platform {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
+    @include flex(flex-end,column );
 
     .top {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
+        @include flex(center,column );
+       
         .title {
             font-family: 'zihunbiantaoti';
             font-size: 68px;

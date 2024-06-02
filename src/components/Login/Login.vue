@@ -226,7 +226,7 @@ onMounted(() => {
 <template>
 
     <div class="bgiamge">
-        <svg-icon class="svg" icon-class="newlogo"></svg-icon>
+        <svg-icon class="svg" icon-class="newlogo" @click.stop="router.push({path:'/'})"></svg-icon>
         <div class="content">
             <div class="top">
                 <Describes></Describes>
@@ -255,6 +255,8 @@ onMounted(() => {
 </template>
 
 <style lang='scss' scoped>
+
+
 .login_container_hover {
     background-color: #00000030;
     line-height: 300px;
@@ -274,6 +276,7 @@ onMounted(() => {
     background-repeat: no-repeat;
 
     svg {
+        cursor: pointer;
         position: fixed;
         top: 2%;
         left: 3%;

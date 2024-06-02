@@ -16,7 +16,7 @@ const skipTotarget = (i: string) => {
     switch (i) {
         case "产品介绍":
             router.push({ path: '/' })
-            window.scrollY=300
+            window.scrollY = 300
             break;
         case "关于我们":
             router.push({ path: '/' })
@@ -121,6 +121,10 @@ const skipTotarget = (i: string) => {
                 font-size: 14px;
                 margin-bottom: 16px;
                 // position: relative;
+
+                &:hover {
+                    color: #1878F5;
+                }
 
                 a {
                     position: relative;
