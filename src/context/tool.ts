@@ -208,6 +208,16 @@ export class Tool extends WatchableObject {
         this.notify(Tool.LABLE_CHANGE);
     }
 
+    private m_refer_selection: ReferLineSelection | undefined;
+
+    setReferSelection(rs: ReferLineSelection | undefined) {
+        this.m_refer_selection = rs;
+    }
+
+    get referSelection() {
+        return this.m_refer_selection!;
+    }
+
     private m_refer_finer: ((xy: XY) => boolean) | undefined;
 
     setReferFiner(func: (xy: XY) => boolean) {

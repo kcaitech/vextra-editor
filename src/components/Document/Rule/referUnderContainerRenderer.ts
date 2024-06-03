@@ -27,7 +27,17 @@ export class ReferUnderContainerRenderer {
      * @description 更新指定Container的参考线绘制
      */
     private updateContainerLineRender(id: string, args: any) {
-        if (!(args && args?.includes('layout'))) {
+        // console.log('==args==', args);
+
+        const ctx = this.m_context;
+        const referSelection = ctx.tool.referSelection;
+
+        if ((args && args.includes('guides') && args.includes('length', -1))) {
+            referSelection.updateSelectionForDelete(id);
+            return;
+        }
+
+        if (!args || !((args.includes('layout') || args.includes('guides')))) {
             return;
         }
 
@@ -48,6 +58,7 @@ export class ReferUnderContainerRenderer {
         }
 
         this.updateReferUnit(unit);
+        referSelection.updateSelectedSelection(id);
     }
 
     /**

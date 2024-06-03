@@ -1,12 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
-import {
-    ArtboradView,
-    GuideAxis,
-    Matrix,
-    ReferHandleApiCaller,
-    ShapeView
-} from "@kcdesign/data";
+import { ArtboradView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
 import { Tool } from "@/context/tool";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
@@ -42,8 +36,8 @@ export class ReferLineHandler extends TransformHandler {
     private m_index: number;
     private livingXY: XY = { x: 0, y: 0 };
 
-    constructor(context: Context, event: MouseEvent, axis: GuideAxis, env?: ShapeView, index?: number) {
-        super(context, event);
+    constructor(context: Context, axis: GuideAxis, env?: ShapeView, index?: number) {
+        super(context);
         this.m_axis = axis;
         this.tool = context.tool;
 
@@ -60,9 +54,21 @@ export class ReferLineHandler extends TransformHandler {
         return this.asyncApiCaller as ReferHandleApiCaller;
     }
 
-    createApiCaller() {
+    createApiCaller(event: MouseEvent, index?: number) {
         this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
         this.workspace.translating(true);
+
+        if (index === undefined) {
+            let offset;
+            if (this.m_axis === GuideAxis.X) {
+                offset = this.workspace.getRootXY(event).x;
+            } else {
+                offset = this.workspace.getRootXY(event).y;
+            }
+
+            // 默认在page下建立新参考线
+            this.m_index = this.api.create(this.m_axis, offset);
+        }
     }
 
     fulfil() {
@@ -92,20 +98,6 @@ export class ReferLineHandler extends TransformHandler {
         return env;
     }
 
-    /**
-     * @description 默认都在Page下创建
-     */
-    create(event: MouseEvent) {
-        let offset;
-        if (this.m_axis === GuideAxis.X) {
-            offset = this.workspace.getRootXY(event).x;
-        } else {
-            offset = this.workspace.getRootXY(event).y;
-        }
-
-        this.m_index = this.api.create(this.m_axis, offset);
-    }
-
     modifyOffset(event: MouseEvent) {
         this.livingXY = this.workspace.getRootXY(event);
 
@@ -120,13 +112,20 @@ export class ReferLineHandler extends TransformHandler {
         const index = this.m_index;
         const currentEnv = this.m_current_env as ArtboradView;
 
-        const gui = currentEnv?.guides?.[index];
-        if (!gui) {
+        if (!currentEnv?.guides?.[index]) {
             // 不存在这条线
             return;
         }
 
+        const contentXY = this.workspace.getContentXY(event);
         const axis = this.m_axis;
+
+        let needRecovery = false;
+        if (axis === GuideAxis.X) {
+            needRecovery = contentXY.x < 20;
+        } else {
+            needRecovery = contentXY.y < 20;
+        }
 
         let offset;
         if (currentEnv.id === this.page.id) {
@@ -145,7 +144,7 @@ export class ReferLineHandler extends TransformHandler {
             }
         }
 
-        this.api.modifyOffset(currentEnv, index, offset, false);
+        this.api.modifyOffset(currentEnv, index, offset, needRecovery);
 
         this.migrate();
     }
@@ -200,9 +199,17 @@ export class ReferLineHandler extends TransformHandler {
     }
 
     // migrateOnce = debounce(this.__migrate, 20); // 延时迁移
-    migrateOnce = this.__migrate;
+    // migrateOnce = this.__migrate;
 
-    migrate() {
-        this.migrateOnce();
+    private migrate() {
+        this.__migrate();
+    }
+
+    delete(env: ShapeView, index: number) {
+        this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
+        if (this.api.delete(env, index)) {
+            console.log('===删除成功===');
+        }
+        super.fulfil();
     }
 }

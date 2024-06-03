@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { GuideAxis, PageView, ShapeView } from '@kcdesign/data';
+import { GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -11,7 +11,6 @@ import { ReferUnderContainerRenderer } from "@/components/Document/Rule/referUnd
 import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
 import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
-import { cloneDeep } from "lodash";
 import { v4 } from "uuid";
 
 const props = defineProps<{
@@ -86,9 +85,14 @@ const referLineSelection = new ReferLineSelection(
 const pageWatcher = (...args: any) => {
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
+        return;
     }
-    if (args.includes('guides')) {
+    if (args && args.includes('guides')) {
         rootReferHandler.render();
+
+        if (args.includes('length', -1)) {
+            props.context.tool.referSelection.updateSelectionForDelete(props.page.id);
+        }
     }
 }
 
@@ -128,19 +132,21 @@ function selectionWatcher(t: number) {
 let move: any;
 let referLineHandler: ReferLineHandler | undefined;
 let isDrag = false;
+let downXY = { x: 0, y: 0 };
 
-function moveStop(e: MouseEvent) {
-    if (e.button !== 0) {
-        e.stopPropagation();
+function moveStop(event: MouseEvent) {
+    if (event.button !== 0) {
+        event.stopPropagation();
     }
 }
 
-function downHor(e: MouseEvent) {
-    if (e.button !== 0) {
+function downHor(event: MouseEvent) {
+    if (event.button !== 0) {
         return;
     }
-    e.stopPropagation();
-    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.Y);
+    downXY = event;
+    event.stopPropagation();
+    referLineHandler = new ReferLineHandler(props.context, GuideAxis.Y);
     document.addEventListener('mousemove', moveHor);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -148,27 +154,26 @@ function downHor(e: MouseEvent) {
     move = moveHor;
 }
 
-function moveHor(e: MouseEvent) {
+function moveHor(event: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.modifyOffset(e);
+        referLineHandler?.modifyOffset(event);
     } else {
-        const y = props.context.workspace.getContentXY(e).y;
-        if (y >= 20) {
+        const y = props.context.workspace.getContentXY(event).y;
+        const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
+        if (y >= 20 && enoughDelta) {
             isDrag = true;
-            referLineHandler?.createApiCaller();
-            referLineHandler?.create(e);
+            referLineHandler?.createApiCaller(event);
         }
     }
 }
 
-function downVer(e: MouseEvent) {
-    if (e.button !== 0) {
+function downVer(event: MouseEvent) {
+    if (event.button !== 0) {
         return;
     }
-    e.stopPropagation();
-
-    referLineHandler = new ReferLineHandler(props.context, e, GuideAxis.X);
-
+    downXY = event;
+    event.stopPropagation();
+    referLineHandler = new ReferLineHandler(props.context, GuideAxis.X);
     document.addEventListener('mousemove', moveVer);
     document.addEventListener('mouseup', upCommon);
     window.addEventListener("blur", blur);
@@ -176,15 +181,16 @@ function downVer(e: MouseEvent) {
     move = moveVer;
 }
 
-function moveVer(e: MouseEvent) {
+function moveVer(event: MouseEvent) {
     if (isDrag) {
-        referLineHandler?.modifyOffset(e);
+        referLineHandler?.modifyOffset(event);
     } else {
-        const x = props.context.workspace.getContentXY(e).x;
-        if (x >= 20) {
+        const x = props.context.workspace.getContentXY(event).x;
+        const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
+
+        if (x >= 20 && enoughDelta) {
             isDrag = true;
-            referLineHandler?.createApiCaller();
-            referLineHandler?.create(e);
+            referLineHandler?.createApiCaller(event);
         }
     }
 }
@@ -202,33 +208,33 @@ function downHover(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
-    props.context.selection.resetSelectShapes();
+
+    if (!referLineSelection.select()) {
+        return;
+    }
+
     event.stopPropagation();
 
-    // 更新选区, 把hover值赋给select
-    if (hovered.value.valid) {
-        selected.value.id = hovered.value.id;
+    downXY = event;
 
-        selected.value.valid = true;
-        selected.value.visible = true;
+    document.addEventListener('mousemove', modifyOffset);
+    document.addEventListener('mouseup', upCommon);
+    window.addEventListener("blur", blur);
 
-        selected.value.index = hovered.value.index;
-        selected.value.env = hovered.value.env;
+    move = modifyOffset;
+}
 
-        selected.value.path = cloneDeep(hovered.value.path);
-        selected.value.start = { ...hovered.value.start };
-        selected.value.end = { ...hovered.value.end };
+function modifyOffset(event: MouseEvent) {
+    if (isDrag) {
+        referLineHandler?.modifyOffset(event);
+    } else {
+        const x = props.context.workspace.getContentXY(event).x;
+        const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
 
-        selected.value.axis = hovered.value.axis;
-        selected.value.offset = hovered.value.offset;
-        selected.value.transform = hovered.value.transform;
-
-        referLineHandler = new ReferLineHandler(props.context, event, selected.value.axis, selected.value.env as ShapeView, selected.value.index);
-        document.addEventListener('mousemove', moveHor);
-        document.addEventListener('mouseup', upCommon);
-        window.addEventListener("blur", blur);
-
-        move = moveHor;
+        if (x >= 20 && enoughDelta) {
+            isDrag = true;
+            referLineHandler?.createApiCaller(event, selected.value.index);
+        }
     }
 }
 
@@ -247,6 +253,7 @@ onMounted(() => {
     props.context.user.watch(userWatcher);
     props.page.watch(pageWatcher);
     props.context.tool.setReferFiner(referLineSelection.search.bind(referLineSelection));
+    props.context.tool.setReferSelection(referLineSelection);
 
     referUnderContainerRenderer.updateUnderRootContainerMap();
 })

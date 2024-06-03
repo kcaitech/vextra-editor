@@ -1,8 +1,9 @@
-import { GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { Artboard, ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
 import { scout, Scout } from "@/utils/scout";
 import { XY } from "@/context/selection";
+import { cloneDeep } from "lodash";
 
 export enum LineTheme {
     Normal = "#ff4400",
@@ -32,12 +33,12 @@ export interface ActiveGuide {
 }
 
 export class ReferLineSelection {
-    readonly m_scout: Scout;
-    readonly m_context: Context;
-    readonly m_line_units: ReferUnit[];
-    readonly m_root_units: ReferUnit;
-    readonly m_selected_guide: ActiveGuide;
-    readonly m_hovered_guide: ActiveGuide;
+    private readonly m_scout: Scout;
+    private readonly m_context: Context;
+    private readonly m_line_units: ReferUnit[];
+    private readonly m_root_units: ReferUnit;
+    private readonly m_selected_guide: ActiveGuide;
+    private readonly m_hovered_guide: ActiveGuide;
 
     private m_last_xy: XY;
 
@@ -196,89 +197,172 @@ export class ReferLineSelection {
         return false;
     }
 
-
-    updateReferSelection() {
+    /**
+     * @description 更新选区，触发因素为容器变动
+     */
+    updateSelectedSelection(envId: string) {
         const selected = this.m_selected_guide;
-        if (selected.valid) {
 
-            const offset = selected.offset;
-            const env = selected.env;
-
-            selected.path.length = 0;
-
-            if (env.type === ShapeType.Page) {
-                const root = this.m_context.workspace.root;
-                const matrix = this.m_context.workspace.matrix
-
-                if (selected.axis === GuideAxis.X) {
-                    selected.start = matrix.computeCoord2(offset, 0);
-                    selected.end = matrix.computeCoord2(offset, root.height);
-
-                    if (selected.start.x < 20 || selected.start.x > root.width) {
-                        return;
-                    }
-
-                    selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
-                } else {
-                    selected.start = matrix.computeCoord2(0, offset);
-                    selected.end = matrix.computeCoord2(root.width, offset);
-
-                    if (selected.start.y < 20 || selected.start.y > root.height) {
-                        return;
-                    }
-
-                    selected.transform = `translateY(${selected.start.y + 10}px)`;
-                }
-
-                const path: Path = { dash: false, data: '' };
-                path.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
-            } else {
-                const root = this.m_context.workspace.root;
-                const frame = env.frame;
-
-                const matrix = env.matrix2Root();
-                matrix.multiAtLeft(this.m_context.workspace.matrix);
-
-                const path1: Path = { dash: true, data: '' };
-                const path2: Path = { dash: false, data: '' };
-                const path3: Path = { dash: true, data: '' };
-
-                if (selected.axis === GuideAxis.X) {
-                    selected.start = matrix.computeCoord2(offset, 0);
-                    selected.end = matrix.computeCoord2(offset, frame.height);
-
-                    if (selected.start.x < 20 || selected.start.x > root.width) {
-                        return;
-                    }
-
-                    selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
-
-                    const clientS = { x: selected.start.x, y: 0 };
-                    const clientE = { x: selected.start.x, y: root.height };
-
-                    path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
-                    path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
-                    path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
-                } else {
-                    selected.start = matrix.computeCoord2(0, offset);
-                    selected.end = matrix.computeCoord2(root.width, offset);
-
-                    if (selected.start.y < 20 || selected.start.y > root.height) {
-                        return;
-                    }
-
-                    selected.transform = `translateY(${selected.start.y + 10}px)`;
-
-                    const clientS = { x: 0, y: selected.start.y };
-                    const clientE = { x: root.width, y: selected.start.y };
-
-                    path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
-                    path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
-                    path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
-                }
-
-                selected.path.push(path2, path1, path3);
-            }
+        // 选区有效时才更新选区
+        if (!selected.valid) {
+            return;
         }
+
+        const env = selected.env as ArtboradView;
+
+        if (env.id !== envId) {
+            return;
+        }
+
+        selected.path.length = 0;
+
+        const offset = selected.offset;
+
+        if (env.type === ShapeType.Page) {
+            const root = this.m_context.workspace.root;
+            const matrix = this.m_context.workspace.matrix
+
+            if (selected.axis === GuideAxis.X) {
+                selected.start = matrix.computeCoord2(offset, 0);
+                selected.end = matrix.computeCoord2(offset, root.height);
+
+                if (selected.start.x < 20 || selected.start.x > root.width) {
+                    return;
+                }
+
+                selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+            } else {
+                selected.start = matrix.computeCoord2(0, offset);
+                selected.end = matrix.computeCoord2(root.width, offset);
+
+                if (selected.start.y < 20 || selected.start.y > root.height) {
+                    return;
+                }
+
+                selected.transform = `translateY(${selected.start.y + 10}px)`;
+            }
+
+            const path: Path = { dash: false, data: '' };
+            path.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+        } else {
+            const root = this.m_context.workspace.root;
+            const frame = env.frame;
+
+            const matrix = env.matrix2Root();
+            matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+            const path1: Path = { dash: true, data: '' };
+            const path2: Path = { dash: false, data: '' };
+            const path3: Path = { dash: true, data: '' };
+
+            if (selected.axis === GuideAxis.X) {
+                selected.start = matrix.computeCoord2(offset, 0);
+                selected.end = matrix.computeCoord2(offset, frame.height);
+
+                if (selected.start.x < 20 || selected.start.x > root.width) {
+                    return;
+                }
+
+                selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+
+                const clientS = { x: selected.start.x, y: 0 };
+                const clientE = { x: selected.start.x, y: root.height };
+
+                path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+                path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
+            } else {
+                selected.start = matrix.computeCoord2(0, offset);
+                selected.end = matrix.computeCoord2(root.width, offset);
+
+                if (selected.start.y < 20 || selected.start.y > root.height) {
+                    return;
+                }
+
+                selected.transform = `translateY(${selected.start.y + 10}px)`;
+
+                const clientS = { x: 0, y: selected.start.y };
+                const clientE = { x: root.width, y: selected.start.y };
+
+                path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+                path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
+            }
+
+            selected.path.push(path2, path1, path3);
+        }
+    }
+
+    updateSelectionForDelete(envId: string) {
+        this.updateSelectedSelectionForDelete(envId);
+        this.updateHoveredSelectionForDelete(envId);
+    }
+
+    updateSelectedSelectionForDelete(envId: string) {
+        const selected = this.m_selected_guide;
+
+        // 选区有效时才更新选区
+        if (!selected.valid) {
+            return;
+        }
+
+        const env = selected.env as ArtboradView;
+
+        if (env.id !== envId) {
+            return;
+        }
+
+        selected.valid = false;
+        selected.id = '-1';
+    }
+
+    updateHoveredSelectionForDelete(envId: string) {
+        const hovered = this.m_hovered_guide;
+
+        // 选区有效时才更新选区
+        if (!hovered.valid) {
+            return;
+        }
+
+        const env = hovered.env as ArtboradView;
+
+        if (env.id !== envId) {
+            return;
+        }
+
+        hovered.valid = false;
+    }
+
+    select() {
+        const selected = this.m_selected_guide;
+        const hovered = this.m_hovered_guide;
+
+        // 当hovered被激活时，selected才有条件激活
+        if (!hovered.valid) {
+            return false;
+        }
+
+        this.m_context.selection.resetSelectShapes();
+
+        selected.valid = true;
+        selected.visible = true;
+
+        selected.id = hovered.id;
+        selected.index = hovered.index;
+        selected.env = hovered.env;
+
+        selected.path = cloneDeep(hovered.path);
+        selected.start = { ...hovered.start };
+        selected.end = { ...hovered.end };
+
+        selected.axis = hovered.axis;
+        selected.offset = hovered.offset;
+        selected.transform = hovered.transform;
+
+        return true;
+    }
+
+    get selected() {
+        return this.m_selected_guide;
     }
 }
