@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { ArtboradView, GuideAxis, PageView, ShapeType } from '@kcdesign/data';
+import { ArtboradView, GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -12,6 +12,7 @@ import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
 import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { v4 } from "uuid";
+import { cloneDeep } from "lodash";
 
 const props = defineProps<{
     context: Context;
@@ -209,6 +210,25 @@ function moveVer(event: MouseEvent) {
 }
 
 function clear() {
+    if (!isDrag && hovered.value.valid) {
+        // 单点选择参考线
+        selected.value.id = hovered.value.id;
+
+        selected.value.valid = true;
+        selected.value.visible = true;
+
+        selected.value.index = hovered.value.index;
+        selected.value.env = hovered.value.env;
+
+        selected.value.path = cloneDeep(hovered.value.path);
+        selected.value.start = { ...hovered.value.start };
+        selected.value.end = { ...hovered.value.end };
+
+        selected.value.axis = hovered.value.axis;
+        selected.value.offset = hovered.value.offset;
+        selected.value.transform = hovered.value.transform;
+    }
+
     isDrag = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', upCommon);
@@ -222,13 +242,17 @@ function downHover(event: MouseEvent) {
         return;
     }
 
-    if (!referLineSelection.select()) {
+    if (!hovered.value.valid) {
         return;
     }
 
     event.stopPropagation();
 
     downXY = event;
+
+    const { axis, env, index } = hovered.value;
+
+    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
 
     document.addEventListener('mousemove', modifyOffset);
     document.addEventListener('mouseup', upCommon);
@@ -238,15 +262,26 @@ function downHover(event: MouseEvent) {
 }
 
 function modifyOffset(event: MouseEvent) {
+    if (!referLineHandler) {
+        return;
+    }
+
     if (isDrag) {
-        referLineHandler?.modifyOffset(event);
+        referLineHandler.modifyOffset(event);
+        referLineSelection.updateHoveredSelection(hovered.value.env.id);
     } else {
-        const x = props.context.workspace.getContentXY(event).x;
+        let offset;
+        if (referLineHandler.m_axis === GuideAxis.X) {
+            offset = props.context.workspace.getContentXY(event).x
+        } else {
+            offset = props.context.workspace.getContentXY(event).y
+        }
+
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
 
-        if (x >= 20 && enoughDelta) {
+        if (offset >= 20 && enoughDelta) {
+            referLineHandler.createApiCaller(event, referLineHandler.m_index);
             isDrag = true;
-            referLineHandler?.createApiCaller(event, selected.value.index);
         }
     }
 }

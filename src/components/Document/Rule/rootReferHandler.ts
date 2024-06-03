@@ -27,7 +27,7 @@ export class RootReferHandler {
         const lines = this.m_lines.lines;
 
         if (index > -1) {
-            // todo 暂时没有比较好的局部更新方案
+            // todo 该场景暂时没有比较好的局部更新方案
         } else { // 全量更新
             lines.length = 0;
             const guides = this.m_page.guides || [];

@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
 import { ArtboradView, GuideAxis, Matrix, ReferHandleApiCaller, ShapeView } from "@kcdesign/data";
-import { Tool } from "@/context/tool";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 
@@ -29,17 +28,15 @@ export function formatNumber(v: number) {
 }
 
 export class ReferLineHandler extends TransformHandler {
+    m_index: number;
     readonly m_axis: GuideAxis;
-    readonly tool: Tool;
 
     private m_current_env: ShapeView;
-    private m_index: number;
     private livingXY: XY = { x: 0, y: 0 };
 
     constructor(context: Context, axis: GuideAxis, env?: ShapeView, index?: number) {
         super(context);
         this.m_axis = axis;
-        this.tool = context.tool;
 
         if (env) {
             this.m_current_env = env;
@@ -173,7 +170,6 @@ export class ReferLineHandler extends TransformHandler {
     }
 
     private __migrate() {
-        console.log('==MIGRATE==')
         const env = this.envSearch();
 
         const _o_env = this.m_current_env as ArtboradView;

@@ -315,6 +315,115 @@ export class ReferLineSelection {
         }
     }
 
+    updateHoveredSelection(envId: string) {
+        const hovered = this.m_hovered_guide;
+
+        // 选区有效时才更新选区
+        if (!hovered.valid) {
+            return;
+        }
+
+        const env = hovered.env as ArtboradView;
+
+        if (env.id !== envId) {
+            return;
+        }
+
+        const gui = (env as ArtboradView)?.guides?.[hovered.index];
+        if (!gui) {
+            return;
+        }
+
+        hovered.path.length = 0;
+
+        const offset = gui.offset;
+        hovered.offset = gui.offset;
+
+        hovered.desc = formatNumber(hovered.offset);
+
+        if (env.type === ShapeType.Page) {
+            const root = this.m_context.workspace.root;
+            const matrix = this.m_context.workspace.matrix
+
+            if (hovered.axis === GuideAxis.X) {
+                const x = matrix.computeCoord2(offset, 0).x;
+
+
+                if (x < 20 || x > root.width) {
+                    return;
+                }
+
+                hovered.start = { x, y: 0 };
+                hovered.end = { x, y: root.height };
+
+                hovered.transform = `translate(${hovered.start.x + 2}px, 10px)`;
+            } else {
+                const y = matrix.computeCoord2(0, offset).y;
+
+
+                if (y < 20 || y > root.height) {
+                    return;
+                }
+
+                hovered.start = { x: 0, y };
+                hovered.end = { x: root.width, y };
+
+                hovered.transform = `translateY(${hovered.start.y + 10}px)`;
+            }
+
+            const path: Path = { dash: false, data: '' };
+            path.data = `M${hovered.start.x} ${hovered.start.y} L${hovered.end.x} ${hovered.end.y}`;
+
+            hovered.path.push(path);
+        } else {
+            const root = this.m_context.workspace.root;
+            const frame = env.frame;
+
+            const matrix = env.matrix2Root();
+            matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+            const path1: Path = { dash: true, data: '' };
+            const path2: Path = { dash: false, data: '' };
+            const path3: Path = { dash: true, data: '' };
+
+            if (hovered.axis === GuideAxis.X) {
+                hovered.start = matrix.computeCoord2(offset, 0);
+                hovered.end = matrix.computeCoord2(offset, frame.height);
+
+                if (hovered.start.x < 20 || hovered.start.x > root.width) {
+                    return;
+                }
+
+                hovered.transform = `translate(${hovered.start.x + 2}px, 10px)`;
+
+                const clientS = { x: hovered.start.x, y: 0 };
+                const clientE = { x: hovered.start.x, y: root.height };
+
+                path1.data = `M${clientS.x} ${clientS.y} L${hovered.start.x} ${hovered.start.y}`;
+                path2.data = `M${hovered.start.x} ${hovered.start.y} L${hovered.end.x} ${hovered.end.y}`;
+                path3.data = `M${hovered.end.x} ${hovered.end.y} L${clientE.x} ${clientE.y}`;
+            } else {
+                hovered.start = matrix.computeCoord2(0, offset);
+                hovered.end = matrix.computeCoord2(frame.width, offset);
+
+                if (hovered.start.y < 20 || hovered.start.y > root.height) {
+                    return;
+                }
+
+                hovered.transform = `translateY(${hovered.start.y + 10}px)`;
+
+                const clientS = { x: 0, y: hovered.start.y };
+                const clientE = { x: root.width, y: hovered.start.y };
+
+                path1.data = `M${clientS.x} ${clientS.y} L${hovered.start.x} ${hovered.start.y}`;
+                path2.data = `M${hovered.start.x} ${hovered.start.y} L${hovered.end.x} ${hovered.end.y}`;
+                path3.data = `M${hovered.end.x} ${hovered.end.y} L${clientE.x} ${clientE.y}`;
+            }
+
+            hovered.path.push(path2, path1, path3);
+        }
+    }
+
     updateSelectionForDelete(envId: string) {
         this.updateSelectedSelectionForDelete(envId);
         this.updateHoveredSelectionForDelete(envId);
@@ -401,5 +510,10 @@ export class ReferLineSelection {
     resetSelected() {
         this.m_selected_guide.valid = false;
         this.m_selected_guide.id = '-1';
+    }
+
+    resetHovered() {
+        this.m_hovered_guide.valid = false;
+        this.m_hovered_guide.id = '-1';
     }
 }
