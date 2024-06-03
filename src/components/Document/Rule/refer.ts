@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { TransformHandler } from "@/transform/handler";
 import {
-    adapt2Shape,
     ArtboradView,
     GuideAxis,
     Matrix,
@@ -9,7 +8,6 @@ import {
     ShapeView
 } from "@kcdesign/data";
 import { Tool } from "@/context/tool";
-import { debounce } from "lodash";
 import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 
@@ -57,6 +55,10 @@ export class ReferLineHandler extends TransformHandler {
         this.m_index = index ?? -1;
     }
 
+    get api() {
+        return this.asyncApiCaller as ReferHandleApiCaller;
+    }
+
     createApiCaller() {
         this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
         this.workspace.translating(true);
@@ -100,7 +102,7 @@ export class ReferLineHandler extends TransformHandler {
             offset = this.workspace.getRootXY(event).y;
         }
 
-        this.m_index = (this.asyncApiCaller as ReferHandleApiCaller).create(this.m_axis, offset);
+        this.m_index = this.api.create(this.m_axis, offset);
     }
 
     modifyOffset(event: MouseEvent) {
@@ -113,8 +115,6 @@ export class ReferLineHandler extends TransformHandler {
             __root_xy.x = Math.round(__root_xy.x);
             __root_xy.y = Math.round(__root_xy.y);
         }
-
-        console.log('__this.m_index:', this.m_index);
 
         const index = this.m_index;
         const currentEnv = this.m_current_env as ArtboradView;
@@ -142,59 +142,57 @@ export class ReferLineHandler extends TransformHandler {
             } else {
                 offset = m.computeCoord3(__root_xy).y;
             }
-
-            console.log('=offset=', offset);
         }
 
-        (this.asyncApiCaller as ReferHandleApiCaller).modifyOffset(currentEnv, index, offset, false);
+        this.api.modifyOffset(currentEnv, index, offset, false);
 
         this.migrate();
     }
 
     private __migrate() {
         const env = this.envSearch();
-        if (env.id === this.m_current_env.id) {
-            return;
-        }
-        if (env.id === this.page.id) {
-            // to page
 
-            return;
-        }
+        const _o_env = this.m_current_env as ArtboradView;
 
-        // 一定要是在页面下的容器
-        if (env.parent?.id !== this.page.id || !env.isNoTransform()) {
-            return;
-        }
-
-        const guide = (this.m_current_env as ArtboradView).guides?.[this.m_index];
-        if (!guide) {
-            return;
-        }
+        if (env.id === _o_env.id) return;
 
         let targetOffset;
-        if (this.m_current_env.id === this.page.id) {
-            const m = new Matrix(env.matrix2Root().inverse);
 
+        const guide = _o_env.guides?.[this.m_index];
+        if (!guide) return;
+
+        if (env.id === this.page.id) {  // 容器迁页面
             if (guide.axis === GuideAxis.X) {
-                targetOffset = m.computeCoord2(guide.offset, 0).x;
+                targetOffset = _o_env.matrix2Root().computeCoord2(guide.offset, 0).x;
             } else {
-                targetOffset = m.computeCoord2(0, guide.offset).y;
+                targetOffset = _o_env.matrix2Root().computeCoord2(0, guide.offset).y;
             }
         } else {
-            const m1 = this.m_current_env.matrix2Root();
-            const m2 = new Matrix(env.matrix2Root().inverse);
+            if (env.parent?.id !== this.page.id || !env.isNoTransform()) return;
 
-            if (guide.axis === GuideAxis.X) {
-                let _temp = m1.computeCoord2(guide.offset, 0).x;
-                targetOffset = m2.computeCoord2(_temp, 0).x;
-            } else {
-                let _temp = m1.computeCoord2(0, guide.offset).y;
-                targetOffset = m2.computeCoord2(0, _temp).y;
+            if (_o_env.id === this.page.id) {  // 页面迁容器
+                const m = new Matrix(env.matrix2Root().inverse);
+
+                if (guide.axis === GuideAxis.X) {
+                    targetOffset = m.computeCoord2(guide.offset, 0).x;
+                } else {
+                    targetOffset = m.computeCoord2(0, guide.offset).y;
+                }
+            } else { // 容器迁容器
+                const m1 = _o_env.matrix2Root();
+                const m2 = new Matrix(env.matrix2Root().inverse);
+
+                if (guide.axis === GuideAxis.X) {
+                    let _temp = m1.computeCoord2(guide.offset, 0).x;
+                    targetOffset = m2.computeCoord2(_temp, 0).x;
+                } else {
+                    let _temp = m1.computeCoord2(0, guide.offset).y;
+                    targetOffset = m2.computeCoord2(0, _temp).y;
+                }
             }
         }
 
-        const result = (this.asyncApiCaller as ReferHandleApiCaller).migrate(this.m_current_env, this.m_index, env, targetOffset);
+        const result = this.api.migrate(this.m_current_env, this.m_index, env, targetOffset);
 
         this.m_current_env = result.env;
         this.m_index = result.index
