@@ -32,11 +32,13 @@ export interface ActiveGuide {
 
 export class ReferLineSelection {
     readonly m_scout: Scout;
-    private m_context: Context;
-    private m_line_units: ReferUnit[];
-    private m_root_units: ReferUnit;
-    private m_selected_guide: ActiveGuide;
-    private m_hovered_guide: ActiveGuide;
+    readonly m_context: Context;
+    readonly m_line_units: ReferUnit[];
+    readonly m_root_units: ReferUnit;
+    readonly m_selected_guide: ActiveGuide;
+    readonly m_hovered_guide: ActiveGuide;
+
+    private m_last_xy: XY;
 
     constructor(ctx: Context, lineUnits: ReferUnit[], rootUnit: ReferUnit, selected: ActiveGuide, hovered: ActiveGuide) {
         this.m_context = ctx;
@@ -46,6 +48,8 @@ export class ReferLineSelection {
         this.m_hovered_guide = hovered;
 
         this.m_scout = scout(ctx);
+
+        this.m_last_xy = { x: 0, y: 0 };
     }
 
     private isPointInStroke(point: XY, start: XY, end: XY) {
@@ -55,6 +59,17 @@ export class ReferLineSelection {
     }
 
     search(xy: XY) {
+        this.m_last_xy = { ...xy };
+        return this.__search();
+    }
+
+    searchPassive() {
+        return this.__search();
+    }
+
+    private __search() {
+        const xy = this.m_last_xy;
+
         const hovered = this.m_hovered_guide;
 
         const isT = this.isPointInStroke.bind(this);
@@ -173,6 +188,7 @@ export class ReferLineSelection {
 
         return false;
     }
+
 
     updateReferSelection() {
         const selected = this.m_selected_guide;

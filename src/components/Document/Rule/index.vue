@@ -94,7 +94,6 @@ function workspaceWatcher(t: number) {
         scaleRenderer.render();
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
-        // referLineSelection.updateReferSelection();
     }
 }
 
