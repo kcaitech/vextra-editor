@@ -433,8 +433,11 @@ onUnmounted(() => {
                 />
                 <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
             </g>
-            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downSelect">
-                <text class="offset-desc" :style="{transform: selected.transform }">{{ selected.offset }}</text>
+            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'"
+               @mousedown="downSelect">
+                <text v-if="selected.path.length" class="offset-desc" :style="{transform: selected.transform }">
+                    {{ selected.offset }}
+                </text>
                 <path
                     v-for="(p, i) in selected.path"
                     :key="i"
