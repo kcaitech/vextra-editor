@@ -130,7 +130,6 @@ export class RotateHandler extends TransformHandler {
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
-            shape.matrix2Root().computeCoord2(shape.frame.x, shape.frame.y);
 
             const parent = shape.parent!;
 

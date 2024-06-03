@@ -541,10 +541,7 @@ export class BaseCreator extends BaseTreeNode {
 
         // 抵消视图层在前后加的两次平移操作
         if (this.transform.hasRotation()) {
-            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate({
-                vector: new ColVector3D([-w1 / 2, -h1 / 2, 0]),
-                mode: TransformMode.Local,
-            }).decompose()
+            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate(new ColVector3D([-w1 / 2, -h1 / 2, 0])).decompose()
             translate = res.translate
             rotate = res.rotate
             skew = res.skew
@@ -740,10 +737,7 @@ export class SvgCreator extends BaseCreator {
                     // })
                 }
                 if (dx !== 0 || dy !== 0) for (const item of this.children) {
-                    item.transform.translate({
-                        vector: new ColVector3D([dx, dy, 0]),
-                        mode: TransformMode.Local,
-                    })
+                    item.transform.translate(new ColVector3D([dx, dy, 0]))
                 }
                 if (scaleX !== 1 || scaleY !== 1 || dx !== 0 || dy !== 0) for (const item of this.children) {
                     item.updateShapeAttrByTransform()

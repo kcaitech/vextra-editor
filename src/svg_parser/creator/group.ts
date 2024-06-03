@@ -74,7 +74,7 @@ export class GroupCreator extends BaseCreator {
 
         // 将子元素包围盒偏移至groupShape的左上角
         for (const child of children) {
-            child.creator.transform.translate({vector: new ColVector3D([-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0])})
+            child.creator.transform.translate(new ColVector3D([-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0]))
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
