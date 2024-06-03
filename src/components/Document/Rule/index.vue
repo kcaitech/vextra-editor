@@ -261,6 +261,32 @@ function downHover(event: MouseEvent) {
     move = modifyOffset;
 }
 
+function downSelect(event: MouseEvent) {
+    if (event.button !== 0) {
+        return;
+    }
+
+    if (!selected.value.valid) {
+        return;
+    }
+
+    event.stopPropagation();
+
+    downXY = event;
+
+    const { axis, env, index } = selected.value;
+
+    referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
+
+    hovered.value.valid = false;
+
+    document.addEventListener('mousemove', modifyOffset);
+    document.addEventListener('mouseup', upCommon);
+    window.addEventListener("blur", blur);
+
+    move = modifyOffset;
+}
+
 function modifyOffset(event: MouseEvent) {
     if (!referLineHandler) {
         return;
@@ -407,7 +433,7 @@ onUnmounted(() => {
                 />
                 <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
             </g>
-            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downHover">
+            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downSelect">
                 <text class="offset-desc" :style="{transform: selected.transform }">{{ selected.offset }}</text>
                 <path
                     v-for="(p, i) in selected.path"
