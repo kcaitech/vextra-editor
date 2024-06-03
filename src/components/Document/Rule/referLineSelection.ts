@@ -153,11 +153,14 @@ export class ReferLineSelection {
         const rootLines = rootUnit.lines;
         for (let l = 0; l < rootLines.length; l++) {
             const line = rootLines[l];
+            if (line.id === selected.id) continue;
 
             const s = matrix.computeCoord3(line.start);
             const e = matrix.computeCoord3(line.end);
 
             if (isT(xy, s, e)) {
+                hovered.id = `page-id-/${l}`;
+
                 hovered.valid = true;
                 hovered.env = rootUnit.shape;
                 hovered.index = l;
@@ -208,42 +211,59 @@ export class ReferLineSelection {
             return;
         }
 
+        // 顺手关一下
+        this.m_hovered_guide.valid = false;
+
         const env = selected.env as ArtboradView;
 
         if (env.id !== envId) {
             return;
         }
 
+        const gui = (env as ArtboradView)?.guides?.[selected.index];
+        if (!gui) {
+            return;
+        }
+
         selected.path.length = 0;
 
-        const offset = selected.offset;
+        const offset = gui.offset;
+        selected.offset = gui.offset;
 
         if (env.type === ShapeType.Page) {
             const root = this.m_context.workspace.root;
             const matrix = this.m_context.workspace.matrix
 
             if (selected.axis === GuideAxis.X) {
-                selected.start = matrix.computeCoord2(offset, 0);
-                selected.end = matrix.computeCoord2(offset, root.height);
+                const x = matrix.computeCoord2(offset, 0).x;
 
-                if (selected.start.x < 20 || selected.start.x > root.width) {
+
+                if (x < 20 || x > root.width) {
                     return;
                 }
+
+                selected.start = { x, y: 0 };
+                selected.end = { x, y: root.height };
 
                 selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
             } else {
-                selected.start = matrix.computeCoord2(0, offset);
-                selected.end = matrix.computeCoord2(root.width, offset);
+                const y = matrix.computeCoord2(0, offset).y;
 
-                if (selected.start.y < 20 || selected.start.y > root.height) {
+
+                if (y < 20 || y > root.height) {
                     return;
                 }
+
+                selected.start = { x: 0, y };
+                selected.end = { x: root.width, y };
 
                 selected.transform = `translateY(${selected.start.y + 10}px)`;
             }
 
             const path: Path = { dash: false, data: '' };
             path.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
+
+            selected.path.push(path);
         } else {
             const root = this.m_context.workspace.root;
             const frame = env.frame;
@@ -268,12 +288,12 @@ export class ReferLineSelection {
                 const clientS = { x: selected.start.x, y: 0 };
                 const clientE = { x: selected.start.x, y: root.height };
 
-                path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                path1.data = `M${clientS.x} ${clientS.y} L${selected.start.x} ${selected.start.y}`;
                 path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
                 path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
             } else {
                 selected.start = matrix.computeCoord2(0, offset);
-                selected.end = matrix.computeCoord2(root.width, offset);
+                selected.end = matrix.computeCoord2(frame.width, offset);
 
                 if (selected.start.y < 20 || selected.start.y > root.height) {
                     return;
@@ -284,7 +304,7 @@ export class ReferLineSelection {
                 const clientS = { x: 0, y: selected.start.y };
                 const clientE = { x: root.width, y: selected.start.y };
 
-                path1.data = `M${clientS.x} ${clientS.y} L${clientS.x} ${selected.start.y}`;
+                path1.data = `M${clientS.x} ${clientS.y} L${selected.start.x} ${selected.start.y}`;
                 path2.data = `M${selected.start.x} ${selected.start.y} L${selected.end.x} ${selected.end.y}`;
                 path3.data = `M${selected.end.x} ${selected.end.y} L${clientE.x} ${clientE.y}`;
             }
@@ -359,10 +379,20 @@ export class ReferLineSelection {
         selected.offset = hovered.offset;
         selected.transform = hovered.transform;
 
+        hovered.valid = false;
+        hovered.id = '-1';
+
         return true;
     }
 
     get selected() {
         return this.m_selected_guide;
+    }
+
+    updateByShapesSelected() {
+        if (this.m_context.selection.selectedShapes.length) {
+            this.m_selected_guide.valid = false;
+            this.m_selected_guide.id = '-1';
+        }
     }
 }

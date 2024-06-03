@@ -55,6 +55,10 @@ export class ReferLineHandler extends TransformHandler {
     }
 
     createApiCaller(event: MouseEvent, index?: number) {
+        if (this.asyncApiCaller) {
+            return;
+        }
+
         this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
         this.workspace.translating(true);
 
@@ -72,9 +76,9 @@ export class ReferLineHandler extends TransformHandler {
     }
 
     fulfil() {
-        this.__migrate();
         this.workspace.translating(false);
         super.fulfil();
+        this.asyncApiCaller = undefined;
     }
 
     private envSearch() {
@@ -149,7 +153,27 @@ export class ReferLineHandler extends TransformHandler {
         this.migrate();
     }
 
+    modifyOffsetByKeyboard(del: number) {
+        if (!this.asyncApiCaller) {
+            this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
+        }
+
+        const index = this.m_index;
+        const currentEnv = this.m_current_env as ArtboradView;
+
+
+        const gui = currentEnv?.guides?.[index];
+
+        if (!gui) {
+            // 不存在这条线
+            return;
+        }
+
+        this.api.modifyOffset(currentEnv, index, gui.offset + del, false);
+    }
+
     private __migrate() {
+        console.log('==MIGRATE==')
         const env = this.envSearch();
 
         const _o_env = this.m_current_env as ArtboradView;
@@ -197,9 +221,6 @@ export class ReferLineHandler extends TransformHandler {
         this.m_current_env = result.env;
         this.m_index = result.index
     }
-
-    // migrateOnce = debounce(this.__migrate, 20); // 延时迁移
-    // migrateOnce = this.__migrate;
 
     private migrate() {
         this.__migrate();

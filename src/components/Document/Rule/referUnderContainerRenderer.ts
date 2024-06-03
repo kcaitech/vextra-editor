@@ -27,8 +27,6 @@ export class ReferUnderContainerRenderer {
      * @description 更新指定Container的参考线绘制
      */
     private updateContainerLineRender(id: string, args: any) {
-        // console.log('==args==', args);
-
         const ctx = this.m_context;
         const referSelection = ctx.tool.referSelection;
 
@@ -58,6 +56,12 @@ export class ReferUnderContainerRenderer {
         }
 
         this.updateReferUnit(unit);
+
+        if ((args && args.includes('guides') && args.includes('offset', -1))) {
+            referSelection.updateSelectedSelection(id);
+            return;
+        }
+
         referSelection.updateSelectedSelection(id);
     }
 

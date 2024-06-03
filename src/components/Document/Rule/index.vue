@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { GuideAxis, PageView } from '@kcdesign/data';
+import { ArtboradView, GuideAxis, PageView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -83,6 +83,7 @@ const referLineSelection = new ReferLineSelection(
 );
 
 const pageWatcher = (...args: any) => {
+    console.log('args:', ...args);
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
         return;
@@ -92,6 +93,8 @@ const pageWatcher = (...args: any) => {
 
         if (args.includes('length', -1)) {
             props.context.tool.referSelection.updateSelectionForDelete(props.page.id);
+        } else if (args.includes('offset', -1)) {
+            props.context.tool.referSelection.updateSelectedSelection(props.page.id);
         }
     }
 }
@@ -109,6 +112,14 @@ function userWatcher(t: number) {
         ruleVisible.value = props.context.user.isRuleVisible;
         scaleRenderer.render();
         rootReferHandler.render();
+
+        if (ruleVisible.value) {
+            props.page.watch(pageWatcher);
+            referUnderContainerRenderer.updateUnderRootContainerMap();
+        } else {
+            props.page.unwatch(pageWatcher);
+            referUnderContainerRenderer.clearContainerWatcher();
+        }
     }
 }
 
@@ -123,6 +134,7 @@ function toolWatcher(t: number) {
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
+        referLineSelection.updateByShapesSelected();
     }
 }
 
@@ -246,6 +258,77 @@ function blur() {
     clear();
 }
 
+// ArrowRight ArrowLeft ArrowUp ArrowDown
+let holder: any = undefined;
+let keyboardWorking = false;
+
+function keydown(event: KeyboardEvent) {
+    if (
+        !props.context.user.isRuleVisible ||
+        !selected.value.valid ||
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        isDrag
+    ) {
+        return;
+    }
+
+    const code = event.code;
+
+    let step = 1;
+
+    if (event.shiftKey) {
+        step *= 10;
+    }
+
+    if (code === 'ArrowRight') {
+        if (selected.value.axis === GuideAxis.X) {
+            modifyOffsetByKeyboard(step);
+        }
+    } else if (code === 'ArrowLeft') {
+        if (selected.value.axis === GuideAxis.X) {
+            modifyOffsetByKeyboard(-step);
+        }
+    } else if (code === 'ArrowUp') {
+        if (selected.value.axis === GuideAxis.Y) {
+            modifyOffsetByKeyboard(-step);
+        }
+    } else if (code === 'ArrowDown') {
+        if (selected.value.axis === GuideAxis.Y) {
+            modifyOffsetByKeyboard(step);
+        }
+    }
+}
+
+function modifyOffsetByKeyboard(del: number) {
+    keyboardWorking = true;
+
+    const { env, index, axis } = selected.value;
+
+    if (!referLineHandler) {
+        referLineHandler = new ReferLineHandler(props.context, axis, env as ArtboradView, index);
+    }
+
+    referLineHandler.modifyOffsetByKeyboard(del);
+
+    updateHolder();
+}
+
+function updateHolder() {
+    clearTimeout(holder);
+
+    holder = setTimeout(() => {
+        if (!keyboardWorking) {
+            return;
+        }
+        keyboardWorking = false;
+        referLineHandler?.fulfil();
+        referLineHandler = undefined;
+        clearTimeout(holder);
+        holder = null;
+    }, 500);
+}
+
 onMounted(() => {
     props.context.tool.watch(toolWatcher);
     props.context.workspace.watch(workspaceWatcher);
@@ -256,6 +339,8 @@ onMounted(() => {
     props.context.tool.setReferSelection(referLineSelection);
 
     referUnderContainerRenderer.updateUnderRootContainerMap();
+
+    document.addEventListener('keydown', keydown);
 })
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
@@ -265,6 +350,8 @@ onUnmounted(() => {
     props.page.unwatch(pageWatcher);
 
     referUnderContainerRenderer.clearContainerWatcher();
+
+    document.removeEventListener('keydown', keydown);
 })
 </script>
 <template>
