@@ -48,7 +48,7 @@ export class RootReferHandler {
                     start = { x: 0, y: offset };
                     end = { x: root.width, y: offset };
                 }
-                lines.push({ axis, offset: guide.offset, start, end, path: genPath(start, end) });
+                lines.push({ id: `page-id-/${i}`, axis, offset: guide.offset, start, end, path: genPath(start, end) });
             }
         }
     }

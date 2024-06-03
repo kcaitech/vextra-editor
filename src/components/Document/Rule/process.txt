@@ -33,6 +33,7 @@
             · 【guides】类型：更新页面下所有参考线；
         · RuleMounted时对WorkSpaceMatrix进行监听
             · 对地图上的所有点进行线性转换，转换过程中注意端点极值；
+    · 渲染与重绘的过程中，需要保持offset不变，offset + matrix可以计算任意坐标系的值；
 
 * 参考线鼠标查找
     · 当键盘按下Shift时，不进行索引；

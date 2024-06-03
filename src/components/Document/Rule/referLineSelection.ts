@@ -16,6 +16,7 @@ interface Path {
 }
 
 export interface ActiveGuide {
+    id: string;
     valid: boolean;
     index: number;
     env: ShapeView;
@@ -71,6 +72,7 @@ export class ReferLineSelection {
         const xy = this.m_last_xy;
 
         const hovered = this.m_hovered_guide;
+        const selected = this.m_selected_guide;
 
         const isT = this.isPointInStroke.bind(this);
 
@@ -91,16 +93,21 @@ export class ReferLineSelection {
             for (let l = 0; l < lines.length; l++) {
                 const line = lines[l];
 
+                if (line.id === selected.id) continue;
+
                 const s = matrix.computeCoord3(line.start);
                 const e = matrix.computeCoord3(line.end);
 
                 if (isT(xy, s, e)) {
+                    hovered.id = line.id;
+
                     hovered.valid = true;
                     hovered.env = unit.shape;
                     hovered.index = l;
 
                     hovered.start = line.start;
                     hovered.end = line.end;
+                    hovered.offset = line.offset;
 
                     hovered.theme = LineTheme.Deep;
                     hovered.axis = line.axis;

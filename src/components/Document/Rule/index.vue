@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { GuideAxis, PageView } from '@kcdesign/data';
+import { GuideAxis, PageView, ShapeView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -11,6 +11,8 @@ import { ReferUnderContainerRenderer } from "@/components/Document/Rule/referUnd
 import { Scale, ScaleRenderer } from "@/components/Document/Rule/scaleRenderer";
 import { RootReferHandler } from "@/components/Document/Rule/rootReferHandler";
 import { ActiveGuide, LineTheme, ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
+import { cloneDeep } from "lodash";
+import { v4 } from "uuid";
 
 const props = defineProps<{
     context: Context;
@@ -44,6 +46,7 @@ const rootReferHandler = new RootReferHandler(props.context, props.page, rootLin
  * @description 参考线选区
  */
 const selected = ref<ActiveGuide>({
+    id: v4(),
     valid: false,
     index: -1,
     env: props.page,
@@ -58,6 +61,7 @@ const selected = ref<ActiveGuide>({
     desc: 0
 });
 const hovered = ref<ActiveGuide>({
+    id: v4(),
     valid: false,
     index: -1,
     env: props.page,
@@ -78,7 +82,6 @@ const referLineSelection = new ReferLineSelection(
     selected.value as ActiveGuide,
     hovered.value as ActiveGuide
 );
-
 
 const pageWatcher = (...args: any) => {
     if (args.length === 1 && args[0] === 'childs') {
@@ -195,28 +198,38 @@ function clear() {
     referLineHandler = undefined;
 }
 
-function downHover(e: MouseEvent) {
-    if (e.button !== 0) {
+function downHover(event: MouseEvent) {
+    if (event.button !== 0) {
         return;
     }
     props.context.selection.resetSelectShapes();
-    e.stopPropagation();
+    event.stopPropagation();
 
-    // 更新选区
-    // if (hovered.value.valid) {
-    //     selected.value.valid = true;
-    //     selected.value.visible = true;
-    //
-    //     selected.value.index = hovered.value.index;
-    //     selected.value.env = hovered.value.env;
-    //     selected.value.path = hovered.value.path;
-    //     selected.value.start = hovered.value.start;
-    //     selected.value.end = hovered.value.end;
-    //
-    //     selected.value.axis = hovered.value.axis;
-    //     selected.value.offset = hovered.value.offset;
-    //     selected.value.transform = hovered.value.transform;
-    // }
+    // 更新选区, 把hover值赋给select
+    if (hovered.value.valid) {
+        selected.value.id = hovered.value.id;
+
+        selected.value.valid = true;
+        selected.value.visible = true;
+
+        selected.value.index = hovered.value.index;
+        selected.value.env = hovered.value.env;
+
+        selected.value.path = cloneDeep(hovered.value.path);
+        selected.value.start = { ...hovered.value.start };
+        selected.value.end = { ...hovered.value.end };
+
+        selected.value.axis = hovered.value.axis;
+        selected.value.offset = hovered.value.offset;
+        selected.value.transform = hovered.value.transform;
+
+        referLineHandler = new ReferLineHandler(props.context, event, selected.value.axis, selected.value.env as ShapeView, selected.value.index);
+        document.addEventListener('mousemove', moveHor);
+        document.addEventListener('mouseup', upCommon);
+        window.addEventListener("blur", blur);
+
+        move = moveHor;
+    }
 }
 
 function upCommon() {

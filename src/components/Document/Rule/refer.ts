@@ -12,6 +12,7 @@ import { XY } from "@/context/selection";
 import { isShapeOut } from "@/utils/assist";
 
 export interface Line {
+    id: string;
     axis: GuideAxis;
     offset: number;
     start: XY;

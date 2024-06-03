@@ -54,7 +54,7 @@ export class ReferUnderContainerRenderer {
      * @description 为指定Container生成参考线
      */
     private generateUnit(shape: ShapeView) {
-        const unit: ReferUnit = {shape: shape, id: shape.id, lines: []};
+        const unit: ReferUnit = { shape: shape, id: shape.id, lines: [] };
 
         this.m_units.push(unit);
 
@@ -106,7 +106,7 @@ export class ReferUnderContainerRenderer {
                 if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
             }
 
-            unit.lines.push({axis, offset, start, end, path: genPath(start, end)});
+            unit.lines.push({ id: `${shape.id}/${i}`, axis, offset, start, end, path: genPath(start, end) });
         }
     }
 
@@ -132,7 +132,7 @@ export class ReferUnderContainerRenderer {
 
         URCM.clear();
 
-        for (let i = children.length - 1; i > -1 ; i--) {
+        for (let i = children.length - 1; i > -1; i--) {
             const c = children[i];
             if (!c.isContainer || (c.rotation || 0) % 180) {
                 continue;
