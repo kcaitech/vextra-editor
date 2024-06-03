@@ -354,7 +354,10 @@ function onMouseDown(e: MouseEvent) {
         } else {
             isMouseLeftPress = true;
             wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+            // 取消参考线选区
+            props.context.tool.referSelection.resetSelected();
         }
+
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) { // 右键按下，右键菜单处理

@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { ArtboradView, GuideAxis, PageView } from '@kcdesign/data';
+import { ArtboradView, GuideAxis, PageView, ShapeType } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -104,6 +104,7 @@ function workspaceWatcher(t: number) {
         scaleRenderer.render();
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
+        props.context.tool.referSelection.updateSelectedSelection(selected.value.env.id);
     }
 }
 
@@ -258,7 +259,6 @@ function blur() {
     clear();
 }
 
-// ArrowRight ArrowLeft ArrowUp ArrowDown
 let holder: any = undefined;
 let keyboardWorking = false;
 

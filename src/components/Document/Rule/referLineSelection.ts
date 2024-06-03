@@ -167,11 +167,13 @@ export class ReferLineSelection {
 
                 hovered.start = line.start;
                 hovered.end = line.end;
+                hovered.offset = line.offset;
 
                 hovered.theme = LineTheme.Deep;
                 hovered.axis = line.axis;
 
                 if (line.axis === GuideAxis.X) {
+                    console.log('line.offset:', line.offset);
                     hovered.desc = formatNumber(line.offset);
                     hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                 } else {
@@ -394,5 +396,10 @@ export class ReferLineSelection {
             this.m_selected_guide.valid = false;
             this.m_selected_guide.id = '-1';
         }
+    }
+
+    resetSelected() {
+        this.m_selected_guide.valid = false;
+        this.m_selected_guide.id = '-1';
     }
 }
