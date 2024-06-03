@@ -52,8 +52,4 @@ export class RootReferHandler {
             }
         }
     }
-
-    updateSelectedSelectionForDelete() {
-
-    }
 }
