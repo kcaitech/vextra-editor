@@ -137,6 +137,14 @@ onUnmounted(() => {
     color: #fff;
     font-size: 18px;
     font-weight: 500;
+
+    &:hover {
+        background-color: #429AFF;
+    }
+
+    &:active {
+        background-color: #0A59CF;
+    }
 }
 
 @mixin login-link {
@@ -157,6 +165,24 @@ onUnmounted(() => {
         transform: translateX(8px) translateY(17px) rotate(90deg);
         animation: huitan 3s infinite both;
     }
+
+    &:hover {
+        color: #429AFF;
+
+        &::after {
+            border-bottom-color: #429AFF;
+        }
+    }
+
+
+    &:active {
+        color: #0A59CF;
+
+        &::after {
+            border-bottom-color: #0A59CF;
+        }
+    }
+
 }
 
 @mixin flex($justify, $direction) {

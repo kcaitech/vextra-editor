@@ -52,7 +52,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-
 .header-container {
     display: flex;
     position: sticky;
@@ -89,13 +88,21 @@ onMounted(() => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    width: 140px;
-                    height: 50px;
-                    border-radius: 10px;
+                    width: 110px;
+                    height: 36px;
+                    border-radius: 6px;
                     background-color: #1878F5;
                     color: #fff;
-                    font-size: 18px;
+                    font-size: 14px;
                     font-weight: 500;
+
+                    &:hover {
+                        background-color: #429AFF;
+                    }
+
+                    &:active {
+                        background-color: #0A59CF;
+                    }
                 }
             }
         }

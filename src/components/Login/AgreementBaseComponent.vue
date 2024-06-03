@@ -18,7 +18,7 @@ import Header from './HeaderComponent.vue'
     width: 100%;
     height: 100%;
     overflow-y: scroll;
-    overflow-x: hidden;
+    // overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
