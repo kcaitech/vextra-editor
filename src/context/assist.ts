@@ -460,7 +460,7 @@ export class Assist extends WatchableObject {
 
         // 参考线
         let sparkY = false;
-        if (this.m_guides_x.length) {
+        if (this.m_guides_y.length) {
             const gy = this.m_guides_y.map(g => g.offsetRoot);
             sparkY = modify_pt_y4p(pre_target, point, gy, this.m_stickness);
         }
