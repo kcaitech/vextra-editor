@@ -1,4 +1,4 @@
-import { Matrix, PathShapeView, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
@@ -127,6 +127,10 @@ export class ScaleRenderer {
             const inverse = new Matrix(matrix);
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
+                
+                if (shape.type === ShapeType.Contact) {
+                    continue;
+                }
 
                 const m = shape.matrix2Root();
                 m.trans(-offsetX, -offsetY);
@@ -150,7 +154,7 @@ export class ScaleRenderer {
                     );
                 }
 
-                const {left, top, right, bottom} = XYsBounding(points);
+                const { left, top, right, bottom } = XYsBounding(points);
 
 
                 // 计算客户端视图偏移值
@@ -357,7 +361,7 @@ export class ScaleRenderer {
             }
 
             const inverse = new Matrix(matrix.inverse);
-            const {width, height} = ctx.workspace.root;
+            const { width, height } = ctx.workspace.root;
 
             const hor = this.m_scale_hor;
             const ver = this.m_scale_ver;
@@ -383,14 +387,14 @@ export class ScaleRenderer {
             for (let data = startX; data < endX; data += scale) {
                 const offset = matrix.computeCoord2(data, 0).x - 24.95;
 
-                let scale: Scale = {data, opacity: gO(offset), offset};
+                let scale: Scale = { data, opacity: gO(offset), offset };
                 hor.push(scale);
             }
 
             for (let data = startY; data < endY; data += scale) {
                 const offset = matrix.computeCoord2(0, data).y - 24.95;
 
-                let scale: Scale = {data, opacity: gO(offset), offset};
+                let scale: Scale = { data, opacity: gO(offset), offset };
                 ver.push(scale);
             }
         }

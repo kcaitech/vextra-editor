@@ -1,4 +1,4 @@
-import { ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -22,20 +22,6 @@ export interface PointGroup1 {
     rh?: PageXY
     bh?: PageXY
     lh?: PageXY
-}
-
-export interface PointGroup2 {
-    lt: PageXY
-    rt: PageXY
-    rb: PageXY
-    lb: PageXY
-    pivot: PageXY
-    top?: number
-    cx?: number
-    bottom?: number
-    left?: number
-    cy?: number
-    right?: number
 }
 
 export interface PT4P1 {
