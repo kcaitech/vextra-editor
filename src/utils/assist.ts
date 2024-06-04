@@ -123,7 +123,8 @@ export function finder(context: Context, scope: ShapeView, all_pg: Map<string, P
 }
 
 export function _collect(context: Context, new_matrix: Matrix) {
-    context.assist.collect();
+    // 调整到每次执行transform任务前
+    // context.assist.collect();
     context.assist.set_stickness(5 / new_matrix.m00);
 }
 
@@ -133,6 +134,7 @@ export function alignXFromPointGroup(dx: number, xs: number[], livingXs: number[
     let livingD = dx;
     let livingAD = Math.abs(dx);
     let targetX = 0;
+    let spark = false;
 
     for (let i = 0; i < livingXs.length; i++) {
         const x = livingXs[i];
@@ -146,16 +148,18 @@ export function alignXFromPointGroup(dx: number, xs: number[], livingXs: number[
                 livingD = d;
                 livingAD = ad;
                 targetX = fixedX;
+                spark = true;
             }
         }
     }
-    return { dx: livingD, targetX };
+    return { dx: livingD, targetX, spark };
 }
 
 export function alignYFromPointGroup(dy: number, ys: number[], livingYs: number[]) {
     let livingD = dy;
     let livingAD = Math.abs(dy);
     let targetY = 0;
+    let spark = false;
 
     for (let i = 0; i < livingYs.length; i++) {
         const y = livingYs[i];
@@ -169,10 +173,11 @@ export function alignYFromPointGroup(dy: number, ys: number[], livingYs: number[
                 livingD = d;
                 livingAD = ad;
                 targetY = fixedY;
+                spark = true;
             }
         }
     }
-    return { dy: livingD, targetY };
+    return { dy: livingD, targetY, spark };
 }
 
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {

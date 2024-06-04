@@ -1,13 +1,13 @@
-import { ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
+    alignXFromPointGroup,
+    alignYFromPointGroup,
     finder,
     get_tree,
     modify_pt_x4p,
-    modify_pt_y4p,
-    alignXFromPointGroup,
-    alignYFromPointGroup
+    modify_pt_y4p
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -55,6 +55,13 @@ export interface PageXY2 {
     p: PageXY
 }
 
+interface AssistGuide {
+    env: ShapeView;
+    offsetFix: number;
+    offsetRoot: number;
+    axis: GuideAxis;
+}
+
 export class Assist extends WatchableObject {
     readonly m_context: Context;
 
@@ -63,7 +70,7 @@ export class Assist extends WatchableObject {
     static UPDATE_ASSIST_PATH = 4;
     static MULTI_LINE_ASSIST = 7;
     private m_stickness: number = 5;
-    private m_collect_target: ShapeView[] = [];
+    private m_collect_target: ShapeView | undefined;
 
     private m_shape_inner: ShapeView[] = [];
     private m_pg_inner: Map<string, PointGroup1> = new Map();
@@ -76,8 +83,16 @@ export class Assist extends WatchableObject {
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
 
+    highlight_guide_x: string[] = [];
+    highlight_guide_y: string[] = [];
+
     private m_nodes_x2: XY[] = [];
     private m_nodes_y2: XY[] = [];
+
+    private m_fixed_target: ShapeView | undefined;
+
+    m_guides_x: AssistGuide[] = [];
+    m_guides_y: AssistGuide[] = [];
 
     constructor(context: Context) {
         super();
@@ -135,13 +150,20 @@ export class Assist extends WatchableObject {
         this.m_y_axis.clear();
         this.m_nodes_x2.length = 0;
         this.m_nodes_y2.length = 0;
+
+        this.m_guides_x.length = 0;
+        this.m_guides_y.length = 0;
+    }
+
+    get fixedTarget() {
+        return this.m_fixed_target;
     }
 
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
         const page = this.m_context.selection.selectedPage!;
 
         if (!shapes.length) {
-            this.m_collect_target = [page];
+            this.m_collect_target = page;
         }
 
         const parents: Map<string, ShapeView> = new Map();
@@ -151,7 +173,7 @@ export class Assist extends WatchableObject {
         }
 
         if (parents.has(page.id)) {
-            this.m_collect_target = [page];
+            this.m_collect_target = page;
         } else {
             const chains: Map<string, Set<ShapeView>> = new Map();
             let longest = 0;
@@ -193,7 +215,7 @@ export class Assist extends WatchableObject {
                     break;
                 }
             }
-            this.m_collect_target = [env];
+            this.m_collect_target = env;
         }
 
         if (collect_immediate) {
@@ -203,19 +225,86 @@ export class Assist extends WatchableObject {
 
     collect() {
         // const s = Date.now();
-        const page = this.m_context.selection.selectedPage;
-        if (page) {
-            this.clear();
-            let targets: ShapeView[] = this.m_collect_target.length ? this.m_collect_target : [page];
-            this.m_shape_inner = [];
-            for (let i = 0; i < targets.length; i++) {
-                const target = targets[i];
-                this.m_shape_inner = this.m_shape_inner
-                    .concat(finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
-            }
+        this.clear();
+        const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
+        this.m_shape_inner = [];
+        this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
+
+        if (this.m_context.user.isRuleVisible) {
+            this.collectGuides();
         }
+        // console.log('__COLLECT_TARGET__', target.name, (target as ArtboradView).guides?.length);
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
+    }
+
+    collectGuides() {
+        const guideTarget = this.getFixedContainer() as ArtboradView;
+
+        this.m_fixed_target = guideTarget;
+
+        const guides = guideTarget?.guides;
+        if (!guides?.length) {
+            return;
+        }
+
+        const gxs = this.m_guides_x;
+        const gys = this.m_guides_y;
+
+        if (guideTarget.type !== ShapeType.Page) {
+            const matrix = guideTarget.matrix2Root();
+            for (let i = 0; i < guides.length; i++) {
+                const { axis, offset } = guides[i];
+                const assistGui: AssistGuide = {
+                    env: guideTarget,
+                    offsetFix: offset,
+                    offsetRoot: offset,
+                    axis
+                }
+                if (axis === GuideAxis.X) {
+                    assistGui.offsetRoot = matrix.computeCoord2(offset, 0).x;
+                    gxs.push(assistGui);
+                } else {
+                    assistGui.offsetRoot = matrix.computeCoord2(0, offset).y;
+                    gys.push(assistGui);
+                }
+            }
+        } else {
+            for (let i = 0; i < guides.length; i++) {
+                const { axis, offset } = guides[i];
+                const assistGui: AssistGuide = {
+                    env: guideTarget,
+                    offsetFix: offset,
+                    offsetRoot: offset,
+                    axis
+                }
+                if (axis === GuideAxis.X) {
+                    gxs.push(assistGui);
+                } else {
+                    gys.push(assistGui);
+                }
+            }
+        }
+        // console.log('__GUIDE_TARGET__', guideTarget.name);
+        // console.log('__GUIX__', this.m_guides_x);
+        // console.log('__GUIY__', this.m_guides_y);
+    }
+
+    getFixedContainer() {
+        const page = this.m_context.selection.selectedPage!;
+        let target = this.m_collect_target || page;
+
+        if (target.type === ShapeType.Page) {
+            return page;
+        } else {
+            while (target) {
+                if (target.type === ShapeType.Page || (target.isContainer && target.parent?.type === ShapeType.Page)) {
+                    break;
+                }
+                target = target.parent as any
+            }
+        }
+        return target;
     }
 
     set_trans_target(shapes: ShapeView[]) {
@@ -460,7 +549,9 @@ export class Assist extends WatchableObject {
             sticked_by_x: false,
             sticked_by_y: false,
             targetX: 0,
-            targetY: 0
+            targetY: 0,
+            sparkX: false,
+            sparkY: false
         }
 
         let targetX = Infinity;
@@ -486,6 +577,21 @@ export class Assist extends WatchableObject {
             const ry = alignYFromPointGroup(dy, pointsGroup.apexY, livingYs);
             dy = ry.dy;
             targetY = ry.targetY;
+        }
+
+        if (this.m_guides_x.length) {
+            const gx = this.m_guides_x.map(g => g.offsetRoot);
+            const rx = alignXFromPointGroup(dx, gx, livingXs);
+            dx = rx.dx;
+            targetX = rx.targetX;
+            assistResult.sparkX = rx.spark;
+        }
+        if (this.m_guides_y.length) {
+            const gy = this.m_guides_y.map(g => g.offsetRoot);
+            const ry = alignYFromPointGroup(dy, gy, livingYs);
+            dy = ry.dy;
+            targetY = ry.targetY;
+            assistResult.sparkY = ry.spark;
         }
 
         if (Math.abs(dx) < this.stickness) {

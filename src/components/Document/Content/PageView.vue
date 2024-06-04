@@ -48,7 +48,10 @@ function pageViewRegister(mount: boolean) {
 }
 
 function _collect(t?: any) {
-    if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
+    // 调整到每次执行transform之前进行收集
+    // if (typeof t === 'string' && t === 'collect') {
+    //     props.context.assist.collect();
+    // }
 }
 
 const collect = debounce(_collect, 240);

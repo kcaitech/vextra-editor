@@ -24,7 +24,6 @@ import {
     modify_down_position,
     remove_blur_from_window,
     remove_move_and_up_from_document,
-    reset_assist_before_translate,
     shapes_picker,
     shutdown_menu,
     update_comment
@@ -33,7 +32,6 @@ import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
-import { Action } from "@/context/tool";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -295,7 +293,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
             transporter?.execute(e);
-
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) {
                 return;
@@ -308,8 +305,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!shapes.length) {
                 return;
             }
-
-            reset_assist_before_translate(context, shapes);
 
             transporter?.createApiCaller();
 
