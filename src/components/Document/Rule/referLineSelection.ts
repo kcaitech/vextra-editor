@@ -173,7 +173,6 @@ export class ReferLineSelection {
                 hovered.axis = line.axis;
 
                 if (line.axis === GuideAxis.X) {
-                    console.log('line.offset:', line.offset);
                     hovered.desc = formatNumber(line.offset);
                     hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
                 } else {

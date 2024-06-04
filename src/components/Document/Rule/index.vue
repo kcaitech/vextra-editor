@@ -84,7 +84,6 @@ const referLineSelection = new ReferLineSelection(
 );
 
 const pageWatcher = (...args: any) => {
-    console.log('args:', ...args);
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
         return;
@@ -227,6 +226,9 @@ function clear() {
         selected.value.axis = hovered.value.axis;
         selected.value.offset = hovered.value.offset;
         selected.value.transform = hovered.value.transform;
+
+        // 清除图层选区
+        props.context.selection.resetSelectShapes();
     }
 
     isDrag = false;
