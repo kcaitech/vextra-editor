@@ -284,7 +284,7 @@ export class Assist extends WatchableObject {
             return page;
         } else {
             while (target) {
-                if (target.type === ShapeType.Page || (target.isContainer && target.parent?.type === ShapeType.Page)) {
+                if (target.type === ShapeType.Page || (target.isContainer && target.parent?.type === ShapeType.Page && !((target.rotation || 0) % 180))) {
                     break;
                 }
                 target = target.parent as any
