@@ -32,7 +32,7 @@ export class ReferLineHandler extends TransformHandler {
     readonly m_axis: GuideAxis;
 
     private m_current_env: ShapeView;
-    private livingXY: XY = { x: 0, y: 0 };
+    private livingXY: XY = {x: 0, y: 0};
 
     constructor(context: Context, axis: GuideAxis, env?: ShapeView, index?: number) {
         super(context);
@@ -68,8 +68,9 @@ export class ReferLineHandler extends TransformHandler {
 
             // 默认在page下建立新参考线
             this.m_index = this.api.create(this.m_axis, offset);
-            this.context.assist.set_collect_target_direct(this.page, true);
         }
+
+        this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
     }
 
     fulfil() {
@@ -273,7 +274,7 @@ export class ReferLineHandler extends TransformHandler {
 
         this.m_current_env = result.env;
         this.m_index = result.index
-        this.context.assist.set_collect_target_direct(this.m_current_env, true);
+        this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
     }
 
     private migrate() {
@@ -282,9 +283,7 @@ export class ReferLineHandler extends TransformHandler {
 
     delete(env: ShapeView, index: number) {
         this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
-        if (this.api.delete(env, index)) {
-            console.log('===删除成功===');
-        }
+        this.api.delete(env, index);
         super.fulfil();
     }
 }
