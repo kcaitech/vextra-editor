@@ -249,6 +249,10 @@ export class ScaleHandler extends TransformHandler {
             this.horFixedStatus = true;
             this.horFixedValue = assistResult.x;
         }
+
+        if (assistResult) {
+
+        }
     }
 
     private updateVerFixedStatus(livingY: number, assistResult: { y: number, sticked_by_y: boolean }) {

@@ -181,6 +181,7 @@ export function alignYFromPointGroup(dy: number, ys: number[], livingYs: number[
 }
 
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
+    let working = false;
     for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
         const delta = Math.abs(x - p.x);
@@ -188,11 +189,14 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
             pre_target1.delta = delta;
             pre_target1.x = x;
             pre_target1.sy = p.y;
+            working = true;
         }
     }
+    return working;
 }
 
 export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
+    let working = false;
     for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
@@ -200,8 +204,10 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
             pre_target2.delta = delta;
             pre_target2.y = y;
             pre_target2.sx = p.x;
+            working = true;
         }
     }
+    return working;
 }
 
 export function get_tree(shape: ShapeView, init: Map<string, ShapeView>) {

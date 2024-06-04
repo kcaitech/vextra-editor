@@ -87,6 +87,7 @@ function render() {
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
+    renderHighlightReferLine();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 
