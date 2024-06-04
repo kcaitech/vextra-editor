@@ -1,8 +1,8 @@
 <template>
-<AgreementBaseComponent>
-    <div class="content" v-html="htmlContent(Markdowncontent)"></div>
-</AgreementBaseComponent>
-  
+    <AgreementBaseComponent>
+        <div class="content" v-html="htmlContent(Markdowncontent)"></div>
+    </AgreementBaseComponent>
+
 </template>
 
 <script setup lang="ts">
@@ -46,5 +46,14 @@ onMounted(() => {
     color: #333333;
     max-width: 880px;
     letter-spacing: 1px;
+}
+
+@media (max-width:880px) {
+    .content {
+        margin: 0;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
 }
 </style>

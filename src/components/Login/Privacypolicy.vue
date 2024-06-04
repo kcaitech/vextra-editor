@@ -47,4 +47,13 @@ onMounted(() => {
     max-width: 880px;
     letter-spacing: 1px;
 }
+
+@media (max-width:880px) {
+    .content {
+        margin: 0;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+}
 </style>

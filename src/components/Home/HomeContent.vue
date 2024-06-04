@@ -3,22 +3,19 @@
         <div class="main-content">
             <div class="start">
                 <div class="content">
-                    <div class="title">随时都可写 什么都能画</div>
-                    <!-- <div class="title"><img :src="start" alt="title"></div> -->
-                    <div class="description">专业UI设计软件，同时支持团队管理、文档演示以及多人协作，
+                    <div class="title">{{ t("start.title") }}</div>
+                    <div class="description">
+                        {{ t("start.description_1") }}
                         <br>
-                        让每一个参与者都能高效参与的设计工具
+                        {{ t("start.description_2") }}
                     </div>
-                    <div class="login" @click.stop="router.push({ name: 'login' })">免费体验</div>
+                    <div class="login" @click.stop="router.push({ name: 'login' })">{{ t("pub.login_1") }}</div>
                 </div>
             </div>
             <div class="moss-container">
                 <div class="moss">
                     <div class="content">
                         <img class="bg" :src="softui" alt="UI">
-                        <!-- <img class="bg-1" :src="zjk" alt="zujianku">
-                    <img class="bg-2" :src="tc" alt="tianchong">
-                    <img class="bg-3" :src="dc" alt="daochu"> -->
                     </div>
                 </div>
             </div>
@@ -31,15 +28,16 @@
                         <img :src="gangbi" alt="gangbi">
                     </div>
                     <div class="wenan">
-                        <div class="title">专业UI设计功能</div>
-                        <!-- <div class="title"><img :src="design" alt="title"></div> -->
-                        <div class="description">专业的矢量编辑工具，满足精细化编辑；高效的组件功能，
-                            <br>
-                            并且兼容Sketch、Figma(<span>开发中，敬请期待</span>)等主流文件格式，
-                            <br>
-                            无缝进行文件迁移
+                        <div class="title">{{ t("design.title") }}</div>
+                        <div class="description">{{ t("design.description_1") }}
+                            <span v-if="lang"><br></span>
+                            {{ t("design.description_2a") }}
+                            <span>{{ t("design.description_2b") }}</span>
+                            {{ t("design.description_2c") }}
+                            <span v-if="lang"><br></span>
+                            {{ t("design.description_3") }}
                         </div>
-                        <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
+                        <div class="login" @click.stop="router.push({ name: 'login' })">{{ t("pub.login_2") }}</div>
                     </div>
                 </div>
             </div>
@@ -49,22 +47,23 @@
                         <img :src="cooperation" alt="cooperation">
                     </div>
                     <div class="content">
-                        <div class="title">团队实时协作</div>
-                        <div class="description">链接邀请，在线实时协同，随时都能获取最新稿件；
-                            <br>
-                            文档定点评论，高效沟通，让思维随时碰撞出新的火花；
-                            <br>
-                            设计师轻松交付，切图资源、布局参数，工程师信手拈来
+                        <div class="title">{{ t("cooperation.title") }}</div>
+                        <div class="description">
+                            {{ t("cooperation.description_1") }}
+                            <span v-if="lang"><br></span>
+                            {{ t("cooperation.description_2") }}
+                            <span v-if="lang"><br></span>
+                            {{ t("cooperation.description_3") }}
                         </div>
-                        <div class="login" @click.stop="router.push({ name: 'login' })">立即免费体验</div>
+                        <div class="login" @click.stop="router.push({ name: 'login' })">{{ t("pub.login_2") }}</div>
                     </div>
                 </div>
             </div>
             <div class="platform-container">
                 <div class="platform">
                     <div class="top">
-                        <div class="title">跨终端 无缝衔接</div>
-                        <div class="description">多端数据实时同步，随时随地编辑创作</div>
+                        <div class="title">{{ t("platform.title") }}</div>
+                        <div class="description">{{ t("platform.description") }}</div>
                     </div>
                     <div class="bottom">
                         <img :src="kuaduan" alt="kuaduan">
@@ -73,8 +72,8 @@
             </div>
             <div class="end">
                 <div class="content">
-                    <div class="title">每个参与者都能高效参与的设计工具</div>
-                    <div class="login" @click.stop="router.push({ name: 'login' })">免费体验</div>
+                    <div class="title">{{ t("end.title") }}</div>
+                    <div class="login" @click.stop="router.push({ name: 'login' })">{{ t("pub.login_1") }}</div>
                 </div>
             </div>
         </div>
@@ -92,8 +91,11 @@ import gsjr from '@/assets/gsjr.svg'
 import AgreementBaseComponent from '@/components/Login/AgreementBaseComponent.vue';
 import { router } from '@/router';
 import { onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 const autoplay = ref<HTMLElement>()
+const lang = ref<boolean>(false)
 
 let timer: any
 function autoPlay() {
@@ -114,8 +116,13 @@ function autoPlay() {
     }, 3000)
 }
 
+function checkLang() {
+    return window.navigator.language.includes('zh')
+}
+
 onMounted(() => {
-    autoPlay()
+    if (autoplay.value) autoPlay()
+    lang.value = checkLang()
 })
 
 onUnmounted(() => {
@@ -445,6 +452,7 @@ onUnmounted(() => {
     background-size: cover;
 
     .content .title {
+        text-align: center;
         font-size: 68px;
     }
 
@@ -660,6 +668,154 @@ onUnmounted(() => {
                 .bottom {
                     width: 1152px;
                     height: 684px;
+                }
+            }
+        }
+    }
+
+}
+
+@media (max-width:480px) {
+    .main-content {
+
+        .start,
+        .end {
+            min-width: 100%;
+            height: auto;
+
+            .content {
+                min-width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+
+                .title {
+                    margin: 0;
+                    font-size: 24px;
+                }
+
+                .description {
+                    margin: 12px 0;
+                    font-size: 14px;
+                    line-height: 20px;
+                }
+
+                .login {
+                    margin: 0;
+                    font-size: 14px;
+                    width: 140px;
+                    min-height: 48px;
+                }
+            }
+        }
+
+        .end .content .login {
+            margin: 20px 0;
+        }
+
+        .moss-container,
+        .design-container,
+        .cooperation-container,
+        .platform-container {
+            min-width: 100%;
+
+            .moss,
+            .design,
+            .cooperation,
+            .platform {
+                min-width: 100%;
+                height: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+            }
+
+            .platform {
+                height: auto;
+            }
+
+            .design {
+                .lunbo {
+                    width: 100%;
+                    height: auto;
+                }
+
+                .wenan {
+                    width: 100%;
+                    height: auto;
+                    padding: 0;
+                    margin: 20px 0;
+
+
+                    .title {
+                        margin: 0;
+                        font-size: 20px;
+                    }
+
+                    .description {
+                        margin: 12px 0;
+                        font-size: 14px;
+                        line-height: 20px;
+                    }
+
+                    .login {
+                        margin: 0;
+                        font-size: 14px;
+                    }
+                }
+
+            }
+
+            .cooperation {
+
+
+                .image {
+                    width: 100%;
+                    height: auto;
+                }
+
+                .content {
+                    margin: 20px 0;
+                    width: 100%;
+                    height: auto;
+                    padding: 0;
+
+                    .title {
+                        margin: 0;
+                        font-size: 20px;
+                    }
+
+                    .description {
+                        margin: 12px 0;
+                        font-size: 14px;
+                        line-height: 20px;
+                    }
+
+                    .login {
+                        margin: 0;
+                        font-size: 14px;
+                    }
+                }
+            }
+
+            .platform {
+                .top {
+                    .title {
+                        font-size: 20px;
+                    }
+
+                    .description {
+                        font-size: 14px;
+                        margin: 12px 0;
+                        text-align: center
+                    }
+                }
+
+                .bottom {
+                    width: 100%;
+                    height: auto;
+                    min-width: 100%;
+                    min-height: 100%;
                 }
             }
         }

@@ -2,7 +2,7 @@
     <div class="header-container">
         <div class="header">
             <div class="header-left">
-                <div class="logo" @click="router.go(-1)">
+                <div class="logo" @click="router.push({ path: '/' })">
                     <img class="logo-img" :src="avatar" alt="墨师设计">
                 </div>
             </div>
@@ -11,7 +11,7 @@
                     <transition enter-active-class="animate__animated animate__fadeInDown"
                         leave-active-class="animate__animated animate__fadeOutUp">
                         <div v-if="show" class="login" @click.stop="router.push({ name: 'login' })">
-                            免费体验
+                            {{ t("pub.login_1") }}
                         </div>
                     </transition>
                 </div>
@@ -72,16 +72,17 @@ onMounted(() => {
         margin: auto;
         width: 100%;
         max-width: 1440px;
+        min-width: 1152px;
 
         .header-left {
-            margin-left: 40px;
+            // margin-left: 40px;
         }
 
         .header-right {
-            margin-right: 40px;
+            // margin-right: 40px;
 
             .login-bnt {
-                width: 140px;
+                // width: 140px;
 
                 .login {
                     cursor: pointer;
@@ -109,19 +110,36 @@ onMounted(() => {
     }
 }
 
+@media (max-width:1440px) {
+    .header-container .header {
+        .header-left {
+            margin-left: 40px;
+        }
 
+        .header-right {
+            margin-right: 40px;
+        }
+    }
+}
 
 @media (max-width:480px) {
-    .header {
-        .header-right {
-            .login-bnt {
-                .login {
-                    width: 100px;
-                    height: 40px;
+    .header-container {
+        min-width: 100%;
+
+        .header {
+            min-width: 100%;
+            padding: 0 12px;
+            box-sizing: border-box;
+
+            .header-left,
+            .header-right {
+                margin: 0;
+
+                .login-bnt {
+                    width: 110px;
                 }
             }
         }
-
     }
 }
 </style>

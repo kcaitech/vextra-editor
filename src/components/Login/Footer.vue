@@ -84,7 +84,8 @@ const skipTotarget = (i: string) => {
 
 .header {
     display: flex;
-    max-width: 66%;
+    max-width: 1440px;
+    min-width: 1152px;
     margin: 56px auto;
     align-items: flex-start;
     flex-wrap: wrap;
@@ -184,28 +185,22 @@ const skipTotarget = (i: string) => {
 
 }
 
-
-
-@media (max-width:1280px) {
-    .header {
-        max-width: 90%;
-        margin: 30px auto;
-
+@media (max-width:1440px) {
+    .header{
+        margin: 0;
+        padding: 56px 40px;
+        box-sizing: border-box;
     }
 }
 
-@media (max-width:1024px) {
+@media (max-width:480px) {
     .header {
         max-width: 100%;
-        margin: 30px 20px;
-    }
-}
-
-@media (max-width:660px) {
-    .header {
-        max-width: 100%;
-        margin: 30px 20px 0 20px;
+        min-width: 100%;
+        padding: 30px 12px 0 12px;
+        margin: 0;
         flex-direction: column;
+        box-sizing: border-box;
 
         .right {
             width: 100%;
@@ -215,6 +210,10 @@ const skipTotarget = (i: string) => {
                 flex-basis: 50%;
             }
         }
+    }
+
+    .footer {
+        min-width: 100%;
     }
 }
 </style>

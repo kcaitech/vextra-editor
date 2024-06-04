@@ -184,19 +184,19 @@ onMounted(() => {
         </div>
         <div class="content">
             <div class="login-left">
-                <div class="welcome">欢迎登录使用</div>
-                <div class="name">墨师设计</div>
-                <div class="describe">在线协作专业产品设计软件</div>
+                <div class="welcome">{{ t("login.welcome") }}</div>
+                <div class="name">{{ t("login.name") }}</div>
+                <div class="describe">{{ t("login.describe") }}</div>
             </div>
             <div class="login-right">
-                <div class="title">{{ !isMobileDevice() ? t('system.wx_login') : '微信扫一扫' }}
+                <div class="title">{{ !isMobileDevice() ? t('system.wx_login') : t("login.scan_code") }}
                 </div>
                 <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
                     v-loading="isLoading">
                 </div>
                 <div v-else class="miniprogarm" v-loading="isLoading">
                     <img v-if="miniprogramcode" :src="miniprogramcode" alt="code">
-                    <span>微信小程序</span>
+                    <span>{{ t("login.miniprogram") }}</span>
                 </div>
                 <div class="tips" :lang="locale">
                     <span class="tips_content">{{ t('system.login_read') }}</span>
@@ -390,4 +390,14 @@ onMounted(() => {
         background-repeat: no-repeat;
     }
 }
+
+@media (max-width:480px) {
+    .bgiamge .content .login-left{
+        display: none;
+    }
+    .bgiamge .content::after{
+        content: none;
+    }
+}
+
 </style>
