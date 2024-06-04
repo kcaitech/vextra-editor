@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
 import { ArtboradView, GuideAxis, PageView } from '@kcdesign/data';
@@ -84,6 +84,8 @@ const referLineSelection = new ReferLineSelection(
 );
 
 const pageWatcher = (...args: any) => {
+    console.log('__...args__', ...args);
+
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
         return;
@@ -137,6 +139,22 @@ function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
         referLineSelection.updateByShapesSelected();
+    } else if (t === Selection.CHANGE_PAGE) {
+        const page = props.context.selection.selectedPage!;
+
+        rootReferHandler.updatePage(page)
+        referUnderContainerRenderer.pageChange(page);
+
+        referLineSelection.resetSelected();
+        referLineSelection.resetHovered();
+        selected.value.env = page;
+        hovered.value.env = page;
+        rootLines.value.shape = page;
+        rootLines.value.id = page.id;
+
+        scaleRenderer.render();
+        referUnderContainerRenderer.clearContainerWatcher();
+        referUnderContainerRenderer.updateUnderRootContainerMap();
     }
 }
 
@@ -392,6 +410,11 @@ function updateHolder() {
         holder = null;
     }, 500);
 }
+
+watch(() => props.page, (n, o) => {
+    o.unwatch(pageWatcher);
+    n.watch(pageWatcher);
+})
 
 onMounted(() => {
     props.context.tool.watch(toolWatcher);

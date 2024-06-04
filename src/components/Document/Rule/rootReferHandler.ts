@@ -52,4 +52,8 @@ export class RootReferHandler {
             }
         }
     }
+
+    updatePage(page: PageView) {
+        this.m_page = page;
+    }
 }

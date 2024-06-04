@@ -55,7 +55,6 @@ export class ReferLineHandler extends TransformHandler {
         if (this.asyncApiCaller) {
             return;
         }
-
         this.asyncApiCaller = new ReferHandleApiCaller(this.context.coopRepo, this.context.data, this.page);
         this.workspace.translating(true);
 

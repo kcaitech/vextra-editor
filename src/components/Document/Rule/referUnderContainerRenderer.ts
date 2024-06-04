@@ -10,7 +10,7 @@ import { XY } from "@/context/selection";
 export class ReferUnderContainerRenderer {
     private readonly m_context: Context;
     private readonly m_units: ReferUnit[];
-    private readonly m_page: PageView;
+    private m_page: PageView;
 
     constructor(context: Context, units: ReferUnit[], page: PageView) {
         this.m_context = context;
@@ -203,5 +203,9 @@ export class ReferUnderContainerRenderer {
             stopFunc();
         })
         this.watcherUninstallerMap.clear();
+    }
+
+    pageChange(page: PageView) {
+        this.m_page = page;
     }
 }
