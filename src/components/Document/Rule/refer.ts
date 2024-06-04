@@ -68,6 +68,7 @@ export class ReferLineHandler extends TransformHandler {
 
             // 默认在page下建立新参考线
             this.m_index = this.api.create(this.m_axis, offset);
+            this.context.assist.set_collect_target_direct(this.page, true);
         }
     }
 
@@ -98,15 +99,72 @@ export class ReferLineHandler extends TransformHandler {
         return env;
     }
 
+    // align
+    private horFixedStatus: boolean = false;
+    private horFixedValue: number = 0;
+    private verFixedStatus: boolean = false;
+    private verFixedValue: number = 0;
+
+    private updateHorFixedStatus(livingX: number, assistResult: { x: number, sticked_by_x: boolean }) {
+        const stickness = this.context.assist.stickness;
+        if (this.horFixedStatus) {
+            if (Math.abs(livingX - this.horFixedValue) >= stickness) {
+                this.horFixedStatus = false;
+            } else {
+                if (this.horFixedValue !== assistResult.x) {
+                    this.horFixedValue = assistResult.x;
+                }
+            }
+        } else if (assistResult.sticked_by_x) {
+            this.horFixedStatus = true;
+            this.horFixedValue = assistResult.x;
+        }
+    }
+
+    private updateVerFixedStatus(livingY: number, assistResult: { y: number, sticked_by_y: boolean }) {
+        const stickness = this.context.assist.stickness;
+        if (this.verFixedStatus) {
+            if (Math.abs(livingY - this.verFixedValue) >= stickness) {
+                this.verFixedStatus = false;
+            } else {
+                if (this.verFixedValue !== assistResult.y) {
+                    this.verFixedValue = assistResult.y;
+                }
+            }
+        } else if (assistResult.sticked_by_y) {
+            this.verFixedStatus = true;
+            this.verFixedValue = assistResult.y;
+        }
+    }
+
+
     modifyOffset(event: MouseEvent) {
         this.livingXY = this.workspace.getRootXY(event);
 
         const __root_xy = this.livingXY;
-
-        if (this.context.user.isPixelAlignMent) {
-            // 取整
+        if (this.alignPixel) {
             __root_xy.x = Math.round(__root_xy.x);
             __root_xy.y = Math.round(__root_xy.y);
+        }
+
+        if (this.m_axis === GuideAxis.X) {
+            const target = this.context.assist.alignX(__root_xy, []);
+            if (target) {
+                this.updateHorFixedStatus(__root_xy.x, target);
+                if (this.horFixedStatus) {
+                    __root_xy.x = this.horFixedValue;
+                }
+            }
+
+        } else {
+            const target = this.context.assist.alignY(__root_xy, []);
+            if (target) {
+                this.updateVerFixedStatus(__root_xy.y, target);
+
+                if (this.verFixedStatus) {
+                    __root_xy.y = this.verFixedValue;
+                }
+            }
         }
 
         const index = this.m_index;
@@ -215,6 +273,7 @@ export class ReferLineHandler extends TransformHandler {
 
         this.m_current_env = result.env;
         this.m_index = result.index
+        this.context.assist.set_collect_target_direct(this.m_current_env, true);
     }
 
     private migrate() {

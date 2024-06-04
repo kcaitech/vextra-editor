@@ -209,6 +209,14 @@ export class Assist extends WatchableObject {
         }
     }
 
+    set_collect_target_direct(target: ShapeView, collect_immediate = false) {
+        this.m_collect_target = target;
+
+        if (collect_immediate) {
+            this.collect();
+        }
+    }
+
     collect() {
         // const s = Date.now();
         this.clear();
@@ -344,9 +352,9 @@ export class Assist extends WatchableObject {
     }
 
     alignX(point: XY, self: XY[]) {
-        if (!this.m_except.size) {
-            return;
-        }
+        // if (!this.m_except.size) {
+        //     return;
+        // }
 
         const hgx = this.highlight_guide_x;
         hgx.length = 0;
@@ -433,9 +441,9 @@ export class Assist extends WatchableObject {
     }
 
     alignY(point: XY, self: XY[]) {
-        if (!this.m_except.size) {
-            return;
-        }
+        // if (!this.m_except.size) {
+        //     return;
+        // }
 
         const hgy = this.highlight_guide_y;
         hgy.length = 0;

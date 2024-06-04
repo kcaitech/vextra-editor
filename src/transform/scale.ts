@@ -249,10 +249,6 @@ export class ScaleHandler extends TransformHandler {
             this.horFixedStatus = true;
             this.horFixedValue = assistResult.x;
         }
-
-        if (assistResult) {
-
-        }
     }
 
     private updateVerFixedStatus(livingY: number, assistResult: { y: number, sticked_by_y: boolean }) {
@@ -315,7 +311,7 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        this.updateHorFixedStatus(x, target);
+        this.updateHorFixedStatus(assist.x, target);
     }
 
     private fixToAlignWhileModifyTopOrBottom() {
@@ -334,7 +330,7 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        this.updateVerFixedStatus(y, assistResult);
+        this.updateVerFixedStatus(assist.y, assistResult);
     }
 
     private fixToAlignWhileModifyPoint() {
