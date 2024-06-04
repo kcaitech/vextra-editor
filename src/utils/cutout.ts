@@ -129,8 +129,9 @@ export const getPageBounds = (page: PageView) => {
 
 export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: number, height: number) => {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    // todo flip
+    // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    // if (shape.isFlippedVertical) rotate = 360 - rotate;
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     const radian = rotate * Math.PI / 180;
     const sin = Math.sin(radian);
@@ -181,8 +182,9 @@ const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
         const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
         const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
         let rotate = shape.rotation || 0;
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
+        // todo flip
+        // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        // if (shape.isFlippedVertical) rotate = 360 - rotate;
         rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
         const points = [];
         const p1 = getRotatePoint(frame.x - l, frame.y - t, rotate, cx, cy);

@@ -172,12 +172,13 @@ export class ScaleHandler extends TransformHandler {
         if (shape.rotation) {
             __m.rotate((shape.rotation || 0) / 180 * Math.PI);
         }
-        if (shape.isFlippedHorizontal) {
-            __m.flipHoriz();
-        }
-        if (shape.isFlippedVertical) {
-            __m.flipVert();
-        }
+        // todo flip
+        // if (shape.isFlippedHorizontal) {
+        //     __m.flipHoriz();
+        // }
+        // if (shape.isFlippedVertical) {
+        //     __m.flipVert();
+        // }
         __m.trans(cx, cy);
         __m.trans(f.x, f.y);
         __m.multiAtLeft(shape.parent!.matrix2Root());
@@ -457,7 +458,7 @@ export class ScaleHandler extends TransformHandler {
             targetHeight,
             needFlipH,
             needFlipV,
-            targetRotation
+            targetRotation,
         }]);
     }
 
@@ -519,7 +520,7 @@ export class ScaleHandler extends TransformHandler {
             targetHeight,
             needFlipH,
             needFlipV,
-            targetRotation
+            targetRotation,
         }]);
     }
 
@@ -722,8 +723,11 @@ export class ScaleHandler extends TransformHandler {
         }
         let targetRotation = this.rotation;
         const __shape = adapt2Shape(shape); // 可优化
-        const targetFlipH = needFlipH ? !__shape.isFlippedHorizontal : !!__shape.isFlippedHorizontal;
-        const targetFlipV = needFlipV ? !__shape.isFlippedVertical : !!__shape.isFlippedVertical;
+        // todo flip
+        // const targetFlipH = needFlipH ? !__shape.isFlippedHorizontal : !!__shape.isFlippedHorizontal;
+        // const targetFlipV = needFlipV ? !__shape.isFlippedVertical : !!__shape.isFlippedVertical;
+        const targetFlipH = false;
+        const targetFlipV = false;
 
         const cx1 = width / 2;
         const cy1 = height / 2;
@@ -880,7 +884,7 @@ export class ScaleHandler extends TransformHandler {
             baseHeight,
             needFlipH,
             needFlipV,
-            targetRotation
+            targetRotation,
         });
 
         (this.asyncApiCaller as Scaler).execute(transformUnits);
@@ -1232,11 +1236,14 @@ export class ScaleHandler extends TransformHandler {
             if (baseFrame.baseRotation) {
                 __m.rotate(baseFrame.baseRotation / 180 * Math.PI);
             }
-            const targetFlipH = needFlipH ? !shape.isFlippedHorizontal : shape.isFlippedHorizontal;
+            // todo flip
+            // const targetFlipH = needFlipH ? !shape.isFlippedHorizontal : shape.isFlippedHorizontal;
+            // const targetFlipV = needFlipV ? !shape.isFlippedVertical : shape.isFlippedVertical;
+            const targetFlipH = false;
+            const targetFlipV = false;
             if (targetFlipH) {
                 __m.flipHoriz();
             }
-            const targetFlipV = needFlipV ? !shape.isFlippedVertical : shape.isFlippedVertical;
             if (targetFlipV) {
                 __m.flipVert();
             }

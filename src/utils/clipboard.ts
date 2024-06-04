@@ -1550,19 +1550,22 @@ function get_source_box(source: Shape[]) {
     return { x: left, y: top, width: right - left, height: bottom - top };
 
     function is_transform(shape: Shape) {
-        return shape.rotation || shape.isFlippedHorizontal || shape.isFlippedVertical;
+        // todo flip
+        // return shape.rotation || shape.isFlippedHorizontal || shape.isFlippedVertical;
+        return shape.rotation;
     }
 
     function get_matrix(shape: Shape) {
         const f = shape.frame;
         const m = new Matrix();
         m.trans(-f.x, -f.y);
-        if (shape.isFlippedHorizontal) {
-            m.flipHoriz();
-        }
-        if (shape.isFlippedVertical) {
-            m.flipVert();
-        }
+        // todo flip
+        // if (shape.isFlippedHorizontal) {
+        //     m.flipHoriz();
+        // }
+        // if (shape.isFlippedVertical) {
+        //     m.flipVert();
+        // }
         if (shape.rotation) {
             m.rotate(-(shape.rotation / 180 * Math.PI));
         }
@@ -1634,15 +1637,18 @@ function get_xys_for_selection_envs(envs: GroupShape[], xys: XY[], source: Shape
 
         const m = new Matrix();
         const frame = s.frame;
-        if (!s.rotation && !s.isFlippedHorizontal && !s.isFlippedVertical) {
+        // todo flip
+        // if (!s.rotation && !s.isFlippedHorizontal && !s.isFlippedVertical) {
+        if (!s.rotation) {
             m.trans(i.x, i.y);
         } else {
             const cx = frame.width / 2;
             const cy = frame.height / 2;
             m.trans(-cx, -cy);
             if (s.rotation) m.rotate(s.rotation / 180 * Math.PI);
-            if (s.isFlippedHorizontal) m.flipHoriz();
-            if (s.isFlippedVertical) m.flipVert();
+            // todo flip
+            // if (s.isFlippedHorizontal) m.flipHoriz();
+            // if (s.isFlippedVertical) m.flipVert();
             m.trans(cx, cy);
             m.trans(i.x, i.y);
         }

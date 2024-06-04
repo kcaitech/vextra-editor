@@ -39,9 +39,9 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform, TransformMode} from "@kcdesign/data"
-import {ColVector3D} from "@kcdesign/data"
-import {makeShapeTransform2By1, updateShapeTransformBy2} from "@kcdesign/data"
+import {Transform} from "@kcdesign/data"
+import {ColVector3D, ColVector2D} from "@kcdesign/data"
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "@kcdesign/data"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -585,12 +585,13 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
+        // todo flip
         const transform2 = makeShapeTransform2By1(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
-        transform2.setFlipH(this.transform.isFlipH)
-        transform2.setFlipV(this.transform.isFlipV)
-        updateShapeTransformBy2(shape.transform, transform2)
+        transform2.setSkew(new ColVector2D([skew.x, skew.y]))
+        transform2.setScale(new ColVector3D([scale.x, scale.y, scale.z]))
+        updateShapeTransform1By2(shape.transform, transform2)
     }
 
     updateShapeStyle() { // 设置shape的样式

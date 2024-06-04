@@ -224,8 +224,11 @@ export function get_transform(shape: ShapeView) {
     const __r = shape.rotation || 0;
     const result = {
         rotate: __r,
-        isFlippedHorizontal: !!shape.isFlippedHorizontal,
-        isFlippedVertical: !!shape.isFlippedVertical
+        // todo flip
+        // isFlippedHorizontal: !!shape.isFlippedHorizontal,
+        // isFlippedVertical: !!shape.isFlippedVertical,
+        isFlippedHorizontal: false,
+        isFlippedVertical: false,
     };
 
     let parent = shape.parent;
@@ -238,17 +241,18 @@ export function get_transform(shape: ShapeView) {
     let p: ShapeView | undefined = shape;
 
     // flip
-    while (p) {
-        if (p.isFlippedHorizontal) {
-            ohflip = !ohflip;
-        }
-
-        if (p.isFlippedVertical) {
-            ovflip = !ovflip;
-        }
-
-        p = p.parent;
-    }
+    // todo flip
+    // while (p) {
+    //     if (p.isFlippedHorizontal) {
+    //         ohflip = !ohflip;
+    //     }
+    //
+    //     if (p.isFlippedVertical) {
+    //         ovflip = !ovflip;
+    //     }
+    //
+    //     p = p.parent;
+    // }
 
     result.isFlippedHorizontal = ohflip;
     result.isFlippedVertical = ovflip;

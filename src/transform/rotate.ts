@@ -203,8 +203,11 @@ export class RotateHandler extends TransformHandler {
                 XYtoRoot: baseXYtoRoot,
 
                 rotate: shape.rotation || 0,
-                flipH: !!shape.isFlippedHorizontal,
-                flipV: !!shape.isFlippedVertical,
+                // todo flip
+                // flipH: !!shape.isFlippedHorizontal,
+                // flipV: !!shape.isFlippedVertical,
+                flipH: false,
+                flipV: false,
 
                 root2parentMatrix: m3
             });
@@ -290,12 +293,13 @@ export class RotateHandler extends TransformHandler {
 
         const shape = this.shapes[0];
 
-        if (shape.isFlippedHorizontal) {
-            deg = -deg;
-        }
-        if (shape.isFlippedVertical) {
-            deg = -deg;
-        }
+        // todo flip
+        // if (shape.isFlippedHorizontal) {
+        //     deg = -deg;
+        // }
+        // if (shape.isFlippedVertical) {
+        //     deg = -deg;
+        // }
 
         const base = this.baseData.get(shape.id);
         if (!base) {

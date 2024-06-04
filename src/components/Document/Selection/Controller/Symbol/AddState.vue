@@ -34,8 +34,9 @@ function gen_add_button_transform() {
         center = matrix.computeCoord2(frame.width, frame.height / 2);
     }
     let mt = ''
-    if (shape.isFlippedHorizontal) mt += 'rotateY(180deg) ';
-    if (shape.isFlippedVertical) mt += 'rotateX(180deg) ';
+    // todo flip
+    // if (shape.isFlippedHorizontal) mt += 'rotateY(180deg) ';
+    // if (shape.isFlippedVertical) mt += 'rotateX(180deg) ';
     if (shape.rotation) mt += `rotate(${shape.rotation}deg)`;
     let t = `translate(${center.x}px, ${center.y}px) `;
     t += mt;

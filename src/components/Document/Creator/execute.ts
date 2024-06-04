@@ -618,16 +618,17 @@ export class CreatorExecute extends TransformHandler {
         let ohflip = false;
         let ovflip = false;
 
-        let p: ShapeView | undefined = env;
-        while (p) {
-            if (p.isFlippedHorizontal) {
-                ohflip = !ohflip;
-            }
-            if (p.isFlippedVertical) {
-                ovflip = !ovflip;
-            }
-            p = p.parent;
-        }
+        // todo flip
+        // let p: ShapeView | undefined = env;
+        // while (p) {
+        //     if (p.isFlippedHorizontal) {
+        //         ohflip = !ohflip;
+        //     }
+        //     if (p.isFlippedVertical) {
+        //         ovflip = !ovflip;
+        //     }
+        //     p = p.parent;
+        // }
 
         result.flipH = ohflip;
         result.flipV = ovflip;
