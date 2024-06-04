@@ -27,6 +27,7 @@ export class ReferUnderContainerRenderer {
      * @description 更新指定Container的参考线绘制
      */
     private updateContainerLineRender(id: string, args: any) {
+        // console.log('_update_', ...args);
         const ctx = this.m_context;
         const referSelection = ctx.tool.referSelection;
 
@@ -55,12 +56,14 @@ export class ReferUnderContainerRenderer {
             return;
         }
 
+        // console.log('__units__', unit);
+
         this.updateReferUnit(unit);
 
-        if ((args && args.includes('guides') && args.includes('offset', -1))) {
-            referSelection.updateSelectedSelection(id);
-            return;
-        }
+        // if ((args && args.includes('guides') && args.includes('offset', -1))) {
+        //     referSelection.updateSelectedSelection(id);
+        //     return;
+        // }
 
         referSelection.updateSelectedSelection(id);
     }
@@ -69,7 +72,7 @@ export class ReferUnderContainerRenderer {
      * @description 为指定Container生成参考线
      */
     private generateUnit(shape: ShapeView) {
-        const unit: ReferUnit = { shape: shape, id: shape.id, lines: [] };
+        const unit: ReferUnit = {shape: shape, id: shape.id, lines: []};
 
         this.m_units.push(unit);
 
@@ -121,7 +124,7 @@ export class ReferUnderContainerRenderer {
                 if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
             }
 
-            unit.lines.push({ id: `${shape.id}/${i}`, axis, offset, start, end, path: genPath(start, end) });
+            unit.lines.push({id: `${shape.id}/${i}`, axis, offset, start, end, path: genPath(start, end)});
         }
     }
 

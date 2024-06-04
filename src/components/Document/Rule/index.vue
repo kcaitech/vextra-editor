@@ -193,6 +193,7 @@ function moveHor(event: MouseEvent) {
         if (y >= 20 && enoughDelta) {
             isDrag = true;
             referLineHandler?.createApiCaller(event);
+            hovered.value.valid = true;
         }
     }
 }

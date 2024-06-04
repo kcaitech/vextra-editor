@@ -171,6 +171,8 @@ export class ReferLineHandler extends TransformHandler {
         const index = this.m_index;
         const currentEnv = this.m_current_env as ArtboradView;
 
+        console.log('currentEnv&index', currentEnv.name, index);
+
         if (!currentEnv?.guides?.[index]) {
             // 不存在这条线
             return;
@@ -227,7 +229,7 @@ export class ReferLineHandler extends TransformHandler {
         this.api.modifyOffset(currentEnv, index, gui.offset + del, false);
     }
 
-    private __migrate() {
+    private migrate() {
         const env = this.envSearch();
 
         const _o_env = this.m_current_env as ArtboradView;
@@ -275,10 +277,6 @@ export class ReferLineHandler extends TransformHandler {
         this.m_current_env = result.env;
         this.m_index = result.index
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
-    }
-
-    private migrate() {
-        this.__migrate();
     }
 
     delete(env: ShapeView, index: number) {
