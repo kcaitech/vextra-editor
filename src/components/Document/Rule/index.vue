@@ -105,6 +105,7 @@ function workspaceWatcher(t: number) {
         rootReferHandler.render();
         referUnderContainerRenderer.updateByMatrix();
         props.context.tool.referSelection.updateSelectedSelection(selected.value.env.id);
+        referLineSelection.resetHovered();
     }
 }
 
