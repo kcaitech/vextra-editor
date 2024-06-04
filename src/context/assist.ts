@@ -348,6 +348,9 @@ export class Assist extends WatchableObject {
             return;
         }
 
+        const hgx = this.highlight_guide_x;
+        hgx.length = 0;
+
         this.m_nodes_x = [];
         const target = { x: 0, sticked_by_x: false };
         const pre_target: PT4P1 = { x: 0, sy: 0, delta: undefined };
@@ -366,6 +369,13 @@ export class Assist extends WatchableObject {
             modify_pt_x4p(pre_target, point, c_pg.apexX, this.m_stickness);
         }
 
+        // 参考线
+        let sparkX = false;
+        if (this.m_guides_x.length) {
+            const gx = this.m_guides_x.map(g => g.offsetRoot);
+            sparkX = modify_pt_x4p(pre_target, point, gx, this.m_stickness);
+        }
+
         if (pre_target.delta !== undefined) {
             target.x = pre_target.x;
             target.sticked_by_x = true;
@@ -377,6 +387,44 @@ export class Assist extends WatchableObject {
             }
 
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat(_self);
+
+            const fixed = this.fixedTarget;
+            if (sparkX && fixed) {
+                if (fixed.type === ShapeType.Page) {
+                    const matrix = this.m_context.workspace.matrix;
+                    const guides_x = this.m_guides_x;
+                    const height = this.m_context.workspace.root.height;
+                    for (let i = 0; i < guides_x.length; i++) {
+                        let offset = guides_x[i].offsetRoot;
+                        if (offset !== _self[0]?.p.x) {
+                            continue;
+                        }
+                        offset = matrix.computeCoord2(offset, 0).x;
+                        hgx.push(`M${offset} 0 L${offset} ${height}`);
+                    }
+                } else {
+                    const guides_x = this.m_guides_x;
+                    const height = fixed.frame.height;
+                    const matrix = fixed.matrix2Root();
+                    matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                    for (let i = 0; i < guides_x.length; i++) {
+                        const g = guides_x[i];
+                        let offset = g.offsetRoot;
+
+                        if (offset !== _self[0]?.p.x) {
+                            continue;
+                        }
+
+                        offset = g.offsetFix;
+
+                        const start = matrix.computeCoord2(offset, 0);
+                        const end = matrix.computeCoord2(offset, height);
+
+                        hgx.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            }
         }
 
         this.notify(Assist.UPDATE_ASSIST);
@@ -388,6 +436,10 @@ export class Assist extends WatchableObject {
         if (!this.m_except.size) {
             return;
         }
+
+        const hgy = this.highlight_guide_y;
+        hgy.length = 0;
+
         this.m_nodes_y = [];
         const target = { y: 0, sticked_by_y: false };
         const pre_target: PT4P2 = { y: 0, sx: 0, delta: undefined };
@@ -406,6 +458,13 @@ export class Assist extends WatchableObject {
             modify_pt_y4p(pre_target, point, c_pg.apexY, this.m_stickness);
         }
 
+        // 参考线
+        let sparkY = false;
+        if (this.m_guides_x.length) {
+            const gy = this.m_guides_y.map(g => g.offsetRoot);
+            sparkY = modify_pt_y4p(pre_target, point, gy, this.m_stickness);
+        }
+
         if (pre_target.delta !== undefined) {
             target.y = pre_target.y;
             target.sticked_by_y = true;
@@ -417,6 +476,44 @@ export class Assist extends WatchableObject {
             }
 
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat(_self);
+
+            const fixed = this.fixedTarget;
+            if (sparkY && fixed) {
+                if (fixed.type === ShapeType.Page) {
+                    const matrix = this.m_context.workspace.matrix;
+                    const guides_y = this.m_guides_y;
+                    const width = this.m_context.workspace.root.width;
+                    for (let i = 0; i < guides_y.length; i++) {
+                        let offset = guides_y[i].offsetRoot;
+                        if (offset !== _self[0]?.p.y) {
+                            continue;
+                        }
+                        offset = matrix.computeCoord2(0, offset).y;
+                        hgy.push(`M0 ${offset} L${width} ${offset}`);
+                    }
+                } else {
+                    const guides_y = this.m_guides_y;
+                    const width = fixed.frame.width;
+                    const matrix = fixed.matrix2Root();
+                    matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                    for (let i = 0; i < guides_y.length; i++) {
+                        const g = guides_y[i];
+                        let offset = g.offsetRoot;
+
+                        if (offset !== _self[0]?.p.y) {
+                            continue;
+                        }
+
+                        offset = g.offsetFix;
+
+                        const start = matrix.computeCoord2(0, offset);
+                        const end = matrix.computeCoord2(width, offset);
+
+                        hgy.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            }
         }
 
         this.notify(Assist.UPDATE_ASSIST);
