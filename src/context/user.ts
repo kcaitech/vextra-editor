@@ -64,17 +64,32 @@ export class User extends WatchableObject {
         localStorage.setItem('userConfig', JSON.stringify(conf));
     }
 
+    static CONF = {
+        pixelAlignment: true,
+        pixelGrid: true,
+        rule: true
+    };
+
     get initConfig(): string {
-        const conf: UserConfig = {
-            pixelAlignment: true,
-            pixelGrid: true,
-            rule: true
-        };
+        const conf: UserConfig = User.CONF;
         return JSON.stringify(conf);
     }
 
     updateUserConfig() {
-        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        let conf = JSON.parse(localStorage.getItem('userConfig')!) as UserConfig;
+        if (!conf) {
+            conf = User.CONF;
+        }
+
+        if ((Object.keys(conf).length !== Object.keys(User.CONF).length)) {
+            const __temp = JSON.parse(JSON.stringify(conf));
+            conf = User.CONF;
+
+            conf.pixelAlignment = __temp.pixelAlignment || true;
+            conf.pixelGrid = __temp.pixelGrid || true;
+            conf.rule = __temp.rule || true;
+        }
+
         this.m_pixel_alignment = conf.pixelAlignment;
         this.m_pixel_grid = conf.pixelGrid;
         this.m_rule = conf.rule;
