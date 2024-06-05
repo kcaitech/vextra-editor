@@ -194,6 +194,8 @@ const center_scale = () => {
 }
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
+    const shape = props.context.preview.selectedShape;
+    if (!shape) return;
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(e);
@@ -238,9 +240,9 @@ const wheelTrans = (e: WheelEvent) => {
 const MAX = 25600;
 const MIN = 2;
 const root_scale = (e: WheelEvent) => {
-    let scale_delta = 1.2;
+    let scale_delta = 1.3;
     if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
-        scale_delta = 1.02;
+        scale_delta = 1.12;
     }
     const scale = Number((props.context.preview.scale * 100).toFixed(0));
     let scale_delta_ = 1 / scale_delta;
@@ -249,7 +251,8 @@ const root_scale = (e: WheelEvent) => {
     } else if (scale >= MAX) {
         scale_delta = MAX / scale;
     }
-    if (!preview.value) return;
+    const shape = props.context.preview.selectedShape;
+    if (!preview.value || !shape) return;
     const bound = canDragging()!;
     const root = preview.value.getBoundingClientRect();
     const w = bound.right - bound.left;
@@ -402,6 +405,8 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
+    const shape = props.context.preview.selectedShape;
+    if (!shape) return;
     e.stopPropagation();
     isMenu.value = false;
     if (e.button === 2) {

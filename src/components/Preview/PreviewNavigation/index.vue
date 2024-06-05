@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import PageList from "./PreviewPageList.vue";
 import Sash from "@/components/common/Sash.vue";
@@ -55,12 +55,15 @@ function navi_watcher(t?: number) {
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
+
 onMounted(() => {
+    props.context.data.watch(init_pagelist_height);
     container.value && observer.observe(container.value);
     init_pagelist_height();
     props.context.navi.watch(navi_watcher);
 });
 onUnmounted(() => {
+    props.context.data.unwatch(init_pagelist_height);
     observer.disconnect();
     props.context.navi.unwatch(navi_watcher);
 })
