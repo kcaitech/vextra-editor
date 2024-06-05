@@ -695,7 +695,7 @@ onUnmounted(() => {
 
             .start-data {
                 top: 0;
-                transform: translateY(-108%) rotate(180deg);
+                transform: translateY(-100%) rotate(180deg);
             }
 
             .end-data {
