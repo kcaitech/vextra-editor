@@ -122,7 +122,7 @@ export class ReferLineSelection {
 
                     if (line.axis === GuideAxis.X) {
                         hovered.desc = formatNumber(line.offset);
-                        hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
+                        hovered.transform = `translate(${line.start.x + 2}px, 14px)`;
                     } else {
                         hovered.desc = formatNumber(line.offset);
                         hovered.transform = `translateY(${line.start.y + 10}px)`;
@@ -181,10 +181,10 @@ export class ReferLineSelection {
 
                 if (line.axis === GuideAxis.X) {
                     hovered.desc = formatNumber(line.offset);
-                    hovered.transform = `translate(${line.start.x + 2}px, 10px)`;
+                    hovered.transform = `translate(${line.start.x + 2}px, 14px)`;
                 } else {
                     hovered.desc = formatNumber(line.offset);
-                    hovered.transform = `translateY(${line.start.y + 10}px)`;
+                    hovered.transform = `translate(4px ,${line.start.y + 10}px)`;
                 }
 
                 const clientS = line.start;
@@ -253,7 +253,7 @@ export class ReferLineSelection {
                 selected.start = { x, y: 0 };
                 selected.end = { x, y: root.height };
 
-                selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+                selected.transform = `translate(${selected.start.x + 2}px, 14px)`;
             } else {
                 const y = matrix.computeCoord2(0, offset).y;
 
@@ -265,7 +265,7 @@ export class ReferLineSelection {
                 selected.start = { x: 0, y };
                 selected.end = { x: root.width, y };
 
-                selected.transform = `translateY(${selected.start.y + 10}px)`;
+                selected.transform = `translate(4px, ${selected.start.y + 10}px)`;
             }
 
             const path: Path = { dash: false, data: '' };
@@ -291,7 +291,7 @@ export class ReferLineSelection {
                     return;
                 }
 
-                selected.transform = `translate(${selected.start.x + 2}px, 10px)`;
+                selected.transform = `translate(${selected.start.x + 2}px, 14px)`;
 
                 const clientS = { x: selected.start.x, y: 0 };
                 const clientE = { x: selected.start.x, y: root.height };
@@ -307,7 +307,7 @@ export class ReferLineSelection {
                     return;
                 }
 
-                selected.transform = `translateY(${selected.start.y + 10}px)`;
+                selected.transform = `translate(4px, ${selected.start.y + 10}px)`;
 
                 const clientS = { x: 0, y: selected.start.y };
                 const clientE = { x: root.width, y: selected.start.y };
@@ -362,7 +362,7 @@ export class ReferLineSelection {
                 hovered.start = { x, y: 0 };
                 hovered.end = { x, y: root.height };
 
-                hovered.transform = `translate(${hovered.start.x + 2}px, 10px)`;
+                hovered.transform = `translate(${hovered.start.x + 2}px, 14px)`;
             } else {
                 const y = matrix.computeCoord2(0, offset).y;
 
@@ -374,7 +374,7 @@ export class ReferLineSelection {
                 hovered.start = { x: 0, y };
                 hovered.end = { x: root.width, y };
 
-                hovered.transform = `translateY(${hovered.start.y + 10}px)`;
+                hovered.transform = `translate(4px, ${hovered.start.y + 10}px)`;
             }
 
             const path: Path = { dash: false, data: '' };
@@ -400,7 +400,7 @@ export class ReferLineSelection {
                     return;
                 }
 
-                hovered.transform = `translate(${hovered.start.x + 2}px, 10px)`;
+                hovered.transform = `translate(${hovered.start.x + 2}px, 14px)`;
 
                 const clientS = { x: hovered.start.x, y: 0 };
                 const clientE = { x: hovered.start.x, y: root.height };
@@ -416,7 +416,7 @@ export class ReferLineSelection {
                     return;
                 }
 
-                hovered.transform = `translateY(${hovered.start.y + 10}px)`;
+                hovered.transform = `translate(4px, ${hovered.start.y + 10}px)`;
 
                 const clientS = { x: 0, y: hovered.start.y };
                 const clientE = { x: root.width, y: hovered.start.y };

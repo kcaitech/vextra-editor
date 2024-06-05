@@ -618,6 +618,7 @@ onUnmounted(() => {
                 color: var(--active-color);
                 font-size: 10px;
                 position: absolute;
+                bottom: 3px;
             }
 
             .start-data {
@@ -688,6 +689,7 @@ onUnmounted(() => {
                 color: var(--active-color);
                 font-size: 10px;
                 position: absolute;
+                bottom: 3px;
 
                 writing-mode: vertical-lr;
             }
