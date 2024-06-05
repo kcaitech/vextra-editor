@@ -104,7 +104,7 @@ export class ReferLineSelection {
 
                     hovered.valid = true;
                     hovered.env = unit.shape;
-                    hovered.index = l;
+                    hovered.index = line.index;
 
                     hovered.start = line.start;
                     hovered.end = line.end;
@@ -163,7 +163,7 @@ export class ReferLineSelection {
 
                 hovered.valid = true;
                 hovered.env = rootUnit.shape;
-                hovered.index = l;
+                hovered.index = line.index;
 
                 hovered.start = line.start;
                 hovered.end = line.end;

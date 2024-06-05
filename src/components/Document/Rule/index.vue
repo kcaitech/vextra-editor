@@ -193,7 +193,7 @@ function moveHor(event: MouseEvent) {
         if (y >= 20 && enoughDelta) {
             isDrag = true;
             referLineHandler?.createApiCaller(event);
-            hovered.value.valid = true;
+            // hovered.value.valid = true;
         }
     }
 }
@@ -427,6 +427,8 @@ onMounted(() => {
     referUnderContainerRenderer.updateUnderRootContainerMap();
 
     document.addEventListener('keydown', keydown);
+
+    scaleRenderer.render();
 })
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);

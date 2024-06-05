@@ -11,6 +11,7 @@ export interface Line {
     start: XY;
     end: XY;
     path: string;
+    index: number;
 }
 
 export interface ReferUnit {

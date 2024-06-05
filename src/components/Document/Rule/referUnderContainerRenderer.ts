@@ -72,7 +72,7 @@ export class ReferUnderContainerRenderer {
      * @description 为指定Container生成参考线
      */
     private generateUnit(shape: ShapeView) {
-        const unit: ReferUnit = {shape: shape, id: shape.id, lines: []};
+        const unit: ReferUnit = { shape: shape, id: shape.id, lines: [] };
 
         this.m_units.push(unit);
 
@@ -124,7 +124,7 @@ export class ReferUnderContainerRenderer {
                 if (start.y <= 20 || start.y >= root.height) continue; // 超出可视范围不绘制
             }
 
-            unit.lines.push({id: `${shape.id}/${i}`, axis, offset, start, end, path: genPath(start, end)});
+            unit.lines.push({ index: i, id: `${shape.id}/${i}`, axis, offset, start, end, path: genPath(start, end) });
         }
     }
 

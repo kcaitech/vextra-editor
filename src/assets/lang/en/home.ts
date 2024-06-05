@@ -64,6 +64,7 @@ export const system = {
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
     pixel: 'Pixel Round',
     grid: 'Pixel grid',
+    rule: 'Rule',
     uploadMediaFail: 'Image upload failed'
 }
 
@@ -372,7 +373,7 @@ export const message = {
     link_success: 'Network connection successful',
     autosave: 'Automatic document saving',
     cancel: 'Cancel',
-    exit_document: 'Exit document',
+    exit_document: 'Exit',
     back_home: 'Back to home',
     unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
