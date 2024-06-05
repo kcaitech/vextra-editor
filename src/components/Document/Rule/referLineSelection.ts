@@ -1,4 +1,4 @@
-import { Artboard, ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { formatNumber, ReferUnit } from "@/components/Document/Rule/refer";
 import { scout, Scout } from "@/utils/scout";
@@ -7,7 +7,7 @@ import { cloneDeep } from "lodash";
 
 export enum LineTheme {
     Normal = "#ff4400",
-    Deep = "#ff0000",
+    Deep = "#ff2200",
     Active = "#3387f5"
 }
 
