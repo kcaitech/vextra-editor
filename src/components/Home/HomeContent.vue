@@ -15,17 +15,32 @@
             <div class="moss-container">
                 <div class="moss">
                     <div class="content">
-                        <img class="bg" :src="softui" alt="UI">
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/moss-ui.png">
+                            <img class="bg" :src="softui" alt="UI" loading="eager">
+                        </picture>
                     </div>
                 </div>
             </div>
             <div class="design-container">
                 <div class="design">
                     <div ref="autoplay" class="lunbo">
-                        <img :src="gangbi" alt="gangbi">
-                        <img :src="zjgn" alt="zjgn">
-                        <img :src="gsjr" alt="gsjr">
-                        <img :src="gangbi" alt="gangbi">
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/des-gb.png">
+                            <img :src="gangbi" alt="gangbi" loading="lazy">
+                        </picture>
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/zjgn.png">
+                            <img :src="zjgn" alt="zjgn" loading="lazy">
+                        </picture>
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/gsjr.png">
+                            <img :src="gsjr" alt="gsjr" loading="lazy">
+                        </picture>
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/des-gb.png">
+                            <img :src="gangbi" alt="gangbi" loading="lazy">
+                        </picture>
                     </div>
                     <div class="wenan">
                         <div class="title">{{ t("design.title") }}</div>
@@ -44,7 +59,10 @@
             <div class="cooperation-container">
                 <div class="cooperation">
                     <div class="image">
-                        <img :src="cooperation" alt="cooperation">
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/cooperation.png">
+                            <img :src="cooperation" alt="cooperation" loading="lazy">
+                        </picture>
                     </div>
                     <div class="content">
                         <div class="title">{{ t("cooperation.title") }}</div>
@@ -66,7 +84,10 @@
                         <div class="description">{{ t("platform.description") }}</div>
                     </div>
                     <div class="bottom">
-                        <img :src="kuaduan" alt="kuaduan">
+                        <picture>
+                            <source media="(max-width:480px)" srcset="@/assets/kuaduan.png">
+                            <img :src="kuaduan" alt="kuaduan" loading="lazy">
+                        </picture>
                     </div>
                 </div>
             </div>
@@ -244,6 +265,7 @@ onUnmounted(() => {
         min-width: 1152px;
 
         .title {
+            text-align: center;
             font-family: 'zihunbiantaoti';
             color: #1F1F1F;
         }
@@ -309,16 +331,23 @@ onUnmounted(() => {
         width: 746px;
         height: 620px;
         display: flex;
-        overflow-y: scroll;
+        overflow: hidden;
         scroll-behavior: smooth;
+        scroll-margin-inline-end: 0;
 
         &::-webkit-scrollbar {
             display: none;
         }
 
-        img {
-            width: 100%;
+        picture {
+            min-width: 100%;
             height: 100%;
+
+            img {
+                width: 100%;
+                height: 100%;
+            }
+
         }
 
     }
