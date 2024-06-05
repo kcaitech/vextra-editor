@@ -1,3 +1,4 @@
+import { ScaleType } from "@/context/preview"
 import { BlendMode, BorderPosition } from "@kcdesign/data"
 
 export const system = {
@@ -150,7 +151,10 @@ export const home = {
     'distribute_v': '上下等距分布',
     people_are_visiting: '正在访问的人:',
     permissions: '权限:',
-    contact: '连接线'
+    contact: '连接线',
+    full: '进入全屏',
+    exit_full: '退出全屏',
+    not_preview_frame: '没有可演示的容器'
 }
 
 export const search = {
@@ -373,6 +377,13 @@ export const date = {
     s: '秒前',
 }
 
+export const preview: any = {
+    actual_size: '实际尺寸',
+    previous_page: '上一页',
+    next_page: '下一页',
+    first_page: '第一页'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
@@ -395,3 +406,7 @@ opacity[BlendMode.Color] = "颜色";
 opacity[BlendMode.Luminosity] = "明度";
 opacity[BlendMode.PlusDarker] = "加暗";
 opacity[BlendMode.PlusLighter] = "提亮";
+
+preview[ScaleType.FillScreen] = '充满屏幕'
+preview[ScaleType.FitWidth] = '适应宽度'
+preview[ScaleType.FitScreen] = '适应屏幕'

@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { PageView, Shape, adapt2Shape } from "@kcdesign/data";
+import { PageView, adapt2Shape } from "@kcdesign/data";
 import { ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
-import { ShapeType } from '@kcdesign/data';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
 import { Preview } from "@/context/preview";
@@ -81,18 +79,18 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 
 function _notifySourceChange(t?: number | string) {
+
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const notifySourceChange = debounce(_notifySourceChange, 30);
 
 function search() {
-    props.context.navi.notify(Navi.SEARCHING);
-    props.context.navi.set_keywords(keywords.value);
+    update();
 }
 
 function inputing() {
-    props.context.navi.notify(Navi.SEARCHING);
+    update();
 }
 
 const selectedShape = (shape: ShapeView) => {
@@ -124,10 +122,25 @@ function leave_search() {
 const update = () => {
     arboardList = [];
     const page = props.context.preview.selectedPage;
-    if(page) {
+    if (page) {
         arboardList = getFrameList(page);
     }
+    if (keywords.value.trim().length && arboardList.length) {
+        let search_list = [];
+        const mode = accurate.value ? 'mg' : 'img'
+        const words = keywords.value;
+        const reg = new RegExp(`${words}`, mode);
+        for (let i = 0; i < arboardList.length; i++) {
+            const arboard = arboardList[i];
+            if (arboard.name.search(reg) > -1) {
+                search_list.unshift(arboard);
+            }
+        }
+        arboardList = search_list;
+    }
     notifySourceChange();
+    listHeight();
+    updateScrollH();
 }
 function navi_watcher(t: number) {
     if (t === Navi.TO_SEARCH) {
@@ -137,10 +150,10 @@ function navi_watcher(t: number) {
 
 function clear_text() {
     keywords.value = '';
-    props.context.navi.set_focus_text();
     if (search_el.value) {
         search_el.value.select();
     }
+    update();
 }
 
 function input_focus() {
@@ -152,7 +165,6 @@ function input_focus() {
 function input_blur() {
     if (search_wrap.value && !keywords.value.length) {
         search_wrap.value.classList.remove('active-box-shadow');
-        props.context.navi.set_focus_text();
     }
 }
 
@@ -164,23 +176,47 @@ function to_search() {
     }
 }
 
+const listHeight = () => {
+    if (shapeList.value) {
+        shapeH.value = shapeList.value.offsetHeight
+    }
+}
+
 function accurate_shift() {
     accurate.value = !accurate.value;
     if (search_el.value) {
         search_el.value.focus();
     }
     popoverVisible.value = false;
-    props.context.navi.setMode(accurate.value);
-    props.context.navi.notify(Navi.SEARCHING);
+    update();
 }
 
 const previewWatcher = (t: number) => {
-    if(t === Preview.CHANGE_PAGE) {
+    if (t === Preview.CHANGE_PAGE) {
         update();
     }
-    if(t === Preview.CHANGE_SHAPE) {
+    if (t === Preview.CHANGE_SHAPE) {
         update();
     }
+}
+const updateScrollH = () => {
+    const shape = props.context.preview.selectedShape;
+    if (!shape) return;
+    let list_h = 0;
+    if (listBody.value) {
+        list_h = listBody.value.clientHeight //list可视高度
+    }
+    const index = arboardList.findIndex(item => item.id === shape.id);
+    if (shapelist.value && index >= 0) {
+        const itemScrollH = index * 52
+        if (itemScrollH + 49 >= list_h - shapelist.value.scroll.y) {
+            if ((itemScrollH) + shapelist.value.scroll.y < list_h - 52) return
+            shapelist.value.clampScroll(0, -(itemScrollH + 52 - list_h))
+        } else if (itemScrollH < -(shapelist.value.scroll.y)) {
+            shapelist.value.clampScroll(0, -itemScrollH)
+        }
+    }
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const stopWatch = watch(() => props.page, (value, old) => {

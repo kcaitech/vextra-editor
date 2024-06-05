@@ -3,10 +3,10 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { Page, PageView } from "@kcdesign/data";
+import { PageView } from "@kcdesign/data";
 import ShapeList from "./ShapeList.vue";
 import { Navi } from "@/context/navigate";
-const props = defineProps<{ context: Context, page: PageView }>();
+const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const i_height = 119;
 const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 32 });
@@ -52,6 +52,9 @@ function navi_watcher(t?: number) {
         init_pagelist_height();
     }
 }
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 onMounted(() => {
     container.value && observer.observe(container.value);
     init_pagelist_height();
@@ -74,6 +77,11 @@ onUnmounted(() => {
             :style="{ height: isPagelistFold ? 'calc(100% - 40px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"></ShapeList>
         </div>
+        <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+            :style="{ opacity: showLeft ? 1 : 0.6 }">
+            <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+            <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+        </div>
     </div>
 </template>
 
@@ -91,6 +99,29 @@ onUnmounted(() => {
     >.page-navi {
         position: relative;
         // transition: all 0.3s ease 0s;
+    }
+    .showHiddenL {
+        position: absolute;
+        right: -16px;
+        top: 40px;
+        transform: translateY(-50%);
+        z-index: 9;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0px 8px 8px 0px;
+        background: #FFFFFF;
+        width: 16px;
+        height: 44px;
+        box-sizing: border-box;
+        border: 1px solid #F0F0F0;
+        padding: 14px 0;
+
+        >.svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 }
 </style>

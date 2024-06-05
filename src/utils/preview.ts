@@ -2,12 +2,12 @@ import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
 import { PageView, ShapeType } from "@kcdesign/data";
-
-export function open_preview(doc_id: string, context: Context, artboardId?: string) {
+import { Preview, ScaleType } from "@/context/preview";
+export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
     if (!page) return;
     if (!page.artboardList.length) {
-        ElMessage.error({ duration: 3000, message: '当前页面没有可预览内容' })
+        ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
         return;
     }
     const artboard = page.artboardList[0];
@@ -28,4 +28,101 @@ export function open_preview(doc_id: string, context: Context, artboardId?: stri
 
 export function getFrameList(page: PageView) {
     return page.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
+}
+
+
+const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
+
+function keydown(event: KeyboardEvent, context: Context) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
+        return;
+    }
+    const f = keydownHandler[event.code];
+    f && f(event, context);
+}
+
+function keyup(event: KeyboardEvent, context: Context) {
+}
+
+export function keyboard(context: Context) {
+    const down = (event: KeyboardEvent) => keydown(event, context);
+    const up = (event: KeyboardEvent) => keyup(event, context);
+
+    document.addEventListener('keydown', down);
+    document.addEventListener('keyup', up);
+
+    const remove_keyboard_units = () => {
+        document.removeEventListener('keydown', down);
+        document.removeEventListener('keyup', up);
+    }
+
+    return remove_keyboard_units;
+}
+
+keydownHandler['ArrowLeft'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    context.preview.notify(Preview.BEFORE_PAGE);
+}
+
+keydownHandler['ArrowRight'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    context.preview.notify(Preview.NEXT_PAGE);
+}
+keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl || event.shiftKey) {
+        event.preventDefault();
+        context.preview.setScaleMenu(ScaleType.Actual);
+        return;
+    }
+}
+
+keydownHandler['Numpad0'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl || event.shiftKey) {
+        event.preventDefault();
+        context.preview.setScaleMenu(ScaleType.Actual);
+        return;
+    }
+}
+
+
+keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
+        context.preview.notify(Preview.NAVI_CHANGE);
+        return;
+    }
+    if (is_ctrl) {
+        event.preventDefault();
+        context.preview.showUiVisible(!context.preview.uiState);
+    }
+}
+
+keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
+    // todo 缩放页面视图
+    event.preventDefault();
+    context.preview.notify(Preview.SCALE_CHANGE, false);
+}
+
+keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    context.preview.notify(Preview.SCALE_CHANGE, true);
+}
+
+keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl || event.altKey || event.shiftKey) return;
+    event.preventDefault();
+    const cur_scale_type = context.preview.scaleType;
+    const scaleType = getNextScaleType(cur_scale_type || ScaleType.Actual);
+    context.preview.setScaleMenu(scaleType);
+}
+
+function getNextScaleType(current: ScaleType): ScaleType {
+    const types = [ScaleType.Actual, ScaleType.FillScreen, ScaleType.FitScreen, ScaleType.FitWidth];
+    const index = types.findIndex(item => item === current) + 1;
+    if (index === -1) return ScaleType.Actual;
+    return types[index % types.length];
 }

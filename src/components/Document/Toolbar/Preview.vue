@@ -14,12 +14,12 @@ const route = useRoute();
 const preview = () => {
     const selected = props.context.selection.selectedShapes;
     const artboard = selected.find(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
-    open_preview(route.query.id as string, props.context, artboard?.id);
+    open_preview(route.query.id as string, props.context, t, artboard?.id);
 }
 </script>
 
 <template>
-     <Tooltip :content="t('navi.comps')">
+    <Tooltip :content="t('navi.comps')">
         <div class="preview" @click="preview">
             <svg-icon icon-class="preview"></svg-icon>
         </div>
@@ -34,6 +34,7 @@ const preview = () => {
     align-items: center;
     justify-content: center;
     margin-left: 4px;
+
     >svg {
         width: 16px;
         height: 16px;

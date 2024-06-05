@@ -186,6 +186,7 @@ declare module '@vue/runtime-core' {
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
     Mapply: typeof import('./src/components/Mobile/Mapply.vue')['default']
     MdNumberInput: typeof import('./src/components/common/MdNumberInput.vue')['default']
+    Menu: typeof import('./src/components/Preview/Menu.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     MessageBoxBeta: typeof import('./src/components/common/MessageBoxBeta.vue')['default']
     MessageInfo: typeof import('./src/components/Mobile/MessageInfo.vue')['default']

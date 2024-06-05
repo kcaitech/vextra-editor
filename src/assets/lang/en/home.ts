@@ -1,3 +1,4 @@
+import { ScaleType } from "@/context/preview";
 import { BlendMode, BorderPosition } from "@kcdesign/data";
 
 export const system = {
@@ -149,7 +150,10 @@ export const home = {
     'distribute_v': 'Distribute vertical spacing',
     people_are_visiting: 'People are visiting:',
     permissions: 'Permissions:',
-    contact: 'Contact'
+    contact: 'Contact',
+    full: 'Full screen',
+    exit_full: 'Exit full screen',
+    not_preview_frame: 'There is no demonstrable container'
 }
 
 export const search = {
@@ -369,6 +373,13 @@ export const date = {
     just_now: 'Just now',
     s: 's',
 }
+
+export const preview: any = {
+    actual_size: 'Actual size',
+    previous_page: 'Previous page',
+    next_page: 'Next page',
+    first_page: 'First page'
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
@@ -391,3 +402,7 @@ opacity[BlendMode.Color] = "Color";
 opacity[BlendMode.Luminosity] = "Lightness";
 opacity[BlendMode.PlusDarker] = "Plus darker";
 opacity[BlendMode.PlusLighter] = "Plus lighter";
+
+preview[ScaleType.FillScreen] = 'Fill screen'
+preview[ScaleType.FitWidth] = 'Fit width'
+preview[ScaleType.FitScreen] = 'Fit screen'

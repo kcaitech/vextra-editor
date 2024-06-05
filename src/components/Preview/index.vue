@@ -4,9 +4,8 @@ import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import * as share_api from '@/request/share'
-import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus';
-import { Document, importRemote, Repository, Page, CoopRepository, IStorage, PageView, PageListItem, ShapeType } from '@kcdesign/data';
+import { importRemote, Repository, Page, CoopRepository, IStorage, PageView, PageListItem } from '@kcdesign/data';
 import { OssStorage, S3Storage, StorageOptions } from '@/utils/storage';
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import kcdesk from '@/kcdesk';
@@ -20,21 +19,23 @@ import Navigation from './Navigation/index.vue'
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
-import { getFrameList } from '@/utils/preview';
+import { getFrameList, keyboard } from '@/utils/preview';
 
 const { t } = useI18n();
 let context: Context | undefined;
 const route = useRoute();
 const loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
+const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
 const sub_loading = ref<boolean>(false);
+const leftTriggleVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 const showTop = ref<boolean>(true);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const inited = ref(false);
-
+const docInfo: any = ref({});
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
 const getDocumentInfo = async () => {
@@ -61,7 +62,7 @@ const getDocumentInfo = async () => {
         }
         const docInfoData = docInfoRes.data;
         const docKeyData = docKeyRes.data;
-
+        docInfo.value = docInfoData;
         const repo = new Repository();
         const storageOptions: StorageOptions = {
             endPoint: docKeyData.endpoint,
@@ -98,7 +99,6 @@ const getDocumentInfo = async () => {
                 router.push("/files");
                 return;
             }
-            loading.value = false;
             await context.communication.docResourceUpload.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
@@ -106,6 +106,7 @@ const getDocumentInfo = async () => {
             const frameId = route.query.frame_id as string;
             context.preview.setDocInfoId(docInfoData.document.id);
             switchPage(page?.id || context!.data.pagesList[0]?.id, frameId);
+            loading.value = false;
         }
     } catch (err) {
         loading.value = false;
@@ -128,13 +129,28 @@ function switchPage(id?: string, shapeId?: string) {
                 ctx.preview.selectPage(pagedom);
                 selectedShape(ctx, pagedom, shapeId);
                 curPage.value = pagedom;
+                setWindowTitle(ctx, pagedom);
             }
         })
     }
 }
+
+const setWindowTitle = (context: Context, page: PageView) => {
+    const _name = context?.data.name || '';
+    const file_name = docInfo.value.document?.name || _name;
+    const pages = context.data.pagesList
+    const page_name = pages.find(item => item.id === page.id)?.name || '';
+    window.document.title = file_name.length > 8 ? `▶ ${file_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${file_name} - ${page_name.slice(0, 8)}`;
+    kcdesk?.fileSetName(file_name);
+}
+
 const selectedShape = (ctx: Context, page: PageView, id?: string) => {
     const list = getFrameList(page);
-    if (!list.length) return ctx.preview.selectShape(undefined);
+    if (!list.length) {
+        ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
+        ctx.preview.selectShape(undefined);
+        return;
+    }
     if (id) {
         const shape = list.find(item => item.id.slice(0, 8) === id);
         ctx.preview.selectShape(shape || list[0]);
@@ -148,6 +164,23 @@ function previewWatcher(t: number) {
             const ctx: Context = context;
             curPage.value = ctx.preview.selectedPage;
         }
+    } else if (t === Preview.UI_CHANGE) {
+        if (!context) return;
+        if (!context.preview.uiState) {
+            if (showLeft.value && showTop.value) {
+                showHiddenLeft();
+                showTop.value = false;
+            } else if (!showLeft.value) {
+                showTop.value = false;
+            }
+        } else {
+            if (!showLeft.value) {
+                showHiddenLeft();
+            }
+            showTop.value = true;
+        }
+    } else if (t === Preview.NAVI_CHANGE) {
+        showHiddenLeft();
     }
 }
 function workspaceWatcher(t: number, o?: any) {
@@ -170,6 +203,41 @@ function switchFullScreen() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
+let timerForLeft: any;
+const showHiddenLeft = () => {
+    if (!context) return;
+    if (showLeft.value) {
+        Left.value.leftMin = 0
+        Left.value.leftWidth = 0
+        Left.value.leftMinWidth = 0
+        showLeft.value = false
+    } else {
+        Left.value.leftMin = 250
+        Left.value.leftWidth = 250
+        Left.value.leftMinWidth = 250
+        showLeft.value = true
+    }
+    context.preview.showNavi(showLeft.value);
+}
+
+function mouseenter() {
+    if (timerForLeft) {
+        clearTimeout(timerForLeft);
+        timerForLeft = undefined;
+    }
+    leftTriggleVisible.value = true;
+}
+function mouseleave() {
+    const delay = 80;
+    timerForLeft = setTimeout(() => {
+        if (!timerForLeft) return;
+        leftTriggleVisible.value = false;
+        clearTimeout(timerForLeft);
+        timerForLeft = undefined;
+    }, delay);
+
+}
+
 
 function init_watcher() {
     if (!context) {
@@ -183,6 +251,7 @@ function init_keyboard_uints() {
     if (!context) {
         return;
     }
+    uninstall_keyboard_units = keyboard(context);
 }
 
 function init_screen_size() {
@@ -222,13 +291,14 @@ onUnmounted(() => {
             :right="0" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                    :page="(curPage as PageView)" @switchpage="switchPage">
+                    @mouseenter="mouseenter" :page="(curPage as PageView)" :showLeft="showLeft"
+                    :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" @switchpage="switchPage">
                 </Navigation>
             </template>
 
             <template #slot2>
                 <PreviewContent v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    :page="(curPage as PageView)"></PreviewContent>
+                    @mouseenter="mouseleave" :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>
