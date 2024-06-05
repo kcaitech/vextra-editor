@@ -3,7 +3,7 @@ import {
     ShapeFrame,
 } from "@kcdesign/data"
 import {BaseCreator} from "./base"
-import {ColVector3D} from "@kcdesign/data/dist/basic/matrix2"
+import {ColVector3D} from "@kcdesign/data"
 
 export class Polyline extends BaseCreator {
     createShape() {

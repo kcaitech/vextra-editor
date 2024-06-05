@@ -21,6 +21,11 @@ description.name = "description";
 description.content = t('product.description');
 document.head.append(description);
 
+const h1 = document.createElement('h1');
+h1.innerText = t('product.description');
+h1.style.display = 'none'
+document.body.append(h1);
+
 const keywords = document.createElement('meta');
 keywords.name = "keywords";
 keywords.content = t('product.keywords');
