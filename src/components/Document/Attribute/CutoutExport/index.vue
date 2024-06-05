@@ -13,7 +13,7 @@ import {
 import { ref, onMounted, onUnmounted, reactive, nextTick, watch, toRaw } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
-import Preview from './Preview.vue';
+import Preview from './CutPreview.vue';
 import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';

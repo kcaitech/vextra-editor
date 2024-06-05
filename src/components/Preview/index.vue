@@ -12,10 +12,10 @@ import kcdesk from '@/kcdesk';
 import { WorkSpace } from '@/context/workspace';
 import { SCREEN_SIZE } from '@/settings';
 import { initpal } from '../Document/initpal';
-import Toolbar from './Toolbar/index.vue'
+import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
-import Navigation from './Navigation/index.vue'
+import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';

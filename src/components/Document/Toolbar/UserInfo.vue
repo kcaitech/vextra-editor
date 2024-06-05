@@ -2,11 +2,10 @@
 import UserAvatar from './UserAvatar.vue';
 import Share from './Share/Share.vue';
 import Scale from './Scale.vue';
-import { } from 'vue';
 import { Context } from '@/context';
 import Collaborator from './Collaboration/Collaborator.vue';
 import LableToggle from './LableToggle.vue';
-import Preview from './Preview.vue';
+import Preview from './PreviewEnter.vue';
 interface Props {
     context: Context
 }
