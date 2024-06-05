@@ -141,6 +141,7 @@ declare module '@vue/runtime-core' {
     Handle: typeof import('./src/components/Document/Selection/Controller/PathEdit/Handle.vue')['default']
     HandleContainer: typeof import('./src/components/Document/Selection/Controller/PathEdit/HandleContainer.vue')['default']
     Header: typeof import('./src/components/AppHome/Header.vue')['default']
+    HeaderComponent: typeof import('./src/components/Login/HeaderComponent.vue')['default']
     HelpEntrance: typeof import('./src/components/Help/HelpEntrance.vue')['default']
     Home: typeof import('./src/components/Home/index.vue')['default']
     HomeContent: typeof import('./src/components/Home/HomeContent.vue')['default']

@@ -309,7 +309,12 @@ export const attr: any = {
 }
 
 export const login = {
-    login_failure: 'Login failure'
+    login_failure: 'Login failure',
+    welcome: 'Welcome',
+    name: 'MossDesign',
+    describe: 'Online collaborative professional product design software',
+    miniprogram:'MiniProgram',
+    scan_code:'Scan wechat'
 }
 
 export const comment = {

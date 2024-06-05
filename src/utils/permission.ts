@@ -26,7 +26,7 @@ router.beforeEach((to, from, next) => {
     }
     //判断是否存在token且有效
     if (token) {
-        if (to.path === '/login') {
+        if (to.path === '/login' || to.path === '/') {
             if (isMobileDevice()) {
                 next('/m')
             } else {

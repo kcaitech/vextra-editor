@@ -310,7 +310,12 @@ export const attr: any = {
 }
 
 export const login = {
-    login_failure: '登录失效，请重新登录'
+    login_failure: '登录失效，请重新登录',
+    welcome: '欢迎登录使用',
+    name: '墨师设计',
+    describe: '在线协作专业产品设计软件',
+    miniprogram:'微信小程序',
+    scan_code:'微信扫一扫'
 }
 
 export const comment = {

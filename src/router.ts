@@ -129,13 +129,13 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: 'login',
+        // redirect: 'login',
         children: [
             {
                 path: "introduction",
                 name: "homecontent",
                 component: HomeContent,
-                // alias: '/'
+                alias: '/'
             },
             {
                 path: "privacypolicy",
@@ -431,10 +431,11 @@ export const router = createRouter({
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition
-        }
-        return {
-            top: 0,
-            behavior: 'smooth'
+        } else {
+            return {
+                top: 0,
+                behavior: 'smooth'
+            }
         }
     },
     routes: routes
