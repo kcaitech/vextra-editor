@@ -233,6 +233,7 @@ onMounted(() => {
     background-image: url("@/assets/bgimg4.svg");
     background-size: cover;
     background-repeat: no-repeat;
+    overflow: auto;
 
     .header {
         width: 100%;
@@ -252,7 +253,8 @@ onMounted(() => {
 .content {
     display: flex;
     position: relative;
-    width: 840px;
+    width: 100%;
+    max-width: 840px;
     height: 640px;
     border-radius: 16px;
     border: 1px solid #F0F0F0;
@@ -373,7 +375,9 @@ onMounted(() => {
     &::before {
         content: "";
         position: absolute;
-        transform: translate3d(761px, -79px, -10px);
+        transform: translate3d(0, 0, -1px);
+        top: -79px;
+        right: -79px;
         width: 158px;
         height: 158px;
         border-radius: 50%;
@@ -391,13 +395,36 @@ onMounted(() => {
     }
 }
 
-@media (max-width:480px) {
-    .bgiamge .content .login-left{
-        display: none;
-    }
-    .bgiamge .content::after{
-        content: none;
+
+@media (max-width:1440px) {
+    .bgiamge .content {
+        transform: translateX(0px);
     }
 }
 
+@media (max-width:480px) {
+    .bgiamge{
+        min-width: 100%;
+        overflow: hidden;
+    }
+    .bgiamge .content {
+        width: calc(100% - 20px);
+        height: 60%;
+        min-height: 450px;
+        transform: translateX(0px);
+    }
+
+    .bgiamge .content .login-left {
+        display: none;
+    }
+
+    .bgiamge .content .login-right {
+        width: 100%;
+        border-radius: 16px;
+    }
+
+    .bgiamge .content::after {
+        content: none;
+    }
+}
 </style>
