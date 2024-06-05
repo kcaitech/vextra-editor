@@ -98,7 +98,7 @@ export class ScaleRenderer {
         const coordinateEnv = this.coordinateEnv;
         // 大于50就不做细节更新了，可以考虑直接把controllerFrame作为结果；
         const shapes = ctx.selection.selectedShapes;
-        if (ctx.user.isRuleVisible && ctx.selection.selectedShapes.length && ctx.selection.selectedShapes.length < 50) {
+        if (ctx.user.isRuleVisible && shapes.length && shapes.length < 50 && !ctx.workspace.is_path_edit_mode) {
             const blocksX: Block[] = [];
             const blocksY: Block[] = [];
 
@@ -127,7 +127,7 @@ export class ScaleRenderer {
             const inverse = new Matrix(matrix);
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
-                
+
                 if (shape.type === ShapeType.Contact) {
                     continue;
                 }
