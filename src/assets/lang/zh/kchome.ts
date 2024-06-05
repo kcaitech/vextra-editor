@@ -1,7 +1,7 @@
 export const start = {
     title: '随时都可写 什么都能画',
-    description_1: '专业UI设计软件，同时支持团队管理、文档演示以及多人协作，',
-    description_2: '让每一个参与者都能高效参与的设计工具',
+    description_1: '专业产品设计软件，支持产品文稿写作、UI设计、设计演示、切图标注交付，',
+    description_2: '为产品研发团队提供一站式协同设计新体验',
 
 }
 

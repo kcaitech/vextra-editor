@@ -6,7 +6,6 @@
                     <div class="title">{{ t("start.title") }}</div>
                     <div class="description">
                         {{ t("start.description_1") }}
-                        <br>
                         {{ t("start.description_2") }}
                     </div>
                     <div class="login" @click.stop="router.push({ name: 'login' })">{{ t("pub.login_1") }}</div>

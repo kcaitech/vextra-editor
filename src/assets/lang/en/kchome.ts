@@ -1,7 +1,7 @@
 export const start = {
     title: 'Write anytime and Drawing anything',
-    description_1: 'Professional UI design software, while supporting team management, document presentation and multi-person collaboration,',
-    description_2: ' so that everyone can effectively participate in the design tool.',
+    description_1: 'Professional product design software, support product document writing, UI design, design presentation, marking delivery,',
+    description_2: 'Provide one-stop collaborative design experience for product development team',
 
 }
 
