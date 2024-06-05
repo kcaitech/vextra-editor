@@ -596,11 +596,12 @@ onUnmounted(() => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
+            gap: 1px;
 
             .dot {
                 width: 1px;
-                height: 4px;
+                height: 2px;
                 background-color: var(--color);
             }
         }
@@ -659,7 +660,8 @@ onUnmounted(() => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
+            gap: 1px;
 
             writing-mode: vertical-lr;
 
@@ -668,7 +670,7 @@ onUnmounted(() => {
             }
 
             .dot {
-                width: 4px;
+                width: 2px;
                 height: 1px;
                 background-color: var(--color);
             }
