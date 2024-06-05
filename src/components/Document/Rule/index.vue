@@ -84,6 +84,7 @@ const referLineSelection = new ReferLineSelection(
 );
 
 const pageWatcher = (...args: any) => {
+    // console.log('...args:', ...args);
     if (args.length === 1 && args[0] === 'childs') {
         referUnderContainerRenderer.updateUnderRootContainerMap();
         return;

@@ -33,7 +33,7 @@ export class ReferLineHandler extends TransformHandler {
     readonly m_axis: GuideAxis;
 
     private m_current_env: ShapeView;
-    private livingXY: XY = {x: 0, y: 0};
+    private livingXY: XY = { x: 0, y: 0 };
 
     constructor(context: Context, axis: GuideAxis, env?: ShapeView, index?: number) {
         super(context);
@@ -172,7 +172,7 @@ export class ReferLineHandler extends TransformHandler {
         const index = this.m_index;
         const currentEnv = this.m_current_env as ArtboradView;
 
-        console.log('currentEnv&index', currentEnv.name, index);
+        // console.log('currentEnv&index', currentEnv.name, index);
 
         if (!currentEnv?.guides?.[index]) {
             // 不存在这条线
