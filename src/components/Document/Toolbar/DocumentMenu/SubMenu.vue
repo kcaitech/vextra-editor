@@ -25,8 +25,9 @@ const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isPixel = ref<boolean>(props.context.user.isPixelAlignMent);
 const isGrid = ref<boolean>(props.context.user.isPixelGrid);
+const isRule = ref<boolean>(props.context.user.isRuleVisible);
 
-const items = ref<string[]>(['half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'grid', 'pixel']);
+const items = ref<string[]>(['half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'grid', 'pixel', 'rule']);
 
 /**
  * 50%视图
@@ -99,6 +100,13 @@ function modifyPixelAlgin() {
     emit('close');
 }
 
+function modifyRuleVisible() {
+    const status = props.context.user.isRuleVisible;
+    props.context.user.modifyRuleVisible(!status);
+    emit('close');
+}
+
+
 function modifyPixelGrid() {
     const status = props.context.user.isPixelGrid;
     props.context.user.modifyPixelGrid(!status);
@@ -149,6 +157,12 @@ onMounted(() => {
                 <svg-icon icon-class="white-select" v-show="isPixel"></svg-icon>
             </div>
             <span :style="{ marginLeft: isPixel ? '8px' : '20px' }">{{ t('system.pixel') }}</span>
+        </div>
+        <div class="item" v-if="items.includes('rule')" @click="modifyRuleVisible">
+            <div class="choose">
+                <svg-icon icon-class="white-select" v-show="isRule"></svg-icon>
+            </div>
+            <span :style="{ marginLeft: isRule ? '8px' : '20px' }">{{ t('system.rule') }}</span>
         </div>
     </div>
     <div class="bottom"></div>

@@ -4,6 +4,7 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
+import { Tool } from "@/context/tool";
 
 export function round2half(f: number) {
     if (f === 0) return 0;
@@ -215,6 +216,10 @@ export class LineHandler extends TransformHandler {
         }
 
         this.updateCtrlView();
+
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER);
+        });
     }
 
     private execute4lineStart() {

@@ -4,6 +4,7 @@ import { Assist, PageXY2 } from '@/context/assist';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import Path from "@/components/Document/Toolbar/Buttons/Path.vue";
 
 interface Props {
     context: Context
@@ -46,9 +47,26 @@ function assist_watcher(t: number) {
     }
 }
 
+const highlightReferLine = ref<string[]>([]);
+
+function renderHighlightReferLine() {
+    const hr = highlightReferLine.value;
+    hr.length = 0;
+
+    const hx = props.context.assist.highlight_guide_x;
+    if (hx.length) {
+        hr.push(...hx);
+    }
+    const hy = props.context.assist.highlight_guide_y;
+    if (hy.length) {
+        hr.push(...hy);
+    }
+}
+
 function renderMultiLine() {
     getExLineX();
     getExLineY();
+    renderHighlightReferLine();
     assist.value = true;
 }
 
@@ -69,7 +87,7 @@ function render() {
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
-
+    renderHighlightReferLine();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 
@@ -140,7 +158,10 @@ function minus_nodes_x(nodes: PageXY2[]): PageXY[] {
     let result: PageXY[] = [];
     for (let i = 0, len = nodes.length; i < len; i++) {
         const n = nodes[i];
-        if (!except.get(n.id)) result.push(n.p);
+
+        if (!except.get(n.id)) {
+            result.push(n.p);
+        }
     }
     return result;
 }
@@ -150,8 +171,12 @@ function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
     let result: PageXY[] = [];
     for (let i = 0, len = nodes.length; i < len; i++) {
         const n = nodes[i];
-        if (!except.get(n.id)) result.push(n.p);
+
+        if (!except.get(n.id)) {
+            result.push(n.p);
+        }
     }
+
     return result;
 }
 
@@ -205,14 +230,6 @@ function sort_nodes_y(nodes: PageXY[]): PageXY[] {
     })
 }
 
-function checkBeforeRender() {
-    let shouldUpdate = true;
-    {
-        shouldUpdate = Math.random() > 0.5;
-    }
-    return shouldUpdate;
-}
-
 onMounted(() => {
     props.context.assist.watch(assist_watcher);
 })
@@ -240,6 +257,9 @@ onUnmounted(() => {
             <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path"/>
             <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path"/>
         </g>
+        <g v-if="assist">
+            <path v-for="(l, i) in highlightReferLine" :key="i" :d="l" class="highlight"/>
+        </g>
     </svg>
 </template>
 <style scoped lang="scss">
@@ -249,13 +269,19 @@ svg {
 }
 
 use {
-    stroke-width: 1px;
     stroke: #ff4400;
+    stroke-width: 0.5px;
 }
 
 .a-path {
-    stroke-width: 1px;
+    stroke-width: 0.5px;
     stroke: #ff4400;
+    fill: none;
+}
+
+.highlight {
+    stroke-width: 0.8px;
+    stroke: #ff0000;
     fill: none;
 }
 </style>

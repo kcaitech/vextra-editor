@@ -37,9 +37,9 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 const matrix = new Matrix();
-const data: { dots: Dot[] } = reactive({ dots: [] });
-const { dots } = data;
-let startPosition: ClientXY = { x: 0, y: 0 };
+const data: { dots: Dot[] } = reactive({dots: []});
+const {dots} = data;
+let startPosition: ClientXY = {x: 0, y: 0};
 let isDragging = false;
 
 const dragActiveDis = 4;
@@ -50,7 +50,7 @@ let need_reset_cursor_after_transform = true;
 let scaler: ScaleHandler | undefined = undefined;
 let rotator: RotateHandler | undefined = undefined;
 
-let downXY: XY = { x: 0, y: 0 };
+let downXY: XY = {x: 0, y: 0};
 let initDeg: number = 0;
 
 function update() {
@@ -136,7 +136,7 @@ function point_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType, active = false) {
     const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
+    const {rotate, isFlippedHorizontal, isFlippedVertical} = get_transform(props.shape);
 
     // type
     const type = t.endsWith('rotate') ? 'rotate' : 'scale';

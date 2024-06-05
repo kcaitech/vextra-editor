@@ -47,6 +47,7 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
+import Rule from "./Rule";
 
 interface Props {
     context: Context
@@ -193,12 +194,21 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
 }
 
 function search(e: MouseEvent) { // 常规图形检索
-    if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
+    const ctx = props.context;
+    if (ctx.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
-    const { x, y } = workspace.value.root;
+    const { x, y } = ctx.workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
-    selectShapes(props.context, shapes);
+
+    if (ctx.user.isRuleVisible && !e.shiftKey) {
+        if (ctx.tool.referFinder?.(xy)) {
+            ctx.selection.unHoverShape();
+            return;
+        }
+    }
+
+    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    selectShapes(ctx, shapes);
 }
 
 const search_once = debounce(search, 350) // 连续操作结尾处调用
@@ -344,7 +354,10 @@ function onMouseDown(e: MouseEvent) {
         } else {
             isMouseLeftPress = true;
             wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+            // 取消参考线选区
+            props.context.tool.referSelection.resetSelected();
         }
+
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) { // 右键按下，右键菜单处理
@@ -390,7 +403,7 @@ function onMouseMove_CV(e: MouseEvent) {
                 select(e);
             }
         } else if (e.buttons === 0) {
-            if (action === Action.AutoV || action === Action.AutoK) {
+            if (action === Action.AutoV) {
                 search(e); // 图形检索(hover)
             }
         }
@@ -517,6 +530,7 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
+
 const isvisible = ref(false);
 
 function menu_watcher(type?: number, mount?: string) {
@@ -698,20 +712,21 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
+         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
+         :style="{ 'background-color': background_color }">
         <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
-            @closeLoading="closeLoading" />
+                     @closeLoading="closeLoading"/>
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <SelectionView :context="props.context" :matrix="matrix" />
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
+        <SelectionView :context="props.context" :matrix="matrix"/>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
-            :site="site" ref="contextMenuEl">
+                     :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
+                                      :context="props.context" @close="contextMenuUnmount" :site="site"
+                                      :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
@@ -719,11 +734,12 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <Creator v-if="creatorMode" :context="props.context" />
+        <Creator v-if="creatorMode" :context="props.context"/>
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
         <Grid :context="props.context"></Grid>
         <TempBoard :context="props.context"></TempBoard>
         <BatchExport v-if="isvisible" :context="props.context"></BatchExport>
+        <Rule :context="props.context" :page="(props.page as PageView)"></Rule>
     </div>
 </template>
