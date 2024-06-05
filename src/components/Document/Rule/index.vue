@@ -528,7 +528,6 @@ onUnmounted(() => {
     height: 100%;
     pointer-events: none;
     position: relative;
-    font-weight: 500;
 
     overflow: hidden;
 
