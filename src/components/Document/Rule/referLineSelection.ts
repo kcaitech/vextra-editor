@@ -70,14 +70,21 @@ export class ReferLineSelection {
     }
 
     private __search() {
+        const isT = this.isPointInStroke.bind(this);
+
+        const ctx = this.m_context;
         const xy = this.m_last_xy;
+
+        const __xy = ctx.workspace.matrix.computeCoord3(xy);
+        const ctrlPath = ctx.workspace.ctrlPath;
+        if (this.m_scout.isPointInStroke(ctrlPath, __xy)) {
+            return false;
+        }
 
         const hovered = this.m_hovered_guide;
         const selected = this.m_selected_guide;
 
-        const isT = this.isPointInStroke.bind(this);
-
-        const matrix = new Matrix(this.m_context.workspace.matrix.inverse);
+        const matrix = new Matrix(ctx.workspace.matrix.inverse);
 
         if (hovered.valid && isT(xy, matrix.computeCoord3(hovered.start), matrix.computeCoord3(hovered.end))) {
             return true;

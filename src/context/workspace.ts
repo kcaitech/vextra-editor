@@ -39,7 +39,6 @@ export class WorkSpace extends WatchableObject {
     static NEW_ENV_MATRIX_CHANGE = 22;
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
-    static RULE = 25;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形

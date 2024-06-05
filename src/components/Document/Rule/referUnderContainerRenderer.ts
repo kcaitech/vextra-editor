@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { XY } from "@/context/selection";
 
 /**
- * @description 容器内参考线渲染机 V1.0
+ * @description 容器内参考线渲染 V1.0
  */
 export class ReferUnderContainerRenderer {
     private readonly m_context: Context;

@@ -4,7 +4,7 @@ import { PageView, GuideAxis } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
 /**
- * @description 页面下参考线渲染机 V1.0
+ * @description 页面下参考线渲染 V1.0
  */
 export class RootReferHandler {
     private m_lines: ReferUnit;
