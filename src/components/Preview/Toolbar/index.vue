@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import BackToHome from "./BackToHome.vue";
-import UserInfo from './UserInfo.vue';
+import BackToHome from "./PreviewBackToHome.vue";
+import UserInfo from './PreviewUserInfo.vue';
 const props = defineProps<{ context: Context }>();
 </script>
 

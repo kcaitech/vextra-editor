@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import UserAvatar from '../../Document/Toolbar/UserAvatar.vue';
 import Share from '../../Document/Toolbar/Share/Share.vue';
-import Scale from './Scale.vue';
+import Scale from './PreviewScale.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import kcdesk from '@/kcdesk';

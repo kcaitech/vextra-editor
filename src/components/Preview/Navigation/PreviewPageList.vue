@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
-import PageItem, { ItemData } from "./PageItem.vue";
+import PageItem, { ItemData } from "./PreviewPageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import { Document, PageListItem } from "@kcdesign/data";

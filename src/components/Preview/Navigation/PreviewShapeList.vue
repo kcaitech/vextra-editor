@@ -2,7 +2,7 @@
 import { Context } from "@/context";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
-import ShapeItem, { ItemData } from "./ShapeItem.vue";
+import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
 import { PageView, adapt2Shape } from "@kcdesign/data";
 import { ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';

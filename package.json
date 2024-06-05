@@ -22,7 +22,7 @@
     "generate-package-prod": "node generate-package.js prod && npm install"
   },
   "dependencies": {
-    "@kcdesign/data": "file:../kcdesign-data",
+    "@kcdesign/data": "1.0.35",
     "ali-oss": "^6.18.1",
     "animate.css": "^4.1.1",
     "aws-sdk": "2.1420.0",

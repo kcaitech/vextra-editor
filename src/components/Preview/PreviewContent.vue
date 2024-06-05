@@ -6,8 +6,8 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { elpatch } from '../Document/Content/vdom/patch';
 import { getFrameList } from '@/utils/preview';
-import PageCard from "./PageCard.vue";
-import MenuVue from './Menu.vue';
+import PageCard from "./PreviewPageCard.vue";
+import MenuVue from './PreviewMenu.vue';
 import { debounce } from 'lodash';
 import { is_mac } from '@/utils/common';
 

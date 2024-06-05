@@ -4,7 +4,7 @@ import { Shape, ShapeView } from '@kcdesign/data';
 import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
 import { useI18n } from 'vue-i18n';
-import ShapeCard from "./ShapeCard.vue";
+import ShapeCard from "./PreviewShapeCard.vue";
 
 export interface ItemData {
     id: string
