@@ -238,12 +238,10 @@ const wheelTrans = (e: WheelEvent) => {
 const MAX = 25600;
 const MIN = 2;
 const root_scale = (e: WheelEvent) => {
-    center_view();
     let scale_delta = 1.2;
     if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
         scale_delta = 1.02;
     }
-
     const scale = Number((props.context.preview.scale * 100).toFixed(0));
     let scale_delta_ = 1 / scale_delta;
     if (scale <= MIN) {
@@ -252,11 +250,23 @@ const root_scale = (e: WheelEvent) => {
         scale_delta = MAX / scale;
     }
     if (!preview.value) return;
+    const bound = canDragging()!;
     const root = preview.value.getBoundingClientRect();
-    const offset = { x: root.width / 2, y: root.height / 2 };
-    matrix.trans(-offset.x, -offset.y);
-    matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * props.context.preview.scale, 256) : Math.max(scale_delta_ * props.context.preview.scale, 0.02));
-    matrix.trans(offset.x, offset.y);
+    const w = bound.right - bound.left;
+    const h = bound.bottom - bound.top;
+    if (w > root.width && h > root.height) {
+        const offsetX = e.x - root.x;
+        const offsetY = e.y - root.y;
+        matrix.trans(-offsetX, -offsetY);
+        matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+        matrix.trans(offsetX, offsetY);
+    } else {
+        center_view();
+        const offset = { x: root.width / 2, y: root.height / 2 };
+        matrix.trans(-offset.x, -offset.y);
+        matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * props.context.preview.scale, 256) : Math.max(scale_delta_ * props.context.preview.scale, 0.02));
+        matrix.trans(offset.x, offset.y);
+    }
     updateMatrix();
     props.context.preview.setScaleMenu(undefined);
 }

@@ -149,6 +149,7 @@ const selectedShape = (ctx: Context, page: PageView, id?: string) => {
     if (!list.length) {
         ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
         ctx.preview.selectShape(undefined);
+        ctx.preview.updateUrl();
         return;
     }
     if (id) {
@@ -157,6 +158,7 @@ const selectedShape = (ctx: Context, page: PageView, id?: string) => {
     } else {
         ctx.preview.selectShape(list[0]);
     }
+    ctx.preview.updateUrl();
 }
 function previewWatcher(t: number) {
     if (t === Preview.CHANGE_PAGE) {

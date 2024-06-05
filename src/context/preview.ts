@@ -63,7 +63,6 @@ export class Preview extends WatchableObject {
         }
         this.m_selectPage = p;
         this.notify(Preview.CHANGE_PAGE);
-        this.updateUrl();
     }
     selectShape(s: ShapeView | undefined) {
         if (this.m_selectShape === s) {
@@ -88,13 +87,13 @@ export class Preview extends WatchableObject {
         return ret;
     }
     updateUrl() {
-        if (!this.selectedPage || !this.selectedShape) return;
+        if (!this.selectedPage) return;
         const page_id = this.selectedPage.id;
-        const shape_id = this.selectedShape.id;
-
+        const query: any = {id: this.m_doc_id, page_id: page_id.slice(0, 8) }
+        if(this.selectedShape) query.frame_id = this.selectedShape.id.slice(0, 8);
         router.replace({
             path: '/prototype',
-            query: { id: this.m_doc_id, page_id: page_id.slice(0, 8), frame_id: shape_id.slice(0, 8) },
+            query: query,
         });
     }
 
