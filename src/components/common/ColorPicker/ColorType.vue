@@ -3,14 +3,17 @@ import { Color, Gradient, GradientType } from '@kcdesign/data';
 import { onMounted } from 'vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 interface Props {
     color: Color
     gradient_type?: GradientType | 'solid'
     angular: any
 }
+
 interface Emits {
     (e: 'change', value: GradientType | 'solid'): void;
 }
+
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const t = useI18n().t;
@@ -21,21 +24,26 @@ onMounted(() => {
 </script>
 <template>
     <div class="color-type-wrapper">
-        <div class="item" @click.stop="() => { emits('change', 'solid') }" :class="{ selected: gradient_type === 'solid' }">
+        <div class="item" @click.stop="() => { emits('change', 'solid') }"
+             :class="{ selected: gradient_type === 'solid' }">
             <svg-icon icon-class="fill-gradient"></svg-icon>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Linear) }"
-            :class="{ selected: gradient_type === GradientType.Linear }">
+             :class="{ selected: gradient_type === GradientType.Linear }">
             <svg-icon icon-class="linear-gradient"></svg-icon>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Radial) }"
-            :class="{ selected: gradient_type === GradientType.Radial }">
+             :class="{ selected: gradient_type === GradientType.Radial }">
             <svg-icon icon-class="radial-gradient"></svg-icon>
         </div>
         <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
-            :class="{ selected: gradient_type === GradientType.Angular }">
+             :class="{ selected: gradient_type === GradientType.Angular }">
             <!-- <img :src="angular"> -->
             <div class="angular"></div>
+        </div>
+        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+             :class="{ selected: gradient_type === GradientType.Radial }">
+            <svg-icon icon-class="pattern-image" stroke="rgb(140,140, 140)" fill="black"></svg-icon>
         </div>
         <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
             :class="{ selected: is_checked === GradientType.Radial }">
