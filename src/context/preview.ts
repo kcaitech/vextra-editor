@@ -25,7 +25,7 @@ export class Preview extends WatchableObject {
     private m_context: Context;
     private m_preview_window: Window | undefined;
     private m_selectPage?: PageView;
-    private m_selectShape?: ShapeView;
+    private m_selectShape?: Shape;
     private m_doc_id: string = '';
     private m_scale: number = 1;
     private m_navi_visible: boolean = true;
@@ -64,7 +64,7 @@ export class Preview extends WatchableObject {
         this.m_selectPage = p;
         this.notify(Preview.CHANGE_PAGE);
     }
-    selectShape(s: ShapeView | undefined) {
+    selectShape(s: Shape | undefined) {
         if (this.m_selectShape === s) {
             return;
         }
@@ -77,7 +77,7 @@ export class Preview extends WatchableObject {
         return this.m_selectPage;
     }
 
-    get selectedShape(): ShapeView | undefined {
+    get selectedShape(): Shape | undefined {
         return this.m_selectShape;
     }
 

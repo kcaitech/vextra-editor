@@ -3,20 +3,19 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
-import { PageView, adapt2Shape } from "@kcdesign/data";
+import { PageView, Shape, ShapeType, adapt2Shape } from "@kcdesign/data";
 import { ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
 import { Preview } from "@/context/preview";
-import { getFrameList } from "@/utils/preview";
 
 type List = InstanceType<typeof ListView>;
 
 class Iter implements IDataIter<ItemData> {
-    private __it: ShapeView[];
+    private __it: Shape[];
     private __index: number;
-    constructor(it: ShapeView[], index: number) {
+    constructor(it: Shape[], index: number) {
         this.__it = it;
         this.__index = index;
     }
@@ -26,17 +25,13 @@ class Iter implements IDataIter<ItemData> {
     }
 
     next(): ItemData {
-        const shape: ShapeView = this.__it[this.__index];
+        const shape: Shape = this.__it[this.__index];
         this.__index++;
-        const _shape = adapt2Shape(shape);
-        if (!_shape) throw new Error("shape data is null");
+        if (!shape) throw new Error("shape data is null");
         const item = {
             id: shape.id,
             shape: () => {
-                return _shape;
-            },
-            shapeview: () => {
-                return shape
+                return shape;
             },
             selected: props.context.preview.isSelectedShape(shape.id),
             context: props.context
@@ -48,7 +43,7 @@ class Iter implements IDataIter<ItemData> {
 const props = defineProps<{ context: Context, page: PageView, pageHeight: number }>();
 const { t } = useI18n();
 const itemHieght = 52;
-let arboardList: ShapeView[] = [];
+let arboardList: Shape[] = [];
 const shapeList = ref<HTMLDivElement>()
 const shapeH = ref(0);
 const keywords = ref<string>('');
@@ -93,8 +88,11 @@ function inputing() {
     update();
 }
 
-const selectedShape = (shape: ShapeView) => {
-    props.context.preview.selectShape(shape);
+const selectedShape = (shape: Shape) => {
+    const page = props.context.preview.selectedPage;
+    if(!page) return;
+    const s = page.data.childs.find(item => item.id === shape.id);
+    props.context.preview.selectShape(s);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -141,6 +139,9 @@ const update = () => {
     notifySourceChange();
     listHeight();
     updateScrollH();
+}
+function getFrameList(page: PageView) {
+    return page.data.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
 function navi_watcher(t: number) {
     if (t === Navi.TO_SEARCH) {
