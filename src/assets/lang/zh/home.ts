@@ -65,7 +65,8 @@ export const system = {
     sensitive_reminder3: '含有敏感信息，无法访问。',
     pixel: '对齐像素',
     grid: '像素网格',
-    uploadMediaFail: '图片资源上传失败'
+    uploadMediaFail: '图片资源上传失败',
+    internet:'进入官网'
 }
 
 export const home = {
