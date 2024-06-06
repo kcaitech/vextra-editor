@@ -59,12 +59,12 @@ export class ScaleHandler extends TransformHandler {
     private toRoot: Matrix = new Matrix();
     private rotation: number = 0;
 
-    sizeList: { width: number, height: number }[] = []; // shape的size列表
-    transformForSelection: Transform = new Transform();  // 选区的Transform
-    transformForSelectionInverse: Transform = new Transform();  // 选区Transform的逆
-    selectionSize = {width: 0, height: 0};
-    transformFromRootMap: Map<ShapeView, Transform> = new Map(); // 在root坐标系下的Transform Map
-    transformListInSelection: Transform[] = []; // 在选区坐标系下的Transform
+    selectionTransform: Transform = new Transform();  // 选区的Transform
+    selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
+    selectionSize = {width: 0, height: 0}; // 选区的size
+    transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
+    shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
+    shapeSizeList: { width: number, height: number }[] = []; // shape的size列表
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
         super(context, event);
@@ -211,12 +211,12 @@ export class ScaleHandler extends TransformHandler {
 
         this.fixedRatioWhileScaling = false;
 
-        this.sizeList = this.shapes.map(shape => {
+        this.shapeSizeList = this.shapes.map(shape => {
             return {width: shape.size.width, height: shape.size.height}
         });
 
-        // 只选一个元素时，选区的Transform为元素的transform2FromRoot，选区大小为元素的size
-        this.transformForSelection = this.shapes.length > 1 ? new Transform({
+        // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
+        this.selectionTransform = this.shapes.length > 1 ? new Transform({
             matrix: new Matrix2([4, 4], [
                 1, 0, 0, this.originSelectionBox.x,
                 0, 1, 0, this.originSelectionBox.y,
@@ -224,7 +224,7 @@ export class ScaleHandler extends TransformHandler {
                 0, 0, 0, 1,
             ])
         }) : this.shapes[0].transform2FromRoot.clone();
-        this.transformForSelectionInverse = this.transformForSelection.getInverse();
+        this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = this.shapes.length > 1 ? {
             width: this.originSelectionBox.width,
             height: this.originSelectionBox.height
@@ -234,13 +234,13 @@ export class ScaleHandler extends TransformHandler {
         };
 
         for (const shape of this.shapes) {
-            if (!this.transformFromRootMap.has(shape.parent!)) {
-                this.transformFromRootMap.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
+            if (!this.transformCache.has(shape.parent!)) {
+                this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
         }
-        this.transformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
-            .addTransform(this.transformFromRootMap.get(shape.parent!)!)    // 在Root坐标系下
-            .addTransform(this.transformForSelection.getInverse())          // 在选区坐标系下
+        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
+            .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
+            .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         ) : [new Transform()];
     }
 
@@ -410,7 +410,7 @@ export class ScaleHandler extends TransformHandler {
 
         // 光标在选区坐标系下的坐标
         const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y);
-        const cursorPointFromSelection = Point3D.FromMatrix(this.transformForSelectionInverse.transform(cursorPointFromRoot));
+        const cursorPointFromSelection = Point3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
         // 选区的左上角和右下角（在原选区坐标系下）
         const ltPointForSelection = Point3D.FromXY(0, 0);
@@ -448,8 +448,8 @@ export class ScaleHandler extends TransformHandler {
         // 选区变换后的Transform
         // Transform = T·R·K·S
         // 不修改旋转和斜切，只修改平移和缩放
-        const transformForSelection = this.transformForSelection.clone();
-        transformForSelection.setTranslate(this.transformForSelection.transform(ltPointForSelection).col0);
+        const transformForSelection = this.selectionTransform.clone();
+        transformForSelection.setTranslate(this.selectionTransform.transform(ltPointForSelection).col0);
         transformForSelection.setScale(new ColVector3D([
             sizeForSelection.width / this.selectionSize.width,
             sizeForSelection.height / this.selectionSize.height,
@@ -457,9 +457,9 @@ export class ScaleHandler extends TransformHandler {
         ]));
 
         // shape最终的Transform
-        const transformList = this.transformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
+        const transformList = this.shapeTransformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
             .addTransform(transformForSelection) // 在Root坐标系下
-            .addTransform(this.transformFromRootMap.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
+            .addTransform(this.transformCache.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
         );
 
         // 分离缩放系数到shape宽高
@@ -471,8 +471,8 @@ export class ScaleHandler extends TransformHandler {
             const transform = transformList[i];
             const scale = transform.decomposeScale();
             shapeSizeList.push({
-                width: this.sizeList[i].width * Math.abs(scale.x),
-                height: this.sizeList[i].height * Math.abs(scale.y),
+                width: this.shapeSizeList[i].width * Math.abs(scale.x),
+                height: this.shapeSizeList[i].height * Math.abs(scale.y),
             });
             transform.clearScale();
         }

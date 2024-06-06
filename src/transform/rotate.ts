@@ -43,12 +43,19 @@ export class RotateHandler extends TransformHandler {
     originSelectionBox: FrameLike = {x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0};
     baseData: BaseData4Rotate = new Map();
 
-    transformForSelection: Transform = new Transform();  // 选区的Transform
-    transformForSelectionInverse: Transform = new Transform();  // 选区Transform的逆
-    selectionSize = {width: 0, height: 0};
-    transformFromRootMap: Map<ShapeView, Transform> = new Map(); // 在root坐标系下的Transform Map
-    transformListInSelection: Transform[] = []; // 在选区坐标系下的Transform
-    beginCursorAngle: number = 0; // 开始时选区中点到光标的向量与X轴之间的角度
+    selectionTransform: Transform = new Transform();  // 选区的Transform
+    selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
+    selectionSize = {width: 0, height: 0}; // 选区的size
+    transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
+    shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
+    cursorBeginAngle: number = 0; // 光标向量的初始角度（从选区的中点指向光标的向量，其与X轴的夹角）
+
+    // selectionTransform: Transform = new Transform();  // 选区的Transform
+    // selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
+    // selectionSize = {width: 0, height: 0}; // 选区的size
+    // transformMap: Map<ShapeView, Transform> = new Map(); // transform缓存
+    // shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
+    // shapeSizeList: { width: number, height: number }[] = []; // shape的size列表
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
         super(context, event);
@@ -222,8 +229,8 @@ export class RotateHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        // 只选一个元素时，选区的Transform为元素的transform2FromRoot，选区大小为元素的size
-        this.transformForSelection = this.shapes.length > 1 ? new Transform({
+        // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
+        this.selectionTransform = this.shapes.length > 1 ? new Transform({
             matrix: new Matrix2([4, 4], [
                 1, 0, 0, this.originSelectionBox.x,
                 0, 1, 0, this.originSelectionBox.y,
@@ -231,7 +238,7 @@ export class RotateHandler extends TransformHandler {
                 0, 0, 0, 1,
             ])
         }) : this.shapes[0].transform2FromRoot.clone();
-        this.transformForSelectionInverse = this.transformForSelection.getInverse();
+        this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = this.shapes.length > 1 ? {
             width: this.originSelectionBox.width,
             height: this.originSelectionBox.height
@@ -241,21 +248,21 @@ export class RotateHandler extends TransformHandler {
         };
 
         for (const shape of this.shapes) {
-            if (!this.transformFromRootMap.has(shape.parent!)) {
-                this.transformFromRootMap.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
+            if (!this.transformCache.has(shape.parent!)) {
+                this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
         }
-        this.transformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
-            .addTransform(this.transformFromRootMap.get(shape.parent!)!)    // 在Root坐标系下
-            .addTransform(this.transformForSelection.getInverse())          // 在选区坐标系下
+        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
+            .addTransform(this.transformCache.get(shape.parent!)!)    // 在Root坐标系下
+            .addTransform(this.selectionTransform.getInverse())          // 在选区坐标系下
         ) : [new Transform()];
 
-        this.beginCursorAngle = this.cursorAngle; // 光标向量的初始角度
+        this.cursorBeginAngle = this.cursorAngle; // 光标向量的初始角度
     }
 
     get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（逆时针为正）（-π ~ π）
         const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
-        const cursorPoint = Point3D.FromMatrix(this.transformForSelectionInverse.transform(cursorPointFromRoot)); // 光标在选区坐标系下的坐标
+        const cursorPoint = Point3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot)); // 光标在选区坐标系下的坐标
         const centerPoint = Point3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2); // 选区中点的坐标（在原选区坐标系下）
         const cursorVector = cursorPoint.subtract(centerPoint); // 光标向量
         const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
@@ -274,19 +281,19 @@ export class RotateHandler extends TransformHandler {
         // }
 
         const cursorAngle = this.cursorAngle; // 光标向量的角度
-        const deltaAngle = cursorAngle - this.beginCursorAngle; // 角度变化量
+        const deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
 
         // 选区变换后的Transform
-        const transformForSelection = this.transformForSelection.clone().rotateZAt({
+        const transformForSelection = this.selectionTransform.clone().rotateZAt({
             point: Point2D2.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2),
             angle: deltaAngle,
             mode: TransformMode.Local,
         });
 
         // shape最终的Transform
-        const transformList = this.transformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
+        const transformList = this.shapeTransformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
             .addTransform(transformForSelection) // 在Root坐标系下
-            .addTransform(this.transformFromRootMap.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
+            .addTransform(this.transformCache.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
         );
 
         // 更新shape
