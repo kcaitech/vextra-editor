@@ -8,7 +8,7 @@ const { t } = useI18n();
 const iszh = locale === 'zh';
 const data = [
     { title: "产品", content: ['产品介绍'] },
-    { title: "公司", content: ['关于我们', '服务条款', '隐私协议'] },
+    { title: "公司", content: ['服务条款', '隐私协议'] },
     { title: "联系", content: ['邮箱'] }
 ]
 
