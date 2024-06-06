@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { DViewCtx, Matrix, PageView, ShapeView, XYsBounding, adapt2Shape } from '@kcdesign/data';
+import { DViewCtx, Matrix, PageView, Shape, ShapeView, XYsBounding, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { elpatch } from '../Document/Content/vdom/patch';
@@ -21,7 +21,7 @@ const width = ref<number>(0);
 const height = ref<number>(0);
 const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
-const cur_shape = ref<ShapeView>();
+const cur_shape = ref<Shape>();
 const matrix = new Matrix();
 const reflush = ref(0);
 const listLength = ref(0);

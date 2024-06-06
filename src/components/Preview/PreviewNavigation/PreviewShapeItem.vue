@@ -9,7 +9,6 @@ import ShapeCard from "./PreviewShapeCard.vue";
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
-    shapeview: () => ShapeView
     selected: boolean
     context: Context
 }
@@ -19,7 +18,7 @@ interface Props {
 }
 
 const emit = defineEmits<{
-    (e: 'selectShape', shape: ShapeView): void;
+    (e: 'selectShape', shape: Shape): void;
 }>();
 
 const props = defineProps<Props>();
@@ -30,7 +29,7 @@ const t = useI18n().t;
 const hovered = ref(false);
 
 const selectShape = () => {
-    emit("selectShape", props.data.shapeview());
+    emit("selectShape", props.data.shape());
 }
 
 onMounted(() => {
@@ -45,10 +44,10 @@ onUnmounted(() => {
         :class="{ container: true, selected: props.data.selected, hovered: hovered && !props.data.selected }"
         @click="selectShape">
         <div class="container-svg zero-symbol">
-            <ShapeCard :shape="props.data.shapeview()"></ShapeCard>
+            <ShapeCard :shape="props.data.shape()"></ShapeCard>
         </div>
         <div class="text">
-            <div class="txt">{{ get_name(props.data.shapeview(), t('compos.dlt')) }}</div>
+            <div class="txt">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
         </div>
     </div>
 </template>

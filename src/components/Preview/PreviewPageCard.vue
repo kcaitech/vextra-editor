@@ -80,17 +80,13 @@ function disassemble() {
 watch(() => props.shapes, () => {
     props.shapes.length && assemble();
 })
-const page_watcher = () => {
-    console.log(1111);
-    
+const page_watcher = (...args: any[]) => {
+    if(args.includes('frame')) return;
+    assemble();
 }
 
 function selection_watcher(...args: any[]) {
-    if (args.includes(Preview.CHANGE_SHAPE)) {
-        const shape = props.context.preview.selectedShape;
-        const focus = shape || undefined;
-        const dom = props.context.getPageDom(props.data);
-    }
+
 }
 onMounted(() => {
     props.data.watch(page_watcher);
@@ -108,7 +104,7 @@ defineExpose({ pageSvg });
 
 <template>
     <svg ref="pageSvg" :width="width" :height="height" :viewBox="viewBox"
-         :style="{ 'background-color': backgroundColor }"></svg>
+        :style="{ 'background-color': backgroundColor }"></svg>
 </template>
 
 <style scoped lang="scss">

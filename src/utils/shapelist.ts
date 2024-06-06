@@ -180,7 +180,7 @@ export function get_state_name(state: SymbolView, dlt: string) {
     return name_slice.toString();
 }
 
-export function get_name(shape: ShapeView, dlt: string) {
+export function get_name(shape: ShapeView | Shape, dlt: string) {
     if (shape.type !== ShapeType.Symbol) {
         return shape.name;
     } else {
