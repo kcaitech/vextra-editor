@@ -390,13 +390,18 @@ export class ViewUpdater {
         const __scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
 
         if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
+            matrix = this.getCenterMatrix();
             const offsetX = e.x - rootBox.x;
             const offsetY = e.y - rootBox.y;
 
-            matrix = this.getCenterMatrix();
-            matrix.trans(-rcx, -rcy);
+            const o = matrix.computeCoord2(offsetX, offsetY);
+            matrix.trans(-o.x, -o.y);
             matrix.scale(__scale);
-            matrix.trans(rcx, rcy);
+            matrix.trans(o.x, o.y);
+            // matrix = this.getCenterMatrix();
+            // matrix.trans(-rcx, -rcy);
+            // matrix.scale(__scale);
+            // matrix.trans(rcx, rcy);
         } else {
             matrix = this.getCenterMatrix();
             matrix.trans(-rcx, -rcy);
