@@ -2,7 +2,6 @@ import { Matrix, Page, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
-import { ScaleType } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 
 type PCard = InstanceType<typeof PageCard>;
