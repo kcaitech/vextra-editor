@@ -94,9 +94,6 @@ const previewWatcher = (t: number, s?: boolean) => {
             matrix.trans(250, 0);
         }
         if (pageCard.value && pageCard.value.pageSvg) {
-            // todo
-            // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-            // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
             viewUpdater.modifyTransform();
         }
     } else if (t === Preview.BEFORE_PAGE) {
@@ -129,13 +126,14 @@ const initMatrix = () => {
         }
     }
 }
+
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.preview.selectedShape;
     if (!shape) return;
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
-        root_scale(e);
+        viewUpdater.scale(e);
     } else {
         wheelTrans(e);
     }
@@ -171,47 +169,8 @@ const wheelTrans = (e: WheelEvent) => {
 
     matrix.trans(-stepx, -stepy);
     if (pageCard.value && pageCard.value.pageSvg) {
-        // todo
-        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
         viewUpdater.modifyTransform();
     }
-}
-
-const MAX = 25600;
-const MIN = 2;
-const root_scale = (e: WheelEvent) => {
-    let scale_delta = 1.3;
-    if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
-        scale_delta = 1.12;
-    }
-    const scale = Number((props.context.preview.scale * 100).toFixed(0));
-    let scale_delta_ = 1 / scale_delta;
-    if (scale <= MIN) {
-        scale_delta_ = 1
-    } else if (scale >= MAX) {
-        scale_delta = MAX / scale;
-    }
-    const shape = props.context.preview.selectedShape;
-    if (!preview.value || !shape) return;
-    const bound = canDragging()!;
-    const root = preview.value.getBoundingClientRect();
-    const w = bound.right - bound.left;
-    const h = bound.bottom - bound.top;
-    if (w > root.width && h > root.height) {
-        const offsetX = e.x - root.x;
-        const offsetY = e.y - root.y;
-        matrix.trans(-offsetX, -offsetY);
-        matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
-        matrix.trans(offsetX, offsetY);
-    } else {
-        const offset = { x: root.width / 2, y: root.height / 2 };
-        matrix.trans(-offset.x, -offset.y);
-        matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * props.context.preview.scale, 256) : Math.max(scale_delta_ * props.context.preview.scale, 0.02));
-        matrix.trans(offset.x, offset.y);
-    }
-    viewUpdater.modifyTransform();
-    props.context.preview.setScaleMenu(undefined);
 }
 
 function page_scale(scale: number) {
@@ -306,9 +265,7 @@ const pageViewDragging = (e: MouseEvent) => {
         preview.value.style.cursor = 'grabbing';
     }
     if (pageCard.value && pageCard.value.pageSvg) {
-        // todo
-        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        // todo drag
         viewUpdater.modifyTransform();
     }
 }

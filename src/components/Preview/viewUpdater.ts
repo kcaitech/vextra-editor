@@ -238,7 +238,6 @@ export class ViewUpdater {
         }
         const box = this.getBoundingBox()!;
         const boxWidth = box.width;
-        const boxHeight = box.height;
 
         const root = container.getBoundingClientRect();
         const rootWidth = root.width;
@@ -246,7 +245,9 @@ export class ViewUpdater {
 
         const ratio = boxWidth / rootWidth;
 
-        if (ratio < 1) return;
+        if (ratio < 1) {
+            return this.modifyTransform();
+        }
 
         const matrix = this.getCenterMatrix();
         matrix.trans(-rootWidth / 2, -rootHeight / 2);
@@ -350,5 +351,58 @@ export class ViewUpdater {
 
         const matrix = this.getCenterMatrix();
         this.setAttri(matrix);
+    }
+
+    private MAX = 25600;
+    private MIN = 2;
+
+    scale(e: WheelEvent) {
+        const MAX = this.MAX;
+        const MIN = this.MIN;
+
+        let scale_delta = 1.3;
+        if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
+            scale_delta = 1.12;
+        }
+        const scale = Number((this.m_context.preview.scale * 100).toFixed(0));
+        let scale_delta_ = 1 / scale_delta;
+        if (scale <= MIN) {
+            scale_delta_ = 1
+        } else if (scale >= MAX) {
+            scale_delta = MAX / scale;
+        }
+
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const targetBox = this.getBoundingBox()!;
+        const rootBox = container.getBoundingClientRect();
+
+        const rcx = rootBox.width / 2;
+        const rcy = rootBox.height / 2;
+
+        const matrix = this.getCenterMatrix();
+
+        const __s = this.m_context.preview.scale;
+
+        if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
+            matrix.reset();
+            const scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
+            const offsetX = e.x - rootBox.x;
+            const offsetY = e.y - rootBox.y;
+            matrix.trans(-offsetX, -offsetY);
+            matrix.scale(scale);
+        } else {
+            matrix.trans(-rcx, -rcy);
+            matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02));
+            matrix.trans(rcx, rcy);
+        }
+
+        this.setAttri(matrix);
+
+        this.m_context.preview.setScaleMenu(undefined);
     }
 }
