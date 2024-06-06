@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance } from 'vue';
+import {
+    reactive,
+    onMounted,
+    onUnmounted,
+    computed,
+    ref,
+    nextTick,
+    watch,
+    getCurrentInstance,
+    onBeforeMount
+} from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -654,6 +664,9 @@ const closeLoading = () => {
     emit('closeLoading');
 }
 watch(() => matrix, matrix_watcher, { deep: true });
+onBeforeMount(() => {
+    props.context.user.updateUserConfig();
+});
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -666,7 +679,6 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.color.watch(color_watcher);
-    props.context.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
     document.addEventListener('keydown', onKeyDown);

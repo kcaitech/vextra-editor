@@ -19,7 +19,7 @@ const props = defineProps<{
     page: PageView;
 }>();
 
-const ruleVisible = ref<boolean>(true);
+const ruleVisible = ref<boolean>(false);
 
 /**
  * @description 建立与绘制刻度坐标系
@@ -428,9 +428,9 @@ onMounted(() => {
     referUnderContainerRenderer.updateUnderRootContainerMap();
 
     document.addEventListener('keydown', keydown);
-
+    ruleVisible.value = props.context.user.isRuleVisible;
     scaleRenderer.render();
-})
+});
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
     props.context.workspace.unwatch(workspaceWatcher);
@@ -528,6 +528,7 @@ onUnmounted(() => {
     height: 100%;
     pointer-events: none;
     position: relative;
+    font-weight: 500;
 
     overflow: hidden;
 

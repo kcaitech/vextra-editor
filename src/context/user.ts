@@ -89,7 +89,6 @@ export class User extends WatchableObject {
             conf.pixelGrid = __temp.pixelGrid || true;
             conf.rule = __temp.rule || true;
         }
-
         this.m_pixel_alignment = conf.pixelAlignment;
         this.m_pixel_grid = conf.pixelGrid;
         this.m_rule = conf.rule;
