@@ -6,7 +6,6 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
-import { debounce } from 'lodash';
 import { is_mac } from '@/utils/common';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 
@@ -80,13 +79,13 @@ const previewWatcher = (t: number, s?: boolean) => {
     } else if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
-            page_scale(1);
+            viewUpdater.modifyTransform();
         } else if (type === ScaleType.FillScreen) {
-            fillScreen();
+            viewUpdater.modifyTransformToFill();
         } else if (type === ScaleType.FitScreen) {
-            fitScreen();
+            viewUpdater.modifyTransformToFit();
         } else if (type === ScaleType.FitWidth) {
-            fitWidth();
+            viewUpdater.modifyTransformToFillByWidth();
         }
     } else if (t === Preview.NAVI_VISIBLE) {
         if (props.context.preview.naviState) {
@@ -115,67 +114,21 @@ const previewWatcher = (t: number, s?: boolean) => {
 const initMatrix = () => {
     const type = props.context.preview.scaleType;
     if (type === ScaleType.FillScreen) {
-        fillScreen();
+        viewUpdater.modifyTransformToFill();
     } else if (type === ScaleType.FitScreen) {
-        fitScreen();
+        viewUpdater.modifyTransformToFit();
     } else if (type === ScaleType.FitWidth) {
-        fitWidth();
+        viewUpdater.modifyTransformToFillByWidth();
     } else {
         if (type === ScaleType.Actual) {
             props.context.preview.setScale(1);
         }
-        center_view()
-        center_scale()
-        nextTick(() => {
-            if (pageCard.value && pageCard.value.pageSvg) {
-                // todo
-                // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-                // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
-                viewUpdater.modifyTransform();
-            }
-        })
+        // center_scale()
+        if (pageCard.value && pageCard.value.pageSvg) {
+            viewUpdater.modifyTransform();
+        }
     }
 }
-
-function center_view() {
-    const m = new Matrix();
-    matrix.reset(m);
-    const shape = props.context.preview.selectedShape;
-    if (!preview.value || !shape) return;
-    const root = preview.value.getBoundingClientRect();
-    const page = props.context.preview.selectedPage;
-    if (!page) return;
-    const pageFramev = page.frame;
-    const shape_m = shape.matrix2Root();
-    shape_m.trans(-pageFramev.x, -pageFramev.y);
-
-    const frame = shape.frame
-    const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => shape_m.computeCoord(p[0], p[1]));
-
-    const box = XYsBounding(points)
-
-    const shapeCenter = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 };
-
-    const contentViewCenter = { x: root.width / 2, y: root.height / 2 };
-    const transX = contentViewCenter.x - shapeCenter.x;
-    const transY = contentViewCenter.y - shapeCenter.y;
-
-    if (!transX && !transY) {
-        return;
-    }
-    matrix.trans(transX, transY);
-}
-
-const center_scale = () => {
-    if (!preview.value) return;
-    const root = preview.value.getBoundingClientRect();
-    const offset = { x: root.width / 2, y: root.height / 2 };
-    matrix.trans(-offset.x, -offset.y);
-    matrix.scale(props.context.preview.scale);
-    matrix.trans(offset.x, offset.y);
-    props.context.preview.setScale(matrix.toArray()[0]);
-}
-
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.preview.selectedShape;
@@ -252,13 +205,12 @@ const root_scale = (e: WheelEvent) => {
         matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
         matrix.trans(offsetX, offsetY);
     } else {
-        center_view();
         const offset = { x: root.width / 2, y: root.height / 2 };
         matrix.trans(-offset.x, -offset.y);
         matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * props.context.preview.scale, 256) : Math.max(scale_delta_ * props.context.preview.scale, 0.02));
         matrix.trans(offset.x, offset.y);
     }
-    updateMatrix();
+    viewUpdater.modifyTransform();
     props.context.preview.setScaleMenu(undefined);
 }
 
@@ -267,126 +219,7 @@ function page_scale(scale: number) {
     initMatrix();
 }
 
-const fillScreen = () => {
-    const shape = props.context.preview.selectedShape;
-    if (!preview.value || !shape) return;
-    center_view();
-    const root = preview.value.getBoundingClientRect();
-    const shape_m = shape.matrix2Root();
-    const frame = shape.frame;
-    const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => shape_m.computeCoord(p[0], p[1]));
-    const box = XYsBounding(points)
-    const width = box.right - box.left;
-    const height = box.bottom - box.top;
-
-    const w_scale = root.width / width;
-    const h_scale = root.height / height;
-
-    props.context.preview.setScale(Math.max(w_scale, h_scale));
-    const offset = { x: root.width / 2, y: root.height / 2 };
-    matrix.trans(-offset.x, -offset.y);
-    matrix.scale(Math.max(w_scale, h_scale));
-    matrix.trans(offset.x, offset.y);
-    const s_w = (width * Math.max(w_scale, h_scale)) / 2;
-    const s_h = (height * Math.max(w_scale, h_scale)) / 2;
-    matrix.trans(s_w - offset.x, s_h - offset.y);
-
-    if (pageCard.value && pageCard.value.pageSvg) {
-        // todo
-        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
-        viewUpdater.modifyTransform();
-    }
-}
-
-function fitScreen() {
-    const shape = props.context.preview.selectedShape;
-    if (!preview.value || !shape) return;
-    center_view();
-    const root = preview.value.getBoundingClientRect();
-    const shape_m = shape.matrix2Root();
-    const frame = shape.frame;
-    const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => shape_m.computeCoord(p[0], p[1]));
-    const box = XYsBounding(points);
-    const width = box.right - box.left;
-    const height = box.bottom - box.top;
-    const w_max = root.width;
-    const h_max = root.height;
-    const ratio_w = width / w_max * 1.06; // 两边留点空白
-    const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
-    const ratio = Math.max(ratio_h, ratio_w);
-    if (ratio !== 1) {
-        matrix.trans(-root.width / 2, -root.height / 2);
-        const max = 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
-            matrix.scale(1 / ratio);
-        } else {
-            if (matrix.m00 / ratio <= 0.02) {
-                matrix.scale(0.02 / matrix.m00);
-            } else if (matrix.m00 / ratio >= max) {
-                matrix.scale(max / matrix.m00);
-            }
-        }
-        matrix.trans(root.width / 2, root.height / 2);
-    }
-    updateMatrix();
-}
-
-function fitWidth() {
-    const shape = props.context.preview.selectedShape;
-    if (!preview.value || !shape) return;
-
-    const root = preview.value.getBoundingClientRect();
-    const shape_m = shape.matrix2Root();
-    const frame = shape.frame;
-    const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => shape_m.computeCoord(p[0], p[1]));
-    const box = XYsBounding(points);
-    const width = box.right - box.left;
-    if (root.width > (width + 30)) {
-        props.context.preview.setScale(1);
-        center_view()
-        center_scale()
-        if (pageCard.value && pageCard.value.pageSvg) {
-            // todo
-            // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-            // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
-            viewUpdater.modifyTransform();
-        }
-        return;
-    }
-    center_view();
-    const w_max = root.width;
-    const ratio = width / w_max * 1.12; // 两边留点空白
-    if (ratio !== 1) {
-        matrix.trans(-root.width / 2, -root.height / 2);
-        const max = 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
-            matrix.scale(1 / ratio);
-        } else {
-            if (matrix.m00 / ratio <= 0.02) {
-                matrix.scale(0.02 / matrix.m00);
-            } else if (matrix.m00 / ratio >= max) {
-                matrix.scale(max / matrix.m00);
-            }
-        }
-        matrix.trans(root.width / 2, root.height / 2);
-    }
-    updateMatrix();
-}
-
-const updateMatrix = () => {
-    props.context.preview.setScale(matrix.toArray()[0]);
-    if (pageCard.value && pageCard.value.pageSvg) {
-        // todo
-        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
-        viewUpdater.modifyTransform();
-    }
-}
-
-const _initMatrix = debounce(initMatrix, 50);
-
-const observer = new ResizeObserver(_initMatrix);
+const observer = new ResizeObserver(initMatrix);
 
 watch(() => props.showTop, (v) => {
     if (v) {
@@ -395,10 +228,7 @@ watch(() => props.showTop, (v) => {
         matrix.trans(0, 46);
     }
     if (pageCard.value && pageCard.value.pageSvg) {
-        // todo
-        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
-        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
-        viewUpdater.modifyTransform();
+        initMatrix()
     }
 })
 

@@ -2,6 +2,8 @@ import { Matrix, Page, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
+import { ScaleType } from "@/context/preview";
+import { XYsBounding } from "@/utils/common";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -34,8 +36,236 @@ export class ViewUpdater {
     private m_stop_last_on_page: () => void = () => {
     };
 
+    /**
+     * @description 监听播放对象的变化
+     * @param args
+     */
+    private updater(...args: any[]) {
+        console.log('__UPDATE_SELF__', ...args, args);
+        this.update(...args);
+    }
+
+    /**
+     * @description 监听播放对象内部元素(子孙元素)变化
+     */
+    private updaterBubble(...args: any[]) {
+        console.log('__UPDATE_FROM_BUBBLE__', ...args, args);
+        this.update(...args);
+    }
+
+    /**
+     * @description page的变化，有可能导致整个坐标系发生改变，此时应该让播放对象抵消这个改变，避免位移
+     */
+    private updater4Page(...args: any[]) {
+    }
+
+    private setAttri(m: Matrix) {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const frame = shape.frame;
+
+        this.m_page_card.pageSvg.style['transform'] = m.toString();
+        const svgEl = (this.m_page_card.pageSvg as Element);
+        svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
+        svgEl.setAttribute('width', `${frame.width}`);
+        svgEl.setAttribute('height', `${frame.height}`);
+
+        this.m_context.preview.setScale(m.m00);
+    }
+
+    private getCenterMatrix() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return new Matrix();
+        }
+
+        const root = container.getBoundingClientRect();
+        const frame = shape.frame;
+
+        const cx = frame.width / 2;
+        const cy = frame.height / 2;
+
+        const transformMatrix = new Matrix();
+        transformMatrix.trans(-cx, -cy);
+        if (shape.rotation) {
+            transformMatrix.rotate(shape.rotation / 360 * 2 * Math.PI);
+        }
+        if (shape.isFlippedHorizontal) {
+            transformMatrix.flipHoriz();
+        }
+        if (shape.isFlippedVertical) {
+            transformMatrix.flipVert();
+        }
+        transformMatrix.trans(cx, cy);
+
+        const rootCX = root.width / 2;
+        const rootCY = root.height / 2;
+
+        transformMatrix.trans(rootCX - cx, rootCY - cy);
+
+        return transformMatrix;
+    }
+
+    private getBoundingBox() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const frame = shape.frame;
+        const m = new Matrix(shape.matrix2Parent());
+        m.trans(-frame.x, -frame.y);
+
+        const points = [
+            m.computeCoord2(0, 0),
+            m.computeCoord2(frame.width, 0),
+            m.computeCoord2(frame.width, frame.height),
+            m.computeCoord2(0, frame.height)
+        ];
+
+        const box = XYsBounding(points);
+
+        return { x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top };
+    }
+
+    private __update(...args: any[]) {
+        this.m_page_card?.repaint() // 执行PreviewPageCard内部重绘函数
+
+        if (args.includes('frame') || args.includes('rotation')) {
+            this.modifyTransform();
+        }
+    }
+
+    // __update属于播放对象的全量绘制，消耗比较大
+    private update = debounce(this.__update, 300);
+
+    modifyTransformToFit() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const box = this.getBoundingBox()!;
+        const boxWidth = box.width;
+        const boxHeight = box.height;
+
+        const root = container.getBoundingClientRect();
+        const rootWidth = root.width;
+        const rootHeight = root.height;
+
+        const ratio_w = boxWidth / rootWidth * 1.06;
+        const ratio_h = boxHeight / rootHeight * 1.12;
+
+        const ratio = Math.max(ratio_h, ratio_w);
+
+        if (ratio === 1) return;
+
+        const matrix = this.getCenterMatrix();
+        matrix.trans(-rootWidth / 2, -rootHeight / 2);
+        const max = 256;
+        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
+            matrix.scale(1 / ratio);
+        } else {
+            if (matrix.m00 / ratio <= 0.02) {
+                matrix.scale(0.02 / matrix.m00);
+            } else if (matrix.m00 / ratio >= max) {
+                matrix.scale(max / matrix.m00);
+            }
+        }
+        matrix.trans(rootWidth / 2, rootHeight / 2);
+        this.setAttri(matrix);
+    }
+
+    modifyTransformToFill() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const box = this.getBoundingBox()!;
+        const boxWidth = box.width;
+        const boxHeight = box.height;
+
+        const root = container.getBoundingClientRect();
+        const rootWidth = root.width;
+        const rootHeight = root.height;
+
+        const ratio_w = boxWidth / rootWidth;
+        const ratio_h = boxHeight / rootHeight;
+
+        const ratio = Math.min(ratio_h, ratio_w);
+
+        if (ratio === 1) return;
+
+        const matrix = this.getCenterMatrix();
+        matrix.trans(-rootWidth / 2, -rootHeight / 2);
+        const max = 256;
+        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
+            matrix.scale(1 / ratio);
+        } else {
+            if (matrix.m00 / ratio <= 0.02) {
+                matrix.scale(0.02 / matrix.m00);
+            } else if (matrix.m00 / ratio >= max) {
+                matrix.scale(max / matrix.m00);
+            }
+        }
+        matrix.trans(rootWidth / 2, rootHeight / 2);
+
+        const __m = matrix.toArray();
+        __m[4] = 0;
+        __m[5] = 0;
+
+        this.setAttri(new Matrix(__m));
+    }
+
+    modifyTransformToFillByWidth() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const box = this.getBoundingBox()!;
+        const boxWidth = box.width;
+        const boxHeight = box.height;
+
+        const root = container.getBoundingClientRect();
+        const rootWidth = root.width;
+        const rootHeight = root.height;
+
+        const ratio = boxWidth / rootWidth;
+
+        if (ratio < 1) return;
+
+        const matrix = this.getCenterMatrix();
+        matrix.trans(-rootWidth / 2, -rootHeight / 2);
+        const max = 256;
+        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
+            matrix.scale(1 / ratio);
+        } else {
+            if (matrix.m00 / ratio <= 0.02) {
+                matrix.scale(0.02 / matrix.m00);
+            } else if (matrix.m00 / ratio >= max) {
+                matrix.scale(max / matrix.m00);
+            }
+        }
+        matrix.trans(rootWidth / 2, rootHeight / 2);
+
+        this.setAttri(matrix);
+    }
+
     mount(container: HTMLDivElement, page: Page, current: Shape | undefined, pageCard: PCard | undefined) {
-        console.log('__MOUNTED__', current, pageCard);
         this.m_container = container;
 
         this.m_current_page = page;
@@ -109,103 +339,16 @@ export class ViewUpdater {
     }
 
     /**
-     * @description 监听播放对象的变化
-     * @param args
-     */
-    updater(...args: any[]) {
-        console.log('__UPDATE_SELF__', ...args, args);
-        this.update(...args);
-    }
-
-    /**
-     * @description 监听播放对象内部元素(子孙元素)变化
-     */
-    updaterBubble(...args: any[]) {
-        console.log('__UPDATE_FROM_BUBBLE__', ...args, args);
-        this.update(...args);
-    }
-
-    /**
-     * @description page的变化，有可能导致整个坐标系发生改变，此时应该让播放对象抵消这个改变，避免位移
-     */
-    updater4Page(...args: any[]) {
-        // console.log('__UPDATE_PAGE__', args);
-        // if (!(args.includes('frame'))) {
-        //     // frame 没有发生变化，不需要抵消
-        //     return;
-        // }
-        //
-        // this.modifyTransform();
-    }
-
-    /**
-     * @description 修改播放对象的transform
+     * @description 修改播放对象的transform(原比例);
      */
     modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
-
         if (!shape || !container || !this.m_page_card) {
             return;
         }
 
-        const root = container.getBoundingClientRect();
-        const frame = shape.frame;
-
-        console.log('__root&frame__', root, frame);
-
-        // const m = new Matrix(shape.matrix2Parent());
-        // m.trans(-frame.x, -frame.y);
-
-        // const points = [
-        //     m.computeCoord2(0, 0),
-        //     m.computeCoord2(frame.width, 0),
-        //     m.computeCoord2(frame.width, frame.height),
-        //     m.computeCoord2(0, frame.height)
-        // ];
-        //
-        // const box = XYsBounding(points);
-        // const width = box.right - box.left;
-        // const height = box.bottom - box.top;
-
-        // console.log('__bounding_box__', box, box.right - box.left, width, height);
-
-        const cx = frame.width / 2;
-        const cy = frame.height / 2;
-
-        const transformMatrix = new Matrix();
-        transformMatrix.trans(-cx, -cy);
-        if (shape.rotation) {
-            transformMatrix.rotate(shape.rotation / 360 * 2 * Math.PI);
-        }
-        if (shape.isFlippedHorizontal) {
-            transformMatrix.flipHoriz();
-        }
-        if (shape.isFlippedVertical) {
-            transformMatrix.flipVert();
-        }
-        transformMatrix.trans(cx, cy);
-
-        const rootCX = root.width / 2;
-        const rootCY = root.height / 2;
-
-        transformMatrix.trans(rootCX - cx, rootCY - cy);
-
-        this.m_page_card.pageSvg.style['transform'] = transformMatrix.toString();
-        const svgEl = (this.m_page_card.pageSvg as Element);
-        svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
-        svgEl.setAttribute('width', `${frame.width}`);
-        svgEl.setAttribute('height', `${frame.height}`);
+        const matrix = this.getCenterMatrix();
+        this.setAttri(matrix);
     }
-
-    __update(...args: any[]) {
-        this.m_page_card?.repaint() // 执行PreviewPageCard内部重绘函数
-
-        if (args.includes('frame') || args.includes('rotation')) {
-            this.modifyTransform();
-        }
-    }
-
-    // __update属于播放对象的全量绘制，消耗比较大
-    update = debounce(this.__update, 300);
 }
