@@ -378,7 +378,8 @@ export const preview: any = {
     actual_size: 'Actual size',
     previous_page: 'Previous page',
     next_page: 'Next page',
-    first_page: 'First page'
+    first_page: 'First page',
+    preview: 'Preview'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

@@ -3,7 +3,6 @@ import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
 import { useRoute } from 'vue-router';
-import { router } from '@/router';
 import { open_preview } from '@/utils/preview';
 import { ShapeType } from '@kcdesign/data';
 const { t } = useI18n()
@@ -19,7 +18,7 @@ const preview = () => {
 </script>
 
 <template>
-    <Tooltip :content="t('navi.comps')">
+    <Tooltip :content="t('preview.preview')">
         <div class="preview" @click="preview">
             <svg-icon icon-class="preview"></svg-icon>
         </div>
