@@ -121,7 +121,7 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
 }
 
 function getNextScaleType(current: ScaleType): ScaleType {
-    const types = [ScaleType.Actual, ScaleType.FillScreen, ScaleType.FitScreen, ScaleType.FitWidth];
+    const types = [ScaleType.Actual, ScaleType.FitScreen, ScaleType.FillScreen, ScaleType.FitWidth];
     const index = types.findIndex(item => item === current) + 1;
     if (index === -1) return ScaleType.Actual;
     return types[index % types.length];

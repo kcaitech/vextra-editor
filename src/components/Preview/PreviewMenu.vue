@@ -88,10 +88,10 @@ const togglePage = (p: number) => {
 const firstPage = () => {
     const shape = props.context.preview.selectedShape;
     const page = props.context.preview.selectedPage;
-    if (!shape || !page) return;
+    if (!shape || !page) return emit('close');
     const frameList = getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
-    if (index === -1) return;
+    if (index === -1) return emit('close');
     props.context.preview.selectShape(frameList[0]);
     emit('close');
 }
@@ -112,49 +112,49 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_menu" ref="previewMenu" @mousedown.stop>
-        <div class="item" @click="changeScale(ScaleType.Actual)">
+        <div class="item" @click.stop="changeScale(ScaleType.Actual)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.Actual || scaleType === undefined"
                     icon-class="choose"></svg-icon>
             </div>
             <div class="text">{{t('preview.actual_size')}}（100%）</div>
-            <div class="key">
+            <div class="key" style="padding-right: 3px;">
                 <Key code="Ctrl 0"></Key>
             </div>
         </div>
-        <div class="item" @click="changeScale(ScaleType.FitScreen)">
+        <div class="item" @click.stop="changeScale(ScaleType.FitScreen)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FitScreen" icon-class="choose"></svg-icon>
             </div>
             <div class="text">{{t(`preview.${ScaleType.FitScreen}`)}}</div>
-            <div class="key">Z</div>
+            <div class="key"><span class="span">Z</span></div>
         </div>
-        <div class="item" @click="changeScale(ScaleType.FillScreen)">
+        <div class="item" @click.stop="changeScale(ScaleType.FillScreen)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FillScreen" icon-class="choose"></svg-icon>
             </div>
             <div class="text">{{t(`preview.${ScaleType.FillScreen}`)}}</div>
-            <div class="key">Z</div>
+            <div class="key"><span class="span">Z</span></div>
         </div>
-        <div class="item" @click="changeScale(ScaleType.FitWidth)">
+        <div class="item" @click.stop="changeScale(ScaleType.FitWidth)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FitWidth" icon-class="choose"></svg-icon>
             </div>
             <div class="text">{{t(`preview.${ScaleType.FitWidth}`)}}</div>
-            <div class="key">Z</div>
+            <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="line"></div>
-        <div class="item" @click="togglePage(-1)">
+        <div class="item" @click.stop="togglePage(-1)">
             <div class="choose"></div>
             <div class="text">{{t('preview.previous_page')}}</div>
-            <div class="key" style="font-size: 20px; transform: rotate(180deg);">→</div>
+            <div class="key" style="font-size: 20px; transform: rotate(180deg);"><svg-icon icon-class="arrow-right"></svg-icon></div>
         </div>
-        <div class="item" @click="togglePage(1)">
+        <div class="item" @click.stop="togglePage(1)">
             <div class="choose"></div>
             <div class="text">{{t('preview.next_page')}}</div>
-            <div class="key" style="font-size: 20px;">→</div>
+            <div class="key" style="font-size: 20px;"><svg-icon icon-class="arrow-right"></svg-icon></div>
         </div>
-        <div class="item" @click="firstPage">
+        <div class="item" @click.stop="firstPage">
             <div class="choose"></div>
             <div class="text">{{t('preview.first_page')}}</div>
             <div class="key"></div>
@@ -162,10 +162,10 @@ onUnmounted(() => {
         <div class="line"></div>
         <div class="item" @click="hiddenUi">
             <div class="choose">
-                <svg-icon v-if="showUi" icon-class="choose"></svg-icon>
+                <svg-icon v-if="!showUi" icon-class="choose"></svg-icon>
             </div>
             <div class="text">{{t('system.hide_operation_interface')}}</div>
-            <div class="key">
+            <div class="key" style="padding-right: 3px;">
                 <Key code="Ctrl \"></Key>
             </div>
         </div>
@@ -226,6 +226,18 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            .span {
+                display: flex;
+                width: 12px;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+            }
+            svg {
+                fill: #262626;
+                width: 12px;
+                height: 12px;
+            }
         }
     }
 
