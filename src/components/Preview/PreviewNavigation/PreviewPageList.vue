@@ -4,13 +4,14 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PreviewPageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { Document, PageListItem } from "@kcdesign/data";
+import { Document, PageListItem, PageView } from "@kcdesign/data";
 import { Preview } from "@/context/preview";
 
 type List = InstanceType<typeof ListView>;
 
 interface Props {
     context: Context
+    page: PageView
 }
 
 interface Emits {
@@ -42,7 +43,12 @@ const getPageName = () => {
 const rightTarget = ref<string>('');
 const pageList = ref<HTMLDivElement>()
 
-function document_watcher() {
+function document_watcher(...args: any[]) {
+    if(args.includes('pagesList')) {
+        const page = props.context.preview.selectedPage;
+           
+    }
+    
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 

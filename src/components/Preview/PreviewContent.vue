@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { DViewCtx, Matrix, PageView, Shape, ShapeView, XYsBounding, adapt2Shape } from '@kcdesign/data';
+import { Matrix, PageView, Shape, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { initComsMap } from '../Document/Content/vdom/comsmap';
-import { elpatch } from '../Document/Content/vdom/patch';
 import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { debounce } from 'lodash';
 import { is_mac } from '@/utils/common';
+import { ViewUpdater } from "@/components/Preview/viewUpdater";
 
 const props = defineProps<{
     context: Context
@@ -23,59 +22,45 @@ const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
 const cur_shape = ref<Shape>();
 const matrix = new Matrix();
-const reflush = ref(0);
 const listLength = ref(0);
 const viewbox = ref<string>('0 0 0 0');
 const curPage = ref(0);
 const pageCard = ref<PCard>();
 const spacePressed = ref<boolean>(false);
-function render() {
-    const shape = props.context.preview.selectedShape;
-    if (!shape) return;
-    if (!container.value) {
-        return;
-    }
 
-    const ctx = new DViewCtx();
-    initComsMap(ctx.comsMap);
-
-    const data = shape instanceof ShapeView ? adapt2Shape(shape) : shape;
-
-    const __Construct = ctx.comsMap.get(data.type);
-    if (!__Construct) {
-        console.error('unknown type');
-        return;
-    }
-
-    const __view = new __Construct(ctx, { data })
-    const __el = (__view as any).renderStatic();
-    __el.el = container.value;
-
-    elpatch(__el, undefined);
-}
 function page_watcher() {
     const shape = props.context.preview.selectedShape;
     const page = props.context.preview.selectedPage;
+
     cur_shape.value = shape;
+
     if (!shape || !page) return;
+
+    viewUpdater.atPage(page.data);
+    viewUpdater.atTarget(shape);
+
     const frameList = getFrameList(page);
     listLength.value = frameList.length;
+
     const index = frameList.findIndex(item => item.id === shape.id);
     curPage.value = index + 1;
+
     const frame = shape.boundingBox();
     width.value = frame.width;
     height.value = frame.height;
     viewbox.value = `0 0 ${frame.width} ${frame.height}`;
-    render();
+
     initMatrix();
-    reflush.value++;
 }
 
 const togglePage = (p: number) => {
     const shape = props.context.preview.selectedShape;
     const page = props.context.preview.selectedPage;
+
     if (!shape || !page) return;
+
     cur_shape.value = shape;
+
     const frameList = getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return;
@@ -84,22 +69,14 @@ const togglePage = (p: number) => {
     props.context.preview.selectShape(frameList[index]);
 }
 
-function watchShape() { // 监听相关shape的变化
-    const shape = props.context.preview.selectedShape;
-    cur_shape.value = shape;
-    if (shape) {
-        shape.unwatch(page_watcher);
-        shape.watch(page_watcher);
-    }
-}
 
 const previewWatcher = (t: number, s?: boolean) => {
     if (t === Preview.CHANGE_PAGE) {
         page_watcher();
-        watchShape();
+        viewUpdater.atTarget(props.context.preview.selectedShape);
     } else if (t === Preview.CHANGE_SHAPE) {
         page_watcher();
-        watchShape();
+        viewUpdater.atTarget(props.context.preview.selectedShape);
     } else if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
@@ -118,7 +95,10 @@ const previewWatcher = (t: number, s?: boolean) => {
             matrix.trans(250, 0);
         }
         if (pageCard.value && pageCard.value.pageSvg) {
-            pageCard.value.pageSvg.style['transform'] = matrix.toString();
+            // todo
+            // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+            // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+            viewUpdater.modifyTransform();
         }
     } else if (t === Preview.BEFORE_PAGE) {
         togglePage(-1);
@@ -148,12 +128,15 @@ const initMatrix = () => {
         center_scale()
         nextTick(() => {
             if (pageCard.value && pageCard.value.pageSvg) {
-                pageCard.value.pageSvg.style['transform'] = matrix.toString();
+                // todo
+                // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+                // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+                viewUpdater.modifyTransform();
             }
         })
     }
-
 }
+
 function center_view() {
     const m = new Matrix();
     matrix.reset(m);
@@ -192,6 +175,7 @@ const center_scale = () => {
     matrix.trans(offset.x, offset.y);
     props.context.preview.setScale(matrix.toArray()[0]);
 }
+
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.preview.selectedShape;
@@ -203,6 +187,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         wheelTrans(e);
     }
 }
+
 const MAX_STEP = 120;
 const wheelTrans = (e: WheelEvent) => {
     if (!preview.value) return;
@@ -233,7 +218,10 @@ const wheelTrans = (e: WheelEvent) => {
 
     matrix.trans(-stepx, -stepy);
     if (pageCard.value && pageCard.value.pageSvg) {
-        pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // todo
+        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        viewUpdater.modifyTransform();
     }
 }
 
@@ -273,6 +261,7 @@ const root_scale = (e: WheelEvent) => {
     updateMatrix();
     props.context.preview.setScaleMenu(undefined);
 }
+
 function page_scale(scale: number) {
     props.context.preview.setScale(scale);
     initMatrix();
@@ -303,9 +292,13 @@ const fillScreen = () => {
     matrix.trans(s_w - offset.x, s_h - offset.y);
 
     if (pageCard.value && pageCard.value.pageSvg) {
-        pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // todo
+        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        viewUpdater.modifyTransform();
     }
 }
+
 function fitScreen() {
     const shape = props.context.preview.selectedShape;
     if (!preview.value || !shape) return;
@@ -338,6 +331,7 @@ function fitScreen() {
     }
     updateMatrix();
 }
+
 function fitWidth() {
     const shape = props.context.preview.selectedShape;
     if (!preview.value || !shape) return;
@@ -353,7 +347,10 @@ function fitWidth() {
         center_view()
         center_scale()
         if (pageCard.value && pageCard.value.pageSvg) {
-            pageCard.value.pageSvg.style['transform'] = matrix.toString();
+            // todo
+            // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+            // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+            viewUpdater.modifyTransform();
         }
         return;
     }
@@ -380,7 +377,10 @@ function fitWidth() {
 const updateMatrix = () => {
     props.context.preview.setScale(matrix.toArray()[0]);
     if (pageCard.value && pageCard.value.pageSvg) {
-        pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // todo
+        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        viewUpdater.modifyTransform();
     }
 }
 
@@ -395,7 +395,10 @@ watch(() => props.showTop, (v) => {
         matrix.trans(0, 46);
     }
     if (pageCard.value && pageCard.value.pageSvg) {
-        pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // todo
+        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        viewUpdater.modifyTransform();
     }
 })
 
@@ -473,7 +476,10 @@ const pageViewDragging = (e: MouseEvent) => {
         preview.value.style.cursor = 'grabbing';
     }
     if (pageCard.value && pageCard.value.pageSvg) {
-        pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // todo
+        // pageCard.value.pageSvg.style['transform'] = matrix.toString();
+        // pageCard.value.pageSvg.style['transform'] = new Matrix().toString();
+        viewUpdater.modifyTransform();
     }
 }
 
@@ -542,35 +548,47 @@ const onMouseLeave = () => {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
 }
-const genPage = () => {
-    const page = props.context.preview.selectedPage;
-    if (!page) return;
-    const frameList = getFrameList(page);
-    listLength.value = frameList.length;
-}
+
+// ====divide====
+const viewUpdater = new ViewUpdater(props.context);
+
 onMounted(() => {
-    props.page.watch(genPage);
-    if (preview.value) observer.observe(preview.value);
-    watchShape();
-    page_watcher();
     props.context.preview.watch(previewWatcher);
+
+    page_watcher();
+
+    // 等cur_shape触发pageCard的挂载
+    nextTick(() => {
+        // 然后初始化视图渲染管理器
+        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value);
+    })
+
+    if (preview.value) {
+        observer.observe(preview.value);
+    }
 })
 onUnmounted(() => {
     observer.disconnect();
-    props.page.unwatch(genPage);
-    cur_shape.value?.unwatch(page_watcher);
     props.context.preview.unwatch(previewWatcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
+
+    viewUpdater.atTarget();
+    viewUpdater.atPage();
 })
 </script>
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-        <PageCard ref="pageCard" v-if="cur_shape" background-color="transparent" :view-box="viewbox"
-            :data="(props.page as PageView)" :context="context" :shapes="[cur_shape]" :width="width" :height="height">
-        </PageCard>
+         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        <PageCard
+            v-if="cur_shape"
+            ref="pageCard"
+            background-color="transparent"
+            :data="(props.page as PageView)"
+            :context="context"
+            :shapes="[cur_shape]"
+        />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

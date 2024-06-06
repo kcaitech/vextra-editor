@@ -131,7 +131,7 @@ const update = () => {
         for (let i = 0; i < arboardList.length; i++) {
             const arboard = arboardList[i];
             if (arboard.name.search(reg) > -1) {
-                search_list.unshift(arboard);
+                search_list.push(arboard);
             }
         }
         arboardList = search_list;

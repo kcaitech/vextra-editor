@@ -8,15 +8,11 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
-import { Preview } from "@/context/preview";
 
 interface Props {
     shapes: ShapeView[] | Shape[];
     data: PageView;
     backgroundColor: string;
-    viewBox: string;
-    width: number;
-    height: number;
     context: Context
 }
 
@@ -69,6 +65,13 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
+        const gs = pageSvg.value.childNodes;
+
+        // 清除自己的transform、style，交给外层去处理，否在会出现内外相互抵消来实现效果的现象
+        gs.forEach(node => {
+            (node as Element).removeAttribute('transform');
+            (node as Element).removeAttribute('style');
+        });
     }
 }
 
@@ -80,31 +83,22 @@ function disassemble() {
 watch(() => props.shapes, () => {
     props.shapes.length && assemble();
 })
-const page_watcher = (...args: any[]) => {
-    if(args.includes('frame')) return;
+
+
+function repaint() {
+    console.log('__REPAINT__');
+    // 暂时用这个
     assemble();
 }
 
-function selection_watcher(...args: any[]) {
+defineExpose({ pageSvg, repaint });
 
-}
-onMounted(() => {
-    props.data.watch(page_watcher);
-    assemble();
-    props.context.preview.watch(selection_watcher);
-});
-onUnmounted(() => {
-    props.data.unwatch(page_watcher);
-    disassemble();
-    props.context.preview.unwatch(selection_watcher);
-});
-
-defineExpose({ pageSvg });
+onMounted(assemble);
+onUnmounted(disassemble);
 </script>
 
 <template>
-    <svg ref="pageSvg" :width="width" :height="height" :viewBox="viewBox"
-        :style="{ 'background-color': backgroundColor }"></svg>
+    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
 </template>
 
 <style scoped lang="scss">
