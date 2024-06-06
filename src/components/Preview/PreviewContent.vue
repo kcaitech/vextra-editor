@@ -131,11 +131,11 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.preview.selectedShape;
     if (!shape) return;
-    const { ctrlKey, metaKey } = e;
+    const {ctrlKey, metaKey} = e;
     if (ctrlKey || metaKey) { // 缩放
         viewUpdater.scale(e);
     } else {
-        wheelTrans(e);
+        viewUpdater.trans(e);
     }
 }
 
@@ -194,7 +194,7 @@ watch(() => props.showTop, (v) => {
 const isMenu = ref(false);
 const top = ref(0);
 const left = ref(0);
-let downXY = { x: 0, y: 0 };
+let downXY = {x: 0, y: 0};
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
     const shape = props.context.preview.selectedShape;
@@ -276,7 +276,7 @@ const canDragging = () => {
     const frame = shape.boundingBox();
     const xy = matrix.computeCoord(frame.x, frame.y);
     const wh = matrix.computeCoord(frame.x + frame.width, frame.y + frame.height);
-    return { top: xy.y, left: xy.x, right: wh.x, bottom: wh.y }
+    return {top: xy.y, left: xy.x, right: wh.x, bottom: wh.y}
 }
 
 function onMouseUp(e: MouseEvent) {

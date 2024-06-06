@@ -2,7 +2,7 @@ import { Matrix, Page, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
-import { XYsBounding } from "@/utils/common";
+import { is_mac, XYsBounding } from "@/utils/common";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -133,7 +133,7 @@ export class ViewUpdater {
 
         const box = XYsBounding(points);
 
-        return { x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top };
+        return {x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top};
     }
 
     private __update(...args: any[]) {
@@ -383,18 +383,19 @@ export class ViewUpdater {
         const rcx = rootBox.width / 2;
         const rcy = rootBox.height / 2;
 
-        let matrix;
+        const matrix = this.matrix;
 
         const __s = this.m_context.preview.scale;
         const __scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
 
         if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
-            matrix = this.getCenterMatrix();
-            matrix.trans(-rcx, -rcy);
-            matrix.scale(__scale);
-            matrix.trans(rcx, rcy);
+            const offsetX = e.x - rootBox.x;
+            const offsetY = e.y - rootBox.y;
+            matrix.trans(-offsetX, -offsetY);
+            matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+            matrix.trans(offsetX, offsetY);
         } else {
-            matrix = this.getCenterMatrix();
+            matrix.reset(this.getCenterMatrix());
             matrix.trans(-rcx, -rcy);
             matrix.scale(__scale);
             matrix.trans(rcx, rcy);
@@ -403,5 +404,27 @@ export class ViewUpdater {
         this.setAttri(matrix);
 
         this.m_context.preview.setScaleMenu(undefined);
+    }
+
+    trans(e: WheelEvent) {
+        const MAX_STEP = 120;
+
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+        let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+
+        if (e.shiftKey && !is_mac() && e.deltaX < 1) {
+            stepx = stepy;
+            stepy = 0;
+        }
+
+        this.matrix.trans(-stepx, -stepy);
+
+        this.setAttri(this.matrix);
     }
 }
