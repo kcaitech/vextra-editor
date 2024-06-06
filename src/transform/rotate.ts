@@ -1,11 +1,8 @@
 import {
-    adapt2Shape,
     ColVector3D,
     Matrix,
     Matrix2,
-    RotateUnit,
     Rotator,
-    ShapeType,
     ShapeView,
     Transform,
     TransformMode,
@@ -46,9 +43,12 @@ export class RotateHandler extends TransformHandler {
     originSelectionBox: FrameLike = {x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0};
     baseData: BaseData4Rotate = new Map();
 
-    beginTransformList: Transform[] = []; // 开始旋转时所有shape的Transform
-    beginTransformForSelection: Transform = new Transform();  // 开始旋转时选区的Transform
-    parentToRootTransformMap: Map<ShapeView, Transform> = new Map(); // parent到root的Transform
+    transformForSelection: Transform = new Transform();  // 选区的Transform
+    transformForSelectionInverse: Transform = new Transform();  // 选区Transform的逆
+    selectionSize = {width: 0, height: 0};
+    transformFromRootMap: Map<ShapeView, Transform> = new Map(); // 在root坐标系下的Transform Map
+    transformListInSelection: Transform[] = []; // 在选区坐标系下的Transform
+    beginCursorAngle: number = 0; // 开始时选区中点到光标的向量与X轴之间的角度
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
         super(context, event);
@@ -222,30 +222,44 @@ export class RotateHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        this.beginTransformForSelection = new Transform({
+        // 只选一个元素时，选区的Transform为元素的transform2FromRoot，选区大小为元素的size
+        this.transformForSelection = this.shapes.length > 1 ? new Transform({
             matrix: new Matrix2([4, 4], [
                 1, 0, 0, this.originSelectionBox.x,
                 0, 1, 0, this.originSelectionBox.y,
                 0, 0, 1, 0,
                 0, 0, 0, 1,
             ])
-        });
-        this.beginTransformList = this.shapes.map(shape => {
-            let parent2RootTransform = this.parentToRootTransformMap.get(shape.parent!);
-            if (!parent2RootTransform) {
-                const parent2RootMatrix = shape.parent!.matrix2Root();
-                parent2RootTransform = new Transform({
-                    matrix: new Matrix2([4, 4], [
-                        parent2RootMatrix.m00, parent2RootMatrix.m01, 0, parent2RootMatrix.m02,
-                        parent2RootMatrix.m10, parent2RootMatrix.m11, 0, parent2RootMatrix.m12,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1,
-                    ]),
-                });
-                this.parentToRootTransformMap.set(shape.parent!, parent2RootTransform);
+        }) : this.shapes[0].transform2FromRoot.clone();
+        this.transformForSelectionInverse = this.transformForSelection.getInverse();
+        this.selectionSize = this.shapes.length > 1 ? {
+            width: this.originSelectionBox.width,
+            height: this.originSelectionBox.height
+        } : {
+            width: this.shapes[0].size.width,
+            height: this.shapes[0].size.height
+        };
+
+        for (const shape of this.shapes) {
+            if (!this.transformFromRootMap.has(shape.parent!)) {
+                this.transformFromRootMap.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
-            return shape.transform2.clone().addTransform(parent2RootTransform).addTransform(this.beginTransformForSelection.getInverse());
-        });
+        }
+        this.transformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
+            .addTransform(this.transformFromRootMap.get(shape.parent!)!)    // 在Root坐标系下
+            .addTransform(this.transformForSelection.getInverse())          // 在选区坐标系下
+        ) : [new Transform()];
+
+        this.beginCursorAngle = this.cursorAngle; // 光标向量的初始角度
+    }
+
+    get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（逆时针为正）（-π ~ π）
+        const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
+        const cursorPoint = Point3D.FromMatrix(this.transformForSelectionInverse.transform(cursorPointFromRoot)); // 光标在选区坐标系下的坐标
+        const centerPoint = Point3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2); // 选区中点的坐标（在原选区坐标系下）
+        const cursorVector = cursorPoint.subtract(centerPoint); // 光标向量
+        const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
+        return xVector.angleTo(cursorVector); // 光标向量相对x轴的夹角（逆时针为正）（-π ~ π）
     }
 
     private __execute() {
@@ -253,185 +267,209 @@ export class RotateHandler extends TransformHandler {
             return;
         }
 
-        if (this.shapes.length === 1) {
-            this.__execute4single();
-        } else {
-            this.__execute4multi();
-        }
+        // if (this.shapes.length === 1) {
+        //     this.__execute4single();
+        // } else {
+        //     this.__execute4multi();
+        // }
+
+        const cursorAngle = this.cursorAngle; // 光标向量的角度
+        const deltaAngle = cursorAngle - this.beginCursorAngle; // 角度变化量
+
+        // 选区变换后的Transform
+        const transformForSelection = this.transformForSelection.clone().rotateZAt({
+            point: Point2D2.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2),
+            angle: deltaAngle,
+            mode: TransformMode.Local,
+        });
+
+        // shape最终的Transform
+        const transformList = this.transformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
+            .addTransform(transformForSelection) // 在Root坐标系下
+            .addTransform(this.transformFromRootMap.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
+        );
+
+        // 更新shape
+        (this.asyncApiCaller as Rotator).execute(transformList.map((transform, i) => {
+            return {
+                shape: this.shapes[i],
+                transform2: transform,
+            }
+        }));
     }
 
     /**
      * todo 这个函数可优化，必要性小
      * @private
      */
-    private __execute4single() {
-        let d = getHorizontalAngle(this.centerXY, this.livingPoint);
-
-        if (this.shiftStatus) {
-            const exD = d % 15;
-            if (exD) {
-                if (exD < 7.5) {
-                    d -= exD;
-                } else {
-                    d += 15 - exD;
-                }
-            }
-            const exInit = this.initDeg % 15;
-            if (exInit) {
-                if (exInit < 7.5) {
-                    this.initDeg -= exInit;
-                } else {
-                    this.initDeg += 15 - exInit;
-                }
-            }
-
-        }
-
-        let deg = d - this.initDeg;
-
-        this.initDeg = d;
-
-        const shape = this.shapes[0];
-
-        // todo flip
-        // if (shape.isFlippedHorizontal) {
-        //     deg = -deg;
-        // }
-        // if (shape.isFlippedVertical) {
-        //     deg = -deg;
-        // }
-
-        const base = this.baseData.get(shape.id);
-        if (!base) {
-            return;
-        }
-
-        const currentRotate = (adapt2Shape(shape).rotation || 0);
-        const targetRotate = currentRotate + deg;
-
-        const beginRotation = this.beginTransformList[0].decomposeEuler().z * 180 / Math.PI;
-        const translate = this.beginTransformList[0].clone().rotateZAt({
-            point: new Point2D2([
-                shape.size.width / 2,
-                shape.size.width / 2,
-            ]),
-            angle: (targetRotate - beginRotation) * Math.PI / 180,
-            mode: TransformMode.Local,
-        }).addTransform(this.beginTransformForSelection).addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse()).decomposeTranslate();
-
-        // const translate = this.beginTransformList[0].clone().rotateZAt({
-        //     point: new Point2D2([
-        //         this.beginCenterList[0].x,
-        //         this.beginCenterList[0].y,
-        //     ]),
-        //     angle: (targetRotate - beginRotation) * Math.PI / 180,
-        //     mode: TransformMode.Global,
-        // }).decomposeTranslate();
-
-        (this.asyncApiCaller as Rotator).execute4multi([{
-            shape,
-            x: translate.x,
-            y: translate.y,
-            targetRotate: targetRotate,
-        }]);
-    }
-
-    private __execute4multi() {
-        const center = this.centerXY;
-
-        const d1 = getHorizontalAngle(center, this.referencePoint);
-        const d2 = getHorizontalAngle(center, this.livingPoint);
-        let deg = d2 - d1;
-        if (deg < 0) {
-            deg = deg + 360;
-        }
-
-        if (this.shiftStatus) {
-            const d = deg % 15;
-            if (d > 0) {
-                deg += (15 - d);
-            } else if (d < 0) {
-                deg -= d;
-            }
-        }
-
-        const beginTransformForSelection = this.beginTransformForSelection.clone().rotateZAt({
-            point: new Point2D2([
-                this.originSelectionBox.width / 2,
-                this.originSelectionBox.height / 2,
-            ]),
-            angle: deg * Math.PI / 180,
-            mode: TransformMode.Local,
-        });
-
-        const rotateMatrix = new Matrix();
-        rotateMatrix.rotate(deg * (Math.PI / 180), center.x, center.y);
-
-        const rotateUnits: RotateUnit[] = [];
-
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
-
-            if (shape.isVirtualShape) {
-                continue;
-            }
-
-            if (shape.type === ShapeType.Contact) {
-                continue;
-            }
-
-            const base = this.baseData.get(shape.id);
-
-            if (!base) {
-                continue;
-            }
-            const targetXY = rotateMatrix.computeCoord3(base.XYtoRoot);
-
-            const common = base.root2parentMatrix.computeCoord3(targetXY);
-
-            if (base.flipH) {
-                deg = -deg;
-            }
-            if (base.flipV) {
-                deg = -deg;
-            }
-
-            const targetRotate = (base.rotate || 0) + deg;
-
-            const m = new Matrix();
-            const cx = base.width / 2;
-            const cy = base.height / 2;
-            m.trans(-cx, -cy);
-            if (targetRotate) {
-                m.rotate(targetRotate / 180 * Math.PI);
-            }
-            if (base.flipH) {
-                m.flipHoriz();
-            }
-            if (base.flipV) {
-                m.flipVert();
-            }
-            m.trans(cx, cy);
-            m.trans(base.x, base.y);
-
-            const self = m.computeCoord2(0, 0);
-
-            const dx = common.x - self.x;
-            const dy = common.y - self.y;
-
-            const decomposeRes = this.beginTransformList[i].clone()
-                .addTransform(beginTransformForSelection)
-                .addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse())
-                .decompose();
-
-            rotateUnits.push({
-                shape,
-                x: decomposeRes.translate.x,
-                y: decomposeRes.translate.y,
-                targetRotate: decomposeRes.rotate.z * 180 / Math.PI,
-            })
-        }
-
-        (this.asyncApiCaller as Rotator).execute4multi(rotateUnits);
-    }
+    // private __execute4single() {
+    //     let d = getHorizontalAngle(this.centerXY, this.livingPoint);
+    //
+    //     if (this.shiftStatus) {
+    //         const exD = d % 15;
+    //         if (exD) {
+    //             if (exD < 7.5) {
+    //                 d -= exD;
+    //             } else {
+    //                 d += 15 - exD;
+    //             }
+    //         }
+    //         const exInit = this.initDeg % 15;
+    //         if (exInit) {
+    //             if (exInit < 7.5) {
+    //                 this.initDeg -= exInit;
+    //             } else {
+    //                 this.initDeg += 15 - exInit;
+    //             }
+    //         }
+    //
+    //     }
+    //
+    //     let deg = d - this.initDeg;
+    //
+    //     this.initDeg = d;
+    //
+    //     const shape = this.shapes[0];
+    //
+    //     // todo flip
+    //     // if (shape.isFlippedHorizontal) {
+    //     //     deg = -deg;
+    //     // }
+    //     // if (shape.isFlippedVertical) {
+    //     //     deg = -deg;
+    //     // }
+    //
+    //     const base = this.baseData.get(shape.id);
+    //     if (!base) {
+    //         return;
+    //     }
+    //
+    //     const currentRotate = (adapt2Shape(shape).rotation || 0);
+    //     const targetRotate = currentRotate + deg;
+    //
+    //     const beginRotation = this.beginTransformList[0].decomposeEuler().z * 180 / Math.PI;
+    //     const translate = this.beginTransformList[0].clone().rotateZAt({
+    //         point: new Point2D2([
+    //             shape.size.width / 2,
+    //             shape.size.width / 2,
+    //         ]),
+    //         angle: (targetRotate - beginRotation) * Math.PI / 180,
+    //         mode: TransformMode.Local,
+    //     }).addTransform(this.beginTransformForSelection).addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse()).decomposeTranslate();
+    //
+    //     // const translate = this.beginTransformList[0].clone().rotateZAt({
+    //     //     point: new Point2D2([
+    //     //         this.beginCenterList[0].x,
+    //     //         this.beginCenterList[0].y,
+    //     //     ]),
+    //     //     angle: (targetRotate - beginRotation) * Math.PI / 180,
+    //     //     mode: TransformMode.Global,
+    //     // }).decomposeTranslate();
+    //
+    //     (this.asyncApiCaller as Rotator).execute4multi([{
+    //         shape,
+    //         x: translate.x,
+    //         y: translate.y,
+    //         targetRotate: targetRotate,
+    //     }]);
+    // }
+    //
+    // private __execute4multi() {
+    //     const center = this.centerXY;
+    //
+    //     const d1 = getHorizontalAngle(center, this.referencePoint);
+    //     const d2 = getHorizontalAngle(center, this.livingPoint);
+    //     let deg = d2 - d1;
+    //     if (deg < 0) {
+    //         deg = deg + 360;
+    //     }
+    //
+    //     if (this.shiftStatus) {
+    //         const d = deg % 15;
+    //         if (d > 0) {
+    //             deg += (15 - d);
+    //         } else if (d < 0) {
+    //             deg -= d;
+    //         }
+    //     }
+    //
+    //     const beginTransformForSelection = this.beginTransformForSelection.clone().rotateZAt({
+    //         point: new Point2D2([
+    //             this.originSelectionBox.width / 2,
+    //             this.originSelectionBox.height / 2,
+    //         ]),
+    //         angle: deg * Math.PI / 180,
+    //         mode: TransformMode.Local,
+    //     });
+    //
+    //     const rotateMatrix = new Matrix();
+    //     rotateMatrix.rotate(deg * (Math.PI / 180), center.x, center.y);
+    //
+    //     const rotateUnits: RotateUnit[] = [];
+    //
+    //     for (let i = 0; i < this.shapes.length; i++) {
+    //         const shape = this.shapes[i];
+    //
+    //         if (shape.isVirtualShape) {
+    //             continue;
+    //         }
+    //
+    //         if (shape.type === ShapeType.Contact) {
+    //             continue;
+    //         }
+    //
+    //         const base = this.baseData.get(shape.id);
+    //
+    //         if (!base) {
+    //             continue;
+    //         }
+    //         const targetXY = rotateMatrix.computeCoord3(base.XYtoRoot);
+    //
+    //         const common = base.root2parentMatrix.computeCoord3(targetXY);
+    //
+    //         if (base.flipH) {
+    //             deg = -deg;
+    //         }
+    //         if (base.flipV) {
+    //             deg = -deg;
+    //         }
+    //
+    //         const targetRotate = (base.rotate || 0) + deg;
+    //
+    //         const m = new Matrix();
+    //         const cx = base.width / 2;
+    //         const cy = base.height / 2;
+    //         m.trans(-cx, -cy);
+    //         if (targetRotate) {
+    //             m.rotate(targetRotate / 180 * Math.PI);
+    //         }
+    //         if (base.flipH) {
+    //             m.flipHoriz();
+    //         }
+    //         if (base.flipV) {
+    //             m.flipVert();
+    //         }
+    //         m.trans(cx, cy);
+    //         m.trans(base.x, base.y);
+    //
+    //         const self = m.computeCoord2(0, 0);
+    //
+    //         const dx = common.x - self.x;
+    //         const dy = common.y - self.y;
+    //
+    //         const decomposeRes = this.beginTransformList[i].clone()
+    //             .addTransform(beginTransformForSelection)
+    //             .addTransform(this.parentToRootTransformMap.get(shape.parent!)!.getInverse())
+    //             .decompose();
+    //
+    //         rotateUnits.push({
+    //             shape,
+    //             x: decomposeRes.translate.x,
+    //             y: decomposeRes.translate.y,
+    //             targetRotate: decomposeRes.rotate.z * 180 / Math.PI,
+    //         })
+    //     }
+    //
+    //     (this.asyncApiCaller as Rotator).execute4multi(rotateUnits);
+    // }
 }
