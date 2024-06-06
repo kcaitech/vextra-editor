@@ -391,17 +391,9 @@ export class ViewUpdater {
 
         if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
             matrix = this.getCenterMatrix();
-            const offsetX = e.x - rootBox.x;
-            const offsetY = e.y - rootBox.y;
-
-            const o = matrix.computeCoord2(offsetX, offsetY);
-            matrix.trans(-o.x, -o.y);
+            matrix.trans(-rcx, -rcy);
             matrix.scale(__scale);
-            matrix.trans(o.x, o.y);
-            // matrix = this.getCenterMatrix();
-            // matrix.trans(-rcx, -rcy);
-            // matrix.scale(__scale);
-            // matrix.trans(rcx, rcy);
+            matrix.trans(rcx, rcy);
         } else {
             matrix = this.getCenterMatrix();
             matrix.trans(-rcx, -rcy);
