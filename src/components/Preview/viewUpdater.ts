@@ -384,20 +384,23 @@ export class ViewUpdater {
         const rcx = rootBox.width / 2;
         const rcy = rootBox.height / 2;
 
-        const matrix = this.getCenterMatrix();
+        let matrix;
 
         const __s = this.m_context.preview.scale;
+        const __scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
 
         if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
-            matrix.reset();
-            const scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
             const offsetX = e.x - rootBox.x;
             const offsetY = e.y - rootBox.y;
-            matrix.trans(-offsetX, -offsetY);
-            matrix.scale(scale);
-        } else {
+
+            matrix = this.getCenterMatrix();
             matrix.trans(-rcx, -rcy);
-            matrix.scale(Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02));
+            matrix.scale(__scale);
+            matrix.trans(rcx, rcy);
+        } else {
+            matrix = this.getCenterMatrix();
+            matrix.trans(-rcx, -rcy);
+            matrix.scale(__scale);
             matrix.trans(rcx, rcy);
         }
 
