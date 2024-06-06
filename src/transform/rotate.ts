@@ -50,13 +50,6 @@ export class RotateHandler extends TransformHandler {
     shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
     cursorBeginAngle: number = 0; // 光标向量的初始角度（从选区的中点指向光标的向量，其与X轴的夹角）
 
-    // selectionTransform: Transform = new Transform();  // 选区的Transform
-    // selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
-    // selectionSize = {width: 0, height: 0}; // 选区的size
-    // transformMap: Map<ShapeView, Transform> = new Map(); // transform缓存
-    // shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
-    // shapeSizeList: { width: number, height: number }[] = []; // shape的size列表
-
     constructor(context: Context, event: MouseEvent, selected: ShapeView[]) {
         super(context, event);
         this.referencePoint = this.workspace.getRootXY(event);
