@@ -57,6 +57,13 @@ router.beforeEach((to, from, next) => {
         }
     }
 })
+
+router.afterEach((to, from, failure) => {
+    if (to.path === "/introduction") {
+        history.replaceState(null, '', location.href.replace('introduction', ''))
+    }
+})
+
 export const permIsEdit = (context: Context) => {
     return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
 }

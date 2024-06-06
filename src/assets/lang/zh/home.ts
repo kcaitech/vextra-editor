@@ -67,7 +67,8 @@ export const system = {
     pixel: '对齐像素',
     grid: '像素网格',
     rule: '显示标尺',
-    uploadMediaFail: '图片资源上传失败'
+    uploadMediaFail: '图片资源上传失败',
+    internet:'进入官网'
 }
 
 export const home = {

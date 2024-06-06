@@ -728,7 +728,7 @@ const showEl = () => {
 </script>
 
 <template>
-    <div class="sj-container">
+    <div class="container">
         <div class="status-bar" @touchmove.stop="moveIcon"
              :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
@@ -767,10 +767,9 @@ const showEl = () => {
     transform: translateY(100%);
 }
 
-.sj-container {
+.container {
     width: 100%;
     height: 100%;
-    overflow: hidden;
 }
 
 .status-bar {

@@ -66,7 +66,8 @@ export const system = {
     pixel: 'Pixel Round',
     grid: 'Pixel grid',
     rule: 'Rule',
-    uploadMediaFail: 'Image upload failed'
+    uploadMediaFail: 'Image upload failed',
+    internet:'Go Home'
 }
 
 export const home = {
