@@ -1343,7 +1343,7 @@ onUnmounted(() => {
             <!--                    </div>-->
             <!--                </div>-->
             <!--            </div>-->
-            <PatternFill/>
+            <PatternFill :context="context"/>
         </div>
     </div>
 </template>

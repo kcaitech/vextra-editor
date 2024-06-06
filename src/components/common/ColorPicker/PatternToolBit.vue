@@ -123,23 +123,11 @@ function blur() {
 <template>
     <div class="container">
         <div class="desc">{{ type }}</div>
-        <div ref="rangeEl"
-             class="range"
-             :style="{width: MAX_SIDE_LENGTH_CSS }"
-             @mousedown="downSlider"
-        >
-            <div class="line"/>
-            <div v-if="valLength"
-                 class="line-center"
-            />
-            <div v-if="valLength"
-                 class="val-line"
-                 :style="{left: `${valStart}px`, width: `${valLength}px`}"
-            />
-            <div :style="{left: `${position}px`}"
-                 :class="{dot: true, 'fill-dot': valLength}"
-                 @mousedown="down"
-            />
+        <div ref="rangeEl" class="range" :style="{ width: MAX_SIDE_LENGTH_CSS }" @mousedown="downSlider">
+            <div class="line" />
+            <div v-if="valLength" class="line-center" />
+            <div v-if="valLength" class="val-line" :style="{ left: `${valStart}px`, width: `${valLength}px` }" />
+            <div :style="{ left: `${position}px` }" :class="{ dot: true, 'fill-dot': valLength }" @mousedown="down" />
         </div>
     </div>
 </template>

@@ -53,6 +53,12 @@ function change(e: Event) {
         img.src = URL.createObjectURL(file);
     }
 }
+function selectImage() {
+    const filepicker = document.getElementById('filepicker');
+    if (filepicker) {
+        filepicker.click();
+    }
+}
 </script>
 <template>
     <div class="container">
@@ -60,19 +66,19 @@ function change(e: Event) {
             {{ '充满' }}
         </div>
         <div class="body">
-            <div class="mask">
+            <div class="mask" @click="selectImage">
                 <div class="pic-picker"> {{ '选择图片' }}</div>
                 <input type="file" ref="picker" :accept="accept" :multiple="false" id="filePicker"
-                       @change="(e: Event) => { change(e) }"/>
+                    @change="(e: Event) => { change(e) }" />
             </div>
         </div>
         <div class="tool">
-            <pattern-tool-bit type="曝光" :value="0"/>
-            <pattern-tool-bit type="对比度" :value="0"/>
-            <pattern-tool-bit type="饱和度" :value="60"/>
-            <pattern-tool-bit type="色温" :value="-60"/>
-            <pattern-tool-bit type="色调" :value="100"/>
-
+            <pattern-tool-bit type="曝光" :value="0" />
+            <pattern-tool-bit type="对比度" :value="0" />
+            <pattern-tool-bit type="饱和度" :value="60" />
+            <pattern-tool-bit type="色温" :value="-60" />
+            <pattern-tool-bit type="色调" :value="100" />
+            <pattern-tool-bit type="色相" :value="100" />
         </div>
     </div>
 
@@ -107,22 +113,26 @@ function change(e: Event) {
 
             background-color: transparent;
 
-            > .pic-picker {
-                width: 120px;
-                height: 40px;
+            >.pic-picker {
+                width: 100px;
+                height: 32px;
                 text-align: center;
-                line-height: 40px;
+                line-height: 32px;
                 visibility: hidden;
                 color: #fff;
                 border: 1px solid #fff;
-                border-radius: 20px;
+                border-radius: 8px;
+            }
+
+            #filePicker {
+                display: none;
             }
         }
 
         .mask:hover {
             background-color: rgba(0, 0, 0, 0.45);
 
-            > .pic-picker {
+            >.pic-picker {
                 visibility: visible;
             }
         }
@@ -134,5 +144,4 @@ function change(e: Event) {
         box-sizing: border-box;
     }
 }
-
 </style>

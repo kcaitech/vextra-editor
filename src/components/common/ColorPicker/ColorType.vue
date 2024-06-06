@@ -41,18 +41,14 @@ onMounted(() => {
             <!-- <img :src="angular"> -->
             <div class="angular"></div>
         </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
-             :class="{ selected: gradient_type === GradientType.Radial }">
-            <svg-icon icon-class="pattern-image" stroke="rgb(140,140, 140)" fill="black"></svg-icon>
-        </div>
         <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
             :class="{ selected: is_checked === GradientType.Radial }">
             <svg-icon icon-class="rhomb-gradient"></svg-icon>
-        </div>
-        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
-            :class="{ selected: is_checked === GradientType.Radial }">
-            <svg-icon icon-class="layer-image" style="fill: #595959;"></svg-icon>
         </div> -->
+        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+            :class="{ selected: gradient_type === GradientType.Radial }">
+            <svg-icon icon-class="layer-image" style="fill: #595959; stroke: #595959; width: 14px; height: 14px;"></svg-icon>
+        </div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -109,13 +105,13 @@ onMounted(() => {
     }
 
     .angular {
-        width: 13px;
-        height: 13px;
+        width: 12.5px;
+        height: 12.5px;
         border-radius: 50%;
         // border: 1.5px solid #434343;
         box-shadow: 0px 0px 0px 1.3px #434343;
         box-sizing: border-box;
-        background: conic-gradient(#8C8C8C, #FFFFFF);
+        background: conic-gradient(#9C9C9C, #FFFFFF);
     }
 }
 </style>
