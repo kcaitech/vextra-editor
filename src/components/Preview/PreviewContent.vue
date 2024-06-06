@@ -542,8 +542,14 @@ const onMouseLeave = () => {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
 }
-
+const genPage = () => {
+    const page = props.context.preview.selectedPage;
+    if (!page) return;
+    const frameList = getFrameList(page);
+    listLength.value = frameList.length;
+}
 onMounted(() => {
+    props.page.watch(genPage);
     if (preview.value) observer.observe(preview.value);
     watchShape();
     page_watcher();
@@ -551,6 +557,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     observer.disconnect();
+    props.page.unwatch(genPage);
     cur_shape.value?.unwatch(page_watcher);
     props.context.preview.unwatch(previewWatcher);
     document.removeEventListener('keydown', onKeyDown);
