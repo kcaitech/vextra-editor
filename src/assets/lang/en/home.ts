@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data";
+import { BlendMode, BorderPosition } from "@kcdesign/data";
 
 export const system = {
     incorrect_input: 'Incorrect input!',
@@ -342,25 +342,7 @@ export const clipboard = {
     'copyAsPNGFailed': 'Failed',
     'copyAsPNG': 'copy as PNG'
 }
-export const opacity = {
-    normal: 'Normal',
-    become_dark: 'Become dark',
-    multiply: 'Multiply',
-    color_deepening: 'Color deepening',
-    become_bright: 'Become bright',
-    filter: 'Filter',
-    color_dodge: 'Color dodge',
-    superpose: 'Superpose',
-    soft_light: 'Soft light',
-    strong_light: 'Strong light',
-    difference: 'Difference',
-    exclude: 'Exclude',
-    hue: 'Hue',
-    saturation: 'Saturation',
-    color: 'Color',
-    lightness: 'Lightness',
-    darken: 'Darken',
-    brighten: 'Brighten'
+export const opacity: any = {
 }
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
@@ -390,3 +372,22 @@ export const date = {
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
+
+opacity[BlendMode.Normal] = "Normal";
+opacity[BlendMode.Darken] = "Become dark";
+opacity[BlendMode.Multiply] = "Multiply";
+opacity[BlendMode.ColorBurn] = "Color deepening";
+opacity[BlendMode.Lighten] = "Become bright";
+opacity[BlendMode.Screen] = "Filter";
+opacity[BlendMode.ColorDodge] = "Color dodge";
+opacity[BlendMode.Overlay] = "Superpose";
+opacity[BlendMode.SoftLight] = "Soft light";
+opacity[BlendMode.HardLight] = "Strong light";
+opacity[BlendMode.Difference] = "Difference";
+opacity[BlendMode.Exclusion] = "Exclude";
+opacity[BlendMode.Hue] = "Hue";
+opacity[BlendMode.Saturation] = "Saturation";
+opacity[BlendMode.Color] = "Color";
+opacity[BlendMode.Luminosity] = "Lightness";
+opacity[BlendMode.PlusDarker] = "Plus darker";
+opacity[BlendMode.PlusLighter] = "Plus lighter";

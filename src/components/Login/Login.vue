@@ -157,8 +157,6 @@ const miniprogramcode = ref<string>('')
 
 async function GetminiProgramCode() {
     const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
-    console.log(perRoute);
-
     if (perRoute.includes('document') || perRoute.includes('pageviews')) {
         if (perRoute.includes('?')) {
             const params = new URLSearchParams(perRoute.split('?')[1]);

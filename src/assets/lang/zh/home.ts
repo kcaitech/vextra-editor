@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data"
+import { BlendMode, BorderPosition } from "@kcdesign/data"
 
 export const system = {
     incorrect_input: '输入有误！',
@@ -344,25 +344,7 @@ export const clipboard = {
     'copyAsPNG': '复制PNG图片'
 
 }
-export const opacity = {
-    normal: '正常',
-    become_dark: '变暗',
-    multiply: '正片叠底',
-    color_deepening: '颜色加深',
-    become_bright: '变亮',
-    filter: '滤色',
-    color_dodge: '颜色减淡',
-    superpose: '叠加',
-    soft_light: '柔光',
-    strong_light: '强光',
-    difference: '差值',
-    exclude: '排除',
-    hue: '色相',
-    saturation: '饱和度',
-    color: '颜色',
-    lightness: '明度',
-    darken: '加暗',
-    brighten: '提亮'
+export const opacity: any = {
 }
 export const message = {
     doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
@@ -394,3 +376,22 @@ export const date = {
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
+
+opacity[BlendMode.Normal] = "正常";
+opacity[BlendMode.Darken] = "变暗";
+opacity[BlendMode.Multiply] = "正片叠底";
+opacity[BlendMode.ColorBurn] = "颜色加深";
+opacity[BlendMode.Lighten] = "变亮";
+opacity[BlendMode.Screen] = "滤色";
+opacity[BlendMode.ColorDodge] = "颜色减淡";
+opacity[BlendMode.Overlay] = "叠加";
+opacity[BlendMode.SoftLight] = "柔光";
+opacity[BlendMode.HardLight] = "强光";
+opacity[BlendMode.Difference] = "差值";
+opacity[BlendMode.Exclusion] = "排除";
+opacity[BlendMode.Hue] = "色相";
+opacity[BlendMode.Saturation] = "饱和度";
+opacity[BlendMode.Color] = "颜色";
+opacity[BlendMode.Luminosity] = "明度";
+opacity[BlendMode.PlusDarker] = "加暗";
+opacity[BlendMode.PlusLighter] = "提亮";

@@ -1,7 +1,7 @@
 import {Color, Shadow,} from "@kcdesign/data"
-import {Transform} from "@kcdesign/data/dist/basic/transform"
-import {ColVector3D, Matrix, Point3D} from "@kcdesign/data/dist/basic/matrix2"
-import {NumberArray2D} from "@kcdesign/data/dist/basic/number_array"
+import {Transform} from "@kcdesign/data"
+import {ColVector3D, Matrix2 as Matrix, Point3D} from "@kcdesign/data"
+import {NumberArray2D} from "@kcdesign/data"
 import {BaseCreator} from "./creator/base"
 
 type RectBox = { // 矩形包围盒

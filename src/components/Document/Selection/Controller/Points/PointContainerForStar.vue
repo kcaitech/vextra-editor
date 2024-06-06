@@ -185,11 +185,11 @@ const countDotMove = (e: MouseEvent) => {
             }
         }
     }
-    if (increase > 15) {
+    if (increase > 5) {
         increase = 0;
         count = 1
     }
-    if (decrease < -15) {
+    if (decrease < -5) {
         decrease = 0;
         count = -1;
     }
