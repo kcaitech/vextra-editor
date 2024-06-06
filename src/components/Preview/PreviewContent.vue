@@ -23,7 +23,6 @@ const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
 const cur_shape = ref<ShapeView>();
 const matrix = new Matrix();
-const reflush = ref(0);
 const listLength = ref(0);
 const viewbox = ref<string>('0 0 0 0');
 const curPage = ref(0);
@@ -68,7 +67,6 @@ function page_watcher() {
     viewbox.value = `0 0 ${frame.width} ${frame.height}`;
     render();
     initMatrix();
-    reflush.value++;
 }
 
 const togglePage = (p: number) => {
