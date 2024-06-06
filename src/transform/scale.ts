@@ -238,7 +238,7 @@ export class ScaleHandler extends TransformHandler {
                 this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
         }
-        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
+        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
             .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         ) : [new Transform()];

@@ -245,21 +245,21 @@ export class RotateHandler extends TransformHandler {
                 this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
         }
-        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在parent坐标系下
-            .addTransform(this.transformCache.get(shape.parent!)!)    // 在Root坐标系下
-            .addTransform(this.selectionTransform.getInverse())          // 在选区坐标系下
+        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
+            .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
+            .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         ) : [new Transform()];
 
         this.cursorBeginAngle = this.cursorAngle; // 光标向量的初始角度
     }
 
-    get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（逆时针为正）（-π ~ π）
+    get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（-π ~ π）
         const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
         const cursorPoint = Point3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot)); // 光标在选区坐标系下的坐标
         const centerPoint = Point3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2); // 选区中点的坐标（在原选区坐标系下）
         const cursorVector = cursorPoint.subtract(centerPoint); // 光标向量
         const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
-        return xVector.angleTo(cursorVector); // 光标向量相对x轴的夹角（逆时针为正）（-π ~ π）
+        return xVector.angleTo(cursorVector); // 光标向量相对x轴的夹角（-π ~ π）
     }
 
     private __execute() {
