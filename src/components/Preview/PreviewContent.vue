@@ -109,7 +109,7 @@ const initMatrix = () => {
     } else {
         viewUpdater.modifyTransformKeepScale();
     }
-    if(is_overlay.value) {
+    if (is_overlay.value) {
         is_overlay.value = false;
     }
 }
@@ -183,18 +183,20 @@ const pageViewDragging = (e: MouseEvent) => {
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
     let dy = e.clientY - downXY.y;
-    const bound = viewUpdater.getBoundingBox(true)!;
-    const matrix = viewUpdater.v_matrix;
-    if (bound.x < 0) {
-        if (-bound.x < dx) dx = -bound.x;
+    const bound = viewUpdater.getBoundingOnView()!;
+
+    const left = bound.left;
+    const top = bound.top;
+    const right = bound.right;
+    const bottom = bound.bottom;
+    if (left < 0) {
+        if (-left < dx) dx = -left;
     }
-    if (bound.x >= 0 && dx > 0) dx = 0;
-    if (bound.y < 0) {
-        if (-bound.y < dy) dy = -bound.y;
+    if (left >= 0 && dx > 0) dx = 0;
+    if (top < 0) {
+        if (-top < dy) dy = -top;
     }
-    if (bound.y >= 0 && dy > 0) dy = 0;
-    const right = bound.x + bound.width;
-    const bottom = bound.y + bound.height;
+    if (top >= 0 && dy > 0) dy = 0;
 
     if (right > root.width) {
         if ((root.width - right) > dx) dx = root.width - right;
@@ -204,6 +206,8 @@ const pageViewDragging = (e: MouseEvent) => {
         if ((root.height - bottom) > dy) dy = root.height - bottom;
     }
     if (bottom <= root.height && dy < 0) dy = 0;
+    const matrix = viewUpdater.v_matrix;
+
     if (isDragging) {
         matrix.trans(dx, dy);
         downXY.x = e.clientX;
