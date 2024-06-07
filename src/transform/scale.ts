@@ -474,7 +474,7 @@ export class ScaleHandler extends TransformHandler {
                 width: this.shapeSizeList[i].width * Math.abs(scale.x),
                 height: this.shapeSizeList[i].height * Math.abs(scale.y),
             });
-            transform.clearScale();
+            transform.clearScaleSize();
         }
 
         // 更新shape

@@ -259,7 +259,9 @@ export class RotateHandler extends TransformHandler {
         const centerPoint = Point3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2); // 选区中点的坐标（在原选区坐标系下）
         const cursorVector = cursorPoint.subtract(centerPoint); // 光标向量
         const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
-        return xVector.angleTo(cursorVector); // 光标向量相对x轴的夹角（-π ~ π）
+        let angle = xVector.angleTo(cursorVector); // 光标向量与x轴的夹角（0 ~ π）
+        if ((xVector.cross(cursorVector) as ColVector3D).z < 0) angle = -angle; // 顺时针方向为负
+        return angle
     }
 
     private __execute() {
