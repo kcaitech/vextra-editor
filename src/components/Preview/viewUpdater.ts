@@ -73,7 +73,6 @@ export class ViewUpdater {
     setAttri(m: Matrix) {
         const shape = this.m_current_view;
         const container = this.m_container;
-
         if (!shape || !container || !this.m_page_card || !this.m_page_card.pageSvg) {
             return;
         }
@@ -372,9 +371,9 @@ export class ViewUpdater {
         }
 
         const matrix = this.getCenterMatrix();
-        if(s) {
+        if (s) {
             console.log(s, 's');
-            
+
             matrix.scale(s);
         }
         this.setAttri(matrix);
@@ -387,7 +386,7 @@ export class ViewUpdater {
         }
         const shape = this.m_current_view;
         const container = this.m_container;
-        
+
         if (!shape || !container || !this.m_page_card) {
             return;
         }

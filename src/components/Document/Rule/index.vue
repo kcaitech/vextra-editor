@@ -690,6 +690,7 @@ onUnmounted(() => {
                 font-size: 10px;
                 position: absolute;
                 bottom: 3px;
+                right: 3px;
 
                 writing-mode: vertical-lr;
             }
