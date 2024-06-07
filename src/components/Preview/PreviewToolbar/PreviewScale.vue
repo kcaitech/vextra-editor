@@ -20,7 +20,7 @@ function watcher(t: any) {
         scale.value = (props.context.preview.scale * 100).toFixed(0);
     } else if (t === Preview.MENU_CHANGE) {
         updateScaleType();
-    } 
+    }
 }
 const showMenu = (e: MouseEvent) => {
     e.stopPropagation();
@@ -73,6 +73,10 @@ onUnmounted(() => {
     border-radius: var(--default-radius);
     box-sizing: border-box;
     padding-left: 8px;
+
+    &:hover {
+        background-color: #4a4a4a;
+    }
 
     span {
         white-space: nowrap;

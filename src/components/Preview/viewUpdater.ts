@@ -72,11 +72,13 @@ export class ViewUpdater {
 
         const frame = shape.frame;
 
-        this.m_page_card.pageSvg.style['transform'] = m.toString();
         const svgEl = (this.m_page_card.pageSvg as Element);
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
+        console.log(m, 'mmm');
+        
+        this.m_page_card!.pageSvg!.style['transform'] = m.toString();
 
         this.m_context.preview.setScale(m.m00);
 

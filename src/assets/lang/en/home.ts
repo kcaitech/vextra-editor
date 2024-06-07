@@ -67,7 +67,7 @@ export const system = {
     grid: 'Pixel grid',
     rule: 'Rule',
     uploadMediaFail: 'Image upload failed',
-    internet:'Go Home'
+    internet: 'Go Home'
 }
 
 export const home = {
@@ -318,8 +318,8 @@ export const login = {
     welcome: 'Welcome',
     name: 'MossDesign',
     describe: 'Online collaborative professional product design software',
-    miniprogram:'MiniProgram',
-    scan_code:'Scan wechat'
+    miniprogram: 'MiniProgram',
+    scan_code: 'Scan wechat'
 }
 
 export const comment = {
@@ -386,7 +386,8 @@ export const preview: any = {
     previous_page: 'Previous page',
     next_page: 'Next page',
     first_page: 'First page',
-    preview: 'Preview'
+    preview: 'Preview',
+    open: 'Opens in Design mode'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

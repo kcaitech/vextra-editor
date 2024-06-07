@@ -27,16 +27,24 @@ const preview = () => {
 
 <style scoped lang="scss">
 .preview {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 4px;
+    margin-left: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    box-sizing: border-box;
 
     >svg {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
     }
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
 }
 </style>

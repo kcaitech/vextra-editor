@@ -103,6 +103,10 @@ onMounted(() => {
 .container {
   margin: auto 0 auto 8px;
 
+  &:hover {
+    filter: brightness(1.1);
+  }
+
   .share {
     cursor: pointer;
     width: 56px;

@@ -389,7 +389,8 @@ export const preview: any = {
     previous_page: '上一页',
     next_page: '下一页',
     first_page: '第一页',
-    preview: '预览'
+    preview: '预览',
+    open: '在设计模式中打开'
 }
 
 attr[BorderPosition.Inner] = '内部';

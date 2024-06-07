@@ -85,9 +85,6 @@ const previewWatcher = (t: number, s?: boolean) => {
             viewUpdater.v_matrix.trans(250, 0);
             viewUpdater.setAttri(viewUpdater.v_matrix)
         }
-        if (pageCard.value && pageCard.value.pageSvg) {
-            viewUpdater.modifyTransform();
-        }
     } else if (t === Preview.BEFORE_PAGE) {
         togglePage(-1);
     } else if (t === Preview.NEXT_PAGE) {
@@ -145,9 +142,6 @@ watch(() => props.showTop, (v) => {
     } else {
         viewUpdater.v_matrix.trans(0, 46);
         viewUpdater.setAttri(viewUpdater.v_matrix);
-    }
-    if (pageCard.value && pageCard.value.pageSvg) {
-        initMatrix()
     }
 })
 
@@ -292,7 +286,7 @@ const onMouseLeave = () => {
 
 // ====divide====
 const viewUpdater = new ViewUpdater(props.context);
-
+const is_overlay = ref(true);
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
 
@@ -302,6 +296,7 @@ onMounted(() => {
     nextTick(() => {
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value);
+        is_overlay.value = false;
     })
 
     if (preview.value) {
@@ -321,15 +316,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-        <PageCard
-            v-if="cur_shape"
-            ref="pageCard"
-            background-color="transparent"
-            :data="(props.page as PageView)"
-            :context="context"
-            :shapes="[cur_shape]"
-        />
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
+            :context="context" :shapes="[cur_shape]" />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
@@ -341,11 +330,14 @@ onUnmounted(() => {
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
     </div>
+    <div class="overlay" v-if="is_overlay"></div>
 </template>
 
 <style scoped lang="scss">
 .preview_container {
     position: relative;
+    height: 100%;
+    width: 100%;
     background-color: black;
 
     .toggle {
@@ -397,5 +389,14 @@ onUnmounted(() => {
 .disable {
     opacity: 0.5;
     cursor: not-allowed !important;
+}
+
+.overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background-color: black;
 }
 </style>

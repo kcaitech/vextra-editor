@@ -62,9 +62,11 @@ onUnmounted(() => {
 <template>
     <div class="user-info" @dblclick.stop>
         <UserAvatar :context="props.context"></UserAvatar>
-        <div class="open_fill" @click="openFill">
-            <span>{{t('home.open_local_file')}}</span>
-        </div>
+        <Tooltip :content="t('preview.open')">
+            <div class="open_fill" @click="openFill">
+                <span>{{ t('home.open_local_file') }}</span>
+            </div>
+        </Tooltip>
         <Share :context="props.context"></Share>
         <Scale :context="props.context"></Scale>
         <Tooltip :content="isFull ? t('home.exit_full') : t('home.full')">
@@ -93,6 +95,7 @@ onUnmounted(() => {
         padding: 6px;
         border-radius: 4px;
         border: 1px solid #f5f5f5;
+        cursor: pointer;
     }
 
     .full {
@@ -101,7 +104,12 @@ onUnmounted(() => {
         justify-content: center;
         width: 32px;
         height: 32px;
+        border-radius: 4px;
         cursor: pointer;
+
+        &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
 
         svg {
             width: 18px;
