@@ -657,10 +657,11 @@ export function get_borders_side(shapes: ShapeView[], index: number): false | Si
     }
 }
 
-export function get_blur(shapes: ShapeView[]): Blur | 'mixed' {
-    const shape = shapes[0];
+export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' {
     const has_blur_shapes = shapes.filter(shape => shape.blur);
+    if(has_blur_shapes.length === 0) return undefined;
     if (has_blur_shapes.length !== shapes.length) return 'mixed';
+    const shape = has_blur_shapes[0];
 
     const firstBlur = shape.blur!;
     for (let i = 1; i < shapes.length; i++) {
