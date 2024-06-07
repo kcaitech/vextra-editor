@@ -126,7 +126,6 @@ export class ViewUpdater {
             return;
         }
 
-
         const frame = shape.frame;
         const m = new Matrix(shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
@@ -369,13 +368,16 @@ export class ViewUpdater {
 
     modifyTransformKeepScale() {
         const scale = this.getScale();
+        if (scale === 1) {
+            return this.modifyTransform();
+        }
         const shape = this.m_current_view;
         const container = this.m_container;
         if (!shape || !container || !this.m_page_card) {
             return;
         }
-        const rootBox = container.getBoundingClientRect();
 
+        const rootBox = container.getBoundingClientRect();
 
         const matrix = this.getCenterMatrix();
         const rcx = rootBox.width / 2;
