@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, PageView, Shape, XYsBounding } from '@kcdesign/data';
+import { PageView, Shape, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
-import { is_mac } from '@/utils/common';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 
 const props = defineProps<{
@@ -15,14 +14,10 @@ const props = defineProps<{
     showTop: boolean
 }>();
 type PCard = InstanceType<typeof PageCard>
-const width = ref<number>(0);
-const height = ref<number>(0);
 const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
 const cur_shape = ref<Shape>();
-const matrix = new Matrix();
 const listLength = ref(0);
-const viewbox = ref<string>('0 0 0 0');
 const curPage = ref(0);
 const pageCard = ref<PCard>();
 const spacePressed = ref<boolean>(false);
@@ -43,11 +38,6 @@ function page_watcher() {
 
     const index = frameList.findIndex(item => item.id === shape.id);
     curPage.value = index + 1;
-
-    const frame = shape.boundingBox();
-    width.value = frame.width;
-    height.value = frame.height;
-    viewbox.value = `0 0 ${frame.width} ${frame.height}`;
 
     initMatrix();
 }
@@ -89,9 +79,11 @@ const previewWatcher = (t: number, s?: boolean) => {
         }
     } else if (t === Preview.NAVI_VISIBLE) {
         if (props.context.preview.naviState) {
-            matrix.trans(-250, 0);
+            viewUpdater.v_matrix.trans(-250, 0);
+            viewUpdater.setAttri(viewUpdater.v_matrix)
         } else {
-            matrix.trans(250, 0);
+            viewUpdater.v_matrix.trans(250, 0);
+            viewUpdater.setAttri(viewUpdater.v_matrix)
         }
         if (pageCard.value && pageCard.value.pageSvg) {
             viewUpdater.modifyTransform();
@@ -131,45 +123,11 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.preview.selectedShape;
     if (!shape) return;
-    const {ctrlKey, metaKey} = e;
+    const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         viewUpdater.scale(e);
     } else {
         viewUpdater.trans(e);
-    }
-}
-
-const MAX_STEP = 120;
-const wheelTrans = (e: WheelEvent) => {
-    if (!preview.value) return;
-    const root = preview.value.getBoundingClientRect();
-    let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
-    let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
-    if (e.shiftKey && !is_mac() && e.deltaX < 1) {
-        stepx = stepy;
-        stepy = 0;
-    }
-    const bound = canDragging()!;
-    if (bound.left < 0) {
-        if (bound.left > stepx) stepx = bound.left;
-    }
-    if (bound.left >= 0 && stepx < 0) stepx = 0;
-    if (bound.top < 0) {
-        if (bound.top > stepy) stepy = bound.top;
-    }
-    if (bound.top >= 0 && stepy < 0) stepy = 0;
-    if (bound.right > root.width) {
-        if ((bound.right - root.width) < stepx) stepx = bound.right - root.width;
-    }
-    if (bound.right <= root.width && stepx > 0) stepx = 0;
-    if (bound.bottom > root.height) {
-        if ((bound.bottom - root.height) < stepy) stepy = bound.bottom - root.height;
-    }
-    if (bound.bottom <= root.height && stepy > 0) stepy = 0;
-
-    matrix.trans(-stepx, -stepy);
-    if (pageCard.value && pageCard.value.pageSvg) {
-        viewUpdater.modifyTransform();
     }
 }
 
@@ -182,9 +140,11 @@ const observer = new ResizeObserver(initMatrix);
 
 watch(() => props.showTop, (v) => {
     if (v) {
-        matrix.trans(0, -46);
+        viewUpdater.v_matrix.trans(0, -46);
+        viewUpdater.setAttri(viewUpdater.v_matrix);
     } else {
-        matrix.trans(0, 46);
+        viewUpdater.v_matrix.trans(0, 46);
+        viewUpdater.setAttri(viewUpdater.v_matrix);
     }
     if (pageCard.value && pageCard.value.pageSvg) {
         initMatrix()
@@ -194,7 +154,7 @@ watch(() => props.showTop, (v) => {
 const isMenu = ref(false);
 const top = ref(0);
 const left = ref(0);
-let downXY = {x: 0, y: 0};
+let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
     const shape = props.context.preview.selectedShape;
@@ -231,23 +191,27 @@ const pageViewDragging = (e: MouseEvent) => {
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
     let dy = e.clientY - downXY.y;
-    const bound = canDragging()!;
-    if (bound.left < 0) {
-        if (-bound.left < dx) dx = -bound.left;
+    const bound = viewUpdater.getBoundingBox(true)!;
+    const matrix = viewUpdater.v_matrix;
+    if (bound.x < 0) {
+        if (-bound.x < dx) dx = -bound.x;
     }
-    if (bound.left >= 0 && dx > 0) dx = 0;
-    if (bound.top < 0) {
-        if (-bound.top < dy) dy = -bound.top;
+    if (bound.x >= 0 && dx > 0) dx = 0;
+    if (bound.y < 0) {
+        if (-bound.y < dy) dy = -bound.y;
     }
-    if (bound.top >= 0 && dy > 0) dy = 0;
-    if (bound.right > root.width) {
-        if ((root.width - bound.right) > dx) dx = root.width - bound.right;
+    if (bound.y >= 0 && dy > 0) dy = 0;
+    const right = bound.x + bound.width;
+    const bottom = bound.y + bound.height;
+
+    if (right > root.width) {
+        if ((root.width - right) > dx) dx = root.width - right;
     }
-    if (bound.right <= root.width && dx < 0) dx = 0;
-    if (bound.bottom > root.height) {
-        if ((root.height - bound.bottom) > dy) dy = root.height - bound.bottom;
+    if (right <= root.width && dx < 0) dx = 0;
+    if (bottom > root.height) {
+        if ((root.height - bottom) > dy) dy = root.height - bottom;
     }
-    if (bound.bottom <= root.height && dy < 0) dy = 0;
+    if (bottom <= root.height && dy < 0) dy = 0;
     if (isDragging) {
         matrix.trans(dx, dy);
         downXY.x = e.clientX;
@@ -264,19 +228,8 @@ const pageViewDragging = (e: MouseEvent) => {
     if (preview.value) {
         preview.value.style.cursor = 'grabbing';
     }
-    if (pageCard.value && pageCard.value.pageSvg) {
-        // todo drag
-        viewUpdater.modifyTransform();
-    }
-}
 
-const canDragging = () => {
-    const shape = props.context.preview.selectedShape;
-    if (!shape) return;
-    const frame = shape.boundingBox();
-    const xy = matrix.computeCoord(frame.x, frame.y);
-    const wh = matrix.computeCoord(frame.x + frame.width, frame.y + frame.height);
-    return {top: xy.y, left: xy.x, right: wh.x, bottom: wh.y}
+    viewUpdater.setAttri(matrix);
 }
 
 function onMouseUp(e: MouseEvent) {
@@ -298,6 +251,7 @@ const isSpacePressed = () => {
     if (!preview.value || !shape) return;
     const root = preview.value.getBoundingClientRect();
     const frame = shape.frame;
+    const matrix = viewUpdater.v_matrix;
     const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => matrix.computeCoord(p[0], p[1]));
     const box = XYsBounding(points);
     const width = box.right - box.left;

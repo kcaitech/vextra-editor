@@ -25,6 +25,10 @@ export class ViewUpdater {
         this.m_context = context;
     }
 
+    get v_matrix() {
+        return this.matrix;
+    }
+
     // 停止监听播放对象内部元素(子孙元素)变化
     private m_stop_last_bubble: () => void = () => {
     };
@@ -58,7 +62,7 @@ export class ViewUpdater {
     private updater4Page(...args: any[]) {
     }
 
-    private setAttri(m: Matrix) {
+     setAttri(m: Matrix) {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -75,6 +79,8 @@ export class ViewUpdater {
         svgEl.setAttribute('height', `${frame.height}`);
 
         this.m_context.preview.setScale(m.m00);
+
+        this.matrix.reset(m);
     }
 
     private getCenterMatrix() {
@@ -112,7 +118,7 @@ export class ViewUpdater {
         return transformMatrix;
     }
 
-    private getBoundingBox() {
+    getBoundingBox(toClient = false) {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -120,9 +126,14 @@ export class ViewUpdater {
             return;
         }
 
+
         const frame = shape.frame;
         const m = new Matrix(shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
+
+        if (toClient) {
+            m.multiAtLeft(this.matrix);
+        }
 
         const points = [
             m.computeCoord2(0, 0),
@@ -133,7 +144,7 @@ export class ViewUpdater {
 
         const box = XYsBounding(points);
 
-        return {x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top};
+        return { x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top };
     }
 
     private __update(...args: any[]) {
@@ -415,13 +426,33 @@ export class ViewUpdater {
             return;
         }
 
+        const root = container.getBoundingClientRect();
         let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
         let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
-
         if (e.shiftKey && !is_mac() && e.deltaX < 1) {
             stepx = stepy;
             stepy = 0;
         }
+        const bound = this.getBoundingBox(true)!;
+
+        if (bound.x < 0) {
+            if (bound.x > stepx) stepx = bound.x;
+        }
+        if (bound.x >= 0 && stepx < 0) stepx = 0;
+        if (bound.y < 0) {
+            if (bound.y > stepy) stepy = bound.y;
+        }
+        if (bound.y >= 0 && stepy < 0) stepy = 0;
+        const right = bound.x + bound.width;
+        const bottom = bound.y + bound.height;
+        if (right > root.width) {
+            if ((right - root.width) < stepx) stepx = right - root.width;
+        }
+        if (right <= root.width && stepx > 0) stepx = 0;
+        if (bottom > root.height) {
+            if ((bottom - root.height) < stepy) stepy = bottom - root.height;
+        }
+        if (bottom <= root.height && stepy > 0) stepy = 0;
 
         this.matrix.trans(-stepx, -stepy);
 
