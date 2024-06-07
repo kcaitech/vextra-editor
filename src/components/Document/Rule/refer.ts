@@ -25,7 +25,7 @@ export function genPath(start: XY, end: XY) {
 }
 
 export function formatNumber(v: number) {
-    return Math.abs(v % 1) > 0.01 ? v.toFixed(2) : Math.round(v);
+    return Math.abs(v % 1) > 0.001 ? v.toFixed(2) : Math.round(v);
 }
 
 export class ReferLineHandler extends TransformHandler {
@@ -69,6 +69,7 @@ export class ReferLineHandler extends TransformHandler {
 
             // 默认在page下建立新参考线
             this.m_index = this.api.create(this.m_axis, offset);
+            this.context.tool.referSelection.modifyHoveredIndex(this.page, this.m_index);
         }
 
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
@@ -276,7 +277,10 @@ export class ReferLineHandler extends TransformHandler {
         const result = this.api.migrate(this.m_current_env, this.m_index, env, targetOffset);
 
         this.m_current_env = result.env;
-        this.m_index = result.index
+        this.m_index = result.index;
+        console.log('__migrate__', result.env.name, result.index);
+        this.context.tool.referSelection.modifyHoveredIndex(result.env, result.index);
+
         this.context.assist.set_collect_target_direct(this.m_current_env, true, true);
     }
 

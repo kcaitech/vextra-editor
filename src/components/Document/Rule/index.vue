@@ -188,6 +188,7 @@ function downHor(event: MouseEvent) {
 function moveHor(event: MouseEvent) {
     if (isDrag) {
         referLineHandler?.modifyOffset(event);
+        referLineSelection.updateHoveredSelection(hovered.value.env.id);
     } else {
         const y = props.context.workspace.getContentXY(event).y;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
@@ -216,6 +217,7 @@ function downVer(event: MouseEvent) {
 function moveVer(event: MouseEvent) {
     if (isDrag) {
         referLineHandler?.modifyOffset(event);
+        referLineSelection.updateHoveredSelection(hovered.value.env.id);
     } else {
         const x = props.context.workspace.getContentXY(event).x;
         const enoughDelta = Math.hypot(event.x - downXY.x, event.x - downXY.y) > 5;
@@ -245,7 +247,7 @@ function clear() {
         selected.value.axis = hovered.value.axis;
         selected.value.offset = hovered.value.offset;
         selected.value.transform = hovered.value.transform;
-
+        selected.value.desc = hovered.value.desc;
         // 清除图层选区
         props.context.selection.resetSelectShapes();
     }
@@ -314,6 +316,9 @@ function modifyOffset(event: MouseEvent) {
     }
 
     if (isDrag) {
+        if (!selected.value.valid) {
+            hovered.value.valid = true;
+        }
         referLineHandler.modifyOffset(event);
         referLineSelection.updateHoveredSelection(hovered.value.env.id);
     } else {
@@ -464,7 +469,7 @@ onUnmounted(() => {
             <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'"
                @mousedown="downSelect">
                 <text v-if="selected.path.length" class="offset-desc" :style="{transform: selected.transform }">
-                    {{ selected.offset }}
+                    {{ selected.desc }}
                 </text>
                 <path
                     v-for="(p, i) in selected.path"
