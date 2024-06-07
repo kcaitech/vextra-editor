@@ -29,6 +29,14 @@ export class ViewUpdater {
         return this.matrix;
     }
 
+    get pageCard() {
+        return this.m_page_card;
+    }
+
+    setPageCard(card: PCard | undefined) {
+        this.m_page_card = card;
+    }
+
     // 停止监听播放对象内部元素(子孙元素)变化
     private m_stop_last_bubble: () => void = () => {
     };
@@ -66,13 +74,13 @@ export class ViewUpdater {
         const shape = this.m_current_view;
         const container = this.m_container;
 
-        if (!shape || !container || !this.m_page_card) {
+        if (!shape || !container || !this.m_page_card || !this.m_page_card.pageSvg) {
             return;
         }
 
         const frame = shape.frame;
 
-        const svgEl = (this.m_page_card.pageSvg as HTMLElement);
+        const svgEl = (this.m_page_card.pageSvg as SVGSVGElement);
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
@@ -168,7 +176,7 @@ export class ViewUpdater {
     }
 
     private __update(...args: any[]) {
-        this.m_page_card?.repaint() // 执行PreviewPageCard内部重绘函数
+        (this.m_page_card as any)?.repaint() // 执行PreviewPageCard内部重绘函数
 
         if (args.includes('frame') || args.includes('rotation')) {
             this.modifyTransform();
@@ -376,14 +384,18 @@ export class ViewUpdater {
     /**
      * @description 修改播放对象的transform(原比例);
      */
-    modifyTransform() {
+    modifyTransform(s?: number) {
         const shape = this.m_current_view;
         const container = this.m_container;
+
         if (!shape || !container || !this.m_page_card) {
             return;
         }
 
         const matrix = this.getCenterMatrix();
+        if(s) {
+            matrix.scale(s);
+        }
         this.setAttri(matrix);
     }
 
@@ -391,6 +403,7 @@ export class ViewUpdater {
         const scale = this.getScale();
         const shape = this.m_current_view;
         const container = this.m_container;
+        
         if (!shape || !container || !this.m_page_card) {
             return;
         }

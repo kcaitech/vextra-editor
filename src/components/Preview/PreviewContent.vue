@@ -90,9 +90,9 @@ const previewWatcher = (t: number, s?: boolean) => {
         togglePage(1);
     } else if (t === Preview.SCALE_CHANGE) {
         if (s) {
-            page_scale(props.context.preview.scale + 0.1);
+            viewUpdater.modifyTransform(0.1);
         } else {
-            page_scale(props.context.preview.scale - 0.1);
+            viewUpdater.modifyTransform(-0.1);
         }
     }
 }
@@ -287,12 +287,11 @@ const is_overlay = ref(true);
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
 
-    page_watcher();
-
     // 等cur_shape触发pageCard的挂载
+    page_watcher();
     nextTick(() => {
         // 然后初始化视图渲染管理器
-        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value);
+        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value as any);
     })
 
     if (preview.value) {
@@ -312,9 +311,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-                  :context="context" :shapes="[cur_shape]"/>
+            :context="context" :shapes="[cur_shape]" />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
