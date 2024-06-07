@@ -19,7 +19,7 @@ export class ViewUpdater {
     private matrix: Matrix = new Matrix();
     private m_container: HTMLDivElement | undefined; // 整个黑盒子
 
-    private m_image_map: Map<string, string> = new Map<string, string>();
+    private m_image_map: Map<string, string> = new Map<string, string>(); // todo 缓存，使列表流畅
 
     constructor(context: Context) {
         this.m_context = context;
@@ -91,26 +91,6 @@ export class ViewUpdater {
         this.matrix.reset(m);
     }
 
-    beCenterView() {
-        const shape = this.m_current_view;
-        const container = this.m_container;
-
-        if (!shape || !container || !this.m_page_card) {
-            return;
-        }
-
-        const box = this.getBoundingBox(true)!;
-        const cx = box.x + box.width / 2;
-        const cy = box.y + box.height / 2;
-
-        const root = container.getBoundingClientRect();
-        const delX = root.width / 2 - cx;
-        const delY = root.height / 2 - cy;
-
-        this.matrix.trans(delX, delY);
-        this.setAttri(this.matrix);
-    }
-
     private getCenterMatrix() {
         const shape = this.m_current_view;
         const container = this.m_container;
@@ -153,7 +133,6 @@ export class ViewUpdater {
         if (!shape || !container || !this.m_page_card) {
             return;
         }
-
 
         const frame = shape.frame;
         const m = new Matrix(shape.matrix2Parent());
@@ -401,14 +380,17 @@ export class ViewUpdater {
 
     modifyTransformKeepScale() {
         const scale = this.getScale();
+        if (scale === 1) {
+            return this.modifyTransform();
+        }
         const shape = this.m_current_view;
         const container = this.m_container;
         
         if (!shape || !container || !this.m_page_card) {
             return;
         }
-        const rootBox = container.getBoundingClientRect();
 
+        const rootBox = container.getBoundingClientRect();
 
         const matrix = this.getCenterMatrix();
         const rcx = rootBox.width / 2;
@@ -474,6 +456,23 @@ export class ViewUpdater {
         this.m_context.preview.setScaleMenu(undefined);
     }
 
+    getBoundingOnView() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const frame = shape.frame;
+        const m = this.matrix;
+        const points = [
+            m.computeCoord2(0, 0),
+            m.computeCoord2(frame.width, 0),
+            m.computeCoord2(frame.width, frame.height),
+            m.computeCoord2(0, frame.height)
+        ];
+        return XYsBounding(points);
+    }
+
     trans(e: WheelEvent) {
         const MAX_STEP = 120;
 
@@ -490,18 +489,23 @@ export class ViewUpdater {
             stepx = stepy;
             stepy = 0;
         }
-        const bound = this.getBoundingBox(true)!;
 
-        if (bound.x < 0) {
-            if (bound.x > stepx) stepx = bound.x;
+        const bound = this.getBoundingOnView()!;
+
+        const left = bound.left;
+        const top = bound.top;
+        const right = bound.right;
+        const bottom = bound.bottom;
+
+        if (left < 0) {
+            if (left > stepx) stepx = left;
         }
-        if (bound.x >= 0 && stepx < 0) stepx = 0;
-        if (bound.y < 0) {
-            if (bound.y > stepy) stepy = bound.y;
+        if (left >= 0 && stepx < 0) stepx = 0;
+        if (top < 0) {
+            if (top > stepy) stepy = top;
         }
-        if (bound.y >= 0 && stepy < 0) stepy = 0;
-        const right = bound.x + bound.width;
-        const bottom = bound.y + bound.height;
+        if (top >= 0 && stepy < 0) stepy = 0;
+
         if (right > root.width) {
             if ((right - root.width) < stepx) stepx = right - root.width;
         }
