@@ -442,9 +442,8 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.user.unwatch(userWatcher);
     props.page.unwatch(pageWatcher);
-
+    referLineSelection.removeScout();
     referUnderContainerRenderer.clearContainerWatcher();
-
     document.removeEventListener('keydown', keydown);
 })
 </script>

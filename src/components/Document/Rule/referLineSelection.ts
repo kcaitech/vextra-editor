@@ -528,4 +528,8 @@ export class ReferLineSelection {
         this.m_hovered_guide.valid = false;
         this.m_hovered_guide.id = '-1';
     }
+
+    removeScout() {
+        this.m_scout.remove();
+    }
 }

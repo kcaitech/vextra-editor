@@ -119,10 +119,11 @@ export function scout(context: Context): Scout {
 
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
+        console.log('__REMOVE_', s);
         if (s) document.body.removeChild(s);
     }
 
-    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth}
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -850,4 +851,4 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
     }
 }
 
-const set_env = throttle(_set_env, 200, {leading: true});
+const set_env = throttle(_set_env, 200, { leading: true });
