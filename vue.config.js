@@ -62,6 +62,8 @@ var configureWebpack = (config) => {
         "fs": false,
     }
 
+    config.resolve.alias["vue-i18n"] = "vue-i18n/dist/vue-i18n.esm-browser.prod.js";
+
     config.module.rules.push(
         {
             test: /\.svg?$/,

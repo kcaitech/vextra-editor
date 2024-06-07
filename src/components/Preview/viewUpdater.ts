@@ -73,7 +73,6 @@ export class ViewUpdater {
     setAttri(m: Matrix) {
         const shape = this.m_current_view;
         const container = this.m_container;
-
         if (!shape || !container || !this.m_page_card || !this.m_page_card.pageSvg) {
             return;
         }
@@ -363,7 +362,7 @@ export class ViewUpdater {
     /**
      * @description 修改播放对象的transform(原比例);
      */
-    modifyTransform(s?: number) {
+    modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -372,9 +371,6 @@ export class ViewUpdater {
         }
 
         const matrix = this.getCenterMatrix();
-        if (s) {
-            matrix.scale(matrix.m00 + s);
-        }
         this.setAttri(matrix);
     }
 

@@ -42,6 +42,33 @@ function page_watcher() {
     initMatrix();
 }
 
+function changePage() {
+    const page = props.context.preview.selectedPage;
+    if (!page) return;
+
+    const frameList = getFrameList(page);
+
+    const shape = props.context.preview.selectedShape || frameList[0];
+    if (!shape) {
+        return;
+    }
+
+    cur_shape.value = shape;
+
+    viewUpdater.atPage(page.data);
+    viewUpdater.atTarget(shape);
+
+    listLength.value = frameList.length;
+
+    const index = frameList.findIndex(item => item.id === shape.id);
+    curPage.value = index + 1;
+
+    nextTick(() => {
+        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value as any);
+        initMatrix();
+    });
+}
+
 const togglePage = (p: number) => {
     const shape = props.context.preview.selectedShape;
     const page = props.context.preview.selectedPage;
@@ -60,11 +87,9 @@ const togglePage = (p: number) => {
 
 const previewWatcher = (t: number, s?: boolean) => {
     if (t === Preview.CHANGE_PAGE) {
-        page_watcher();
-        viewUpdater.atTarget(props.context.preview.selectedShape);
+        changePage();
     } else if (t === Preview.CHANGE_SHAPE) {
         page_watcher();
-        viewUpdater.atTarget(props.context.preview.selectedShape);
     } else if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
@@ -315,9 +340,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-            :context="context" :shapes="[cur_shape]" />
+                  :context="context" :shapes="[cur_shape]"/>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

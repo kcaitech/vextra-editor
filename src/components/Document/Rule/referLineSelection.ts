@@ -65,10 +65,6 @@ export class ReferLineSelection {
         return this.__search();
     }
 
-    searchPassive() {
-        return this.__search();
-    }
-
     private __search() {
         const isT = this.isPointInStroke.bind(this);
 
@@ -237,7 +233,7 @@ export class ReferLineSelection {
 
         const offset = gui.offset;
         selected.offset = gui.offset;
-
+        selected.desc = formatNumber(selected.offset);
         if (env.type === ShapeType.Page) {
             const root = this.m_context.workspace.root;
             const matrix = this.m_context.workspace.matrix
@@ -470,6 +466,16 @@ export class ReferLineSelection {
         hovered.valid = false;
     }
 
+    modifyHoveredIndex(env: ShapeView, index: number) {
+        this.m_hovered_guide.valid = true;
+        this.m_hovered_guide.env = env;
+        this.m_hovered_guide.index = index;
+    }
+
+    get hovered() {
+        return this.m_hovered_guide;
+    }
+
     select() {
         const selected = this.m_selected_guide;
         const hovered = this.m_hovered_guide;
@@ -521,5 +527,9 @@ export class ReferLineSelection {
     resetHovered() {
         this.m_hovered_guide.valid = false;
         this.m_hovered_guide.id = '-1';
+    }
+
+    removeScout() {
+        this.m_scout.remove();
     }
 }
