@@ -372,10 +372,8 @@ export class ViewUpdater {
         }
 
         const matrix = this.getCenterMatrix();
-        if(s) {
-            console.log(s, 's');
-            
-            matrix.scale(s);
+        if (s) {
+            matrix.scale(matrix.m00 + s);
         }
         this.setAttri(matrix);
     }
@@ -387,7 +385,7 @@ export class ViewUpdater {
         }
         const shape = this.m_current_view;
         const container = this.m_container;
-        
+
         if (!shape || !container || !this.m_page_card) {
             return;
         }
@@ -452,6 +450,30 @@ export class ViewUpdater {
             matrix.scale(__scale);
             matrix.trans(rcx, rcy);
         }
+
+        this.setAttri(matrix);
+
+        this.m_context.preview.setScaleMenu(undefined);
+    }
+
+    keyScale(s: number) {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const rootBox = container.getBoundingClientRect();
+
+        const rcx = rootBox.width / 2;
+        const rcy = rootBox.height / 2;
+
+        const matrix = this.matrix;
+
+        matrix.reset(this.getCenterMatrix());
+        matrix.trans(-rcx, -rcy);
+        matrix.scale(s > 0 ? Math.min(this.m_context.preview.scale + s, 256) : Math.max(this.m_context.preview.scale + s, 0.02));
+        matrix.trans(rcx, rcy);
 
         this.setAttri(matrix);
 
