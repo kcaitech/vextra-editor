@@ -107,7 +107,7 @@ const initMatrix = () => {
     } else if (type === ScaleType.Actual) {
         viewUpdater.modifyTransform();
     } else {
-        // todo
+        viewUpdater.modifyTransformKeepScale();
     }
     if(is_overlay.value) {
         is_overlay.value = false;
@@ -312,9 +312,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-            :context="context" :shapes="[cur_shape]" />
+                  :context="context" :shapes="[cur_shape]"/>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

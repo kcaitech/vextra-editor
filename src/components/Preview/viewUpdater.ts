@@ -72,15 +72,11 @@ export class ViewUpdater {
 
         const frame = shape.frame;
 
-        const svgEl = (this.m_page_card.pageSvg as Element);
+        const svgEl = (this.m_page_card.pageSvg as HTMLElement);
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
-        console.log(m, 'mmm');
-        
-        this.m_page_card!.pageSvg!.style['transform'] = m.toString();
-
-        console.log('__m__', m.toString(), this.getScale(m));
+        svgEl.style['transform'] = m.toString();
 
         this.m_context.preview.setScale(this.getScale(m));
 
@@ -332,7 +328,7 @@ export class ViewUpdater {
      * @description 切换播放对象
      */
     atTarget(shape?: Shape) {
-        console.log("__TARGET__", shape?.name);
+        // console.log("__TARGET__", shape?.name);
 
         if (shape && (shape.id === this.m_current_view?.id)) {
             // 无效切换
@@ -360,7 +356,7 @@ export class ViewUpdater {
      * @description 切换页面
      */
     atPage(page?: Page) {
-        console.log("__PAGE__", page?.name);
+        // console.log("__PAGE__", page?.name);
         if (page && (page.id === this.m_current_page?.id)) {
             // 无效切换
             return;
@@ -388,6 +384,26 @@ export class ViewUpdater {
         }
 
         const matrix = this.getCenterMatrix();
+        this.setAttri(matrix);
+    }
+
+    modifyTransformKeepScale() {
+        const scale = this.getScale();
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const rootBox = container.getBoundingClientRect();
+
+
+        const matrix = this.getCenterMatrix();
+        const rcx = rootBox.width / 2;
+        const rcy = rootBox.height / 2;
+        matrix.trans(-rcx, -rcy);
+        matrix.scale(scale);
+        matrix.trans(rcx, rcy);
+
         this.setAttri(matrix);
     }
 
