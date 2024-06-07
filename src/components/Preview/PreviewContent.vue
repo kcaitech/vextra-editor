@@ -109,7 +109,7 @@ const initMatrix = () => {
     } else {
         viewUpdater.modifyTransformKeepScale();
     }
-    if (is_overlay.value) {
+    if (is_overlay.value && pageCard.value) {
         is_overlay.value = false;
     }
 }
