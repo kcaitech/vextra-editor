@@ -18,6 +18,7 @@ export interface Scout {
     isPointInShape: (shape: ShapeView, point: PageXY) => boolean
     isPointInPath: (d: string, point: PageXY) => boolean
     isPointInStroke: (d: string, point: PageXY) => boolean
+    isPointInStrokeByWidth: (d: string, point: PageXY, width: number) => boolean
     isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
 
@@ -109,12 +110,19 @@ export function scout(context: Context): Scout {
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
 
+    function isPointInStrokeByWidth(d: string, point: XY, width: number): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        path.setAttributeNS(null, 'stroke-width', `${width}`);
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+    }
+
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
 
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
+    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth}
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -842,4 +850,4 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
     }
 }
 
-const set_env = throttle(_set_env, 200, { leading: true });
+const set_env = throttle(_set_env, 200, {leading: true});

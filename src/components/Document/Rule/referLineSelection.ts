@@ -57,7 +57,7 @@ export class ReferLineSelection {
     private isPointInStroke(point: XY, start: XY, end: XY) {
         const pathStr = `M${start.x} ${start.y} L${end.x} ${end.y}`;
 
-        return this.m_scout.isPointInStroke(pathStr, point);
+        return this.m_scout.isPointInStrokeByWidth(pathStr, point, 14 / this.m_context.workspace.matrix.m00);
     }
 
     search(xy: XY) {
@@ -77,7 +77,7 @@ export class ReferLineSelection {
 
         const __xy = ctx.workspace.matrix.computeCoord3(xy);
         const ctrlPath = ctx.workspace.ctrlPath;
-        if (this.m_scout.isPointInStroke(ctrlPath, __xy)) {
+        if (this.m_scout.isPointInStrokeByWidth(ctrlPath, __xy, 14 / ctx.workspace.matrix.m00)) {
             return false;
         }
 

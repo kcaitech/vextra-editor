@@ -2,8 +2,7 @@ import { Matrix, Page, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
-import { ScaleType } from "@/context/preview";
-import { XYsBounding } from "@/utils/common";
+import { is_mac, XYsBounding } from "@/utils/common";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -24,6 +23,10 @@ export class ViewUpdater {
 
     constructor(context: Context) {
         this.m_context = context;
+    }
+
+    get v_matrix() {
+        return this.matrix;
     }
 
     // 停止监听播放对象内部元素(子孙元素)变化
@@ -59,7 +62,7 @@ export class ViewUpdater {
     private updater4Page(...args: any[]) {
     }
 
-    private setAttri(m: Matrix) {
+     setAttri(m: Matrix) {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -76,6 +79,8 @@ export class ViewUpdater {
         svgEl.setAttribute('height', `${frame.height}`);
 
         this.m_context.preview.setScale(m.m00);
+
+        this.matrix.reset(m);
     }
 
     private getCenterMatrix() {
@@ -113,7 +118,7 @@ export class ViewUpdater {
         return transformMatrix;
     }
 
-    private getBoundingBox() {
+    getBoundingBox(toClient = false) {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -121,9 +126,14 @@ export class ViewUpdater {
             return;
         }
 
+
         const frame = shape.frame;
         const m = new Matrix(shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
+
+        if (toClient) {
+            m.multiAtLeft(this.matrix);
+        }
 
         const points = [
             m.computeCoord2(0, 0),
@@ -238,7 +248,6 @@ export class ViewUpdater {
         }
         const box = this.getBoundingBox()!;
         const boxWidth = box.width;
-        const boxHeight = box.height;
 
         const root = container.getBoundingClientRect();
         const rootWidth = root.width;
@@ -246,7 +255,9 @@ export class ViewUpdater {
 
         const ratio = boxWidth / rootWidth;
 
-        if (ratio < 1) return;
+        if (ratio < 1) {
+            return this.modifyTransform();
+        }
 
         const matrix = this.getCenterMatrix();
         matrix.trans(-rootWidth / 2, -rootHeight / 2);
@@ -350,5 +361,101 @@ export class ViewUpdater {
 
         const matrix = this.getCenterMatrix();
         this.setAttri(matrix);
+    }
+
+    private MAX = 25600;
+    private MIN = 2;
+
+    scale(e: WheelEvent) {
+        const MAX = this.MAX;
+        const MIN = this.MIN;
+
+        let scale_delta = 1.3;
+        if (Math.abs(e.deltaY) < 16 && Math.abs(e.deltaX) < 16) {
+            scale_delta = 1.12;
+        }
+        const scale = Number((this.m_context.preview.scale * 100).toFixed(0));
+        let scale_delta_ = 1 / scale_delta;
+        if (scale <= MIN) {
+            scale_delta_ = 1
+        } else if (scale >= MAX) {
+            scale_delta = MAX / scale;
+        }
+
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const targetBox = this.getBoundingBox()!;
+        const rootBox = container.getBoundingClientRect();
+
+        const rcx = rootBox.width / 2;
+        const rcy = rootBox.height / 2;
+
+        const matrix = this.matrix;
+
+        const __s = this.m_context.preview.scale;
+        const __scale = Math.sign(e.deltaY) <= 0 ? Math.min(scale_delta * __s, 256) : Math.max(scale_delta_ * __s, 0.02);
+
+        if ((targetBox.width * __s) > rootBox.width && (targetBox.height * __s) > rootBox.height) {
+            const offsetX = e.x - rootBox.x;
+            const offsetY = e.y - rootBox.y;
+            matrix.trans(-offsetX, -offsetY);
+            matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+            matrix.trans(offsetX, offsetY);
+        } else {
+            matrix.reset(this.getCenterMatrix());
+            matrix.trans(-rcx, -rcy);
+            matrix.scale(__scale);
+            matrix.trans(rcx, rcy);
+        }
+
+        this.setAttri(matrix);
+
+        this.m_context.preview.setScaleMenu(undefined);
+    }
+
+    trans(e: WheelEvent) {
+        const MAX_STEP = 120;
+
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const root = container.getBoundingClientRect();
+        let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+        let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+        if (e.shiftKey && !is_mac() && e.deltaX < 1) {
+            stepx = stepy;
+            stepy = 0;
+        }
+        const bound = this.getBoundingBox(true)!;
+
+        if (bound.x < 0) {
+            if (bound.x > stepx) stepx = bound.x;
+        }
+        if (bound.x >= 0 && stepx < 0) stepx = 0;
+        if (bound.y < 0) {
+            if (bound.y > stepy) stepy = bound.y;
+        }
+        if (bound.y >= 0 && stepy < 0) stepy = 0;
+        const right = bound.x + bound.width;
+        const bottom = bound.y + bound.height;
+        if (right > root.width) {
+            if ((right - root.width) < stepx) stepx = right - root.width;
+        }
+        if (right <= root.width && stepx > 0) stepx = 0;
+        if (bottom > root.height) {
+            if ((bottom - root.height) < stepy) stepy = bottom - root.height;
+        }
+        if (bottom <= root.height && stepy > 0) stepy = 0;
+
+        this.matrix.trans(-stepx, -stepy);
+
+        this.setAttri(this.matrix);
     }
 }
