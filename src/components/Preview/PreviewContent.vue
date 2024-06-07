@@ -109,6 +109,9 @@ const initMatrix = () => {
     } else {
         // todo
     }
+    if(is_overlay.value) {
+        is_overlay.value = false;
+    }
 }
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
@@ -290,7 +293,6 @@ onMounted(() => {
     nextTick(() => {
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value);
-            is_overlay.value = false;
     })
 
     if (preview.value) {
