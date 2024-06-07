@@ -1,6 +1,7 @@
 import { Matrix, PageView, Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { router } from "@/router";
+import { getFrameList } from "@/utils/preview";
 
 export enum ScaleType {
     Actual = 0,
@@ -31,6 +32,8 @@ export class Preview extends WatchableObject {
     private m_navi_visible: boolean = true;
     private m_menu_options: ScaleType | undefined;
     private m_visible_ui: boolean = true;
+    private m_page_index: number = 0;
+    private m_shape_index: number = 0;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -62,15 +65,24 @@ export class Preview extends WatchableObject {
             return;
         }
         this.m_selectPage = p;
+        this.m_page_index = this.m_context.data.pagesList.findIndex(item => item.id === p?.id);
         this.notify(Preview.CHANGE_PAGE);
+    }
+
+    get pageIndex() {
+        return this.m_page_index;
     }
     selectShape(s: Shape | undefined) {
         if (this.m_selectShape === s) {
             return;
         }
         this.m_selectShape = s;
+        this.m_shape_index = getFrameList(this.selectedPage!).findIndex(item => item.id === s?.id);
         this.notify(Preview.CHANGE_SHAPE);
         this.updateUrl();
+    }
+    get shapeIndex() {
+        return this.m_shape_index;
     }
 
     get selectedPage(): PageView | undefined {

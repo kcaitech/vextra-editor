@@ -4,8 +4,9 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PreviewPageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { Document, PageListItem, PageView } from "@kcdesign/data";
+import { Document, Page, PageListItem, PageView } from "@kcdesign/data";
 import { Preview } from "@/context/preview";
+import { selectedShape, setWindowTitle } from "@/utils/preview";
 
 type List = InstanceType<typeof ListView>;
 
@@ -44,11 +45,38 @@ const rightTarget = ref<string>('');
 const pageList = ref<HTMLDivElement>()
 
 function document_watcher(...args: any[]) {
-    if(args.includes('pagesList')) {
+    if (args.includes('pagesList')) {
         const page = props.context.preview.selectedPage;
-           
+        if (page) {
+            const _page = props.context.data.pagesList.find(item => item.id === page.id);
+            if (!_page) {
+                const pages = props.context.data.pagesList;
+                const index = props.context.preview.pageIndex;
+                if (index === -1 || index === pages.length) {
+                    const first_page = props.context.data.pagesList[0];
+                    props.context.data.pagesMgr.get(first_page.id).then((page: Page | undefined) => {
+                        if (page) {
+                            const pagedom = props.context.getPageDom(page).dom;
+                            props.context.preview.selectPage(pagedom);
+                            selectedShape(props.context, pagedom, t);
+                            setWindowTitle(props.context, pagedom);
+                        }
+                    })
+                } else {
+                    const select_page = props.context.data.pagesList[index];
+                    props.context.data.pagesMgr.get(select_page.id).then((page: Page | undefined) => {
+                        if (page) {
+                            const pagedom = props.context.getPageDom(page).dom;
+                            props.context.preview.selectPage(pagedom);
+                            selectedShape(props.context, pagedom, t);
+                            setWindowTitle(props.context, pagedom);
+                        }
+                    })
+                }
+            }
+        }
     }
-    
+
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -177,7 +205,8 @@ onUnmounted(() => {
         </div>
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 40px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" :item-width="0" :context="props.context"
-                :pageHeight="pageH" :item-height="32" :first-index="0" v-bind="$attrs" orientation="vertical" location="pagelist">
+                :pageHeight="pageH" :item-height="32" :first-index="0" v-bind="$attrs" orientation="vertical"
+                location="pagelist">
             </ListView>
         </div>
     </div>

@@ -140,7 +140,7 @@ const update = () => {
     listHeight();
     updateScrollH();
 }
-function getFrameList(page: PageView) {
+function getFrameList(page: PageView): Shape[] {
     return page.data.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
 function navi_watcher(t: number) {
@@ -220,6 +220,25 @@ const updateScrollH = () => {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
+const listUpdate= (...args: any[]) => {
+    if(args.includes('childs')) {
+        const shape = props.context.preview.selectedShape;
+        const page = props.context.preview.selectedPage;
+        if (!shape || !page) return;
+        const shapes = getFrameList(page);    
+        const shape_index = props.context.preview.shapeIndex;
+        const _shape = shapes.find(item => item.id === shape.id);
+        if(!_shape) {
+            if(shape_index === -1 || shape_index === shapes.length) {
+                props.context.preview.selectShape(shapes[0]);
+            } else {
+                props.context.preview.selectShape(shapes[shape_index]);
+            }
+        }
+    }
+    update();
+}
+
 const stopWatch = watch(() => props.page, (value, old) => {
     old?.unwatch(update);
     value.watch(update);
@@ -227,13 +246,13 @@ const stopWatch = watch(() => props.page, (value, old) => {
 
 onMounted(() => {
     update();
-    props.page.watch(update);
+    props.page.watch(listUpdate);
     props.context.preview.watch(previewWatcher);
     props.context.navi.watch(navi_watcher);
 });
 
 onUnmounted(() => {
-    props.page.unwatch(update);
+    props.page.unwatch(listUpdate);
     props.context.preview.watch(previewWatcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
