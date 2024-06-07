@@ -90,9 +90,7 @@ const previewWatcher = (t: number, s?: boolean) => {
         togglePage(1);
     } else if (t === Preview.SCALE_CHANGE) {
         if (s) {
-            viewUpdater.modifyTransform(0.1);
         } else {
-            viewUpdater.modifyTransform(-0.1);
         }
     }
 }

@@ -373,6 +373,8 @@ export class ViewUpdater {
 
         const matrix = this.getCenterMatrix();
         if(s) {
+            console.log(s, 's');
+            
             matrix.scale(s);
         }
         this.setAttri(matrix);
