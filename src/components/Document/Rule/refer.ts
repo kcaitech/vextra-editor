@@ -25,7 +25,7 @@ export function genPath(start: XY, end: XY) {
 }
 
 export function formatNumber(v: number) {
-    return Math.abs(v % 1) > 0.001 ? v.toFixed(2) : Math.round(v);
+    return Math.abs(v % 1) > 0.009 ? v.toFixed(2) : Math.round(v);
 }
 
 export class ReferLineHandler extends TransformHandler {
