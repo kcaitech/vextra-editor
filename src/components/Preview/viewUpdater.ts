@@ -62,7 +62,7 @@ export class ViewUpdater {
      * @param args
      */
     private updater(...args: any[]) {
-        console.log('__UPDATE_SELF__', ...args, args);
+        // console.log('__UPDATE_SELF__', ...args, args);
         this.update(...args);
     }
 
@@ -70,7 +70,7 @@ export class ViewUpdater {
      * @description 监听播放对象内部元素(子孙元素)变化
      */
     private updaterBubble(...args: any[]) {
-        console.log('__UPDATE_FROM_BUBBLE__', ...args, args);
+        // console.log('__UPDATE_FROM_BUBBLE__', ...args, args);
         this.update(...args);
     }
 

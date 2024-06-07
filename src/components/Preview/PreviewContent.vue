@@ -7,7 +7,6 @@ import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
-import TempBoard from "@/components/common/TempBoard.vue";
 
 const props = defineProps<{
     context: Context
