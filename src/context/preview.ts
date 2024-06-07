@@ -30,7 +30,7 @@ export class Preview extends WatchableObject {
     private m_doc_id: string = '';
     private m_scale: number = 1;
     private m_navi_visible: boolean = true;
-    private m_menu_options: ScaleType | undefined;
+    private m_menu_options: ScaleType | undefined = ScaleType.Actual;
     private m_visible_ui: boolean = true;
     private m_page_index: number = 0;
     private m_shape_index: number = 0;

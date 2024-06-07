@@ -62,7 +62,7 @@ export class ViewUpdater {
     private updater4Page(...args: any[]) {
     }
 
-     setAttri(m: Matrix) {
+    setAttri(m: Matrix) {
         const shape = this.m_current_view;
         const container = this.m_container;
 
@@ -80,9 +80,31 @@ export class ViewUpdater {
         
         this.m_page_card!.pageSvg!.style['transform'] = m.toString();
 
-        this.m_context.preview.setScale(m.m00);
+        console.log('__m__', m.toString(), this.getScale(m));
+
+        this.m_context.preview.setScale(this.getScale(m));
 
         this.matrix.reset(m);
+    }
+
+    beCenterView() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const box = this.getBoundingBox(true)!;
+        const cx = box.x + box.width / 2;
+        const cy = box.y + box.height / 2;
+
+        const root = container.getBoundingClientRect();
+        const delX = root.width / 2 - cx;
+        const delY = root.height / 2 - cy;
+
+        this.matrix.trans(delX, delY);
+        this.setAttri(this.matrix);
     }
 
     private getCenterMatrix() {
@@ -160,6 +182,17 @@ export class ViewUpdater {
     // __update属于播放对象的全量绘制，消耗比较大
     private update = debounce(this.__update, 300);
 
+    private getScale(m?: Matrix) {
+        let __m: any = (m || this.matrix).toArray();
+        __m[4] = 0;
+        __m[5] = 0;
+        __m = new Matrix(__m);
+
+        const xy = __m.computeCoord2(1, 0);
+
+        return Math.hypot(xy.x, xy.y);
+    }
+
     modifyTransformToFit() {
         const shape = this.m_current_view;
         const container = this.m_container;
@@ -180,20 +213,18 @@ export class ViewUpdater {
 
         const ratio = Math.max(ratio_h, ratio_w);
 
-        if (ratio === 1) return;
+        const max = 256;
+        const min = 0.02;
+        let scale = 1 / ratio;
+        if (scale < min) {
+            scale = min;
+        } else if (scale > max) {
+            scale = max;
+        }
 
         const matrix = this.getCenterMatrix();
         matrix.trans(-rootWidth / 2, -rootHeight / 2);
-        const max = 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
-            matrix.scale(1 / ratio);
-        } else {
-            if (matrix.m00 / ratio <= 0.02) {
-                matrix.scale(0.02 / matrix.m00);
-            } else if (matrix.m00 / ratio >= max) {
-                matrix.scale(max / matrix.m00);
-            }
-        }
+        matrix.scale(scale);
         matrix.trans(rootWidth / 2, rootHeight / 2);
         this.setAttri(matrix);
     }
@@ -218,27 +249,27 @@ export class ViewUpdater {
 
         const ratio = Math.min(ratio_h, ratio_w);
 
-        if (ratio === 1) return;
+        const max = 256;
+        const min = 0.02;
+        let scale = 1 / ratio;
+        if (scale < min) {
+            scale = min;
+        } else if (scale > max) {
+            scale = max;
+        }
 
         const matrix = this.getCenterMatrix();
         matrix.trans(-rootWidth / 2, -rootHeight / 2);
-        const max = 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
-            matrix.scale(1 / ratio);
-        } else {
-            if (matrix.m00 / ratio <= 0.02) {
-                matrix.scale(0.02 / matrix.m00);
-            } else if (matrix.m00 / ratio >= max) {
-                matrix.scale(max / matrix.m00);
-            }
-        }
+        matrix.scale(scale);
         matrix.trans(rootWidth / 2, rootHeight / 2);
 
-        const __m = matrix.toArray();
-        __m[4] = 0;
-        __m[5] = 0;
+        if (ratio_w > ratio_h) {
+            matrix.trans((box.width * scale - rootWidth) / 2, 0);
+        } else {
+            matrix.trans(0, (box.height * scale - rootHeight) / 2);
+        }
 
-        this.setAttri(new Matrix(__m));
+        this.setAttri(matrix);
     }
 
     modifyTransformToFillByWidth() {
@@ -257,24 +288,19 @@ export class ViewUpdater {
 
         const ratio = boxWidth / rootWidth;
 
-        if (ratio < 1) {
-            return this.modifyTransform();
+        const max = 256;
+        const min = 0.02;
+        let scale = 1 / ratio;
+        if (scale < min) {
+            scale = min;
+        } else if (scale > max) {
+            scale = max;
         }
 
         const matrix = this.getCenterMatrix();
         matrix.trans(-rootWidth / 2, -rootHeight / 2);
-        const max = 256;
-        if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) {
-            matrix.scale(1 / ratio);
-        } else {
-            if (matrix.m00 / ratio <= 0.02) {
-                matrix.scale(0.02 / matrix.m00);
-            } else if (matrix.m00 / ratio >= max) {
-                matrix.scale(max / matrix.m00);
-            }
-        }
+        matrix.scale(scale);
         matrix.trans(rootWidth / 2, rootHeight / 2);
-
         this.setAttri(matrix);
     }
 

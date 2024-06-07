@@ -58,7 +58,6 @@ const togglePage = (p: number) => {
     props.context.preview.selectShape(frameList[index]);
 }
 
-
 const previewWatcher = (t: number, s?: boolean) => {
     if (t === Preview.CHANGE_PAGE) {
         page_watcher();
@@ -105,14 +104,10 @@ const initMatrix = () => {
         viewUpdater.modifyTransformToFit();
     } else if (type === ScaleType.FitWidth) {
         viewUpdater.modifyTransformToFillByWidth();
+    } else if (type === ScaleType.Actual) {
+        viewUpdater.modifyTransform();
     } else {
-        if (type === ScaleType.Actual) {
-            props.context.preview.setScale(1);
-        }
-        // center_scale()
-        if (pageCard.value && pageCard.value.pageSvg) {
-            viewUpdater.modifyTransform();
-        }
+        // todo
     }
 }
 
@@ -284,7 +279,6 @@ const onMouseLeave = () => {
     document.removeEventListener('keyup', onKeyUp);
 }
 
-// ====divide====
 const viewUpdater = new ViewUpdater(props.context);
 const is_overlay = ref(true);
 onMounted(() => {
