@@ -296,7 +296,7 @@ onMounted(() => {
     nextTick(() => {
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value);
-        is_overlay.value = false;
+            is_overlay.value = false;
     })
 
     if (preview.value) {
@@ -329,8 +329,8 @@ onUnmounted(() => {
             </div>
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+        <div class="overlay" v-if="is_overlay"></div>
     </div>
-    <div class="overlay" v-if="is_overlay"></div>
 </template>
 
 <style scoped lang="scss">
