@@ -7,12 +7,15 @@ import {
 } from "@kcdesign/data"
 import { XYsBounding } from "@/utils/common";
 
+/**
+ * @description 使图层绕axis轴翻转
+ */
 export function flip(context: Context, axis: 'X' | 'Y') {
     const __shapes = context.selection.selectedShapes;
 
     if (!__shapes.length) return;
 
-    const TC = new Map<string, Transform>(); // transformCache for parent to root
+    const TC = new Map<string, Transform>(); // transformCache for parent reflect to root
 
     let left = Infinity;
     let top = Infinity;
@@ -28,7 +31,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
         shapes.push(shape);
 
-        const transformT = shape.transform2.clone();
+        const t = shape.transform2.clone();
 
         let parent2root = TC.get(parent.id);
         if (!parent2root) {
@@ -36,15 +39,15 @@ export function flip(context: Context, axis: 'X' | 'Y') {
             TC.set(parent.id, parent2root);
         }
 
-        transformT.addTransform(parent2root);
+        t.addTransform(parent2root);
         const { width, height } = shape.size;
 
-        const { col0, col1, col2, col3 } = transformT.transform([
+        const { col0, col1, col2, col3 } = t.transform([
             Point3D.FromXY(0, 0),
             Point3D.FromXY(width, height),
             Point3D.FromXY(width, 0),
             Point3D.FromXY(0, height),
-        ])
+        ]);
 
         const box = XYsBounding([col0, col1, col2, col3]);
 
@@ -71,9 +74,7 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     const selectionTransformInverse = selectionTransform.getInverse();
 
-    const size: { width: number, height: number } = { width: right - left, height: bottom - top };
-
-    const STLIS: { shape: ShapeView, transform: Transform }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform
+    const STLIS: { shape: ShapeView, transform: Transform }[] = []; // shapeTransformListInSelection 图层相对选区坐标系的transform集合
     if (multi) {
         for (const shape of shapes) {
             STLIS.push({
@@ -91,8 +92,10 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         });
     }
 
+    const size: { width: number, height: number } = { width: right - left, height: bottom - top };
+
     let flipedSelectionTransform;
-    if (axis === "X") {
+    if (axis === "Y") {
         flipedSelectionTransform = selectionTransform.clone().flipH2D(left + size.width / 2);
     } else {
         flipedSelectionTransform = selectionTransform.clone().flipV2D(top + size.height / 2);

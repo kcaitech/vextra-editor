@@ -251,14 +251,14 @@ function fliph() {
     if (model_disable_state.flipHorizontal) {
         return;
     }
-    flip(props.context, 'X');
+    flip(props.context, 'Y');
 }
 
 function flipv() {
     if (model_disable_state.flipVertical) {
         return;
     }
-    flip(props.context, 'Y');
+    flip(props.context, 'X');
 }
 
 function changeR(value: string) {
