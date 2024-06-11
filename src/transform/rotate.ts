@@ -133,7 +133,6 @@ export class RotateHandler extends TransformHandler {
             const shape = this.shapes[i];
 
             const parent = shape.parent!;
-
             const m1 = shape.matrix2Parent();
 
             let m2 = matrixParent2rootCache.get(parent.id)!;
@@ -186,7 +185,6 @@ export class RotateHandler extends TransformHandler {
                 if (point.y > bottom) {
                     bottom = point.y;
                 }
-
             }
 
             let m3 = matrixRoot2ParentCache.get(parent.id)!;
