@@ -30,6 +30,7 @@ import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import { computeString } from "@/utils/content";
 import { Attribute } from '@/context/atrribute';
+import { flip } from "@/transform/flip";
 
 interface Props {
     context: Context
@@ -250,36 +251,14 @@ function fliph() {
     if (model_disable_state.flipHorizontal) {
         return;
     }
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape((selected[0]));
-        e.flipH();
-    } else if (selected.length > 1) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const actions = get_actions_flip_h(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page);
-            editor.shapesFlip(actions);
-        }
-    }
+    flip(props.context, 'Y');
 }
 
 function flipv() {
     if (model_disable_state.flipVertical) {
         return;
     }
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape((selected[0]));
-        e.flipV();
-    } else if (selected.length > 1) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const actions = get_actions_flip_v(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page);
-            editor.shapesFlip(actions);
-        }
-    }
+    flip(props.context, 'X');
 }
 
 function changeR(value: string) {
