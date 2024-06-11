@@ -46,6 +46,7 @@ export class RotateHandler extends TransformHandler {
     selectionTransform: Transform = new Transform();  // 选区的Transform
     selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
     selectionSize = {width: 0, height: 0}; // 选区的size
+    selectionCenter: ColVector3D = ColVector3D.FromXY(0, 0); // 选区的中点
     transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
     shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
     cursorBeginAngle: number = 0; // 光标向量的初始角度（从选区的中点指向光标的向量，其与X轴的夹角）
@@ -223,14 +224,9 @@ export class RotateHandler extends TransformHandler {
         };
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
-        this.selectionTransform = this.shapes.length > 1 ? new Transform({
-            matrix: new Matrix2([4, 4], [
-                1, 0, 0, this.originSelectionBox.x,
-                0, 1, 0, this.originSelectionBox.y,
-                0, 0, 1, 0,
-                0, 0, 0, 1,
-            ])
-        }) : this.shapes[0].transform2FromRoot.clone();
+        this.selectionTransform = this.shapes.length > 1
+            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : this.shapes[0].transform2FromRoot.clone();
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = this.shapes.length > 1 ? {
             width: this.originSelectionBox.width,
@@ -239,6 +235,10 @@ export class RotateHandler extends TransformHandler {
             width: this.shapes[0].size.width,
             height: this.shapes[0].size.height
         };
+        this.selectionCenter = this.selectionTransform.transform(Point3D.FromXY(
+            this.selectionSize.width / 2,
+            this.selectionSize.height / 2
+        )).col0;
 
         for (const shape of this.shapes) {
             if (!this.transformCache.has(shape.parent!)) {
@@ -254,10 +254,8 @@ export class RotateHandler extends TransformHandler {
     }
 
     get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（-π ~ π）
-        const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
-        const cursorPoint = Point3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot)); // 光标在选区坐标系下的坐标
-        const centerPoint = Point3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2); // 选区中点的坐标（在原选区坐标系下）
-        const cursorVector = cursorPoint.subtract(centerPoint); // 光标向量
+        const cursorPoint = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
+        const cursorVector = cursorPoint.subtract(this.selectionCenter); // 光标向量
         const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
         let angle = xVector.angleTo(cursorVector); // 光标向量与x轴的夹角（0 ~ π）
         if ((xVector.cross(cursorVector) as ColVector3D).z < 0) angle = -angle; // 顺时针方向为负

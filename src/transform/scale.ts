@@ -216,14 +216,9 @@ export class ScaleHandler extends TransformHandler {
         });
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
-        this.selectionTransform = this.shapes.length > 1 ? new Transform({
-            matrix: new Matrix2([4, 4], [
-                1, 0, 0, this.originSelectionBox.x,
-                0, 1, 0, this.originSelectionBox.y,
-                0, 0, 1, 0,
-                0, 0, 0, 1,
-            ])
-        }) : this.shapes[0].transform2FromRoot.clone();
+        this.selectionTransform = this.shapes.length > 1
+            ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
+            : this.shapes[0].transform2FromRoot.clone();
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = this.shapes.length > 1 ? {
             width: this.originSelectionBox.width,
