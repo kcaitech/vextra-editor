@@ -121,7 +121,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
     }
     event.preventDefault();
     if (shiftKey) {
-        context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
+        // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
     }
     context.tool.setAction(Action.AddComment)

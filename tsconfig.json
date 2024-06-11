@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
     "strict": true,
     "jsx": "preserve",
     "importHelpers": true,
     "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "declaration": true,
+    "declarationDir": "dist/types",
+    "declarationMap": false,
+    "baseUrl": "./",
+    "outDir": "dist",
+    "allowJs": true,
     "types": [
-      "webpack-env",
       "jest"
     ],
     "paths": {
@@ -23,8 +24,7 @@
         "src/*"
       ],
       "@pal/*": [
-        "src/PAL/browser/*",
-        "src/PAL/nodejs/*"
+        "src/PAL/browser/*"
       ]
     },
     "lib": [
@@ -35,20 +35,19 @@
       "webworker"
     ],
     "typeRoots": [
-      "./src",
-      "./node_modules/@types"
+      "src",
+      "node_modules/@types"
     ]
   },
   "include": [
     "src/**/*.ts",
+    "src/**/*.js",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "src/utils/dom-to-image.js"
+    "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules",
-    "src/**/*.js"
+    "node_modules"
   ]
 }

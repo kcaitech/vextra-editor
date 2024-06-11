@@ -5,7 +5,7 @@ import {Context} from '@/context';
 import {useI18n} from 'vue-i18n';
 import {XY} from '@/context/selection';
 import {new_file, copy_file} from '@/utils/document';
-import {useRoute} from 'vue-router';
+// import {useRoute} from 'vue-router';
 import {Perm} from '@/context/workspace';
 import {permIsEdit} from '@/utils/content';
 import {ElMessage} from 'element-plus';
@@ -30,7 +30,7 @@ const childMenuVisible = ref<boolean>(false);
 const trigger = ref<HTMLDivElement>(); // 按钮 Dom
 const popover = ref<HTMLDivElement>(); // 菜单 Dom
 const childMenuPosition: XY = reactive({x: 0, y: 0});
-const route = useRoute();
+// const route = useRoute();
 const without_editing_permissions = ref<boolean>(!permIsEdit(props.context) || props.context.tool.isLable);
 
 function showChildFileMenu(e: MouseEvent) {
@@ -71,17 +71,17 @@ async function newFile() {
 
 async function copiedFile() {
     popoverVisible.value = false;
-    props.context.workspace.setFreezeStatus(true);
-    const doc_id = route.query.id;
-    if (!doc_id || typeof doc_id !== "string") {
-        props.context.workspace.setFreezeStatus(false);
-        return;
-    }
-    const result = await copy_file(doc_id);
-    if (!result) {
-        ElMessage.error({duration: 1500, message: t('homerightmenu.copyfile_no')});
-    }
-    props.context.workspace.setFreezeStatus(false);
+    // props.context.workspace.setFreezeStatus(true);
+    // const doc_id = route.query.id;
+    // if (!doc_id || typeof doc_id !== "string") {
+    //     props.context.workspace.setFreezeStatus(false);
+    //     return;
+    // }
+    // const result = await copy_file(doc_id);
+    // if (!result) {
+    //     ElMessage.error({duration: 1500, message: t('homerightmenu.copyfile_no')});
+    // }
+    // props.context.workspace.setFreezeStatus(false);
 }
 
 function rename() {

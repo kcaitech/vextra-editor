@@ -147,7 +147,7 @@ const onBold = (weight: number) => {
         editor.setTextWeightMulti(props.textShapes, weight);
     }
     const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.bold = weight;
+    textAttr.weight = weight;
     props.context.textSelection.setTextAttr(textAttr);
 }
 // 设置文本倾斜

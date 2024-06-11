@@ -35,7 +35,7 @@ onMounted(init_slice);
         <span :class="slice.is_tail ? 'tail' : 'parent-node'" v-for="(slice, index) in title_slice" :key="index">{{ slice.slice }}</span>
     </div>
 </template>
-<scoped lang="scss" scoped>
+<style lang="scss" scoped>
 .comp_title {
     display: flex;
     align-items: center;
@@ -56,4 +56,4 @@ onMounted(init_slice);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-</scoped>
+</style>

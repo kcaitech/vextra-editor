@@ -36,7 +36,7 @@ import { is_symbol_or_union } from "@/utils/symbol";
 import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
-import { router } from "@/router";
+// import { router } from "@/router";
 import isMobileDevice from "@/utils/mobileDeviceChecker";
 
 interface Saved {
@@ -239,10 +239,10 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_selectShapes.length = 0;
         this.notify(Selection.CHANGE_PAGE);
         if (p) {
-            router.replace({
-                path: isMobileDevice() ? '/pageviews' : '/document',
-                query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
-            });
+            // router.replace({
+            //     path: isMobileDevice() ? '/pageviews' : '/document',
+            //     query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
+            // });
         }
     }
 

@@ -745,7 +745,7 @@ export function get_selected_types(context: Context): number {
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance", e: MouseEvent): string[] {
     const BASE_ITEM = ['all', 'copy', 'copyAs'];
-    let contextMenuItems = []
+    let contextMenuItems: string[] = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
@@ -959,8 +959,8 @@ export function shape_track(context: Context, shape: Shape | ShapeView) {
         const pagesMgr = ctx.data.pagesMgr;
         pagesMgr.get(page.id).then((page: Page | undefined) => {
             if (page) {
-                ctx.comment.toggleCommentPage()
-                ctx.comment.commentMount(false)
+                // ctx.comment.toggleCommentPage()
+                // ctx.comment.commentMount(false)
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.selection.selectPage(pagedom);
                 let timer = setTimeout(() => {
@@ -1317,6 +1317,7 @@ export function redo(context: Context) {
 }
 
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
+    if (!context.communication) return false;
     try {
         const __buff = new Uint8Array(buff);
         let count = 0;

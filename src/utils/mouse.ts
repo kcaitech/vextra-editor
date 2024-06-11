@@ -3,7 +3,7 @@ import { Matrix, ShapeType, ShapeView } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
 import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
-import { Comment } from "@/context/comment";
+// import { Comment } from "@/context/comment";
 import { scout_once, XYsBounding } from "@/utils/common";
 import { multi_select_shape } from "./listview";
 import { is_straight } from "@/utils/attri_setting";
@@ -249,7 +249,7 @@ export function end_transalte(context: Context) {
  */
 export function update_comment(context: Context, need_update_comment: boolean) {
     if (need_update_comment) {
-        context.comment.notify(Comment.UPDATE_COMMENT_POS);
+        // context.comment.notify(Comment.UPDATE_COMMENT_POS);
     }
     return false;
 }

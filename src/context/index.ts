@@ -15,11 +15,11 @@ import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
-import { Comment } from "./comment";
+// import { Comment } from "./comment";
 import { Menu } from "./menu";
 import { Tool } from "./tool";
 import { Navi } from "./navigate";
-import { Communication } from "@/context/communication/communication";
+// import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Assist } from "./assist";
@@ -36,6 +36,7 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
+import { ICommunication } from "@/openapi";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -88,12 +89,12 @@ export class Context extends WatchableObject {
     private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
     private m_workspace: WorkSpace;
-    private m_comment: Comment;
+    // private m_comment: Comment;
     private m_menu: Menu;
     private m_tool: Tool;
     private m_navi: Navi;
     private m_cursor: Cursor;
-    private m_communication: Communication;
+    private m_communication?: ICommunication;
     private m_escstack: EscStack;
     private m_assist: Assist;
     private m_teamwork: TeamWork;
@@ -117,12 +118,12 @@ export class Context extends WatchableObject {
         this.m_selection = new Selection(data, this); //选区相关
         repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
-        this.m_comment = new Comment(); // 评论相关
+        // this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
-        this.m_communication = new Communication();
+        // this.m_communication = new Communication();
         this.m_cursor = new Cursor(this); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Assist(this); // 辅助线相关
@@ -196,9 +197,9 @@ export class Context extends WatchableObject {
         return this.m_workspace;
     }
 
-    get comment() {
-        return this.m_comment;
-    }
+    // get comment() {
+    //     return this.m_comment;
+    // }
 
     get menu() {
         return this.m_menu;
@@ -212,6 +213,9 @@ export class Context extends WatchableObject {
         return this.m_navi;
     }
 
+    set communication(c: ICommunication | undefined) {
+        this.m_communication = c;
+    }
     get communication() {
         return this.m_communication;
     }

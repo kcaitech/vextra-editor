@@ -87,11 +87,11 @@ const tool_watcher = (t: number) => {
 }
 const stopMouseDown = (e: MouseEvent) => {
     const action = props.context.tool.action;
-    const comment = props.context.comment;
+    // const comment = props.context.comment;
 
-    if (action === Action.AddComment && !comment.isCommentInputMove) {
-        e.stopPropagation();
-    }
+    // if (action === Action.AddComment && !comment.isCommentInputMove) {
+    //     e.stopPropagation();
+    // }
 }
 async function getFontNameList(fontName: string[], lang: string) {
     try {

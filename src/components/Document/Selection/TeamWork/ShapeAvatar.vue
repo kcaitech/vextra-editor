@@ -5,7 +5,7 @@ import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
-import { DocSelectionData } from "@/communication/modules/doc_selection_op";
+// import { DocSelectionData } from "@/communication/modules/doc_selection_op";
 import { TeamWork } from "@/context/teamwork";
 import { Selection } from '@/context/selection';
 import { throttle } from 'lodash';
@@ -19,14 +19,14 @@ interface Avatar {
     rotate: number
     shape: ShapeView
     avatar: string | undefined
-    userSelectInfo: DocSelectionData
+    // userSelectInfo: DocSelectionData
 }
 interface MultipShape {
     x: number
     y: number
     shapes: ShapeView[]
     avatar: string | undefined
-    userSelectInfo: DocSelectionData
+    // userSelectInfo: DocSelectionData
     shapesIds: string
 }
 
@@ -35,7 +35,7 @@ const origin: ClientXY = { x: 0, y: 0 };
 const avatars = ref<Avatar[]>([]);
 const multipShape = ref<MultipShape[]>([]);
 const shapes = ref<ShapeView[]>([]);
-const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
+// const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const groupedShapes = ref();
 const multipShapeGroup = ref<any>({});
 const setOrigin = () => {
@@ -44,86 +44,86 @@ const setOrigin = () => {
     origin.y = matrix.m12;
 }
 const setPosition = () => {
-    avatars.value.length = 0;
-    multipShape.value.length = 0;
-    groupedShapes.value = [];
-    multipShapeGroup.value = [];
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    for (let i = 0; i < userSelectionInfo.value.length; i++) {
-        const userSelectInfo = userSelectionInfo.value[i];
-        const selection: ShapeView[] = props.context.selection.selectedShapes;
-        if (page.id !== userSelectInfo.select_page_id) continue;
-        const shapes: ShapeView[] = [];
-        const len = userSelectInfo.select_shape_id_list.length;
-        for (let i = 0; i < len; i++) {
-            const shape = page.shapes.get(userSelectInfo.select_shape_id_list[i]);
-            if (shape) shapes.push(shape);
-        }
-        if (shapes.length === 1) {
-            if (selection.length > 0 && selection[0].id === shapes[0].id && props.context.workspace.isTranslating) continue
-            const s = selection.find(v => v.id === shapes[0].id);
-            if (s && props.context.workspace.isTranslating) continue;
-            const shape = (shapes[0] as ShapeView)
-            const m = shape.matrix2Root()
-            const frame = shape.frame;
-            const matrix = props.context.workspace.matrix
-            let anchor = { x: frame.width, y: 0 }
-            let rotate = shape.rotation || 0;
-            rotate = rotate < 0 ? rotate + 360 : rotate;
-            if (rotate < 135 && rotate >= 45) {
-                anchor = m.computeCoord({ x: 0, y: 0 });
-                rotate -= 90;
-            } else if (rotate < 225 && rotate >= 135) {
-                anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
-                rotate -= 180;
-            } else if (rotate < 315 && rotate >= 225) {
-                anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
-                rotate += 90;
-            } else if (rotate < 360 && rotate > 315) {
-                anchor = m.computeCoord({ x: frame.width, y: 0 });
-            } else if (rotate < 45 && rotate >= 0) {
-                anchor = m.computeCoord({ x: frame.width, y: 0 });
-            }
-            anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
-            anchor.y -= origin.y;
-            anchor.x -= origin.x;
-            anchor.y -= 24
-            const avatar = userSelectInfo.avatar
-            avatars.value.push({ x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo })
-        } else if (shapes.length > 1) {
-            if (arraysOfObjectsWithIdAreEqual(shapes, selection) && props.context.workspace.isTranslating) continue;
-            const points: { x: number, y: number }[] = [];
-            for (let index = 0; index < shapes.length; index++) {
-                const s = shapes[index];
-                const m = s.matrix2Root()
-                m.multiAtLeft(matrix)
-                const f = s.frame
-                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
-                points.push(...ps);
-            }
-            const b = XYsBounding(points);
-            const avatar = userSelectInfo.avatar
-            let anchor = { x: b.right, y: b.top }
-            anchor.y -= 24
-            const shapesIds = shapes.map(shape => shape.id).sort().join(',');
-            multipShape.value.push({ x: anchor.x, y: anchor.y, avatar, shapes: shapes, userSelectInfo, shapesIds })
-        }
-    }
-    avatars.value.forEach((item, i) => {
-        if (!groupedShapes.value[item.shape.id]) {
-            groupedShapes.value[item.shape.id] = [];
-        }
-        groupedShapes.value[item.shape.id].push(item);
-    });
+    // avatars.value.length = 0;
+    // multipShape.value.length = 0;
+    // groupedShapes.value = [];
+    // multipShapeGroup.value = [];
+    // const page = props.context.selection.selectedPage;
+    // if (!page) return;
+    // for (let i = 0; i < userSelectionInfo.value.length; i++) {
+    //     const userSelectInfo = userSelectionInfo.value[i];
+    //     const selection: ShapeView[] = props.context.selection.selectedShapes;
+    //     if (page.id !== userSelectInfo.select_page_id) continue;
+    //     const shapes: ShapeView[] = [];
+    //     const len = userSelectInfo.select_shape_id_list.length;
+    //     for (let i = 0; i < len; i++) {
+    //         const shape = page.shapes.get(userSelectInfo.select_shape_id_list[i]);
+    //         if (shape) shapes.push(shape);
+    //     }
+    //     if (shapes.length === 1) {
+    //         if (selection.length > 0 && selection[0].id === shapes[0].id && props.context.workspace.isTranslating) continue
+    //         const s = selection.find(v => v.id === shapes[0].id);
+    //         if (s && props.context.workspace.isTranslating) continue;
+    //         const shape = (shapes[0] as ShapeView)
+    //         const m = shape.matrix2Root()
+    //         const frame = shape.frame;
+    //         const matrix = props.context.workspace.matrix
+    //         let anchor = { x: frame.width, y: 0 }
+    //         let rotate = shape.rotation || 0;
+    //         rotate = rotate < 0 ? rotate + 360 : rotate;
+    //         if (rotate < 135 && rotate >= 45) {
+    //             anchor = m.computeCoord({ x: 0, y: 0 });
+    //             rotate -= 90;
+    //         } else if (rotate < 225 && rotate >= 135) {
+    //             anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
+    //             rotate -= 180;
+    //         } else if (rotate < 315 && rotate >= 225) {
+    //             anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+    //             rotate += 90;
+    //         } else if (rotate < 360 && rotate > 315) {
+    //             anchor = m.computeCoord({ x: frame.width, y: 0 });
+    //         } else if (rotate < 45 && rotate >= 0) {
+    //             anchor = m.computeCoord({ x: frame.width, y: 0 });
+    //         }
+    //         anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
+    //         anchor.y -= origin.y;
+    //         anchor.x -= origin.x;
+    //         anchor.y -= 24
+    //         const avatar = userSelectInfo.avatar
+    //         avatars.value.push({ x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo })
+    //     } else if (shapes.length > 1) {
+    //         if (arraysOfObjectsWithIdAreEqual(shapes, selection) && props.context.workspace.isTranslating) continue;
+    //         const points: { x: number, y: number }[] = [];
+    //         for (let index = 0; index < shapes.length; index++) {
+    //             const s = shapes[index];
+    //             const m = s.matrix2Root()
+    //             m.multiAtLeft(matrix)
+    //             const f = s.frame
+    //             const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+    //             points.push(...ps);
+    //         }
+    //         const b = XYsBounding(points);
+    //         const avatar = userSelectInfo.avatar
+    //         let anchor = { x: b.right, y: b.top }
+    //         anchor.y -= 24
+    //         const shapesIds = shapes.map(shape => shape.id).sort().join(',');
+    //         multipShape.value.push({ x: anchor.x, y: anchor.y, avatar, shapes: shapes, userSelectInfo, shapesIds })
+    //     }
+    // }
+    // avatars.value.forEach((item, i) => {
+    //     if (!groupedShapes.value[item.shape.id]) {
+    //         groupedShapes.value[item.shape.id] = [];
+    //     }
+    //     groupedShapes.value[item.shape.id].push(item);
+    // });
 
-    multipShape.value.forEach(item => {
-        const shapesIds = item.shapes.map(shape => shape.id).sort().join(',');
-        if (!multipShapeGroup.value[shapesIds]) {
-            multipShapeGroup.value[shapesIds] = [];
-        }
-        multipShapeGroup.value[shapesIds].push(item);
-    });
+    // multipShape.value.forEach(item => {
+    //     const shapesIds = item.shapes.map(shape => shape.id).sort().join(',');
+    //     if (!multipShapeGroup.value[shapesIds]) {
+    //         multipShapeGroup.value[shapesIds] = [];
+    //     }
+    //     multipShapeGroup.value[shapesIds].push(item);
+    // });
 }
 function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
     const idsSet1 = new Set(arr1.map((obj: any) => obj.id));
@@ -147,20 +147,20 @@ const workspaceUpdate = (t: number) => {
     }
 }
 const updater = (t?: number) => {
-    if (t === TeamWork.CHANGE_USER_STATE) {        
-        userSelectionInfo.value = props.context.teamwork.getUserSelection;
-        const page = props.context.selection.selectedPage;
-        props.context.teamwork.getUserSelection.forEach(item  => {
-            for (let i = 0; i < item.select_shape_id_list.length; i++) {
-                const shape = page!.shapes.get(item.select_shape_id_list[i]);
-                if (shape) shapes.value.push(shape);
-            }
-        })
-        shapes.value = Array.from(new Set(shapes.value));
-        setOrigin();
-        setPosition();
-        watchShapes();
-    }
+    // if (t === TeamWork.CHANGE_USER_STATE) {        
+    //     userSelectionInfo.value = props.context.teamwork.getUserSelection;
+    //     const page = props.context.selection.selectedPage;
+    //     props.context.teamwork.getUserSelection.forEach(item  => {
+    //         for (let i = 0; i < item.select_shape_id_list.length; i++) {
+    //             const shape = page!.shapes.get(item.select_shape_id_list[i]);
+    //             if (shape) shapes.value.push(shape);
+    //         }
+    //     })
+    //     shapes.value = Array.from(new Set(shapes.value));
+    //     setOrigin();
+    //     setPosition();
+    //     watchShapes();
+    // }
 }
 
 const selectionWatcher = (t: number) => {

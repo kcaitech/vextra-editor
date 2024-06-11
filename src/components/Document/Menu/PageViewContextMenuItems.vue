@@ -50,7 +50,7 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 const layerSubMenuVisiable = ref<boolean>(false);
-const isComment = ref<boolean>(props.context.comment.isVisibleComment);
+// const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isCutout = ref<boolean>(props.context.tool.isCutoutVisible);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
@@ -241,12 +241,12 @@ function cursor() {
     emit('close');
 }
 
-function comment() {
-    const status = props.context.comment.isVisibleComment;
-    isComment.value = !status;
-    props.context.comment.setVisibleComment(isComment.value);
-    emit('close');
-}
+// function comment() {
+//     const status = props.context.comment.isVisibleComment;
+//     isComment.value = !status;
+//     props.context.comment.setVisibleComment(isComment.value);
+//     emit('close');
+// }
 
 function cutout() {
     const status = props.context.tool.isCutoutVisible;
@@ -596,7 +596,7 @@ onUnmounted(() => {
                       v-show="isCursor"></svg-icon>
             <span>{{ t('system.show_many_cursor') }}</span>
         </div>
-        <div class="check" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
+        <!-- <div class="check" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
              @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'"
                       v-show="isComment"></svg-icon>
@@ -604,7 +604,7 @@ onUnmounted(() => {
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
-        </div>
+        </div> -->
         <div class="check" v-if="props.items.includes('cutout')" @click="cutout" @mouseenter="mouseenter('cutout')"
              @mouseleave="hoverItem = ''">
             <svg-icon :icon-class="hoverItem === 'cutout' ? 'white-select' : 'page-select'"

@@ -8,7 +8,7 @@ import GroupUngroup from "./GroupUngroup.vue";
 import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
-import Comment from "./Buttons/Comment.vue"
+// import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
 import Cutout from "./Buttons/Cutout.vue";
 import CreateComps from "./Buttons/CreateComps.vue";
@@ -20,7 +20,7 @@ import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { string_by_sys } from "@/utils/common";
 import { ElMessage } from "element-plus";
 import ToolButton from "./ToolButton.vue";
-import * as share_api from '@/request/share'
+// import * as share_api from '@/request/share'
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
 import Export from "./Buttons/Export.vue";
 
@@ -41,11 +41,11 @@ const is_path_edit = ref<boolean>(false);
 
 function select(action: Action) {
     props.context.tool.setAction(action);
-    if (action === Action.AddComment) {
-        nextTick(() => {
-            props.context.comment.commentInput(false);
-        })
-    }
+    // if (action === Action.AddComment) {
+    //     nextTick(() => {
+    //         props.context.comment.commentInput(false);
+    //     })
+    // }
 }
 
 function selectComps() {
@@ -95,33 +95,33 @@ onUnmounted(() => {
 })
 
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
-    try {
-        const { code, message } = await share_api.postDocumentAuthorityAPI(data)
-        if (code === 400 && message === '申请次数已达上限') {
-            ElMessage.success({
-                message: message,
-                center: true,
-                duration: 3000
-            })
-        } else {
-            ElMessage.success({
-                message: '权限申请已发送',
-                center: true,
-                duration: 3000
-            })
-        }
-    } catch (error) {
-        ElMessage.success({
-            message: '未知异常',
-            center: true,
-            duration: 3000
-        })
-    }
+    // try {
+    //     const { code, message } = await share_api.postDocumentAuthorityAPI(data)
+    //     if (code === 400 && message === '申请次数已达上限') {
+    //         ElMessage.success({
+    //             message: message,
+    //             center: true,
+    //             duration: 3000
+    //         })
+    //     } else {
+    //         ElMessage.success({
+    //             message: '权限申请已发送',
+    //             center: true,
+    //             duration: 3000
+    //         })
+    //     }
+    // } catch (error) {
+    //     ElMessage.success({
+    //         message: '未知异常',
+    //         center: true,
+    //         duration: 3000
+    //     })
+    // }
 }
 
 function applyForEdit() {
-    const documentID = props.context.comment.isDocumentInfo?.document.id
-    postDocumentAuthority({ doc_id: documentID, perm_type: 3, applicant_notes: '' })
+    // const documentID = props.context.comment.isDocumentInfo?.document.id
+    // postDocumentAuthority({ doc_id: documentID, perm_type: 3, applicant_notes: '' })
 }
 </script>
 
@@ -151,7 +151,7 @@ function applyForEdit() {
                 </div>
             </ToolButton>
         </el-tooltip>
-        <Comment @select="select" :active="selected === Action.AddComment" :context="props.context"></Comment>
+        <!-- <Comment @select="select" :active="selected === Action.AddComment" :context="props.context"></Comment> -->
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
@@ -163,8 +163,8 @@ function applyForEdit() {
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
-        <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
-        </Comment>
+        <!-- <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
+        </Comment> -->
         <Export :context="context" @select="select" :active="selected === Action.Export"></Export>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"

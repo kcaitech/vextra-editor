@@ -3,10 +3,10 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
-import CommentTab from "./Comment/CommentTab.vue";
+// import CommentTab from "./Comment/CommentTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page, PageView } from "@kcdesign/data";
-import { Comment } from "@/context/comment";
+// import { Comment } from "@/context/comment";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 
@@ -41,11 +41,11 @@ const tabs: { title: string, id: Tab }[] = [
 ]
 
 function update(t: number) {
-    if (t === Comment.SELECT_LIST_TAB) {
-        if (!props.showLeft) showHiddenLeft();
-        currentTab.value = 'Comment';
-        updateUnderlinePosition();
-    }
+    // if (t === Comment.SELECT_LIST_TAB) {
+    //     if (!props.showLeft) showHiddenLeft();
+    //     currentTab.value = 'Comment';
+    //     updateUnderlinePosition();
+    // }
 }
 
 function toggle(id: Tab) {
@@ -88,10 +88,10 @@ const tool_watch = (t: number) => {
 }
 const stopMouseDown = (e: MouseEvent) => {
     const action = props.context.tool.action;
-    const comment = props.context.comment;
-    if (action === Action.AddComment && !comment.isCommentInputMove) {
-        e.stopPropagation();
-    }
+    // const comment = props.context.comment;
+    // if (action === Action.AddComment && !comment.isCommentInputMove) {
+    //     e.stopPropagation();
+    // }
 }
 
 const navi_watch = (t: number) => {
@@ -103,13 +103,13 @@ const navi_watch = (t: number) => {
 }
 onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
-    props.context.comment.watch(update);
+    // props.context.comment.watch(update);
     props.context.tool.watch(tool_watch);
     props.context.navi.watch(navi_watch);
     updateUnderlinePosition();
 });
 onUnmounted(() => {
-    props.context.comment.unwatch(update);
+    // props.context.comment.unwatch(update);
     props.context.tool.unwatch(tool_watch);
     props.context.navi.watch(navi_watch);
 })
@@ -132,8 +132,8 @@ onUnmounted(() => {
                 :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
             <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
+            <!-- <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
+                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab> -->
         </div>
     </div>
 </template>

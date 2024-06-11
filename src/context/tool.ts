@@ -1,6 +1,6 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
-import { Comment } from "./comment";
+// import { Comment } from "./comment";
 import { v4 as uuid } from "uuid"
 
 export enum Action {
@@ -92,8 +92,8 @@ export class Tool extends WatchableObject {
                     return;
                 }
 
-                this.m_context.comment.commentInput(false);
-                this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
+                // this.m_context.comment.commentInput(false);
+                // this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
                 this.m_context.cursor.setType('comment', 0);
             } else if (action === Action.Pen) {
                 this.m_context.cursor.setType('pen', 0);

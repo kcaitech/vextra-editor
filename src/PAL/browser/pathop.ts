@@ -1,7 +1,7 @@
 import { IPalPath } from "@kcdesign/data";
 
-const PathKitInit = require('pathkit-wasm/bin/pathkit.js');
-
+import PathKitInit from 'pathkit-wasm'
+import wasm from 'pathkit-wasm/bin/pathkit.wasm?arraybuffer&base64'
 // - `PathKit.PathOp.DIFFERENCE`
 // - `PathKit.PathOp.INTERSECT`
 // - `PathKit.PathOp.REVERSE_DIFFERENCE`
@@ -109,20 +109,11 @@ interface PathKitPath {
 //     .field("join",        &StrokeOpts::join)
 //     .field("cap",         &StrokeOpts::cap);
 
-declare const ENV_SUFFIX: string;
-let envSuffix = ENV_SUFFIX;
-if (envSuffix) {
-    if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
-    if (envSuffix[envSuffix.length - 1] !== '/') envSuffix += '/';
-} else {
-    envSuffix = '/';
-}
-
 let _ck: PathKit;
 export async function init() {
     if (_ck) return;
     _ck = await PathKitInit({
-        locateFile: (file: string) => `${envSuffix}static/${file}`
+        wasmBinary: wasm,
     })
 }
 

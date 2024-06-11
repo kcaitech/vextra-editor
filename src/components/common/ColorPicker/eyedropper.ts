@@ -114,7 +114,7 @@ export class Eyedropper {
 
   // 将dom节点画到canvas里
   async drawCanvas() {
-    const base64 = await domtoimage.toPng(this.container).catch((e: any) => console.log(e));
+    const base64 = await domtoimage.toPng(this.container, {}).catch((e: any) => console.log(e));
     if (!base64) {
       throw new Error('invalid base64');
     }

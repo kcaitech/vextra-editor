@@ -158,7 +158,7 @@ watch(scale, () => {
         }
     } else {
         const shapes = props.context.selection.selectedShapes;
-        let result;
+        let result: string;
         if (props.svgicon === 'angle') {
             if (input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
                 const rotate = get_rotation(shapes[0]);

@@ -5,7 +5,7 @@ import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import CommentView from './Content/CommentView.vue';
+// import CommentView from './Content/CommentView.vue';
 import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
@@ -29,14 +29,13 @@ import {
     root_scale, root_trans
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
-import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-import * as comment_api from '@/request/comment';
+// import * as comment_api from '@/request/comment';
 import Creator from './Creator/Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
@@ -64,7 +63,7 @@ const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
-const comment = computed(() => props.context.comment);
+// const comment = computed(() => props.context.comment);
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
@@ -93,7 +92,7 @@ const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
-const documentCommentList = ref<any[]>(comment.value.pageCommentList);
+// const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
@@ -408,7 +407,7 @@ function onMouseUp(e: MouseEvent) {
     } else {
         isMouseLeftPress = false;
         selectEnd();
-        saveShapeCommentXY();
+        // saveShapeCommentXY();
         if (selector_mount.value) {
             selectEnd();
         }
@@ -424,31 +423,31 @@ function onMouseUp(e: MouseEvent) {
 }
 
 //移动shape时保存shape身上的评论坐标
-const saveShapeCommentXY = () => {
-    const shapesId = props.context.comment.commentShape;
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    const shapes: ShapeView[] = []
-    shapesId.forEach((id: string) => {
-        const shape = page.getShape(id);
-        if (shape) {
-            shapes.push(shape);
-        }
-    })
-    const sleectShapes = flattenShapes(shapes)
-    const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: ShapeView) => {
-        commentList.forEach((comment: any, i: number) => {
-            if (comment.target_shape_id === item.id) {
-                const { x, y } = item.frame2Root()
-                const x1 = comment.shape_frame.x2 + x;
-                const y1 = comment.shape_frame.y2 + y;
-                editShapeComment(i, x1, y1);
-            }
-        })
-    })
-    props.context.comment.editShapeComment(false, [])
-}
+// const saveShapeCommentXY = () => {
+//     const shapesId = props.context.comment.commentShape;
+//     const page = props.context.selection.selectedPage;
+//     if (!page) return;
+//     const shapes: ShapeView[] = []
+//     shapesId.forEach((id: string) => {
+//         const shape = page.getShape(id);
+//         if (shape) {
+//             shapes.push(shape);
+//         }
+//     })
+//     const sleectShapes = flattenShapes(shapes)
+//     const commentList = props.context.comment.pageCommentList
+//     sleectShapes.forEach((item: ShapeView) => {
+//         commentList.forEach((comment: any, i: number) => {
+//             if (comment.target_shape_id === item.id) {
+//                 const { x, y } = item.frame2Root()
+//                 const x1 = comment.shape_frame.x2 + x;
+//                 const y1 = comment.shape_frame.y2 + y;
+//                 editShapeComment(i, x1, y1);
+//             }
+//         })
+//     })
+//     props.context.comment.editShapeComment(false, [])
+// }
 
 // mouseleave
 function onMouseLeave() {
@@ -477,24 +476,24 @@ function windowBlur() {
     document.removeEventListener('mouseup', onMouseUp);
 }
 
-const editShapeComment = (index: number, x: number, y: number) => {
-    const comment = documentCommentList.value[index]
-    const id = comment.id
-    const shapeId = comment.target_shape_id
-    const { x2, y2 } = comment.shape_frame
-    const data = {
-        id: id,
-        target_shape_id: shapeId,
-        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
-    }
-    editCommentShapePosition(data)
-}
+// const editShapeComment = (index: number, x: number, y: number) => {
+//     const comment = documentCommentList.value[index]
+//     const id = comment.id
+//     const shapeId = comment.target_shape_id
+//     const { x2, y2 } = comment.shape_frame
+//     const data = {
+//         id: id,
+//         target_shape_id: shapeId,
+//         shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
+//     }
+//     editCommentShapePosition(data)
+// }
 const editCommentShapePosition = async (data: any) => {
-    try {
-        await comment_api.editCommentAPI(data)
-    } catch (err) {
-        console.log(err)
-    }
+    // try {
+    //     await comment_api.editCommentAPI(data)
+    // } catch (err) {
+    //     console.log(err)
+    // }
 }
 
 //表格
@@ -509,14 +508,14 @@ function updateBackground(page?: PageView) {
     }
 }
 
-function comment_watcher(type?: number) {
-    if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
-    else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
-    else if (type === Comment.UPDATE_COMMENT) {
-        props.context.comment.updateCommentList(props.page.id)
-        documentCommentList.value = props.context.comment.pageCommentList
-    }
-}
+// function comment_watcher(type?: number) {
+//     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
+//     else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
+//     else if (type === Comment.UPDATE_COMMENT) {
+//         props.context.comment.updateCommentList(props.page.id)
+//         documentCommentList.value = props.context.comment.pageCommentList
+//     }
+// }
 const isvisible = ref(false);
 
 function menu_watcher(type?: number, mount?: string) {
@@ -645,7 +644,7 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.workspace.init(t.bind(getCurrentInstance()));
     props.context.workspace.setFreezeStatus(true);
-    props.context.comment.watch(comment_watcher);
+    // props.context.comment.watch(comment_watcher);
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
@@ -679,7 +678,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.scout?.remove();
     props.context.workspace.unwatch(workspace_watcher);
-    props.context.comment.unwatch(comment_watcher);
+    // props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.cursor.unwatch(cursor_watcher);
     props.context.tool.unwatch(tool_watcher);
@@ -717,8 +716,8 @@ onUnmounted(() => {
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
         </CellSetting>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
-        </CommentView>
+        <!-- <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
+        </CommentView> -->
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>

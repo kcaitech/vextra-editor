@@ -88,7 +88,7 @@ function write() {
 }
 
 function getBase64(): Promise<Blob | null> {
-    const svg = pageCard.value.pageSvg as SVGElement;
+    const svg = pageCard.value?.pageSvg as SVGElement;
     return new Promise((resolve) => {
         if (!svg) {
             resolve(null);

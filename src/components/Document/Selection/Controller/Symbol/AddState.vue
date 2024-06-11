@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
 import {find_space_for_state, make_default_state, make_state, SymbolType} from '@/utils/symbol';
-import {Matrix, Shape, ShapeView, SymbolShape} from '@kcdesign/data';
+import {Matrix, Shape, ShapeView, SymbolShape, SymbolView} from '@kcdesign/data';
 import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 
@@ -53,7 +53,7 @@ function down(e: MouseEvent) {
     } else if (props.symbolType === SymbolType.State) {
         const state = props.context.selection.symbolstate;
         if (!state) return;
-        const symbol = state.parent as SymbolShape;
+        const symbol = state.parent as SymbolView;
         if (!symbol) return;
         const result = find_space_for_state(symbol, state);
         make_result = make_state(props.context, t, result?.x);

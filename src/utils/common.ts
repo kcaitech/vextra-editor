@@ -15,7 +15,11 @@ import {
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { hidden_selection, selectShapes } from './content';
-import { permIsEdit } from './permission';
+import { Perm } from '@/context/workspace';
+// import { permIsEdit } from './permission';
+export const permIsEdit = (context: Context) => {
+    return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
+}
 
 // 打印
 function _debounceLog(mes: any, flag?: string) {

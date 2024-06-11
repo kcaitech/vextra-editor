@@ -128,7 +128,7 @@ const addPage = () => {
     const id = props.context.selection.selectedPage?.id;
     const index = props.context.data.pagesList.findIndex((item) => item.id === id);
     const new_page = editor.insertPage(`${t('navi.page')} ${_tail}`, index + 1);
-    props.context.comment.toggleCommentPage()
+    // props.context.comment.toggleCommentPage()
     if (new_page) {
         props.context.selection.selectPage(props.context.getPageDom(new_page).dom);
         if (list_body.value) {
@@ -263,12 +263,12 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         })
     } else if (item === 'copy_link') {
         e?.stopPropagation();
-        const docInfo = props.context.comment.isDocumentInfo?.document;
-        const page_url = location.origin + `/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
-        copyLink(page_url, t);
+        // const docInfo = props.context.comment.isDocumentInfo?.document;
+        // const page_url = location.origin + `/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
+        // copyLink(page_url, t);
     } else if (item === 'delete') {
         e?.stopPropagation();
-        props.context.comment.toggleCommentPage()
+        // props.context.comment.toggleCommentPage()
         const pagesList = props.context.data.pagesList;
         if (pagesList.length === 1) return;
         if (id) {

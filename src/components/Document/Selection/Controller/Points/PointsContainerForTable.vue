@@ -12,7 +12,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
-import { Comment } from '@/context/comment';
+// import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from './common';
@@ -214,7 +214,7 @@ function mouseup4trans(e: MouseEvent) {
         document.removeEventListener('mouseup', up);
     }
     if (need_update_comment) {
-        props.context.comment.notify(Comment.UPDATE_COMMENT_POS);
+        // props.context.comment.notify(Comment.UPDATE_COMMENT_POS);
         need_update_comment = false;
     }
 }

@@ -1079,8 +1079,8 @@ export function reset_all_attr_for_ref(context: Context) {
     editor.resetSymbolRefVariable();
 }
 
-export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
-    if (!(symbol as SymbolShape).isSymbolUnionShape) return;
+export function find_space_for_state(symbol: SymbolView, state: SymbolView) {
+    if (!(symbol.data as SymbolShape).isSymbolUnionShape) return;
     const targets = symbol.childs;
     if (!targets.length) return;
     const init_frame = {

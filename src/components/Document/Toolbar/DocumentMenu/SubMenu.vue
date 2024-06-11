@@ -22,7 +22,7 @@ const emit = defineEmits<{
 const surplusX = ref<number>(0);
 const subMenu = ref<HTMLDivElement>();
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
-const isComment = ref<boolean>(props.context.comment.isVisibleComment);
+// const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isPixel = ref<boolean>(props.context.user.isPixelAlignMent);
 const isGrid = ref<boolean>(props.context.user.isPixelGrid);
 
@@ -86,12 +86,12 @@ function cursor() {
     emit('close');
 }
 
-function comment() {
-    const status = props.context.comment.isVisibleComment;
-    isComment.value = !status;
-    props.context.comment.setVisibleComment(isComment.value);
-    emit('close');
-}
+// function comment() {
+//     const status = props.context.comment.isVisibleComment;
+//     isComment.value = !status;
+//     props.context.comment.setVisibleComment(isComment.value);
+//     emit('close');
+// }
 
 function modifyPixelAlgin() {
     const status = props.context.user.isPixelAlignMent;
@@ -132,12 +132,12 @@ onMounted(() => {
             </div>
             <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
-        <div class="item" v-if="items.includes('comment')" @click="comment">
+        <!-- <div class="item" v-if="items.includes('comment')" @click="comment">
             <div class="choose">
                 <svg-icon icon-class="white-select" v-show="isComment"></svg-icon>
             </div>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
-        </div>
+        </div> -->
         <div class="item" v-if="items.includes('grid')" @click="modifyPixelGrid">
             <div class="choose">
                 <svg-icon icon-class="white-select" v-show="isGrid"></svg-icon>
