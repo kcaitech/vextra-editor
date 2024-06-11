@@ -446,8 +446,8 @@ export class ScaleHandler extends TransformHandler {
         const transformForSelection = this.selectionTransform.clone();
         transformForSelection.setTranslate(this.selectionTransform.transform(ltPointForSelection).col0);
         transformForSelection.setScale(new ColVector3D([
-            sizeForSelection.width / this.selectionSize.width,
-            sizeForSelection.height / this.selectionSize.height,
+            sizeForSelection.width / this.selectionSize.width * (this.selectionTransform.decomposeScale().x > 0 ? 1 : -1),
+            sizeForSelection.height / this.selectionSize.height * (this.selectionTransform.decomposeScale().y > 0 ? 1 : -1),
             1,
         ]));
 
