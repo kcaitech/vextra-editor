@@ -6,6 +6,7 @@ import {
     FillType,
     Gradient,
     GradientType,
+    ImageScaleMode,
     ShapeType,
     TableView,
     TextShapeView,
@@ -51,6 +52,7 @@ import { flattenShapes } from '@/utils/cutout';
 import angular from '@/assets/angular-gradient.png'
 import { watch } from 'vue';
 import PatternFill from "@/components/common/ColorPicker/PatternFill.vue";
+import { ImgFrame } from '@/context/atrribute';
 
 interface Props {
     context: Context
@@ -61,9 +63,12 @@ interface Props {
     gradient?: Gradient
     late?: number
     top?: number
-    auto_to_right_line?: boolean;
+    auto_to_right_line?: boolean
     cell?: boolean
     op?: boolean
+    imageScaleMode?: ImageScaleMode
+    scale?: number
+    imageUrl?: string
 }
 
 interface Data {
@@ -84,11 +89,14 @@ interface Emits {
 
     (e: 'gradient-add-stop', position: number, color: Color, id: string): void;
 
-    (e: 'gradient-type', type: GradientType | 'solid'): void;
+    (e: 'gradient-type', type: GradientType, fill: FillType): void;
 
     (e: 'gradient-color-change', color: Color, index: number): void;
 
     (e: 'gradient-stop-delete', index: number): void;
+
+    (e: 'changeMode', mode: ImageScaleMode): void;
+    (e: 'setImageRef', ref: string, origin: ImgFrame): void;
 }
 
 export interface HRGB { // 色相
@@ -161,8 +169,11 @@ const picker_visible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
 const gradient_channel_style = ref<any>({});
-const gradient_type = ref<GradientType | 'solid'>();
+const gradient_type = ref<GradientType>();
+const fill_type = ref<FillType>(FillType.SolidColor);
 const stop_els = ref<StopEl[]>([]);
+const imageScale = ref<number>();
+const scaleMode = ref<ImageScaleMode>();
 
 const LINE_LENGTH = 196;
 const DOT_SIZE = 12;
@@ -521,7 +532,7 @@ function setColor(color: Color) {
 }
 
 const changeColor = (color: Color) => {
-    if (gradient_type.value === 'solid' || !props.fillType) {
+    if (fill_type.value === FillType.SolidColor || !props.fillType) {
         emit('change', color);
     } else {
         if (!props.gradient) return;
@@ -1039,23 +1050,23 @@ const stop_mouseup = () => {
     document.removeEventListener('mouseup', stop_mouseup);
 }
 
-function color_type_change(val: GradientType | 'solid') {
-    if (gradient_type.value === val) {
-        set_gradient(val);
+function color_type_change(val: GradientType, type: FillType) {
+    if (gradient_type.value === val && fill_type.value === type) {
+        set_gradient(val, type);
         return;
     }
-    emit('gradient-type', val);
-    update_gradient_type(val);
+    emit('gradient-type', val, type);
+    update_gradient_type(val, type);
     nextTick(() => {
-        set_gradient(val);
+        set_gradient(val, type);
         if (props.locat) props.context.color.gradinet_locat(props.locat);
         init();
         locate();
     })
 }
 
-const set_gradient = (val: GradientType | 'solid') => {
-    if (val === 'solid') {
+const set_gradient = (val: GradientType, fillType: FillType) => {
+    if (fillType !== FillType.Gradient) {
         props.context.color.set_gradient_type(undefined);
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
@@ -1069,8 +1080,8 @@ const set_gradient = (val: GradientType | 'solid') => {
 }
 
 // 切换渐变类型
-function update_gradient_type(type: GradientType | 'solid') {
-    if (type === 'solid') {
+function update_gradient_type(type: GradientType, fill: FillType) {
+    if (fill !== FillType.Gradient) {
         props.context.color.select_stop(undefined);
     } else {
         let id = props.context.color.selected_stop;
@@ -1079,23 +1090,29 @@ function update_gradient_type(type: GradientType | 'solid') {
     }
     nextTick(() => {
         gradient_type.value = type;
+        fill_type.value = fill;
     })
 }
 
 // 获取渐变类型
 const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
+        fill_type.value = FillType.Gradient;
         gradient_type.value = props.gradient?.gradientType;
         props.context.color.set_gradient_type(gradient_type.value);
         let id = props.context.color.selected_stop;
         if (id === undefined) id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
     } else if (props.fillType === FillType.SolidColor) {
-        gradient_type.value = 'solid';
+        fill_type.value = FillType.SolidColor;
         props.context.color.select_stop(undefined);
         props.context.color.set_gradient_type(undefined);
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
+    } else if (props.fillType === FillType.Pattern) {
+        fill_type.value = FillType.Pattern;
+        imageScale.value = props.scale;
+        scaleMode.value = props.imageScaleMode;
     }
 
     if (props.locat) {
@@ -1205,10 +1222,25 @@ function onDrag(e: MouseEvent) {
     }
 }
 
+const changeScaleMode = (mode: ImageScaleMode) => {
+    emit('changeMode', mode);
+    nextTick(() => {
+        get_gradient_type();
+    })
+}
+
+const setImageRef = (urlRef:string, origin: ImgFrame) => {
+    emit('setImageRef', urlRef, origin);
+}
+
 function stopDrag(e: MouseEvent) {
     isDragging = false
     document.removeEventListener('mousemove', onDrag)
 }
+const image_url = ref(props.imageUrl);
+watch(() => props.imageUrl, (v) => {
+    image_url.value = v;
+}, { immediate: true })
 
 onMounted(() => {
     if (document.body) observer.observe(document.body);
@@ -1246,17 +1278,18 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="color_type_container" v-if="fillType && is_gradient_selected()">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular">
+                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
+                    :fillType="fill_type" :angular="angular">
                 </ColorType>
             </div>
             <!-- 渐变工具 -->
-            <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient && is_gradient_selected()"
-                 class="gradient-container">
+            <div v-if="fill_type === FillType.Gradient && fillType === FillType.Gradient && is_gradient_selected()"
+                class="gradient-container">
                 <div class="line-container">
                     <div class="line" ref="gradient_line" :style="gradient_channel_style"
-                         @mouseup.stop="_gradient_channel_down"></div>
+                        @mouseup.stop="_gradient_channel_down"></div>
                     <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
-                         @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
                         <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
                     </div>
                 </div>
@@ -1272,78 +1305,83 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 饱和度 -->
-            <!--            <div class="saturation" @mousedown.stop="e => setDotPosition(e)"-->
-            <!--                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">-->
-            <!--                <div class="white"></div>-->
-            <!--                <div class="black"></div>-->
-            <!--                <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>-->
-            <!--            </div>-->
-            <!--            &lt;!&ndash; 常用色 &ndash;&gt;-->
-            <!--            <div class="typical-container">-->
-            <!--                <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"-->
-            <!--                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>-->
-            <!--            </div>-->
-            <!--            <div class="controller">-->
-            <!--                <div class="eyedropper">-->
-            <!--                    <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>-->
-            <!--                </div>-->
-            <!--                <div class="sliders-container" ref="sliders">-->
-            <!--                    &lt;!&ndash; 色相 &ndash;&gt;-->
-            <!--                    <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">-->
-            <!--                        <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>-->
-            <!--                    </div>-->
-            <!--                    &lt;!&ndash; 透明度 &ndash;&gt;-->
-            <!--                    <div class="alpha-bacground">-->
-            <!--                        <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"-->
-            <!--                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">-->
-            <!--                            <div class="alphaIndicator" ref="alphaIndicator"-->
-            <!--                                 :style="{ left: alphaIndicatorAttr.x + 'px' }">-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </div>-->
-            <!--            &lt;!&ndash; model & values &ndash;&gt;-->
-            <!--            <div class="input-container">-->
-            <!--                <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>-->
-            <!--                <div class="values">-->
-            <!--                    <div class="wrap">-->
-            <!--                        <div class="value">-->
-            <!--                            <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"-->
-            <!--                                                                                           @click="(e) => inputClick(e, idx)"/>-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-            <!--                        <div class="label">-->
-            <!--                            <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </div>-->
-            <!--            &lt;!&ndash; 最近使用 &ndash;&gt;-->
-            <!--            <div class="recently-container" v-if="recent.length">-->
-            <!--                <div class="inner">-->
-            <!--                    <div class="header">{{ t('color.recently') }}</div>-->
-            <!--                    <div class="typical-container">-->
-            <!--                        <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"-->
-            <!--                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </div>-->
-            <!--            &lt;!&ndash; 文档使用 &ndash;&gt;-->
-            <!--            <div class="dc-container" v-if="document_colors.length">-->
-            <!--                <div class="inner">-->
-            <!--                    <div class="header">{{ t('color.documentc') }}</div>-->
-            <!--                    <div class="documentc-container" @wheel.stop>-->
-            <!--                        <div class="block" v-for="(c, idx) in document_colors" :key="idx"-->
-            <!--                             @click="() => setColor(c.color as any)"-->
-            <!--                             :title="t('color.times').replace('xx', c.times.toString())"-->
-            <!--                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </div>-->
-            <PatternFill :context="context"/>
+            <template v-if="fillType !== FillType.Pattern">
+                <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
+                    :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                    <div class="white"></div>
+                    <div class="black"></div>
+                    <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
+                </div>
+                <!-- &lt;!&ndash; 常用色 &ndash;&gt; -->
+                <div class="typical-container">
+                    <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+                        :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                    </div>
+                </div>
+                <div class="controller">
+                    <div class="eyedropper">
+                        <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
+                    </div>
+                    <div class="sliders-container" ref="sliders">
+                        <!-- &lt;!&ndash; 色相 &ndash;&gt; -->
+                        <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
+                            <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }">
+                            </div>
+                        </div>
+                        <!-- &lt;!&ndash; 透明度 &ndash;&gt; -->
+                        <div class="alpha-bacground">
+                            <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
+                                :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                                <div class="alphaIndicator" ref="alphaIndicator"
+                                    :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- &lt;!&ndash; model & values &ndash;&gt; -->
+                <div class="input-container">
+                    <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+                    <div class="values">
+                        <div class="wrap">
+                            <div class="value">
+                                <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
+                                        @click="(e) => inputClick(e, idx)" />
+                                </div>
+                            </div>
+                            <div class="label">
+                                <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- &lt;!&ndash; 最近使用 &ndash;&gt; -->
+                <div class="recently-container" v-if="recent.length">
+                    <div class="inner">
+                        <div class="header">{{ t('color.recently') }}</div>
+                        <div class="typical-container">
+                            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
+                                :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- &lt;!&ndash; 文档使用 &ndash;&gt; -->
+                <div class="dc-container" v-if="document_colors.length">
+                    <div class="inner">
+                        <div class="header">{{ t('color.documentc') }}</div>
+                        <div class="documentc-container" @wheel.stop>
+                            <div class="block" v-for="(c, idx) in document_colors" :key="idx"
+                                @click="() => setColor(c.color as any)"
+                                :title="t('color.times').replace('xx', c.times.toString())"
+                                :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode" :image="image_url"
+                @changeMode="changeScaleMode" @setImageRef="setImageRef"/>
         </div>
     </div>
 </template>
@@ -1376,7 +1414,7 @@ onUnmounted(() => {
 
         width: v-bind('HUE_WIDTH_CSS');
 
-        > .header {
+        >.header {
             width: 100%;
             height: 40px;
             position: relative;
@@ -1391,7 +1429,7 @@ onUnmounted(() => {
             border-color: #F5F5F5;
             padding: 14px 12px;
 
-            > .color-type-desc {
+            >.color-type-desc {
                 display: flex;
                 align-items: center;
                 cursor: pointer;
@@ -1400,19 +1438,19 @@ onUnmounted(() => {
                     user-select: none;
                 }
 
-                > svg {
+                >svg {
                     transition: 0.3s;
                     width: 10px;
                     height: 10px;
                     margin-left: 4px;
                 }
 
-                > svg:hover {
+                >svg:hover {
                     transform: translateY(2px);
                 }
             }
 
-            > .close {
+            >.close {
                 flex: 0 0 16px;
                 height: 16px;
                 text-align: center;
@@ -1422,7 +1460,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                > svg {
+                >svg {
                     width: 85%;
                     height: 85%;
                 }
@@ -1438,7 +1476,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        > .gradient-container {
+        >.gradient-container {
             display: flex;
             align-items: center;
             width: 100%;
@@ -1522,7 +1560,7 @@ onUnmounted(() => {
             }
         }
 
-        > .saturation {
+        >.saturation {
             width: 100%;
             position: relative;
             cursor: pointer;
@@ -1530,21 +1568,21 @@ onUnmounted(() => {
 
             height: v-bind('HUE_HEIGHT_CSS');
 
-            > .white {
+            >.white {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
 
-            > .black {
+            >.black {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
             }
 
-            > .dot {
+            >.dot {
                 width: v-bind('DOT_SIZE_CSS');
                 height: v-bind('DOT_SIZE_CSS');
                 border-radius: 50%;
@@ -1555,7 +1593,7 @@ onUnmounted(() => {
             }
         }
 
-        > .typical-container {
+        >.typical-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1565,7 +1603,7 @@ onUnmounted(() => {
             padding: 12px 6px;
             box-sizing: border-box;
 
-            > .block {
+            >.block {
                 margin: 0 3px 6px 3px;
                 width: 16px;
                 height: 16px;
@@ -1576,7 +1614,7 @@ onUnmounted(() => {
             }
         }
 
-        > .controller {
+        >.controller {
             width: 100%;
             height: 46px;
             display: flex;
@@ -1586,11 +1624,11 @@ onUnmounted(() => {
             box-sizing: border-box;
             justify-content: space-around;
 
-            > .sliders-container {
+            >.sliders-container {
                 width: v-bind('LINE_LENGTH_CSS');
                 height: 32px;
 
-                > .hue {
+                >.hue {
                     position: relative;
                     width: 100%;
                     height: 8px;
@@ -1598,7 +1636,7 @@ onUnmounted(() => {
                     border-radius: 5px 5px 5px 5px;
                     cursor: pointer;
 
-                    > .hueIndicator {
+                    >.hueIndicator {
                         top: -2px;
                         width: v-bind('DOT_SIZE_CSS');
                         height: v-bind('DOT_SIZE_CSS');
@@ -1610,7 +1648,7 @@ onUnmounted(() => {
                     }
                 }
 
-                > .alpha-bacground {
+                >.alpha-bacground {
                     margin-top: 8px;
                     width: 100%;
                     height: 8px;
@@ -1620,13 +1658,13 @@ onUnmounted(() => {
                     cursor: pointer;
                     box-sizing: border-box;
 
-                    > .alpha {
+                    >.alpha {
                         position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 5px 5px 5px 5px;
 
-                        > .alphaIndicator {
+                        >.alphaIndicator {
                             top: -2px;
                             width: v-bind('DOT_SIZE_CSS');
                             height: v-bind('DOT_SIZE_CSS');
@@ -1641,7 +1679,7 @@ onUnmounted(() => {
                 }
             }
 
-            > .eyedropper {
+            >.eyedropper {
                 width: 30px;
                 height: 30px;
                 display: flex;
@@ -1652,7 +1690,7 @@ onUnmounted(() => {
                 padding: 6px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     width: 18px;
                     height: 18px;
                     cursor: pointer;
@@ -1698,7 +1736,7 @@ onUnmounted(() => {
                             width: 25%;
                             text-align: center;
 
-                            > input {
+                            >input {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -1737,7 +1775,7 @@ onUnmounted(() => {
             }
         }
 
-        > .recently-container {
+        >.recently-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1763,14 +1801,14 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                > .typical-container {
+                >.typical-container {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     box-sizing: border-box;
 
-                    > .block {
+                    >.block {
                         width: 16px;
                         height: 16px;
                         border-radius: 3px;
@@ -1779,14 +1817,14 @@ onUnmounted(() => {
                         box-sizing: border-box;
                     }
 
-                    > .block:not(:first-child) {
+                    >.block:not(:first-child) {
                         margin-left: 6.2px;
                     }
                 }
             }
         }
 
-        > .dc-container {
+        >.dc-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1810,7 +1848,7 @@ onUnmounted(() => {
                     margin-bottom: 12px;
                 }
 
-                > .documentc-container {
+                >.documentc-container {
                     width: 100%;
                     max-height: 90px;
                     overflow: scroll;
@@ -1840,7 +1878,7 @@ onUnmounted(() => {
                         background-color: none;
                     }
 
-                    > .block {
+                    >.block {
                         display: inline-block;
                         width: 16px;
                         height: 16px;

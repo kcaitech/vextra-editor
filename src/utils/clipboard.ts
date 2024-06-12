@@ -895,7 +895,6 @@ export function after_import(context: Context, media: any) {
         console.log('!media || !(media instanceof Object)');
         return;
     }
-
     const values = Array.from(Object.keys(media) || []) as string[];
 
     if (!values?.length) {
@@ -1191,6 +1190,7 @@ function image_reader(context: Context, val: any, contentType: string, t: Functi
     img.onload = function () {
         frame.width = img.width;
         frame.height = img.height;
+        const origin = { width: img.width, height: img.height }
         const fr = new FileReader();
         fr.onload = function (event) {
             const base64: any = event.target?.result;
@@ -1202,7 +1202,7 @@ function image_reader(context: Context, val: any, contentType: string, t: Functi
                         const content = item!.content as Media;
                         const __xy = adjust_content_xy(context, content.frame);
                         const xy: PageXY = _xy || __xy;
-                        paster_image(context, xy, t, content);
+                        paster_image(context, xy, t, content, origin);
                     }
                 }
                 fr.readAsArrayBuffer(val);
@@ -1312,7 +1312,7 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
 /**
  * 将图片插入文档
  */
-export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: { width: number, height: number }) {
     const selection = context.selection;
     const workspace = context.workspace;
     const page = selection.selectedPage;
@@ -1326,7 +1326,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         frame.height = media.frame.height;
         frame.width = media.frame.width;
-        new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media);
+        new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media, origin);
     }
     if (asyncCreator && new_shape) {
         asyncCreator.close();

@@ -8,6 +8,7 @@ import {
     FillType,
     GradientType,
     GroupShapeView,
+    ImageScaleMode,
     ShapeType,
     ShapeView,
     Stop, SymbolView,
@@ -27,12 +28,15 @@ import {
     get_actions_fill_enabled,
     get_actions_fill_unify,
     get_actions_filltype,
+    get_actions_image_ref,
+    get_actions_image_scale_mode,
     get_fills
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, hidden_selection, is_editing } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
+import { ImgFrame } from '@/context/atrribute';
 
 interface FillItem {
     id: number,
@@ -497,14 +501,14 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
  * @description 切换渐变类型
  * @param idx
  */
-function togger_gradient_type(idx: number, type: GradientType | 'solid') {
+function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    if (type === 'solid') {
-        toggle_fill_type(idx, FillType.SolidColor);
+    if (fillType !== FillType.Gradient) {
+        toggle_fill_type(idx, fillType);
     } else {
         const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
         editor.toggerShapeGradientType(actions);
@@ -561,6 +565,50 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
+const changeMode = (idx: number, mode: ImageScaleMode) => {
+    const _idx = fills.length - idx - 1;
+    const s = props.context.selection.selectedShapes[0];
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
+    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.setFillImageScaleMode4Cell(_idx, mode, range);
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_image_scale_mode(shapes, _idx, mode);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageScaleMode(actions);
+        }
+    }
+}
+
+const getImageUrl = (fill: Fill) => {
+    return fill.peekImage(true) || props.context.attr.defaultImage;
+}
+
+const setImageRef = (idx: number, urlRef: string, origin: ImgFrame) => {
+    const _idx = fills.length - idx - 1;
+    const s = props.context.selection.selectedShapes[0];
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
+    if (len.value === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.setFillImageRef4Cell(_idx, urlRef, origin, range);
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_image_ref(shapes, _idx, {urlRef, origin});
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageRef(actions);
+        }
+    }
+}
+
 // hooks
 const stop2 = watch(() => props.selectionChange, updateData); // 监听选区变化
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
@@ -601,36 +649,31 @@ onUnmounted(() => {
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
-                <div class="color">
-                    <ColorPicker
-                        :color="f.fill.color"
-                        :context="props.context"
-                        :auto_to_right_line="true"
-                        :locat="{ index: fills.length - idx - 1, type: 'fills' }"
-                        :gradient="f.fill.gradient"
-                        :fillType="f.fill.fillType"
-                        @change="c => getColorFromPicker(idx, c)"
-                        @gradient-reverse="() => gradient_reverse(idx)"
-                        @gradient-rotate="() => gradient_rotate(idx)"
+                <div class="color" v-if="f.fill">
+                    <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
+                        :locat="{ index: fills.length - idx - 1, type: 'fills' }" :gradient="f.fill.gradient"
+                        :fillType="f.fill.fillType" :scale="f.fill.scale" :image-scale-mode="f.fill.imageScaleMode"
+                        :imageUrl="getImageUrl(f.fill)" @change="c => getColorFromPicker(idx, c)"
+                        @gradient-reverse="() => gradient_reverse(idx)" @gradient-rotate="() => gradient_rotate(idx)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                        @gradient-type="(type) => togger_gradient_type(idx, type)"
+                        @gradient-type="(type, fillType) => togger_gradient_type(idx, type, fillType)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
-                    >
+                        @changeMode="(mode) => changeMode(idx, mode)"  @setImageRef="(url, origin) => setImageRef(idx, url, origin)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
-                           :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                           @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)" @click="colorClick"
-                           @input="colorInput($event)"  @blur="is_color_select = false"
-                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
+                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                        @change="(e) => onColorChange(e, idx)" @focus="selectColor($event)" @click="colorClick"
+                        @input="colorInput($event)" @blur="is_color_select = false"
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <span class="colorFill" style="line-height: 14px;"
-                          v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
-                            t(`color.${f.fill.gradient.gradientType}`)
-                        }}</span>
+                        v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
+            t(`color.${f.fill.gradient.gradientType}`)
+        }}</span>
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
-                           @change="(e) => onAlphaChange(e, idx, f.fill)" @focus="(e) => selectAlpha(e)"
-                           @input="alphaInput"  @click="alphaClick" @blur="is_alpha_select = false"
-                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
+                        @change="(e) => onAlphaChange(e, idx, f.fill)" @focus="(e) => selectAlpha(e)"
+                        @input="alphaInput" @click="alphaClick" @blur="is_alpha_select = false"
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
                 <!--                <div class="temporary"></div>-->
                 <div class="delete" @click="deleteFill(idx)">
@@ -660,7 +703,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -669,11 +712,13 @@ onUnmounted(() => {
     }
 
     .add:hover {
-        background-color: #F5F5F5;;
+        background-color: #F5F5F5;
+        ;
     }
 
     .fills-container {
         padding: 6px 0;
+
         .fill {
             height: 32px;
             width: 100%;
@@ -696,7 +741,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 margin-right: 5px;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -749,7 +794,7 @@ onUnmounted(() => {
                     box-sizing: border-box;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
 
@@ -777,7 +822,7 @@ onUnmounted(() => {
                 height: 28px;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }

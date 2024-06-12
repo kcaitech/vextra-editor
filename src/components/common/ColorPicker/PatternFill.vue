@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import PatternToolBit from "@/components/common/ColorPicker/PatternToolBit.vue";
-import { insert_imgs, SVGReader } from "@/utils/content";
+import { insert_imgs, modify_imgs, SVGReader } from "@/utils/content";
 import { after_import } from "@/utils/clipboard";
 import { ref } from "vue";
 import { Context } from "@/context";
+import PatternMode from "./PatternMode.vue"
+import { ImageScaleMode } from "@kcdesign/data";
+import { ImgFrame } from "@/context/atrribute";
 
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 const picker = ref<HTMLInputElement>();
 
-const props = defineProps<{ context: Context }>()
-
+const props = defineProps<{
+    context: Context
+    scale: number | undefined
+    imageScaleMode: ImageScaleMode | undefined
+    image: string | undefined
+}>()
+const emits = defineEmits<{
+    (e: 'changeMode', mode: ImageScaleMode): void;
+    (e: 'setImageRef', ref: string, origin: ImgFrame): void;
+}>();
 function change(e: Event) {
     if (e.target) {
         const files = (e.target as HTMLInputElement).files;
@@ -24,6 +35,7 @@ function change(e: Event) {
         img.onload = function () {
             frame.width = img.width;
             frame.height = img.height;
+            const origin = { width: img.width, height: img.height }
             reader.onload = function (evt) {
                 if (!evt.target?.result) {
                     return;
@@ -42,7 +54,9 @@ function change(e: Event) {
                     }
                     const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
                     const container: any = {};
-                    // insert_imgs(props.context, t, [media], container);
+                    modify_imgs(props.context, [media], container);
+                    const keys = Array.from(Object.keys(container) || []) as string[];
+                    changeImageRef(keys[0], origin);
                     after_import(props.context, container);
                     if (picker.value) (picker.value as HTMLInputElement).value = '';
                 }
@@ -54,22 +68,31 @@ function change(e: Event) {
     }
 }
 function selectImage() {
-    const filepicker = document.getElementById('filepicker');
+    const filepicker = document.getElementById('fillfilepicker');
     if (filepicker) {
         filepicker.click();
     }
 }
+
+const changeImageRef = (urlRef: string, origin: ImgFrame) => {
+    emits('setImageRef', urlRef, origin);
+}
+
 </script>
 <template>
     <div class="container">
         <div class="header">
-            {{ '充满' }}
+            <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
+                @changeMode="(mode) => emits('changeMode', mode)"></PatternMode>
         </div>
         <div class="body">
             <div class="mask" @click="selectImage">
-                <div class="pic-picker"> {{ '选择图片' }}</div>
-                <input type="file" ref="picker" :accept="accept" :multiple="false" id="filePicker"
-                    @change="(e: Event) => { change(e) }" />
+                <img :src="image" alt="">
+                <div class="pic-picker">
+                    <div> {{ '选择图片' }}</div>
+                </div>
+                <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
+                    @change.stop="(e: Event) => { change(e) }" />
             </div>
         </div>
         <div class="tool">
@@ -93,54 +116,78 @@ function selectImage() {
         width: 100%;
         display: flex;
         align-items: center;
-        padding: 12px 10px;
+        padding: 12px;
         box-sizing: border-box;
         justify-content: space-between;
+        margin-bottom: 8px;
     }
 
     .body {
+        padding: 0 12px;
         width: 100%;
-        height: 160px;
-        background: conic-gradient(#eee 25%, white 0deg 50%, #eee 0deg 75%, white 0deg) 0 / 20px 20px;
+        height: 170px;
+        box-sizing: border-box;
 
         .mask {
+            background: conic-gradient(#eee 25%, white 0deg 50%, #eee 0deg 75%, white 0deg) 0 / 20px 20px;
+            position: relative;
             width: 100%;
             height: 100%;
-            transition: 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-
             background-color: transparent;
+            box-sizing: border-box;
 
-            >.pic-picker {
-                width: 100px;
-                height: 32px;
-                text-align: center;
-                line-height: 32px;
-                visibility: hidden;
-                color: #fff;
-                border: 1px solid #fff;
-                border-radius: 8px;
+            img {
+                position: absolute;
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
             }
 
-            #filePicker {
+            >.pic-picker {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: 0.2s;
+
+                div {
+                    transition: 0.2s;
+                    width: 100px;
+                    height: 32px;
+                    text-align: center;
+                    line-height: 32px;
+                    visibility: hidden;
+                    color: #fff;
+                    border: 1px solid #fff;
+                    border-radius: 8px;
+                    background-color: rgba(255, 255, 255, 0.2);
+                }
+            }
+
+            #fillfilepicker {
                 display: none;
             }
         }
 
         .mask:hover {
-            background-color: rgba(0, 0, 0, 0.45);
-
             >.pic-picker {
-                visibility: visible;
+                div {
+                    visibility: visible;
+                }
+
+                background-color: rgba(0, 0, 0, 0.15);
             }
         }
     }
 
     .tool {
         width: 100%;
-        padding: 12px 10px;
+        padding: 12px;
         box-sizing: border-box;
     }
 }

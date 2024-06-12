@@ -9,7 +9,8 @@ import {
     BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting,
     Blur,
     BlurType,
-    Point2D
+    Point2D,
+    ImageScaleMode
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -149,6 +150,22 @@ export function get_actions_fill_enabled(shapes: ShapeView[], index: number, val
     return actions;
 }
 export function get_actions_filltype(shapes: ShapeView[], index: number, value: FillType) {
+    const actions: BatchAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), index, value });
+    }
+    return actions;
+}
+export function get_actions_image_scale_mode(shapes: ShapeView[], index: number, value: ImageScaleMode) {
+    const actions: BatchAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: (shapes[i]), index, value });
+    }
+    return actions;
+}
+export function get_actions_image_ref(shapes: ShapeView[], index: number, value: any) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;

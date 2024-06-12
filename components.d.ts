@@ -215,6 +215,7 @@ declare module '@vue/runtime-core' {
     PathPen: typeof import('./src/components/Document/Toolbar/PathEdit/PathPen.vue')['default']
     PathShape: typeof import('./src/components/Document/Toolbar/Buttons/PathShape.vue')['default']
     PatternFill: typeof import('./src/components/common/ColorPicker/PatternFill.vue')['default']
+    PatternMode: typeof import('./src/components/common/ColorPicker/PatternMode.vue')['default']
     PatternToolBit: typeof import('./src/components/common/ColorPicker/PatternToolBit.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
     PenMode: typeof import('./src/components/Document/Selection/Controller/PathEdit/PenMode.vue')['default']

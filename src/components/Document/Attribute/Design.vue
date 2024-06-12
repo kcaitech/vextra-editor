@@ -42,7 +42,8 @@ const WITH_FILL = [
     ShapeType.Symbol,
     ShapeType.SymbolUnion,
     ShapeType.SymbolRef,
-    ShapeType.BoolShape
+    ShapeType.BoolShape,
+    ShapeType.Image,
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
