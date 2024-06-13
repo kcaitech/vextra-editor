@@ -1,10 +1,18 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import {
+    ColVector3D,
+    CtrlElementType,
+    makeMatrixByTransform2,
+    makeShapeTransform2By1,
+    Point3D,
+    ShapeView,
+    Transform
+} from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
-import { get_transform, modify_rotate_before_set, update_dot } from './common';
+import { get_transform, modify_rotate_before_set } from './common';
 import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
@@ -13,7 +21,6 @@ import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 
 interface Props {
-    matrix: number[]
     context: Context
     shape: ShapeView
     axle: { x: number, y: number }
@@ -25,20 +32,29 @@ interface Emits {
     (e: 'dblclick', event: MouseEvent): void;
 }
 
-interface Dot {
-    point: { x: number, y: number }
-    extra: { x: number, y: number }
-    r: { p: string, transform: string }
-    type: CtrlElementType
-    type2: CtrlElementType
+interface MainDot {
+    transform: string;
+    type: CtrlElementType;
+}
+
+interface AssistDot {
+    transform: string;
+    type: CtrlElementType;
+    type2: CtrlElementType;
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 
-const matrix = new Matrix();
-const data: { dots: Dot[] } = reactive({ dots: [] });
-const { dots } = data;
+const data: {
+    dots: MainDot[],
+    subDots: AssistDot[]
+} = reactive({
+    dots: [],
+    subDots: []
+});
+
+const { dots, subDots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 
@@ -54,19 +70,155 @@ let downXY: XY = { x: 0, y: 0 };
 let initDeg: number = 0;
 
 function update() {
-    matrix.reset(props.matrix);
     update_dot_path();
 }
 
 function update_dot_path() {
     dots.length = 0;
-    const frame = props.shape.frame;
-    let lt = matrix.computeCoord2(0, 0);
-    let rt = matrix.computeCoord2(frame.width, 0);
-    let rb = matrix.computeCoord2(frame.width, frame.height);
-    let lb = matrix.computeCoord2(0, frame.height);
+    updateDotLayout();
+}
 
-    dots.push(...update_dot([lt, rt, rb, lb], props.shape));
+function cursorAngle(srcVector: ColVector3D, destVector: ColVector3D) { // 获取srcVector到的destVector夹角（-π ~ π）
+    let angle = srcVector.angleTo(destVector); // srcVector与destVector的夹角（0 ~ π）
+    if ((srcVector.cross(destVector) as ColVector3D).z < 0) angle = -angle; // 顺时针方向为负
+    return angle
+}
+
+function updateDotLayout() {
+    dots.length = 0;
+    const shape = props.shape;
+    const { width, height } = shape.size;
+
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = shape.transform2FromRoot;
+
+    const fromClient = fromRoot.addTransform(clientMatrix);
+
+    const cols = fromClient.transform([
+        Point3D.FromXY(0, 0),
+        Point3D.FromXY(width, 0),
+        Point3D.FromXY(width, height),
+        Point3D.FromXY(0, height),
+        Point3D.FromXY(width / 2, height / 2),
+    ]);
+
+    const { col0, col1, col2, col3 } = cols;
+
+    const ltTransform = new Transform()
+        .rotateZ({ angle: Math.PI })
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const rtTransform = new Transform()
+        .rotateZ({ angle: -0.5 * Math.PI })
+        .setTranslate(ColVector3D.FromXY(width, 0))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const rbTransform = new Transform()
+        .setTranslate(ColVector3D.FromXY(width, height))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    const lbTransform = new Transform()
+        .rotateZ({ angle: 0.5 * Math.PI })
+        .setTranslate(ColVector3D.FromXY(0, height))
+        .addTransform(fromClient)
+        .clearScaleSize();
+
+    dots.push(
+        {
+            type: CtrlElementType.RectLT,
+            transform: makeMatrixByTransform2(ltTransform).toString(),
+        },
+        {
+            type: CtrlElementType.RectRT,
+            transform: makeMatrixByTransform2(rtTransform).toString(),
+        },
+        {
+            type: CtrlElementType.RectRB,
+            transform: makeMatrixByTransform2(rbTransform).toString(),
+        },
+        {
+            type: CtrlElementType.RectLB,
+            transform: makeMatrixByTransform2(lbTransform).toString(),
+        }
+    )
+
+    subDots.length = 0;
+
+    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = fromClient.clone()
+        .clearTranslate()
+        .transform([
+            Point3D.FromXY(-1, -1),
+            Point3D.FromXY(1, -1),
+            Point3D.FromXY(1, 1),
+            Point3D.FromXY(-1, 1),
+        ]);
+    // console.log(
+    //     fromClient.clone()
+    //         .clearTranslate()
+    //         .transform([
+    //             Point3D.FromXY(-1, -1),
+    //             Point3D.FromXY(1, -1),
+    //             Point3D.FromXY(1, 1),
+    //             Point3D.FromXY(-1, 1),
+    //         ])
+    //         .toString()
+    // )
+    // console.log(
+    //     fromClient.clone()
+    //         .clearTranslate()
+    //         .toString()
+    // )
+
+    const xVector = ColVector3D.FromXY(1, 0)
+
+    const R1 = cursorAngle(xVector, vecLT);
+    const R2 = cursorAngle(xVector, vecRT);
+    const R3 = cursorAngle(xVector, vecRB);
+    const R4 = cursorAngle(xVector, vecLB);
+
+    // console.log('{_POS_R1}', R1 / Math.PI)
+    // console.log('{_POS_R2}', R2 / Math.PI)
+    // console.log('{_POS_R3}', R3 / Math.PI)
+    // console.log('{_POS_R4}', R4 / Math.PI)
+
+    const assistLT = new Transform()
+        .setRotateZ(R1)
+        .setTranslate(ColVector3D.FromXY(col0.x, col0.y));
+    const assistRT = new Transform()
+        .setRotateZ(R2)
+        .setTranslate(ColVector3D.FromXY(col1.x, col1.y));
+    const assistRB = new Transform()
+        .setRotateZ(R3)
+        .setTranslate(ColVector3D.FromXY(col2.x, col2.y));
+    const assistLB = new Transform()
+        .setRotateZ(R4)
+        .setTranslate(ColVector3D.FromXY(col3.x, col3.y));
+
+    subDots.push(
+        {
+            type: CtrlElementType.RectLT,
+            type2: CtrlElementType.RectLTR,
+            transform: makeMatrixByTransform2(assistLT).toString()
+        },
+        {
+            type: CtrlElementType.RectRT,
+            type2: CtrlElementType.RectRTR,
+            transform: makeMatrixByTransform2(assistRT).toString()
+        },
+        {
+            type: CtrlElementType.RectRB,
+            type2: CtrlElementType.RectRBR,
+            transform: makeMatrixByTransform2(assistRB).toString()
+        },
+        {
+            type: CtrlElementType.RectLB,
+            type2: CtrlElementType.RectLBR,
+            transform: makeMatrixByTransform2(assistLB).toString()
+        }
+    )
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
@@ -197,46 +349,72 @@ function window_blur() {
     clear_status();
 }
 
-watch(() => props.matrix, update);
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    }
+}
+
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);
     update();
 })
 onMounted(() => {
+    props.context.workspace.watch(workspaceWatcher);
     props.shape.watch(update);
     window.addEventListener('blur', window_blur);
     update();
 })
 onUnmounted(() => {
+    props.context.workspace.unwatch(workspaceWatcher);
     props.shape.unwatch(update);
     window.removeEventListener('blur', window_blur);
 })
 </script>
 <template>
-    <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
-        </path>
-
-        <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-           @mouseleave="point_mouseleave">
-            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
-        </g>
+    <rect v-for="(p, i) in dots"
+          class="main-rect"
+          :key="i"
+          :stroke="theme"
+          :style="`transform: ${p.transform};`"
+          x="-3.5"
+          y="-3.5"
+          rx="2"
+          @mousedown.stop="(e) => point_mousedown(e, p.type)"
+          @mouseenter="() => point_mouseenter(p.type)"
+          @mouseleave="point_mouseleave"
+    />
+    <!--            <text x="0" y="0">{{ i + 1 }}</text>-->
+    <g v-for="(p, i) in subDots" :key="i" :style="`transform: ${p.transform};`">
+        <path
+            class="r-path"
+            d="M-3 0 l12.6 -12.6 a18 18 0 0 1 0 25.2 z"
+            @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            @mouseenter="() => point_mouseenter(p.type2)"
+            @mouseleave="point_mouseleave"
+        />
+        <circle
+            class="assist-rect"
+            cx="0"
+            cy="0"
+            r="7"
+            @mousedown.stop="(e) => point_mousedown(e, p.type)"
+            @mouseenter="() => point_mouseenter(p.type)"
+            @mouseleave="point_mouseleave"
+        />
     </g>
-    <!--    旋转中心-->
-    <!--    <rect :x="axle.x - 4" :y="axle.y - 4" width="8" height="8" fill="pink" rx="4" ry="4"></rect>-->
 </template>
 <style lang='scss' scoped>
 .r-path {
-    fill: transparent;
+    //fill: transparent;
+    fill: rgba(255, 0, 0, 0.6);
     stroke: none;
 }
 
 .main-rect {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     fill: #ffffff;
 }
 
@@ -244,6 +422,7 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     stroke: transparent;
-    fill: transparent;
+    //fill: transparent;
+    fill: rgba(0, 255, 0, 0.6);
 }
 </style>

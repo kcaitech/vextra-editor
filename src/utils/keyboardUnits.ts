@@ -136,9 +136,9 @@ keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyE'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
-    if(is_ctrl && event.shiftKey) {
+    if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        if(!permIsEdit(context)) {
+        if (!permIsEdit(context)) {
             context.tool.setAction(Action.Export);
         }
         context.menu.setExportDialog(true);
@@ -194,6 +194,9 @@ keydownHandler['KeyH'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (event.shiftKey) {
+        if (event.repeat) {
+            return;
+        }
         context.attr.notify(Attribute.HOR_HILP);
         return;
     }
@@ -358,6 +361,9 @@ keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
         context.arrange.notify(Arrange.ITEMS_ALIGN_VER); // 图层中线对齐
     }
     if (event.shiftKey && permIsEdit(context)) {
+        if (event.repeat) {
+            return;
+        }
         context.attr.notify(Attribute.VER_HILP);
         return;
     }

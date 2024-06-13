@@ -167,7 +167,6 @@ function rotateBase64Image(base64Image: string, angle: number) {
             const height = image.width * sin + image.height * cos;
             canvas.width = width;
             canvas.height = height;
-
             context.translate(width / 2, height / 2);
             context.rotate(radians);
             context.drawImage(image, -image.width / 2, -image.height / 2);

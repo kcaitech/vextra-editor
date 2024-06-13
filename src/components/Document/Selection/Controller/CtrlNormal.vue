@@ -110,25 +110,12 @@ function selection_watcher(t: number) {
     }
 }
 
-// const testPathData = ref<string>('');
-
 function workspace_watcher(t: number, some: any) {
     if (t === WorkSpace.TRANSLATING) {
         selection_hidden.value = props.context.workspace.isTranslating;
     } else if (t === WorkSpace.PATH_EDIT_MODE) {
         selection_hidden.value = props.context.workspace.is_path_edit_mode;
     }
-    // else if (t === 999) {
-    //     const { l, r, t, b } = some;
-    //     const m = props.context.workspace.matrix;
-    //     const p1 = m.computeCoord2(l, t);
-    //     const p2 = m.computeCoord2(r, t);
-    //     const p3 = m.computeCoord2(r, b);
-    //     const p4 = m.computeCoord2(l, b);
-    //
-    //     testPathData.value = `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y}L ${p4.x} ${p4.y} Z`
-    //
-    // }
 }
 
 function check_status() {
@@ -188,20 +175,19 @@ watchEffect(updateControllerView);
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox="viewBox" :width="width" :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
-         overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
+         viewBox="0 0 100 100" :width="100" :height="100" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
+         overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave">
         <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
         <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                        :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
-        <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+        <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape"
                          :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
-        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"
-                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"
-                   :theme="theme"></component>
-        <!--        <path :d="testPathData" stroke="green" stroke-width="1" fill="none"/>-->
+<!--        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"-->
+<!--                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"-->
+<!--                   :theme="theme"></component>-->
     </svg>
 </template>
 <style lang='scss' scoped>
