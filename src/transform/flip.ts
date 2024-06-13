@@ -3,7 +3,6 @@ import {
     ColVector3D,
     ShapeView,
     Transform,
-    Point3D,
 } from "@kcdesign/data"
 import { XYsBounding } from "@/utils/common";
 
@@ -43,10 +42,10 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         const { width, height } = shape.size;
 
         const { col0, col1, col2, col3 } = t.transform([
-            Point3D.FromXY(0, 0),
-            Point3D.FromXY(width, height),
-            Point3D.FromXY(width, 0),
-            Point3D.FromXY(0, height),
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(0, height),
         ]);
 
         const box = XYsBounding([col0, col1, col2, col3]);

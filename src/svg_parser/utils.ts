@@ -1,6 +1,6 @@
 import {Color, Shadow,} from "@kcdesign/data"
 import {Transform} from "@kcdesign/data"
-import {ColVector3D, Matrix2 as Matrix, Point3D} from "@kcdesign/data"
+import {ColVector3D, Matrix2 as Matrix} from "@kcdesign/data"
 import {NumberArray2D} from "@kcdesign/data"
 import {BaseCreator} from "./creator/base"
 
@@ -118,7 +118,7 @@ export function parseTransform(transformContent: string) {
                 } else if (numArgList.length === 3) {
                     transform.rotateAt({
                         axis: new ColVector3D([0, 0, 1]),
-                        point: new Point3D([numArgList[1], numArgList[2], 0]),
+                        point: new ColVector3D([numArgList[1], numArgList[2], 0]),
                         angle: numArgList[0],
                     })
                 }
