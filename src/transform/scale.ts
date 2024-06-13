@@ -4,7 +4,6 @@ import {
     adapt2Shape, ColVector3D,
     CtrlElementType,
     Matrix,
-    Matrix2, Point3D,
     Scaler,
     ScaleUnit,
     ShapeType,
@@ -404,12 +403,12 @@ export class ScaleHandler extends TransformHandler {
         // }
 
         // 光标在选区坐标系下的坐标
-        const cursorPointFromRoot = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y);
-        const cursorPointFromSelection = Point3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
+        const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
+        const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
         // 选区的左上角和右下角（在原选区坐标系下）
-        const ltPointForSelection = Point3D.FromXY(0, 0);
-        const rbPointForSelection = Point3D.FromXY(this.selectionSize.width, this.selectionSize.height);
+        const ltPointForSelection = ColVector3D.FromXY(0, 0);
+        const rbPointForSelection = ColVector3D.FromXY(this.selectionSize.width, this.selectionSize.height);
 
         // 左
         if (this.ctrlElementType === CtrlElementType.RectLT         // 左上

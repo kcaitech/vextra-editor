@@ -1,13 +1,11 @@
 import {
+    ColVector2D,
     ColVector3D,
     Matrix,
-    Matrix2,
     Rotator,
     ShapeView,
     Transform,
     TransformMode,
-    Point3D,
-    Point2D2,
 } from "@kcdesign/data";
 import {FrameLike, TransformHandler} from "./handler";
 import {XY} from "@/context/selection";
@@ -233,7 +231,7 @@ export class RotateHandler extends TransformHandler {
             width: this.shapes[0].size.width,
             height: this.shapes[0].size.height
         };
-        this.selectionCenter = this.selectionTransform.transform(Point3D.FromXY(
+        this.selectionCenter = this.selectionTransform.transform(ColVector3D.FromXY(
             this.selectionSize.width / 2,
             this.selectionSize.height / 2
         )).col0;
@@ -252,7 +250,7 @@ export class RotateHandler extends TransformHandler {
     }
 
     get cursorAngle() { // 获取光标向量（选区中点到光标的向量）相对x轴的夹角（-π ~ π）
-        const cursorPoint = Point3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
+        const cursorPoint = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y); // 光标在Root坐标系下的坐标
         const cursorVector = cursorPoint.subtract(this.selectionCenter); // 光标向量
         const xVector = ColVector3D.FromXY(1, 0); // X轴方向向量
         let angle = xVector.angleTo(cursorVector); // 光标向量与x轴的夹角（0 ~ π）
@@ -276,7 +274,7 @@ export class RotateHandler extends TransformHandler {
 
         // 选区变换后的Transform
         const transformForSelection = this.selectionTransform.clone().rotateZAt({
-            point: Point2D2.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2),
+            point: ColVector2D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2),
             angle: deltaAngle,
             mode: TransformMode.Local,
         });
