@@ -266,6 +266,7 @@ declare module '@vue/runtime-core' {
     ProjectShareList: typeof import('./src/components/TeamProject/ProjectShare/ProjectShareList.vue')['default']
     ProjectSharePage: typeof import('./src/components/TeamProject/ProjectShare/ProjectSharePage.vue')['default']
     ProjectView: typeof import('./src/components/Mobile/ProjectView.vue')['default']
+    Prototype: typeof import('./src/components/Document/Attribute/Prototype.vue')['default']
     Radial: typeof import('./src/components/Document/Selection/Controller/ColorEdit/Radial.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/BaseAttr/Radius.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
