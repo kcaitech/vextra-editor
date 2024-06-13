@@ -31,7 +31,7 @@ attributes
 export type PluginLocate =
     'toolbar.home' |
     'toolbar.home.menu' |
-    'toolbar.cooperation' |
+    'toolbar.others' |
     'toolbar.tools' |
     'toolbar.tools.efficient' |
     'navigation' |

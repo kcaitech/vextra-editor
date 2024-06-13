@@ -204,36 +204,7 @@ comps.push({ component: GroupUngroup })
 
 <template>
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-        <!-- <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-            :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
-        </div>
-        <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <PathShape :context="context"></PathShape>
-        <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
-        <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
-        <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
-        <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
-        <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
-        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
-        </div>
-
-        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-            <ToolButton style="width: 32px">
-                <div class="temp" @click="selectComps">
-                    <svg-icon icon-class="resource"></svg-icon>
-                </div>
-            </ToolButton>
-        </el-tooltip>
-        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" />
-        </div>
-        <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup> -->
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;" v-if="!isLable">{{ isread ? t('apply.read_only') : t('share.reviewable') }}</span>
@@ -243,6 +214,7 @@ comps.push({ component: GroupUngroup })
             </button>
         </div>
         <Cursor :params="cursorParams" :context="context"></Cursor>
+        <!-- todo -->
         <!-- <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
         </Comment> -->
         <Export :context="context" @select="select" :active="selected === Action.Export"></Export>

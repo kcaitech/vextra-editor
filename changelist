@@ -296,3 +296,14 @@ Changes to be committed:
 	modified:   src/openapi/plugins.ts
 	modified:   vite.config.ts
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	deleted:    src/components/Document/StatusBar/index.vue
+	renamed:    src/components/Document/Toolbar/LableToggle.vue -> src/components/Document/Toolbar/Others/LableToggle.vue
+	renamed:    src/components/Document/Toolbar/Scale.vue -> src/components/Document/Toolbar/Others/Scale.vue
+	renamed:    src/components/Document/Toolbar/UserInfo.vue -> src/components/Document/Toolbar/Others/index.vue
+	modified:   src/components/Document/Toolbar/Tools/index.vue
+	modified:   src/components/Document/Toolbar/index.vue
+	modified:   src/openapi/plugins.ts
+

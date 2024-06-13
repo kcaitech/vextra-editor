@@ -11,19 +11,22 @@ interface Props {
 }
 const props = defineProps<Props>();
 
+const plugins = props.context.pluginsMgr.search2('toolbar.others');
+const comps: { component: any, params?: any }[] = []
+comps.push(...plugins.begin)
+comps.push({ component: LableToggle })
+comps.push({ component: Scale })
+comps.push(...plugins.end)
+
 </script>
 <template>
-    <div class="user-info" @dblclick.stop>
-        <!-- <Collaborator :context="props.context"></Collaborator>
-        <UserAvatar :context="props.context"></UserAvatar>
-        <Share :context="props.context"></Share> -->
-        <LableToggle :context="props.context"></LableToggle>
-        <Scale :context="props.context"></Scale>
+    <div class="others" @dblclick.stop>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
 </template>
 
 <style scoped lang="scss">
-.user-info {
+.others {
     box-sizing: border-box;
     display: flex;
     flex-direction: row;

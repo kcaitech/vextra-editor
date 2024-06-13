@@ -4,7 +4,8 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { page_scale } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 interface Props {
-    context: Context
+    context: Context,
+    params: any
 }
 const props = defineProps<Props>();
 const cus = ref<boolean>(false);

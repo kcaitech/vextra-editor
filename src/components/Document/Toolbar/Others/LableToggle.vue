@@ -6,7 +6,8 @@ import { Action } from '@/context/tool';
 
 const { t } = useI18n();
 interface Props {
-    context: Context
+    context: Context,
+    params: any
 }
 const props = defineProps<Props>();
 const isLable = ref(false);
