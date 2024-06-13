@@ -4,7 +4,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from "vue-i18n";
 import { string_by_sys } from "@/utils/common";
-import ToolButton from "@/components/Document/Toolbar/ToolButton.vue";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -12,7 +11,8 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n();
 
 const props = defineProps<{
-    context: Context;
+    context: Context,
+    params: any
 }>();
 
 const currentTool = ref<Action>(Action.AddRect);

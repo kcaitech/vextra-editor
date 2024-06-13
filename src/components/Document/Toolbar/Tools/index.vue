@@ -2,27 +2,22 @@
 import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import Cursor from "./Buttons/Cursor.vue";
-import Frame from "./Buttons/Frame.vue";
-import GroupUngroup from "./GroupUngroup.vue";
-import CreateText from "./Buttons/CreateText.vue";
-import CreateImage from "./Buttons/CreateImage.vue";
-import Table from "./Buttons/Table/index.vue"
-// import Comment from "./Buttons/Comment.vue"
-import Contact from "./Buttons/CreateContact.vue";
-import Cutout from "./Buttons/Cutout.vue";
-import CreateComps from "./Buttons/CreateComps.vue";
+import Cursor from "../Buttons/Cursor.vue";
+import Frame from "../Buttons/Frame.vue";
+import GroupUngroup from "../Buttons/GroupUngroup.vue";
+import CreateText from "../Buttons/CreateText.vue";
+import CreateImage from "../Buttons/CreateImage.vue";
+import Table from "../Buttons/Table/index.vue"
+import Contact from "../Buttons/CreateContact.vue";
+import Cutout from "../Buttons/Cutout.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
-import { message } from "@/utils/message";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
-import { string_by_sys } from "@/utils/common";
-import { ElMessage } from "element-plus";
-import ToolButton from "./ToolButton.vue";
-// import * as share_api from '@/request/share'
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
-import Export from "./Buttons/Export.vue";
+import Export from "../Buttons/Export.vue";
+import VertLine from "./VertLine.vue"
+import CompsVue from "./Comps.vue"
 
 const { t } = useI18n();
 
@@ -32,7 +27,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const workspace = computed<WorkSpace>(() => props.context.workspace)
 const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
@@ -123,17 +117,99 @@ function applyForEdit() {
     // const documentID = props.context.comment.isDocumentInfo?.document.id
     // postDocumentAuthority({ doc_id: documentID, perm_type: 3, applicant_notes: '' })
 }
+
+
+const cursorParams = {
+    get d() {
+        return selected.value
+    },
+    select,
+    get is_lable() {
+        return isLable.value
+    },
+    get edit() {
+        return isEdit.value;
+    },
+    get active() {
+        return selected.value === Action.AutoV || selected.value === Action.AutoK
+    }
+}
+
+const comps: { component: any, params?: any }[] = []
+comps.push(
+    {
+        component: Cursor,
+        params: cursorParams
+    },
+    { component: VertLine },
+    {
+        component: Frame,
+        params: {
+            get active() {
+                return selected.value === Action.AddFrame
+            }
+        }
+    },
+    { component: PathShape },
+    {
+        component: CreateText,
+        params: {
+            get active() {
+                return selected.value === Action.AddText
+            }
+        }
+    },
+    {
+        component: CreateImage,
+        params: {
+            get active() {
+                return selected.value === Action.AddImage
+            }
+        }
+    },
+    {
+        component: Table,
+        params: {
+            get active() {
+                return selected.value === Action.AddTable
+            }
+        }
+    },
+    {
+        component: Contact, params: {
+            get active() {
+                return selected.value === Action.AddContact
+            }
+        }
+    },
+    {
+        component: Cutout, params: {
+            get active() {
+                return selected.value === Action.AddCutout
+            }
+        }
+    },
+    { component: VertLine })
+
+const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
+comps.push(...efficientPlugins.begin)
+comps.push({ component: CompsVue })
+comps.push(...efficientPlugins.end)
+
+comps.push({ component: VertLine })
+
+comps.push({ component: GroupUngroup })
+
 </script>
 
 <template>
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
+        <!-- <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
+            :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <!--        <Shape :context="context" @select="select"></Shape>-->
         <PathShape :context="context"></PathShape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
@@ -141,18 +217,23 @@ function applyForEdit() {
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
+
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton style="width: 32px">
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
                 </div>
             </ToolButton>
         </el-tooltip>
-        <!-- <Comment @select="select" :active="selected === Action.AddComment" :context="props.context"></Comment> -->
-        <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line" />
+        </div>
+        <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup> -->
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;" v-if="!isLable">{{ isread ? t('apply.read_only') : t('share.reviewable') }}</span>
@@ -161,14 +242,13 @@ function applyForEdit() {
                 {{ t('apply.apply_for_edit') }}
             </button>
         </div>
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
+        <Cursor :params="cursorParams" :context="context"></Cursor>
         <!-- <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
         </Comment> -->
         <Export :context="context" @select="select" :active="selected === Action.Export"></Export>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
-                  :selected="selected"></PathEditTool>
+        :selected="selected"></PathEditTool>
 </template>
 
 <style scoped lang="scss">
@@ -220,30 +300,7 @@ function applyForEdit() {
         }
     }
 
-    .temp {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 6px 6px 6px;
-        box-sizing: border-box;
 
-        > svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
 
-    .vertical-line {
-        width: 1px;
-        height: 20px;
-        background-color: grey;
-        flex: 0 0 auto;
-        margin-left: 5px;
-        margin-right: 5px;
-    }
 }
 </style>

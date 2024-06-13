@@ -52,11 +52,11 @@ function get_position_on_page(e: MouseEvent) {
 }
 
 onMounted(() => {
-    props.context.watch(component_watcher);
+    props.context.component.watch(component_watcher);
     check_status();
 })
 onUnmounted(() => {
-    props.context.unwatch(component_watcher);
+    props.context.component.unwatch(component_watcher);
 })
 
 </script>

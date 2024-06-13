@@ -21,12 +21,12 @@ import { debounce } from 'lodash';
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
-import BooleanObject from "./Buttons/BooleanObject.vue"
+import BooleanObject from "./BooleanObject.vue"
 import { Tool } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 
 const { t } = useI18n();
-const props = defineProps<{ context: Context, selection: Selection }>();
+const props = defineProps<{ context: Context, params: any }>();
 const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
@@ -38,7 +38,7 @@ const isGroup = ref(false);
 function _updater(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
-        const selection = props.selection;
+        const selection = props.context.selection;
         const shapes = selection.selectedShapes;
         isBoolGroup.value = false;
         isUngroup.value = false;
@@ -86,18 +86,18 @@ function tool_watcher(t?: number, alt?: boolean) {
 
 onMounted(() => {
     props.context.tool.watch(tool_watcher)
-    props.selection.watch(updater);
+    props.context.selection.watch(updater);
     updater();
 })
 onUnmounted(() => {
-    props.selection.unwatch(updater);
+    props.context.selection.unwatch(updater);
     props.context.tool.unwatch(tool_watcher)
 })
 
 const groupClick = (alt?: boolean) => {
     if (!(state.value & GROUP)) return;
     props.context.workspace.setSelectionViewUpdater(false);
-    const selection = props.selection;
+    const selection = props.context.selection;
     let shapes = filter_for_group1(selection.selectedShapes);
     const page = selection.selectedPage;
     if (!page || !shapes.length) return;
@@ -115,8 +115,8 @@ const groupClick = (alt?: boolean) => {
     if (newshape) {
         props.context.nextTick(page, () => {
             const group = newshape && page.getShape(newshape.id);
-            group && props.selection.selectShape(group);
-            group && props.selection.notify(Selection.EXTEND, group);
+            group && props.context.selection.selectShape(group);
+            group && props.context.selection.notify(Selection.EXTEND, group);
         })
         state.value = 0;
         state.value = state.value ^ UNGROUP ^ GROUP;
@@ -128,7 +128,7 @@ const ungroupClick = () => {
     if (!(state.value & UNGROUP)) {
         return;
     }
-    const selection = props.selection;
+    const selection = props.context.selection;
     const shapes = selection.selectedShapes;
     if (!shapes.length) {
         return;
@@ -167,7 +167,7 @@ const ungroupClick = () => {
  * @description 布尔操作
  */
 const changeBoolgroup = (type: BoolOp, n: string) => {
-    const selection = props.selection;
+    const selection = props.context.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     // console.log(type, n, 'bool', shapes[0] instanceof GroupShape);
@@ -201,7 +201,7 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
  */
 const flattenShape = () => {
     const page = props.context.selection.selectedPage;
-    const selection = props.selection;
+    const selection = props.context.selection;
     const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
@@ -229,33 +229,10 @@ const flattenShape = () => {
 </script>
 
 <template>
-    <div class="container">
-        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
-        </div>
-        <!--        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5" v-if="isGroup">-->
-        <!--            <div class="group" v-if="isGroup">-->
-        <!--                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"-->
-        <!--                    :class="{ active: state & GROUP }">-->
-        <!--                    <svg-icon icon-class="group"></svg-icon>-->
-        <!--                </ToolButton>-->
-        <!--            </div>-->
-        <!--        </Tooltip>-->
 
-        <BooleanObject :context="context" :selection="selection"
-                       @changeBool="changeBoolgroup"
-                       @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
+    <BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup" @flatten-shape="flattenShape"
+        :disabled="!isBoolGroup"></BooleanObject>
 
-        <!--        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5"-->
-        <!--            v-if="isUngroup">-->
-        <!--            <div class="group" v-if="isUngroup">-->
-        <!--                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false"-->
-        <!--                    :class="{ active: state & UNGROUP }">-->
-        <!--                    <svg-icon icon-class="ungroup"></svg-icon>-->
-        <!--                </ToolButton>-->
-        <!--            </div>-->
-        <!--        </Tooltip>-->
-    </div>
 </template>
 
 <style scoped lang="scss">
@@ -272,7 +249,7 @@ const flattenShape = () => {
         height: 100%;
         width: 34.5px;
 
-        > div {
+        >div {
             height: 32px;
             width: 32px;
             display: flex;
@@ -283,13 +260,13 @@ const flattenShape = () => {
             margin: 0;
             padding: 0;
 
-            > svg {
+            >svg {
                 height: 18px;
                 width: 18px;
             }
         }
 
-        > .active {
+        >.active {
             color: #ffffff;
         }
     }

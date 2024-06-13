@@ -95,7 +95,7 @@ const stopMouseDown = (e: MouseEvent) => {
 }
 
 const navi_watch = (t: number) => {
-    if(t === Navi.MODULE_CHANGE) {
+    if (t === Navi.MODULE_CHANGE) {
         const tab = props.context.navi.current_navi_module;
         currentTab.value = tab;
         updateUnderlinePosition();
@@ -113,6 +113,9 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watch);
     props.context.navi.watch(navi_watch);
 })
+
+const plugins = props.context.pluginsMgr.search2('navigation');
+
 </script>
 
 <template>
@@ -128,12 +131,15 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
+            <!-- begin plugin -->
+            <component v-for="p in plugins.begin" :is=p.component :context="props.context" :params="p.params" />
             <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
+                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
+            </ShapeTab>
             <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <!-- <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab> -->
+            <!-- end plugin -->
+            <component v-for="p in plugins.end" :is=p.component :context="props.context" :params="p.params" />
         </div>
     </div>
 </template>

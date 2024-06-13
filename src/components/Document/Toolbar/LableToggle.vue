@@ -3,7 +3,6 @@ import { ref, watch } from 'vue'
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n'
 import { Action } from '@/context/tool';
-import Cursor from "@/components/Document/Toolbar/Buttons/Cursor.vue";
 
 const { t } = useI18n();
 interface Props {

@@ -37,9 +37,6 @@ export default defineConfig({
         dir: 'dist'
       },
       plugins: []
-    },
-    watch: {
-      include: ['src', 'tsconfig.json']
     }
   },
   plugins: [

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import {} from 'vue';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Context } from '@/context';
 const { t } = useI18n()
 const props = defineProps<{
+  context: Context,
+  params: {
     active: boolean,
+  }
 }>();
 const emit = defineEmits<{
     (e: "select", action: Action): void;
@@ -17,7 +21,7 @@ function select(action: Action) {
 </script>
 <template>
   <Tooltip :content="`${t('cutoutExport.cutout')} &nbsp;&nbsp; S`">
-    <ToolButton ref="button" @click="() => {select(Action.AddCutout)}" :selected="props.active" style="width: 32px">
+    <ToolButton ref="button" @click="() => {select(Action.AddCutout)}" :selected="props.params.active" style="width: 32px">
       <div class="svg-container">
         <svg-icon icon-class="cutout"></svg-icon>
       </div>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import { Action, Tool } from "@/context/tool";
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -7,7 +7,8 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import { string_by_sys } from "@/utils/common";
 const { t } = useI18n()
 interface Props {
-    context: Context
+    context: Context,
+    params: any,
 }
 const props = defineProps<Props>();
 

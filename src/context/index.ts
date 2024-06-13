@@ -8,6 +8,7 @@ import {
     TableView,
     TextShapeView,
     TableCellView,
+    EventEmitter,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -37,6 +38,7 @@ import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
 import { ICommunication } from "@/openapi";
+import { PluginsMgr } from "./pluginsmgr";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -80,7 +82,13 @@ export class RepoWraper {
     // }
 }
 
-export class Context extends WatchableObject {
+export class Context extends EventEmitter {
+    // 用EventEmitter及storage来进行界面组件之间的数据同步及通信
+    // storage的key可以用组件路径也可用uuid等唯一标识
+    // eventid同上，需要个唯一前缀。
+    // 做到不同功能的组件之间可以完全解耦合
+    public storage: Map<string, any> = new Map();
+
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWraper;
@@ -89,6 +97,7 @@ export class Context extends WatchableObject {
     private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
     private m_workspace: WorkSpace;
+    private m_pluginsMgr: PluginsMgr;
     // private m_comment: Comment;
     private m_menu: Menu;
     private m_tool: Tool;
@@ -118,6 +127,7 @@ export class Context extends WatchableObject {
         this.m_selection = new Selection(data, this); //选区相关
         repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
+        this.m_pluginsMgr = new PluginsMgr();
         // this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
@@ -195,6 +205,10 @@ export class Context extends WatchableObject {
 
     get workspace() {
         return this.m_workspace;
+    }
+
+    get pluginsMgr() {
+        return this.m_pluginsMgr;
     }
 
     // get comment() {

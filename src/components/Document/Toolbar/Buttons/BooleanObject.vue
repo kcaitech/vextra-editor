@@ -2,7 +2,7 @@
 import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { Context } from '@/context';
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
 import { BoolOp, BoolShapeView, ShapeType, ShapeView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'

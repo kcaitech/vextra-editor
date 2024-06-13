@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue';
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
 import { Action } from "@/context/tool";
@@ -10,7 +10,9 @@ import { Context } from '@/context';
 type Button = InstanceType<typeof ToolButton>
 interface Props {
     context: Context;
-    active: boolean;
+    params: {
+        active: boolean;
+    }
 }
 interface Emits {
     (e: "select", action: Action): void;
@@ -89,7 +91,7 @@ const customFrame = () => {
 </script>
 
 <template>
-    <ToolButton ref="button" :selected="props.active" style="width: 32px">
+    <ToolButton ref="button" :selected="props.params.active" style="width: 32px">
         <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
             <div class="svg-container" @click="() => { emits('select', Action.AddFrame) }">
                 <svg-icon icon-class="frame"></svg-icon>

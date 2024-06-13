@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import ToolButton from '../../ToolButton.vue';
+import ToolButton from '../ToolButton.vue';
 import { ref, nextTick } from 'vue';
 import { Action } from "@/context/tool";
 import { Context } from '@/context';
@@ -7,8 +7,10 @@ import { useI18n } from 'vue-i18n';
 import CreateTable from './CreateTable.vue';
 const { t } = useI18n()
 interface Props {
-  context: Context
-  active: boolean
+  context: Context,
+  params: {
+    active: boolean
+  }
 }
 type Button = InstanceType<typeof ToolButton>;
 const props = defineProps<Props>();
@@ -78,7 +80,7 @@ const onMouseleave = () => {
   </div>
   <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
+    <ToolButton ref="button" :selected="props.params.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
       style="width: 32px">
       <div class="svg-table" @click="showTable">
         <svg-icon icon-class="pattern-table"></svg-icon>

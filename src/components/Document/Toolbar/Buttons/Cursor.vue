@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, nextTick, onUpdated } from 'vue';
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import { Action } from "@/context/tool";
 import DropSelect from "./DropSelect.vue"
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Context } from '@/context';
 const { t } = useI18n()
 type Button = InstanceType<typeof ToolButton>
 
@@ -15,10 +16,13 @@ const selected = ref<Action>(Action.AutoV);
 const selects = ref<Action>(Action.AutoV);
 const visible = ref(false)
 const props = defineProps<{
-  active: boolean,
-  d: Action,
-  is_lable: boolean,
-  edit: boolean
+  context: Context,
+  params: {
+    active: boolean,
+    d: Action,
+    is_lable: boolean,
+    edit: boolean
+  }
 }>();
 const emit = defineEmits<{
   (e: "select", action: Action): void;
@@ -77,11 +81,11 @@ const onMouseleave = () => {
 }
 
 onUpdated(() => {
-  if (props.d === Action.AutoV || props.d === Action.AutoK) {
-    if (props.d === Action.AutoV) {
-      selects.value = props.d
+  if (props.params.d === Action.AutoV || props.params.d === Action.AutoK) {
+    if (props.params.d === Action.AutoV) {
+      selects.value = props.params.d
     } else {
-      selects.value = props.d
+      selects.value = props.params.d
     }
   }
 })
@@ -92,10 +96,10 @@ onUpdated(() => {
   <el-tooltip class="box-item" effect="dark"
     :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
     placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave" :style="{ width: !(edit && !is_lable) ? '32px' : '32px' }">
-      <div class="svg-container" :style="{ marginLeft: !(edit && !is_lable) ? '0px' : '0px' }">
-        <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
+    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.params.active" @mouseenter.stop="onMouseenter"
+      @mouseleave.stop="onMouseleave" :style="{ width: !(props.params.edit && !props.params.is_lable) ? '32px' : '32px' }">
+      <div class="svg-container" :style="{ marginLeft: !(props.params.edit && !props.params.is_lable) ? '0px' : '0px' }">
+        <svg-icon :icon-class="props.params.d === selected ? props.params.d : selects"></svg-icon>
       </div>
       <!-- <div class="menu" @click="showMenu" v-if="edit && !is_lable">
         <svg-icon icon-class="white-down"></svg-icon>
@@ -104,7 +108,7 @@ onUpdated(() => {
   </el-tooltip>
     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
         <template v-for="item in patterns" :key="item.value">
-            <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor">
+            <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="props.params.d" :select="item.content" type="cursor">
             </DropSelect>
         </template>
     </div>

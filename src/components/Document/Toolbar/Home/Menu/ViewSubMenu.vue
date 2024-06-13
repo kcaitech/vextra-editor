@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page } from '@/utils/content';
 import { onMounted } from 'vue';
-import { ref, inject } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 interface Props {

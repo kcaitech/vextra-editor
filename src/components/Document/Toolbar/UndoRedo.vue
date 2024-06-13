@@ -3,7 +3,7 @@ import { Repository } from "@kcdesign/data";
 import { ref } from "@vue/reactivity";
 import { onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";
-import ToolButton from "./ToolButton.vue"
+import ToolButton from "./Buttons/ToolButton.vue"
 const props = defineProps<{ repo?: Repository }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {

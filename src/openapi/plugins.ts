@@ -1,45 +1,46 @@
 // 插件定位
 
 /*
-
-editor // 默认不写
-    .toolbar
-        :begin
-        :end
-        .tools
-            .select
-            .shapes
-            .efficient
-                .plugins
-            .group
-            :begin
-            :end
-            .xxx^begin // 新增加分组
-        .documentmenu
-            :begin
-            :end
-    .navigation
+toolbar
+    .tools
+        .select
         .shapes
-        .components
-        :begin
-        :end
-    .content
+        .efficient
+            .plugins
+        .group
+    .home
         .menu
-    .attributes
-        .design
+    .cooperation
+navigation
+    .shapes
+    .components
+content
+    .menu
+attributes
+    .design
 */
 
-import Plugin from "./Plugin.vue"
+// export type PluginPos = {
+//     node: string,
+//     pos?: 'begin' | 'end'
+// }[]
 
-export type PluginPos = {
-    node: string,
-    pos?: 'begin' | 'end'
-}[]
+// import type { DefineComponent } from 'vue'
+// export type PluginComponent = InstanceType<DefineComponent<{}, {}, any>>
 
-export type PluginComponent = InstanceType<typeof Plugin>
+export type PluginLocate =
+    'toolbar.home' |
+    'toolbar.home.menu' |
+    'toolbar.cooperation' |
+    'toolbar.tools' |
+    'toolbar.tools.efficient' |
+    'navigation' |
+    'content' |
+    'attributes';
 
 export interface IPlugin {
-    get pos(): PluginPos,
+    get locate(): PluginLocate,
+    readonly align?: 'begin' | 'end',
     get params(): any,
-    get component(): PluginComponent
+    get component(): any
 }

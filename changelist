@@ -252,3 +252,47 @@ Untracked files:
   (use "git add <file>..." to include in what will be committed)
 	changelist
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/components/Document/Bridge.vue
+	modified:   src/components/Document/Navigation/LeftTabs.vue
+	deleted:    src/components/Document/Toolbar/BackToHome.vue
+	modified:   src/components/Document/Toolbar/Buttons/BooleanObject.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateComps.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateContact.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateImage.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateText.vue
+	modified:   src/components/Document/Toolbar/Buttons/Cursor.vue
+	modified:   src/components/Document/Toolbar/Buttons/Cutout.vue
+	modified:   src/components/Document/Toolbar/Buttons/Export.vue
+	modified:   src/components/Document/Toolbar/Buttons/Frame.vue
+	renamed:    src/components/Document/Toolbar/GroupUngroup.vue -> src/components/Document/Toolbar/Buttons/GroupUngroup.vue
+	modified:   src/components/Document/Toolbar/Buttons/PathShape.vue
+	modified:   src/components/Document/Toolbar/Buttons/Table/index.vue
+	renamed:    src/components/Document/Toolbar/ToolButton.vue -> src/components/Document/Toolbar/Buttons/ToolButton.vue
+	deleted:    src/components/Document/Toolbar/DocumentMenu/DocumentMenu.vue
+	new file:   src/components/Document/Toolbar/Home/DevMode.vue
+	new file:   src/components/Document/Toolbar/Home/Menu/Export.vue
+	new file:   src/components/Document/Toolbar/Home/Menu/Guide.vue
+	new file:   src/components/Document/Toolbar/Home/Menu/View.vue
+	renamed:    src/components/Document/Toolbar/DocumentMenu/SubMenu.vue -> src/components/Document/Toolbar/Home/Menu/ViewSubMenu.vue
+	new file:   src/components/Document/Toolbar/Home/Menu/index.vue
+	new file:   src/components/Document/Toolbar/Home/index.vue
+	modified:   src/components/Document/Toolbar/LableToggle.vue
+	modified:   src/components/Document/Toolbar/PathEdit/Auto.vue
+	modified:   src/components/Document/Toolbar/PathEdit/Curve.vue
+	modified:   src/components/Document/Toolbar/PathEdit/PathClip.vue
+	modified:   src/components/Document/Toolbar/PathEdit/PathPen.vue
+	deleted:    src/components/Document/Toolbar/Saving.vue
+	new file:   src/components/Document/Toolbar/Tools/Comps.vue
+	new file:   src/components/Document/Toolbar/Tools/VertLine.vue
+	renamed:    src/components/Document/Toolbar/EditorTools.vue -> src/components/Document/Toolbar/Tools/index.vue
+	modified:   src/components/Document/Toolbar/UndoRedo.vue
+	modified:   src/components/Document/Toolbar/index.vue
+	modified:   src/context/index.ts
+	modified:   src/context/pluginsmgr.ts
+	deleted:    src/openapi/Plugin.vue
+	modified:   src/openapi/plugins.ts
+	modified:   vite.config.ts
+

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ToolButton from '../ToolButton.vue';
+import ToolButton from './ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -10,7 +10,9 @@ import { Tool } from '@/context/tool';
 import { after_import } from '@/utils/clipboard';
 const { t } = useI18n();
 interface Porps {
-    active: boolean
+    params: {
+        active: boolean
+    },
     context: Context
 }
 const props = defineProps<Porps>();
@@ -153,7 +155,7 @@ onUnmounted(() => {
 </script>
 <template>
     <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
-        <ToolButton ref="button" @click="select" :selected="props.active" style="width: 32px">
+        <ToolButton ref="button" @click="select" :selected="props.params.active" style="width: 32px">
             <div class="svg-container">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
