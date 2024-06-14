@@ -3,7 +3,7 @@
         <div v-if="isPrototype.length">
             <div v-if="isPrototype.length < 2" class="origin">
                 <div class="title">
-                    <div class="text" :style="{color:originedit?'#000':''}">流程起点</div>
+                    <div class="text" :style="{ color: originedit ? '#000' : '' }">流程起点</div>
                     <div v-if="!originedit" class="add" @click.stop=createOrigin>
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -23,11 +23,45 @@
             <div class="interaction">
                 <div class="title">
                     <div class="text">交互</div>
-                    <div class="add">
+                    <div class="add" @click.stop="createAction">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="default">设置窗口或其中控件的交互行为</div>
+                <div class="actions" v-if="numbers.length">
+
+                    <div class="actions-item" v-for="i in numbers" :key="i">
+                        <div>
+                            <div class="arrow" :class="{ activation: showaction && acitonindex === i }"
+                                @click.stop="showhandel(i)">
+                                <svg-icon icon-class="arrows-dr"></svg-icon>
+                            </div>
+                            <div class="item-content">{{ i }}</div>
+                            <div class="delete" @click.stop="deleteAction(i)">
+                                <svg-icon icon-class="delete"></svg-icon>
+                            </div>
+                        </div>
+                        <div v-if="showaction && acitonindex === i">
+                            <div class="trigger">
+                                <span>触发</span>
+                                <Select class="select" id="select" :source="actions"
+                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
+                            </div>
+                            <div class="action">
+                                <span>动作</span>
+                                <Select class="select" id="select" :source="actions"
+                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
+                            </div>
+                            <div class="target">
+                                <span>目标</span>
+                                <Select class="select" id="select" :source="actions"
+                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div v-else class="default">设置窗口或其中控件的交互行为</div>
             </div>
             <div class="overflow-roll">
                 <div class="text">溢出滚动</div>
@@ -60,6 +94,21 @@ enum overflowRollType {
     HorAndVer = 'horandver'
 }
 
+enum Actions {
+    Click = 'click',
+    DBLClick = 'dblclick',
+    RightClick = 'rightclick',
+    Drag = 'drag',
+    Hover = 'hover',
+    MouseEnter = 'mouseenter',
+    MouseLeave = 'mouseleave',
+    MouseDown = 'mousedown',
+    MouseUp = 'mouseup',
+    Delay = 'delay'
+
+}
+
+
 const props = defineProps<{ context: Context }>();
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
@@ -76,12 +125,29 @@ const originDescribed = ref<string>()
 const originNameNumber = ref<number>(0)
 const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
+const showaction = ref<boolean>(false)
+const acitonindex = ref<number>(-1)
+
 const overflowRoll: SelectSource[] = genOptions([
     [overflowRollType.NotRoll, '不滚动'],
     [overflowRollType.Horizontal, '水平'],
     [overflowRollType.Vertical, '垂直'],
     [overflowRollType.HorAndVer, '水平并垂直']
 ])
+
+const actions: SelectSource[] = genOptions([
+    [Actions.Click, '单击'],
+    [Actions.DBLClick, '双击'],
+    [Actions.RightClick, '右键'],
+    [Actions.Drag, '拖拽'],
+    [Actions.Hover, '悬停'],
+    [Actions.MouseEnter, '光标移入'],
+    [Actions.MouseLeave, '光标移出'],
+    [Actions.MouseDown, '按下鼠标'],
+    [Actions.MouseUp, '松开鼠标'],
+    [Actions.Delay, '延迟'],
+])
+
 
 
 const createOrigin = () => {
@@ -91,6 +157,33 @@ const createOrigin = () => {
 
 const deleteOrigin = () => {
     originedit.value = false
+}
+
+
+const numbers = ref<number[]>([])
+let i = 0
+const createAction = () => {
+    numbers.value.push(++i)
+    acitonindex.value = i
+    showaction.value = true
+}
+
+const deleteAction = (i: number) => {
+    numbers.value = numbers.value.filter(item => item != i)
+}
+
+const showhandel = (i: number) => {
+    if (acitonindex.value !== i) {
+        acitonindex.value = i
+        if (!showaction.value) {
+            showaction.value = true
+        }
+        return
+    } else {
+        showaction.value = !showaction.value
+    }
+
+
 }
 
 // 图层选区变化
@@ -192,6 +285,10 @@ onUnmounted(() => {
     justify-content: space-between;
 }
 
+.activation {
+    transform: rotate(90deg);
+}
+
 @mixin flex($j, $a) {
     display: flex;
     justify-content: $j;
@@ -214,6 +311,7 @@ onUnmounted(() => {
         padding: 14px 12px;
         border-bottom: 1px solid #F0F0F0;
         box-sizing: border-box;
+        gap: 8px;
 
         .title {
             @extend .flex;
@@ -307,6 +405,50 @@ onUnmounted(() => {
             height: 32px;
         }
 
+    }
+
+    .interaction .actions {
+        @include flex(space-between, center);
+        flex-direction: column;
+        gap: 8px;
+
+        .actions-item div {
+            @include flex(space-between, center);
+            gap: 8px;
+
+            .arrow {
+                display: flex;
+                width: 10px;
+                height: 10px;
+
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            .item-content {
+                width: 172px;
+                height: 32px;
+                background-color: #F5F5F5;
+                border-radius: 6px;
+                text-align: center;
+                line-height: 32px;
+
+            }
+
+            .delete {
+                width: 28px;
+                height: 28px;
+                display: flex;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    margin: auto;
+                }
+            }
+        }
     }
 }
 </style>
