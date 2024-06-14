@@ -84,6 +84,22 @@ function cursorAngle(srcVector: ColVector3D, destVector: ColVector3D) { // Ëé∑Âè
     return angle
 }
 
+const rotateCtx: {
+    mlt: Transform;
+    mrt: Transform;
+    mrb: Transform;
+    mlb: Transform;
+    lt?: number;
+    rt?: number;
+    rb?: number;
+    lb?: number;
+} = {
+    mlt: new Transform(),
+    mrt: new Transform(),
+    mrb: new Transform(),
+    mlb: new Transform()
+}
+
 function updateDotLayout() {
     dots.length = 0;
     const shape = props.shape;
@@ -125,6 +141,7 @@ function updateDotLayout() {
         .setTranslate(ColVector3D.FromXY(0, height))
         .addTransform(fromClient)
         .clearScaleSize();
+
 
     dots.push(
         {
@@ -168,15 +185,22 @@ function updateDotLayout() {
     const assistLT = new Transform()
         .setRotateZ(theta1)
         .setTranslate(ColVector3D.FromXY(col0.x, col0.y));
+    rotateCtx.mlt = assistLT;
+
     const assistRT = new Transform()
         .setRotateZ(theta2)
         .setTranslate(ColVector3D.FromXY(col1.x, col1.y));
+    rotateCtx.mrt = assistRT;
+
     const assistRB = new Transform()
         .setRotateZ(theta3)
         .setTranslate(ColVector3D.FromXY(col2.x, col2.y));
+    rotateCtx.mrb = assistRB;
+
     const assistLB = new Transform()
         .setRotateZ(theta4)
         .setTranslate(ColVector3D.FromXY(col3.x, col3.y));
+    rotateCtx.mlb = assistLB;
 
     subDots.push(
         {
@@ -267,15 +291,13 @@ function point_mouseup(event: MouseEvent) {
     clear_status();
 }
 
-function setCursor(t: CtrlElementType, active = false) {
-    const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
 
+function setCursor(t: CtrlElementType, active = false) {
     // type
     const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     // rotate
-    let deg = rotate;
+    let deg = 0;
     if (t === CtrlElementType.RectLT) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
     } else if (t === CtrlElementType.RectRT) {
@@ -286,16 +308,12 @@ function setCursor(t: CtrlElementType, active = false) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
     } else if (t === CtrlElementType.RectLTR) {
         deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
-        // deg = 0;
     } else if (t === CtrlElementType.RectRTR) {
         deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
-        // deg = 0;
     } else if (t === CtrlElementType.RectRBR) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        // deg = 0;
     } else if (t === CtrlElementType.RectLBR) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        // deg = 0;
     }
 
     active
