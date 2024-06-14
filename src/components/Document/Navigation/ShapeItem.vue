@@ -3,7 +3,7 @@ import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, w
 import { Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
 import { is_state } from "@/utils/symbol";
@@ -58,9 +58,9 @@ const is_tool_visible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const esc = ref<boolean>(false)
-const isread = ref(false)
-const canComment = ref(false)
-const isEdit = ref(false)
+// const isread = ref(false)
+// const canComment = ref(false)
+// const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 18);
 let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
@@ -123,7 +123,7 @@ const setVisible = (e: MouseEvent) => {
 }
 const onRename = () => {
     if (is_state(props.data.shapeview())
-        || !isEdit.value
+        || props.data.context.readonly
         || props.data.context.tool.isLable
     ) {
         return;
@@ -229,19 +229,19 @@ function mouseup(e: MouseEvent) {
 }
 
 //获取文档权限
-const handlePerm = () => {
-    const perm = props.data.context.workspace.documentPerm
-    if (perm === Perm.isRead) {
-        isread.value = true
-    } else if (perm === Perm.isComment) {
-        isread.value = false
-        canComment.value = true
-    } else {
-        isread.value = false
-        canComment.value = false
-        isEdit.value = true
-    }
-}
+// const handlePerm = () => {
+//     const perm = props.data.context.workspace.documentPerm
+//     if (perm === Perm.isRead) {
+//         isread.value = true
+//     } else if (perm === Perm.isComment) {
+//         isread.value = false
+//         // canComment.value = true
+//     } else {
+//         isread.value = false
+//         // canComment.value = false
+//         isEdit.value = true
+//     }
+// }
 
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
@@ -365,7 +365,7 @@ onUpdated(() => {
     getHovered();
 })
 onMounted(() => {
-    handlePerm()
+    // handlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
     props.data.context.selection.watch(selectedWatcher);
@@ -405,12 +405,12 @@ onUnmounted(() => {
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                    v-if="isEdit && !isLable">
+                    v-if="!data.context.readonly && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': visible_status }"
-                    @click="(e: MouseEvent) => setVisible(e)" v-if="isEdit && !isLable">
+                    @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                 </div>

@@ -28,6 +28,10 @@ attributes
 // import type { DefineComponent } from 'vue'
 // export type PluginComponent = InstanceType<DefineComponent<{}, {}, any>>
 
+// 正常PC模式
+// PC开发模式
+// 移动端
+
 export type PluginLocate =
     'toolbar.home' |
     'toolbar.home.menu' |
@@ -36,7 +40,8 @@ export type PluginLocate =
     'toolbar.tools.efficient' |
     'navigation' |
     'content' |
-    'attributes';
+    'attributes' | 
+    'devmode.toolbar.tools';
 
 export interface IPlugin {
     get locate(): PluginLocate,

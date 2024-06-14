@@ -4,7 +4,7 @@ import { ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
-import { Perm } from '@/context/workspace';
+// import { Perm } from '@/context/workspace';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 
@@ -111,7 +111,7 @@ const unHoverShape = (e: MouseEvent) => {
 function down(e: MouseEvent) {
     const context = props.context;
 
-    if ((context.workspace.documentPerm !== Perm.isEdit)) {
+    if ((context.readonly)) {
         context.selection.selectShape(props.shape);
         return;
     }

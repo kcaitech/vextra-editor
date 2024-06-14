@@ -25,7 +25,7 @@ import {
     TextShape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
-import { Perm, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { adjust_content_xy, after_import, paster_image } from "./clipboard";
@@ -876,7 +876,7 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
 }
 
 export const permIsEdit = (context: Context) => {
-    return Boolean(context.workspace.documentPerm === Perm.isEdit);
+    return Boolean(!context.readonly);
 }
 
 export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {

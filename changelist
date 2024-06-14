@@ -307,3 +307,28 @@ Changes to be committed:
 	modified:   src/components/Document/Toolbar/index.vue
 	modified:   src/openapi/plugins.ts
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/components/Document/Attribute/RightTabs.vue
+	modified:   src/components/Document/Content/ArtboardName.vue
+	modified:   src/components/Document/Navigation/Component/ComponentListView.vue
+	modified:   src/components/Document/Navigation/PageItem.vue
+	modified:   src/components/Document/Navigation/PageList.vue
+	modified:   src/components/Document/Navigation/Search/ResultItem.vue
+	modified:   src/components/Document/Navigation/Search/TextResultItem.vue
+	modified:   src/components/Document/Navigation/ShapeItem.vue
+	modified:   src/components/Document/Navigation/ShapeList.vue
+	modified:   src/components/Document/Toolbar/Buttons/Export.vue
+	modified:   src/components/Document/Toolbar/Tools/index.vue
+	new file:   src/components/common/watchreadonly.ts
+	new file:   src/context/events.ts
+	modified:   src/context/index.ts
+	modified:   src/context/workspace.ts
+	modified:   src/index.ts
+	modified:   src/openapi/index.ts
+	modified:   src/openapi/plugins.ts
+	modified:   src/utils/common.ts
+	modified:   src/utils/content.ts
+	modified:   src/utils/permission.ts
+

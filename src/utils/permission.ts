@@ -1,6 +1,6 @@
 // import { router, Group } from "@/router";
 import { Context } from "@/context";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 // import isMobileDevice from "./mobileDeviceChecker";
 // import kcdesk from "@/kcdesk";
 
@@ -58,5 +58,5 @@ import { Perm } from "@/context/workspace";
 //     }
 // })
 export const permIsEdit = (context: Context) => {
-    return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
+    return Boolean(!context.readonly && !context.tool.isLable);
 }

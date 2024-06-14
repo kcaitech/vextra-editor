@@ -15,7 +15,7 @@ import SearchPanel from "./Search/SearchPanel.vue";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
-import { Perm } from "@/context/workspace"
+// import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import { DragDetail, hover, modify_after_drag, modify_shape_lock_status, modify_shape_visible_status, multi_select_shape, range_select_shape, scroll_to_view } from "@/utils/listview";
 import { v4 } from "uuid";
@@ -251,7 +251,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             const index = chartMenuItems.value.findIndex((item) => item === 'component');
             if (index > -1) chartMenuItems.value.splice(index, 1);
         }
-        if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
+        if (props.context.readonly || props.context.tool.isLable) {
             chartMenuItems.value = ['all', 'copy'];
         }
         chartMenuMount(e);
@@ -427,7 +427,7 @@ function after_drag(detail: DragDetail) {
 }
 
 const allow_to_drag = () => {
-    return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
+    return !props.context.readonly && !props.context.tool.isLable;
 }
 
 const stopWatch = watch(() => props.page, () => {

@@ -10,7 +10,7 @@ import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { Navi } from "@/context/navigate";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";
 import { v4 } from "uuid";
@@ -61,7 +61,7 @@ const getPageName = () => {
     const name = pages.find(item => item.id === page.id)?.name
     cur_page_name.value = name || t('navi.page');
 }
-const isEdit = ref(props.context.workspace.documentPerm);
+// const isEdit = ref(props.context.workspace.documentPerm);
 const isLable = ref(props.context.tool.isLable);
 const rightTarget = ref<string>('');
 const pageList = ref<HTMLDivElement>()
@@ -209,7 +209,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
-    if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
+    if (props.context.readonly || props.context.tool.isLable) {
         pageMenuItems = [
             { name: 'copy_link', id: id, disable: false },
         ]
@@ -297,7 +297,7 @@ const tool_watcher = (t?: number) => {
     }
 }
 const allow_to_drag = () => {
-    return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
+    return !props.context.readonly && !props.context.tool.isLable;
 }
 const scrollList = (index: number) => {
     if (pagelist.value && index >= 0) {
@@ -349,7 +349,7 @@ onUnmounted(() => {
         <div class="header">
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
-                <Tooltip v-if="context.workspace.documentPerm === Perm.isEdit && !isLable" :content="t('navi.add_page')">
+                <Tooltip v-if="!context.readonly && !isLable" :content="t('navi.add_page')">
                     <div class="add" @click.stop="addPage">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>

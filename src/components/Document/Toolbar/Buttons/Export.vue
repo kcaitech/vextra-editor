@@ -9,8 +9,9 @@ const { t } = useI18n();
 
 const props = defineProps<{
     context: Context,
-    active: boolean,
-
+    params: {
+        active: boolean,
+    }
 }>();
 
 const emit = defineEmits<{
@@ -25,7 +26,7 @@ const exportClick = () => {
 
 <template>
     <Tooltip :content="`${t('cutoutExport.export_cutout')}`">
-        <ToolButton ref="button" @click.stop="exportClick" style="width: 32px" :selected="props.active">
+        <ToolButton ref="button" @click.stop="exportClick" style="width: 32px" :selected="props.params.active">
             <div class="svg-container" id="export_dialog">
                 <svg-icon icon-class="dialog"></svg-icon>
             </div>

@@ -14,7 +14,7 @@ import {
 } from '@/utils/mouse_interactive';
 import { Component } from '@/context/component';
 import { is_state } from "@/utils/symbol";
-import { Perm } from '@/context/workspace';
+// import { Perm } from '@/context/workspace';
 
 interface Props {
     context: Context
@@ -69,7 +69,7 @@ function down(e: MouseEvent, shape: Shape) {
 
 function move(e: MouseEvent) {
     if (
-        props.context.workspace.documentPerm !== Perm.isEdit
+        props.context.readonly
         || props.context.tool.isLable
     ) {
         return;

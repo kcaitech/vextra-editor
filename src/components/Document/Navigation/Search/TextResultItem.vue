@@ -7,7 +7,7 @@ import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/sh
 import { is_state } from "@/utils/symbol";
 import { is_component_class } from "@/utils/listview";
 import { Selection } from "@/context/selection";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 
 export interface TItemData {
@@ -36,9 +36,10 @@ const title = ref<string>('');
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
-const isread = ref(false)
-const canComment = ref(false)
-const isEdit = ref(false)
+// const isread = ref(false)
+// const canComment = ref(false)
+// const isEdit = ref(false)
+const isEdit = !props.data.context.readonly;
 const emit = defineEmits<{
     (e: "toggleexpand", shape: ShapeView): void;
     (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -134,7 +135,7 @@ const setVisible = (e: MouseEvent) => {
 }
 const onRename = () => {
     if (is_state(props.data.shape)
-        || !isEdit.value
+        || !isEdit
         || props.data.context.tool.isLable
         || props.data.shape.isVirtualShape) return;
     isInput.value = true
@@ -217,19 +218,19 @@ function icon_class() {
     }
 }
 
-const handlePerm = () => {
-    const perm = props.data.context.workspace.documentPerm
-    if (perm === Perm.isRead) {
-        isread.value = true
-    } else if (perm === Perm.isComment) {
-        isread.value = false
-        canComment.value = true
-    } else {
-        isread.value = false
-        canComment.value = false
-        isEdit.value = true
-    }
-}
+// const handlePerm = () => {
+//     const perm = props.data.context.workspace.documentPerm
+//     if (perm === Perm.isRead) {
+//         isread.value = true
+//     } else if (perm === Perm.isComment) {
+//         isread.value = false
+//         canComment.value = true
+//     } else {
+//         isread.value = false
+//         canComment.value = false
+//         isEdit.value = true
+//     }
+// }
 
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
@@ -328,7 +329,7 @@ onUpdated(() => {
 onMounted(() => {
     updater();
     update_slice();
-    handlePerm();
+    // handlePerm();
     props.data.context.tool.watch(tool_watcher);
     props.data.context.navi.watch(navi_watcher);
     props.data.context.selection.watch(selectedWatcher);

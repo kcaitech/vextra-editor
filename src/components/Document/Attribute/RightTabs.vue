@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
 import PageAttr from "@/components/Document/Attribute/PageAttr.vue";
@@ -26,7 +26,7 @@ const emit = defineEmits<Emits>();
 const controllerRef = ref<HTMLElement>();
 const underlineWidth = ref(0);
 const underlinePosition = ref(0);
-const perm = ref(props.context.workspace.documentPerm);
+// const perm = ref(props.context.workspace.documentPerm);
 const currentTab = ref<Tab>("Design");
 const tabs: { title: string, id: Tab }[] = [
     {
@@ -120,7 +120,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container" @mouseup="stopMouseDown" v-if="isLable || perm === Perm.isEdit">
+    <div class="tab-container" @mouseup="stopMouseDown" v-if="isLable || !context.readonly">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
@@ -135,7 +135,7 @@ onUnmounted(() => {
             <div class="body">
                 <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
                 <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
-                <template v-if="perm === Perm.isEdit">
+                <template v-if="!context.readonly">
                     <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                         :style="{ opacity: showRight ? 1 : 0.6 }">
                         <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>

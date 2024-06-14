@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import Cursor from "../Buttons/Cursor.vue";
@@ -10,7 +10,7 @@ import CreateImage from "../Buttons/CreateImage.vue";
 import Table from "../Buttons/Table/index.vue"
 import Contact from "../Buttons/CreateContact.vue";
 import Cutout from "../Buttons/Cutout.vue";
-import { WorkSpace, Perm } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
@@ -18,6 +18,7 @@ import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
 import Export from "../Buttons/Export.vue";
 import VertLine from "./VertLine.vue"
 import CompsVue from "./Comps.vue"
+import { watchReadyonly } from "@/components/common/watchreadonly";
 
 const { t } = useI18n();
 
@@ -27,9 +28,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const isread = ref(false)
-const canComment = ref(false)
-const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
 const is_path_edit = ref<boolean>(false);
 
@@ -56,21 +54,6 @@ function tool_watcher(t?: number) {
     }
 }
 
-//获取文档权限
-const hangdlePerm = () => {
-    const perm = props.context.workspace.documentPerm;
-    if (perm === Perm.isRead) {
-        isread.value = true
-    } else if (perm === Perm.isComment) {
-        isread.value = false
-        canComment.value = true
-    } else {
-        isread.value = false
-        canComment.value = false
-        isEdit.value = true
-    }
-}
-
 function workspace_watcher(t: number) {
     if (t === WorkSpace.PATH_EDIT_MODE) {
         is_path_edit.value = props.context.workspace.is_path_edit_mode
@@ -79,7 +62,7 @@ function workspace_watcher(t: number) {
 
 // hooks
 onMounted(() => {
-    hangdlePerm()
+    // hangdlePerm()
     props.context.tool.watch(tool_watcher);
     props.context.workspace.watch(workspace_watcher);
 });
@@ -88,36 +71,11 @@ onUnmounted(() => {
     props.context.tool.unwatch(workspace_watcher);
 })
 
-const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
-    // try {
-    //     const { code, message } = await share_api.postDocumentAuthorityAPI(data)
-    //     if (code === 400 && message === '申请次数已达上限') {
-    //         ElMessage.success({
-    //             message: message,
-    //             center: true,
-    //             duration: 3000
-    //         })
-    //     } else {
-    //         ElMessage.success({
-    //             message: '权限申请已发送',
-    //             center: true,
-    //             duration: 3000
-    //         })
-    //     }
-    // } catch (error) {
-    //     ElMessage.success({
-    //         message: '未知异常',
-    //         center: true,
-    //         duration: 3000
-    //     })
-    // }
-}
 
-function applyForEdit() {
-    // const documentID = props.context.comment.isDocumentInfo?.document.id
-    // postDocumentAuthority({ doc_id: documentID, perm_type: 3, applicant_notes: '' })
-}
-
+const readonly = watchReadyonly(props.context, () => {
+    updateComps()
+    updateDevComps()
+});
 
 const cursorParams = {
     get d() {
@@ -128,98 +86,146 @@ const cursorParams = {
         return isLable.value
     },
     get edit() {
-        return isEdit.value;
+        return !readonly.value;
     },
     get active() {
         return selected.value === Action.AutoV || selected.value === Action.AutoK
     }
 }
 
-const comps: { component: any, params?: any }[] = []
-comps.push(
-    {
-        component: Cursor,
-        params: cursorParams
-    },
-    { component: VertLine },
-    {
-        component: Frame,
-        params: {
-            get active() {
-                return selected.value === Action.AddFrame
-            }
-        }
-    },
-    { component: PathShape },
-    {
-        component: CreateText,
-        params: {
-            get active() {
-                return selected.value === Action.AddText
-            }
-        }
-    },
-    {
-        component: CreateImage,
-        params: {
-            get active() {
-                return selected.value === Action.AddImage
-            }
-        }
-    },
-    {
-        component: Table,
-        params: {
-            get active() {
-                return selected.value === Action.AddTable
-            }
-        }
-    },
-    {
-        component: Contact, params: {
-            get active() {
-                return selected.value === Action.AddContact
-            }
-        }
-    },
-    {
-        component: Cutout, params: {
-            get active() {
-                return selected.value === Action.AddCutout
-            }
-        }
-    },
-    { component: VertLine })
+const _comps = shallowRef<{ component: any, params?: any }[]>([])
 
-const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
-comps.push(...efficientPlugins.begin)
-comps.push({ component: CompsVue })
-comps.push(...efficientPlugins.end)
+function updateComps() {
+    const comps = _comps.value;
+    comps.length = 0;
 
-comps.push({ component: VertLine })
+    const toolsPlugins = props.context.pluginsMgr.search2('toolbar.tools');
+    comps.push(...toolsPlugins.begin)
+    comps.push(
+        {
+            component: Cursor,
+            params: cursorParams
+        })
 
-comps.push({ component: GroupUngroup })
+    if (!readonly.value) {
+        comps.push({ component: VertLine },
+            {
+                component: Frame,
+                params: {
+                    get active() {
+                        return selected.value === Action.AddFrame
+                    }
+                }
+            },
+            { component: PathShape },
+            {
+                component: CreateText,
+                params: {
+                    get active() {
+                        return selected.value === Action.AddText
+                    }
+                }
+            },
+            {
+                component: CreateImage,
+                params: {
+                    get active() {
+                        return selected.value === Action.AddImage
+                    }
+                }
+            },
+            {
+                component: Table,
+                params: {
+                    get active() {
+                        return selected.value === Action.AddTable
+                    }
+                }
+            },
+            {
+                component: Contact, params: {
+                    get active() {
+                        return selected.value === Action.AddContact
+                    }
+                }
+            },
+            {
+                component: Cutout, params: {
+                    get active() {
+                        return selected.value === Action.AddCutout
+                    }
+                }
+            },
+            { component: VertLine }
+        )
+        const efficientPlugins = props.context.pluginsMgr.search2('toolbar.tools.efficient');
+        comps.push(...efficientPlugins.begin)
+        comps.push({ component: CompsVue })
+        comps.push(...efficientPlugins.end)
 
+        comps.push({ component: VertLine })
+
+        comps.push({ component: GroupUngroup })
+    }
+    else {
+        comps.push(
+            {
+                component: Export,
+                params: {
+                    get active() {
+                        return selected.value === Action.Export
+                    }
+                }
+            })
+    }
+
+    comps.push(...toolsPlugins.end)
+
+}
+
+updateComps()
+
+const devcomps = shallowRef<{ component: any, params?: any }[]>([])
+function updateDevComps() {
+    const comps = devcomps.value;
+    comps.length = 0;
+
+    const toolsPlugins = props.context.pluginsMgr.search2('devmode.toolbar.tools');
+    comps.push(...toolsPlugins.begin)
+    comps.push(
+        {
+            component: Cursor,
+            params: cursorParams
+        })
+
+    comps.push(
+        {
+            component: Export,
+            params: {
+                get active() {
+                    return selected.value === Action.Export
+                }
+            }
+        })
+
+    comps.push(...toolsPlugins.end)
+
+}
+updateDevComps()
 </script>
 
 <template>
-    <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+    <!-- 正常工具栏 --><!-- 可编辑或者只读 -->
+    <div v-if="!isLable" class="editor-tools" @dblclick.stop>
+        <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
-    <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
-        <span style="color: #ffffff;" v-if="!isLable">{{ isread ? t('apply.read_only') : t('share.reviewable') }}</span>
-        <div class="button" v-if="!isLable">
-            <button class="el" style="background-color: #1878F5;margin-right: 4px" @click.stop="applyForEdit">
-                {{ t('apply.apply_for_edit') }}
-            </button>
-        </div>
-        <Cursor :params="cursorParams" :context="context"></Cursor>
-        <!-- todo -->
-        <!-- <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :context="props.context">
-        </Comment> -->
-        <Export :context="context" @select="select" :active="selected === Action.Export"></Export>
+    <!-- 开发模式 --><!-- 可编辑或者只读 -->
+    <div v-if="isLable" class="editor-tools" @dblclick.stop>
+        <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params" />
     </div>
-    <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
+
+    <!-- 路径编辑 -->
+    <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
         :selected="selected"></PathEditTool>
 </template>
 
@@ -259,20 +265,5 @@ comps.push({ component: GroupUngroup })
     &::-webkit-scrollbar-thumb:active {
         background-color: none;
     }
-
-    .button {
-        margin-left: 15px;
-
-        .el {
-            height: 32px;
-            border-radius: 5px;
-            color: #ffffff;
-            background-color: #865DFF;
-            border: none;
-        }
-    }
-
-
-
 }
 </style>

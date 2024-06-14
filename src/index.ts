@@ -18,21 +18,13 @@ import { LzDataLocal } from "./basic/lzdatalocal";
 import { Zip } from "./PAL/browser/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
-import { ICommunication } from "./openapi";
+import { DocumentProps } from "./openapi";
 
 export { Context } from "./context";
 export { Selection } from "./context/selection"
 export * from "./openapi";
 
 const t = (i18n as any).global.t;
-
-export type DocumentProps = (
-    { source: 'storage', storage: IStorage, path: string, fid: string, versionId: string } |
-    { source: 'file', file: File, fmt: 'sketch' | 'fig' } |
-    { source: 'new' }) &
-{ coop?: ICoopNet } &
-{ isMobile?: boolean } &
-{ communication?: ICommunication }
 
 async function _open(props: DocumentProps) {
     const repo = new Repository();
@@ -86,7 +78,7 @@ export async function openDocument(props: DocumentProps) {
     }
 
     if (props.coop) cooprepo.setNet(props.coop);
-    const context = new Context(data, cooprepo);
+    const context = new Context(data, cooprepo, props);
     if (props.communication) context.communication = props.communication;
     // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
     return { context, loader: loader }

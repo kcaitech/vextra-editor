@@ -5,11 +5,11 @@ import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 
-export enum Perm {
-    isRead = 1, // 仅阅读
-    isComment = 2, // 可评论
-    isEdit = 3 // 可编辑
-}
+// export enum Perm {
+//     isRead = 1, // 仅阅读
+//     isComment = 2, // 可评论
+//     isEdit = 3 // 可编辑
+// }
 
 export class WorkSpace extends WatchableObject {
     readonly m_clipboard: Clipboard;
@@ -56,7 +56,7 @@ export class WorkSpace extends WatchableObject {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_font_name_list: { zh: string[], en: string[] } = { zh: [], en: [] };
-    private m_document_perm: number = 3;
+    // private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
     private m_root: Root = {
@@ -121,9 +121,9 @@ export class WorkSpace extends WatchableObject {
         if (pageView) return pageView as Element;
     }
 
-    get documentPerm() {
-        return this.m_document_perm;
-    }
+    // get documentPerm() {
+    //     return this.m_document_perm;
+    // }
 
     get isPreToTranslating() {
         return this.m_pre_to_translating;
@@ -177,9 +177,9 @@ export class WorkSpace extends WatchableObject {
         this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
     }
 
-    setDocumentPerm(perm: number) {
-        this.m_document_perm = perm;
-    }
+    // setDocumentPerm(perm: number) {
+    //     this.m_document_perm = perm;
+    // }
 
     get clipboard() {
         return this.m_clipboard;
@@ -276,7 +276,7 @@ export class WorkSpace extends WatchableObject {
         return e.button === 0
             && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
-            && this.m_document_perm === Perm.isEdit
+            // && this.m_document_perm === Perm.isEdit
             && !this.context.tool.isLable
             && !this.isEditing;
     }

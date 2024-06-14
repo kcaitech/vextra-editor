@@ -2,7 +2,7 @@
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Selection } from "@/context/selection";
 import { Context } from "@/context";
-import { Perm } from "@/context/workspace";
+// import { Perm } from "@/context/workspace";
 export interface ItemData {
     name: string
     id: string
@@ -34,7 +34,7 @@ function onMouseDown(e: MouseEvent) {
 }
 
 const onRename = () => {
-    if (props.data.context.workspace.documentPerm !== Perm.isEdit) return;
+    if (props.data.context.readonly) return;
     if (props.data.context.tool.isLable) return;
     isInput.value = true
     nextTick(() => {

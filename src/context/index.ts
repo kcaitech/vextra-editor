@@ -37,8 +37,9 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
-import { ICommunication } from "@/openapi";
+import { DocumentProps, ICommunication } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
+import { events } from "./events";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -116,12 +117,14 @@ export class Context extends EventEmitter {
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
+    private m_props: DocumentProps;
 
-    constructor(data: Document, repo: CoopRepository) {
+    constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
         (window as any).__context = this;
         this.m_data = data;
         this.m_coopRepo = repo;
+        this.m_props = props;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
@@ -193,6 +196,17 @@ export class Context extends EventEmitter {
 
     get repo(): RepoWraper {
         return this.m_repo;
+    }
+
+    get props() {
+        return this.m_props;
+    }
+    set readonly(readonly: boolean) {
+        this.m_props.readonly = readonly;
+        this.emit(events.context_readonly, readonly)
+    }
+    get readonly() {
+        return !!this.m_props.readonly;
     }
 
     get coopRepo(): CoopRepository {
