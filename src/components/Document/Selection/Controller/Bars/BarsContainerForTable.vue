@@ -1,12 +1,14 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { adapt2Shape, AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
+import { CursorType } from "@/utils/cursor2";
+
 interface Props {
     matrix: number[]
     context: Context
@@ -194,7 +196,7 @@ function setCursor(t: CtrlElementType) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
     }
 
-    cursor.setType('scale', deg);
+    cursor.setType(CursorType.Scale, deg);
 }
 
 function set_status_on_down() {

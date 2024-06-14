@@ -1,10 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { CtrlElementType, Matrix } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { ScaleHandler } from '@/transform/scale';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -144,10 +145,10 @@ function clear_status() {
 }
 
 function setCursor(t: CtrlElementType) {
-    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale', 90);
-    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale', 0);
-    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale', 90);
-    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale', 0);
+    if (t === CtrlElementType.RectTop) props.context.cursor.setType(CursorType.Scale, 90);
+    else if (t === CtrlElementType.RectRight) props.context.cursor.setType(CursorType.Scale, 0);
+    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType(CursorType.Scale, 90);
+    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType(CursorType.Scale, 0);
 }
 
 function bar_mouseenter(type: CtrlElementType) {

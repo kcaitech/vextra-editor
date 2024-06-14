@@ -9,6 +9,7 @@ import { get_transform, modify_rotate_before_set } from '../Points/common';
 import { ScaleHandler } from "@/transform/scale";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -146,7 +147,7 @@ function setCursor(t: CtrlElementType) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
     }
 
-    cursor.setType('scale', deg);
+    cursor.setType(CursorType.Scale, deg);
 }
 
 function bar_mouseenter(type: CtrlElementType) {

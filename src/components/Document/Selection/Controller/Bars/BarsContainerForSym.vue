@@ -1,12 +1,14 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 import { ScaleHandler } from "@/transform/scale";
+import { CursorType } from "@/utils/cursor2";
+
 interface Props {
     matrix: number[]
     context: Context
@@ -117,7 +119,7 @@ function setCursor(t: CtrlElementType) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
     }
 
-    cursor.setType('scale', deg);
+    cursor.setType(CursorType.Scale, deg);
 }
 function bar_mouseenter(type: CtrlElementType) {
     need_reset_cursor_after_transform = false;

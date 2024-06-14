@@ -1,15 +1,15 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY, XY } from '@/context/selection';
-import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { ClientXY, XY } from '@/context/selection';
+import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
-import { Action } from '@/context/tool';
 import { ScaleHandler } from "@/transform/scale";
 import { RotateHandler } from "@/transform/rotate";
 import { WorkSpace } from "@/context/workspace";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -132,7 +132,7 @@ function setCursor(t: CtrlElementType, active = false) {
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
 
     // type
-    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     // rotate
     let deg = rotate;

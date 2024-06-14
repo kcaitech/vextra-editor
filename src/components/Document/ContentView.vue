@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance } from 'vue';
+import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
+import { Color, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
-import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
+import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
@@ -17,16 +17,17 @@ import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
     _updateRoot,
-    is_drag,
-    drop,
-    right_select,
     adapt_page,
+    color2string,
+    drop,
     flattenShapes,
     get_menu_items,
-    selectShapes,
-    color2string,
     init_insert_table,
-    root_scale, root_trans
+    is_drag,
+    right_select,
+    root_scale,
+    root_trans,
+    selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
@@ -38,7 +39,7 @@ import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
 import Creator from './Creator/Creator.vue';
-import { Wheel, fourWayWheel } from '@/utils/wheel';
+import { fourWayWheel, Wheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
 import { ColorCtx } from '@/context/color';
@@ -47,6 +48,7 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context
@@ -170,7 +172,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    props.context.cursor.setType('grab', 0);
+    props.context.cursor.setType(CursorType.Grab, 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
@@ -226,12 +228,12 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType('grabbing', 0);
+    props.context.cursor.setType(CursorType.Grabbing, 0);
 }
 
 function pageViewDragEnd() {
     state = STATE_NONE;
-    props.context.cursor.setType('grab', 0)
+    props.context.cursor.setType(CursorType.Grab, 0)
 }
 
 /**
@@ -517,6 +519,7 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
+
 const isvisible = ref(false);
 
 function menu_watcher(type?: number, mount?: string) {
@@ -641,18 +644,19 @@ const closeLoading = () => {
 }
 watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
-    props.context.selection.scoutMount(props.context);
-    props.context.workspace.watch(workspace_watcher);
-    props.context.workspace.init(t.bind(getCurrentInstance()));
-    props.context.workspace.setFreezeStatus(true);
-    props.context.comment.watch(comment_watcher);
-    props.context.menu.watch(menu_watcher);
-    props.context.cursor.watch(cursor_watcher);
-    props.context.cursor.init();
-    props.context.tool.watch(tool_watcher);
+    const ctx = props.context;
+    ctx.selection.scoutMount(ctx);
+    ctx.workspace.watch(workspace_watcher);
+    ctx.workspace.init(t.bind(getCurrentInstance()));
+    ctx.workspace.setFreezeStatus(true);
+    ctx.comment.watch(comment_watcher);
+    ctx.menu.watch(menu_watcher);
+    ctx.cursor.watch(cursor_watcher);
+    ctx.cursor.init();
+    ctx.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
-    props.context.color.watch(color_watcher);
-    props.context.user.updateUserConfig();
+    ctx.color.watch(color_watcher);
+    ctx.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
     document.addEventListener('keydown', onKeyDown);
@@ -668,23 +672,25 @@ onMounted(() => {
             return;
         }
         resizeObserver.observe(root.value);
-        _updateRoot(props.context, root.value);
+        _updateRoot(ctx, root.value);
         initMatrix(props.page);
     });
-    props.context.workspace.setFreezeStatus(false)
+    ctx.workspace.setFreezeStatus(false)
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
 })
 onUnmounted(() => {
-    props.context.selection.scout?.remove();
-    props.context.workspace.unwatch(workspace_watcher);
-    props.context.comment.unwatch(comment_watcher);
-    props.context.menu.unwatch(menu_watcher);
-    props.context.cursor.unwatch(cursor_watcher);
-    props.context.tool.unwatch(tool_watcher);
+    const ctx = props.context;
+    ctx.selection.scout?.remove();
+    ctx.workspace.unwatch(workspace_watcher);
+    ctx.comment.unwatch(comment_watcher);
+    ctx.menu.unwatch(menu_watcher);
+    ctx.cursor.unwatch(cursor_watcher);
+    ctx.cursor.remove();
+    ctx.tool.unwatch(tool_watcher);
     props.page.unwatch(page_watcher);
-    props.context.color.unwatch(color_watcher);
+    ctx.color.unwatch(color_watcher);
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
@@ -698,20 +704,21 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
+         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
+         :style="{ 'background-color': background_color }">
         <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
-            @closeLoading="closeLoading" />
+                     @closeLoading="closeLoading"/>
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <SelectionView :context="props.context" :matrix="matrix" />
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
+        <SelectionView :context="props.context" :matrix="matrix"/>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
-            :site="site" ref="contextMenuEl">
+                     :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
+                                      :context="props.context" @close="contextMenuUnmount" :site="site"
+                                      :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
@@ -719,7 +726,7 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <Creator v-if="creatorMode" :context="props.context" />
+        <Creator v-if="creatorMode" :context="props.context"/>
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
         <Grid :context="props.context"></Grid>

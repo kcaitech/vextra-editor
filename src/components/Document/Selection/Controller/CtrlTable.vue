@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
+import { Matrix, TableCellType, TableCellView, TableLayout, TableView } from '@kcdesign/data';
+import { computed, onMounted, onUnmounted, reactive, ref, shallowRef, watch } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
@@ -15,7 +15,7 @@ import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
-import { WorkSpace } from "@/context/workspace";
+import { CursorType } from "@/utils/cursor2";
 
 const props = defineProps<{
     context: Context,
@@ -193,9 +193,9 @@ function move(e: MouseEvent) {
         if (props.shape.isFlippedHorizontal) deg = 180 - deg;
         if (props.shape.isFlippedVertical) deg = 360 - deg;
         if (x_checked) {
-            props.context.cursor.setType('scale', deg);
+            props.context.cursor.setType(CursorType.Scale, deg);
         } else if (y_checked) {
-            props.context.cursor.setType('scale', 90 + deg);
+            props.context.cursor.setType(CursorType.Scale, 90 + deg);
         }
     }
 }

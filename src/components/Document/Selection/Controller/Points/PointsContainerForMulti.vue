@@ -5,10 +5,11 @@ import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot2 } from './common';
-import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
+import { getHorizontalAngle } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
 import { RotateHandler } from '@/transform/rotate';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -101,7 +102,7 @@ function point_mousemove(event: MouseEvent) {
         if (isRotateElement) {
             rotator?.execute(event);
 
-            props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
+            props.context.cursor.setTypeForce(CursorType.Rotate, getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
             scaler?.execute(event);
         }
@@ -157,7 +158,7 @@ function setCursor(t: CtrlElementType) {
     } else if (t === CtrlElementType.RectLBR) {
         deg = deg + 135;
     }
-    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     cursor.setType(type, deg);
 }

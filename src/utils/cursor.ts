@@ -48,7 +48,7 @@ export function styleSheetController(): StyleSheetController {
         style = document.createElement('style');
         style.type = 'text/css';
         const temp = uuid().split('-');
-        styleSheetId = temp[temp.length - 1] || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
+        styleSheetId = temp[temp.length - 1] || 'cursor';
         style.id = styleSheetId;
         // 预设一个auto
         style.innerHTML += await getClassString('auto', 0, styleSheetId);

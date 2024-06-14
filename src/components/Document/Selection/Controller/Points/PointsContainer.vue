@@ -5,7 +5,6 @@ import {
     CtrlElementType,
     makeMatrixByTransform2,
     makeShapeTransform2By1,
-    Point3D,
     ShapeView,
     Transform
 } from '@kcdesign/data';
@@ -19,6 +18,7 @@ import { WorkSpace } from "@/context/workspace";
 import { RotateHandler } from "@/transform/rotate";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context
@@ -70,11 +70,11 @@ let downXY: XY = { x: 0, y: 0 };
 let initDeg: number = 0;
 
 function update() {
-    update_dot_path();
+    updateDotLayout();
 }
 
-function update_dot_path() {
-    dots.length = 0;
+function updateByShape(...args: any[]) {
+    if (!args.includes('layout')) return;
     updateDotLayout();
 }
 
@@ -95,11 +95,11 @@ function updateDotLayout() {
     const fromClient = fromRoot.addTransform(clientMatrix);
 
     const cols = fromClient.transform([
-        Point3D.FromXY(0, 0),
-        Point3D.FromXY(width, 0),
-        Point3D.FromXY(width, height),
-        Point3D.FromXY(0, height),
-        Point3D.FromXY(width / 2, height / 2),
+        ColVector3D.FromXY(0, 0),
+        ColVector3D.FromXY(width, 0),
+        ColVector3D.FromXY(width, height),
+        ColVector3D.FromXY(0, height),
+        ColVector3D.FromXY(width / 2, height / 2),
     ]);
 
     const { col0, col1, col2, col3 } = cols;
@@ -147,54 +147,35 @@ function updateDotLayout() {
 
     subDots.length = 0;
 
-    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = fromClient.clone()
-        .clearTranslate()
-        .transform([
-            Point3D.FromXY(-1, -1),
-            Point3D.FromXY(1, -1),
-            Point3D.FromXY(1, 1),
-            Point3D.FromXY(-1, 1),
-        ]);
-    // console.log(
-    //     fromClient.clone()
-    //         .clearTranslate()
-    //         .transform([
-    //             Point3D.FromXY(-1, -1),
-    //             Point3D.FromXY(1, -1),
-    //             Point3D.FromXY(1, 1),
-    //             Point3D.FromXY(-1, 1),
-    //         ])
-    //         .toString()
-    // )
-    // console.log(
-    //     fromClient.clone()
-    //         .clearTranslate()
-    //         .toString()
-    // )
+    const t = fromClient.clearTranslate();
+    t.updateMatrix();
+    t.matrix.normalize();
+    t.isSubMatrixLatest = false;
+    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = t.transform([
+        ColVector3D.FromXY(-1, -1),
+        ColVector3D.FromXY(1, -1),
+        ColVector3D.FromXY(1, 1),
+        ColVector3D.FromXY(-1, 1)
+    ]);
 
-    const xVector = ColVector3D.FromXY(1, 0)
+    const xVector = ColVector3D.FromXY(1, 0);
 
-    const R1 = cursorAngle(xVector, vecLT);
-    const R2 = cursorAngle(xVector, vecRT);
-    const R3 = cursorAngle(xVector, vecRB);
-    const R4 = cursorAngle(xVector, vecLB);
-
-    // console.log('{_POS_R1}', R1 / Math.PI)
-    // console.log('{_POS_R2}', R2 / Math.PI)
-    // console.log('{_POS_R3}', R3 / Math.PI)
-    // console.log('{_POS_R4}', R4 / Math.PI)
+    const theta1 = cursorAngle(xVector, vecLT);
+    const theta2 = cursorAngle(xVector, vecRT);
+    const theta3 = cursorAngle(xVector, vecRB);
+    const theta4 = cursorAngle(xVector, vecLB);
 
     const assistLT = new Transform()
-        .setRotateZ(R1)
+        .setRotateZ(theta1)
         .setTranslate(ColVector3D.FromXY(col0.x, col0.y));
     const assistRT = new Transform()
-        .setRotateZ(R2)
+        .setRotateZ(theta2)
         .setTranslate(ColVector3D.FromXY(col1.x, col1.y));
     const assistRB = new Transform()
-        .setRotateZ(R3)
+        .setRotateZ(theta3)
         .setTranslate(ColVector3D.FromXY(col2.x, col2.y));
     const assistLB = new Transform()
-        .setRotateZ(R4)
+        .setRotateZ(theta4)
         .setTranslate(ColVector3D.FromXY(col3.x, col3.y));
 
     subDots.push(
@@ -291,7 +272,7 @@ function setCursor(t: CtrlElementType, active = false) {
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
 
     // type
-    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     // rotate
     let deg = rotate;
@@ -305,12 +286,16 @@ function setCursor(t: CtrlElementType, active = false) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
     } else if (t === CtrlElementType.RectLTR) {
         deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
+        // deg = 0;
     } else if (t === CtrlElementType.RectRTR) {
         deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
+        // deg = 0;
     } else if (t === CtrlElementType.RectRBR) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
+        // deg = 0;
     } else if (t === CtrlElementType.RectLBR) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+        // deg = 0;
     }
 
     active
@@ -356,19 +341,19 @@ function workspaceWatcher(t: number) {
 }
 
 watch(() => props.shape, (value, old) => {
-    old.unwatch(update);
-    value.watch(update);
+    old.unwatch(updateByShape);
+    value.watch(updateByShape);
     update();
 })
 onMounted(() => {
     props.context.workspace.watch(workspaceWatcher);
-    props.shape.watch(update);
+    props.shape.watch(updateByShape);
     window.addEventListener('blur', window_blur);
     update();
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
-    props.shape.unwatch(update);
+    props.shape.unwatch(updateByShape);
     window.removeEventListener('blur', window_blur);
 })
 </script>
@@ -385,8 +370,11 @@ onUnmounted(() => {
           @mouseenter="() => point_mouseenter(p.type)"
           @mouseleave="point_mouseleave"
     />
-    <!--            <text x="0" y="0">{{ i + 1 }}</text>-->
-    <g v-for="(p, i) in subDots" :key="i" :style="`transform: ${p.transform};`">
+    <g
+        v-for="(p, i) in subDots"
+        :key="i"
+        :style="`transform: ${p.transform};`"
+    >
         <path
             class="r-path"
             d="M-3 0 l12.6 -12.6 a18 18 0 0 1 0 25.2 z"
