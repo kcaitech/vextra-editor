@@ -293,27 +293,37 @@ function point_mouseup(event: MouseEvent) {
 
 
 function setCursor(t: CtrlElementType, active = false) {
+    const cursor = props.context.cursor;
+
     // type
     const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     // rotate
     let deg = 0;
-    if (t === CtrlElementType.RectLT) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRT) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRB) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLB) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLTR) {
-        deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRTR) {
-        deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectRBR) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-    } else if (t === CtrlElementType.RectLBR) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+    if (t === CtrlElementType.RectLT || t === CtrlElementType.RectLTR) {
+        if (rotateCtx.lt === undefined) {
+            rotateCtx.lt = rotateCtx.mlt.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.lt;
+    } else if (t === CtrlElementType.RectRT || t === CtrlElementType.RectRTR) {
+        if (rotateCtx.rt === undefined) {
+            rotateCtx.rt = rotateCtx.mrt.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.rt;
+    } else if (t === CtrlElementType.RectRB || t === CtrlElementType.RectRBR) {
+        if (rotateCtx.rb === undefined) {
+            rotateCtx.rb = rotateCtx.mrb.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.rb;
+    } else if (t === CtrlElementType.RectLB || t === CtrlElementType.RectLBR) {
+        if (rotateCtx.lb === undefined) {
+            rotateCtx.lb = rotateCtx.mlb.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.lb;
     }
 
     active
