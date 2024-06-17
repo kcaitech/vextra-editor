@@ -92,7 +92,6 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     startPosition = { x: event.x, y: event.y };
 
     scaler = new ScaleHandler(props.context, event, props.context.selection.selectedShapes, cur_ctrl_type);
-    // console.log('scaler:', scaler);
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
@@ -102,8 +101,6 @@ function bar_mousemove(event: MouseEvent) {
     if (isDragging) {
         scaler?.execute(event);
     } else if (Math.hypot(event.x - startPosition.x, event.y - startPosition.y) > dragActiveDis) {
-        // const selection = props.context.selection
-        // const shapes = shapes_organize(selection.selectedShapes);
         scaler?.createApiCaller();
         isDragging = true;
     }
@@ -113,32 +110,19 @@ function bar_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
+
     clear_status();
 }
 
 function clear_status() {
-    const workspace = props.context.workspace;
-    if (isDragging) {
-        // if (asyncMultiAction) {
-        //     asyncMultiAction.close();
-        //     asyncMultiAction = undefined;
-        // }
+    isDragging = false;
 
-        // workspace.setSelectionViewUpdater(true);
-        isDragging = false;
-
-        scaler?.fulfil();
-    }
-    // workspace.scaling(false);
-    // workspace.setCtrl('page');
-
-    // props.context.cursor.cursor_freeze(false);
+    scaler?.fulfil();
+    scaler = undefined;
 
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
-
-    scaler = undefined;
 
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
@@ -184,10 +168,8 @@ onUnmounted(() => {
 <template>
     <g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
        @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
-        <path :d="b.path" class="main-path">
-        </path>
-        <path :d="b.path" class="assist-path">
-        </path>
+        <path :d="b.path" class="main-path"/>
+        <path :d="b.path" class="assist-path"/>
     </g>
 </template>
 <style lang='scss' scoped>
