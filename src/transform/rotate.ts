@@ -1,5 +1,5 @@
 import {
-    ColVector2D,
+    Line,
     ColVector3D,
     Matrix,
     Rotator,
@@ -273,8 +273,8 @@ export class RotateHandler extends TransformHandler {
         const deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
 
         // 选区变换后的Transform
-        const transformForSelection = this.selectionTransform.clone().rotateZAt({
-            point: ColVector2D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2),
+        const transformForSelection = this.selectionTransform.clone().rotateAt({
+            axis: Line.FromZAxis(ColVector3D.FromXYZ(this.selectionSize.width / 2, this.selectionSize.height / 2, 0)), // 选区的旋转轴（Z轴）（选区的中心点）
             angle: deltaAngle,
             mode: TransformMode.Local,
         });
