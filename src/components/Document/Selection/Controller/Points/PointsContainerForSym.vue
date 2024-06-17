@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
@@ -34,11 +34,6 @@ const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let stickedX: boolean = false;
-let stickedY: boolean = false;
-let sticked_x_v: number = 0;
-let sticked_y_v: number = 0;
 
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
@@ -168,6 +163,7 @@ function point_mouseleave() {
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
+
 function clear_status() {
     isDragging = false;
 
@@ -208,11 +204,11 @@ onUnmounted(() => {
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
         <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
 
         <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-            @mouseleave="point_mouseleave">
+           @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
             <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
         </g>

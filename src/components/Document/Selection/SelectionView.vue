@@ -51,8 +51,8 @@ const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
-const theme = ref<SelectionTheme>(SelectionTheme.Normol);
-const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normol);
+const theme = ref<SelectionTheme>(SelectionTheme.Normal);
+const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
 const updateTrigger = ref<number>(0);
 
 function watchShapes() { // 监听选区相关shape的变化
@@ -164,7 +164,7 @@ function modify_tracing_class(shape: ShapeView) {
     if (is_symbol_class(shape)) {
         tracingStroke.value = SelectionTheme.Symbol;
     } else {
-        tracingStroke.value = SelectionTheme.Normol;
+        tracingStroke.value = SelectionTheme.Normal;
     }
 }
 
@@ -348,7 +348,7 @@ function modify_rotate(shapes: ShapeView[]) {
 }
 
 function modify_theme(shapes: ShapeView[]) {
-    theme.value = SelectionTheme.Normol;
+    theme.value = SelectionTheme.Normal;
     if (shapes.length !== 1) {
         return;
     }

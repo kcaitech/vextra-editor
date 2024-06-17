@@ -100,16 +100,6 @@ function updateDotLayout() {
 
     const fromClient = fromRoot.addTransform(clientMatrix);
 
-    const cols = fromClient.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
-        ColVector3D.FromXY(width / 2, height / 2),
-    ]);
-
-    const { col0, col1, col2, col3 } = cols;
-
     const ltTransform = new Transform()
         .rotateZ({ angle: Math.PI })
         .addTransform(fromClient)
@@ -154,7 +144,7 @@ function updateDotLayout() {
 
     subDots.length = 0;
 
-    const t = fromClient.clearTranslate();
+    const t = fromClient.clone().clearTranslate();
     t.updateMatrix();
     t.matrix.normalize();
     t.isSubMatrixLatest = false;
@@ -171,6 +161,16 @@ function updateDotLayout() {
     const theta2 = cursorAngle(xVector, vecRT);
     const theta3 = cursorAngle(xVector, vecRB);
     const theta4 = cursorAngle(xVector, vecLB);
+
+    const cols = fromClient.transform([
+        ColVector3D.FromXY(0, 0),
+        ColVector3D.FromXY(width, 0),
+        ColVector3D.FromXY(width, height),
+        ColVector3D.FromXY(0, height),
+        ColVector3D.FromXY(width / 2, height / 2),
+    ]);
+
+    const { col0, col1, col2, col3 } = cols;
 
     const assistLT = new Transform()
         .setRotateZ(theta1)

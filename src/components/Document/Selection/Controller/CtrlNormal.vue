@@ -182,8 +182,7 @@ onUnmounted(() => {
             :axle="axle"
             :c-frame="props.controllerFrame"
             :theme="theme"
-        >
-        </PointsContainer>
+        />
         <!--        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"-->
         <!--                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"-->
         <!--                   :theme="theme"></component>-->

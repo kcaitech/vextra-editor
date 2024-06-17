@@ -60,7 +60,7 @@ function update_paths() {
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
         workspace.setCtrlPath(paths.value[0].path);
@@ -72,7 +72,7 @@ function update_themes() {
     theme_map.clear();
     for (let i = 0; i < shapes.length; i++) {
         const shape = adapt2Shape(shapes[i]);
-        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normol;
+        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normal;
         theme_map.set(shape.id, theme);
     }
 }
@@ -95,7 +95,7 @@ function passive_update() {
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
         props.context.workspace.setCtrlPath(paths.value[0].path);
