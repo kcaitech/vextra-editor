@@ -28,13 +28,14 @@ import { Selection, XY } from "@/context/selection";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
+import { IContext } from "@/openapi";
 
-const props = defineProps<{ context: Context }>()
+const props = defineProps<{ context: IContext }>()
 
 // const route = useRoute();
 const initialized = ref<boolean>(false);
 const { t } = useI18n();
-let context: Context | undefined;
+// let context: Context | undefined;
 const permType = ref<number>();
 const docInfo: any = ref({});
 const noNetwork = ref(false)
@@ -370,22 +371,22 @@ let updateDocumentKeyTimer: ReturnType<typeof setInterval> | Parameters<typeof c
 function switchPage(id?: string) {
     if (!id) return
     if (showpagelist.value) showpagelist.value = !showpagelist.value
-    if (context) {
-        const ctx: Context = context;
-        const pagesMgr = ctx.data.pagesMgr;
-        const cur_page = context.selection.selectedPage;
-        if (cur_page && cur_page.id === id) return;
-        pagesMgr.get(id).then((page: Page | undefined) => {
-            if (page) {
-                // ctx.comment.toggleCommentPage()
-                curPage.value = undefined;
-                // ctx.comment.commentMount(false)
-                const pagedom = ctx.getPageDom(page).dom;
-                ctx.selection.selectPage(pagedom);
-                curPage.value = pagedom;
-            }
-        })
-    }
+
+    const ctx: Context = props.context as Context;
+    const pagesMgr = ctx.data.pagesMgr;
+    const cur_page = ctx.selection.selectedPage;
+    if (cur_page && cur_page.id === id) return;
+    pagesMgr.get(id).then((page: Page | undefined) => {
+        if (page) {
+            // ctx.comment.toggleCommentPage()
+            curPage.value = undefined;
+            // ctx.comment.commentMount(false)
+            const pagedom = ctx.getPageDom(page).dom;
+            ctx.selection.selectPage(pagedom);
+            curPage.value = pagedom;
+        }
+    })
+
 }
 
 
@@ -414,25 +415,25 @@ let timer: any = null;
 // }
 
 function selectionWatcher(t: number) {
+    const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
-        if (context) {
-            curPage.value = context!.selection.selectedPage;
-        }
+
+        curPage.value = ctx.selection.selectedPage;
+
     }
 }
 
 function workspace_watcher(type?: number) {
-    if (type === WorkSpace.MATRIX_TRANSFORMATION && context) {
-        matrix.value.reset(context.workspace.matrix);
+    const ctx: Context = props.context as Context;
+    if (type === WorkSpace.MATRIX_TRANSFORMATION) {
+        matrix.value.reset(ctx.workspace.matrix);
     }
 }
 
 function init_watcher() {
-    if (!context) {
-        return;
-    }
-    context.selection.watch(selectionWatcher);
-    context.workspace.watch(workspace_watcher);
+    const ctx: Context = props.context as Context;
+    ctx.selection.watch(selectionWatcher);
+    ctx.workspace.watch(workspace_watcher);
 }
 
 // function onBeforeUnload(event: any) {
@@ -477,13 +478,11 @@ const matrix = ref<Matrix>(new Matrix() as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 
 function initMatrix(cur: PageView) {
-    if (!context) {
-        return;
-    }
+    const ctx: Context = props.context as Context;
     let info = matrixMap.get(cur.id);
     if (!info) {
         const __m = adapt_page2(
-            context,
+            ctx,
             document.documentElement.clientWidth,
             document.documentElement.clientHeight - HEAD_HEIGHT
         );
@@ -494,7 +493,7 @@ function initMatrix(cur: PageView) {
     }
 
     matrix.value.reset(info.m.toArray());
-    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    ctx.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 const stop2 = watch(() => curPage.value, (page, old) => {
@@ -536,10 +535,11 @@ onMounted(() => {
     // })
 })
 onUnmounted(() => {
+    const ctx: Context = props.context as Context;
     closeNetMsg();
     // onUnloadForCommunication();
-    context?.selection.unwatch(selectionWatcher);
-    context?.workspace.unwatch(workspace_watcher);
+    ctx.selection.unwatch(selectionWatcher);
+    ctx.workspace.unwatch(workspace_watcher);
     clearInterval(timer);
     localStorage.removeItem('docId');
     // window.removeEventListener('beforeunload', onBeforeUnload);
@@ -754,7 +754,7 @@ const pageParams = {
             </div>
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist = false">
-            <PageViewVue v-if="!null_context && curPage" :context="context!" :params="pageParams" />
+            <PageViewVue v-if="!null_context && curPage" :context="context as Context" :params="pageParams" />
         </div>
     </div>
 </template>

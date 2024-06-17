@@ -12,7 +12,7 @@ export function watchReadyonly(context: Context, cb?: (readonly: boolean) => voi
             _ro.value = context.readonly;
             if (cb) cb(_ro.value);
         }
-        rm = context.on(events.context_readonly, (readonly: boolean) => {
+        rm = context.on(events.context_readonly_change, (readonly: boolean) => {
             _ro.value = readonly;
             if (cb) cb(readonly);
         })

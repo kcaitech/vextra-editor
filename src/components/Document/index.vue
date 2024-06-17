@@ -23,9 +23,10 @@ import { Component } from '@/context/component';
 import { initpal } from './initpal';
 import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
+import { IContext } from '@/openapi';
 // import HelpEntrance from '../Help/HelpEntrance.vue';
 
-const props = defineProps<{ context: Context }>()
+const props = defineProps<{ context: IContext }>()
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -105,7 +106,7 @@ function mouseleave(t: 'left' | 'right') {
 function switchPage(id?: string) {
     if (!id) return
 
-    const ctx: Context = props.context;
+    const ctx: Context = props.context as Context;
     const pagesMgr = ctx.data.pagesMgr;
     const cur_page = ctx.selection.selectedPage;
     if (cur_page && cur_page.id === id) return;
@@ -123,18 +124,16 @@ function switchPage(id?: string) {
 }
 
 function selectionWatcher(t: number) {
+    const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
 
-        const ctx: Context = props.context;
         curPage.value = ctx.selection.selectedPage;
 
     }
-    if (t === Selection.COMMENT_CHANGE_PAGE) {
-
-        const pageId = props.context.selection.commentPageId
-        switchPage(pageId)
-
-    }
+    // if (t === Selection.COMMENT_CHANGE_PAGE) {
+    //     const pageId = ctx.selection.commentPageId
+    //     switchPage(pageId)
+    // }
 }
 
 const isLable = ref<boolean>(false);
@@ -148,7 +147,8 @@ const showHiddenRight = () => {
     }
 }
 const showHiddenLeft = () => {
-    const w = props.context.workspace;
+    const ctx: Context = props.context as Context;
+    const w = ctx.workspace;
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -186,17 +186,19 @@ function keyToggleTB() {
     showHiddenRight();
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
+    const ctx: Context = props.context as Context;
     if (showTop.value) {
-        props.context.workspace.matrix.trans(0, -40);
+        ctx.workspace.matrix.trans(0, -40);
     } else {
-        props.context.workspace.matrix.trans(0, 40);
+        ctx.workspace.matrix.trans(0, 40);
     }
-    props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    ctx.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 const tool_watcher = (t: number) => {
+    const ctx: Context = props.context as Context;
     if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
+        isLable.value = ctx.tool.isLable;
         not_perm_hidden_right();
     }
 }
@@ -483,16 +485,17 @@ let timer: any = null;
 // }
 
 function init_watcher() {
-
-    props.context.selection.watch(selectionWatcher);
-    props.context.workspace.watch(workspaceWatcher);
-    props.context.component.watch(component_watcher);
-    props.context.tool.watch(tool_watcher);
+    const ctx: Context = props.context as Context;
+    ctx.selection.watch(selectionWatcher);
+    ctx.workspace.watch(workspaceWatcher);
+    ctx.component.watch(component_watcher);
+    ctx.tool.watch(tool_watcher);
 }
 
 function init_keyboard_uints() {
 
-    uninstall_keyboard_units = keyboardUints(props.context)
+    const ctx: Context = props.context as Context;
+    uninstall_keyboard_units = keyboardUints(ctx)
 }
 
 // function init_doc() {
@@ -703,9 +706,9 @@ const changeLeftWidth = (width: number) => {
 // }
 
 function component_watcher(t: number) {
-
+    const ctx: Context = props.context as Context;
     if (t === Component.BRIDGE_CHANGE) {
-        bridge.value = props.context.component.bridge;
+        bridge.value = ctx.component.bridge;
     }
 }
 
@@ -747,7 +750,7 @@ onMounted(() => {
     // upload(project_id);
     localStorage.setItem('project_id', '');
     switchPage(props.context.data.pagesList[0]?.id);
-    
+
     initpal().then(() => {
         inited.value = true;
     }).catch((e) => {
@@ -758,12 +761,13 @@ onMounted(() => {
 onUnmounted(() => {
     // closeNetMsg();
     // onUnloadForCommunication();
+    const ctx: Context = props.context as Context;
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    props.context.selection.unwatch(selectionWatcher);
-    props.context.workspace.unwatch(workspaceWatcher);
-    props.context.tool.unwatch(tool_watcher);
+    ctx.selection.unwatch(selectionWatcher);
+    ctx.workspace.unwatch(workspaceWatcher);
+    ctx.tool.unwatch(tool_watcher);
     clearInterval(timer);
     localStorage.removeItem('docId')
     showHint.value = false;
@@ -773,7 +777,7 @@ onUnmounted(() => {
     clearInterval(loopNet);
     clearInterval(netErr);
     // networkStatus.close();
-    props.context.component.unwatch(component_watcher);
+    ctx.component.unwatch(component_watcher);
     uninstall_keyboard_units();
     stop();
     clearInterval(updateDocumentKeyTimer); // 清除更新文档密钥定时器
@@ -784,30 +788,30 @@ onUnmounted(() => {
     <div class="editor" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context" />
+            <Toolbar :context="context as Context" v-if="!loading && !null_context" />
         </div>
         <!-- <div id="visit">
             <ApplyFor></ApplyFor>
         </div> -->
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
             v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
+            :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
-                <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
+                <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context as Context"
                     @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
                     :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
 
             <template #slot2>
-                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context as Context"
                     @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                     @closeLoading="closeLoading">
                 </ContentView>
             </template>
 
             <template #slot3>
-                <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
+                <Attribute id="attributes" v-if="!null_context && !loading" :context="context as Context"
                     @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                     :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
@@ -826,7 +830,7 @@ onUnmounted(() => {
             <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
             <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
         </div> -->
-        <Bridge v-if="bridge" :context="context!"></Bridge>
+        <Bridge v-if="bridge" :context="context as Context"></Bridge>
         <!-- <HelpEntrance v-if="!null_context" :context="context!" /> -->
     </div>
 </template>

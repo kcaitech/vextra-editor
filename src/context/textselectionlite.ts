@@ -1,5 +1,6 @@
 import { Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView, TextAttr } from "@kcdesign/data";
 import { Selection } from "./selection"
+import { ITextSelection } from "@/openapi/selection";
 
 export interface TextLocate {
     index: number
@@ -8,7 +9,7 @@ export interface TextLocate {
     attr: SpanAttr | undefined
 }
 
-export class TextSelectionLite extends WatchableObject {
+export class TextSelectionLite extends WatchableObject implements ITextSelection {
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;

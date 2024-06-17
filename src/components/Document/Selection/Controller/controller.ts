@@ -13,7 +13,7 @@ import { Context } from "@/context";
 import { ClientXY, PageXY, Selection } from "@/context/selection";
 import { DirectionCalc, modify_shapes } from "@/utils/controllerFn";
 import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
-import { Perm, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n';
 import {
     add_blur_for_window,

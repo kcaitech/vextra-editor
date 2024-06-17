@@ -37,6 +37,12 @@ function keydown(event: KeyboardEvent, context: Context) {
         return;
     }
 
+    const rf = context.keyHandlers[event.code];
+    if (rf) {
+        rf(event, context);
+        return;
+    }
+
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
@@ -107,25 +113,25 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
     }
 }
 
-keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
-    const { metaKey, ctrlKey, shiftKey } = event;
-    const isCtrl = ctrlKey || metaKey;
-    if (isCtrl && shiftKey) {
-        event.preventDefault();
-        context.menu.notify(Menu.WRITE_MEDIA);
-        return;
-    }
-    if (isCtrl && !shiftKey) {
-        // context.workspace.notify(WorkSpace.COPY); // 拷贝
-        return
-    }
-    event.preventDefault();
-    if (shiftKey) {
-        // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
-        return;
-    }
-    context.tool.setAction(Action.AddComment)
-}
+// keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
+//     const { metaKey, ctrlKey, shiftKey } = event;
+//     const isCtrl = ctrlKey || metaKey;
+//     if (isCtrl && shiftKey) {
+//         event.preventDefault();
+//         context.menu.notify(Menu.WRITE_MEDIA);
+//         return;
+//     }
+//     if (isCtrl && !shiftKey) {
+//         // context.workspace.notify(WorkSpace.COPY); // 拷贝
+//         return
+//     }
+//     event.preventDefault();
+//     if (shiftKey) {
+//         // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
+//         return;
+//     }
+//     context.tool.setAction(Action.AddComment)
+// }
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey && permIsEdit(context)) {

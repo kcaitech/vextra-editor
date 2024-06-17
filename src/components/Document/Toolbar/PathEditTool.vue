@@ -10,16 +10,16 @@ import { onMounted, onUnmounted } from "vue";
 
 interface Props {
     context: Context
-    selected: Action
+    selected: string
 }
 
 const emit = defineEmits<{
-    (e: "select", action: Action): void;
+    (e: "select", action: string): void;
 }>();
 
 const props = defineProps<Props>();
 
-function select(action: Action) {
+function select(action: string) {
     emit("select", action);
 }
 
@@ -27,7 +27,7 @@ function is_curve_active() {
     return props.selected === Action.Curve;
 }
 
-let o: Action;
+let o: string;
 
 function keyboard_up_watcher(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) {

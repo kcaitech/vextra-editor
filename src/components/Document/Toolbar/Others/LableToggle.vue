@@ -19,7 +19,7 @@ watch(isActive, (v) => {
     props.context.tool.setLableSwitch(v);
     vis.value = true;
     const active = props.context.tool.action;
-    if (!v || active === Action.AutoV || active === Action.AddComment) return;
+    if (!v || active === Action.AutoV /* || active === Action.AddComment */) return;
     props.context.tool.setAction(Action.AutoV);
 })
 

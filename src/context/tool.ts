@@ -3,29 +3,31 @@ import { Context } from ".";
 // import { Comment } from "./comment";
 import { v4 as uuid } from "uuid"
 
-export enum Action {
-    Auto = 'auto',
-    AutoV = 'drag',
-    AutoK = 'scale',
-    AddRect = 'add-rect',
-    AddLine = 'add-line',
-    AddEllipse = 'add-ellipse',
-    AddArrow = 'add-arrow',
-    AddFrame = 'add-frame',
-    AddText = 'add-text',
-    AddComment = 'add-comment',
-    AddImage = 'add-image',
-    AddTable = 'table',
-    AddContact = 'add-contact',
-    AddCutout = 'add-cutout',
-    Curve = 'curve',
-    PathClip = 'path-clip',
-    Pen = 'add-vector',
-    Pen2 = 'vector',
-    Pencil = 'add-free-path',
-    Polygon = 'add-polygon',
-    Star = 'add-star',
-    Export = 'export',
+const _uuid = '-E9BB37D8-8853-D650-4EF1-ACCF4E2D4BE5'
+
+export const Action = {
+    Auto: 'auto' + _uuid,
+    AutoV: 'drag' + _uuid,
+    AutoK: 'scale' + _uuid,
+    AddRect: 'add-rect' + _uuid,
+    AddLine: 'add-line' + _uuid,
+    AddEllipse: 'add-ellipse' + _uuid,
+    AddArrow: 'add-arrow' + _uuid,
+    AddFrame: 'add-frame' + _uuid,
+    AddText: 'add-text' + _uuid,
+    // AddComment: 'add-comment',
+    AddImage: 'add-image' + _uuid,
+    AddTable: 'table' + _uuid,
+    AddContact: 'add-contact' + _uuid,
+    AddCutout: 'add-cutout' + _uuid,
+    Curve: 'curve' + _uuid,
+    PathClip: 'path-clip' + _uuid,
+    Pen: 'add-vector' + _uuid,
+    Pen2: 'vector' + _uuid,
+    Pencil: 'add-free-path' + _uuid,
+    Polygon: 'add-polygon' + _uuid,
+    Star: 'add-star' + _uuid,
+    Export: 'export' + _uuid,
 }
 
 const A2R = new Map([
@@ -44,7 +46,7 @@ const A2R = new Map([
     [Action.Star, ShapeType.Star],
 ]);
 
-export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
+export const ResultByAction = (action: string): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 
 export class Tool extends WatchableObject {
     static CHANGE_ACTION = 1;
@@ -60,7 +62,7 @@ export class Tool extends WatchableObject {
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
     static CUTOUT_VISIBLE = 12;
-    private m_current_action: Action = Action.AutoV;
+    private m_current_action: string = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
@@ -80,22 +82,22 @@ export class Tool extends WatchableObject {
         return this.m_current_action;
     }
 
-    setAction(action: Action) {
-        this.m_current_action = action;
-        if (action.startsWith('add')) {
+    setAction(uuid: string) {
+        this.m_current_action = uuid;
+        if (uuid.startsWith('add')) {
             this.m_context.menu.menuMount();
 
             this.m_context.esctask.save('tool-action', this.reset.bind(this));
 
-            if (action === Action.AddComment) {
-                if (this.m_context.workspace.documentPerm === 1) {
-                    return;
-                }
-
-                // this.m_context.comment.commentInput(false);
-                // this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                this.m_context.cursor.setType('comment', 0);
-            } else if (action === Action.Pen) {
+            // if (action === Action.AddComment) {
+            //     if (this.m_context.workspace.documentPerm === 1) {
+            //         return;
+            //     }
+            //     this.m_context.comment.commentInput(false);
+            //     this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
+            //     this.m_context.cursor.setType('comment', 0);
+            // } else 
+            if (uuid === Action.Pen) {
                 this.m_context.cursor.setType('pen', 0);
             } else {
                 this.m_context.cursor.setType('cross', 0);

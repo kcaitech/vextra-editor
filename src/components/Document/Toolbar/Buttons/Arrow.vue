@@ -9,10 +9,10 @@ const props = defineProps<{
     active: boolean,
 }>();
 const emit = defineEmits<{
-    (e: "select", action: Action): void;
+    (e: "select", action: string): void;
 }>();
 
-function select(action: Action) {
+function select(action: string) {
     emit('select', action);
 }
 </script>

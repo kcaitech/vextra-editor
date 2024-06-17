@@ -49,3 +49,9 @@ export interface IPlugin {
     get params(): any,
     get component(): any
 }
+
+export interface IPluginsMgr {
+    regist(...plugins: IPlugin[]): void;
+    search(locate: PluginLocate): IPlugin[];
+    search2(locate: PluginLocate): { begin: IPlugin[], end: IPlugin[] };
+}

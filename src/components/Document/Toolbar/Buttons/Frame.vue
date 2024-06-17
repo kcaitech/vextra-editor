@@ -15,7 +15,7 @@ interface Props {
     }
 }
 interface Emits {
-    (e: "select", action: Action): void;
+    (e: "select", action: string): void;
 }
 
 const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']

@@ -94,10 +94,10 @@ function down(e: MouseEvent) {
         return;
     }
 
-    if (action !== Action.AddComment) {
+    // if (action !== Action.AddComment) {
         // commentInput.value = false;
         creatorHdl = new CreatorExecute(props.context, e);
-    }
+    // }
 
     if (action === Action.AddContact) {
         just_search = true;
@@ -137,13 +137,13 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 
-    if (!isDrag && props.context.tool.action.startsWith('add')) {
+    // if (!isDrag && props.context.tool.action.startsWith('add')) {
 
-        if (props.context.tool.action === Action.AddComment) {
-            isDrag = false;
-            // return addComment(e);
-        }
-    }
+    //     if (props.context.tool.action === Action.AddComment) {
+    //         isDrag = false;
+    //         // return addComment(e);
+    //     }
+    // }
 
     creatorHdl?.fulfil();
     creatorHdl = undefined;
@@ -291,9 +291,10 @@ function windowBlur() {
 function init() {
     let timer: any = setTimeout(() => {
         const action = props.context.tool.action;
-        if (action === Action.AddComment) {
-            props.context.cursor.setType('comment', 0);
-        } else if (action === Action.Pen) {
+        // if (action === Action.AddComment) {
+        //     props.context.cursor.setType('comment', 0);
+        // } else 
+        if (action === Action.Pen) {
             props.context.cursor.setType('pen', 0);
             mode.value = 'pen';
         } else {

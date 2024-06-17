@@ -349,7 +349,7 @@ function onMouseDown(e: MouseEvent) {
     } else if (e.button === 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
         const action = props.context.tool.action;
-        if (action === Action.AddComment) return;
+        // if (action === Action.AddComment) return;
         contextMenuMount(e);
     }
 }

@@ -15,7 +15,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "select", action: Action): void;
+    (e: "select", action: string): void;
 }>();
 const exportClick = () => {
     props.context.menu.setExportDialog(true);

@@ -351,3 +351,53 @@ Changes to be committed:
 	modified:   src/components/Mobile/Document.vue
 	modified:   src/utils/common.ts
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/components/Document/ContentView.vue
+	modified:   src/components/Document/Creator/Creator.vue
+	modified:   src/components/Document/Creator/execute.ts
+	modified:   src/components/Document/Menu/TableMenu/TableCellsMenu.vue
+	modified:   src/components/Document/Selection/Controller/controller.ts
+	modified:   src/components/Document/Toolbar/Buttons/Arrow.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateContact.vue
+	modified:   src/components/Document/Toolbar/Buttons/CreateText.vue
+	modified:   src/components/Document/Toolbar/Buttons/Cursor.vue
+	modified:   src/components/Document/Toolbar/Buttons/Cutout.vue
+	modified:   src/components/Document/Toolbar/Buttons/DropSelect.vue
+	modified:   src/components/Document/Toolbar/Buttons/Ellipse.vue
+	modified:   src/components/Document/Toolbar/Buttons/Export.vue
+	modified:   src/components/Document/Toolbar/Buttons/Frame.vue
+	modified:   src/components/Document/Toolbar/Buttons/Path.vue
+	modified:   src/components/Document/Toolbar/Buttons/PathShape.vue
+	modified:   src/components/Document/Toolbar/Buttons/Rect.vue
+	modified:   src/components/Document/Toolbar/Buttons/Table/index.vue
+	modified:   src/components/Document/Toolbar/Others/LableToggle.vue
+	modified:   src/components/Document/Toolbar/PathEdit/Auto.vue
+	modified:   src/components/Document/Toolbar/PathEdit/Curve.vue
+	modified:   src/components/Document/Toolbar/PathEdit/PathClip.vue
+	modified:   src/components/Document/Toolbar/PathEdit/PathPen.vue
+	modified:   src/components/Document/Toolbar/PathEditTool.vue
+	modified:   src/components/Document/Toolbar/Tools/index.vue
+	modified:   src/components/Document/index.vue
+	modified:   src/components/Mobile/Document.vue
+	modified:   src/components/common/watchreadonly.ts
+	modified:   src/context/events.ts
+	modified:   src/context/index.ts
+	modified:   src/context/medias.ts
+	modified:   src/context/selection.ts
+	modified:   src/context/textselectionlite.ts
+	modified:   src/context/tool.ts
+	modified:   src/index.ts
+	deleted:    src/openapi/authority.ts
+	deleted:    src/openapi/communication.ts
+	new file:   src/openapi/context.ts
+	modified:   src/openapi/index.ts
+	new file:   src/openapi/net.ts
+	modified:   src/openapi/plugins.ts
+	deleted:    src/openapi/pluginsmgr.ts
+	new file:   src/openapi/selection.ts
+	modified:   src/utils/clipboard.ts
+	modified:   src/utils/content.ts
+	modified:   src/utils/keyboardUnits.ts
+

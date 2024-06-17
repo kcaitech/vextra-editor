@@ -14,10 +14,10 @@ const props = defineProps<{
     state?: boolean
 }>();
 const emit = defineEmits<{
-    (e: "selector", select: Action): void;
-    (e: "selectBool", select: Action, bool: BoolOp): void;
+    (e: "selector", select: string): void;
+    (e: "selectBool", select: string, bool: BoolOp): void;
 }>();
-const selector = (active: Action) => {
+const selector = (active: string) => {
     emit('selector', active);
 }
 const handleBoolean = (e: MouseEvent) => {

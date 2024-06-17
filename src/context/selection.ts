@@ -38,6 +38,7 @@ import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 // import { router } from "@/router";
 import isMobileDevice from "@/utils/mobileDeviceChecker";
+import { ISelection } from "@/openapi/selection";
 
 interface Saved {
     page: Page | undefined,
@@ -85,7 +86,7 @@ export const enum SelectionTheme {
     Symbol = '#7F58F9'
 }
 
-export class Selection extends WatchableObject implements ISave4Restore {
+export class Selection extends WatchableObject implements ISave4Restore, ISelection {
 
     static CHANGE_PAGE = 1;
     static CHANGE_SHAPE = 2;
@@ -94,12 +95,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static CHANGE_TEXT = 5;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
-    static CHANGE_COMMENT = 8;
-    static SOLVE_MENU_STATUS = 9;
-    static COMMENT_CHANGE_PAGE = 10;
-    static SKIP_COMMENT = 11;
-    static PAGE_SORT = 12;
-    static ABOUT_ME = 13;
+    // static CHANGE_COMMENT = 8;
+    // static SOLVE_MENU_STATUS = 9;
+    // static COMMENT_CHANGE_PAGE = 10;
+    // static SKIP_COMMENT = 11;
+    // static PAGE_SORT = 12;
+    // static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
     static SELECTION_HIDDEN = 16;
@@ -116,12 +117,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_tableselection: TableSelection;
     private m_textselection: TextSelectionLite;
 
-    private m_comment_id: string = '';
-    private m_comment_status: boolean = false;
-    private m_comment_page_id: string | undefined;
-    private m_select_comment: boolean = false;
-    private m_comment_page_sort: boolean = false;
-    private m_comment_about_me: boolean = false;
+    // private m_comment_id: string = '';
+    // private m_comment_status: boolean = false;
+    // private m_comment_page_id: string | undefined;
+    // private m_select_comment: boolean = false;
+    // private m_comment_page_sort: boolean = false;
+    // private m_comment_about_me: boolean = false;
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_selected_sym_ref_menber: ShapeView | undefined;
     private m_selected_sym_ref_bros: ShapeView[] = [];
@@ -158,29 +159,29 @@ export class Selection extends WatchableObject implements ISave4Restore {
     //     return abs;
     // }
 
-    get commentId() {
-        return this.m_comment_id;
-    }
+    // get commentId() {
+    //     return this.m_comment_id;
+    // }
 
-    get commentStatus() { //评论列表是否显示解决
-        return this.m_comment_status;
-    }
+    // get commentStatus() { //评论列表是否显示解决
+    //     return this.m_comment_status;
+    // }
 
-    get commentPageId() {
-        return this.m_comment_page_id;
-    }
+    // get commentPageId() {
+    //     return this.m_comment_page_id;
+    // }
 
-    get isSelectComment() {
-        return this.m_select_comment;
-    }
+    // get isSelectComment() {
+    //     return this.m_select_comment;
+    // }
 
-    get commentPageSort() { //评论是否按页面排序
-        return this.m_comment_page_sort;
-    }
+    // get commentPageSort() { //评论是否按页面排序
+    //     return this.m_comment_page_sort;
+    // }
 
-    get commentAboutMe() { //评论显示关于我的
-        return this.m_comment_about_me;
-    }
+    // get commentAboutMe() { //评论显示关于我的
+    //     return this.m_comment_about_me;
+    // }
 
     get tableSelection() {
         return this.m_tableselection;
@@ -204,32 +205,32 @@ export class Selection extends WatchableObject implements ISave4Restore {
         }
     }
 
-    selectCommentPage(id: string) {
-        this.m_comment_page_id = id
-        this.notify(Selection.COMMENT_CHANGE_PAGE)
-    }
+    // selectCommentPage(id: string) {
+    //     this.m_comment_page_id = id
+    //     this.notify(Selection.COMMENT_CHANGE_PAGE)
+    // }
 
-    setCommentSelect(s: boolean) {
-        this.m_select_comment = s
-        if (!s) {
-            this.notify(Selection.SKIP_COMMENT)
-        }
-    }
+    // setCommentSelect(s: boolean) {
+    //     this.m_select_comment = s
+    //     if (!s) {
+    //         this.notify(Selection.SKIP_COMMENT)
+    //     }
+    // }
 
-    commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态
-        this.m_comment_status = status
-        this.notify(Selection.SOLVE_MENU_STATUS)
-    }
+    // commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态
+    //     this.m_comment_status = status
+    //     this.notify(Selection.SOLVE_MENU_STATUS)
+    // }
 
-    setPageSort(status: boolean) {
-        this.m_comment_page_sort = status
-        this.notify(Selection.PAGE_SORT)
-    }
+    // setPageSort(status: boolean) {
+    //     this.m_comment_page_sort = status
+    //     this.notify(Selection.PAGE_SORT)
+    // }
 
-    setCommentAboutMe(status: boolean) {
-        this.m_comment_about_me = status
-        this.notify(Selection.ABOUT_ME)
-    }
+    // setCommentAboutMe(status: boolean) {
+    //     this.m_comment_about_me = status
+    //     this.notify(Selection.ABOUT_ME)
+    // }
 
     selectPage(p: PageView | undefined) {
         if (this.m_selectPage === p) {
@@ -267,10 +268,10 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.notify(Selection.PAGE_RENAME);
     }
 
-    selectComment(id: string) {
-        this.m_comment_id = id
-        this.notify(Selection.CHANGE_COMMENT);
-    }
+    // selectComment(id: string) {
+    //     this.m_comment_id = id
+    //     this.notify(Selection.CHANGE_COMMENT);
+    // }
 
     get selectedPage(): PageView | undefined {
         return this.m_selectPage;

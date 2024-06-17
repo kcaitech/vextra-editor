@@ -28,10 +28,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const selected = ref<Action>(Action.AutoV);
+const selected = ref<string>(Action.AutoV);
 const is_path_edit = ref<boolean>(false);
 
-function select(action: Action) {
+function select(action: string) {
     props.context.tool.setAction(action);
     // if (action === Action.AddComment) {
     //     nextTick(() => {

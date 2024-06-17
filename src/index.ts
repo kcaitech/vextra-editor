@@ -12,6 +12,7 @@ import {
     importRemote,
     importSketch,
     IStorage,
+    RadixConvert,
     Repository,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
@@ -19,9 +20,10 @@ import { Zip } from "./PAL/browser/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
+import { IContext } from "./openapi/context";
 
-export { Context } from "./context";
-export { Selection } from "./context/selection"
+// export { Context } from "./context";
+// export { Selection } from "./context/selection"
 export * from "./openapi";
 
 const t = (i18n as any).global.t;
@@ -57,6 +59,9 @@ async function _open(props: DocumentProps) {
         cooprepo.setInitingDocument(false);
     }
 
+    // todo 移动到data
+    if (cooprepo) cooprepo.setBaseVer(new RadixConvert(62).from(data!.lastCmdId))
+
     if (data) {
         return { data, cooprepo: cooprepo!, loader: loader_ }
     }
@@ -77,9 +82,9 @@ export async function openDocument(props: DocumentProps) {
         return;
     }
 
-    if (props.coop) cooprepo.setNet(props.coop);
-    const context = new Context(data, cooprepo, props);
-    if (props.communication) context.communication = props.communication;
+    // if (props.coop) cooprepo.setNet(props.coop);
+    const context = new Context(data, cooprepo, props) as IContext;
+    // if (props.communication) context.communication = props.communication;
     // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
     return { context, loader: loader }
 }

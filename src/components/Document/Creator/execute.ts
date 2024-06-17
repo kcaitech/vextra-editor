@@ -28,7 +28,7 @@ export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;
     private livingPoint: XY;
 
-    readonly action: Action = Action.AutoV;
+    readonly action: string = Action.AutoV;
 
     private isCustomFrame: boolean = false;
 

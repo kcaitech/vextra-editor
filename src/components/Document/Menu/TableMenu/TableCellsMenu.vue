@@ -79,7 +79,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const table = props.context.tableSelection;
     if (table) {
         editor.setCellContentImage(table.tableRowStart, table.tableColStart, ref);
-        props.context.communication?.docResourceUpload.upload(ref, data.buff.buffer.slice(0));
+        props.context.net?.upload(ref, data.buff.buffer.slice(0));
         emit('close');
     }
 }

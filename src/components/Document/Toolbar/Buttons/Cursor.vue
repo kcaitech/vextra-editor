@@ -12,26 +12,26 @@ type Button = InstanceType<typeof ToolButton>
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
-const selected = ref<Action>(Action.AutoV);
-const selects = ref<Action>(Action.AutoV);
+const selected = ref<string>(Action.AutoV);
+const selects = ref<string>(Action.AutoV);
 const visible = ref(false)
 const props = defineProps<{
   context: Context,
   params: {
     active: boolean,
-    d: Action,
+    d: string,
     is_lable: boolean,
     edit: boolean
   }
 }>();
 const emit = defineEmits<{
-  (e: "select", action: Action): void;
+  (e: "select", action: string): void;
 }>();
-function select(action: Action) {
+function select(action: string) {
   emit('select', action);
 }
 
-const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
+const patterns = ((items: [string, string, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
   ['object_selector', Action.AutoV, 'V'],
   ['scale', Action.AutoK, 'K']
 ]);
@@ -53,7 +53,7 @@ function showMenu() {
   }
 }
 
-const selector = (active: Action) => {
+const selector = (active: string) => {
   selected.value = active
   emit('select', active);
   popoverVisible.value = false;

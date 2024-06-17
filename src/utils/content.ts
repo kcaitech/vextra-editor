@@ -1317,11 +1317,11 @@ export function redo(context: Context) {
 }
 
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
-    if (!context.communication) return false;
+    if (!context.net) return false;
     try {
         const __buff = new Uint8Array(buff);
         let count = 0;
-        while (count < 3 && !(await context.communication.docResourceUpload.upload(ref, __buff.buffer))) {
+        while (count < 3 && !(await context.net.upload(ref, __buff.buffer))) {
             count++;
         }
         if (count >= 3) {

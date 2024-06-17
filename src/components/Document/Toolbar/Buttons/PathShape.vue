@@ -15,7 +15,7 @@ const props = defineProps<{
     params: any
 }>();
 
-const currentTool = ref<Action>(Action.AddRect);
+const currentTool = ref<string>(Action.AddRect);
 const popover = ref<boolean>(false);
 const tipsVisible = ref<boolean>(false);
 const selected = ref<boolean>(false);
@@ -145,7 +145,7 @@ const stop = watch(() => popover.value, (v) => {
     }
 })
 
-function setAction(type: Action) {
+function setAction(type: string) {
     props.context.tool.setAction(type);
 }
 

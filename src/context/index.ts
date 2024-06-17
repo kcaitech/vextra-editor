@@ -37,9 +37,10 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
-import { DocumentProps, ICommunication } from "@/openapi";
+import { DocumentProps, INet } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
+import { IContext } from "@/openapi/context";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -83,7 +84,7 @@ export class RepoWraper {
     // }
 }
 
-export class Context extends EventEmitter {
+export class Context extends EventEmitter implements IContext {
     // 用EventEmitter及storage来进行界面组件之间的数据同步及通信
     // storage的key可以用组件路径也可用uuid等唯一标识
     // eventid同上，需要个唯一前缀。
@@ -104,7 +105,7 @@ export class Context extends EventEmitter {
     private m_tool: Tool;
     private m_navi: Navi;
     private m_cursor: Cursor;
-    private m_communication?: ICommunication;
+    // private m_communication?: ICommunication;
     private m_escstack: EscStack;
     private m_assist: Assist;
     private m_teamwork: TeamWork;
@@ -118,6 +119,7 @@ export class Context extends EventEmitter {
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
     private m_props: DocumentProps;
+    private m_net?: INet;
 
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
@@ -151,6 +153,33 @@ export class Context extends EventEmitter {
         this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
     }
+    get curAction(): string | undefined {
+        return this.tool.action;
+    }
+    setCurAction(uuid: string): void {
+        this.tool.setAction(uuid);
+    }
+
+
+    keyHandlers: {
+        [key: string]: (
+            event: KeyboardEvent, context: IContext) => void
+    } = {}
+    registKeyHandler(keyCode: string, handler: (
+        event: KeyboardEvent, context: IContext) => void): void {
+        this.keyHandlers[keyCode] = handler;
+    }
+    hasPendingSyncCmd(): boolean {
+        return this.m_coopRepo.hasPendingSyncCmd();
+    }
+    setNet(net: INet): void {
+        this.m_net = net;
+        this.m_coopRepo.setNet(net);
+    }
+    get net() {
+        return this.m_net;
+    }
+
 
     get editor(): Editor {
         return this.m_editor;
@@ -203,7 +232,7 @@ export class Context extends EventEmitter {
     }
     set readonly(readonly: boolean) {
         this.m_props.readonly = readonly;
-        this.emit(events.context_readonly, readonly)
+        this.emit(events.context_readonly_change, readonly)
     }
     get readonly() {
         return !!this.m_props.readonly;
@@ -241,12 +270,12 @@ export class Context extends EventEmitter {
         return this.m_navi;
     }
 
-    set communication(c: ICommunication | undefined) {
-        this.m_communication = c;
-    }
-    get communication() {
-        return this.m_communication;
-    }
+    // set communication(c: ICommunication | undefined) {
+    //     this.m_communication = c;
+    // }
+    // get communication() {
+    //     return this.m_communication;
+    // }
 
     get cursor() {
         return this.m_cursor;
