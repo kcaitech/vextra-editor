@@ -1,6 +1,6 @@
 import {Color, Shadow,} from "@kcdesign/data"
 import {Transform} from "@kcdesign/data"
-import {ColVector3D, Matrix2 as Matrix} from "@kcdesign/data"
+import {ColVector3D, Matrix2 as Matrix, LineThrough0, Line} from "@kcdesign/data"
 import {NumberArray2D} from "@kcdesign/data"
 import {BaseCreator} from "./creator/base"
 
@@ -117,8 +117,7 @@ export function parseTransform(transformContent: string) {
                     transform.rotateZ({angle: numArgList[0]})
                 } else if (numArgList.length === 3) {
                     transform.rotateAt({
-                        axis: new ColVector3D([0, 0, 1]),
-                        point: new ColVector3D([numArgList[1], numArgList[2], 0]),
+                        axis: new Line(ColVector3D.FromXYZ(0, 0, 1), ColVector3D.FromXYZ(numArgList[0], numArgList[1], 0)),
                         angle: numArgList[0],
                     })
                 }
@@ -130,7 +129,7 @@ export function parseTransform(transformContent: string) {
                 transform.rotateZ({angle: numArgList[0]})
             } else if (name === "rotate3d") {
                 transform.rotate({
-                    axis: new ColVector3D([numArgList[0], numArgList[1], numArgList[2]]),
+                    axis: new LineThrough0(ColVector3D.FromXYZ(numArgList[0], numArgList[1], numArgList[2])),
                     angle: numArgList[3],
                 })
             }

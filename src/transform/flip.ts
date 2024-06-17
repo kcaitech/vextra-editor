@@ -95,9 +95,9 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
     let flipedSelectionTransform;
     if (axis === "Y") {
-        flipedSelectionTransform = selectionTransform.clone().flipH2D(left + size.width / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipH(left + size.width / 2);
     } else {
-        flipedSelectionTransform = selectionTransform.clone().flipV2D(top + size.height / 2);
+        flipedSelectionTransform = selectionTransform.clone().flipV(top + size.height / 2);
     }
 
     const params: { shape: ShapeView, transform2: Transform }[] = [];
