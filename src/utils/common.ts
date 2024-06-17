@@ -36,7 +36,8 @@ export function genOptions(items: string[][]) {
             id: index,
             data: {
                 value: item[0],
-                content: item[1]
+                content: item[1],
+                [item[2] ? 'icon' : '']: item[2]
             }
         }
     })

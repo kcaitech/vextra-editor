@@ -8,11 +8,12 @@ import { ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
-    content: string
+    content: string,
+    icon?: string
 }
 export interface SelectSource {
     id: number,
-    data: SelectItem
+    data: SelectItem,
 }
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
     itemView?: any;
     mixed?: boolean;
     shapes?: ShapeView[];
+    visibility?: boolean;
 }
 
 interface Emits {
@@ -160,6 +162,9 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
+            <div class="icon-img" v-if="curValue?.icon">
+                <svg-icon :icon-class="curValue?.icon"></svg-icon>
+            </div>
             <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
             curValue?.content }}
             </div>
@@ -183,6 +188,15 @@ onMounted(render)
             <div v-else-if="props.itemView">
                 <component v-for="(c, idx) in source" v-bind="$attrs" :is="props.itemView" :key="c.id" :data="c.data"
                     :isCurValue="idx === curValueIndex" @select="select" />
+            </div>
+            <div v-else-if="visibility">
+                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
+                    @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
+                    <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
+                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
+                    <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
+                    <div class="content-wrap"> {{ c.data.content }}</div>
+                </div>
             </div>
             <div v-else>
                 <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
@@ -213,6 +227,23 @@ onMounted(render)
         border-radius: var(--default-radius);
         padding: 0 9px;
         box-sizing: border-box;
+
+        .icon-img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #1878F5;
+            margin-right: 8px;
+            overflow: hidden;
+            display: flex;
+
+            svg {
+                margin: auto;
+                width: 12px;
+                height: 12px;
+                color: white;
+            }
+        }
 
         .value-wrap {
             flex: 1;
@@ -276,6 +307,7 @@ onMounted(render)
             display: flex;
 
             align-items: center;
+            gap: 8px;
 
             .content-wrap {
                 flex: 1;
@@ -288,6 +320,11 @@ onMounted(render)
             >svg {
                 flex: 0 0 12px;
                 height: 12px;
+            }
+
+            .icon {
+                fill: currentColor;
+                color: #8C8C8C;
             }
         }
 
@@ -304,6 +341,10 @@ onMounted(render)
         .item-default:hover {
             background-color: var(--active-color);
             color: #FFFFFF;
+
+            .icon {
+                color: #fff;
+            }
         }
     }
 }

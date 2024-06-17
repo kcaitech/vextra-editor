@@ -30,7 +30,7 @@
                 <div class="actions" v-if="numbers.length">
 
                     <div class="actions-item" v-for="i in numbers" :key="i">
-                        <div>
+                        <div class="item">
                             <div class="arrow" :class="{ activation: showaction && acitonindex === i }"
                                 @click.stop="showhandel(i)">
                                 <svg-icon icon-class="arrows-dr"></svg-icon>
@@ -40,21 +40,29 @@
                                 <svg-icon icon-class="delete"></svg-icon>
                             </div>
                         </div>
-                        <div v-if="showaction && acitonindex === i">
+                        <div class="item-setting" v-if="showaction && acitonindex === i">
                             <div class="trigger">
                                 <span>触发</span>
-                                <Select class="select" id="select" :source="actions"
-                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
+                                <Select class="select" id="select" :visibility="true" :source="trigger"
+                                    :selected="trigger.find(item => item.id === 0)?.data"></Select>
                             </div>
                             <div class="action">
                                 <span>动作</span>
-                                <Select class="select" id="select" :source="actions"
+                                <Select class="select" id="select" :visibility="true" :source="actions"
                                     :selected="actions.find(item => item.id === 0)?.data"></Select>
                             </div>
                             <div class="target">
                                 <span>目标</span>
-                                <Select class="select" id="select" :source="actions"
-                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
+                                <input type="text" placeholder="请选择目标容器" readonly v-model="selectshape" @click="test">
+                                <div v-if="showtargerlist">
+                                    <div class="header-search">
+                                        <label for="search"></label>
+                                        <input type="text" id="search">
+                                    </div>
+                                    <div class="item-list">
+                                        <div v-for="i in 10" :key="i">{{i}}</div>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
@@ -95,6 +103,19 @@ enum overflowRollType {
 }
 
 enum Actions {
+    JumpPage = 'jumppage',
+    ReturnPage = 'returnpage',
+    PageScroll = 'pagescroll',
+    OpenLink = 'openlink',
+    ComponentState = 'componentstate',
+    OpenFloatLayer = 'openfloatlayer',
+    CloseFloatLayer = 'closefloatlayer',
+    ChangeFloatLayer = 'changefloatlayer'
+
+}
+
+
+enum Trigger {
     Click = 'click',
     DBLClick = 'dblclick',
     RightClick = 'rightclick',
@@ -105,7 +126,6 @@ enum Actions {
     MouseDown = 'mousedown',
     MouseUp = 'mouseup',
     Delay = 'delay'
-
 }
 
 
@@ -127,6 +147,7 @@ const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
 const acitonindex = ref<number>(-1)
+const selectshape=ref<string>()
 
 const overflowRoll: SelectSource[] = genOptions([
     [overflowRollType.NotRoll, '不滚动'],
@@ -135,20 +156,37 @@ const overflowRoll: SelectSource[] = genOptions([
     [overflowRollType.HorAndVer, '水平并垂直']
 ])
 
-const actions: SelectSource[] = genOptions([
-    [Actions.Click, '单击'],
-    [Actions.DBLClick, '双击'],
-    [Actions.RightClick, '右键'],
-    [Actions.Drag, '拖拽'],
-    [Actions.Hover, '悬停'],
-    [Actions.MouseEnter, '光标移入'],
-    [Actions.MouseLeave, '光标移出'],
-    [Actions.MouseDown, '按下鼠标'],
-    [Actions.MouseUp, '松开鼠标'],
-    [Actions.Delay, '延迟'],
+const trigger: SelectSource[] = genOptions([
+    [Trigger.Click, '单击'],
+    [Trigger.DBLClick, '双击'],
+    [Trigger.RightClick, '右键'],
+    [Trigger.Drag, '拖拽'],
+    [Trigger.Hover, '悬停'],
+    [Trigger.MouseEnter, '光标移入'],
+    [Trigger.MouseLeave, '光标移出'],
+    [Trigger.MouseDown, '按下鼠标'],
+    [Trigger.MouseUp, '松开鼠标'],
+    [Trigger.Delay, '延迟'],
 ])
 
+const actions: SelectSource[] = genOptions([
+    [Actions.JumpPage, '跳转页面', 'jump-page'],
+    [Actions.ReturnPage, '返回上一页面', 'retrun-page'],
+    [Actions.PageScroll, '页面内滚动', 'scroll-page'],
+    [Actions.OpenLink, '打开链接', 'open-link'],
+    [Actions.ComponentState, '组件状态切换', 'component-state'],
+    [Actions.OpenFloatLayer, '打开浮层', 'open-float-layer'],
+    [Actions.CloseFloatLayer, '关闭浮层', 'close-float-layer'],
+    [Actions.ChangeFloatLayer, '替换浮层', 'change-float-layer'],
 
+
+])
+
+const showtargerlist=ref<boolean>(false)
+const test=()=>{
+    console.log('1111');
+    showtargerlist.value=!showtargerlist.value
+}
 
 const createOrigin = () => {
     originName.value = '流程 ' + ++originNameNumber.value
@@ -412,7 +450,7 @@ onUnmounted(() => {
         flex-direction: column;
         gap: 8px;
 
-        .actions-item div {
+        .actions-item .item {
             @include flex(space-between, center);
             gap: 8px;
 
@@ -446,6 +484,29 @@ onUnmounted(() => {
                     width: 16px;
                     height: 16px;
                     margin: auto;
+                }
+            }
+        }
+
+        .actions-item .item-setting {
+            display: flex;
+            flex-direction: column;
+            width: 172px;
+            margin-left: 18px;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 400;
+            gap: 8px;
+
+            .trigger,
+            .action,
+            .target {
+                display: flex;
+                gap: 8px;
+
+                span {
+                    line-height: 32px;
+                    white-space: nowrap;
                 }
             }
         }
