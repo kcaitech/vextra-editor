@@ -1,3 +1,4 @@
+import { ColVector3D } from "@kcdesign/data";
 
 export function genRectPath(points: { x: number, y: number }[]): string {
     let path = ""
@@ -25,4 +26,10 @@ export function throttle<T extends (...args: any[]) => void>(func: T, delay: num
             }, delay);
         }
     } as T;
+}
+
+export function cursorAngle(srcVector: ColVector3D, destVector: ColVector3D) { // 获取srcVector到的destVector夹角（-π ~ π）
+    let angle = srcVector.angleTo(destVector); // srcVector与destVector的夹角（0 ~ π）
+    if ((srcVector.cross(destVector) as ColVector3D).z < 0) angle = -angle; // 顺时针方向为负
+    return angle
 }

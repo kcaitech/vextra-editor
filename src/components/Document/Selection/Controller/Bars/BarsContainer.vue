@@ -1,15 +1,15 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { ColVector3D, CtrlElementType, makeShapeTransform2By1, Matrix, ShapeView, Transform } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, SelectionTheme, XY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
-import { get_transform, modify_rotate_before_set } from '../Points/common';
 import { ScaleHandler } from "@/transform/scale";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 import { CursorType } from "@/utils/cursor2";
+import { cursorAngle } from "@/components/Document/Selection/common";
 
 interface Props {
     matrix: number[]
@@ -34,9 +34,8 @@ const emits = defineEmits<Emits>();
 const matrix = new Matrix();
 const data: {
     paths: Bar[],
-    dashes: string[]
-} = reactive({ paths: [], dashes: [] });
-const { paths, dashes } = data;
+} = reactive({ paths: [] });
+const { paths } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
@@ -76,6 +75,80 @@ function update_dot_path() {
         const path = get_bar_path(apex[i], apex[i + 1]);
         paths.push({ path, type: types[i] });
     }
+
+    updateRotateCtx();
+}
+
+const rotateCtx: {
+    mTop: Transform;
+    mRight: Transform;
+    mBottom: Transform;
+    mLeft: Transform;
+
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+} = {
+    mTop: new Transform(),
+    mRight: new Transform(),
+    mBottom: new Transform(),
+    mLeft: new Transform()
+}
+
+function updateRotateCtx() {
+    const shape = props.shape;
+    const { width, height } = shape.size;
+
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = shape.transform2FromRoot;
+
+    const fromClient = fromRoot.addTransform(clientMatrix);
+
+    const cols = fromClient.transform([
+        ColVector3D.FromXY(0, 0),
+        ColVector3D.FromXY(width, 0),
+        ColVector3D.FromXY(width, height),
+        ColVector3D.FromXY(0, height),
+        ColVector3D.FromXY(width / 2, height / 2),
+    ]);
+
+    const { col0, col1, col2, col3 } = cols;
+
+    const t = fromClient.clearTranslate();
+    t.updateMatrix();
+    t.matrix.normalize();
+    t.isSubMatrixLatest = false;
+
+    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = t.transform([
+        ColVector3D.FromXY(0, -1),
+        ColVector3D.FromXY(1, 0),
+        ColVector3D.FromXY(0, 1),
+        ColVector3D.FromXY(-1, 0)
+    ]);
+
+    const xVector = ColVector3D.FromXY(1, 0);
+
+    const theta1 = cursorAngle(xVector, vecLT);
+    const theta2 = cursorAngle(xVector, vecRT);
+    const theta3 = cursorAngle(xVector, vecRB);
+    const theta4 = cursorAngle(xVector, vecLB);
+
+    rotateCtx.mTop = new Transform()
+        .setRotateZ(theta1)
+        .setTranslate(ColVector3D.FromXY(col0.x, col0.y));
+
+    rotateCtx.mRight = new Transform()
+        .setRotateZ(theta2)
+        .setTranslate(ColVector3D.FromXY(col1.x, col1.y));
+
+    rotateCtx.mBottom = new Transform()
+        .setRotateZ(theta3)
+        .setTranslate(ColVector3D.FromXY(col2.x, col2.y));
+
+    rotateCtx.mLeft = new Transform()
+        .setRotateZ(theta4)
+        .setTranslate(ColVector3D.FromXY(col3.x, col3.y));
 }
 
 function get_bar_path(s: {
@@ -134,17 +207,32 @@ function bar_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
-    let deg = rotate;
+    let deg = 0;
 
     if (t === CtrlElementType.RectTop) {
-        deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
+        if (rotateCtx.top === undefined) {
+            rotateCtx.top = rotateCtx.mTop.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.top;
     } else if (t === CtrlElementType.RectRight) {
-        deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
+        if (rotateCtx.right === undefined) {
+            rotateCtx.right = rotateCtx.mRight.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.right;
     } else if (t === CtrlElementType.RectBottom) {
-        deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
+        if (rotateCtx.bottom === undefined) {
+            rotateCtx.bottom = rotateCtx.mBottom.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.bottom;
     } else if (t === CtrlElementType.RectLeft) {
-        deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
+        if (rotateCtx.left === undefined) {
+            rotateCtx.left = rotateCtx.mLeft.decomposeEuler().z * 180 / Math.PI;
+        }
+
+        deg = rotateCtx.left;
     }
 
     cursor.setType(CursorType.Scale, deg);
@@ -202,13 +290,9 @@ onUnmounted(() => {
         @mouseenter="() => bar_mouseenter(b.type)"
         @mouseleave="bar_mouseleave"
     >
-        <path :d="b.path" class="main-path" :stroke="theme">
-        </path>
-        <path :d="b.path" class="assist-path">
-        </path>
+        <path :d="b.path" class="main-path" :stroke="theme"/>
+        <path :d="b.path" class="assist-path"/>
     </g>
-    <path v-for="(d, i) in dashes" :key="i" :d="d" class="dash" :stroke="theme">
-    </path>
 </template>
 <style lang='scss' scoped>
 .main-path {

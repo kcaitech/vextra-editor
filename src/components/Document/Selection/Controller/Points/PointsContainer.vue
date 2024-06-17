@@ -11,7 +11,6 @@ import {
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
-import { get_transform, modify_rotate_before_set } from './common';
 import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
@@ -19,6 +18,7 @@ import { RotateHandler } from "@/transform/rotate";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 import { CursorType } from "@/utils/cursor2";
+import { cursorAngle } from "@/components/Document/Selection/common";
 
 interface Props {
     context: Context
@@ -76,12 +76,6 @@ function update() {
 function updateByShape(...args: any[]) {
     if (!args.includes('layout')) return;
     updateDotLayout();
-}
-
-function cursorAngle(srcVector: ColVector3D, destVector: ColVector3D) { // 获取srcVector到的destVector夹角（-π ~ π）
-    let angle = srcVector.angleTo(destVector); // srcVector与destVector的夹角（0 ~ π）
-    if ((srcVector.cross(destVector) as ColVector3D).z < 0) angle = -angle; // 顺时针方向为负
-    return angle
 }
 
 const rotateCtx: {
