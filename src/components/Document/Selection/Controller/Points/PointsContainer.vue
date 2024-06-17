@@ -83,10 +83,6 @@ const rotateCtx: {
     mrt: Transform;
     mrb: Transform;
     mlb: Transform;
-    lt?: number;
-    rt?: number;
-    rb?: number;
-    lb?: number;
 } = {
     mlt: new Transform(),
     mrt: new Transform(),
@@ -269,6 +265,7 @@ function point_mousemove(event: MouseEvent) {
         });
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
+
         if (cur_ctrl_type.endsWith('rotate')) {
             rotator?.createApiCaller();
         } else {
@@ -295,29 +292,13 @@ function setCursor(t: CtrlElementType, active = false) {
     // rotate
     let deg = 0;
     if (t === CtrlElementType.RectLT || t === CtrlElementType.RectLTR) {
-        if (rotateCtx.lt === undefined) {
-            rotateCtx.lt = rotateCtx.mlt.decomposeEuler().z * 180 / Math.PI;
-        }
-
-        deg = rotateCtx.lt;
+        deg = rotateCtx.mlt.decomposeEuler().z * 180 / Math.PI;
     } else if (t === CtrlElementType.RectRT || t === CtrlElementType.RectRTR) {
-        if (rotateCtx.rt === undefined) {
-            rotateCtx.rt = rotateCtx.mrt.decomposeEuler().z * 180 / Math.PI;
-        }
-
-        deg = rotateCtx.rt;
+        deg = rotateCtx.mrt.decomposeEuler().z * 180 / Math.PI;
     } else if (t === CtrlElementType.RectRB || t === CtrlElementType.RectRBR) {
-        if (rotateCtx.rb === undefined) {
-            rotateCtx.rb = rotateCtx.mrb.decomposeEuler().z * 180 / Math.PI;
-        }
-
-        deg = rotateCtx.rb;
+        deg = rotateCtx.mrb.decomposeEuler().z * 180 / Math.PI;
     } else if (t === CtrlElementType.RectLB || t === CtrlElementType.RectLBR) {
-        if (rotateCtx.lb === undefined) {
-            rotateCtx.lb = rotateCtx.mlb.decomposeEuler().z * 180 / Math.PI;
-        }
-
-        deg = rotateCtx.lb;
+        deg = rotateCtx.mlb.decomposeEuler().z * 180 / Math.PI;
     }
 
     active
@@ -417,8 +398,8 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .r-path {
-    //fill: transparent;
-    fill: rgba(255, 0, 0, 0.6);
+    fill: transparent;
+    //fill: rgba(255, 0, 0, 0.6);
     stroke: none;
 }
 
@@ -432,7 +413,7 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     stroke: transparent;
-    //fill: transparent;
-    fill: rgba(0, 255, 0, 0.6);
+    fill: transparent;
+    //fill: rgba(0, 255, 0, 0.6);
 }
 </style>
