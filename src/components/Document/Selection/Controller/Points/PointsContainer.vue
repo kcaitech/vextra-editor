@@ -21,11 +21,11 @@ import { CursorType } from "@/utils/cursor2";
 import { cursorAngle } from "@/components/Document/Selection/common";
 
 interface Props {
-    context: Context
-    shape: ShapeView
-    axle: { x: number, y: number }
-    cFrame: Point[]
-    theme: SelectionTheme
+    context: Context;
+    shape: ShapeView;
+    axle: { x: number, y: number };
+    cFrame: Point[];
+    theme: SelectionTheme;
 }
 
 interface Emits {

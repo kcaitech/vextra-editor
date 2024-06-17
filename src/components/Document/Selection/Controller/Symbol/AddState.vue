@@ -12,12 +12,14 @@ import {
 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 interface Props {
     context: Context;
     shape: ShapeView;
 
     symbolType: SymbolType;
+    cFrame: Point[];
 }
 
 const props = defineProps<Props>();
@@ -32,9 +34,8 @@ function gen_add_button_transform() {
     const shape = props.shape;
     const { width, height } = shape.size;
 
-    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
-    const fromClient = fromRoot.addTransform(clientMatrix);
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
 
     if (props.symbolType === SymbolType.Union) {
 
@@ -42,10 +43,25 @@ function gen_add_button_transform() {
 
     }
 
+    const t = new Transform()
+        .setTranslate(ColVector3D.FromXY(width / 2 - 8, height - 8))
+        .addTransform(fromRoot)
+        .addTransform(clientMatrix);
+
+    // const __transform = t
+        // .clearSkew()
+        // .clearScale()
+        // .translateAt({
+        //     axis: t.transform(ColVector3D.FromXY(0, 1)).col0,
+        //     distance: 16,
+        // });
     const __transform = new Transform()
-        .setTranslate(ColVector3D.FromXY(width / 2, height))
-        .addTransform(fromClient)
-        .clearScaleSize();
+        .setRotateZ(t.decomposeEuler().z)
+        .setTranslate(t.decomposeTranslate())
+        // .translateAt({
+        //     axis: t.transform(ColVector3D.FromXY(0, 1)).col0,
+        //     distance: 16,
+        // });
 
     return makeMatrixByTransform2(__transform).toString();
 }
@@ -87,7 +103,8 @@ const stop = watch(() => props.shape, (value, old) => {
     value.watch(update);
 
     update();
-})
+});
+const uninstallFrameWatcher = watch(() => props.cFrame, update);
 onMounted(() => {
     props.shape.watch(update);
     update();
@@ -95,6 +112,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.shape.unwatch(update);
     stop();
+    uninstallFrameWatcher();
 })
 </script>
 <template>

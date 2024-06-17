@@ -193,6 +193,7 @@ onUnmounted(() => {
             v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union"
             :context="props.context"
             :shape="props.shape"
+            :c-frame="props.controllerFrame"
             :symbol-type="symbol_type"
         />
     </svg>
