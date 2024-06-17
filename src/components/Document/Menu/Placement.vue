@@ -4,8 +4,13 @@ import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
-    x: number
-    y: number
+    params: {
+        visible: boolean,
+        pos: {
+            x: number
+            y: number
+        }
+    }
     context: Context
 }
 const props = defineProps<Props>();
@@ -25,7 +30,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="container" :style="{ left: `${props.x}px`, top: `${props.y}px`, opacity: show_placement ? 1 : 0 }">
+    <div v-if="props.params.visible" class="container" :style="{ left: `${props.params.pos.x}px`, top: `${props.params.pos.y}px`, opacity: show_placement ? 1 : 0 }">
         <div class="dot"></div>
         <div class="pulse"></div>
         <div class="pulse1"></div>

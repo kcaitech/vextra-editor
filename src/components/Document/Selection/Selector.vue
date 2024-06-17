@@ -15,7 +15,10 @@ export interface SelectorFrame {
 }
 
 interface Props {
-    selectorFrame: SelectorFrame
+    params: {
+        visible: boolean
+        frame: SelectorFrame
+    }
     context: Context
 }
 
@@ -33,7 +36,7 @@ function select() {
         return;
     }
 
-    const { top, left, width, height } = props.selectorFrame;
+    const { top, left, width, height } = props.params.frame;
 
     const p1: XY = pageMatirx.computeCoord2(left, top); // lt
     const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
@@ -55,7 +58,7 @@ function select() {
 }
 
 function is_target_for_group(shape: GroupShapeView, points: [XY, XY, XY, XY, XY]): boolean {
-    if (props.selectorFrame.includes) {
+    if (props.params.frame.includes) {
         return isTarget2(points, shape, true);
     }
 
@@ -128,7 +131,7 @@ function finder(childs: ShapeView[], points: [XY, XY, XY, XY, XY]) {
             continue;
         }
 
-        if (isTarget2(points, shape, props.selectorFrame.includes)) {
+        if (isTarget2(points, shape, props.params.frame.includes)) {
             private_set(shape.id, shape);
         }
     }
@@ -146,7 +149,7 @@ function remove(childs: Map<string, ShapeView>, points: [XY, XY, XY, XY, XY]) {
                 private_delete(value);
             }
         } else {
-            if (!isTarget2(points, value, props.selectorFrame.includes)) {
+            if (!isTarget2(points, value, props.params.frame.includes)) {
                 private_delete(value);
             }
         }
@@ -184,8 +187,8 @@ onUnmounted(() => {
 watchEffect(select);
 </script>
 <template>
-    <div class="selector"
-        :style="{ top: `${props.selectorFrame.top}px`, left: `${props.selectorFrame.left}px`, width: `${props.selectorFrame.width}px`, height: `${props.selectorFrame.height}px` }">
+    <div class="selector" v-if="props.params.visible"
+        :style="{ top: `${props.params.frame.top}px`, left: `${props.params.frame.left}px`, width: `${props.params.frame.width}px`, height: `${props.params.frame.height}px` }">
     </div>
 </template>
 <style scoped lang="scss">

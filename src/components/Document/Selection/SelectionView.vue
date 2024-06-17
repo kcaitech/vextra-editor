@@ -29,7 +29,9 @@ export interface Bar {
 
 interface Props {
     context: Context
-    matrix: Matrix
+    params: {
+        matrix: Matrix
+    }
 }
 
 interface PathView {
@@ -90,7 +92,7 @@ function shapesWatcher(...args: any) {
             update_by_shapes();
             updateTrigger.value++;
         } else if (args.includes('destroy')) {
-            matrix.reset(props.matrix);
+            matrix.reset(props.params.matrix);
             createShapeTracing();
             createController2()
         }
@@ -98,20 +100,20 @@ function shapesWatcher(...args: any) {
 }
 
 function update_by_shapes() {
-    matrix.reset(props.matrix);
+    matrix.reset(props.params.matrix);
     createShapeTracing();
     createController();
 }
 
 function update_by_matrix() {
-    matrix.reset(props.matrix);
+    matrix.reset(props.params.matrix);
     createShapeTracing();
     createController();
 }
 
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
-        matrix.reset(props.matrix);
+        matrix.reset(props.params.matrix);
         createShapeTracing();
         createController();
     }
@@ -126,11 +128,11 @@ function selectionWatcher(t: number) { // selection的部分动作可触发更�
         tracing.value = false;
         controller.value = false;
     } else if (t === Selection.CHANGE_SHAPE) {
-        matrix.reset(props.matrix);
+        matrix.reset(props.params.matrix);
         createController();
         watchShapes();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
-        matrix.reset(props.matrix);
+        matrix.reset(props.params.matrix);
         createShapeTracing();
         watchShapes();
     }
@@ -141,7 +143,7 @@ function selectionWatcher(t: number) { // selection的部分动作可触发更�
 
 function tool_watcher(t: number) {
     if (t === Tool.LABLE_CHANGE) {
-        matrix.reset(props.matrix);
+        matrix.reset(props.params.matrix);
         createController();
         watchShapes();
         lableLineStatus();
@@ -439,7 +441,7 @@ function remove_page_watcher() {
 }
 
 // hooks
-watch(() => props.matrix, update_by_matrix, { deep: true });
+watch(() => props.params.matrix, update_by_matrix, { deep: true });
 
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
@@ -476,13 +478,13 @@ onUnmounted(() => {
     </svg>
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-               :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+               :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
                :shape="context.selection.selectedShapes[0]" :theme="theme">
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
     <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
                :update-trigger="updateTrigger"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>

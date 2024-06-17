@@ -411,7 +411,7 @@ export function scout_once(context: Context, e: MouseEvent) {
     selectShapes(context, shapes);
 }
 
-export function menu_locate(context: Context, site: XY, el: HTMLDivElement | undefined) {
+export function menu_locate(context: Context, site: XY, el: HTMLElement | undefined) {
     if (!el) {
         return;
     }

@@ -18,6 +18,9 @@ import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
     context: Context
+    params: {
+        visible: boolean
+    }
 }
 
 const props = defineProps<Props>();
@@ -197,7 +200,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="{ wrapper: true, 'clip-mode': clip_mode, 'pen-mode': penMode }" @wheel.stop @mousedown.stop="down"
+    <div :class="{ wrapper: true, 'clip-mode': clip_mode, 'pen-mode': penMode }" @wheel.stop @mousedown.stop="down" v-if="params.visible"
          @mousemove="move"
          @wheel="onMouseWheel">
         <ClipMode v-if="clip_mode" :context="context"></ClipMode>

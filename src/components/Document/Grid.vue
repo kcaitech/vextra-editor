@@ -6,7 +6,8 @@ import { Matrix } from "@kcdesign/data";
 import { User } from "@/context/user";
 
 interface Props {
-    context: Context;
+    context: Context,
+    params: any
 }
 
 const props = defineProps<Props>();

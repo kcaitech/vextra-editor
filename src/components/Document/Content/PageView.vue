@@ -12,10 +12,12 @@ import { Selection } from '@/context/selection';
 
 interface Props {
     context: Context
-    data: PageView
-    matrix: Matrix
-
-    noCutout?: boolean
+    params: {
+        data: PageView
+        matrix: Matrix
+        noCutout?: boolean,
+        closeLoading?: () => void
+    }
 }
 
 const props = defineProps<Props>();
@@ -29,12 +31,12 @@ const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
 const cutoutVisible = ref<boolean>(true);
 
-const emit = defineEmits<{
-    (e: 'closeLoading'): void;
-}>();
+// const emit = defineEmits<{
+//     (e: 'closeLoading'): void;
+// }>();
 
 const show_c = computed<boolean>(() => {
-    return !props.noCutout && cutoutVisible.value;
+    return !props.params.noCutout && cutoutVisible.value;
 })
 
 function pageViewRegister(mount: boolean) {
@@ -54,11 +56,11 @@ function _collect(t?: any) {
 const collect = debounce(_collect, 240);
 
 function page_watcher() {
-    matrixWithFrame.reset(props.matrix);
-    matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
+    matrixWithFrame.reset(props.params.matrix);
+    matrixWithFrame.preTrans(props.params.data.frame.x, props.params.data.frame.y);
 
-    width.value = props.data.frame.width;
-    height.value = props.data.frame.height;
+    width.value = props.params.data.frame.width;
+    height.value = props.params.data.frame.height;
 
     modifySize();
 
@@ -78,7 +80,7 @@ function modifySize() {
     viewbox.value = `0 0 ${width.value} ${height.value}`;
 }
 
-const stopWatchPage = watch(() => props.data, (value, old) => {
+const stopWatchPage = watch(() => props.params.data, (value, old) => {
     old.unwatch(page_watcher);
     old.data.__collect.unwatch(collect);
     value.watch(page_watcher);
@@ -99,7 +101,7 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
         dom.ctx.loop(window.requestAnimationFrame);
     }
 })
-const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
+const stop_watch_matrix = watch(() => props.params.matrix, page_watcher, { deep: true });
 
 function tool_watcher(t?: number) {
     if (t === Tool.TITILE_VISIBLE) {
@@ -110,16 +112,16 @@ function tool_watcher(t?: number) {
 }
 
 onMounted(() => {
-    props.data.watch(page_watcher);
-    props.data.data.__collect.watch(collect);
+    props.params.data.watch(page_watcher);
+    props.params.data.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
     page_watcher();
 })
 onUnmounted(() => {
-    props.data.unwatch(page_watcher);
-    props.data.data.__collect.unwatch(collect);
+    props.params.data.unwatch(page_watcher);
+    props.params.data.data.__collect.unwatch(collect);
     props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
@@ -131,25 +133,26 @@ function selection_watcher(...args: any[]) {
     if (args.includes(Selection.CHANGE_SHAPE)) {
         const selectedShapes = props.context.selection.selectedShapes;
         const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
-        const dom = props.context.getPageDom(props.data);
+        const dom = props.context.getPageDom(props.params.data);
         dom.ctx.updateFocusShape(focus ? adapt2Shape(focus) : undefined);
     }
 }
 
 onMounted(() => {
-    const dom = props.context.getPageDom(props.data);
+    const dom = props.context.getPageDom(props.params.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
         dom.ctx.loop(window.requestAnimationFrame);
-        props.context.nextTick(props.data, () => {
-            emit('closeLoading');
+        props.context.nextTick(props.params.data, () => {
+            // emit('closeLoading');
+            if (props.params.closeLoading) props.params.closeLoading();
         })
     }
 })
 
 onUnmounted(() => {
-    const dom = props.context.getPageDom(props.data);
+    const dom = props.context.getPageDom(props.params.data);
     if (dom) {
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
@@ -162,11 +165,11 @@ onUnmounted(() => {
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
          :width="width" :height="height" :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="show_c" :context="props.context" :data="data" :matrix="props.matrix"
+    <ShapeCutout v-if="show_c" :context="props.context" :data="props.params.data" :matrix="props.params.matrix"
                  :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
-    <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
-    <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
+    <ShapeTitles v-if="show_t" :context="props.context" :data="props.params.data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ComponentTitleContainer :context="props.context" :data="props.params.data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
 </template>
 

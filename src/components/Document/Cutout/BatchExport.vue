@@ -16,6 +16,9 @@ const { t } = useI18n();
 
 const props = defineProps<{
     context: Context
+    params: {
+        visible: boolean
+    }
 }>();
 
 type ExportInfo = {
@@ -398,7 +401,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="export-dialog" ref="dialog" :style="`transform: translate(${left}px, ${top}px)`" @click.stop
+    <div class="export-dialog" ref="dialog" :style="`transform: translate(${left}px, ${top}px)`" @click.stop v-if="params.visible"
         @mousedown.stop @wheel.stop>
         <div class="header" @mousedown="mousedown">
             <div class="title">{{ t('cutoutExport.export') }}</div>

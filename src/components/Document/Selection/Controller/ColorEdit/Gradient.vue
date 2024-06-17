@@ -9,7 +9,10 @@ import { onUnmounted } from 'vue';
 import { ColorCtx } from '@/context/color';
 interface Props {
     context: Context
-    matrix: Matrix
+    params: {
+        matrix: Matrix
+        visible: boolean
+    }
 }
 const props = defineProps<Props>();
 const _g_type = ref<GradientType>(GradientType.Linear);
@@ -49,8 +52,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="gradient" @mousedown.stop="down" @mousemove="move">
-        <component :is="gradient_map.get(_g_type)" :context="props.context" :matrix="matrix"></component>
+    <div class="gradient" @mousedown.stop="down" @mousemove="move" v-if="params.visible">
+        <component :is="gradient_map.get(_g_type)" :context="props.context" :matrix="params.matrix"></component>
     </div>
 </template>
 <style scoped lang="scss">

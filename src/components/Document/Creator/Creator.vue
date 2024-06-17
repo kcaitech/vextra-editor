@@ -15,7 +15,10 @@ import { PathShapeView } from "@kcdesign/data";
 import { CreatorExecute } from "./execute";
 
 interface Props {
-    context: Context
+    context: Context,
+    params: {
+        visible: boolean
+    }
 }
 
 const props = defineProps<Props>();
@@ -328,7 +331,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
+    <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`" v-if="props.params.visible">
         <!-- <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
                       :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
                       :rootWidth="rootWidth"

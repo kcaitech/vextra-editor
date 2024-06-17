@@ -11,8 +11,11 @@ import { TeamWork } from "@/context/teamwork";
 import { Selection } from '@/context/selection';
 import { getRandomColor } from '@/utils/color';
 interface Props {
-    context: Context
-    matrix: Matrix
+    context: Context,
+    params: {
+        matrix: Matrix
+        visible: boolean
+    }
 }
 
 const userSelectColor = ['#FF7A05', '#FFAB05', '#E701FF', '#FF0172', '#00C9C5', '#0199FF', '#6FFFAC', '#36C45F', '#13D6F4', '#9112D1']
@@ -112,7 +115,7 @@ function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
 }
 
 function update_by_shapes() {
-    matrix.reset(props.matrix);
+    matrix.reset(props.params.matrix);
 }
 
 const teamworkWatcher = (t?: any) => {
@@ -211,7 +214,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    <svg v-if="props.params.visible" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="position: absolute">
         <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color"
@@ -220,7 +223,7 @@ onUnmounted(() => {
             opacity="0.5"></path>
         <!-- <path v-for="(p, i) in selectPath" :key="i" :d="p.path" :fill="p.color" fill-opacity="0.5" stroke='none'></path> -->
     </svg>
-    <ShapeAvatar :context="props.context" :matrix="props.matrix"></ShapeAvatar>
+    <ShapeAvatar v-if="props.params.visible" :context="props.context" :matrix="props.params.matrix"></ShapeAvatar>
 </template>
 
 <style lang="scss" scoped></style>

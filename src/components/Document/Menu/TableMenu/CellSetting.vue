@@ -1,19 +1,22 @@
 <script lang="ts" setup>
-import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
 import { Close } from '@element-plus/icons-vue'
-import { TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { TableView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 interface Props {
     context: Context,
-    addOrDivision: string
+    params: {
+        cellStatus: string
+        close: () => void
+        visible: boolean;
+    }
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-    (e: 'close'): void;
-}>();
+// const emit = defineEmits<{
+//     (e: 'close'): void;
+// }>();
 const dialogVisible = ref(true);
 const rowNum = ref(1);
 const radioRanks = ref('top');
@@ -23,7 +26,8 @@ const colRight = ref(1);
 
 const escClose = (e: KeyboardEvent) => {
     e.stopPropagation();
-    emit('close');
+    // emit('close');
+    props.params.close()
 }
 
 const InsertCell = (state: string) => {
@@ -60,7 +64,8 @@ const InsertCell = (state: string) => {
     }
     table.resetSelection();
     table.setEditingCell();
-    emit('close');
+    // emit('close');
+    props.params.close()
 }
 
 onMounted(() => {
@@ -72,11 +77,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" @mousedown.stop>
+    <div class="container" @mousedown.stop v-if="props.params.visible">
         <el-dialog v-model="dialogVisible" :title="t('table.insert_column')" width="200px" draggable align-center
-            :modal="false" v-if="addOrDivision === 'insert'" :close-on-click-modal="false" :close-on-press-escape="false"
+            :modal="false" v-if="props.params.cellStatus === 'insert'" :close-on-click-modal="false" :close-on-press-escape="false"
             :show-close="false" :lock-scroll="false">
-            <div class="close" @click="emit('close')"><el-icon>
+            <div class="close" @click="props.params.close()"><el-icon>
                     <Close />
                 </el-icon></div>
             <div class="body">

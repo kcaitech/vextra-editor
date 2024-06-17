@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance, h } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -694,13 +694,97 @@ onUnmounted(() => {
     window.removeEventListener('focus', windowFocus);
     stopWatch();
 })
+
+const comps: { component: any, params?: any }[] = [];
+
+const plugins = props.context.pluginsMgr.search2("content");
+comps.push(...plugins.begin);
+
+comps.push(
+    {
+        component: PageViewVue, params: {
+            get data() { return props.page },
+            get matrix() { return matrix },
+            closeLoading
+        }
+    },
+    {
+        component: TextSelection, params: {
+            get matrix() { return matrix }
+        }
+    },
+    {
+        component: UsersSelection, params: {
+            get matrix() { return matrix },
+            get visible() { return avatarVisi.value }
+        }
+    },
+    {
+        component: SelectionView, params: {
+            get matrix() { return matrix },
+        }
+    },
+    {
+        component: Placement, params: {
+            get visible() { return contextMenu.value },
+            get pos() { return contextMenuPosition }
+        }
+    },
+    {
+        component: () => {
+            if (contextMenu.value) {
+                return h(ContextMenu, { site, "@close": contextMenuUnmount, "ref": contextMenuEl, context: props.context })
+            }
+        }
+    },
+    {
+        component: CellSetting, params: {
+            get visible() { return cellSetting.value },
+            close: closeModal,
+            get cellStatus() { return cellStatus.value }
+        }
+    },
+    {
+        component: Selector, params: {
+            get visible() { return selector_mount.value },
+            get frame() { return selectorFrame }
+        }
+    },
+    {
+        component: Creator, params: {
+            get visible() { return creatorMode.value },
+        }
+    },
+    {
+        component: PathEditMode, params: {
+            get visible() { return path_edit_mode.value },
+        }
+    },
+    {
+        component: Gradient, params: {
+            get visible() { return color_edit_mode.value },
+            get matrix() { return matrix },
+        }
+    },
+    {
+        component: Grid
+    },
+    {
+        component: BatchExport, params: {
+            get visible() { return isvisible.value }
+        }
+    }
+)
+
+comps.push(...plugins.end);
+
 </script>
 <template>
     <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
+        <!-- <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
             @closeLoading="closeLoading" />
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
@@ -716,13 +800,15 @@ onUnmounted(() => {
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
         </CellSetting>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <!-- <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
-        </CommentView> -->
+        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
+        </CommentView>
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
         <Grid :context="props.context"></Grid>
         <TempBoard :context="props.context"></TempBoard>
-        <BatchExport v-if="isvisible" :context="props.context"></BatchExport>
+        <BatchExport v-if="isvisible" :context="props.context"></BatchExport> -->
+
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
 </template>
