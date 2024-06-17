@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType, Matrix } from '@kcdesign/data';
+import { CtrlElementType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
@@ -8,7 +8,6 @@ import { ScaleHandler } from '@/transform/scale';
 import { CursorType } from "@/utils/cursor2";
 
 interface Props {
-    matrix: number[]
     context: Context
     frame: Point[]
 }
@@ -19,10 +18,8 @@ interface Bar {
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
-const submatrix = new Matrix();
-const data: { bars: Bar[] } = reactive({ bars: [] });
-const { bars } = data;
+const bars = reactive<{ bars: Bar[] }>({ bars: [] }).bars;
+
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
@@ -38,7 +35,6 @@ let need_reset_cursor_after_transform = true;
 let scaler: ScaleHandler | undefined = undefined;
 
 function update() {
-    matrix.reset(props.matrix);
     update_dot_path();
 }
 
@@ -48,10 +44,12 @@ function update_dot_path() {
     }
 
     bars.length = 0;
+
     const apex = props.frame.map(p => {
         return { x: p.x, y: p.y }
     });
     apex.push(apex[0]);
+
     for (let i = 0; i < apex.length - 1; i++) {
         const p = get_bar_path(apex[i], apex[i + 1]);
         bars.push({ path: p, type: types[i] });
@@ -59,12 +57,12 @@ function update_dot_path() {
 }
 
 function passive_update() {
-    matrix.reset(props.matrix);
     bars.length = 0;
-    const apex = props.frame.map(p => {
-        return { x: p.x, y: p.y }
-    });
+
+    const apex = props.frame.map(p => ({ ...p }));
+
     apex.push(apex[0]);
+
     for (let i = 0; i < apex.length - 1; i++) {
         const p = get_bar_path(apex[i], apex[i + 1]);
         bars.push({ path: p, type: types[i] });
@@ -129,10 +127,15 @@ function clear_status() {
 }
 
 function setCursor(t: CtrlElementType) {
-    if (t === CtrlElementType.RectTop) props.context.cursor.setType(CursorType.Scale, 90);
-    else if (t === CtrlElementType.RectRight) props.context.cursor.setType(CursorType.Scale, 0);
-    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType(CursorType.Scale, 90);
-    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType(CursorType.Scale, 0);
+    if (t === CtrlElementType.RectTop) {
+        props.context.cursor.setType(CursorType.Scale, 90);
+    } else if (t === CtrlElementType.RectRight) {
+        props.context.cursor.setType(CursorType.Scale, 0);
+    } else if (t === CtrlElementType.RectBottom) {
+        props.context.cursor.setType(CursorType.Scale, 90);
+    } else if (t === CtrlElementType.RectLeft) {
+        props.context.cursor.setType(CursorType.Scale, 0);
+    }
 }
 
 function bar_mouseenter(type: CtrlElementType) {
@@ -149,14 +152,8 @@ function window_blur() {
     clear_status();
 }
 
-function frame_watcher() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        passive_update();
-    }
-}
+watch(() => props.frame, passive_update);
 
-watch(() => props.frame, frame_watcher);
-watch(() => props.matrix, update);
 onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);

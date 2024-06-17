@@ -32,7 +32,6 @@ export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[
     const bit_v_d = 7;
     const [lt, rt, rb, lb] = ps;
     const t = get_transform(shape);
-    console.log('__T__ROTATION__', t.rotate);
 
     // lt
     const r1 = get_r_path(lt);

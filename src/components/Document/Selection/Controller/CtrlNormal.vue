@@ -57,14 +57,7 @@ const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-const width = computed(() => {
-    const w = bounds.right - bounds.left;
-    return w < 10 ? 10 : w;
-})
-const height = computed(() => {
-    const h = bounds.bottom - bounds.top;
-    return h < 10 ? 10 : h;
-})
+
 const partVisible = computed(() => {
     return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
 })
@@ -145,27 +138,40 @@ const mouseleave = () => {
     is_enter.value = false;
 }
 
+const stop = watchEffect(updateControllerView);
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
+
     check_status();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
+
     props.context.cursor.reset();
     reset_hidden();
+    stop();
 })
-watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100" :width="100" :height="100" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xhtml="http://www.w3.org/1999/xhtml"
+         data-area="controller"
+         preserveAspectRatio="xMinYMin meet"
+         viewBox="0 0 100 100"
+         width="100"
+         height="100"
+         :class="{ hidden: selection_hidden }"
          overflow="visible"
-         @mouseenter="mouseenter" @mouseleave="mouseleave">
+         @mousedown="mousedown"
+         @mouseenter="mouseenter"
+         @mouseleave="mouseleave"
+    >
         <ShapesStrokeContainer :context="props.context"/>
         <BarsContainer
             v-if="partVisible"

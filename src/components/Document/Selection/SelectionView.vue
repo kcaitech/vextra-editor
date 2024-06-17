@@ -258,6 +258,7 @@ function modify_controller_frame(shapes: ShapeView[]) {
         controllerFrame.value = points;
         return;
     }
+
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
@@ -271,11 +272,14 @@ function modify_controller_frame(shapes: ShapeView[]) {
         for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
         points.push(...ps);
     }
+
     const b = XYsBounding(points);
-    controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, {
-        x: b.left,
-        y: b.bottom
-    }];
+    controllerFrame.value = [
+        { x: b.left, y: b.top },
+        { x: b.right, y: b.top },
+        { x: b.right, y: b.bottom },
+        { x: b.left, y: b.bottom }
+    ];
 }
 
 function for_virtual(shape: ShapeView) {
