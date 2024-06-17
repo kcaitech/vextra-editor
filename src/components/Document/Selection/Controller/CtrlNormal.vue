@@ -1,7 +1,11 @@
 <script setup lang='ts'>
+/**
+ * @description 单选通用型控件
+ */
+
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, PolygonShapeView, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -11,16 +15,14 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
-import { point_map } from "./Points/map"
-
 
 interface Props {
-    context: Context
-    controllerFrame: Point[]
-    rotate: number
-    matrix: Matrix
-    shape: ShapeView
-    theme: SelectionTheme
+    context: Context;
+    shape: ShapeView;
+
+    controllerFrame: Point[];
+
+    theme: SelectionTheme;
 }
 
 const props = defineProps<Props>();
@@ -28,8 +30,6 @@ const { isDrag } = useController(props.context);
 const editing = ref<boolean>(false);
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
-const matrix = new Matrix();
-const submatrix = reactive(new Matrix());
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
 
@@ -53,7 +53,6 @@ function reset_hidden() {
     hidden_holder = null;
 }
 
-let viewBox = '';
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -70,16 +69,9 @@ const partVisible = computed(() => {
     return bounds.bottom - bounds.top > 8 || bounds.right - bounds.left > 8;
 })
 
-// #region 绘制控件
-function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
-}
-
 function updateControllerView() {
-    const m2r = props.shape.matrix2Root();
-    matrix.reset(m2r);
-    matrix.multiAtLeft(props.matrix);
-    submatrix.reset(matrix);
+    const matrix = new Matrix(props.shape.matrix2Root());
+    matrix.multiAtLeft(props.context.workspace.matrix);
 
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
@@ -97,7 +89,6 @@ function updateControllerView() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds);
-    viewBox = genViewBox(bounds);
 }
 
 // #endregion
@@ -141,15 +132,12 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
-
-const pointVisible = computed(() => {
-    return bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90;
-})
 const is_enter = ref(false);
 const mouseenter = () => {
     if (props.context.workspace.transforming) {
         return;
     }
+
     is_enter.value = true;
 }
 
@@ -178,16 +166,26 @@ watchEffect(updateControllerView);
          viewBox="0 0 100 100" :width="100" :height="100" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
          overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave">
-        <ShapesStrokeContainer :context="props.context">
-        </ShapesStrokeContainer>
-        <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
-        <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape"
-                         :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
+        <ShapesStrokeContainer :context="props.context"/>
+        <BarsContainer
+            v-if="partVisible"
+            :context="props.context"
+            :shape="props.shape"
+            :c-frame="props.controllerFrame"
+            :theme="theme"
+        />
+        <PointsContainer
+            v-if="partVisible"
+            :context="props.context"
+            :shape="props.shape"
+            :axle="axle"
+            :c-frame="props.controllerFrame"
+            :theme="theme"
+        >
         </PointsContainer>
-<!--        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"-->
-<!--                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"-->
-<!--                   :theme="theme"></component>-->
+        <!--        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"-->
+        <!--                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"-->
+        <!--                   :theme="theme"></component>-->
     </svg>
 </template>
 <style lang='scss' scoped>
