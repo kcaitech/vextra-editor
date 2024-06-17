@@ -47,6 +47,7 @@ function gen_add_button_transform() {
         .setTranslate(ColVector3D.FromXY(width / 2 - 8, height - 8))
         .addTransform(fromRoot)
         .addTransform(clientMatrix);
+    // todo add 16px
 
     // const __transform = t
         // .clearSkew()
