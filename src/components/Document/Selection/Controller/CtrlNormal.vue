@@ -5,7 +5,7 @@
 
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -27,9 +27,10 @@ interface Props {
 
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
-const editing = ref<boolean>(false);
+
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
+
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
 
@@ -63,18 +64,14 @@ const partVisible = computed(() => {
 })
 
 function updateControllerView() {
-    const matrix = new Matrix(props.shape.matrix2Root());
-    matrix.multiAtLeft(props.context.workspace.matrix);
-
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
     props.context.workspace.setCtrlPath(boundrectPath.value);
 
-    const p0 = framePoint[0];
-    bounds.left = p0.x;
-    bounds.top = p0.y;
-    bounds.right = p0.x;
-    bounds.bottom = p0.y;
+    bounds.left = Infinity;
+    bounds.top = Infinity;
+    bounds.right = -Infinity;
+    bounds.bottom = -Infinity;
     framePoint.reduce((bounds, point) => {
         if (point.x < bounds.left) bounds.left = point.x;
         else if (point.x > bounds.right) bounds.right = point.x;
@@ -84,10 +81,8 @@ function updateControllerView() {
     }, bounds);
 }
 
-// #endregion
 function selection_watcher(t: number) {
     if (t == Selection.CHANGE_SHAPE) {
-        editing.value = false;
         reset_hidden();
     } else if (t === Selection.SELECTION_HIDDEN) {
         modify_selection_hidden();
