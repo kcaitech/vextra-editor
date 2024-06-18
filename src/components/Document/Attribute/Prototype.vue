@@ -53,18 +53,43 @@
                             </div>
                             <div class="target">
                                 <span>目标</span>
-                                <input type="text" placeholder="请选择目标容器" readonly v-model="selectshape" @click="test">
-                                <div v-if="showtargerlist">
+                                <input id="target-input" type="text" placeholder="请选择目标容器" readonly
+                                    v-model="selectshape" @click="test">
+                                <div class="svg-wrap">
+                                    <svg-icon icon-class="down"></svg-icon>
+                                </div>
+                                <div class="search-container" v-if="showtargerlist">
                                     <div class="header-search">
-                                        <label for="search"></label>
-                                        <input type="text" id="search">
+                                        <svg-icon icon-class="search"></svg-icon>
+                                        <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
                                     </div>
                                     <div class="item-list">
-                                        <div v-for="i in 10" :key="i">{{i}}</div>
+                                        <div class="item" v-for="shape in DomList" :key="shape.id"
+                                            @click.stop="selectshape = shape.name">{{ shape.name }}</div>
                                     </div>
                                 </div>
                             </div>
-
+                            <div class="set-animation">
+                                <span>动画设置</span>
+                                <div class="wrapper">
+                                    <div class="container">
+                                        <div class="containerA">A</div>
+                                        <div class="containerB">B</div>
+                                        <div class="containerC"></div>
+                                    </div>
+                                </div>
+                                <div class="animation">
+                                    <span>动画</span>
+                                    <Select class="select" id="select" :visibility="true" :source="animation"
+                                        :selected="animation.find(item => item.id === 0)?.data"></Select>
+                                </div>
+                                <div class="effect">
+                                    <span>效果</span>
+                                    <Select class="select" id="select" :visibility="true" :source="animation"
+                                        :selected="animation.find(item => item.id === 0)?.data"></Select>
+                                    <input v-select type="text" placeholder="时间">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -92,7 +117,7 @@ import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
 
 
 enum overflowRollType {
@@ -128,6 +153,16 @@ enum Trigger {
     Delay = 'delay'
 }
 
+enum Animation {
+    Immediately = 'immediately',
+    FadeInOut = 'fadeinout',
+    SlideIn = 'slidein',
+    SlideOut = 'slideout',
+    MoveIn = 'movein',
+    MoveOut = 'moveout',
+    PushIn = 'pushin'
+}
+
 
 const props = defineProps<{ context: Context }>();
 const baseAttr = ref(true);
@@ -147,7 +182,9 @@ const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
 const acitonindex = ref<number>(-1)
-const selectshape=ref<string>()
+const selectshape = ref<string>()
+
+const searchvlue = ref<string>('')
 
 const overflowRoll: SelectSource[] = genOptions([
     [overflowRollType.NotRoll, '不滚动'],
@@ -178,14 +215,22 @@ const actions: SelectSource[] = genOptions([
     [Actions.OpenFloatLayer, '打开浮层', 'open-float-layer'],
     [Actions.CloseFloatLayer, '关闭浮层', 'close-float-layer'],
     [Actions.ChangeFloatLayer, '替换浮层', 'change-float-layer'],
-
-
 ])
 
-const showtargerlist=ref<boolean>(false)
-const test=()=>{
+const animation: SelectSource[] = genOptions([
+    [Animation.Immediately, '即时'],
+    [Animation.FadeInOut, '淡入淡出'],
+    [Animation.SlideIn, '滑入'],
+    [Animation.SlideOut, '滑出'],
+    [Animation.MoveIn, '移入'],
+    [Animation.MoveOut, '移出'],
+    [Animation.PushIn, '推入']
+])
+
+const showtargerlist = ref<boolean>(false)
+const test = () => {
     console.log('1111');
-    showtargerlist.value=!showtargerlist.value
+    showtargerlist.value = !showtargerlist.value
 }
 
 const createOrigin = () => {
@@ -220,9 +265,14 @@ const showhandel = (i: number) => {
     } else {
         showaction.value = !showaction.value
     }
-
-
 }
+
+const DomList = computed(() => {
+    return props.context.selection.selectedPage?.childs.filter(i => {
+        return (i.isContainer || i.type === ShapeType.SymbolRef) && i.name.includes(searchvlue.value)
+    })
+})
+
 
 // 图层选区变化
 function _selection_change() {
@@ -501,12 +551,188 @@ onUnmounted(() => {
             .trigger,
             .action,
             .target {
+                position: relative;
                 display: flex;
                 gap: 8px;
 
                 span {
                     line-height: 32px;
                     white-space: nowrap;
+                }
+
+                .svg-wrap {
+                    display: flex;
+                    position: absolute;
+                    right: 9px;
+                    height: 32px;
+                    flex: 0 0 10px;
+
+                    svg {
+                        margin: auto 0;
+                        width: 10px;
+                        height: 12px;
+                        transition: 0.3s;
+                        color: #666666;
+                    }
+
+                    &:hover svg {
+                        transform: translateY(2px);
+                    }
+                }
+
+                #target-input {
+                    cursor: default;
+                    outline: none;
+                    border: none;
+                    width: 100%;
+                    padding: 10px;
+                    height: 32px;
+                    background-color: #F5F5F5;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    box-sizing: border-box;
+
+                    &:hover {
+                        background-color: #EBEBEB;
+                    }
+                }
+
+                .search-container {
+                    position: absolute;
+                    top: 38px;
+                    left: 32px;
+                    width: 140px;
+                    padding: 6px;
+                    border-radius: 4px;
+                    background-color: white;
+                    box-sizing: border-box;
+                    z-index: 1;
+
+                    .header-search {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        width: 100%;
+                        height: 32px;
+                        padding: 10px 8px;
+                        border-radius: 6px;
+                        background-color: #F5F5F5;
+                        box-sizing: border-box;
+
+                        svg {
+                            width: 12px;
+                            height: 12px;
+                        }
+
+                        input {
+                            outline: none;
+                            border: none;
+                            padding: 0;
+                            width: 100%;
+                            font-size: 12px;
+                            background-color: transparent;
+
+                            &::placeholder {
+                                color: #BFBFBF;
+                            }
+                        }
+                    }
+
+                    .item-list {
+                        max-height: 200px;
+                        overflow-y: scroll;
+
+                        &::-webkit-scrollbar {
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .item {
+                            height: 32px;
+                        }
+                    }
+                }
+            }
+
+            .set-animation {
+                display: flex;
+                flex-direction: column;
+
+                span {
+                    line-height: 32px;
+                }
+
+                .wrapper {
+                    display: flex;
+                    width: 172px;
+                    height: 100px;
+                    border-radius: 6px;
+                    background-color: #F5F5F5;
+                    box-sizing: border-box;
+
+                    .container {
+                        position: relative;
+                        @include flex(center, center);
+                        margin: auto;
+                        width: 54px;
+                        height: 64px;
+                        border-radius: 4px;
+
+
+                        .containerA {
+                            position: absolute;
+                            @include flex(center, center);
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 4px;
+                            border: 1px solid #000;
+                            box-sizing: border-box;
+                        }
+
+                        .containerB {
+                            position: absolute;
+                            @include flex(center, center);
+                            transform: translateX(100%);
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 4px;
+                            background-color: silver;
+                        }
+
+                        .containerC {
+                            position: absolute;
+                            @include flex(center, center);
+                            width: 100%;
+                            height: 100%;
+                            border: 1px solid #000;
+                            border-radius: 4px;
+                            box-sizing: border-box;
+                        }
+                    }
+                }
+
+                .animation,
+                .effect {
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 8px;
+
+                    span {
+                        white-space: nowrap;
+                    }
+
+                    input {
+                        font-size: 12px;
+                        outline: none;
+                        border: none;
+                        padding: 10px 8px;
+                        width: 54px;
+                        height: 32px;
+                        border-radius: 6px;
+                        background-color: #F5F5F5;
+                        box-sizing: border-box;
+
+                    }
                 }
             }
         }
