@@ -1,16 +1,15 @@
 <script lang="ts" setup>
-import {watchEffect, onMounted, onUnmounted, computed, reactive} from "vue";
-import {Context} from "@/context";
-import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "@kcdesign/data";
-import {WorkSpace} from "@/context/workspace";
-import {ClientXY} from "@/context/selection";
+import { onMounted, onUnmounted, computed, reactive } from "vue";
+import { Context } from "@/context";
+import { Matrix, PageView, ShapeType, ShapeView } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
+import { ClientXY } from "@/context/selection";
 import ArtboardName from "./ArtboardName.vue";
-import {is_shape_out, pre_modify_anchor, shape_title_width} from "@/utils/content";
+import { is_shape_out, pre_modify_anchor, shape_title_width } from "@/utils/content";
 
 const props = defineProps<{
-    context: Context
-    data: PageView,
-    matrix: number[]
+    context: Context;
+    data: PageView;
 }>()
 
 interface Title {
@@ -19,15 +18,16 @@ interface Title {
     x: number
     y: number
     width: number
+
     shape(): ShapeView
+
     rotate: number
     maxWidth: number
     selected: boolean
 }
 
-const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
-const origin: ClientXY = {x: 0, y: 0};
+const origin: ClientXY = { x: 0, y: 0 };
 const watcher = () => {
     updater();
 }
@@ -53,19 +53,18 @@ const setPosition = () => {
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
             if (artboard.parent?.type === ShapeType.Page && artboard.isVisible) { // 只给页面的直接子元素上标题
-                const selecte = props.context.selection.selectedShapes;
+                const select = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
+
                 let selected = false
-                if (selecte[0] && artboard.id === selecte[0].id) {
-                    selected = true
-                } else if (hovered && artboard.id === hovered.id) {
-                    selected = true
-                } else {
-                    selected = false
-                }
+
+                selected = Boolean(
+                    (select[0] && artboard.id === select[0].id)
+                    || (hovered && artboard.id === hovered.id)
+                );
+
                 const f2p = artboard.frame2Root();
-                
-                const frame = artboard.frame;
+
                 const matrix_artboard_root = artboard.matrix2Root(); // 图形到页面的转换矩阵
                 const matrix = props.context.workspace.matrix; // 页面到屏幕的转换矩阵
                 const matrix_artboard = new Matrix(matrix_artboard_root);
@@ -75,12 +74,22 @@ const setPosition = () => {
                 if (maxWidth < 24) continue;
                 // let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
                 let anchor = modify_anchor(artboard, matrix_artboard_root);
-                anchor = matrix.computeCoord({x: anchor.x, y: anchor.y}); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
+                anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
-                titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: () => artboard, rotate: modify_rotate(artboard), maxWidth, selected});
+                titles.push({
+                    id: artboard.id,
+                    content: artboard.name,
+                    x: anchor.x,
+                    y: anchor.y,
+                    width,
+                    shape: () => artboard,
+                    rotate: modify_rotate(artboard),
+                    maxWidth,
+                    selected
+                });
             }
         }
     } else {
@@ -90,8 +99,8 @@ const setPosition = () => {
 
 function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    // if (shape.isFlippedVertical) rotate = 360 - rotate;
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     if (rotate >= 0 && rotate < 45) {
     } else if (rotate >= 45 && rotate < 135) {
@@ -108,7 +117,7 @@ function modify_rotate(shape: ShapeView) {
 function modify_anchor(shape: ShapeView, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
-    let anchor = {x: 0, y: 0};
+    let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
         anchor = m2r.computeCoord2(0, 0);
     } else if (rotate >= 45 && rotate < 135) {
@@ -124,11 +133,12 @@ function modify_anchor(shape: ShapeView, m2r: Matrix) {
 }
 
 function setOrigin() { // 这个动作是让container与页面坐标系重合
-    matrix.reset(props.context.workspace.matrix);
+    const matrix = new Matrix(props.context.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
     origin.x = matrix.m02;
     origin.y = matrix.m12;
 }
+
 const watchedShapes = new Map();
 
 function watchShapes() { // 监听相关shape的变化
@@ -175,23 +185,35 @@ function leave() {
 onMounted(() => {
     props.context.workspace.watch(handleWorkspaceUpdate)
     props.context.selection.watch(updater);
+
     props.data.watch(watcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(handleWorkspaceUpdate);
-    props.data.unwatch(watcher);
     props.context.selection.unwatch(updater);
+
+    props.data.unwatch(watcher);
 })
-watchEffect(() => updater());
 </script>
 <template>
-    <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div class="title-container" v-for="(t, index) in titles" :key="index"
-             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
-            <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
-                          @rename="rename"
-                          @hover="hover" @leave="leave" :shape="t.shape()" :selected="t.selected"></ArtboardName>
+        <div
+            v-for="(t, index) in titles"
+            class="title-container"
+            :key="index"
+            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }"
+        >
+            <ArtboardName
+                :context="props.context"
+                :name="t.content"
+                :index="index"
+                :maxWidth="t.maxWidth"
+                @rename="rename"
+                @hover="hover"
+                @leave="leave"
+                :shape="t.shape()"
+                :selected="t.selected"
+            ></ArtboardName>
         </div>
     </div>
 </template>
@@ -204,7 +226,7 @@ watchEffect(() => updater());
         display: flex;
         align-items: flex-end;
         height: 20px;
-        min-width: 10px;
+        min-width: 14px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
