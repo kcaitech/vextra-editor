@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import { Context } from '@/context';
-import { find_space_for_state, make_default_state, make_state, SymbolType } from '@/utils/symbol';
+import {Context} from '@/context';
+import {find_space_for_state, make_default_state, make_state, SymbolType} from '@/utils/symbol';
 import {
     adapt2Shape,
     ColVector3D, makeMatrixByTransform2,
@@ -10,9 +10,9 @@ import {
     SymbolShape,
     SymbolView, Transform
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Point } from "@/components/Document/Selection/SelectionView.vue";
+import {onMounted, onUnmounted, ref, watch} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {Point} from "@/components/Document/Selection/SelectionView.vue";
 
 interface Props {
     context: Context;
@@ -23,7 +23,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const {t} = useI18n();
 const transform = ref<string>('');
 
 function update() {
@@ -32,32 +32,19 @@ function update() {
 
 function gen_add_button_transform() {
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const {width, height} = shape.size;
 
     const fromRoot = shape.transform2FromRoot;
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
 
-    if (props.symbolType === SymbolType.Union) {
-        const __transform = new Transform()
-            .setTranslate(ColVector3D.FromXY(width / 2, height))
-            .addTransform(fromRoot)
-            .addTransform(clientMatrix)
-            .translateInLocal(ColVector3D.FromXY(-8, 8))
-            .clearSkew()
-            .clearScale();
-
-        return makeMatrixByTransform2(__transform).toString();
-    } else {
-        const __transform = new Transform()
-            .setTranslate(ColVector3D.FromXY(width, height / 2))
-            .addTransform(fromRoot)
-            .addTransform(clientMatrix)
-            .translateInLocal(ColVector3D.FromXY(8, -8))
-            .clearSkew()
-            .clearScale();
-
-        return makeMatrixByTransform2(__transform).toString();
-    }
+    const transform = new Transform()
+        .setTranslate(ColVector3D.FromXY(width / 2, height))
+        .addTransform(fromRoot)
+        .addTransform(clientMatrix)
+        .clearSkew()
+        .clearScaleSize();
+    const translateVector = props.symbolType === SymbolType.Union ? ColVector3D.FromXY(-8, 8) : ColVector3D.FromXY(8, -8);
+    return makeMatrixByTransform2(transform.translateInLocal(translateVector)).toString();
 }
 
 function down(e: MouseEvent) {
