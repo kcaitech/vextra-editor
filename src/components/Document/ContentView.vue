@@ -545,7 +545,7 @@ function tool_watcher(type: number) {
     else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
 }
 
-function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
+function workspace_watcher(type?: number | string, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
     } else if (type === WorkSpace.PASTE_RIGHT) {
@@ -784,30 +784,6 @@ comps.push(...plugins.end);
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <!-- <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix"
-            @closeLoading="closeLoading" />
-        <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <SelectionView :context="props.context" :matrix="matrix" />
-        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
-        </Placement>
-        <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount"
-            :site="site" ref="contextMenuEl">
-            <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
-            </PageViewContextMenuItems>
-        </ContextMenu>
-        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus">
-        </CellSetting>
-        <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
-        </CommentView>
-        <Creator v-if="creatorMode" :context="props.context" />
-        <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
-        <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
-        <Grid :context="props.context"></Grid>
-        <TempBoard :context="props.context"></TempBoard>
-        <BatchExport v-if="isvisible" :context="props.context"></BatchExport> -->
 
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
     </div>

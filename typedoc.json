@@ -1,0 +1,4 @@
+{
+    // "plugin": ["typedoc-plugin-vue"],
+    "exclude": ["node_modules"]
+}

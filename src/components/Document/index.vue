@@ -123,7 +123,7 @@ function switchPage(id?: string) {
 
 }
 
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
 

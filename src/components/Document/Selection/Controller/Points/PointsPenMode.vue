@@ -465,7 +465,7 @@ function path_watcher(type: number) {
     }
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
 

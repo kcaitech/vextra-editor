@@ -214,7 +214,7 @@ function page_color() {
 }
 
 const shape = ref<ShapeView | undefined>(props.shapes[0]);
-const select_watcher = (t: number) => {
+const select_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes;
         const page = props.context.selection.selectedPage;

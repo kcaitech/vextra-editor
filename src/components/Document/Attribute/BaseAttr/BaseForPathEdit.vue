@@ -200,7 +200,7 @@ function init_path_shape() {
     }
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         const t = props.context.selection.pathshape;
         if (path_shape) {

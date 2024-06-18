@@ -34,7 +34,7 @@ const stopWatch = watch(() => props.data, (value, old) => {
     value.watch(watcher);
 })
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         watch_shapes();
         props.context.nextTick(props.data, () => {

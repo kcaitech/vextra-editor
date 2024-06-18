@@ -117,7 +117,7 @@ function save_layer_show(type: VariableType, name: string) {
     isLayerShow.value = false;
 }
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         if (shape.value) shape.value.unwatch(layer_watcher);
         shape.value = (props.context.selection.selectedShapes[0]);

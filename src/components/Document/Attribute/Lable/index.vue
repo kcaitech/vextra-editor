@@ -41,7 +41,7 @@ function _selection_change() {
 }
 const selection_change = debounce(_selection_change, 160, { leading: true });
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         selection_change();
         watch_shapes();

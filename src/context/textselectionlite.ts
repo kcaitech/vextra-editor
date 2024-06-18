@@ -1,4 +1,4 @@
-import { Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView, TextAttr } from "@kcdesign/data";
+import { Text, SpanAttr, WatchableObject, TextShapeView, TableCellView, TextAttr } from "@kcdesign/data";
 import { Selection } from "./selection"
 import { ITextSelection } from "@/openapi/selection";
 

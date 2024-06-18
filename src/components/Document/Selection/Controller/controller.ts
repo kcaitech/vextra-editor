@@ -388,7 +388,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         return !!len;
     }
 
-    function selection_watcher(t: number) {
+    function selection_watcher(t: number | string) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件            
             initController();
             workspace.contentEdit(false);

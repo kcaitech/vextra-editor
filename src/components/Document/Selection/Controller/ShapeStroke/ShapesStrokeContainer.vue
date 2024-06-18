@@ -37,7 +37,7 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 
-function selection_watcher(t?: number) {
+function selection_watcher(t?: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         watchShapes();
         update_themes();
@@ -77,7 +77,7 @@ function update_themes() {
     }
 }
 
-function workspace_watcher(t: number) {
+function workspace_watcher(t: number | string) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         passive_update();
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {

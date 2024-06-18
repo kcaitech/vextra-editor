@@ -137,7 +137,7 @@ function modify_anchor(shape: ShapeView, m2r: Matrix) {
     return anchor;
 }
 
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         watchShapes();
         getShapePositionSize();
@@ -146,7 +146,7 @@ function selectionWatcher(t: number) {
         size_box_show();
     }
 }
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         getShapePositionSize();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {

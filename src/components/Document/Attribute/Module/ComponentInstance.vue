@@ -174,7 +174,7 @@ function save_layer_show(type: VariableType, name: string) {
 const getValue = (id: string) => {
     return props.context.data.getSymbolSync(id)?.name;
 }
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         isBind();
     }

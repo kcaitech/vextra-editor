@@ -106,7 +106,7 @@ const changeBool = () => {
     emit('changeBool', boolType.value, boolName.value);
 }
 
-const selectionWatch = (t?: number) => {
+const selectionWatch = (t?: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.selection.selectedShapes
         getBoolGroupType(shapes)

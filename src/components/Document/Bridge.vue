@@ -4,7 +4,6 @@ import ComponentWonderCard from '@/components/Document/Navigation/Component/Comp
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
 import { GroupShape, GroupShapeView, Shape, ShapeView, SymbolShape, adapt2Shape } from '@kcdesign/data';
 import { Component } from '@/context/component';
-import { Selection } from '@/context/selection';
 import { is_content, ref_symbol } from '@/utils/content';
 interface Props {
     context: Context

@@ -401,3 +401,87 @@ Changes to be committed:
 	modified:   src/utils/content.ts
 	modified:   src/utils/keyboardUnits.ts
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   package.json
+	modified:   src/components/Document/Assist/LableLine.vue
+	modified:   src/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue
+	modified:   src/components/Document/Attribute/BaseAttr/Radius.vue
+	modified:   src/components/Document/Attribute/Border/Border.vue
+	modified:   src/components/Document/Attribute/CutoutExport/Preview.vue
+	modified:   src/components/Document/Attribute/CutoutExport/index.vue
+	modified:   src/components/Document/Attribute/Design.vue
+	modified:   src/components/Document/Attribute/Lable/LableBorder.vue
+	modified:   src/components/Document/Attribute/Lable/LableFill.vue
+	modified:   src/components/Document/Attribute/Lable/index.vue
+	modified:   src/components/Document/Attribute/Module/ComponentInstance.vue
+	modified:   src/components/Document/Attribute/Module/InstanceAttr.vue
+	modified:   src/components/Document/Attribute/Module/LayerShow.vue
+	modified:   src/components/Document/Attribute/Module/StatusCard.vue
+	modified:   src/components/Document/Attribute/Module/TextContent.vue
+	modified:   src/components/Document/Attribute/Table/TableText.vue
+	modified:   src/components/Document/Attribute/Text/Text.vue
+	modified:   src/components/Document/Bridge.vue
+	modified:   src/components/Document/Content/ComponentTitleContainer.vue
+	modified:   src/components/Document/ContentView.vue
+	modified:   src/components/Document/Cutout/ShapeCutout.vue
+	modified:   src/components/Document/Cutout/renderCutout.vue
+	modified:   src/components/Document/Grid.vue
+	modified:   src/components/Document/Navigation/Component/ComponentCardAlpha.vue
+	modified:   src/components/Document/Navigation/Component/ComponentCardBeta.vue
+	modified:   src/components/Document/Navigation/PageList.vue
+	modified:   src/components/Document/Navigation/Search/SearchPanel.vue
+	modified:   src/components/Document/Selection/Controller/Bars/ClipSlice.vue
+	modified:   src/components/Document/Selection/Controller/ClipMode.vue
+	modified:   src/components/Document/Selection/Controller/ColorEdit/Angular.vue
+	modified:   src/components/Document/Selection/Controller/ColorEdit/Gradient.vue
+	modified:   src/components/Document/Selection/Controller/ColorEdit/Linear.vue
+	modified:   src/components/Document/Selection/Controller/ColorEdit/Radial.vue
+	modified:   src/components/Document/Selection/Controller/CtrlComponent.vue
+	modified:   src/components/Document/Selection/Controller/CtrlContact.vue
+	modified:   src/components/Document/Selection/Controller/CtrlForMulti.vue
+	modified:   src/components/Document/Selection/Controller/CtrlLine.vue
+	modified:   src/components/Document/Selection/Controller/CtrlNormal.vue
+	modified:   src/components/Document/Selection/Controller/CtrlPathEdit.vue
+	modified:   src/components/Document/Selection/Controller/CtrlTable.vue
+	modified:   src/components/Document/Selection/Controller/CtrlTableVirtual.vue
+	modified:   src/components/Document/Selection/Controller/CtrlVirtual.vue
+	modified:   src/components/Document/Selection/Controller/PathEdit/Handle.vue
+	modified:   src/components/Document/Selection/Controller/PathEdit/PathEditMode.vue
+	modified:   src/components/Document/Selection/Controller/PathEdit/PenMode.vue
+	modified:   src/components/Document/Selection/Controller/Points/PointsPathEditContainer.vue
+	modified:   src/components/Document/Selection/Controller/Points/PointsPenMode.vue
+	modified:   src/components/Document/Selection/Controller/ShapeStroke/ShapesStrokeContainer.vue
+	modified:   src/components/Document/Selection/Controller/Table/TableSelectionView.vue
+	modified:   src/components/Document/Selection/Controller/Text/SelectView.vue
+	modified:   src/components/Document/Selection/Controller/Text/TextInput.vue
+	modified:   src/components/Document/Selection/Controller/controller.ts
+	modified:   src/components/Document/Selection/Controller/controller4contact.ts
+	modified:   src/components/Document/Selection/Controller/controller4table.ts
+	modified:   src/components/Document/Selection/SelectionView.vue
+	modified:   src/components/Document/Selection/ShapeSize.vue
+	modified:   src/components/Document/Selection/TeamWork/ShapeAvatar.vue
+	modified:   src/components/Document/Selection/TeamWork/UsersSelection.vue
+	modified:   src/components/Document/Toolbar/Buttons/BooleanObject.vue
+	modified:   src/components/Document/Toolbar/Buttons/Cursor.vue
+	modified:   src/components/Document/Toolbar/Buttons/GroupUngroup.vue
+	modified:   src/components/Document/Toolbar/ContactInit.vue
+	modified:   src/components/Document/Toolbar/Tools/index.vue
+	modified:   src/components/Document/index.vue
+	modified:   src/components/Mobile/Document.vue
+	modified:   src/components/common/ColSplitView.vue
+	modified:   src/components/common/watchreadonly.ts
+	modified:   src/context/index.ts
+	modified:   src/context/selection.ts
+	modified:   src/context/textselectionlite.ts
+	modified:   src/context/workspace.ts
+	modified:   src/index.ts
+	modified:   src/openapi/context.ts
+	modified:   src/openapi/index.ts
+	modified:   src/openapi/selection.ts
+	new file:   src/openapi/workspace.ts
+	modified:   tsconfig.json
+	new file:   typedoc.json
+	deleted:    typedoc.tsconfig.json
+

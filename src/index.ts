@@ -7,11 +7,9 @@ import {
     DataLoader,
     DocEditor,
     Document,
-    ICoopNet,
     importFigma,
     importRemote,
     importSketch,
-    IStorage,
     RadixConvert,
     Repository,
 } from '@kcdesign/data';

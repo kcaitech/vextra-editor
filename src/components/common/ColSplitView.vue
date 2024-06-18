@@ -118,7 +118,7 @@ function initSizeBounds() {
     leftSize.value.width = props.left.width;
 }
 
-const handle_left = (t: number) => {
+const handle_left = (t: number | string) => {
     if (t === WorkSpace.CHANGE_NAVI) {
         const rootWidth = getRootWidth();
         if (leftSize.value.width !== 0) {

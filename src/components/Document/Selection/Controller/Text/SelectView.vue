@@ -13,7 +13,7 @@ interface Props {
     shape: TextShapeView | TableCellView
     matrix: number[]
     context: Context
-    mainNotify: number
+    mainNotify: string | number
     selection: SelectionLike
 }
 const props = defineProps<Props>();
@@ -76,7 +76,7 @@ function _update() {
         }
     }
 }
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     if (t === props.mainNotify) {
         update();
         // cursor_tracking(cursor_points);  功能不完善，暂时关闭

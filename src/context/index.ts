@@ -40,7 +40,7 @@ import { Attribute } from "./atrribute";
 import { DocumentProps, INet } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
-import { IContext } from "@/openapi/context";
+import { IContext, IEscStack, Rect } from "@/openapi/context";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -84,12 +84,12 @@ export class RepoWraper {
     // }
 }
 
-export class Context extends EventEmitter implements IContext {
+export class Context extends WatchableObject implements IContext {
     // 用EventEmitter及storage来进行界面组件之间的数据同步及通信
     // storage的key可以用组件路径也可用uuid等唯一标识
     // eventid同上，需要个唯一前缀。
     // 做到不同功能的组件之间可以完全解耦合
-    public storage: Map<string, any> = new Map();
+    // public storage: Map<string, any> = new Map();
 
     private m_data: Document;
     private m_editor: Editor;
@@ -153,6 +153,10 @@ export class Context extends EventEmitter implements IContext {
         this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
     }
+    get escstack(): IEscStack {
+        return this.m_escstack;
+    }
+
     get curAction(): string | undefined {
         return this.tool.action;
     }
@@ -232,7 +236,7 @@ export class Context extends EventEmitter implements IContext {
     }
     set readonly(readonly: boolean) {
         this.m_props.readonly = readonly;
-        this.emit(events.context_readonly_change, readonly)
+        this.notify(events.context_readonly_change, readonly)
     }
     get readonly() {
         return !!this.m_props.readonly;

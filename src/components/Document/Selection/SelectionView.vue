@@ -119,7 +119,7 @@ function workspace_watcher(t?: any) {
     }
 }
 
-function selectionWatcher(t: number) { // selection的部分动作可触发更新
+function selectionWatcher(t: string | number) { // selection的部分动作可触发更新
     if (t === Selection.CHANGE_PAGE) {
         watchedShapes.forEach(v => {
             v.unwatch(shapesWatcher)

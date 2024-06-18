@@ -547,7 +547,7 @@ function watchShapes() { // 监听相关shape的变化
     })
 }
 
-const workspace_watcher = (t: number) => {
+const workspace_watcher = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         watcher();
     }
@@ -560,7 +560,7 @@ const color_watcher = (t: number) => {
     }
 }
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         watcher();
     }

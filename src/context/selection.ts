@@ -1,26 +1,20 @@
 import {
     adapt2Shape,
-    ISave4Restore, PageView, PathShape,
-    PathShapeView,
+    ISave4Restore, PageView, 
     ShapeType,
     ShapeView,
-    SymbolRefShape,
     SymbolRefView,
-    SymbolShape,
     SymbolView,
     TableCellView,
     SymbolUnionShape,
-    TableShape,
     TableView,
-    TextShape,
     TextShapeView,
     WatchableObject,
     SelectionState,
     ArrayOpSelection,
     isDiffStringArr,
     SNumber,
-    TableCellType
-} from "@kcdesign/data";
+    TableCellType} from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -37,8 +31,7 @@ import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 // import { router } from "@/router";
-import isMobileDevice from "@/utils/mobileDeviceChecker";
-import { ISelection } from "@/openapi/selection";
+import { ISelection, SelectionEvents } from "@/openapi/selection";
 
 interface Saved {
     page: Page | undefined,
@@ -88,11 +81,11 @@ export const enum SelectionTheme {
 
 export class Selection extends WatchableObject implements ISave4Restore, ISelection {
 
-    static CHANGE_PAGE = 1;
-    static CHANGE_SHAPE = 2;
-    static CHANGE_SHAPE_HOVER = 3;
+    static CHANGE_PAGE = SelectionEvents.page_change;
+    static CHANGE_SHAPE = SelectionEvents.shape_change;
+    static CHANGE_SHAPE_HOVER = SelectionEvents.shape_hover_change;
     static CHANGE_RENAME = 4;
-    static CHANGE_TEXT = 5;
+    static CHANGE_TEXT = SelectionEvents.text_change;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
     // static CHANGE_COMMENT = 8;

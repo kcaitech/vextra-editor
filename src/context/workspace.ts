@@ -4,6 +4,7 @@ import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
+import { IWorkspace, WorkspaceEvents } from "@/openapi/workspace";
 
 // export enum Perm {
 //     isRead = 1, // 仅阅读
@@ -11,11 +12,11 @@ import { Action } from "@/context/tool";
 //     isEdit = 3 // 可编辑
 // }
 
-export class WorkSpace extends WatchableObject {
+export class WorkSpace extends WatchableObject implements IWorkspace {
     readonly m_clipboard: Clipboard;
     readonly context: Context;
 
-    static MATRIX_TRANSFORMATION = 1;
+    static MATRIX_TRANSFORMATION = WorkspaceEvents.transform_change;
     static SELECTING = 2;
     static TEXT_FORMAT = 3;
     static TRANSLATING = 4;
@@ -76,6 +77,34 @@ export class WorkSpace extends WatchableObject {
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
+    translate(x: number, y: number): void {
+        this.m_matrix.trans(x, y);
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION)
+    }
+    scale(sx: number, sy: number): void {
+        this.m_matrix.scale(sx, sy);
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION)
+    }
+    doc2view(point: { x: number; y: number; }): { x: number; y: number; };
+    doc2view(x: number, y: number): { x: number; y: number; };
+    doc2view(x: number | { x: number, y: number }, y?: number): { x: number; y: number; } {
+        if (typeof x === 'number') return this.m_matrix.computeCoord(x, y!);
+        return this.m_matrix.computeCoord(x)
+    }
+    view2doc(point: { x: number; y: number; }): { x: number; y: number; };
+    view2doc(x: number, y: number): { x: number; y: number; };
+    view2doc(x: number | { x: number, y: number }, y?: number): { x: number; y: number; } {
+        if (typeof x === 'number') return this.m_matrix.inverseCoord(x, y!);
+        return this.m_matrix.inverseCoord(x)
+    }
+
+    private m_element: HTMLElement | undefined;
+    get element(): HTMLElement | undefined {
+        if (this.m_element) return this.m_element;
+        const content: NodeListOf<HTMLElement> = document.querySelectorAll('#content');
+        this.m_element = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
+        return this.m_element;
+    }
 
     get is_path_edit_mode() {
         return this.m_path_edit_mode;
@@ -92,23 +121,17 @@ export class WorkSpace extends WatchableObject {
 
     get root(): Root { //return contentView HTMLElement info
         const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构后会进行root数据更新)；
-        if (root.init) {
-            return root;
-        } else { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
-            let content: any = document.querySelectorAll('#content');
-            content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
-            if (content) {
-                const { x, y, bottom, right } = content.getBoundingClientRect();
-                root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
-                root.x = x;
-                root.y = y;
-                root.bottom = bottom;
-                root.right = right;
-                root.element = content;
-                root.init = true;
-            }
-            return root;
+        if (!root.init && this.element) { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
+            const { x, y, bottom, right } = this.element.getBoundingClientRect();
+            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
+            root.x = x;
+            root.y = y;
+            root.bottom = bottom;
+            root.right = right;
+            root.element = this.element;
+            root.init = true;
         }
+        return root;
     }
 
     get center_on_page(): PageXY {
@@ -185,7 +208,7 @@ export class WorkSpace extends WatchableObject {
         return this.m_clipboard;
     }
 
-    private m_t: Function = () => {};
+    private m_t: Function = () => { };
 
     t(content: string) {
         return this.m_t.call(this, content);

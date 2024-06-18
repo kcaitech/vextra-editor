@@ -86,7 +86,7 @@ function break_watch() {
     shape.unwatch(update);
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }

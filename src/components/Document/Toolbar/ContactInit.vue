@@ -80,7 +80,7 @@ function tool_watcher(t: number) {
         update_contact_apex();
     }
 }
-function workspace_watcher(t: number) {
+function workspace_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update_contact_apex();
     }

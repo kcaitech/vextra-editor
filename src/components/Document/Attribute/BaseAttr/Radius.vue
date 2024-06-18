@@ -72,7 +72,7 @@ function update() {
     modify_radius_value();
 }
 
-function selection_watcher(t: Number) {
+function selection_watcher(t: Number | string) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }

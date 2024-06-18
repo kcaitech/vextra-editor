@@ -414,7 +414,7 @@ let timer: any = null;
 //     }
 // }
 
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
 
@@ -423,7 +423,7 @@ function selectionWatcher(t: number) {
     }
 }
 
-function workspace_watcher(type?: number) {
+function workspace_watcher(type?: number | string) {
     const ctx: Context = props.context as Context;
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.value.reset(ctx.workspace.matrix);

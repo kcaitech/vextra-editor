@@ -38,14 +38,14 @@ const getCutoutPath = (args?: any) => {
 }
 const _getCutoutPath = throttle(getCutoutPath, 20);
 
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         getCutoutPath();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         getCutoutPath();
     }
 }
-const selectedWatcher = (t: number) => {
+const selectedWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes;
         isSelected.value = shapes.some(v => v.id === props.data.id);

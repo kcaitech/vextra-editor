@@ -15,7 +15,7 @@ interface Props {
     shape: TextShapeView | TableCellView
     context: Context
     matrix: number[]
-    mainNotify: number
+    mainNotify: number | string
     selection: SelectionLike
     root?: { x: number, y: number }
 }

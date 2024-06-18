@@ -24,7 +24,7 @@ const danger = ref<boolean>(false);
 let render_item = toRaw<GroupShape>(props.data);
 const tip_name = ref('');
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
         check_selected_status();
     } else if (t === Selection.PAGE_RENAME) {

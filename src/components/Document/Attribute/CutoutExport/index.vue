@@ -476,7 +476,7 @@ function update_by_shapes() {
     showCheckbox();
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
     if (t === Selection.CHANGE_PAGE) update_by_shapes();
 }

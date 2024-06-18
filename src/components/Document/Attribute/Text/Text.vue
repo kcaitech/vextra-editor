@@ -495,7 +495,7 @@ const _textFormat = () => {
 }
 const textFormat = throttle(_textFormat, 320, { leading: true })
 
-function selection_wather(t: number) {
+function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat()
     }

@@ -118,7 +118,7 @@ function modify_selection_hidden() {
     selection_hidden.value = true;
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) return init();
     else if (t === Selection.CHANGE_PAGE) return init();
     else if (t === Selection.SELECTION_HIDDEN) {

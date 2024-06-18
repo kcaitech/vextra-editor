@@ -31,7 +31,7 @@ function move(e: MouseEvent) {
         e.stopPropagation();
     }
 }
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         init();
     }

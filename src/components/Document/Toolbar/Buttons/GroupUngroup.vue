@@ -35,7 +35,7 @@ const state = ref(0);
 const isUngroup = ref(false);
 const isGroup = ref(false);
 
-function _updater(t?: number) {
+function _updater(t?: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
         const selection = props.context.selection;

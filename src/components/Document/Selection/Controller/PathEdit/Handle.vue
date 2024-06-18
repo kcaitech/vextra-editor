@@ -379,7 +379,7 @@ function shape_watcher(t: any) {
     update();
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }

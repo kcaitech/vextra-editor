@@ -116,7 +116,7 @@ function save_layer_show(type: VariableType, name: string) {
     isTextShow.value = false;
 }
 
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         update();
         watchShapes();

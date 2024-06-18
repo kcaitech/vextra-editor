@@ -302,7 +302,7 @@ function is_curve_tool() {
     return props.context.tool.action === Action.Curve;
 }
 
-function workspaceWatcher(t: number) {
+function workspaceWatcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {

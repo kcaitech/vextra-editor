@@ -520,7 +520,7 @@ const textFormat = (_t?: any) => {
 
 const _textFormat = throttle(textFormat, 160, { leading: true })
 
-function selection_wather(t: number) {
+function selection_wather(t: number | string) {
     if (t === Selection.CHANGE_TEXT) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {

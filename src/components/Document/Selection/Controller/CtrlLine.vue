@@ -120,7 +120,7 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', mouseup);
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         editing.value = false;
         reset_hidden();

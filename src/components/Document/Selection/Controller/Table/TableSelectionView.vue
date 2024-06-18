@@ -90,7 +90,7 @@ function update_triangle() {
     }
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         update_cell_selection();
         watchCells.forEach((v) => v.unwatch(t1));

@@ -90,7 +90,7 @@ const getVattagValue = () => {
     statusValue.value = val;
     menuIndex.value = props.data.values.findIndex(v => v === val);
 }
-const selected_watcher = (t: number) => {
+const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         getVattagValue();
         if (selectoption.value) {

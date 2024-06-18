@@ -136,7 +136,7 @@ const teamworkWatcher = (t?: any) => {
     // }
 }
 
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update_by_shapes();
         createShapeTracing();
@@ -146,7 +146,7 @@ const workspaceUpdate = (t: number) => {
     }
 }
 
-const selectionWatcher = (t: number) => {
+const selectionWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         createShapeTracing();
     } else if (t === Selection.CHANGE_PAGE) {

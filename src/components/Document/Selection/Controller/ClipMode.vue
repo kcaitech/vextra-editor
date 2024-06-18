@@ -51,7 +51,7 @@ function update() {
     bounds.bottom = Math.max(__points[0].y, __points[1].y, __points[2].y, __points[3].y);
 }
 
-function matrix_watcher(t: number) {
+function matrix_watcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }

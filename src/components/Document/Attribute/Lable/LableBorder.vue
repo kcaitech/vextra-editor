@@ -160,7 +160,7 @@ const update_by_shapes = () => {
     watchShapes();
     getBordersData();
 }
-const selection_wather = (t: number) => {
+const selection_wather = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
         watchShapes();
         getBordersData();

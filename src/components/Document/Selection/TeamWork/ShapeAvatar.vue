@@ -137,7 +137,7 @@ function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
     return true;
 }
 
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin();
         setPosition();
@@ -163,7 +163,7 @@ const updater = (t?: number) => {
     // }
 }
 
-const selectionWatcher = (t: number) => {
+const selectionWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE) {
         setOrigin();
         setPosition();

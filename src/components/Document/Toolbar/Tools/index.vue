@@ -78,9 +78,9 @@ const readonly = watchReadyonly(props.context, () => {
 });
 
 const cursorParams = {
-    get d() {
-        return selected.value
-    },
+    // get d() {
+    //     return selected.value
+    // },
     select,
     get is_lable() {
         return isLable.value

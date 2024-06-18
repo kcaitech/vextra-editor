@@ -646,7 +646,7 @@ function table_selection_watcher(t: number) {
     }
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
 }
 

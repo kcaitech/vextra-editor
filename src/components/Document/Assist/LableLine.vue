@@ -130,7 +130,7 @@ const solid_line_center_point = (point: LintPoint[]) => {
 }
 
 
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         contour();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
@@ -138,7 +138,7 @@ const workspaceUpdate = (t: number) => {
     }
 }
 
-const selectionWatcher = (t: number) => {
+const selectionWatcher = (t: string | number) => {
     if (t === Selection.CHANGE_SHAPE) {
         contour();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {

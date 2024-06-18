@@ -503,7 +503,7 @@ function toggle2() {
     // }
 }
 
-function selection_watcher(t?: number) {
+function selection_watcher(t?: number | string) {
     if (t === Selection.CHANGE_PAGE) {
         update();
     } else if (t === Selection.CHANGE_SHAPE) {

@@ -72,7 +72,7 @@ function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t == Selection.CHANGE_SHAPE) editing.value = false;
 }
 onMounted(() => {

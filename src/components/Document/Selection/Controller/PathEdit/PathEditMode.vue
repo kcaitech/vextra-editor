@@ -158,7 +158,7 @@ function window_blur() {
     clear_state();
 }
 
-function selection_watcher(type: Number) {
+function selection_watcher(type: Number | string) {
     if (type === Selection.CHANGE_SHAPE) {
         props.context.workspace.setPathEditMode(false);
     }

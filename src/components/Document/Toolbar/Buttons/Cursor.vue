@@ -4,22 +4,21 @@ import ToolButton from './ToolButton.vue';
 import { Action } from "@/context/tool";
 import DropSelect from "./DropSelect.vue"
 import { useI18n } from 'vue-i18n'
-import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
 const { t } = useI18n()
 type Button = InstanceType<typeof ToolButton>
 
-const popoverVisible = ref<boolean>(false);
-const popover = ref<HTMLDivElement>();
-const button = ref<Button>();
-const selected = ref<string>(Action.AutoV);
-const selects = ref<string>(Action.AutoV);
-const visible = ref(false)
+// const popoverVisible = ref<boolean>(false);
+// const popover = ref<HTMLDivElement>();
+// const button = ref<Button>();
+// const selected = ref<string>(Action.AutoV);
+// const selects = ref<string>(Action.AutoV);
+// const visible = ref(false)
 const props = defineProps<{
   context: Context,
   params: {
     active: boolean,
-    d: string,
+    // d: string,
     is_lable: boolean,
     edit: boolean
   }
@@ -27,91 +26,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "select", action: string): void;
 }>();
-function select(action: string) {
-  emit('select', action);
+function select() {
+  emit('select', Action.AutoV);
 }
-
-const patterns = ((items: [string, string, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
-  ['object_selector', Action.AutoV, 'V'],
-  ['scale', Action.AutoK, 'K']
-]);
-
-function showMenu() {
-  if (popoverVisible.value) return popoverVisible.value = false;
-  if (button.value?.toolButtonEl) {
-    const el = button.value?.toolButtonEl;
-    visible.value = false
-    popoverVisible.value = true;
-    nextTick(() => {
-      if (popover.value) {
-        popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 13 + 'px';
-
-      }
-    })
-    document.addEventListener('click', onMenuBlur);
-  }
-}
-
-const selector = (active: string) => {
-  selected.value = active
-  emit('select', active);
-  popoverVisible.value = false;
-}
-
-function onMenuBlur(e: MouseEvent) {
-  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
-    var timer = setTimeout(() => {
-      popoverVisible.value = false;
-      clearTimeout(timer)
-      document.removeEventListener('click', onMenuBlur);
-    }, 10)
-  }
-}
-var timer: any = null
-const onMouseenter = () => {
-  timer = setTimeout(() => {
-    visible.value = true
-    clearTimeout(timer)
-  }, 600)
-}
-const onMouseleave = () => {
-  clearTimeout(timer)
-  visible.value = false
-}
-
-onUpdated(() => {
-  if (props.params.d === Action.AutoV || props.params.d === Action.AutoK) {
-    if (props.params.d === Action.AutoV) {
-      selects.value = props.params.d
-    } else {
-      selects.value = props.params.d
-    }
-  }
-})
 
 </script>
 
 <template>
-  <el-tooltip class="box-item" effect="dark"
-    :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
-    placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.params.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave" :style="{ width: !(props.params.edit && !props.params.is_lable) ? '32px' : '32px' }">
-      <div class="svg-container" :style="{ marginLeft: !(props.params.edit && !props.params.is_lable) ? '0px' : '0px' }">
-        <svg-icon :icon-class="props.params.d === selected ? props.params.d : selects"></svg-icon>
+  <el-tooltip class="box-item" effect="dark" :content="`${t('home.object_selector')} &nbsp;&nbsp; V`" placement="bottom"
+    :show-after="600" :offset="10" :hide-after="0">
+    <ToolButton @click="select" :selected="props.params.active"
+      :style="{ width: !(props.params.edit && !props.params.is_lable) ? '32px' : '32px' }">
+      <div class="svg-container"
+        :style="{ marginLeft: !(props.params.edit && !props.params.is_lable) ? '0px' : '0px' }">
+        <svg-icon icon-class="drag"></svg-icon>
       </div>
-      <!-- <div class="menu" @click="showMenu" v-if="edit && !is_lable">
-        <svg-icon icon-class="white-down"></svg-icon>
-      </div> -->
     </ToolButton>
   </el-tooltip>
-    <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-        <template v-for="item in patterns" :key="item.value">
-            <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="props.params.d" :select="item.content" type="cursor">
-            </DropSelect>
-        </template>
-    </div>
 </template>
 
 <style scoped lang="scss">

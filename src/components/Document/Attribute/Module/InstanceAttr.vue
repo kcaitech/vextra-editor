@@ -125,7 +125,7 @@ function updater_untie_state() {
     untie_state.value = is_able_to_unbind(props.context.selection.selectedShapes);
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         updater_untie_state();
         watchShapes();

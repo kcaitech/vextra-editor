@@ -253,7 +253,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
     }
-    function selection_watcher(t?: number) {
+    function selection_watcher(t?: number | string) {
         if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) initController();
     }
     function workspace_watcher(t?: number) {

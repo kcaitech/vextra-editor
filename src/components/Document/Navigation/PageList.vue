@@ -48,7 +48,7 @@ const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const cur_page_name = ref<string>(t('navi.page'));
-const selectionWatcher = (type: number) => {
+const selectionWatcher = (type: number | string) => {
     if (type === Selection.CHANGE_PAGE) {
         getPageName();
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
