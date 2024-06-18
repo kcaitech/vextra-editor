@@ -1,16 +1,16 @@
 import { Document } from "@kcdesign/data";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
-import { ISelection, ITextSelection } from "./selection";
+import { ISelection } from "./selection";
 import { IWorkspace } from "./workspace";
 // import { Selection } from "@/context/selection";
 
-export interface Rect {
-    x: number,
-    y: number,
-    width: number,
-    height: number
-}
+// export interface Rect {
+//     x: number,
+//     y: number,
+//     width: number,
+//     height: number
+// }
 
 export interface IEscStack {
     save(key: string, call: Function): void;
