@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, computed, reactive } from "vue";
+import { onMounted, onUnmounted, computed, reactive, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Matrix, PageView, ShapeType, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
 import ArtboardName from "./ArtboardName.vue";
 import { is_shape_out, pre_modify_anchor, shape_title_width } from "@/utils/content";
+import { TitleAttri, TitleRenderer } from "@/components/Document/Content/titleRenderer";
 
 const props = defineProps<{
     context: Context;
@@ -28,8 +29,13 @@ interface Title {
 
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
+
+const titlesList = ref<TitleAttri[]>([]);
+const titleRenderer = new TitleRenderer(props.context, titlesList.value as TitleAttri[]);
+
 const watcher = () => {
     updater();
+    titleRenderer.fullUpdate();
 }
 
 function updater() {
@@ -42,6 +48,9 @@ function handleWorkspaceUpdate(t: any) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin();
         setPosition();
+    } else if (t === WorkSpace.ROOT_UPDATE) {
+        titleRenderer.updateUnderRootContainerMap();
+        titleRenderer.fullUpdate();
     }
 }
 
@@ -67,16 +76,18 @@ const setPosition = () => {
 
                 const matrix_artboard_root = artboard.matrix2Root(); // 图形到页面的转换矩阵
                 const matrix = props.context.workspace.matrix; // 页面到屏幕的转换矩阵
+
                 const matrix_artboard = new Matrix(matrix_artboard_root);
                 matrix_artboard.multiAtLeft(matrix);
+
                 if (is_shape_out(props.context, artboard, matrix_artboard)) continue;
+
                 const maxWidth = shape_title_width(artboard, matrix_artboard);
                 if (maxWidth < 24) continue;
-                // let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
+
                 let anchor = modify_anchor(artboard, matrix_artboard_root);
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
-                anchor.y -= origin.y;
-                anchor.x -= origin.x;
+
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 titles.push({
@@ -196,23 +207,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
+    <div class="container">
         <div
-            v-for="(t, index) in titles"
+            v-for="(title, index) in titlesList"
             class="title-container"
             :key="index"
-            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }"
+            :style="{  transform:  title.transform}"
         >
             <ArtboardName
                 :context="props.context"
-                :name="t.content"
+                :name="title.name"
                 :index="index"
-                :maxWidth="t.maxWidth"
+                :maxWidth="title.width"
                 @rename="rename"
                 @hover="hover"
                 @leave="leave"
-                :shape="t.shape()"
-                :selected="t.selected"
+                :shape="title.shape as ShapeView"
+                :selected="title.active"
             ></ArtboardName>
         </div>
     </div>
@@ -221,19 +232,26 @@ onUnmounted(() => {
 .container {
     position: absolute;
     overflow: visible;
+    background-color: grey;
+    height: 100px;
+    width: 100px;
 
     .title-container {
+        position: absolute;
+
         display: flex;
         align-items: flex-end;
-        height: 20px;
+
         min-width: 14px;
+        height: 20px;
+
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        position: absolute;
+
         font-size: var(--font-default-fontsize);
-        transform-origin: bottom left;
         color: grey;
+
         z-index: 1;
     }
 }

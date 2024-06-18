@@ -10,17 +10,18 @@ import { TranslateHandler } from '@/transform/translate';
 
 const props = defineProps<{
     name: string,
-    index: number,
     maxWidth: number,
     shape: ShapeView,
     selected: boolean,
     context: Context
 }>()
+
 const emit = defineEmits<{
     (e: 'rename', value: string, shape: ShapeView): void
     (e: 'hover', shape: ShapeView): void
     (e: 'leave'): void
 }>()
+
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const inputSpan = ref<HTMLSpanElement>()
@@ -39,18 +40,20 @@ const onRename = () => {
 
     isInput.value = true
     nextTick(() => {
-        if (nameInput.value) {
-            if (inputSpan.value) {
-                inputSpan.value.innerHTML = props.name
-                inputWidth.value = inputSpan.value.offsetWidth + 5
-            }
-            (nameInput.value as HTMLInputElement).value = props.name.trim();
-            nameInput.value.focus();
-            nameInput.value.select();
-            nameInput.value?.addEventListener('blur', stopInput);
-            nameInput.value?.addEventListener('keydown', keySaveInput);
+        if (!nameInput.value) {
+           return;
         }
+        if (inputSpan.value) {
+            inputSpan.value.innerHTML = props.name
+            inputWidth.value = inputSpan.value.offsetWidth + 5
+        }
+        (nameInput.value as HTMLInputElement).value = props.name.trim();
+        nameInput.value.focus();
+        nameInput.value.select();
+        nameInput.value?.addEventListener('blur', stopInput);
+        nameInput.value?.addEventListener('keydown', keySaveInput);
     })
+
     document.addEventListener('click', onInputBlur)
 }
 
@@ -200,12 +203,16 @@ function windowBlur() {
     .name {
         width: 100%;
         height: 22px;
+
         line-height: 22px;
+
+        overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        overflow: hidden;
-        padding-left: 2px;
-        background-color: transparent;
+
+        //padding-left: 2px;
+        //background-color: transparent;
+        background-color: rgba(255, 255, 0, 0.25);
         color: #bbb;
     }
 

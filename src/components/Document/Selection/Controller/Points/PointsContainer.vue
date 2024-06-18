@@ -8,7 +8,7 @@ import {
     ShapeView,
     Transform
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
 import { Point } from "../../SelectionView.vue";
@@ -398,8 +398,8 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .r-path {
-    fill: transparent;
-    //fill: rgba(255, 0, 0, 0.6);
+    //fill: transparent;
+    fill: rgba(255, 0, 0, 0.6);
     stroke: none;
 }
 
@@ -413,7 +413,7 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     stroke: transparent;
-    fill: transparent;
-    //fill: rgba(0, 255, 0, 0.6);
+    //fill: transparent;
+    fill: rgba(0, 255, 0, 0.6);
 }
 </style>
