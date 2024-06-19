@@ -5,7 +5,7 @@ import {
     makeShapeTransform2By1,
     Matrix2,
     NumberArray2D,
-    ShapeView,
+    ShapeView, SymbolView,
     Transform
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
@@ -21,6 +21,7 @@ export interface TitleAttri {
     width: number;
     active: boolean;
     transform: string;
+    isSymbol: boolean;
 }
 
 export class TitleRenderer {
@@ -49,7 +50,8 @@ export class TitleRenderer {
             width: 56,
             shape,
             active: false,
-            transform: ''
+            transform: '',
+            isSymbol: shape instanceof SymbolView
         };
 
         this.modifyTransformStr(titleCtx);

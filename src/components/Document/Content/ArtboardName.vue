@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import { ShapeView } from "@kcdesign/data";
+import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
 import { Perm } from '@/context/workspace';
 import { TranslateHandler } from '@/transform/translate';
+import { TitleAttri } from "@/components/Document/Content/titleRenderer";
 
 const props = defineProps<{
-    name: string,
-    width: number,
-    shape: ShapeView,
-    active: boolean,
-    context: Context
+    data: TitleAttri;
+    context: Context;
 }>()
 
 const emit = defineEmits<{
@@ -44,10 +42,10 @@ const onRename = () => {
         }
 
         if (inputSpan.value) {
-            inputSpan.value.innerHTML = props.name
+            inputSpan.value.innerHTML = props.data.name
             inputWidth.value = inputSpan.value.offsetWidth + 5
         }
-        (nameInput.value as HTMLInputElement).value = props.name.trim();
+        (nameInput.value as HTMLInputElement).value = props.data.name.trim();
 
         nameInput.value.focus();
         nameInput.value.select();
@@ -98,12 +96,12 @@ const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
     if (esc.value) return
     if (value.length === 0 || value.trim().length === 0) return
-    emit('rename', value, props.shape)
+    emit('rename', value, props.data.shape)
 }
 
 const hoverShape = (e: MouseEvent) => {
     if (isDragging) return;
-    emit('hover', props.shape)
+    emit('hover', props.data.shape)
     hover.value = true
 }
 
@@ -117,7 +115,7 @@ function down(e: MouseEvent) {
     const context = props.context;
 
     if ((context.workspace.documentPerm !== Perm.isEdit)) {
-        context.selection.selectShape(props.shape);
+        context.selection.selectShape(props.data.shape);
         return;
     }
 
@@ -129,10 +127,10 @@ function down(e: MouseEvent) {
         e.stopPropagation();
 
         if (e.shiftKey) {
-            context.selection.rangeSelectShape([...context.selection.selectedShapes, props.shape]);
+            context.selection.rangeSelectShape([...context.selection.selectedShapes, props.data.shape]);
         } else {
-            if (!context.selection.isSelectedShape(props.shape)) {
-                context.selection.selectShape(props.shape);
+            if (!context.selection.isSelectedShape(props.data.shape)) {
+                context.selection.selectShape(props.data.shape);
             }
         }
 
@@ -207,16 +205,77 @@ function windowBlur() {
         <div
             v-if="!isInput"
             class="name"
-            :class="{ selected: active, active: hover }"
-            :style="{ maxWidth: props.width + 'px' }"
+            :class="{  active: hover }"
+            :style="{ maxWidth: data.width + 'px' }"
             @dblclick="onRename"
-        >{{ props.name }}
+        >
+            <svg v-if="(data.shape as SymbolView).isSymbolUnionShape" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
+                 width="16" height="16" viewBox="0 0 16 16">
+                <defs>
+                    <clipPath id="master_svg0_747_09671">
+                        <rect x="0" y="0" width="16" height="16" rx="0"/>
+                    </clipPath>
+                </defs>
+                <g clip-path="url(#master_svg0_747_09671)">
+                    <g>
+                        <path
+                            d="M15.1858,8Q15.1858,7.33726,14.7172,6.86863L9.13137,1.282843Q8.66274,0.814214,8,0.814214Q7.33726,0.814214,6.86863,1.282843L1.282843,6.86863Q0.814214,7.33726,0.814214,8Q0.814214,8.66274,1.282843,9.13137L6.86863,14.7172Q7.33726,15.1858,8,15.1858Q8.66274,15.1858,9.13137,14.7172L14.7172,9.13137Q15.1858,8.66274,15.1858,8ZM8.28284,2.13137L13.8686,7.71716Q14.1515,8,13.8686,8.28284L8.28284,13.8686Q8,14.1515,7.71716,13.8686L2.13137,8.28284Q2.0142100000000003,8.16569,2.0142100000000003,8Q2.0142100000000003,7.83431,2.13137,7.71716L7.71716,2.13137Q7.83431,2.0142100000000003,8,2.0142100000000003Q8.16569,2.0142100000000003,8.28284,2.13137Z"
+                            fill-rule="evenodd" fill="#7F58F9" fill-opacity="1"/>
+                    </g>
+                    <g
+                        transform="matrix(0.7071067690849304,0.7071067690849304,-0.7071067690849304,0.7071067690849304,4.538494595686643,-4.75560098247297)">
+                        <rect x="8.009765625" y="3.10064697265625" width="3" height="3" rx="0.5" fill="#B7A4F3"
+                              fill-opacity="1"/>
+                    </g>
+                    <g
+                        transform="matrix(0.7071067690849304,0.7071067690849304,-0.7071067690849304,0.7071067690849304,5.693277989414128,-1.9677502472059132)">
+                        <rect x="5.221923828125" y="5.888519287109375" width="3" height="3" rx="0.5" fill="#B7A4F3"
+                              fill-opacity="1"/>
+                    </g>
+                    <g
+                        transform="matrix(0.7071067690849304,0.7071067690849304,-0.7071067690849304,0.7071067690849304,7.306647318680916,-5.902135808926687)">
+                        <rect x="10.77783203125" y="5.86883544921875" width="3" height="3" rx="0.5" fill="#B7A4F3"
+                              fill-opacity="1"/>
+                    </g>
+                    <g
+                        transform="matrix(0.7071067690849304,0.7071067690849304,-0.7071067690849304,0.7071067690849304,8.461502219544855,-3.1144577071481763)">
+                        <rect x="7.990234375" y="8.656707763671875" width="3" height="3" rx="0.5" fill="#B7A4F3"
+                              fill-opacity="1"/>
+                    </g>
+                </g>
+            </svg>
+            <svg v-if="(data.shape.type === ShapeType.Symbol)" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
+                 width="16" height="16" viewBox="0 0 16 16">
+                <defs>
+                    <clipPath id="master_svg0_747_6025">
+                        <rect x="0" y="0" width="16" height="16" rx="0"/>
+                    </clipPath>
+                </defs>
+                <g clip-path="url(#master_svg0_747_6025)">
+                    <g>
+                        <path
+                            d="M15.1858,8Q15.1858,7.33726,14.7172,6.86863L9.13137,1.282843Q8.66274,0.814214,8,0.814214Q7.33726,0.814214,6.86863,1.282843L1.282843,6.86863Q0.814214,7.33726,0.814214,8Q0.814214,8.66274,1.282843,9.13137L6.86863,14.7172Q7.33726,15.1858,8,15.1858Q8.66274,15.1858,9.13137,14.7172L14.7172,9.13137Q15.1858,8.66274,15.1858,8ZM8.28284,2.13137L13.8686,7.71716Q14.1515,8,13.8686,8.28284L8.28284,13.8686Q8,14.1515,7.71716,13.8686L2.13137,8.28284Q2.0142100000000003,8.16569,2.0142100000000003,8Q2.0142100000000003,7.83431,2.13137,7.71716L7.71716,2.13137Q7.83431,2.0142100000000003,8,2.0142100000000003Q8.16569,2.0142100000000003,8.28284,2.13137Z"
+                            fill-rule="evenodd" fill="#7F58F9" fill-opacity="1"/>
+                    </g>
+                    <g
+                        transform="matrix(0.7071067690849304,0.7071067690849304,-0.7071067690849304,0.7071067690849304,4.540654637874468,-4.75025670389914)">
+                        <rect x="8.00439453125" y="3.105926513671875" width="6.921310901641846"
+                              height="6.9352264404296875"
+                              rx="0.5" fill="#B7A4F3" fill-opacity="1"/>
+                    </g>
+                </g>
+            </svg>
+            <span :class="{'force-theme':data.isSymbol }">
+                 {{ data.name }}
+            </span>
         </div>
         <input
             v-if="isInput"
             ref="nameInput"
             type="text"
-            :style="{ maxWidth: props.width + 'px' }"
+            :style="{ maxWidth: data.width + 'px' }"
             class="rename"
             @input="onInputName"
             @change="ChangeReName"
@@ -244,8 +303,11 @@ function windowBlur() {
 
         padding: 0 2px;
         background-color: transparent;
-        //background-color: red;
         color: #bbb;
+
+        display: flex;
+        align-items: center;
+        gap: 2px;
     }
 
     .rename {
@@ -264,6 +326,10 @@ function windowBlur() {
 
     .active {
         color: var(--active-color);
+    }
+
+    .force-theme {
+        color: var(--component-color) !important;
     }
 }
 </style>

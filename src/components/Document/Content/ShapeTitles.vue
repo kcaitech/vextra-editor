@@ -86,12 +86,7 @@ onUnmounted(() => {
         >
             <ArtboardName
                 :context="props.context"
-                :shape="title.shape as ShapeView"
-
-                :name="title.name"
-                :width="title.width"
-                :active="title.active"
-
+                :data="title as TitleAttri"
                 @rename="rename"
                 @hover="hover"
                 @leave="leave"
