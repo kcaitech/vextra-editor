@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { Context } from '@/context';
+import {Context} from '@/context';
 import {
     ColVector3D,
     CtrlElementType,
@@ -8,17 +8,17 @@ import {
     ShapeView,
     Transform
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { ClientXY, SelectionTheme, XY } from '@/context/selection';
-import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
-import { Point } from "../../SelectionView.vue";
-import { ScaleHandler } from "@/transform/scale";
-import { WorkSpace } from "@/context/workspace";
-import { RotateHandler } from "@/transform/rotate";
-import { dbl_action } from "@/utils/mouse_interactive";
-import { startEdit } from "@/transform/pathEdit";
-import { CursorType } from "@/utils/cursor2";
-import { cursorAngle } from "@/components/Document/Selection/common";
+import {onMounted, onUnmounted, reactive, ref, watch} from 'vue';
+import {ClientXY, SelectionTheme, XY} from '@/context/selection';
+import {forbidden_to_modify_frame, getHorizontalAngle} from '@/utils/common';
+import {Point} from "../../SelectionView.vue";
+import {ScaleHandler} from "@/transform/scale";
+import {WorkSpace} from "@/context/workspace";
+import {RotateHandler} from "@/transform/rotate";
+import {dbl_action} from "@/utils/mouse_interactive";
+import {startEdit} from "@/transform/pathEdit";
+import {CursorType} from "@/utils/cursor2";
+import {cursorAngle} from "@/components/Document/Selection/common";
 
 interface Props {
     context: Context;
@@ -54,8 +54,8 @@ const data: {
     subDots: []
 });
 
-const { dots, subDots } = data;
-let startPosition: ClientXY = { x: 0, y: 0 };
+const {dots, subDots} = data;
+let startPosition: ClientXY = {x: 0, y: 0};
 let isDragging = false;
 
 const dragActiveDis = 4;
@@ -66,7 +66,7 @@ let need_reset_cursor_after_transform = true;
 let scaler: ScaleHandler | undefined = undefined;
 let rotator: RotateHandler | undefined = undefined;
 
-let downXY: XY = { x: 0, y: 0 };
+let downXY: XY = {x: 0, y: 0};
 let initDeg: number = 0;
 
 function update() {
@@ -93,7 +93,7 @@ const rotateCtx: {
 function updateDotLayout() {
     dots.length = 0;
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const {width, height} = shape.size;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
@@ -101,12 +101,12 @@ function updateDotLayout() {
     const fromClient = fromRoot.addTransform(clientMatrix);
 
     const ltTransform = new Transform()
-        .rotateZ({ angle: Math.PI })
+        .rotateZ({angle: Math.PI})
         .addTransform(fromClient)
         .clearScaleSize();
 
     const rtTransform = new Transform()
-        .rotateZ({ angle: -0.5 * Math.PI })
+        .rotateZ({angle: -0.5 * Math.PI})
         .setTranslate(ColVector3D.FromXY(width, 0))
         .addTransform(fromClient)
         .clearScaleSize();
@@ -117,7 +117,7 @@ function updateDotLayout() {
         .clearScaleSize();
 
     const lbTransform = new Transform()
-        .rotateZ({ angle: 0.5 * Math.PI })
+        .rotateZ({angle: 0.5 * Math.PI})
         .setTranslate(ColVector3D.FromXY(0, height))
         .addTransform(fromClient)
         .clearScaleSize();
@@ -143,17 +143,15 @@ function updateDotLayout() {
     )
 
     subDots.length = 0;
-
-    const t = fromClient.clone().clearTranslate();
-    t.updateMatrix();
-    t.matrix.normalize();
-    t.isSubMatrixLatest = false;
-    const { col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB } = t.transform([
-        ColVector3D.FromXY(-1, -1),
-        ColVector3D.FromXY(1, -1),
-        ColVector3D.FromXY(1, 1),
-        ColVector3D.FromXY(-1, 1)
-    ]);
+    const {col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB} = fromClient.clone()
+        .clearTranslate()
+        .clearScale()
+        .transform([
+            ColVector3D.FromXY(-1, -1),
+            ColVector3D.FromXY(1, -1),
+            ColVector3D.FromXY(1, 1),
+            ColVector3D.FromXY(-1, 1)
+        ]);
 
     const xVector = ColVector3D.FromXY(1, 0);
 
@@ -170,7 +168,7 @@ function updateDotLayout() {
         ColVector3D.FromXY(width / 2, height / 2),
     ]);
 
-    const { col0, col1, col2, col3 } = cols;
+    const {col0, col1, col2, col3} = cols;
 
     const assistLT = new Transform()
         .setRotateZ(theta1)
