@@ -589,7 +589,7 @@ export class BaseCreator extends BaseTreeNode {
         const transform2 = makeShapeTransform2By1(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
-        transform2.setSkew(new ColVector2D([skew.x, skew.y]))
+        transform2.setSkew({skew: skew})
         transform2.setScale(new ColVector3D([scale.x, scale.y, scale.z]))
         updateShapeTransform1By2(shape.transform, transform2)
     }
