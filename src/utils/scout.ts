@@ -12,7 +12,7 @@ import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
 import { IScout as Scout } from "@/openapi";
-export { IScout } from "@/openapi";
+export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
