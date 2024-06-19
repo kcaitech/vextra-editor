@@ -4,11 +4,41 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=yes,viewport-fit=cover">
+  <meta name="viewport" id="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <link rel="icon" href="<%= BASE_URL %>favicon.ico">
   <title></title>
   <meta http-equiv='content-language' content='zh-CN, en-US'>
   <link rel="canonical" href="https://moss.design" />
+  <link rel="properly" as="font" href="/static/fonts/zihun.ttf" type="font">
+  <script>
+    (function () {
+      const mobileKeywords = [
+        "Android",
+        "webOS",
+        "iPhone",
+        "iPad",
+        "iPod",
+        "Macintosh",
+        "BlackBerry",
+        "Windows Phone",
+      ];
+      const userAgent = navigator.userAgent;
+      mobileKeywords.forEach(item => {
+        if (userAgent.includes(item)) {
+          if (item === 'Macintosh') {
+            if (navigator.maxTouchPoints > 1) {
+              var meta = document.getElementById('viewport');
+              meta.content = "width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover"
+              return
+            }
+          }
+          var meta = document.getElementById('viewport');
+          meta.content = "width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover"
+          return
+        }
+      })
+    })()
+  </script>
   <script>
     ! function (a, b, c) {
       function d(a) {
@@ -24,7 +54,7 @@
     }(window, document);
   </script>
   <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.4.0.js" defer></script>
-  <script type="text/javascript" src="/uni.webview.0.1.52.js" defer></script>
+  <script type="text/javascript" src="/static/uniwebview.js" defer></script>
 
 </head>
 

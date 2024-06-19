@@ -1473,7 +1473,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
-            border-width: 0px 0px 1px 0px;
+            border-width: 0 0 1px 0;
             border-style: solid;
             border-color: #F5F5F5;
             padding: 14px 12px;

@@ -728,8 +728,7 @@ const showEl = () => {
 </script>
 
 <template>
-    <div class="container1">
-        <Loading v-if="loading" :size="20"></Loading>
+    <div class="container">
         <div class="status-bar" @touchmove.stop="moveIcon"
              :style="{ left: iconPosition.left + 'px', top: iconPosition.top + 'px' }">
             <div class="list" @click="showEl">
@@ -749,7 +748,7 @@ const showEl = () => {
                 </div>
             </div>
         </transition>
-        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist = false">
+        <div class="pageview" @touchstart.stop="start" @touchmove.stop="move" @touchend.stop="end" @click="showpagelist =false">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
                          :matrix="(matrix as Matrix)" @closeLoading="closeLoading" no-cutout/>
         </div>
@@ -768,8 +767,7 @@ const showEl = () => {
     transform: translateY(100%);
 }
 
-.container1 {
-    // position: relative;
+.container {
     width: 100%;
     height: 100%;
 }

@@ -13,11 +13,8 @@ import { locale } from '@/locale'
 const { t } = useI18n()
 const isLoading = ref(false)
 const failed = ref<boolean>(false)
-const loginshow = ref<boolean>(true)
 const userid = ref('')
 const Wxcode = ref('')
-const codeerror = ref<boolean>(false)
-const inputfocus = ref<any>([])
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") return
@@ -36,7 +33,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
                 isLoading.value = false
-                const perRoute = sessionStorage.getItem('perRoute') || ''
+                const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
                 if (perRoute) {
                     if (perRoute.includes('?')) {
                         const params = new URLSearchParams(perRoute.split('?')[1]);
@@ -64,7 +61,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     } else {
                         router.push({ path: perRoute })
                     }
-                    localStorage.removeItem('perRoute')
+                    sessionStorage.removeItem('perRoute')
                 }
                 else {
                     if (isMobileDevice()) {
@@ -76,7 +73,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 }
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
-                loginshow.value = false
             } else if (linfo.code === -1) {
                 isLoading.value = false
                 ElMessage.error({ duration: 1500, message: '服务异常，请稍后再试' })
@@ -91,7 +87,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
         }
     }).catch((linfo: any) => {
         if (linfo.data.code === -1) {
-            loginshow.value = true
             ElMessage.error(linfo.data.message)
             nextTick(() => {
                 isLoading.value = true
@@ -107,13 +102,11 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
 }
 
 function wxcode() {
-    // if (isMobileDevice()) return
     new (window as any).WxLogin({
         self_redirect: true,
         id: "login_container",
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
-        // redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         redirect_uri: encodeURIComponent("https://moss.design/static/GetCode.html"),
         state: "STATE",
         style: "",
@@ -129,28 +122,19 @@ const handleOpenNewWindow = (routeName: string) => {
 }
 
 watchEffect(() => {
-    if (loginshow.value) {
-        setTimeout(async () => {
-            isLoading.value = true
-            if (isMobileDevice()) {
-                await GetminiProgramCode()
+    setTimeout(async () => {
+        isLoading.value = true
+        if (isMobileDevice()) {
+            await GetminiProgramCode()
+            isLoading.value = false
+        } else {
+            wxcode()
+            const login: any = document.querySelector('iframe')
+            login.addEventListener('load', function () {
                 isLoading.value = false
-            } else {
-                wxcode()
-                const login: any = document.querySelector('iframe')
-                login.addEventListener('load', function () {
-                    isLoading.value = false
-                })
-            }
-        }, 500);
-    } else {
-        inputvalues.forEach(item => { item.value = ""; })
-        codeerror.value = false
-        setTimeout(() => {
-            inputfocus.value[0].focus()
-
-        }, 0)
-    }
+            })
+        }
+    }, 500);
 })
 
 const miniprogramcode = ref<string>('')
@@ -174,16 +158,9 @@ async function GetminiProgramCode() {
             miniprogramcode.value = data
         }
     }
-
 }
 
 onMounted(() => {
-
-    // if (isMobileDevice()) {
-    //     router.push({ name: "privacypolicy" })
-    // } else {
-    //     window.addEventListener('message', onmessage, false)
-    // }
     window.addEventListener('message', onmessage, false)
 })
 
@@ -191,32 +168,10 @@ onUnmounted(() => {
     window.removeEventListener('message', onmessage)
 })
 
-const inputvalues = reactive([
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-    { value: "" },
-])
 
-function changesize(e: HTMLElement) {
-    if (window.innerWidth > window.innerHeight) {
-        e.style.aspectRatio = '8/6'
-    } else {
-        e.style.aspectRatio = '8/10'
-    }
-}
 
 onMounted(() => {
 
-    if (isMobileDevice()) {
-        const el = document.querySelector('.login-page') as HTMLElement
-        window.onresize = () => { changesize(el) }
-        changesize(el)
-    }
 })
 
 </script>
@@ -224,31 +179,37 @@ onMounted(() => {
 <template>
 
     <div class="bgiamge">
-        <svg-icon class="svg" icon-class="newlogo"></svg-icon>
+        <div class="header">
+            <svg-icon class="svg" icon-class="newlogo" @click.stop="router.push({ path: '/' })"></svg-icon>
+        </div>
         <div class="content">
-            <div class="top">
-                <Describes></Describes>
-                <div class="login-page">
-                    <div class="title">{{ t('system.wx_login') }}</div>
-                    <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
-                        v-loading="isLoading">
-                    </div>
-                    <div v-else style="width: 200px;height: 200px;" v-loading="isLoading">
-                        <img v-if="miniprogramcode" style="width: 100%;height: 100%;" :src="miniprogramcode" alt="code">
-                    </div>
-                    <div class="tips" :lang="locale">
-                        <span class="tips_content">{{ t('system.login_read') }}</span>
-                        <span class="tips_button" @click.prevent="handleOpenNewWindow('serviceagreement')">{{
-                            t('system.read_TOS')
+            <div class="login-left">
+                <div class="welcome">{{ t("login.welcome") }}</div>
+                <div class="name">{{ t("login.name") }}</div>
+                <div class="describe">{{ t("login.describe") }}</div>
+            </div>
+            <div class="login-right">
+                <div class="title">{{ !isMobileDevice() ? t('system.wx_login') : t("login.scan_code") }}
+                </div>
+                <div v-if="!isMobileDevice()" id="login_container" :class="{ 'login_container_hover': failed }"
+                    v-loading="isLoading">
+                </div>
+                <div v-else class="miniprogarm" v-loading="isLoading">
+                    <img v-if="miniprogramcode" :src="miniprogramcode" alt="code">
+                    <span>{{ t("login.miniprogram") }}</span>
+                </div>
+                <div class="tips" :lang="locale">
+                    <span class="tips_content">{{ t('system.login_read') }}</span>
+                    <span class="tips_button" @click="handleOpenNewWindow('serviceagreement')">{{
+                t('system.read_TOS')
+            }}</span>
+                    <span class="tips_button" @click="handleOpenNewWindow('privacypolicy')">{{
+                t('system.read_Privacy')
                         }}</span>
-                        <span class="tips_button" @click.prevent="handleOpenNewWindow('privacypolicy')">{{
-                            t('system.read_Privacy')
-                        }}</span>
-                    </div>
                 </div>
             </div>
-            <Footer></Footer>
         </div>
+
     </div>
 </template>
 
@@ -264,205 +225,207 @@ onMounted(() => {
 }
 
 .bgiamge {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
-    background-color: #ffffff;
-    background-image: url("@/assets/bgimg3.png");
+    background-color: #F4F8FB;
+    background-image: url("@/assets/bgimg4.svg");
     background-size: cover;
     background-repeat: no-repeat;
+    overflow: auto;
 
-    svg {
-        position: fixed;
-        top: 2%;
-        left: 3%;
-        width: 136px;
-        height: 36px;
+    .header {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+
+        svg {
+            cursor: pointer;
+            width: 122px;
+            height: 64px;
+            margin-left: 40px;
+        }
     }
+
 }
 
 .content {
-    height: 100%;
     display: flex;
-    justify-content: center;
+    position: relative;
+    width: 100%;
+    max-width: 840px;
+    height: 640px;
+    border-radius: 16px;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
+    margin: auto;
+    background-color: #fff;
+    transform-style: preserve-3d;
+    transform: translateX(-20px);
 
-    .top {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
+
+    .login-left {
+        width: 50%;
         height: 100%;
+        padding: 64px 87px 0 64px;
+        box-sizing: border-box;
 
-
-        .login-page {
-
-            position: relative;
-            top: -30px;
-            width: 80%;
-            height: 460px;
-            max-width: 360px;
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #F0F0F0;
-            box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
-            box-sizing: border-box;
-            transform-style: preserve-3d;
-            transition: transform 0.5s;
-            aspect-ratio: 8/9.6;
-
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: space-evenly;
-
-            #login_container {
-                width: 200px;
-                height: 200px;
-            }
-
-            .title {
-                font-size: 20px;
-                font-weight: 500;
-                // margin-top: 74px;
-                // margin-bottom: 46px;
-                color:black;
-                opacity: 0.8;
-            }
-
-            .tips {
-                display: grid;
-                gap: 4px;
-                font-size: 13px;
-                font-weight: 500;
-                color: rgb(146 146 146);
-                align-items: center;
-                justify-items: center;
-                grid-template-columns: auto auto;
-                grid-template-rows: auto;
-                grid-template-areas:
-                    "header header"
-                    "auto auto";
-
-                .tips_content {
-                    grid-area: header;
-                }
-
-                .tips_button {
-                    cursor: pointer;
-                    color: #1878f5;
-                    font-weight: 500;
-                    opacity: 0.6;
-                }
-            }
-
-            .tips:lang(zh) {
-                grid-template-columns: auto auto auto auto;
-                grid-template-areas:
-                    "header header auto auto";
-            }
+        .welcome,
+        .name {
+            font-family: "zihunbiantaoti";
+            font-size: 56px;
+            font-weight: 400;
         }
 
-        .login-code {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            transform-style: preserve-3d;
-            transform: rotateY(180deg);
+        .welcome {
+            color: #1F1F1F;
+        }
 
-            .back {
-                width: 28px;
-                height: 28px;
-                position: absolute;
-                top: 20px;
-                left: 16px;
-                padding: 4px;
-                border-radius: 6px;
-                box-sizing: border-box;
+        .name {
+            color: #1878F5;
+        }
 
-                &:hover {
-                    background-color: rgba(240, 240, 240, 1);
-                }
-
-                &:active {
-                    background-color: rgba(243, 243, 245, 1);
-                }
-
-                svg {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-
-            .invitation_code {
-                font-size: 20px;
-                font-weight: 600;
-                color: rgba(67, 67, 67, 1);
-                // margin: 74px 0 106px 0;
-            }
-
-            .inputs {
-                position: relative;
-                display: flex;
-                justify-content: space-evenly;
-                width: 344px;
-                width: 100%;
-
-                // margin-bottom: 56px;
-
-
-
-                input {
-                    width: 36px;
-                    height: 48px;
-                    border-radius: 6px;
-                    font-size: 24px;
-                    font-weight: 600;
-                    color: rgba(0, 0, 0, 1);
-                    text-align: center;
-                    background-color: rgba(235, 235, 235, 1);
-                    border: 1px solid #EBEBEB;
-                    box-sizing: border-box;
-                    outline: none;
-                }
-            }
-
-            .code_error_tips {
-                position: absolute;
-                top: 58px;
-                font-size: 12px;
-                font-weight: 400;
-                color: rgba(234, 0, 0, 1);
-
-            }
-
-            .affirm {
-                // width: 344px;
-                width: 80%;
-                height: 44px;
-                font-size: 14px;
-                border: none;
-                border-radius: 6px;
-                background-color: rgba(24, 120, 245, 1);
-                color: white;
-                text-align: center;
-                outline: none;
-
-                &:hover {
-                    background-color: rgba(66, 154, 255, 1);
-                }
-
-                &:active {
-                    background-color: rgba(10, 89, 207, 1);
-                }
-
-                &[disabled] {
-                    background-color: rgba(189, 226, 255, 1);
-                }
-            }
+        .describe {
+            color: #BFBFBF;
+            font-size: 18px;
+            margin-top: 24px;
         }
     }
 
+    .login-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50%;
+        height: 100%;
+        background-color: #FAFBFC;
+        box-sizing: border-box;
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+
+
+
+        .title {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 20px;
+            color: #141414;
+            letter-spacing: 2px;
+        }
+
+        #login_container {
+            width: 200px;
+            height: 200px;
+            margin: 67px 0 84px 0;
+        }
+
+        .tips {
+            display: grid;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 400;
+            color: #262626;
+            align-items: center;
+            justify-items: center;
+            grid-template-columns: auto auto;
+            grid-template-rows: auto;
+            grid-template-areas:
+                "header header"
+                "auto auto";
+
+            .tips_content {
+                grid-area: header;
+            }
+
+            .tips_button {
+                cursor: pointer;
+                color: #1878f5;
+                font-weight: 500;
+            }
+        }
+
+        .tips:lang(zh) {
+            grid-template-columns: auto auto auto auto;
+            grid-template-areas:
+                "header header auto auto";
+        }
+
+        .miniprogarm {
+            width: 200px;
+            height: 200px;
+            text-align: center;
+            margin: 67px 0 84px 0;
+
+            img {
+                width: 100%;
+                height: 100%;
+            }
+
+            span {
+                font-size: 14px;
+                color: #c8c8c8;
+                letter-spacing: 1px;
+            }
+        }
+
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        transform: translate3d(0, 0, -1px);
+        top: -79px;
+        right: -79px;
+        width: 158px;
+        height: 158px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #E8F0FA 0%, rgba(232, 240, 250, 0) 88%);
+    }
+
+    &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        width: 465px;
+        height: 294px;
+        background-image: url("@/assets/content-img.svg");
+        background-repeat: no-repeat;
+    }
+}
+
+
+@media (max-width:1440px) {
+    .bgiamge .content {
+        transform: translateX(0px);
+    }
+}
+
+@media (max-width:480px) {
+    .bgiamge {
+        min-width: 100%;
+        overflow: hidden;
+    }
+
+    .bgiamge .content {
+        width: calc(100% - 20px);
+        height: 60%;
+        min-height: 450px;
+        transform: translateX(0px);
+    }
+
+    .bgiamge .content .login-left {
+        display: none;
+    }
+
+    .bgiamge .content .login-right {
+        width: 100%;
+        border-radius: 16px;
+    }
+
+    .bgiamge .content::after {
+        content: none;
+    }
 }
 </style>

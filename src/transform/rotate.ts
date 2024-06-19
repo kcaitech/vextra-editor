@@ -3,6 +3,7 @@ import { FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { getHorizontalAngle } from "@/utils/common";
+import { Tool } from "@/context/tool";
 
 type Base4Rotation = {
     XYtoRoot: XY;
@@ -213,6 +214,10 @@ export class RotateHandler extends TransformHandler {
         } else {
             this.__execute4multi();
         }
+
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER);
+        });
     }
 
     /**

@@ -7,7 +7,6 @@ import {
     Fill,
     FillType,
     GradientType,
-    GroupShapeView,
     ImageScaleMode,
     ShapeType,
     ShapeView,

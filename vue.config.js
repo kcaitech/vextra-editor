@@ -12,6 +12,8 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 let IS_PRODUCTION = process.env.BUILD_ENV === 'production'
 
+console.log("BUILD_ENV: ", process.env.BUILD_ENV)
+
 let envSuffix = !IS_PRODUCTION ? process.env.ENV_SUFFIX : "";
 if (envSuffix) {
     if (envSuffix[0] !== '/') envSuffix = '/' + envSuffix;
@@ -59,6 +61,8 @@ var configureWebpack = (config) => {
         "stream": false, //require.resolve("stream-browserify")
         "fs": false,
     }
+
+    config.resolve.alias["vue-i18n"] = "vue-i18n/dist/vue-i18n.esm-browser.prod.js";
 
     config.module.rules.push(
         {
@@ -122,6 +126,18 @@ var configureWebpack = (config) => {
             patterns: [{
                 from: "src/assets/GetCode.html",
                 to: "static/GetCode.html",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/uniwebview.js",
+                to: "static/uniwebview.js",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/fonts/zihun.ttf",
+                to: "static/fonts/zihun.ttf",
             }]
         }),
         new CopyWebpackPlugin({

@@ -191,16 +191,6 @@ export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
 }
 
 /**
- * @description 判定下一次移动为数据正式修改时，设置控件更新状态、预设辅助线中心对象、以及其他一些编辑器状态
- */
-export function reset_assist_before_translate(context: Context, shapes: ShapeView[]) {
-    context.selection.unHoverShape();
-    context.workspace.setSelectionViewUpdater(false);
-    context.workspace.translating(true);
-    context.assist.set_trans_target(shapes);
-}
-
-/**
  * @description 更新更新类型update_type更新鼠标在client坐标系上的落点
  */
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {

@@ -249,6 +249,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 </script>
+
 <template>
     <div class="header">
         <div v-if="props.switch" class="search">
@@ -264,6 +265,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                             :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
+
                 <template #suffix>
                     <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
                         <Close />
@@ -291,6 +293,10 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             @reviewed="reviewed" :y="rect_y" :x="rect_x"></Inform>
         <Teleport to="body">
             <div v-if="menuUser" class="userinfo" :style="{ top: rect_y + 'px', left: rect_x + 'px' }" :lang="locale">
+                <div @click="router.push({path:'/introduction'})">
+                    <svg-icon icon-class="Internet"></svg-icon>
+                    <span>{{ t('system.internet') }}</span>
+                </div>
                 <div @click="userinfo">
                     <svg-icon icon-class="user"></svg-icon>
                     <span>{{ t('system.personal_center') }}</span>
@@ -303,6 +309,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         </Teleport>
     </div>
 </template>
+
 <style lang="scss" scoped>
 .menu-select {
     background-color: rgba(24, 120, 245, 0.1);
@@ -450,7 +457,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     font-size: 13px;
     width: 120px;
     overflow: visible;
-    
+
     div {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -463,16 +470,28 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         box-sizing: border-box;
 
         &:hover {
-            background-color: rgba(243, 243, 245, 1);
+            background-color: #1878F5;
+
+            span {
+                color: #fff;
+            }
+
+            svg {
+                fill: currentColor;
+                color: #fff;
+            }
         }
 
         svg {
+            fill: currentColor;
+            color: #262626;
             grid-area: icon;
             width: 16px;
             height: 16px;
         }
 
         span {
+            color: #262626;
             grid-area: text;
             text-wrap: nowrap;
         }

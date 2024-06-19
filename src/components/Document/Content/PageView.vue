@@ -48,7 +48,10 @@ function pageViewRegister(mount: boolean) {
 }
 
 function _collect(t?: any) {
-    if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
+    // 调整到每次执行transform之前进行收集
+    // if (typeof t === 'string' && t === 'collect') {
+    //     props.context.assist.collect();
+    // }
 }
 
 const collect = debounce(_collect, 240);
@@ -102,7 +105,7 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
 const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
 
 function tool_watcher(t?: number) {
-    if (t === Tool.TITILE_VISIBLE) {
+    if (t === Tool.TITLE_VISIBLE) {
         show_t.value = props.context.tool.isShowTitle;
     } else if (t === Tool.CUTOUT_VISIBLE) {
         cutoutVisible.value = props.context.tool.isCutoutVisible;

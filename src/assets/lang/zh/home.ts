@@ -1,3 +1,4 @@
+import { ScaleType } from "@/context/preview"
 import { BlendMode, BorderPosition } from "@kcdesign/data"
 
 export const system = {
@@ -65,7 +66,9 @@ export const system = {
     sensitive_reminder3: '含有敏感信息，无法访问。',
     pixel: '对齐像素',
     grid: '像素网格',
-    uploadMediaFail: '图片资源上传失败'
+    rule: '显示标尺',
+    uploadMediaFail: '图片资源上传失败',
+    internet:'进入官网'
 }
 
 export const home = {
@@ -150,7 +153,10 @@ export const home = {
     'distribute_v': '上下等距分布',
     people_are_visiting: '正在访问的人:',
     permissions: '权限:',
-    contact: '连接线'
+    contact: '连接线',
+    full: '进入全屏',
+    exit_full: '退出全屏',
+    not_preview_frame: '没有可演示的容器'
 }
 
 export const search = {
@@ -309,7 +315,12 @@ export const attr: any = {
 }
 
 export const login = {
-    login_failure: '登录失效，请重新登录'
+    login_failure: '登录失效，请重新登录',
+    welcome: '欢迎登录使用',
+    name: '墨师设计',
+    describe: '在线协作专业产品设计软件',
+    miniprogram:'微信小程序',
+    scan_code:'微信扫一扫'
 }
 
 export const comment = {
@@ -373,6 +384,15 @@ export const date = {
     s: '秒前',
 }
 
+export const preview: any = {
+    actual_size: '实际尺寸',
+    previous_page: '上一页',
+    next_page: '下一页',
+    first_page: '第一页',
+    preview: '预览',
+    open: '在设计模式中打开'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
@@ -395,3 +415,7 @@ opacity[BlendMode.Color] = "颜色";
 opacity[BlendMode.Luminosity] = "明度";
 opacity[BlendMode.PlusDarker] = "加暗";
 opacity[BlendMode.PlusLighter] = "提亮";
+
+preview[ScaleType.FillScreen] = '充满屏幕'
+preview[ScaleType.FitWidth] = '适应宽度'
+preview[ScaleType.FitScreen] = '适应屏幕'

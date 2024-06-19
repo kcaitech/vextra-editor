@@ -1,7 +1,8 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { v4 as uuid } from "uuid"
+import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
+import { XY } from "@/context/selection";
 
 export enum Action {
     Auto = 'auto',
@@ -46,12 +47,22 @@ const A2R = new Map([
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 
+export interface Block {
+    dataStart: number; // 刻度值
+    dataEnd: number;
+
+    offsetStart: number; // 客户端视图偏移值
+    offsetEnd: number;
+
+    hidden?: boolean; // 隐藏间距小的端点
+}
+
 export class Tool extends WatchableObject {
     static CHANGE_ACTION = 1;
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
-    static TITILE_VISIBLE = 5;
+    static TITLE_VISIBLE = 5;
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
@@ -59,7 +70,12 @@ export class Tool extends WatchableObject {
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;
-    static CUTOUT_VISIBLE = 12;
+    static BLOCKS_CHANGE = 12;
+    static CUTOUT_VISIBLE = 13;
+    static RULE_RENDER = 14;
+    static RULE_RENDER_SIM = 15;
+    static HOVER_REFER_CHANGE = 16;
+    static REFER_FOCUS_CHANGE = 17;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -125,7 +141,7 @@ export class Tool extends WatchableObject {
 
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
-        this.notify(Tool.TITILE_VISIBLE);
+        this.notify(Tool.TITLE_VISIBLE);
     }
 
     get isCutoutVisible() {
@@ -192,7 +208,23 @@ export class Tool extends WatchableObject {
         this.notify(Tool.LABLE_CHANGE);
     }
 
-    get uniqueID() {
-        return uuid();
+    private m_refer_selection: ReferLineSelection | undefined;
+
+    setReferSelection(rs: ReferLineSelection | undefined) {
+        this.m_refer_selection = rs;
+    }
+
+    get referSelection() {
+        return this.m_refer_selection!;
+    }
+
+    private m_refer_finer: ((xy: XY) => boolean) | undefined;
+
+    setReferFiner(func: (xy: XY) => boolean) {
+        this.m_refer_finer = func;
+    }
+
+    get referFinder() {
+        return this.m_refer_finer
     }
 }
