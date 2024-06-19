@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Color, FillType, Gradient, GradientType } from '@kcdesign/data';
+import { Color, FillType, Gradient, GradientType, ImageScaleMode } from '@kcdesign/data';
 import { onMounted } from 'vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -9,6 +9,7 @@ interface Props {
     gradient_type?: GradientType
     angular: any
     fillType: FillType
+    imageScaleMode: ImageScaleMode | undefined
 }
 
 interface Emits {
@@ -47,7 +48,7 @@ onMounted(() => {
             :class="{ selected: is_checked === GradientType.Radial }">
             <svg-icon icon-class="rhomb-gradient"></svg-icon>
         </div> -->
-        <div class="item"
+        <div class="item" v-if="imageScaleMode"
             @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.Pattern) }"
             :class="{ selected: fillType === FillType.Pattern }">
             <svg-icon icon-class="layer-image"

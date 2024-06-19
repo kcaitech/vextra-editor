@@ -1,6 +1,7 @@
 import { ImageScaleMode } from "@kcdesign/data";
 
 export const pattern: any = {
+    image: '图片'
 }
 
 pattern[ImageScaleMode.Fill] = '填充';

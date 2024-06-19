@@ -1,5 +1,5 @@
 import { GradientFrom } from "@/components/Document/Selection/Controller/ColorEdit/gradient_utils";
-import { WatchableObject, Gradient, GradientType } from "@kcdesign/data";
+import { WatchableObject, Gradient, GradientType, ImageScaleMode } from "@kcdesign/data";
 
 export class ColorCtx extends WatchableObject {
     static CHANGE_STOP = 1;
@@ -7,11 +7,19 @@ export class ColorCtx extends WatchableObject {
     static STOP_DELETE = 3;
     static CHANGE_GRADIENT_TYPE = 4;
     static GRADIENT_UPDATE = 5;
+    static TILE_CHANGE = 6;
+    static CHANGE_IMAGE_MODE = 7;
+    static IMAGE_ORIGIN_CHANGE = 8;
+    static HIDDEN_SELECTED = 9;
     private m_selected_stop: string | undefined = undefined;
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;
     private m_gradient_type: GradientType | undefined = undefined;
     private m_locat: { index: number, type: GradientFrom } | undefined;
+    private m_image_scale_mode: ImageScaleMode | undefined;
+    private m_image_scale: number | undefined;
+    private m_image_origin_frame: { width: number, height: number } | undefined;
+    private m_color_index: number = -1;
     constructor() {
         super();
     }
@@ -48,5 +56,36 @@ export class ColorCtx extends WatchableObject {
     }
     clear_locat() {
         this.m_locat = undefined;
+    }
+
+    setImageScaleMode(mode?: ImageScaleMode) {
+        this.m_image_scale_mode = mode;
+        this.notify(ColorCtx.CHANGE_IMAGE_MODE);
+    }
+    get imageScaleMode() {
+        return this.m_image_scale_mode;
+    }
+    setImageScale(scale?: number) {
+        this.m_image_scale = scale;
+        this.notify(ColorCtx.TILE_CHANGE);
+    }
+    get imageScale() {
+        return this.m_image_scale;
+    }
+
+    setImageOriginFrame(frame?: { width: number, height: number }) {
+        this.m_image_origin_frame = frame;
+        this.notify(ColorCtx.IMAGE_ORIGIN_CHANGE);
+    }
+    get imageOriginFrame() {
+        return this.m_image_origin_frame;
+    }
+
+    setColorIndex(index: number) {
+        this.m_color_index = index;
+    }
+
+    get colorIndex() {
+        return this.m_color_index;
     }
 }

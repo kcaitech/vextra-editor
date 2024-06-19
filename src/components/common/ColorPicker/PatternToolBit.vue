@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
-
+const emits = defineEmits<{
+    (e: 'change', value: number): void;
+    (e: 'down', event: MouseEvent): void;
+    (e: 'onUp', event: MouseEvent): void;
+}>();
 const props = defineProps<{ type: string, value: number, range?: [number, number] }>();
 const MAX_SIDE_LENGTH = 160;
 const MAX_SIDE_LENGTH_CSS = `${MAX_SIDE_LENGTH}px`;
@@ -44,7 +48,6 @@ let downX = 0;
 let isDrag = false;
 
 function down(e: MouseEvent) {
-    console.log('down')
     if (!rangeEl.value || e.button !== 0) return;
     e.stopPropagation();
     downX = e.clientX;
@@ -52,14 +55,13 @@ function down(e: MouseEvent) {
     start = box.left;
     end = box.right;
     center = (start + end) / 2;
-
+    emits('down', e);
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
     window.addEventListener('blur', blur);
 }
 
 function downSlider(e: MouseEvent) {
-    console.log('downSlider')
     if (!rangeEl.value || e.button !== 0) return;
     e.stopPropagation();
     downX = e.clientX;
@@ -67,7 +69,7 @@ function downSlider(e: MouseEvent) {
     start = box.left;
     end = box.right;
     center = (start + end) / 2;
-
+    emits('down', e);
     modify(e);
 
     document.addEventListener('mousemove', move);
@@ -101,6 +103,7 @@ function modify(e: MouseEvent) {
         valStart.value = x - start;
         position.value = x - start;
     }
+    emits('change', position.value);
 }
 
 function move(e: MouseEvent) {
@@ -111,7 +114,9 @@ function move(e: MouseEvent) {
     }
 }
 
-function up() {
+function up(e: MouseEvent) {
+    emits('onUp', e);
+    
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }

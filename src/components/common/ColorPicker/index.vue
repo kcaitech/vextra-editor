@@ -7,6 +7,7 @@ import {
     Gradient,
     GradientType,
     ImageScaleMode,
+    PaintFilter,
     ShapeType,
     TableView,
     TextShapeView,
@@ -69,6 +70,8 @@ interface Props {
     imageScaleMode?: ImageScaleMode
     scale?: number
     imageUrl?: string
+    imageOriginFrame?: { width: number, height: number }
+    paintFilter?: PaintFilter
 }
 
 interface Data {
@@ -96,7 +99,10 @@ interface Emits {
     (e: 'gradient-stop-delete', index: number): void;
 
     (e: 'changeMode', mode: ImageScaleMode): void;
-    (e: 'setImageRef', ref: string, origin: ImgFrame): void;
+    (e: 'setImageRef', ref: string, origin: ImgFrame, imageMgr: any): void;
+    (e: 'changeRotate'): void;
+    (e: 'changeScale', scale: number): void;
+    (e: 'closeMode'): void;
 }
 
 export interface HRGB { // 色相
@@ -319,6 +325,8 @@ function quit(e: MouseEvent) {
         props.context.color.select_stop(undefined);
         blockUnmount();
         document.removeEventListener('mousedown', quit);
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
     }
 }
 
@@ -768,6 +776,8 @@ function colorPickerMount() {
 
     get_gradient_type();
 
+    switch_tile();
+
     document.addEventListener('mousedown', quit);
 
     nextTick(locate);
@@ -796,12 +806,21 @@ function removeCurColorPicker() {
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
     props.context.color.select_stop(undefined);
-    props.context.color.clear_locat();
+    props.context.color.setImageScale(undefined);
+    props.context.color.setImageScaleMode(undefined);
 }
 
 function switch_editor_mode() {
     if (props.locat && props.gradient && props.fillType === FillType.Gradient) {
         props.context.color.switch_editor_mode(true, props.gradient);
+    }
+}
+
+function switch_tile() {
+    if (props.imageScaleMode === ImageScaleMode.Tile) {
+        props.context.color.setImageScale(props.scale);
+        props.context.color.setImageScaleMode(ImageScaleMode.Tile);
+        props.context.color.setImageOriginFrame(props.imageOriginFrame);
     }
 }
 
@@ -1062,6 +1081,9 @@ function color_type_change(val: GradientType, type: FillType) {
         if (props.locat) props.context.color.gradinet_locat(props.locat);
         init();
         locate();
+        if (type === FillType.Pattern) {
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
     })
 }
 
@@ -1070,6 +1092,12 @@ const set_gradient = (val: GradientType, fillType: FillType) => {
         props.context.color.set_gradient_type(undefined);
         props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
+        if (fillType === FillType.Pattern) {
+            props.context.color.setImageScale(props.scale);
+            props.context.color.setImageScaleMode(props.imageScaleMode);
+        }
     } else {
         props.context.color.set_gradient_type(val);
         setTimeout(() => {
@@ -1103,16 +1131,24 @@ const get_gradient_type = () => {
         let id = props.context.color.selected_stop;
         if (id === undefined) id = props.gradient?.stops[0].id;
         props.context.color.select_stop(id);
-    } else if (props.fillType === FillType.SolidColor) {
-        fill_type.value = FillType.SolidColor;
+        props.context.color.setImageScale(undefined);
+        props.context.color.setImageScaleMode(undefined);
+    } else {
         props.context.color.select_stop(undefined);
         props.context.color.set_gradient_type(undefined);
-        props.context.color.clear_locat();
         props.context.color.switch_editor_mode(false);
-    } else if (props.fillType === FillType.Pattern) {
-        fill_type.value = FillType.Pattern;
-        imageScale.value = props.scale;
-        scaleMode.value = props.imageScaleMode;
+        if (props.fillType === FillType.SolidColor) {
+            fill_type.value = FillType.SolidColor;
+            props.context.color.clear_locat();
+            props.context.color.setImageScale(undefined);
+            props.context.color.setImageScaleMode(undefined);
+        } else if (props.fillType === FillType.Pattern) {
+            fill_type.value = FillType.Pattern;
+            imageScale.value = props.scale;
+            scaleMode.value = props.imageScaleMode;
+            props.context.color.setImageScale(props.scale);
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
     }
 
     if (props.locat) {
@@ -1140,6 +1176,7 @@ function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
     } else if (t === Menu.SHUTDOWN_MENU) {
+        if (props.imageScaleMode === ImageScaleMode.Tile) return;
         removeCurColorPicker();
     }
 }
@@ -1189,6 +1226,12 @@ const watch_picker = () => {
     }
 }
 
+watch(() => picker_visible.value, (v) => {
+    if (!v) {
+        emit('closeMode');
+    }
+})
+
 const observer = new ResizeObserver(locate);
 let isDragging = false
 let elpx: any
@@ -1226,11 +1269,14 @@ const changeScaleMode = (mode: ImageScaleMode) => {
     emit('changeMode', mode);
     nextTick(() => {
         get_gradient_type();
+        if (mode === ImageScaleMode.Tile) {
+            props.context.color.setImageOriginFrame(props.imageOriginFrame);
+        }
     })
 }
 
-const setImageRef = (urlRef:string, origin: ImgFrame) => {
-    emit('setImageRef', urlRef, origin);
+const setImageRef = (urlRef: string, origin: ImgFrame, imageMgr: any) => {
+    emit('setImageRef', urlRef, origin, imageMgr);
 }
 
 function stopDrag(e: MouseEvent) {
@@ -1266,6 +1312,8 @@ onUnmounted(() => {
 
 <template>
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
+        <svg-icon v-if="fillType === FillType.Pattern" icon-class="layer-image"
+            style="fill: #595959; stroke: #595959; width: 14px; height: 14px;"></svg-icon>
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
@@ -1279,7 +1327,7 @@ onUnmounted(() => {
             </div>
             <div class="color_type_container" v-if="fillType && is_gradient_selected()">
                 <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"
-                    :fillType="fill_type" :angular="angular">
+                    :fillType="fill_type" :angular="angular" :imageScaleMode="imageScaleMode">
                 </ColorType>
             </div>
             <!-- 渐变工具 -->
@@ -1381,7 +1429,8 @@ onUnmounted(() => {
                 </div>
             </template>
             <PatternFill :context="context" v-else :scale="imageScale" :imageScaleMode="scaleMode" :image="image_url"
-                @changeMode="changeScaleMode" @setImageRef="setImageRef"/>
+                :paintFilter="paintFilter" @changeMode="changeScaleMode" @setImageRef="setImageRef"
+                @changeRotate="emit('changeRotate')" @changeScale="(s) => emit('changeScale', s)" />
         </div>
     </div>
 </template>

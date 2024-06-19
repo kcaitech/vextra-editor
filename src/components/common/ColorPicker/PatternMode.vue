@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
+import { ColorCtx } from '@/context/color';
+import { fixedZero } from '@/utils/common';
 import { ImageScaleMode } from '@kcdesign/data';
 import { v4 } from 'uuid';
-import { nextTick, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
@@ -13,6 +15,8 @@ const props = defineProps<{
 }>()
 const emits = defineEmits<{
     (e: 'changeMode', mode: ImageScaleMode): void;
+    (e: 'changeRotate'): void;
+    (e: 'changeScale', scale: number): void;
 }>();
 const isMenu = ref(false);
 const activeItem = ref(props.imageScaleMode);
@@ -59,7 +63,66 @@ const setScaleMode = (mode: ImageScaleMode) => {
     activeItem.value = mode;
     emits('changeMode', mode);
     isMenu.value = false;
+    if (mode === ImageScaleMode.Tile) {
+        props.context.color.setImageScale(props.scale);
+    } else if (mode === ImageScaleMode.Crop) {
+    } else {
+        props.context.color.setImageScale();
+    }
+    props.context.color.setImageScaleMode(mode);
 }
+
+const changeRotate = () => {
+    emits('changeRotate');
+}
+
+const input = ref<HTMLInputElement>();
+const isActived = ref(false)
+const selectValue = () => {
+    isActived.value = true
+}
+
+const onChange = () => {
+    if (input.value) {
+        let value = parseFloat(input.value.value);
+        if (isNaN(value) || value <= 0) {
+            return input.value.value = (props.scale || 0.5) * 100 + '%';
+        }
+        if (value > 1000) value = 1000;
+        emits('changeScale', value);
+        props.context.color.setImageScale(value / 100);
+        input.value.blur();
+        input.value.value = fixedZero(value) + '%';
+    }
+}
+const is_select = ref(false);
+function click() {
+    if (!input.value) return;
+    const el = input.value;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_select.value) return;
+    el.select();
+    is_select.value = true;
+}
+
+const colorWatcher = (t: number) => {
+    if (t === ColorCtx.TILE_CHANGE) {
+        const scale = props.context.color.imageScale || 0.5;
+        if (input.value) {
+            input.value.value = fixedZero(scale * 100) + '%';
+        }
+    }
+}
+
+onMounted(() => {
+    props.context.color.watch(colorWatcher);
+})
+
+onUnmounted(() => {
+    props.context.color.unwatch(colorWatcher);
+})
 </script>
 
 <template>
@@ -71,9 +134,12 @@ const setScaleMode = (mode: ImageScaleMode) => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
             </div>
-            <div class="scale" v-if="activeItem === ImageScaleMode.Tile"></div>
+            <div class="scale" v-if="activeItem === ImageScaleMode.Tile">
+                <input type="text" ref="input" @click="click" :value="fixedZero((props.scale || 0.5) * 100) + '%'"
+                    @focus="selectValue" @change="onChange">
+            </div>
         </div>
-        <div class="rotate">
+        <div class="rotate" @click="changeRotate">
             <svg-icon icon-class="rotate90"></svg-icon>
         </div>
     </div>
@@ -153,10 +219,45 @@ const setScaleMode = (mode: ImageScaleMode) => {
         }
 
         .scale {
+            display: flex;
             height: 100%;
             width: 60px;
             border-radius: 4px;
             background-color: #f4f5f5;
+
+            input {
+                width: 100%;
+                flex: 1 1 auto;
+                align-content: center;
+                padding-left: 8px;
+                color: #000000;
+                font-family: HarmonyOS Sans;
+                text-overflow: ellipsis;
+                background-color: transparent;
+                border: none;
+                font-size: var(--font-default-fontsize);
+                outline: none;
+                box-sizing: border-box;
+            }
+
+            input::selection {
+                color: #FFFFFF;
+                background: #1878F5;
+            }
+
+            input::-moz-selection {
+                color: #FFFFFF;
+                background: #1878F5;
+            }
+
+            .input-text {
+                border: none;
+                outline: none;
+            }
+
+            input[type="range"]:focus {
+                outline: none;
+            }
         }
 
         svg {

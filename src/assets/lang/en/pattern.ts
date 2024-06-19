@@ -2,6 +2,7 @@
 import { ImageScaleMode } from "@kcdesign/data";
 
 export const pattern: any = {
+    image: 'image'
 }
 
 pattern[ImageScaleMode.Fill] = 'Fill';

@@ -2,11 +2,12 @@
 import PatternToolBit from "@/components/common/ColorPicker/PatternToolBit.vue";
 import { insert_imgs, modify_imgs, SVGReader } from "@/utils/content";
 import { after_import } from "@/utils/clipboard";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { Context } from "@/context";
 import PatternMode from "./PatternMode.vue"
-import { ImageScaleMode } from "@kcdesign/data";
+import { ColorPicker, ImageScaleMode, PaintFilter, PaintFilterType, ShapeType } from "@kcdesign/data";
 import { ImgFrame } from "@/context/atrribute";
+import { flattenShapes } from "@/utils/cutout";
 
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 const picker = ref<HTMLInputElement>();
@@ -16,11 +17,16 @@ const props = defineProps<{
     scale: number | undefined
     imageScaleMode: ImageScaleMode | undefined
     image: string | undefined
+    paintFilter?: PaintFilter
 }>()
 const emits = defineEmits<{
     (e: 'changeMode', mode: ImageScaleMode): void;
-    (e: 'setImageRef', ref: string, origin: ImgFrame): void;
+    (e: 'setImageRef', ref: string, origin: ImgFrame, imageMgr: any): void;
+    (e: 'changeScale', scale: number): void;
+    (e: 'changeRotate'): void;
 }>();
+let colorEditor: ColorPicker | undefined;
+const paint_filter = ref<PaintFilter>();
 function change(e: Event) {
     if (e.target) {
         const files = (e.target as HTMLInputElement).files;
@@ -56,7 +62,8 @@ function change(e: Event) {
                     const container: any = {};
                     modify_imgs(props.context, [media], container);
                     const keys = Array.from(Object.keys(container) || []) as string[];
-                    changeImageRef(keys[0], origin);
+                    const imageMgr = { buff: new Uint8Array(buff), base64: base64 }
+                    changeImageRef(keys[0], origin, imageMgr);
                     after_import(props.context, container);
                     if (picker.value) (picker.value as HTMLInputElement).value = '';
                 }
@@ -74,16 +81,48 @@ function selectImage() {
     }
 }
 
-const changeImageRef = (urlRef: string, origin: ImgFrame) => {
-    emits('setImageRef', urlRef, origin);
+const changeImageRef = (urlRef: string, origin: ImgFrame, imageMgr: any) => {
+    emits('setImageRef', urlRef, origin, imageMgr);
 }
+
+
+const changePaint = (value: number, type: PaintFilterType) => {
+    const page = props.context.selection.selectedPage;
+    if (!colorEditor) {
+        if (!page) return;
+        colorEditor = new ColorPicker(props.context.coopRepo, props.context.data, page);
+    }
+    const locat = props.context.color.locat;
+    if (!locat) return;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+    const fills = selected[0].style.getFills();
+    const _idx = fills.length - locat.index - 1;
+    const v = (value - 80) * (type === PaintFilterType.Hue ? 2.25 : 1.25);
+    colorEditor?.executeImageFilter(shapes, type, v, _idx);
+}
+
+const startChange = (e: MouseEvent) => {
+    const page = props.context.selection.selectedPage;
+    if (colorEditor || !page) return;
+    colorEditor = new ColorPicker(props.context.coopRepo, props.context.data, page);
+}
+const endChange = () => {
+    colorEditor?.commit();
+    colorEditor = undefined;
+}
+
+watch(() => props.paintFilter, (v) => {
+    paint_filter.value = v;
+}, { immediate: true, deep: true })
 
 </script>
 <template>
     <div class="container">
         <div class="header">
             <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
-                @changeMode="(mode) => emits('changeMode', mode)"></PatternMode>
+                @changeMode="(mode) => emits('changeMode', mode)" @changeRotate="emits('changeRotate')"
+                @changeScale="(s) => emits('changeScale', s)"></PatternMode>
         </div>
         <div class="body">
             <div class="mask" @click="selectImage">
@@ -96,12 +135,20 @@ const changeImageRef = (urlRef: string, origin: ImgFrame) => {
             </div>
         </div>
         <div class="tool">
-            <pattern-tool-bit type="曝光" :value="0" />
-            <pattern-tool-bit type="对比度" :value="0" />
-            <pattern-tool-bit type="饱和度" :value="60" />
-            <pattern-tool-bit type="色温" :value="-60" />
-            <pattern-tool-bit type="色调" :value="100" />
-            <pattern-tool-bit type="色相" :value="100" />
+            <pattern-tool-bit type="亮度" :value="paint_filter?.exposure || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="对比度" :value="paint_filter?.contrast || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="饱和度" :value="paint_filter?.saturation || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="色温" :value="paint_filter?.temperature || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="色调" :value="paint_filter?.tint || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="阴影" :value="paint_filter?.shadow || 0"
+                @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange" @onUp="endChange" />
+            <pattern-tool-bit type="色相" :value="(paint_filter?.hue || 0) * (100 / 180)"
+                @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange" />
         </div>
     </div>
 
