@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { GradientType, ImageScaleMode, Matrix } from '@kcdesign/data';
+import { GradientType, ImageScaleMode, Matrix, ShapeType } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 import { image_mode_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';
@@ -14,8 +14,11 @@ interface Props {
 const props = defineProps<Props>();
 const mode = ref<ImageScaleMode>();
 function init() {
-    mode.value = props.context.color.imageScaleMode;
-    if(mode.value && mode.value === ImageScaleMode.Tile) {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length && selected[0].type !== ShapeType.Group) {
+        mode.value = props.context.color.imageScaleMode;
+    }
+    if (props.context.color.imageScaleMode === ImageScaleMode.Tile) {
         props.context.color.notify(ColorCtx.HIDDEN_SELECTED, true);
     } else {
         props.context.color.notify(ColorCtx.HIDDEN_SELECTED, false);

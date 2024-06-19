@@ -283,7 +283,8 @@ function locate() {
     if (cur_t > 0) {
         p_top = p_el.top;
     } else {
-        p_top = p_el.top - Math.abs(cur_t - 10 - (props.fillType && props.fillType === FillType.SolidColor ? 38 : 0));
+        // p_top = p_el.top - Math.abs(cur_t - 10 - (props.fillType && props.fillType === FillType.SolidColor ? 38 : 0));
+        p_top = p_el.top - Math.abs(cur_t - 10);
     }
     if (p_top - 40 < 0) {
         p_top = 40
@@ -1312,8 +1313,7 @@ onUnmounted(() => {
 
 <template>
     <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
-        <svg-icon v-if="fillType === FillType.Pattern" icon-class="layer-image"
-            style="fill: #595959; stroke: #595959; width: 14px; height: 14px;"></svg-icon>
+        <img v-if="fillType === FillType.Pattern" :src="image_url" alt="">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header" @mousedown.stop="startDrag" @mouseup="stopDrag">
@@ -1451,6 +1451,13 @@ onUnmounted(() => {
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     flex: 0 0 16px;
+
+    img {
+        border-radius: 3px;
+        width: 16px;
+        height: 16px;
+        object-fit: fill;
+    }
 
     .popover {
         position: fixed;

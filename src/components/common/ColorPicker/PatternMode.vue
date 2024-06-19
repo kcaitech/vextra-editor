@@ -23,6 +23,7 @@ const activeItem = ref(props.imageScaleMode);
 const hoverItem = ref(props.imageScaleMode);
 const menu = ref<HTMLDivElement>();
 const mode = ref<HTMLDivElement>();
+const image_scale = ref(props.scale);
 const showMenu = (e: MouseEvent) => {
     if (isMenu.value) return isMenu.value = false;
     activeItem.value = props.imageScaleMode;
@@ -59,7 +60,7 @@ function close() {
 }
 
 const setScaleMode = (mode: ImageScaleMode) => {
-    if (mode === activeItem.value) return;
+    if (mode === activeItem.value) return isMenu.value = false;
     activeItem.value = mode;
     emits('changeMode', mode);
     isMenu.value = false;
@@ -90,6 +91,7 @@ const onChange = () => {
         }
         if (value > 1000) value = 1000;
         emits('changeScale', value);
+        image_scale.value = value / 100;
         props.context.color.setImageScale(value / 100);
         input.value.blur();
         input.value.value = fixedZero(value) + '%';
@@ -110,6 +112,7 @@ function click() {
 const colorWatcher = (t: number) => {
     if (t === ColorCtx.TILE_CHANGE) {
         const scale = props.context.color.imageScale || 0.5;
+        image_scale.value = scale;
         if (input.value) {
             input.value.value = fixedZero(scale * 100) + '%';
         }
@@ -135,7 +138,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="scale" v-if="activeItem === ImageScaleMode.Tile">
-                <input type="text" ref="input" @click="click" :value="fixedZero((props.scale || 0.5) * 100) + '%'"
+                <input type="text" ref="input" @click="click" :value="fixedZero((image_scale || 0.5) * 100) + '%'"
                     @focus="selectValue" @change="onChange">
             </div>
         </div>
@@ -186,6 +189,7 @@ onUnmounted(() => {
     box-sizing: border-box;
 
     .options {
+        font-size: 12px;
         flex: 1;
         height: 100%;
         display: flex;
@@ -201,6 +205,9 @@ onUnmounted(() => {
             align-items: center;
             background-color: #f4f5f5;
             border-radius: 4px;
+            &:hover {
+                background-color: #EBEBEB;
+            }
 
             .option {
                 flex: 1;

@@ -96,7 +96,7 @@ const changePaint = (value: number, type: PaintFilterType) => {
     if (!locat) return;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-    const fills = selected[0].style.getFills();
+    const fills = shapes[0].style.getFills();
     const _idx = fills.length - locat.index - 1;
     const v = (value - 80) * (type === PaintFilterType.Hue ? 2.25 : 1.25);
     colorEditor?.executeImageFilter(shapes, type, v, _idx);
@@ -172,11 +172,12 @@ watch(() => props.paintFilter, (v) => {
     .body {
         padding: 0 12px;
         width: 100%;
-        height: 170px;
+        height: 190px;
         box-sizing: border-box;
 
         .mask {
-            background: conic-gradient(#eee 25%, white 0deg 50%, #eee 0deg 75%, white 0deg) 0 / 20px 20px;
+            border: solid 1px #efefef;
+            background: conic-gradient(#eee 25%, white 0deg 50%, #eee 0deg 75%, white 0deg) 0 / 15px 15px;
             position: relative;
             width: 100%;
             height: 100%;
@@ -211,8 +212,8 @@ watch(() => props.paintFilter, (v) => {
                     visibility: hidden;
                     color: #fff;
                     border: 1px solid #fff;
-                    border-radius: 8px;
-                    background-color: rgba(255, 255, 255, 0.2);
+                    border-radius: 6px;
+                    background-color: rgba(0, 0, 0, 0.2);
                 }
             }
 
@@ -227,14 +228,14 @@ watch(() => props.paintFilter, (v) => {
                     visibility: visible;
                 }
 
-                background-color: rgba(0, 0, 0, 0.15);
+                background-color: rgba(0, 0, 0, 0.1);
             }
         }
     }
 
     .tool {
         width: 100%;
-        padding: 12px;
+        padding: 0 16px 12px 16px;
         box-sizing: border-box;
     }
 }

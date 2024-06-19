@@ -145,6 +145,9 @@ function blur() {
     justify-content: space-between;
     gap: 10px;
     position: relative;
+    .desc {
+        color: #3D3D3D;
+    }
 
     .range {
         display: flex;
@@ -155,13 +158,14 @@ function blur() {
         .line {
             width: 100%;
             height: 2px;
-            background-color: grey;
+            border-radius: 1px;
+            background-color: #D9D9D9;
         }
 
         .line-center {
             width: 1px;
-            background-color: grey;
-            height: 8px;
+            background-color: #D9D9D9;
+            height: 10px;
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
@@ -169,7 +173,7 @@ function blur() {
 
         .val-line {
             height: 2px;
-            background-color: black;
+            background-color: #1878F5;
             position: absolute;
         }
 
@@ -181,14 +185,14 @@ function blur() {
             box-sizing: border-box;
             width: 10px;
             height: 10px;
-            border: 1px solid black;
+            border: 1.5px solid #262626;
             border-radius: 50%;
             background-color: #fff;
+            box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
         }
 
         .fill-dot {
-            border: 1px solid #fff;
-            background-color: black !important;
+            border: 1.5px solid #1878F5;
         }
     }
 }

@@ -299,7 +299,7 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
             }
-            if (fill.fillType === FillType.SolidColor) {
+            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
                 setColor(idx, clr, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);
@@ -318,7 +318,7 @@ function onAlphaChange(e: Event, idx: number, fill: Fill) {
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
             }
-            if (fill.fillType === FillType.SolidColor) {
+            if (fill.fillType === FillType.SolidColor || fill.fillType === FillType.Pattern) {
                 setColor(idx, clr, value);
             } else if (fill.gradient && fill.fillType === FillType.Gradient) {
                 set_gradient_opacity(idx, value);

@@ -58,7 +58,7 @@ import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
-import Rule from "./Rule";
+import Rule from "./Rule/index.vue";
 
 interface Props {
     context: Context
