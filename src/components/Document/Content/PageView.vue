@@ -168,8 +168,7 @@ onUnmounted(() => {
          :viewBox="viewbox"
     />
     <ShapeCutout v-if="show_c" :context="props.context" :data="data" :matrix="props.matrix"
-                 :transform="matrixWithFrame.toArray()">
-    </ShapeCutout>
+                 :transform="matrixWithFrame.toArray()"/>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data"/>
 </template>
 
