@@ -76,13 +76,17 @@ comps.push(...plugins.begin)
 comps.push({ component: ExportVue }, { component: ViewVue }, { component: GuideVue })
 comps.push(...plugins.end)
 
+function close() {
+    popoverVisible.value = false;
+}
+
 </script>
 <template>
     <div class="icon" @click="showMenu" ref="trigger">
         <svg-icon icon-class="menu"></svg-icon>
     </div>
     <div ref="popover" class="popover-f" v-if="popoverVisible">
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close" />
     </div>
 </template>
 <style scoped lang="scss">

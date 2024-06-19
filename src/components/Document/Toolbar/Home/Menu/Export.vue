@@ -4,6 +4,9 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
+const emit = defineEmits<{
+    (e: 'close'): void;
+}>();
 
 const props = defineProps<{
     context: Context
@@ -12,6 +15,7 @@ const props = defineProps<{
 const exportClick = () => {
     props.context.menu.setExportDialog(true);
     // popoverVisible.value = false;
+    emit('close');
 }
 
 </script>

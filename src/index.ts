@@ -1,4 +1,3 @@
-import Vue from "vue";
 import _DocumentVue from "./components/Document/index.vue"
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
 import {
@@ -20,8 +19,6 @@ import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
 import { IContext } from "./openapi/context";
 
-// export { Context } from "./context";
-// export { Selection } from "./context/selection"
 export * from "./openapi";
 
 const t = (i18n as any).global.t;

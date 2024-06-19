@@ -16,10 +16,12 @@ interface Props {
 // interface Emits {
 //     (e: 'rename'): void;
 // }
-
+const emit = defineEmits<{
+    (e: 'close'): void;
+}>();
 const props = defineProps<Props>();
 // const emit = defineEmits<Emits>();
-const popoverVisible = ref<boolean>(false);
+// const popoverVisible = ref<boolean>(false);
 const childMenuVisible = ref<boolean>(false);
 const childMenuPosition: XY = reactive({ x: 0, y: 0 });
 
@@ -35,7 +37,8 @@ const closeChildFileMenu = () => {
 
 function close() {
     childMenuVisible.value = false;
-    popoverVisible.value = false;
+    // popoverVisible.value = false;
+    emit('close');
 }
 
 

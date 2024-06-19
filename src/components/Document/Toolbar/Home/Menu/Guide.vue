@@ -9,13 +9,16 @@ interface Props {
     context: Context
 }
 
-
+const emit = defineEmits<{
+    (e: 'close'): void;
+}>();
 const props = defineProps<Props>();
 
 
 const guide = () => {
     props.context.menu.notify(Menu.OPEN_SHORTCUTS);
     // popoverVisible.value = false;
+    emit('close');
 }
 
 
