@@ -26,17 +26,11 @@ export interface TitleAttri {
 export class TitleRenderer {
     private readonly m_context: Context;
     private readonly m_title_list: TitleAttri[];
-    private readonly m_title_map: Map<string, TitleAttri>;
 
     constructor(context: Context, titleList: TitleAttri[]) {
         this.m_context = context;
 
         this.m_title_list = titleList;
-        this.m_title_map = new Map([]);
-        const map = this.m_title_map;
-        titleList.forEach(t => {
-            map.set(t.id, t);
-        });
     }
 
     // 已监听的Container对象
@@ -61,7 +55,6 @@ export class TitleRenderer {
         this.modifyTransformStr(titleCtx);
 
         this.m_title_list.push(titleCtx);
-        this.m_title_map.set(shape.id, titleCtx);
     }
 
     /**
@@ -229,17 +222,9 @@ export class TitleRenderer {
     }
 
     private updateContainerTitle(id: string, args: any[]) {
-        // console.log('args:', args);
         if (!args?.includes('layout')) {
             return;
         }
-
-        // todo 这里双数据结构没有起到作用，后续想办法解决一下
-
-        // const titleCtx = this.m_title_map.get(id);
-        // if (!titleCtx) {
-        //     return;
-        // }
 
         const titleCtx = this.m_title_list.find(t => t.id === id);
         if (!titleCtx) {
@@ -251,7 +236,6 @@ export class TitleRenderer {
 
     fullUpdate() {
         this.m_title_list.length = 0;
-        this.m_title_map.clear();
 
         this.underRootContainerMap.forEach((shape) => {
             this.generate(shape);
@@ -295,19 +279,16 @@ export class TitleRenderer {
         const added = new Set<string>();
 
         const list = this.m_title_list;
-        const map = this.m_title_map;
 
         const temp = [...list];
 
         list.length = 0;
-        map.clear();
 
         for (let i = 0; i < temp.length; i++) {
             const c = temp[i];
 
             if (URCM.has(c.id)) {
                 list.push(c);
-                map.set(c.id, c);
                 added.add(c.id);
             }
         }
