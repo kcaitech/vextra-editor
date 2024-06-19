@@ -174,22 +174,22 @@ function updateDotLayout() {
 
     const assistLT = new Transform()
         .setRotateZ(theta1)
-        .setTranslate(ColVector3D.FromXY(col0.x, col0.y));
+        .setTranslate(col0);
     rotateCtx.mlt = assistLT;
 
     const assistRT = new Transform()
         .setRotateZ(theta2)
-        .setTranslate(ColVector3D.FromXY(col1.x, col1.y));
+        .setTranslate(col1);
     rotateCtx.mrt = assistRT;
 
     const assistRB = new Transform()
         .setRotateZ(theta3)
-        .setTranslate(ColVector3D.FromXY(col2.x, col2.y));
+        .setTranslate(col2);
     rotateCtx.mrb = assistRB;
 
     const assistLB = new Transform()
         .setRotateZ(theta4)
-        .setTranslate(ColVector3D.FromXY(col3.x, col3.y));
+        .setTranslate(col3);
     rotateCtx.mlb = assistLB;
 
     subDots.push(
@@ -398,8 +398,8 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .r-path {
-    //fill: transparent;
-    fill: rgba(255, 0, 0, 0.6);
+    fill: transparent;
+    //fill: rgba(255, 0, 0, 0.6);
     stroke: none;
 }
 
@@ -413,7 +413,7 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     stroke: transparent;
-    //fill: transparent;
-    fill: rgba(0, 255, 0, 0.6);
+    fill: transparent;
+    //fill: rgba(0, 255, 0, 0.6);
 }
 </style>

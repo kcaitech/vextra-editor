@@ -167,7 +167,7 @@ onUnmounted(() => {
          @mouseenter="mouseenter"
          @mouseleave="mouseleave"
     >
-        <ShapesStrokeContainer :context="props.context"/>
+<!--        <ShapesStrokeContainer :context="props.context"/>-->
         <BarsContainer
             v-if="partVisible"
             :context="props.context"

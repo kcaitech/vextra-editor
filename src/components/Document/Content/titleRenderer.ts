@@ -9,6 +9,7 @@ import {
     Transform
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
+import { cursorAngle } from "@/components/Document/Selection/common";
 
 export interface TitleAttri {
     id: string;
@@ -113,7 +114,6 @@ export class TitleRenderer {
 
         const t4 = (s4[0].y + s4[1].y) / 2;
         if (t4 < topValue) {
-            topValue = t4;
             top = s4;
         }
 
@@ -197,29 +197,34 @@ export class TitleRenderer {
         }).clearSkew().transform(ColVector3D.FromXY(0, -1)).col0;
 
         const OT = new Transform()
-            .setRotateZ(ColVector3D.FromXY(1, 0).angleTo(X))
+            .setRotateZ(cursorAngle(ColVector3D.FromXY(1, 0), X))
             .setTranslate(O)
-
-        // .translateAt({
-        //     axis: tDirection,
-        //     distance: 22,
-        // });
+            .translateAt({
+                axis: tDirection,
+                distance: 20,
+            });
 
         titleCtx.transform = makeMatrixByTransform2(OT).toString();
     }
 
     private updateContainerTitle(id: string, args: any[]) {
-        // check
+        // console.log('args:', args);
         if (!args?.includes('layout')) {
             return;
         }
 
-        const titleCtx = this.m_title_map.get(id);
+        // todo 这里双数据结构没有起到作用，后续想办法解决一下
+
+        // const titleCtx = this.m_title_map.get(id);
+        // if (!titleCtx) {
+        //     return;
+        // }
+
+        const titleCtx = this.m_title_list.find(t => t.id === id);
         if (!titleCtx) {
             return;
         }
 
-        // modify transform
         this.modifyTransformStr(titleCtx);
     }
 
