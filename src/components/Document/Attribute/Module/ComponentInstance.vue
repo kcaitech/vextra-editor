@@ -46,7 +46,7 @@ const saveExamplesToggle = () => {
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
     isInstanceShow.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 const resetMenu = ref(false)
@@ -143,7 +143,7 @@ const card_ref = ref<HTMLDivElement>();
 function edit_instance() {
     getDialogPosi(card_ref.value);
     isInstanceShow.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 function de_layer_is_show() {

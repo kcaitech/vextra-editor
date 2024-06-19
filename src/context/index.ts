@@ -8,7 +8,6 @@ import {
     TableView,
     TextShapeView,
     TableCellView,
-    EventEmitter,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -22,7 +21,6 @@ import { Tool } from "./tool";
 import { Navi } from "./navigate";
 // import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
-import { EscStack } from "./escstack";
 import { Assist } from "./assist";
 import { TeamWork } from "./teamwork";
 import { PageDom } from "@/components/Document/Content/vdom/page";
@@ -40,7 +38,8 @@ import { Attribute } from "./atrribute";
 import { DocumentProps, INet } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
-import { IContext, IEscStack } from "@/openapi/context";
+import { IContext } from "@/openapi";
+import { EscStack } from "./escstack";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -153,7 +152,8 @@ export class Context extends WatchableObject implements IContext {
         this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
     }
-    get escstack(): IEscStack {
+
+    get escstack(): EscStack {
         return this.m_escstack;
     }
 
@@ -301,9 +301,9 @@ export class Context extends WatchableObject implements IContext {
         return this.m_selection.textSelection;
     }
 
-    get esctask() {
-        return this.m_escstack;
-    }
+    // get escstack() {
+    //     return this.m_escstack;
+    // }
 
     get component() {
         return this.m_component;

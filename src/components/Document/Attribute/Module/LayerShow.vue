@@ -29,7 +29,7 @@ const closeLayerShowPopup = () => {
 const layerIsShow = () => {
     getDialogPosi(atrrdialog.value);
     isLayerShow.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 function de_layer_is_show() {
@@ -55,7 +55,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 function edit_visible() {
     getDialogPosi(card_ref.value);
     isLayerShow.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 const is_bind = ref<Variable>();

@@ -79,7 +79,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
 
             workspace.setPathEditMode(true); // --开启对象编辑
-            context.esctask.save('path-edit', exist_edit_mode);
+            context.escstack.save('path-edit', exist_edit_mode);
         }
     }
 
@@ -430,8 +430,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         initController();
         workspace.contentEdit(false);
 
-        if (!context.esctask.has('select-shape')) {
-            context.esctask.save('select-shape', exit);
+        if (!context.escstack.has('select-shape')) {
+            context.escstack.save('select-shape', exit);
         }
     }
 

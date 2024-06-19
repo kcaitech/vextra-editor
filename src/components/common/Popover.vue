@@ -86,7 +86,7 @@ function locate() {
     popover.value.style.left = _left + 'px';
     popover.value.style.top = _top + 'px';
 
-    props.context.esctask.save(Math.random().toString(), popoverClose);
+    props.context.escstack.save(Math.random().toString(), popoverClose);
 }
 
 function handleClickOutside(event: MouseEvent) {

@@ -86,7 +86,7 @@ export class TableSelection extends WatchableObject {
 
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
 
-            this.m_context.esctask.save('table-selection', () => {
+            this.m_context.escstack.save('table-selection', () => {
                 const achieve = this.m_tableRowStart > -1 || this.m_tableColStart > -1;
                 this.resetSelection();
                 return achieve;
@@ -103,7 +103,7 @@ export class TableSelection extends WatchableObject {
 
             this.notify(TableSelection.CHANGE_TABLE_CELL, gen_menu_posi);
 
-            this.m_context.esctask.save('table-selection', () => {
+            this.m_context.escstack.save('table-selection', () => {
                 const achieve = this.m_tableRowStart > -1 || this.m_tableColStart > -1;
                 this.resetSelection();
                 return achieve;

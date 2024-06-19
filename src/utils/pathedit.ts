@@ -420,7 +420,7 @@ export function enter_path_edit_mode(context: Context) {
     }
 
     context.workspace.setPathEditMode(true); // --开启对象编辑
-    context.esctask.save('path-edit', exist_edit_mode);
+    context.escstack.save('path-edit', exist_edit_mode);
 
     function exist_edit_mode() {
         const al = context.workspace.is_path_edit_mode;

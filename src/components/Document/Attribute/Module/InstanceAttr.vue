@@ -37,7 +37,7 @@ const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
     document.addEventListener('click', closeResetMenu);
-    props.context.esctask.save(v4(), close_popover);
+    props.context.escstack.save(v4(), close_popover);
 }
 
 const closeResetMenu = (e: MouseEvent) => {

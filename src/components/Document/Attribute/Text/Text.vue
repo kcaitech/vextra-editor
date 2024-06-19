@@ -81,7 +81,7 @@ const onShowFont = () => {
     }
     showFont.value = true
 
-    props.context.esctask.save('onShowFont', () => {
+    props.context.escstack.save('onShowFont', () => {
         const achieve = showFont.value;
         showFont.value = false;
         return achieve;
@@ -111,7 +111,7 @@ const onShowSize = () => {
     if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
 
-    props.context.esctask.save('onShowSize', () => {
+    props.context.escstack.save('onShowSize', () => {
         const isAchieve = showSize.value;
         showSize.value = false;
         return isAchieve

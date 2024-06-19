@@ -276,7 +276,7 @@ function contextMenuMount(e: MouseEvent) {
         }
         const el = contextMenuEl.value.menu;
         menu_over_left.value = menu_locate(props.context, contextMenuPosition, el) || 0;
-        props.context.esctask.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+        props.context.escstack.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
 
@@ -528,7 +528,7 @@ function menu_watcher(type?: number, mount?: string) {
     }
     if (type === Menu.EXPORT_DIALOG) {
         isvisible.value = props.context.menu.isExportDialog;
-        props.context.esctask.save(v4(), export_dialog_show);
+        props.context.escstack.save(v4(), export_dialog_show);
     }
 }
 
@@ -538,9 +538,13 @@ const export_dialog_show = () => {
     return is_achieve_expected_results;
 }
 
+function isCreatorSupportAction(action: string | undefined) {
+    return action && Object.values(Action).indexOf(action) >= 0 && action.startsWith('add') || false
+}
+
 function tool_watcher(type: number) {
     if (type === Tool.CHANGE_ACTION) {
-        creatorMode.value = props.context.tool.action.startsWith('add');
+        creatorMode.value = isCreatorSupportAction(props.context.curAction);
     } else if (type === Tool.INSERT_FRAME) insertFrame();
     else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
 }

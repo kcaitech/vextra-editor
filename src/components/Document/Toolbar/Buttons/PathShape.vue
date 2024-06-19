@@ -121,7 +121,7 @@ function showMenu(e: MouseEvent) {
     popoverXY.value.x = el.offsetLeft;
     popoverXY.value.y = 45;
 
-    props.context.esctask.save('pathshape-menu', () => {
+    props.context.escstack.save('pathshape-menu', () => {
         const achieve = popover.value;
         popover.value = false;
         return achieve;

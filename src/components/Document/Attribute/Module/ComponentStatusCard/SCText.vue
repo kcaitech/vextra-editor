@@ -47,7 +47,7 @@ function edit_text() {
     get_text();
     get_dialog_posi(card_ref.value);
     iseditText.value = true;
-    props.context.esctask.save(v4(), de_text_is_show);
+    props.context.escstack.save(v4(), de_text_is_show);
 }
 function de_text_is_show() {
     const is_achieve_expected_results = iseditText.value;

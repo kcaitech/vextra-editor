@@ -159,7 +159,7 @@ export function startEdit(context: Context) {
         }
 
         workspace.setPathEditMode(true); // --开启对象编辑
-        context.esctask.save('path-edit', () => {
+        context.escstack.save('path-edit', () => {
             const al = workspace.is_path_edit_mode;
             workspace.setPathEditMode(false);
             return al;

@@ -44,7 +44,7 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
 function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
-    props.context.esctask.save(v4(), de_symbol_is_show);
+    props.context.escstack.save(v4(), de_symbol_is_show);
 }
 
 function de_symbol_is_show() {

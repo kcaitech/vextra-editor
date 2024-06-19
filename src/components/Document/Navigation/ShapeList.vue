@@ -264,7 +264,7 @@ const chartMenuMount = (e: MouseEvent) => {
     props.context.menu.menuMount('shapelist');
     nextTick(() => {
         menu_locate2(e, contextMenuEl.value?.menu, shapeList.value);
-        props.context.esctask.save(v4(), close);
+        props.context.escstack.save(v4(), close);
     })
 }
 

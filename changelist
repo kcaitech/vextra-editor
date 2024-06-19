@@ -485,3 +485,40 @@ Changes to be committed:
 	new file:   typedoc.json
 	deleted:    typedoc.tsconfig.json
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/components/Document/Attribute/CutoutExport/ExportArguments.vue
+	modified:   src/components/Document/Attribute/CutoutExport/index.vue
+	modified:   src/components/Document/Attribute/Module/ComponentAttr.vue
+	modified:   src/components/Document/Attribute/Module/ComponentInstance.vue
+	modified:   src/components/Document/Attribute/Module/ComponentStatusCard/SCSymbolRef.vue
+	modified:   src/components/Document/Attribute/Module/ComponentStatusCard/SCText.vue
+	modified:   src/components/Document/Attribute/Module/ComponentStatusCard/SCVisible.vue
+	modified:   src/components/Document/Attribute/Module/InstanceAttr.vue
+	modified:   src/components/Document/Attribute/Module/InstanceAttrCard/IACSymbolRef.vue
+	modified:   src/components/Document/Attribute/Module/LayerShow.vue
+	modified:   src/components/Document/Attribute/Module/SelectLayerInput.vue
+	modified:   src/components/Document/Attribute/Module/TextContent.vue
+	modified:   src/components/Document/Attribute/Text/FontWeightSelected.vue
+	modified:   src/components/Document/Attribute/Text/Text.vue
+	modified:   src/components/Document/ContentView.vue
+	modified:   src/components/Document/Creator/Creator.vue
+	modified:   src/components/Document/Navigation/PageList.vue
+	modified:   src/components/Document/Navigation/ShapeList.vue
+	modified:   src/components/Document/Selection/Controller/PathEdit/PathEditMode.vue
+	modified:   src/components/Document/Selection/Controller/Points/PointsPenMode.vue
+	modified:   src/components/Document/Selection/Controller/controller.ts
+	modified:   src/components/Document/Toolbar/Buttons/PathShape.vue
+	modified:   src/components/common/Popover.vue
+	modified:   src/context/escstack.ts
+	modified:   src/context/index.ts
+	modified:   src/context/menu.ts
+	modified:   src/context/tableselection.ts
+	modified:   src/context/tool.ts
+	modified:   src/openapi/context.ts
+	modified:   src/openapi/index.ts
+	modified:   src/transform/pathEdit.ts
+	modified:   src/utils/keyboardUnits.ts
+	modified:   src/utils/pathedit.ts
+

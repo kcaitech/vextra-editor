@@ -63,7 +63,7 @@ export class Menu extends WatchableObject {
   }
   setupColorPicker(id: string) {
     this.m_color_picker = id;
-    this.m_context.esctask.save(v4(), this.removeColorPicker.bind(this));
+    this.m_context.escstack.save(v4(), this.removeColorPicker.bind(this));
   }
   clearColorPickerId() {
     this.m_color_picker = undefined;

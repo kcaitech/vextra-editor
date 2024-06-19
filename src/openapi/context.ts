@@ -1,4 +1,4 @@
-import { Document } from "@kcdesign/data";
+import { Document, IWatchable } from "@kcdesign/data";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
@@ -11,13 +11,16 @@ import { IWorkspace } from "./workspace";
 //     width: number,
 //     height: number
 // }
-
 export interface IEscStack {
-    save(key: string, call: Function): void;
+    save(key: string, call: () => boolean): void;
     remove(key: string): void;
 }
 
-export interface IContext {
+export namespace ContextEvents {
+    export const action_change = "action_change"
+}
+
+export interface IContext extends IWatchable {
     get storage(): Map<string, any>;
     get data(): Document;
     get pluginsMgr(): IPluginsMgr;
@@ -33,4 +36,5 @@ export interface IContext {
 
     get workspace(): IWorkspace;
     get escstack(): IEscStack;
+    // setEscstack(stack: EscStack): void;
 }

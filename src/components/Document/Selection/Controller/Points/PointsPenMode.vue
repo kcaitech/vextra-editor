@@ -259,7 +259,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
                 asyncEnvMount();
 
-                props.context.esctask.save('contact-status', () => {
+                props.context.escstack.save('contact-status', () => {
                     path.reset();
                     const achieve = props.context.path.isContacting;
                     props.context.path.setContactStatus(false);
@@ -282,7 +282,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             pathModifier.createApiCaller();
             asyncEnvMount();
 
-            props.context.esctask.save('contact-status', () => {
+            props.context.escstack.save('contact-status', () => {
                 path.reset();
                 const achieve = props.context.path.isContacting;
                 props.context.path.setContactStatus(false);
@@ -306,7 +306,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
             props.context.path.setContactStatus(true);
 
-            props.context.esctask.save('contact-status', () => {
+            props.context.escstack.save('contact-status', () => {
                 path.reset();
                 const achieve = path.isContacting;
                 path.setContactStatus(false);
@@ -343,7 +343,7 @@ function checkStatus() {
     const workspace = props.context.workspace;
 
     if (workspace.is_path_edit_mode) {
-        props.context.esctask.save('path-edit', () => {
+        props.context.escstack.save('path-edit', () => {
             const achieve = workspace.is_path_edit_mode;
             workspace.setPathEditMode(false);
             return achieve;
@@ -351,7 +351,7 @@ function checkStatus() {
     }
 
     if (path.isContacting) {
-        props.context.esctask.save('contact-status', () => {
+        props.context.escstack.save('contact-status', () => {
             path.reset();
             const achieve = path.isContacting;
             path.setContactStatus(false);
@@ -641,7 +641,7 @@ function down(e: MouseEvent) {
 
         props.context.path.setContactStatus(true);
 
-        props.context.esctask.save('contact-status', () => {
+        props.context.escstack.save('contact-status', () => {
             props.context.path.reset();
             const achieve = props.context.path.isContacting;
             props.context.path.setContactStatus(false);

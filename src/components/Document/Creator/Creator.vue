@@ -194,7 +194,7 @@ function up(e: MouseEvent) {
 //     posi.value.y = y
 //     commentInput.value = true;
 
-//     props.context.esctask.save('comment-input-visible', () => {
+//     props.context.escstack.save('comment-input-visible', () => {
 //         const achieve = commentInput.value;
 //         commentInput.value = false;
 //         return achieve;
@@ -333,12 +333,6 @@ onUnmounted(() => {
 </script>
 <template>
     <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`" v-if="props.params.visible">
-        <!-- <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
-                      :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
-                      :rootWidth="rootWidth"
-                      @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
-                      :matrix="props.context.workspace.matrix"
-                      :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput> -->
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
         <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
     </div>

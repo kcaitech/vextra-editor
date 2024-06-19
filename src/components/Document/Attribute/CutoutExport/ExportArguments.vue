@@ -48,7 +48,7 @@ const showCutoutSizeMenu = () => {
     sizeMenuItems = props.sizeItems;
     showCutoutSize.value = true;
 
-    props.context.esctask.save('showCutoutSizeMenu', () => {
+    props.context.escstack.save('showCutoutSizeMenu', () => {
         const achieve = showCutoutSize.value;
         showCutoutSize.value = false;
         return achieve;
@@ -60,7 +60,7 @@ const showCutoutPerfixMenu = () => {
     perMenuItems = props.perfixItems;
     showCutoutPerfix.value = true;
 
-    props.context.esctask.save('showCutoutPerfixMenu', () => {
+    props.context.escstack.save('showCutoutPerfixMenu', () => {
         const achieve = showCutoutPerfix.value;
         showCutoutPerfix.value = false;
         return achieve;
@@ -72,7 +72,7 @@ const showCutoutFormatMenu = () => {
     formatMenuItems = props.formatItems;
     showCutoutFormat.value = true;
 
-    props.context.esctask.save('showCutoutFormatMenu', () => {
+    props.context.escstack.save('showCutoutFormatMenu', () => {
         const achieve = showCutoutFormat.value;
         showCutoutFormat.value = false;
         return achieve;

@@ -144,7 +144,7 @@ function modify_cursor() {
 function switch_to_clip_mode() {
     props.context.path.reset();
     clip_mode.value = true;
-    props.context.esctask.save('clip-to-auto', quit);
+    props.context.escstack.save('clip-to-auto', quit);
 }
 
 function quit() {

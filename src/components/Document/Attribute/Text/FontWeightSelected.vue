@@ -30,7 +30,7 @@ const showWeightList = () => {
     getFontWeightList(props.fontName);
     transTop();
     isSelectList.value = true;
-    props.context.esctask.save('showWeightList', () => {
+    props.context.escstack.save('showWeightList', () => {
         const achieve = isSelectList.value;
         isSelectList.value = false;
         return achieve;

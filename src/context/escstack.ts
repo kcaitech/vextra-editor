@@ -1,17 +1,18 @@
-import {WatchableObject} from "@kcdesign/data";
+import { IEscStack } from "@/openapi";
+
 
 interface EscItem {
     key: string
-    task: Function
+    task: () => boolean
 }
 
-export class EscStack extends WatchableObject {
+export class EscStack implements IEscStack {
     private m_stack_map: Map<string, EscItem> = new Map();
 
-    constructor() {
-        super();
-    }
-    save(key: string, call: Function) {
+    // constructor() {
+    //     super();
+    // }
+    save(key: string, call: () => boolean) {
         if (this.m_stack_map.has(key)) { // 先删后加，保持先来的后出
             this.m_stack_map.delete(key);
         }
@@ -36,12 +37,13 @@ export class EscStack extends WatchableObject {
         }
     }
 
-    clear_stack() {
+    clear() {
         const queue = Array.from(this.m_stack_map.values());
         while (queue.length) {
             const f = queue.pop()?.task;
             if (typeof f !== 'function') continue;
             f();
         }
+        this.m_stack_map.clear();
     }
 }

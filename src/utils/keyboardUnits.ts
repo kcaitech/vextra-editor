@@ -704,10 +704,10 @@ keydownHandler['NumpadEnter'] = function (event: KeyboardEvent, context: Context
 keydownHandler['Escape'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     if (event.shiftKey) {
-        context.esctask.clear_stack.call(context.esctask);
+        context.escstack.clear();
         return;
     }
-    context.esctask.execute.call(context.esctask);
+    context.escstack.execute();
 }
 
 keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) {

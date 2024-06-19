@@ -33,7 +33,7 @@ const compsDialog = () => {
         comps_posi.value.y = el.y;
     }
     showCompsDialog.value = true;
-    props.context.esctask.save(v4(), de_symbol_is_show);
+    props.context.escstack.save(v4(), de_symbol_is_show);
 }
 const closeDialog = () => {
     showCompsDialog.value = false;

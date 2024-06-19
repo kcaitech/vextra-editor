@@ -2,6 +2,7 @@ import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { Comment } from "./comment";
 import { v4 as uuid } from "uuid"
+import { ContextEvents } from "..";
 
 const _uuid = '-E9BB37D8-8853-D650-4EF1-ACCF4E2D4BE5'
 
@@ -84,30 +85,28 @@ export class Tool extends WatchableObject {
 
     setAction(uuid: string) {
         this.m_current_action = uuid;
-        if (uuid.startsWith('add')) {
-            this.m_context.menu.menuMount();
-
-            this.m_context.esctask.save('tool-action', this.reset.bind(this));
-
-            // if (action === Action.AddComment) {
-            //     if (this.m_context.workspace.documentPerm === 1) {
-            //         return;
-            //     }
-            //     this.m_context.comment.commentInput(false);
-            //     this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-            //     this.m_context.cursor.setType('comment', 0);
-            // } else 
-            if (uuid === Action.Pen) {
-                this.m_context.cursor.setType('pen', 0);
-            } else {
-                this.m_context.cursor.setType('cross', 0);
-            }
-
-        } else {
-            this.m_context.cursor.reset();
-        }
+        // 各功能各自控制
+        // if (uuid.startsWith('add')) {
+        //     this.m_context.menu.menuMount();
+        //     this.m_context.escstack.save('tool-action', this.reset.bind(this));
+        //     // if (action === Action.AddComment) {
+        //     //     if (this.m_context.workspace.documentPerm === 1) {
+        //     //         return;
+        //     //     }
+        //     //     this.m_context.comment.commentInput(false);
+        //     //     this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
+        //     //     this.m_context.cursor.setType('comment', 0);
+        //     // } else if (uuid === Action.Pen) {
+        //         this.m_context.cursor.setType('pen', 0);
+        //     } else {
+        //         this.m_context.cursor.setType('cross', 0);
+        //     }
+        // } else {
+        //     this.m_context.cursor.reset();
+        // }
 
         this.notify(Tool.CHANGE_ACTION);
+        this.m_context.notify(ContextEvents.action_change)
     }
 
     reset() {
@@ -118,6 +117,7 @@ export class Tool extends WatchableObject {
         this.m_current_action = Action.AutoV;
         this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
+        this.m_context.notify(ContextEvents.action_change)
         return exe_result;
     }
 

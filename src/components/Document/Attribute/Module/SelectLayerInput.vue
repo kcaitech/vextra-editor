@@ -51,7 +51,7 @@ const showSelectLayer = (e: MouseEvent) => {
     }
 
     isselectLayer.value = true;
-    props.context.esctask.save(v4(), de_show_select_layer);
+    props.context.escstack.save(v4(), de_show_select_layer);
 }
 
 function de_show_select_layer() {

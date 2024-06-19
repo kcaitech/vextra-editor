@@ -52,7 +52,7 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
 function edit_visible() {
     get_dialog_posi(card_ref.value);
     iseditLayerShow.value = true;
-    props.context.esctask.save(v4(), de_layer_is_show);
+    props.context.escstack.save(v4(), de_layer_is_show);
 }
 
 function de_layer_is_show() {

@@ -144,7 +144,7 @@ function updateData() {
 const showPreinstall = () => {
     if (isPreinstall.value) return isPreinstall.value = false;
     isPreinstall.value = true;
-    props.context.esctask.save('showPreinstall', () => {
+    props.context.escstack.save('showPreinstall', () => {
         const achieve = isPreinstall.value;
         isPreinstall.value = false;
         return achieve;
