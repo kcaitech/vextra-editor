@@ -5,7 +5,6 @@ import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
-import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
