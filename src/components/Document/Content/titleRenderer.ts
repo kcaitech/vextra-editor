@@ -61,8 +61,20 @@ export class TitleRenderer {
         this.m_title_map.set(shape.id, titleCtx);
     }
 
+    /**
+     * @description 修改容器标题的transform以及内容
+     * @param titleCtx
+     * @private
+     */
     private modifyTransformStr(titleCtx: TitleAttri) {
         const { shape } = titleCtx;
+
+        {
+            // reset
+            titleCtx.name = shape.name;
+            titleCtx.width = 10;
+            titleCtx.transform = '';
+        }
 
         const { width, height } = shape.size;
 
@@ -204,6 +216,12 @@ export class TitleRenderer {
                 distance: 20,
             });
 
+
+        titleCtx.width = Math.hypot(xAxis[1].x - xAxis[0].x, xAxis[1].y - xAxis[0].y);
+        if (titleCtx.width < 10) {
+            titleCtx.width = 10;
+            titleCtx.name = '...'
+        }
         titleCtx.transform = makeMatrixByTransform2(OT).toString();
     }
 
@@ -295,7 +313,7 @@ export class TitleRenderer {
             if (!added.has(shape.id)) this.generate(shape);
         });
 
-        console.log('__TITLE_LAYOUT_FINISH__', URCM.size, this.m_title_map.size, this.m_title_list);
+        // console.log('__TITLE_LAYOUT_FINISH__', URCM.size, this.m_title_map.size, this.m_title_list);
     }
 
     clearContainerWatcher() {

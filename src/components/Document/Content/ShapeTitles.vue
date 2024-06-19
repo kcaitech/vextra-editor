@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, computed, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { PageView, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -38,17 +38,14 @@ function selectionWatcher(t: number) {
 }
 
 const rename = (value: string, shape: ShapeView) => {
-    const editor = computed(() => {
-        return props.context.editor4Shape((shape));
-    });
-    editor.value.setName(value)
+    props.context.editor4Shape((shape)).setName(value)
     props.context.selection.rename();
 }
 
 function hover(shape: ShapeView) {
     const page = props.data;
-    const s = page.data.artboards.get(shape.id);
-    const _s = s && page.getShape(s.id);
+
+    const _s = page.getShape(shape.id);
     if (_s) {
         props.context.selection.hoverShape(_s);
     }
@@ -90,11 +87,11 @@ onUnmounted(() => {
         >
             <ArtboardName
                 :context="props.context"
-                :name="title.name"
-                :index="index"
-                :maxWidth="title.width"
                 :shape="title.shape as ShapeView"
-                :selected="title.active"
+
+                :name="title.name"
+                :width="title.width"
+                :active="title.active"
 
                 @rename="rename"
                 @hover="hover"

@@ -5,14 +5,13 @@ import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
 import { Perm } from '@/context/workspace';
-import { forbidden_to_modify_frame } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 
 const props = defineProps<{
     name: string,
-    maxWidth: number,
+    width: number,
     shape: ShapeView,
-    selected: boolean,
+    active: boolean,
     context: Context
 }>()
 
@@ -22,9 +21,9 @@ const emit = defineEmits<{
     (e: 'leave'): void
 }>()
 
-const isInput = ref<boolean>(false)
-const nameInput = ref<HTMLInputElement | null>(null)
-const inputSpan = ref<HTMLSpanElement>()
+const isInput = ref<boolean>(false);
+const nameInput = ref<HTMLInputElement>();
+const inputSpan = ref<HTMLSpanElement>();
 const esc = ref<boolean>(false)
 const inputWidth = ref(5)
 const hover = ref(false)
@@ -41,15 +40,18 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (!nameInput.value) {
-           return;
+            return;
         }
+
         if (inputSpan.value) {
             inputSpan.value.innerHTML = props.name
             inputWidth.value = inputSpan.value.offsetWidth + 5
         }
         (nameInput.value as HTMLInputElement).value = props.name.trim();
+
         nameInput.value.focus();
         nameInput.value.select();
+
         nameInput.value?.addEventListener('blur', stopInput);
         nameInput.value?.addEventListener('keydown', keySaveInput);
     })
@@ -125,14 +127,19 @@ function down(e: MouseEvent) {
         }
 
         e.stopPropagation();
-        context.selection.selectShape(props.shape);
 
-        if (context.tool.isLable || forbidden_to_modify_frame(props.shape)) {
+        if (e.shiftKey) {
+            context.selection.rangeSelectShape([...context.selection.selectedShapes, props.shape]);
+        } else {
+            context.selection.selectShape(props.shape);
+        }
+
+        if (context.tool.isLable) {
             return;
         }
 
         startPosition = { x: e.x, y: e.y };
-        transporter = new TranslateHandler(props.context, e, [props.shape],);
+        transporter = new TranslateHandler(props.context, e, context.selection.selectedShapes,);
 
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
@@ -187,14 +194,37 @@ function windowBlur() {
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
-         @mousemove="move2" data-area="controller">
-        <div v-if="!isInput" class="name" :class="{ selected, active: hover }"
-             :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">{{ props.name }}
+    <div
+        class="container-name"
+        data-area="controller"
+        @mouseenter="hoverShape"
+        @mouseleave="unHoverShape"
+        @mousedown="down"
+        @mousemove="move2"
+    >
+        <div
+            v-if="!isInput"
+            class="name"
+            :class="{ selected: active, active: hover }"
+            :style="{ maxWidth: props.width + 'px' }"
+            @dblclick="onRename"
+        >{{ props.name }}
         </div>
-        <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousedown.stop>
-        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0;" ref="inputSpan"></span>
+        <input
+            v-if="isInput"
+            ref="nameInput"
+            type="text"
+            :style="{ maxWidth: props.width + 'px' }"
+            class="rename"
+            @input="onInputName"
+            @change="ChangeReName"
+            @mousedown.stop
+        />
+        <span
+            v-if="isInput"
+            ref="inputSpan"
+            style="position: absolute; visibility: hidden;  top: 0;"
+        />
     </div>
 </template>
 
@@ -210,9 +240,9 @@ function windowBlur() {
         text-overflow: ellipsis;
         white-space: nowrap;
 
-        padding-left: 2px;
+        padding: 0 2px;
         background-color: transparent;
-        //background-color: rgba(255, 255, 0, 0.25);
+        //background-color: red;
         color: #bbb;
     }
 
