@@ -3,6 +3,7 @@ import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
 import { IWorkspace } from "./workspace";
+import { IToolBox } from "./toolbox";
 // import { Selection } from "@/context/selection";
 
 // export interface Rect {
@@ -37,4 +38,6 @@ export interface IContext extends IWatchable {
     get workspace(): IWorkspace;
     get escstack(): IEscStack;
     // setEscstack(stack: EscStack): void;
+
+    get toolbox(): IToolBox;
 }

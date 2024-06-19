@@ -35,7 +35,7 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
-import { DocumentProps, INet } from "@/openapi";
+import { DocumentProps, INet, IToolBox } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
 import { IContext } from "@/openapi";
@@ -151,6 +151,9 @@ export class Context extends WatchableObject implements IContext {
         this.m_user = new User();
         this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
+    }
+    get toolbox(): IToolBox {
+        return this.selection; // todo
     }
 
     get escstack(): EscStack {

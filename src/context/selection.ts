@@ -27,7 +27,7 @@ import {
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
-import { scout, Scout } from "@/utils/scout";
+import { scout, IScout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 // import { router } from "@/router";
@@ -106,7 +106,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private m_selectShapes: ShapeView[] = [];
     private m_hoverShape?: ShapeView;
     private m_document: Document;
-    private m_scout: Scout | undefined;
+    private m_scout: IScout | undefined;
     private m_tableselection: TableSelection;
     private m_textselection: TextSelectionLite;
 
@@ -139,7 +139,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }); // 表格选区
     }
 
-    get scout(): Scout {
+    get scout(): IScout {
         return this.m_scout!;
     }
 

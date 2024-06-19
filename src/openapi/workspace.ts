@@ -14,8 +14,10 @@ export interface IWorkspace extends IWatchable {
      */
     get element(): HTMLElement | undefined;
 
+    get curScale(): number;
+
     translate(x: number, y: number): void;
-    scale(sx: number, sy: number): void;
+    scale(ratio: number): void;
     doc2view(point: {
         x: number;
         y: number;

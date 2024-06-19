@@ -11,15 +11,8 @@ import {
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
-
-export interface Scout {
-    path: SVGPathElement
-    remove: () => void
-    isPointInShape: (shape: ShapeView, point: PageXY) => boolean
-    isPointInPath: (d: string, point: PageXY) => boolean
-    isPointInStroke: (d: string, point: PageXY) => boolean
-    isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
-}
+import { IScout as Scout } from "@/openapi";
+export { IScout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -44,7 +37,7 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        const scale = context.workspace.matrix.m00;
+        const scale = context.workspace.curScale;
 
         let stroke = 14 / scale;
 
@@ -572,7 +565,7 @@ function get_max_thickness_border(shape: ShapeView) {
 
 /**
  * @description 图形检索规则以及实现 2
- * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
+ * @param { IScout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
  * @param { ShapeView[] } scope 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } hot 一个点，在root坐标系上的点
  * @param { ShapeView[] } selected 已选图层

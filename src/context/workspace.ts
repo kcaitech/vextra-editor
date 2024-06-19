@@ -77,12 +77,15 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
+    get curScale(): number {
+        return this.matrix.m00;
+    }
     translate(x: number, y: number): void {
         this.m_matrix.trans(x, y);
         this.notify(WorkSpace.MATRIX_TRANSFORMATION)
     }
-    scale(sx: number, sy: number): void {
-        this.m_matrix.scale(sx, sy);
+    scale(ratio: number): void {
+        this.m_matrix.scale(ratio, ratio);
         this.notify(WorkSpace.MATRIX_TRANSFORMATION)
     }
     doc2view(point: { x: number; y: number; }): { x: number; y: number; };
