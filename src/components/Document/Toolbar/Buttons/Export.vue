@@ -11,15 +11,17 @@ const props = defineProps<{
     context: Context,
     params: {
         active: boolean,
+        select: (action: string) => void
     }
 }>();
 
-const emit = defineEmits<{
-    (e: "select", action: string): void;
-}>();
+// const emit = defineEmits<{
+//     (e: "select", action: string): void;
+// }>();
 const exportClick = () => {
     props.context.menu.setExportDialog(true);
-    emit('select', Action.Export);
+    // emit('select', Action.Export);
+    props.params.select(Action.Export)
 }
 
 </script>

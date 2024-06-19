@@ -9,13 +9,15 @@ const props = defineProps<{
   context: Context,
   params: {
     active: boolean,
+    select: (action: string) => void
   }
 }>();
-const emit = defineEmits<{
-  (e: "select", action: string): void;
-}>();
+// const emit = defineEmits<{
+//   (e: "select", action: string): void;
+// }>();
 function select(action: string) {
-  emit('select', action);
+  // emit('select', action);
+  props.params.select(action)
 }
 </script>
 <template>

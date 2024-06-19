@@ -18,6 +18,7 @@ export interface IEscStack {
 }
 
 export interface IContext {
+    get storage(): Map<string, any>;
     get data(): Document;
     get pluginsMgr(): IPluginsMgr;
     setNet(net: INet): void;

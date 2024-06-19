@@ -11,12 +11,13 @@ type Button = InstanceType<typeof ToolButton>
 interface Props {
     context: Context;
     params: {
-        active: boolean;
+        active: boolean,
+        select: (action: string) => void
     }
 }
-interface Emits {
-    (e: "select", action: string): void;
-}
+// interface Emits {
+//     (e: "select", action: string): void;
+// }
 
 const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
 
@@ -32,42 +33,43 @@ const framesChild = [
 
 const { t } = useI18n();
 const props = defineProps<Props>();
-const emits = defineEmits<Emits>();
+// const emits = defineEmits<Emits>();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
 const frame = ref<HTMLDivElement>();
 const hoverIndex = ref<number>(-1);
 
-function showMenu(e: MouseEvent) {
-    if (popoverVisible.value) {
-        return popoverVisible.value = false;
-    }
+// function showMenu(e: MouseEvent) {
+//     if (popoverVisible.value) {
+//         return popoverVisible.value = false;
+//     }
 
-    if (button.value?.toolButtonEl) {
-        const el = button.value?.toolButtonEl;
-        popoverVisible.value = true;
-        nextTick(() => {
-            if (popover.value) {
-                popover.value.style.left = el.offsetLeft + 'px';
-                popover.value.style.top = el.offsetHeight + 13 + 'px';
-            }
-        })
-        document.addEventListener('click', onMenuBlur);
-    }
+//     if (button.value?.toolButtonEl) {
+//         const el = button.value?.toolButtonEl;
+//         popoverVisible.value = true;
+//         nextTick(() => {
+//             if (popover.value) {
+//                 popover.value.style.left = el.offsetLeft + 'px';
+//                 popover.value.style.top = el.offsetHeight + 13 + 'px';
+//             }
+//         })
+//         document.addEventListener('click', onMenuBlur);
+//     }
 
-    emits('select', Action.AutoV);
-}
+//     // emits('select', Action.AutoV);
+//     props.params.select(Action.AutoV);
+// }
 
-function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu-f')) {
-        var timer = setTimeout(() => {
-            popoverVisible.value = false;
-            clearTimeout(timer)
-            document.removeEventListener('click', onMenuBlur);
-        }, 10)
-    }
-}
+// function onMenuBlur(e: MouseEvent) {
+//     if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu-f')) {
+//         var timer = setTimeout(() => {
+//             popoverVisible.value = false;
+//             clearTimeout(timer)
+//             document.removeEventListener('click', onMenuBlur);
+//         }, 10)
+//     }
+// }
 
 const left = ref(0)
 const showChildFrame = (i: number) => {
@@ -85,7 +87,8 @@ const closeFrame = () => {
     hoverIndex.value = -1
 }
 const customFrame = () => {
-    emits('select', Action.AddFrame);
+    // emits('select', Action.AddFrame);
+    props.params.select(Action.AddFrame);
     popoverVisible.value = false;
 }
 </script>
@@ -93,7 +96,7 @@ const customFrame = () => {
 <template>
     <ToolButton ref="button" :selected="props.params.active" style="width: 32px">
         <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
-            <div class="svg-container" @click="() => { emits('select', Action.AddFrame) }">
+            <div class="svg-container" @click="() => props.params.select(Action.AddFrame)">
                 <svg-icon icon-class="frame"></svg-icon>
             </div>
         </Tooltip>

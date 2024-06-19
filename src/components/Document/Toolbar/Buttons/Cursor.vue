@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, nextTick, onUpdated } from 'vue';
+// import { ref, nextTick, onUpdated } from 'vue';
 import ToolButton from './ToolButton.vue';
 import { Action } from "@/context/tool";
-import DropSelect from "./DropSelect.vue"
+// import DropSelect from "./DropSelect.vue"
 import { useI18n } from 'vue-i18n'
 import { Context } from '@/context';
 const { t } = useI18n()
-type Button = InstanceType<typeof ToolButton>
+// type Button = InstanceType<typeof ToolButton>
 
 // const popoverVisible = ref<boolean>(false);
 // const popover = ref<HTMLDivElement>();
@@ -20,14 +20,16 @@ const props = defineProps<{
     active: boolean,
     // d: string,
     is_lable: boolean,
-    edit: boolean
+    edit: boolean,
+    select: (action: string) => void
   }
 }>();
-const emit = defineEmits<{
-  (e: "select", action: string): void;
-}>();
+// const emit = defineEmits<{
+//   (e: "select", action: string): void;
+// }>();
 function select() {
-  emit('select', Action.AutoV);
+  // emit('select', Action.AutoV);
+  props.params.select(Action.AutoV)
 }
 
 </script>

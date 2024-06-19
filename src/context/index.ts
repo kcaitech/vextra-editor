@@ -40,7 +40,7 @@ import { Attribute } from "./atrribute";
 import { DocumentProps, INet } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
-import { IContext, IEscStack, Rect } from "@/openapi/context";
+import { IContext, IEscStack } from "@/openapi/context";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -89,7 +89,7 @@ export class Context extends WatchableObject implements IContext {
     // storage的key可以用组件路径也可用uuid等唯一标识
     // eventid同上，需要个唯一前缀。
     // 做到不同功能的组件之间可以完全解耦合
-    // public storage: Map<string, any> = new Map();
+    public storage: Map<string, any> = new Map();
 
     private m_data: Document;
     private m_editor: Editor;

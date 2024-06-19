@@ -9,7 +9,8 @@ const { t } = useI18n()
 interface Props {
   context: Context,
   params: {
-    active: boolean
+    active: boolean,
+    select: (action: string) => void
   }
 }
 type Button = InstanceType<typeof ToolButton>;
@@ -18,11 +19,12 @@ const button = ref<Button>();
 const visible = ref(false);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const emit = defineEmits<{
-  (e: "select", action: string): void;
-}>();
+// const emit = defineEmits<{
+//   (e: "select", action: string): void;
+// }>();
 function select(action: string) {
-  emit('select', action);
+  // emit('select', action);
+  props.params.select(action)
 }
 
 function showTable(e: MouseEvent) {

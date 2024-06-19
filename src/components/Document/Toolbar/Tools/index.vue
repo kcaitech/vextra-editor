@@ -114,7 +114,8 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.AddFrame
-                    }
+                    },
+                    select,
                 }
             },
             { component: PathShape },
@@ -123,7 +124,8 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.AddText
-                    }
+                    },
+                    select,
                 }
             },
             {
@@ -139,21 +141,26 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.AddTable
-                    }
+                    },
+                    select,
                 }
             },
             {
-                component: Contact, params: {
+                component: Contact,
+                params: {
                     get active() {
                         return selected.value === Action.AddContact
-                    }
+                    },
+                    select
                 }
             },
             {
-                component: Cutout, params: {
+                component: Cutout,
+                params: {
                     get active() {
                         return selected.value === Action.AddCutout
-                    }
+                    },
+                    select
                 }
             },
             { component: VertLine }
@@ -174,7 +181,8 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.Export
-                    }
+                    },
+                    select
                 }
             })
     }
@@ -216,11 +224,11 @@ updateDevComps()
 
 <template>
     <!-- 正常工具栏 --><!-- 可编辑或者只读 -->
-    <div v-if="!isLable" class="editor-tools" @dblclick.stop>
+    <div v-if="!isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
     <!-- 开发模式 --><!-- 可编辑或者只读 -->
-    <div v-if="isLable" class="editor-tools" @dblclick.stop>
+    <div v-if="isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params" />
     </div>
 
