@@ -10,12 +10,15 @@ import {
 } from "@kcdesign/data";
 import { isShapeOut } from "@/utils/assist";
 import { cursorAngle } from "@/components/Document/Selection/common";
+import { markRaw } from "vue";
 
 export interface TitleAttri {
     id: string;
+
+    shape: ShapeView;
+
     name: string;
     width: number;
-    shape: ShapeView;
     active: boolean;
     transform: string;
 }
@@ -267,7 +270,7 @@ export class TitleRenderer {
         URCM.clear();
 
         for (let i = children.length - 1; i > -1; i--) {
-            const c = children[i];
+            const c = markRaw(children[i]);
 
             if (!c.isContainer) {
                 continue;
@@ -312,8 +315,6 @@ export class TitleRenderer {
         URCM.forEach((shape) => {
             if (!added.has(shape.id)) this.generate(shape);
         });
-
-        // console.log('__TITLE_LAYOUT_FINISH__', URCM.size, this.m_title_map.size, this.m_title_list);
     }
 
     clearContainerWatcher() {

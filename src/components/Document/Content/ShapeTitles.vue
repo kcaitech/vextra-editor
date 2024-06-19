@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, watch } from "vue";
 import { Context } from "@/context";
 import { PageView, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -13,8 +13,8 @@ const props = defineProps<{
 }>()
 
 
-const titlesList = ref<TitleAttri[]>([]);
-const titleRenderer = new TitleRenderer(props.context, titlesList.value as TitleAttri[]);
+const titlesList = reactive<TitleAttri[]>([]);
+const titleRenderer = new TitleRenderer(props.context, titlesList as TitleAttri[]);
 
 function pageWatcher(...args: any[]) {
     if (args.length === 1 && args[0] === 'childs') {

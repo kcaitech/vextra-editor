@@ -131,7 +131,9 @@ function down(e: MouseEvent) {
         if (e.shiftKey) {
             context.selection.rangeSelectShape([...context.selection.selectedShapes, props.shape]);
         } else {
-            context.selection.selectShape(props.shape);
+            if (!context.selection.isSelectedShape(props.shape)) {
+                context.selection.selectShape(props.shape);
+            }
         }
 
         if (context.tool.isLable) {

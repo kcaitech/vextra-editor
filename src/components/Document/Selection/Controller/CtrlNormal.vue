@@ -161,13 +161,13 @@ onUnmounted(() => {
          viewBox="0 0 100 100"
          width="100"
          height="100"
-         :class="{ hidden: selection_hidden }"
          overflow="visible"
+         :class="{ hidden: selection_hidden }"
          @mousedown="mousedown"
          @mouseenter="mouseenter"
          @mouseleave="mouseleave"
     >
-<!--        <ShapesStrokeContainer :context="props.context"/>-->
+        <ShapesStrokeContainer :context="props.context"/>
         <BarsContainer
             v-if="partVisible"
             :context="props.context"
