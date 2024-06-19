@@ -211,8 +211,8 @@ function windowBlur() {
         white-space: nowrap;
 
         padding-left: 2px;
-        //background-color: transparent;
-        background-color: rgba(255, 255, 0, 0.25);
+        background-color: transparent;
+        //background-color: rgba(255, 255, 0, 0.25);
         color: #bbb;
     }
 
