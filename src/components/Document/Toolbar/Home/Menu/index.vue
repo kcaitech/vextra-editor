@@ -6,7 +6,7 @@ import { XY } from '@/context/selection';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ExportVue from "./Export.vue"
 import ViewVue from "./View.vue"
-import GuideVue from "./Guide.vue"
+// import GuideVue from "./Guide.vue"
 
 const { t } = useI18n();
 
@@ -73,7 +73,7 @@ function onMenuBlur(e: MouseEvent) {
 const plugins = props.context.pluginsMgr.search2('toolbar.home.menu');
 const comps: { component: any, params?: any }[] = []
 comps.push(...plugins.begin)
-comps.push({ component: ExportVue }, { component: ViewVue }, { component: GuideVue })
+comps.push({ component: ExportVue }, { component: ViewVue })
 comps.push(...plugins.end)
 
 function close() {
