@@ -221,10 +221,10 @@ export class Clipboard {
         for (let i = 0, len = _shapes.length; i < len; i++) {
             const shape = _shapes[i];
             const root_frame = position_map.get(shape.id);
-            if (root_frame) {
-                shape.frame.x = root_frame.x;
-                shape.frame.y = root_frame.y;
-            }
+            // if (root_frame) {
+            //     shape.size.x = root_frame.x;
+            //     shape.size.y = root_frame.y;
+            // }
 
             const points = points_map.get(shape.id);
             if (points) {
@@ -1017,14 +1017,14 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
                 insert_env = get_env_by_xy(context, xy);
             } else {
-                const box = get_source_box(source);
-                if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                    const wpc = context.workspace.center_on_page;
-                    box.x = wpc.x - box.width / 2;
-                    box.y = wpc.y - box.height / 2;
-                    modify_frame_by_xy(box, source);
-                }
-                insert_env = get_env_by_box(context, box);
+                // const box = get_source_box(source);
+                // if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                //     const wpc = context.workspace.center_on_page;
+                //     box.x = wpc.x - box.width / 2;
+                //     box.y = wpc.y - box.height / 2;
+                //     modify_frame_by_xy(box, source);
+                // }
+                // insert_env = get_env_by_box(context, box);
             }
         }
 
