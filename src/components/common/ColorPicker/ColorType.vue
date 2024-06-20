@@ -51,7 +51,7 @@ onMounted(() => {
         <div class="item" v-if="imageScaleMode"
             @click.stop="() => { emits('change', gradient_type || GradientType.Linear, FillType.Pattern) }"
             :class="{ selected: fillType === FillType.Pattern }">
-            <svg-icon icon-class="fill-image" style="width: 14px; height: 14px;"></svg-icon>
+            <svg-icon icon-class="fill-image" style="width: 15px; height: 15px;"></svg-icon>
         </div>
     </div>
 </template>

@@ -47,6 +47,8 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
         const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue, fill.fillType].join('-');
         if (fill.fillType === FillType.Pattern) {
             image_str.push(get_image_str(fill));
+        } else {
+            image_str.push('undefined');
         }
         if (fill.gradient) {
             const g_str = get_gradient_str(fill.gradient);
@@ -92,7 +94,7 @@ function get_gradient_str(g: Gradient) {
 }
 
 function get_image_str(fill: Fill) {
-    const str = [fill.imageRef, fill.scale, fill.rotation, fill.originalImageWidth, fill.originalImageHeight, fill.transform];
+    const str = [fill.imageRef, fill.scale, fill.rotation, fill.originalImageWidth, fill.originalImageHeight, fill.transform, fill.imageScaleMode];
     if (fill.paintFilter) {
         const filter = fill.paintFilter;
         str.push(filter.contrast, filter.exposure, filter.hue, filter.saturation, filter.shadow, filter.temperature, filter.tint);
