@@ -3,7 +3,7 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action, ResultByAction } from "@/context/tool";
 import {
-    Color,
+    Color, ColVector3D,
     ContactForm,
     ContactLineView,
     CreatorApiCaller,
@@ -14,7 +14,7 @@ import {
     Matrix,
     ShapeFrame,
     ShapeType,
-    ShapeView
+    ShapeView, Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
@@ -265,25 +265,21 @@ export class CreatorExecute extends TransformHandler {
         frame.x = fixedPoint.x;
         frame.y = fixedPoint.y;
 
-        const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3(frame);
-        frame.x = xy.x;
-        frame.y = xy.y;
-
         frame.width = 1;
         frame.height = 1;
 
-        const transform = this.getTransform();
         const namePrefix = this.workspace.t(`shape.${ShapeType.Contact}`);
+
+        const targetTransform = this.getTargetTransform(this.downEnv, frame);
 
         const params: GeneratorParams = {
             parent: this.downEnv as GroupShapeView,
             frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
             type: ShapeType.Contact,
-            transform,
             namePrefix,
             isFixedRatio: this.shiftStatus,
-            shape: this.shape
+            shape: this.shape,
+            transform2: targetTransform
         };
 
         params.apex = apex;
@@ -362,26 +358,22 @@ export class CreatorExecute extends TransformHandler {
             frame.width = 1;
             frame.height = 1;
 
-            const m = new Matrix(this.downEnv.matrix2Root().inverse);
-            const xy = m.computeCoord3(frame);
-            frame.x = xy.x;
-            frame.y = xy.y;
-
-            const transform = this.getTransform();
 
             if (!this.namePrefix) {
                 this.namePrefix = this.workspace.t(`shape.${type}`);
             }
             const namePrefix = this.namePrefix!;
 
+            const targetTransform = this.getTargetTransform(this.downEnv, frame);
+
             const params: GeneratorParams = {
                 parent: this.downEnv as GroupShapeView,
                 frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
                 type,
-                transform,
                 namePrefix,
                 isFixedRatio: false,
-                shape: this.shape
+                shape: this.shape,
+                transform2: targetTransform
             };
 
             if (this.action === Action.AddArrow) {
@@ -521,31 +513,9 @@ export class CreatorExecute extends TransformHandler {
         frame.width = right - left;
         frame.height = bottom - top;
 
+        const targetTransform = this.getTargetTransform(this.downEnv, frame);
+
         this.fixedByUserConfig();
-
-        const transform = this.getTransform();
-
-        if (transform.rotation || transform.flipV || transform.flipH) {
-            const target = this.downEnv.matrix2Root().inverseCoord(frame);
-
-            const m = new Matrix();
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-            m.trans(-cx, -cy);
-            if (transform.rotation) m.rotate(transform.rotation / 360 * 2 * Math.PI);
-            if (transform.flipH) m.flipHoriz();
-            if (transform.flipV) m.flipVert();
-            m.trans(cx, cy);
-            m.trans(frame.x, frame.y);
-
-            const current = m.computeCoord2(0, 0);
-            frame.x += (target.x - current.x);
-            frame.y += (target.y - current.y);
-        } else {
-            const target = this.downEnv.matrix2Root().inverseCoord(frame);
-            frame.x = target.x;
-            frame.y = target.y;
-        }
 
         const type = ResultByAction(this.action);
 
@@ -563,10 +533,10 @@ export class CreatorExecute extends TransformHandler {
             parent: this.downEnv as GroupShapeView,
             frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
             type,
-            transform,
             namePrefix,
             isFixedRatio: this.shiftStatus,
-            shape: this.shape
+            shape: this.shape,
+            transform2: targetTransform
         };
 
         if (type === ShapeType.Text) {
@@ -590,6 +560,23 @@ export class CreatorExecute extends TransformHandler {
         }
     }
 
+    private getTargetTransform(env: ShapeView, frame: ShapeFrame) {
+        const envFromRoot = env.transform2FromRoot.clone();
+
+        const selectionTransform = new Transform()
+            .setTranslate(ColVector3D.FromXY(frame.x, frame.y));
+
+        const targetTransform = selectionTransform
+            .addTransform(envFromRoot.getInverse());
+
+        const scale = targetTransform.decomposeScale();
+
+        frame.width = frame.width * Math.abs(scale.x);
+        frame.height = frame.height * Math.abs(scale.y);
+
+        return targetTransform.clearScaleSize();
+    }
+
     private fixedByUserConfig() {
         const align = this.alignPixel;
 
@@ -610,65 +597,6 @@ export class CreatorExecute extends TransformHandler {
         }
     }
 
-    private getTransform() {
-        const result = { flipH: false, flipV: false, rotation: 0 };
-        const env: ShapeView = this.downEnv;
-
-        // flip
-        let ohflip = false;
-        let ovflip = false;
-
-        // todo flip
-        // let p: ShapeView | undefined = env;
-        // while (p) {
-        //     if (p.isFlippedHorizontal) {
-        //         ohflip = !ohflip;
-        //     }
-        //     if (p.isFlippedVertical) {
-        //         ovflip = !ovflip;
-        //     }
-        //     p = p.parent;
-        // }
-
-        result.flipH = ohflip;
-        result.flipV = ovflip;
-
-        // rotate
-        const pm = env.matrix2Root();
-        const pminverse = pm.inverse;
-
-        const m = new Matrix(pminverse);
-
-        let sina = m.m10;
-        let cosa = m.m00;
-
-        if (result.flipH) sina = -sina;
-        if (result.flipV) cosa = -cosa;
-
-        let rotate = Math.asin(sina);
-
-        if (cosa < 0) {
-            if (sina > 0) rotate = Math.PI - rotate;
-            else if (sina < 0) rotate = -Math.PI - rotate;
-            else rotate = Math.PI;
-        }
-
-        if (!Number.isNaN(rotate)) {
-            result.rotation = (rotate / (2 * Math.PI) * 360) % 360;
-        }
-
-        if (result.flipH) {
-            result.rotation = result.rotation - 180;
-        }
-        if (result.flipV) {
-            result.rotation = result.rotation - 180;
-        }
-
-        result.rotation %= 360;
-
-        return result;
-    }
-
     private createImmediate() {
         const action = this.action;
 
@@ -676,12 +604,14 @@ export class CreatorExecute extends TransformHandler {
             this.createApiCaller();
         }
 
+        const env = this.downEnv as GroupShapeView;
         const frame = this.frame;
 
-        const m = new Matrix(this.downEnv.matrix2Root().inverse);
-        const xy = m.computeCoord3(this.livingPoint);
+        const xy = { ...this.livingPoint };
         frame.x = xy.x - 50;
         frame.y = xy.y - 50;
+
+        const targetTransform = this.getTargetTransform(env, frame);
 
         this.fixedByUserConfig();
 
@@ -694,13 +624,13 @@ export class CreatorExecute extends TransformHandler {
         const namePrefix = this.workspace.t(`shape.${type}`);
 
         const params: GeneratorParams = {
-            parent: this.downEnv as GroupShapeView,
+            parent: env,
             frame: new ShapeFrame(frame.x, frame.y, frame.width, frame.height),
             type,
-            transform: this.getTransform(),
             namePrefix,
             isFixedRatio: this.shiftStatus,
-            shape: this.shape
+            shape: this.shape,
+            transform2: targetTransform
         };
 
         if (type === ShapeType.Text) {

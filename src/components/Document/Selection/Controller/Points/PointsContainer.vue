@@ -145,7 +145,7 @@ function updateDotLayout() {
     subDots.length = 0;
     const {col0: vecLT, col1: vecRT, col2: vecRB, col3: vecLB} = fromClient.clone()
         .clearTranslate()
-        .clearScale()
+        .clearScaleSize()
         .transform([
             ColVector3D.FromXY(-1, -1),
             ColVector3D.FromXY(1, -1),
