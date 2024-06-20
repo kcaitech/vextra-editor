@@ -1333,7 +1333,8 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         page && context.nextTick(page, () => {
             new_shape && selection.selectShape(page.shapes.get(new_shape.id));
         })
-        context.communication.docResourceUpload.upload((new_shape as ImageShape).imageRef, media.buff.buffer.slice(0));
+        const fills = new_shape.style.getFills();
+        context.communication.docResourceUpload.upload(fills[0].imageRef || '', media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);
     workspace.creating(false);

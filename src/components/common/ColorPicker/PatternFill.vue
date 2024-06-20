@@ -96,10 +96,8 @@ const changePaint = (value: number, type: PaintFilterType) => {
     if (!locat) return;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-    const fills = shapes[0].style.getFills();
-    const _idx = fills.length - locat.index - 1;
     const v = (value - 80) * (type === PaintFilterType.Hue ? 2.25 : 1.25);
-    colorEditor?.executeImageFilter(shapes, type, v, _idx);
+    colorEditor?.executeImageFilter(shapes, type, v, locat.index);
 }
 
 const startChange = (e: MouseEvent) => {

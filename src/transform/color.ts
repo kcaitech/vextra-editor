@@ -18,8 +18,4 @@ export class ColorHandler extends TransformHandler {
     fulfil() {
         super.fulfil();
     }
-
-    executeScale(s: number, index: number) {
-        (this.asyncApiCaller as ColorPicker).executeImageScale(this.shapes, s, index);
-    }
 }

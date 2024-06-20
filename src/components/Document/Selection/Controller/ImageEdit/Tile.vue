@@ -4,8 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { ColorHandler } from '@/transform/color';
-import { get_actions_image_ref } from '@/utils/shape_style';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { ColorPicker, Matrix, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
@@ -24,7 +23,7 @@ const image_width = ref(0);
 const image_height = ref(0);
 const matrix = reactive(new Matrix());
 const transform = ref('');
-let colorEditor: ColorHandler | undefined;
+let colorEditor: ColorPicker | undefined;
 let startPosition: ClientXY = { x: 0, y: 0 };
 const cur_shape = ref<ShapeView>();
 
@@ -35,7 +34,9 @@ const update_frame = () => {
     if (!locat) return;
     const frame = props.context.color.imageOriginFrame;
     if (frame) {
-        const shape = props.context.selection.selectedShapes[0];
+        const shapes = props.context.selection.selectedShapes;
+        if (!shapes.length) return;
+        const shape = shapes[0];
         const scale = props.context.color.imageScale;
         image_width.value = frame.width * (scale || 0.5);
         image_height.value = frame.height * (scale || 0.5);
@@ -50,7 +51,9 @@ const update_frame = () => {
 
 const update_position = () => {
     update_frame();
-    const shape = props.context.selection.selectedShapes[0];
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) return;
+    const shape = shapes[0];
     const m = shape.matrix2Root();
     m.multiAtLeft(matrix as Matrix);
     const trans = m.computeCoord2(0, 0);
@@ -60,16 +63,19 @@ const update_position = () => {
     let flippedX = shape.isFlippedVertical ? 180 : 0;
     transform.value = `translate(${trans.x}px, ${trans.y}px) rotateX(${flippedX}deg) rotateY(${shape.isFlippedHorizontal ? 180 : 0}deg) rotate(${rotate}deg)`
 }
-
-const onMouseDown = (e: MouseEvent, direction: Direction) => {
+let direction = Direction.X;
+const onMouseDown = (e: MouseEvent, d: Direction) => {
     e.stopPropagation();
-    colorEditor = new ColorHandler(props.context, e);
+    direction = d;
+    const page = props.context.selection.selectedPage;
+    if (colorEditor || !page) return;
+    colorEditor = new ColorPicker(props.context.coopRepo, props.context.data, page);
     startPosition = props.context.workspace.getContentXY(e);
-    document.addEventListener('mousemove', (e) => onMouseMove(e, direction));
-    document.addEventListener('mouseup', (e) => onMouseUp(e, direction));
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
 }
 
-const onMouseMove = (e: MouseEvent, direction: Direction) => {
+const onMouseMove = (e: MouseEvent) => {
     e.stopPropagation();
     const workspace = props.context.workspace;
     const { x: sx, y: sy } = startPosition;
@@ -77,9 +83,6 @@ const onMouseMove = (e: MouseEvent, direction: Direction) => {
     if (isDragging) {
         if (!colorEditor) {
             return;
-        }
-        if (!colorEditor.asyncApiCaller) {
-            colorEditor.createApiCaller();
         }
         const locat = props.context.color.locat;
         if (!locat) return;
@@ -94,7 +97,9 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
     if (!locat) return;
 
     const { x, y } = props.context.workspace.getContentXY(e);
-    const shape = props.context.selection.selectedShapes[0];
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) return;
+    const shape = shapes[0];
     const image_frame = props.context.color.imageOriginFrame;
     if (!image_frame) return;
     const fill = shape.style.getFills()[locat.index];
@@ -118,17 +123,17 @@ const setImageScale = (e: MouseEvent, index: number, direction: Direction) => {
         scale = Math.max(trans.x, trans.y);
     }
     if (scale === 0) return;
-    colorEditor?.executeScale(Math.abs(scale), index);
+    colorEditor?.executeImageScale(shapes, Math.abs(scale), index);
     props.context.color.setImageScale(Math.abs(scale));
 }
 
-const onMouseUp = (e: MouseEvent, direction: Direction) => {
+const onMouseUp = (e: MouseEvent) => {
     e.stopPropagation();
     isDragging = false;
-    colorEditor?.fulfil();
+    colorEditor?.commit();
     colorEditor = undefined;
-    document.removeEventListener('mousemove', (e) => onMouseMove(e, direction));
-    document.removeEventListener('mouseup', (e) => onMouseUp(e, direction));
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
 }
 
 const colorWatcher = (t: number) => {
@@ -172,12 +177,10 @@ const editImage = (edit: boolean) => {
     const locat = props.context.color.locat;
     if (!locat) return;
     const shape = cur_shape.value!;
-    const fills = shape.style.getFills();
-    const _idx = fills.length - locat.index - 1;
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        editor.setShapesFillEdit(shape, _idx, edit);
+        editor.setShapesFillEdit(shape, locat.index, edit);
     }
 }
 const selectShape = () => {
