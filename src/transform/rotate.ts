@@ -11,6 +11,7 @@ import {FrameLike, TransformHandler} from "./handler";
 import {XY} from "@/context/selection";
 import {Context} from "@/context";
 import {getHorizontalAngle} from "@/utils/common";
+import { Tool } from "@/context/tool";
 
 type Base4Rotation = {
     XYtoRoot: XY;
@@ -269,6 +270,13 @@ export class RotateHandler extends TransformHandler {
         //     this.__execute4multi();
         // }
 
+
+        // if (this.shapes.length === 1) {
+        //     this.__execute4single();
+        // } else {
+        //     this.__execute4multi();
+        // }
+
         const cursorAngle = this.cursorAngle; // 光标向量的角度
         const deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
 
@@ -292,6 +300,10 @@ export class RotateHandler extends TransformHandler {
                 transform2: transform,
             }
         }));
+
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER);
+        });
     }
 
     /**

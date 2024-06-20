@@ -31,6 +31,7 @@ import { LockMouse } from "@/transform/lockMouse";
 import { computeString } from "@/utils/content";
 import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
+import { Tool } from "@/context/tool";
 
 interface Props {
     context: Context
@@ -167,6 +168,10 @@ function changeX(value: string) {
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesX(actions);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
 
 function changeY(value: string) {
@@ -189,6 +194,10 @@ function changeY(value: string) {
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesY(actions);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
 
 function changeW(value: string) {
@@ -209,6 +218,10 @@ function changeW(value: string) {
 
     editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
     props.context.attr.notify(Attribute.FRAME_CHANGE);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
 
 function changeH(value: string) {
@@ -229,6 +242,10 @@ function changeH(value: string) {
 
     editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
     props.context.attr.notify(Attribute.FRAME_CHANGE);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
 
 function lockToggle() {
@@ -280,6 +297,10 @@ function changeR(value: string) {
     const editor = props.context.editor4Page(page);
 
     editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
 }
 
 function changeCounts(value: string) {

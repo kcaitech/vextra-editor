@@ -297,7 +297,7 @@ onUnmounted(() => {
                 </svg>
             </div>
             <div style="padding: 2px;" v-if="singleChoice" @click="onPickImge">
-                <svg-icon icon-class="layer-image"></svg-icon>
+                <svg-icon icon-class="layer-image" style="stroke: black"></svg-icon>
             </div>
         </div>
         <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol"

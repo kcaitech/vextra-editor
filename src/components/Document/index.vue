@@ -46,6 +46,7 @@ import { ElMessage } from 'element-plus';
 import HelpEntrance from '../Help/HelpEntrance.vue';
 import kcdesk from '@/kcdesk';
 import { newFile2, openFile3 } from '@/utils/neworopen';
+import { scroll_to_view } from '@/utils/listview';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -126,7 +127,7 @@ function mouseleave(t: 'left' | 'right') {
     }
 }
 
-function switchPage(id?: string) {
+function switchPage(id?: string, frame_id?: string) {
     if (!id) return
     if (context) {
         const ctx: Context = context;
@@ -141,10 +142,16 @@ function switchPage(id?: string) {
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.selection.selectPage(pagedom);
                 curPage.value = pagedom;
+                if (frame_id) {
+                    const shape = pagedom.childs.find(item => item.id.slice(0, 8) == frame_id.slice(0, 8));
+                    if(!shape) return;
+                    scroll_to_view(ctx, shape);
+                }
             }
         })
     }
 }
+
 
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
@@ -415,14 +422,14 @@ const getDocumentInfo = async () => {
                 return;
             }
             perm < 3 && showHiddenRight();
-            loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
-            switchPage(page?.id || context!.data.pagesList[0]?.id);
+            const route_frame_id = route.query.frame_id as string;
+            switchPage(page?.id || context!.data.pagesList[0]?.id, route_frame_id);
             updateDocumentKeyTimer = setInterval(updateDocumentKey, 1000 * 60 * 30); // 30分钟更新一次文档密钥
         }
     } catch (err) {
@@ -806,36 +813,32 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context"/>
+            <Toolbar :context="context!" v-if="!loading && !null_context" />
         </div>
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-                      v-if="inited && !null_context"
-                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-                      :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
+            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+            :right="rightWidth" :context="context!" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                            @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
-                            @showNavigation="showHiddenLeft"
-                            :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
 
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                             @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                             @closeLoading="closeLoading">
+                    @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
+                    @closeLoading="closeLoading">
                 </ContentView>
             </template>
 
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !loading" :context="context!"
-                           @mouseenter="(e: Event) => { mouseenter('right') }"
-                           @mouseleave="() => { mouseleave('right') }"
-                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
-                           @showAttrbute="showHiddenRight">
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
             </template>
         </ColSplitView>
@@ -845,7 +848,7 @@ onUnmounted(() => {
         </div>
         <div v-if="showHint" class="notification">
             <el-icon :size="13">
-                <Warning/>
+                <Warning />
             </el-icon>
             <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
             <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
@@ -853,7 +856,7 @@ onUnmounted(() => {
             <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
         </div>
         <Bridge v-if="bridge" :context="context!"></Bridge>
-        <HelpEntrance v-if="!null_context" :context="context!"/>
+        <HelpEntrance v-if="!null_context" :context="context!" />
     </div>
 </template>
 
@@ -977,7 +980,7 @@ onUnmounted(() => {
         border-radius: 4px;
 
         .loading-spinner {
-            > svg {
+            >svg {
                 width: 15px;
                 height: 15px;
                 color: #000;

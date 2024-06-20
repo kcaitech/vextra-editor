@@ -59,7 +59,6 @@ const goto = (name: string) => {
 
 const OutLogin = () => {
     localStorage.clear();
-    // window.location.href = window.location.href + "#wechat_redirect";
     let miniprogram: any;
     miniprogram = navigator.userAgent.includes('miniProgram')
     if (miniprogram) {

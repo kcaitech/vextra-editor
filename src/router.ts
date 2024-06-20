@@ -48,6 +48,7 @@ const MyTeam = () => import('@/components/Mobile/Team.vue')
 const About = () => import('@/components/Mobile/About.vue')
 const Message = () => import('@/components/Mobile/MessageInfo.vue')
 const ShareMember = () => import('@/components/Mobile/ShareMember.vue')
+const Preview = () => import('@/components/Preview/index.vue')
 let _t: any = i18n.global
 const productName = _t.t('product.name');
 
@@ -129,13 +130,13 @@ const routes = [
         path: '/',
         name: "kchome",
         component: KChome,
-        redirect: 'login',
+        // redirect: 'login',
         children: [
             {
                 path: "introduction",
                 name: "homecontent",
                 component: HomeContent,
-                // alias: '/'
+                alias: '/'
             },
             {
                 path: "privacypolicy",
@@ -196,6 +197,15 @@ const routes = [
                 next();
             }
         },
+    },
+    {
+        path: "/prototype",
+        name: "prototype",
+        component: Preview,
+        meta: {
+            requireAuth: true,
+            group: Group.Document
+        }
     },
     {
         path: "/pageviews",
@@ -431,10 +441,11 @@ export const router = createRouter({
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition
-        }
-        return {
-            top: 0,
-            behavior: 'smooth'
+        } else {
+            return {
+                top: 0,
+                behavior: 'smooth'
+            }
         }
     },
     routes: routes

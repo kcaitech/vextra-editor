@@ -28,6 +28,7 @@ import { NetworkStatus } from "@/communication/modules/network_status";
 import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import Select, { SelectItem, SelectSource } from "@/components/common/Select.vue";
+import Loading from "@/components/common/Loading.vue";
 
 
 const route = useRoute();
@@ -37,7 +38,7 @@ let context: Context | undefined;
 const permType = ref<number>();
 const docInfo: any = ref({});
 const noNetwork = ref(false)
-const loading = ref<boolean>(false);
+const loading = ref<boolean>(true);
 const null_context = ref<boolean>(true);
 const isRead = ref(false);
 const isEdit = ref(true);
@@ -254,7 +255,6 @@ const getDocumentInfo = async () => {
                 router.push("/m");
                 return;
             }
-            loading.value = false;
             if (perm >= 3) await context.communication.docResourceUpload.start(getToken, docId);
             await context.communication.docCommentOp.start(getToken, docId);
             await context.communication.docSelectionOp.start(getToken, docId, context);
@@ -469,7 +469,7 @@ function closeNetMsg() {
 }
 
 const closeLoading = () => {
-    emit('closeLoading');
+    loading.value = false;
 }
 
 const matrix = ref<Matrix>(new Matrix() as any);
@@ -709,7 +709,7 @@ onUnmounted(() => {
 
 function scrollIntoView() {
     const item = document.querySelectorAll('.list-item');
-    const el = document.querySelector('.pagelist');
+    const el = document.querySelector('.content');
     const idx = arr.value.findIndex(item => item.data.value === curPage.value?.id)
     if (item) {
         el?.scrollTo({ top: idx * 44 })
@@ -737,15 +737,18 @@ const showEl = () => {
         </div>
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist" @touchstart.stop @touchmove.stop @touchend.stop>
-                <div class="list-item" v-for="page in arr" :key="page.id"
-                     @click.stop="switchPage(page.data.value as string)">
-                    <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                <div class="content">
+                    <div class="list-item" v-for="page in arr" :key="page.id"
+                        @click.stop="switchPage(page.data.value as string)">
+                        <div class="choose"
+                            :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
+                        </div>
+                        <div class="pagename">{{ page.data.content }}</div>
                     </div>
-                    <div class="pagename">{{ page.data.content }}</div>
                 </div>
             </div>
         </transition>
-        <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist =false">
+        <div class="pageview" @touchstart.stop="start" @touchmove.stop="move" @touchend.stop="end" @click="showpagelist =false">
             <PageViewVue v-if="!null_context && curPage" :context="context!" :data="(curPage as PageView)"
                          :matrix="(matrix as Matrix)" @closeLoading="closeLoading" no-cutout/>
         </div>
@@ -780,7 +783,7 @@ const showEl = () => {
     background-color: #fff;
     box-sizing: border-box;
     box-shadow: 0 0 5px silver;
-    z-index: 999;
+    z-index: 1;
 
     .back {
         width: 24px;
@@ -815,35 +818,43 @@ const showEl = () => {
     height: 50%;
     background-color: #fff;
     border-radius: 12px;
-    overflow-y: scroll;
+    padding: 12px 0px;
+    box-shadow: 0 -1px 5px #8d8d8d;
     box-sizing: border-box;
     z-index: 1;
 
-    .list-item {
-        display: flex;
-        align-items: center;
-        height: 44px;
-        font-size: 14px;
-        justify-content: center;
+    .content {
+        width: 100%;
+        height: 100%;
+        overflow-y: scroll;
 
-        .choose {
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            margin-right: 10px;
-            margin-left: 2px;
-            border-width: 0 0 2px 2px;
-            border-style: solid;
-            border-color: rgb(0, 0, 0, .75);
-            transform: rotate(-45deg) translateY(-30%);
-        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            height: 44px;
+            font-size: 14px;
+            justify-content: center;
 
-        .pagename {
-            flex: 0.8;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            .choose {
+                box-sizing: border-box;
+                width: 10px;
+                height: 6px;
+                margin-right: 10px;
+                margin-left: 2px;
+                border-width: 0 0 2px 2px;
+                border-style: solid;
+                border-color: rgb(0, 0, 0, .75);
+                transform: rotate(-45deg) translateY(-30%);
+            }
+
+            .pagename {
+                flex: 0.8;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
         }
     }
+
 }
 
 .pageview {

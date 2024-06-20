@@ -1,13 +1,13 @@
-import { ShapeView, WatchableObject } from "@kcdesign/data";
+import { ArtboradView, GuideAxis, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
+    alignXFromPointGroup,
+    alignYFromPointGroup,
     finder,
     get_tree,
     modify_pt_x4p,
-    modify_pt_y4p,
-    alignXFromPointGroup,
-    alignYFromPointGroup
+    modify_pt_y4p
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -22,20 +22,6 @@ export interface PointGroup1 {
     rh?: PageXY
     bh?: PageXY
     lh?: PageXY
-}
-
-export interface PointGroup2 {
-    lt: PageXY
-    rt: PageXY
-    rb: PageXY
-    lb: PageXY
-    pivot: PageXY
-    top?: number
-    cx?: number
-    bottom?: number
-    left?: number
-    cy?: number
-    right?: number
 }
 
 export interface PT4P1 {
@@ -55,6 +41,13 @@ export interface PageXY2 {
     p: PageXY
 }
 
+interface AssistGuide {
+    env: ShapeView;
+    offsetFix: number;
+    offsetRoot: number;
+    axis: GuideAxis;
+}
+
 export class Assist extends WatchableObject {
     readonly m_context: Context;
 
@@ -63,7 +56,7 @@ export class Assist extends WatchableObject {
     static UPDATE_ASSIST_PATH = 4;
     static MULTI_LINE_ASSIST = 7;
     private m_stickness: number = 5;
-    private m_collect_target: ShapeView[] = [];
+    private m_collect_target: ShapeView | undefined;
 
     private m_shape_inner: ShapeView[] = [];
     private m_pg_inner: Map<string, PointGroup1> = new Map();
@@ -76,8 +69,16 @@ export class Assist extends WatchableObject {
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
 
+    highlight_guide_x: string[] = [];
+    highlight_guide_y: string[] = [];
+
     private m_nodes_x2: XY[] = [];
     private m_nodes_y2: XY[] = [];
+
+    private m_fixed_target: ShapeView | undefined;
+
+    m_guides_x: AssistGuide[] = [];
+    m_guides_y: AssistGuide[] = [];
 
     constructor(context: Context) {
         super();
@@ -135,13 +136,20 @@ export class Assist extends WatchableObject {
         this.m_y_axis.clear();
         this.m_nodes_x2.length = 0;
         this.m_nodes_y2.length = 0;
+
+        this.m_guides_x.length = 0;
+        this.m_guides_y.length = 0;
+    }
+
+    get fixedTarget() {
+        return this.m_fixed_target;
     }
 
     set_collect_target(shapes: ShapeView[], collect_immediate = false) {
         const page = this.m_context.selection.selectedPage!;
 
         if (!shapes.length) {
-            this.m_collect_target = [page];
+            this.m_collect_target = page;
         }
 
         const parents: Map<string, ShapeView> = new Map();
@@ -151,7 +159,7 @@ export class Assist extends WatchableObject {
         }
 
         if (parents.has(page.id)) {
-            this.m_collect_target = [page];
+            this.m_collect_target = page;
         } else {
             const chains: Map<string, Set<ShapeView>> = new Map();
             let longest = 0;
@@ -193,7 +201,19 @@ export class Assist extends WatchableObject {
                     break;
                 }
             }
-            this.m_collect_target = [env];
+            this.m_collect_target = env;
+        }
+
+        if (collect_immediate) {
+            this.collect();
+        }
+    }
+
+    set_collect_target_direct(target: ShapeView, needBubble: boolean, collect_immediate = false) {
+        this.m_collect_target = target;
+
+        if (needBubble) {
+            this.m_collect_target = this.getFixedContainer();
         }
 
         if (collect_immediate) {
@@ -203,19 +223,91 @@ export class Assist extends WatchableObject {
 
     collect() {
         // const s = Date.now();
-        const page = this.m_context.selection.selectedPage;
-        if (page) {
-            this.clear();
-            let targets: ShapeView[] = this.m_collect_target.length ? this.m_collect_target : [page];
-            this.m_shape_inner = [];
-            for (let i = 0; i < targets.length; i++) {
-                const target = targets[i];
-                this.m_shape_inner = this.m_shape_inner
-                    .concat(finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
-            }
+        this.clear();
+        const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
+        this.m_shape_inner = [];
+        this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
+
+        if (this.m_context.user.isRuleVisible) {
+            this.collectGuides();
         }
+        // console.log('__COLLECT_TARGET__', target.name, (target as ArtboradView).guides?.length);
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
+    }
+
+    collectGuides() {
+        const guideTarget = this.getFixedContainer() as ArtboradView;
+
+        this.m_fixed_target = guideTarget;
+
+        const guides = guideTarget?.guides;
+        if (!guides?.length) {
+            return;
+        }
+
+        const gxs = this.m_guides_x;
+        const gys = this.m_guides_y;
+
+        if (guideTarget.type !== ShapeType.Page) {
+            const matrix = guideTarget.matrix2Root();
+            for (let i = 0; i < guides.length; i++) {
+                const { axis, offset } = guides[i];
+                const assistGui: AssistGuide = {
+                    env: guideTarget,
+                    offsetFix: offset,
+                    offsetRoot: offset,
+                    axis
+                }
+                if (axis === GuideAxis.X) {
+                    assistGui.offsetRoot = matrix.computeCoord2(offset, 0).x;
+                    gxs.push(assistGui);
+                } else {
+                    assistGui.offsetRoot = matrix.computeCoord2(0, offset).y;
+                    gys.push(assistGui);
+                }
+            }
+        } else {
+            for (let i = 0; i < guides.length; i++) {
+                const { axis, offset } = guides[i];
+                const assistGui: AssistGuide = {
+                    env: guideTarget,
+                    offsetFix: offset,
+                    offsetRoot: offset,
+                    axis
+                }
+                if (axis === GuideAxis.X) {
+                    gxs.push(assistGui);
+                } else {
+                    gys.push(assistGui);
+                }
+            }
+        }
+        // console.log('__GUIDE_TARGET__', guideTarget.name);
+        // console.log('__GUIX__', this.m_guides_x);
+        // console.log('__GUIY__', this.m_guides_y);
+    }
+
+    getFixedContainer() {
+        const page = this.m_context.selection.selectedPage!;
+        let target = this.m_collect_target || page;
+
+        if (target.type === ShapeType.Page) {
+            return page;
+        } else {
+            while (target) {
+                if (target.type === ShapeType.Page
+                    || (target.isContainer
+                        && target.parent?.type === ShapeType.Page
+                        && !((target.rotation || 0) % 180)
+                    )
+                ) {
+                    break;
+                }
+                target = target.parent as any
+            }
+        }
+        return target;
     }
 
     set_trans_target(shapes: ShapeView[]) {
@@ -268,10 +360,13 @@ export class Assist extends WatchableObject {
         return target;
     }
 
-    alignX(point: XY, self: XY[]) {
-        if (!this.m_except.size) {
-            return;
-        }
+    alignX(point: XY, self: XY[], toGuide = true) {
+        // if (!this.m_except.size) {
+        //     return;
+        // }
+
+        const hgx = this.highlight_guide_x;
+        hgx.length = 0;
 
         this.m_nodes_x = [];
         const target = { x: 0, sticked_by_x: false };
@@ -291,6 +386,16 @@ export class Assist extends WatchableObject {
             modify_pt_x4p(pre_target, point, c_pg.apexX, this.m_stickness);
         }
 
+
+        // 参考线
+        let sparkX = false;
+        if (toGuide) {
+            if (this.m_guides_x.length) {
+                const gx = this.m_guides_x.map(g => g.offsetRoot);
+                sparkX = modify_pt_x4p(pre_target, point, gx, this.m_stickness);
+            }
+        }
+
         if (pre_target.delta !== undefined) {
             target.x = pre_target.x;
             target.sticked_by_x = true;
@@ -302,6 +407,45 @@ export class Assist extends WatchableObject {
             }
 
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat(_self);
+
+            const fixed = this.fixedTarget;
+
+            if (sparkX && fixed) {
+                if (fixed.type === ShapeType.Page) {
+                    const matrix = this.m_context.workspace.matrix;
+                    const guides_x = this.m_guides_x;
+                    const height = this.m_context.workspace.root.height;
+                    for (let i = 0; i < guides_x.length; i++) {
+                        let offset = guides_x[i].offsetRoot;
+                        if (offset !== _self[0]?.p.x) {
+                            continue;
+                        }
+                        offset = matrix.computeCoord2(offset, 0).x;
+                        hgx.push(`M${offset} 0 L${offset} ${height}`);
+                    }
+                } else {
+                    const guides_x = this.m_guides_x;
+                    const height = fixed.frame.height;
+                    const matrix = fixed.matrix2Root();
+                    matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                    for (let i = 0; i < guides_x.length; i++) {
+                        const g = guides_x[i];
+                        let offset = g.offsetRoot;
+
+                        if (offset !== _self[0]?.p.x) {
+                            continue;
+                        }
+
+                        offset = g.offsetFix;
+
+                        const start = matrix.computeCoord2(offset, 0);
+                        const end = matrix.computeCoord2(offset, height);
+
+                        hgx.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            }
         }
 
         this.notify(Assist.UPDATE_ASSIST);
@@ -309,10 +453,14 @@ export class Assist extends WatchableObject {
         return target;
     }
 
-    alignY(point: XY, self: XY[]) {
-        if (!this.m_except.size) {
-            return;
-        }
+    alignY(point: XY, self: XY[], toGuide = true) {
+        // if (!this.m_except.size) {
+        //     return;
+        // }
+
+        const hgy = this.highlight_guide_y;
+        hgy.length = 0;
+
         this.m_nodes_y = [];
         const target = { y: 0, sticked_by_y: false };
         const pre_target: PT4P2 = { y: 0, sx: 0, delta: undefined };
@@ -331,6 +479,15 @@ export class Assist extends WatchableObject {
             modify_pt_y4p(pre_target, point, c_pg.apexY, this.m_stickness);
         }
 
+        // 参考线
+        let sparkY = false;
+        if (toGuide) {
+            if (this.m_guides_y.length) {
+                const gy = this.m_guides_y.map(g => g.offsetRoot);
+                sparkY = modify_pt_y4p(pre_target, point, gy, this.m_stickness);
+            }
+        }
+
         if (pre_target.delta !== undefined) {
             target.y = pre_target.y;
             target.sticked_by_y = true;
@@ -342,6 +499,44 @@ export class Assist extends WatchableObject {
             }
 
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat(_self);
+
+            const fixed = this.fixedTarget;
+            if (sparkY && fixed) {
+                if (fixed.type === ShapeType.Page) {
+                    const matrix = this.m_context.workspace.matrix;
+                    const guides_y = this.m_guides_y;
+                    const width = this.m_context.workspace.root.width;
+                    for (let i = 0; i < guides_y.length; i++) {
+                        let offset = guides_y[i].offsetRoot;
+                        if (offset !== _self[0]?.p.y) {
+                            continue;
+                        }
+                        offset = matrix.computeCoord2(0, offset).y;
+                        hgy.push(`M0 ${offset} L${width} ${offset}`);
+                    }
+                } else {
+                    const guides_y = this.m_guides_y;
+                    const width = fixed.frame.width;
+                    const matrix = fixed.matrix2Root();
+                    matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                    for (let i = 0; i < guides_y.length; i++) {
+                        const g = guides_y[i];
+                        let offset = g.offsetRoot;
+
+                        if (offset !== _self[0]?.p.y) {
+                            continue;
+                        }
+
+                        offset = g.offsetFix;
+
+                        const start = matrix.computeCoord2(0, offset);
+                        const end = matrix.computeCoord2(width, offset);
+
+                        hgy.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            }
         }
 
         this.notify(Assist.UPDATE_ASSIST);
@@ -356,6 +551,11 @@ export class Assist extends WatchableObject {
 
         this.m_nodes_x = [];
         this.m_nodes_y = [];
+
+        const hgx = this.highlight_guide_x;
+        const hgy = this.highlight_guide_y;
+        hgx.length = 0;
+        hgy.length = 0;
 
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
 
@@ -377,6 +577,18 @@ export class Assist extends WatchableObject {
             modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
         }
 
+        // 参考线
+        let sparkX = false;
+        let sparkY = false;
+        if (this.m_guides_x.length) {
+            const gx = this.m_guides_x.map(g => g.offsetRoot);
+            sparkX = modify_pt_x4p(pre_target1, point, gx, this.m_stickness);
+        }
+        if (this.m_guides_y.length) {
+            const gy = this.m_guides_y.map(g => g.offsetRoot);
+            sparkY = modify_pt_y4p(pre_target2, point, gy, this.m_stickness);
+        }
+
         const _self = { id: 'self', p: { x: point.x, y: point.y } };
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x;
@@ -394,6 +606,82 @@ export class Assist extends WatchableObject {
             _self.p.y = target.y;
 
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([_self]);
+        }
+
+        const fixed = this.fixedTarget;
+
+        if (pre_target1.delta !== undefined && sparkX && fixed) {
+            if (fixed.type === ShapeType.Page) {
+                const matrix = this.m_context.workspace.matrix;
+                const guides_x = this.m_guides_x;
+                const height = this.m_context.workspace.root.height;
+                for (let i = 0; i < guides_x.length; i++) {
+                    let offset = guides_x[i].offsetRoot;
+                    if (offset !== _self.p.x) {
+                        continue;
+                    }
+                    offset = matrix.computeCoord2(offset, 0).x;
+                    hgx.push(`M${offset} 0 L${offset} ${height}`);
+                }
+            } else {
+                const guides_x = this.m_guides_x;
+                const height = fixed.frame.height;
+                const matrix = fixed.matrix2Root();
+                matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                for (let i = 0; i < guides_x.length; i++) {
+                    const g = guides_x[i];
+                    let offset = g.offsetRoot;
+
+                    if (offset !== _self.p.x) {
+                        continue;
+                    }
+
+                    offset = g.offsetFix;
+
+                    const start = matrix.computeCoord2(offset, 0);
+                    const end = matrix.computeCoord2(offset, height);
+
+                    hgx.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                }
+            }
+        }
+        if (pre_target2.delta !== undefined && sparkY && fixed) {
+            if (fixed.type === ShapeType.Page) {
+                const matrix = this.m_context.workspace.matrix;
+                const guides_y = this.m_guides_y;
+                const width = this.m_context.workspace.root.width;
+                for (let i = 0; i < guides_y.length; i++) {
+                    let offset = guides_y[i].offsetRoot;
+
+                    if (offset !== _self.p.y) {
+                        continue;
+                    }
+                    offset = matrix.computeCoord2(0, offset).y;
+                    hgy.push(`M0 ${offset} L${width} ${offset}`);
+                }
+            } else {
+                const guides_y = this.m_guides_y;
+                const width = fixed.frame.width;
+                const matrix = fixed.matrix2Root();
+                matrix.multiAtLeft(this.m_context.workspace.matrix);
+
+                for (let i = 0; i < guides_y.length; i++) {
+                    const g = guides_y[i];
+                    let offset = g.offsetRoot;
+
+                    if (offset !== _self.p.y) {
+                        continue;
+                    }
+
+                    offset = g.offsetFix;
+
+                    const start = matrix.computeCoord2(0, offset);
+                    const end = matrix.computeCoord2(width, offset);
+
+                    hgy.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                }
+            }
         }
 
         this.notify(Assist.UPDATE_ASSIST);
@@ -460,7 +748,9 @@ export class Assist extends WatchableObject {
             sticked_by_x: false,
             sticked_by_y: false,
             targetX: 0,
-            targetY: 0
+            targetY: 0,
+            sparkX: false,
+            sparkY: false
         }
 
         let targetX = Infinity;
@@ -486,6 +776,21 @@ export class Assist extends WatchableObject {
             const ry = alignYFromPointGroup(dy, pointsGroup.apexY, livingYs);
             dy = ry.dy;
             targetY = ry.targetY;
+        }
+
+        if (this.m_guides_x.length) {
+            const gx = this.m_guides_x.map(g => g.offsetRoot);
+            const rx = alignXFromPointGroup(dx, gx, livingXs);
+            dx = rx.dx;
+            targetX = rx.targetX;
+            assistResult.sparkX = rx.spark;
+        }
+        if (this.m_guides_y.length) {
+            const gy = this.m_guides_y.map(g => g.offsetRoot);
+            const ry = alignYFromPointGroup(dy, gy, livingYs);
+            dy = ry.dy;
+            targetY = ry.targetY;
+            assistResult.sparkY = ry.spark;
         }
 
         if (Math.abs(dx) < this.stickness) {

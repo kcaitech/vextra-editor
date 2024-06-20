@@ -62,6 +62,8 @@ var configureWebpack = (config) => {
         "fs": false,
     }
 
+    config.resolve.alias["vue-i18n"] = "vue-i18n/dist/vue-i18n.esm-browser.prod.js";
+
     config.module.rules.push(
         {
             test: /\.svg?$/,
@@ -124,6 +126,18 @@ var configureWebpack = (config) => {
             patterns: [{
                 from: "src/assets/GetCode.html",
                 to: "static/GetCode.html",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/uniwebview.js",
+                to: "static/uniwebview.js",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/fonts/zihun.ttf",
+                to: "static/fonts/zihun.ttf",
             }]
         }),
         new CopyWebpackPlugin({

@@ -9,14 +9,17 @@ interface UserInfo {
 interface UserConfig {
     pixelAlignment: boolean;
     pixelGrid: boolean;
+    rule: boolean;
 }
 
 export class User extends WatchableObject {
     static GRID_STATUS_CHANGE = 1;
+    static RULE_STATUS_CHANGE = 2;
 
     private m_username: string = ''
     private m_pixel_alignment: boolean = true;
     private m_pixel_grid: boolean = true;
+    private m_rule: boolean = true;
 
     constructor() {
         super();
@@ -34,6 +37,10 @@ export class User extends WatchableObject {
         return this.m_pixel_grid;
     }
 
+    get isRuleVisible() {
+        return this.m_rule;
+    }
+
     modifyPixelAlignment(v: boolean) {
         const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
         conf.pixelAlignment = v;
@@ -49,17 +56,42 @@ export class User extends WatchableObject {
         localStorage.setItem('userConfig', JSON.stringify(conf));
     }
 
+    modifyRuleVisible(v: boolean) {
+        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        conf.rule = v;
+        this.m_rule = v;
+        this.notify(User.RULE_STATUS_CHANGE);
+        localStorage.setItem('userConfig', JSON.stringify(conf));
+    }
+
+    static CONF = {
+        pixelAlignment: true,
+        pixelGrid: true,
+        rule: true
+    };
+
     get initConfig(): string {
-        const conf: UserConfig = {
-            pixelAlignment: true,
-            pixelGrid: true
-        };
+        const conf: UserConfig = User.CONF;
         return JSON.stringify(conf);
     }
 
     updateUserConfig() {
-        const conf = JSON.parse(localStorage.getItem('userConfig') || this.initConfig) as UserConfig;
+        let conf = JSON.parse(localStorage.getItem('userConfig')!) as UserConfig;
+        if (!conf) {
+            conf = User.CONF;
+        }
+
+        if ((Object.keys(conf).length !== Object.keys(User.CONF).length)) {
+            const __temp = JSON.parse(JSON.stringify(conf));
+            conf = User.CONF;
+
+            conf.pixelAlignment = __temp.pixelAlignment || true;
+            conf.pixelGrid = __temp.pixelGrid || true;
+            conf.rule = __temp.rule || true;
+        }
         this.m_pixel_alignment = conf.pixelAlignment;
+        this.m_pixel_grid = conf.pixelGrid;
+        this.m_rule = conf.rule;
 
         localStorage.setItem('userConfig', JSON.stringify(conf));
     }
@@ -106,43 +138,6 @@ interface DocInfo {
     shares_count: number
     application_count: number
     project: Project
-}
-
-export class DocumentInfo extends WatchableObject {
-    private m_document_info: DocInfo;
-    private m_document: Document | undefined;
-    private m_user: DocUser | undefined;
-    private m_shares_count: number = 0;
-    private m_application_count: number = 0;
-
-    constructor(docInfo: DocInfo) {
-        super();
-        this.m_document_info = docInfo
-        this.m_document = docInfo.document
-        this.m_user = docInfo.user
-        this.m_shares_count = docInfo.shares_count
-        this.m_application_count = docInfo.application_count
-    }
-
-    get DocumentInfo() {
-        return this.m_document_info
-    }
-
-    get getDocument() {
-        return this.m_document
-    }
-
-    get documentUser() {
-        return this.m_user
-    }
-
-    get sharesCount() {
-        return this.m_shares_count
-    }
-
-    get applicationCount() {
-        return this.m_application_count
-    }
 }
 
 export { DocInfo, UserInfo }

@@ -1,12 +1,21 @@
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
-import { Shape, ShapeView, TableCellType, TableShape, TableView, adapt2Shape } from "@kcdesign/data";
+import { ShapeView, TableCellType, TableView } from "@kcdesign/data";
+import { ReferLineHandler } from "@/components/Document/Rule/refer";
 
 export function deleteUnits(context: Context) {
-    if(context.color.selected_stop !== undefined) {
+    // 删除参考线
+    if (context.user.isRuleVisible && context.tool.referSelection?.selected?.valid) {
+        const { env, index, axis } = context.tool.referSelection.selected;
+        new ReferLineHandler(context, axis, env, index).delete(env, index);
+        return;
+    }
+    // 删除颜色控点
+    if (context.color.selected_stop !== undefined) {
         context.color.notify(ColorCtx.STOP_DELETE);
         return
     }
+    // 删除路径节点
     const path_edit_mode = context.workspace.is_path_edit_mode;
     if (path_edit_mode) {
         delete_for_path_edit(context);
@@ -14,22 +23,24 @@ export function deleteUnits(context: Context) {
     }
 
     const selected = context.selection.selectedShapes;
-
     if (selected.length === 0) {
         return;
     }
 
+    // 批量删除图层
     if (selected.length > 1) {
         delete_shapes(context, selected);
         return;
     }
 
+    // 删除单元格
     const table = context.selection.tableshape;
     if (table) {
         delete_for_table(context, table);
         return;
     }
 
+    // 删除单个图层
     delete_shapes(context, selected);
 }
 

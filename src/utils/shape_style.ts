@@ -6,7 +6,10 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting,
+    Blur,
+    BlurType,
+    Point2D
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -621,13 +624,13 @@ export function get_actions_export_format_file_format(shapes: ShapeView[], index
 export function get_borders_corner(shapes: ShapeView[], index: number): false | CornerType {
     const shape = shapes[0];
     const styleborders = shape.getBorders() || [];
-    if(!styleborders.length) return false;
+    if (!styleborders.length) return false;
     const corner = styleborders[index].cornerType;
     const mixed = shapes.every(shape => {
         const borders = shape.getBorders() || [];
-        if(borders[index]) {
+        if (borders[index]) {
             return borders[index].cornerType === corner;
-        }else {
+        } else {
             return false;
         }
     });
@@ -641,7 +644,7 @@ export function get_borders_corner(shapes: ShapeView[], index: number): false | 
 export function get_borders_side(shapes: ShapeView[], index: number): false | SideType {
     const shape = shapes[0];
     const styleborders = shape.getBorders() || [];
-    if(!styleborders.length) return false;
+    if (!styleborders.length) return false;
     const side = styleborders[index].sideSetting.sideType;
     const mixed = shapes.every(shape => {
         const borders = shape.getBorders() || [];
@@ -652,4 +655,78 @@ export function get_borders_side(shapes: ShapeView[], index: number): false | Si
     } else {
         return false;
     }
+}
+
+export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' {
+    const has_blur_shapes = shapes.filter(shape => shape.blur);
+    if(has_blur_shapes.length === 0) return undefined;
+    if (has_blur_shapes.length !== shapes.length) return 'mixed';
+    const shape = has_blur_shapes[0];
+
+    const firstBlur = shape.blur!;
+    for (let i = 1; i < shapes.length; i++) {
+        const blur = shapes[i].blur!;
+        if (firstBlur.type !== blur.type) return 'mixed';
+        if (firstBlur.type === BlurType.Gaussian) {
+            if (firstBlur.saturation !== blur.saturation) return 'mixed';
+        } else if (firstBlur.type === BlurType.Background) {
+            if (firstBlur.saturation !== blur.saturation) return 'mixed';
+        }
+    }
+    return firstBlur;
+}
+
+export function get_actions_add_blur(shapes: ShapeView[], blur: Blur) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        const { isEnabled, saturation, type, center } = blur;
+        const new_blur = new Blur(isEnabled, new Point2D(center.x, center.y), saturation, type);
+        actions.push({ target: (shapes[i]), value: new_blur });
+    }
+    return actions;
+}
+
+export function get_actions_blur_unify(shapes: ShapeView[]) {
+    const actions: BatchAction2[] = [];
+    let blur: Blur | undefined;
+    let b = 0;
+    while (!blur && b < shapes.length) {
+        blur = shapes[b].blur;
+        b++;
+    }
+    if (!blur) return;
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout || i === b - 1) continue;
+        const { isEnabled, saturation, type, center, motionAngle, radius } = blur;
+        const new_blur = new Blur(isEnabled, new Point2D(center.x, center.y), saturation, type, motionAngle, radius);
+        actions.push({ target: shapes[i], value: new_blur });
+    }
+    return actions;
+}
+export function get_actions_blur_enabled(shapes: ShapeView[], value: boolean) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: shapes[i], value });
+    }
+    return actions;
+}
+
+export function get_actions_blur_delete(shapes: ShapeView[]) {
+    const actions: ShapeView[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push(shapes[i]);
+    }
+    return actions;
+}
+
+export function get_actions_blur_modify(shapes: ShapeView[], value: any) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Cutout) continue;
+        actions.push({ target: shapes[i], value });
+    }
+    return actions;
 }

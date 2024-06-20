@@ -1,7 +1,7 @@
 import { TransformHandler } from "@/transform/handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
-import { Action, ResultByAction } from "@/context/tool";
+import { Action, ResultByAction, Tool } from "@/context/tool";
 import {
     Color, ColVector3D,
     ContactForm,
@@ -256,6 +256,9 @@ export class CreatorExecute extends TransformHandler {
         } else {
             this.__extendFrame();
         }
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER);
+        });
     }
 
     initContact(apex?: ContactForm) {

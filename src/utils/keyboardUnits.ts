@@ -315,7 +315,12 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
         context.navi.notify(Navi.RENAME);
         return;
     }
-    if (is_ctrl || event.shiftKey || event.altKey) return;
+    if (event.shiftKey) {
+        const status = context.user.isRuleVisible;
+        context.user.modifyRuleVisible(!status);
+        return;
+    }
+    if (event.altKey) return;
     context.tool.setAction(Action.AddRect); // 矩形工具
 }
 
