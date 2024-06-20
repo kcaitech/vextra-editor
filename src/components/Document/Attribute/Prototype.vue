@@ -1,110 +1,163 @@
 <template>
     <div class="container">
-        <div v-if="isPrototype.length">
-            <div v-if="isPrototype.length < 2" class="origin">
-                <div class="title">
-                    <div class="text" :style="{ color: originedit ? '#000' : '' }">流程起点</div>
-                    <div v-if="!originedit" class="add" @click.stop=createOrigin>
-                        <svg-icon icon-class="add"></svg-icon>
-                    </div>
-                    <div v-else class="delete" @click.stop=deleteOrigin>
-                        <svg-icon icon-class="delete"></svg-icon>
-                    </div>
-                </div>
-                <div v-if="!originedit" class="default">设置选中容器为新流程起点</div>
-                <div v-else class="originname">
-                    <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName }}</label>
-                    <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName"
-                        @blur="showIpnut = false">
-                    <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
-                        v-model="originDescribed"></textarea>
-                </div>
-            </div>
-            <div class="interaction">
-                <div class="title">
-                    <div class="text">交互</div>
-                    <div class="add" @click.stop="createAction">
-                        <svg-icon icon-class="add"></svg-icon>
-                    </div>
-                </div>
-                <div class="actions" v-if="numbers.length">
-
-                    <div class="actions-item" v-for="i in numbers" :key="i">
-                        <div class="item">
-                            <div class="arrow" :class="{ activation: showaction && acitonindex === i }"
-                                @click.stop="showhandel(i)">
-                                <svg-icon icon-class="arrows-dr"></svg-icon>
-                            </div>
-                            <div class="item-content">{{ i }}</div>
-                            <div class="delete" @click.stop="deleteAction(i)">
-                                <svg-icon icon-class="delete"></svg-icon>
-                            </div>
+        <el-scrollbar height="100%">
+            <div v-if="isPrototype.length">
+                <div v-if="isPrototype.length < 2" class="origin">
+                    <div class="title">
+                        <div class="text" :style="{ color: originedit ? '#000' : '' }">流程起点</div>
+                        <div v-if="!originedit" class="add" @click.stop=createOrigin>
+                            <svg-icon icon-class="add"></svg-icon>
                         </div>
-                        <div class="item-setting" v-if="showaction && acitonindex === i">
-                            <div class="trigger">
-                                <span>触发</span>
-                                <Select class="select" id="select" :visibility="true" :source="trigger"
-                                    :selected="trigger.find(item => item.id === 0)?.data"></Select>
-                            </div>
-                            <div class="action">
-                                <span>动作</span>
-                                <Select class="select" id="select" :visibility="true" :source="actions"
-                                    :selected="actions.find(item => item.id === 0)?.data"></Select>
-                            </div>
-                            <div class="target">
-                                <span>目标</span>
-                                <input id="target-input" type="text" placeholder="请选择目标容器" readonly
-                                    v-model="selectshape" @click="test">
-                                <div class="svg-wrap">
-                                    <svg-icon icon-class="down"></svg-icon>
-                                </div>
-                                <div class="search-container" v-if="showtargerlist">
-                                    <div class="header-search">
-                                        <svg-icon icon-class="search"></svg-icon>
-                                        <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
-                                    </div>
-                                    <div class="item-list">
-                                        <div class="item" v-for="shape in DomList" :key="shape.id"
-                                            @click.stop="selectshape = shape.name">{{ shape.name }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="set-animation">
-                                <span>动画设置</span>
-                                <div class="wrapper">
-                                    <div class="container">
-                                        <div class="containerA">A</div>
-                                        <div class="containerB">B</div>
-                                        <div class="containerC"></div>
-                                    </div>
-                                </div>
-                                <div class="animation">
-                                    <span>动画</span>
-                                    <Select class="select" id="select" :visibility="true" :source="animation"
-                                        :selected="animation.find(item => item.id === 0)?.data"></Select>
-                                </div>
-                                <div class="effect">
-                                    <span>效果</span>
-                                    <Select class="select" id="select" :visibility="true" :source="animation"
-                                        :selected="animation.find(item => item.id === 0)?.data"></Select>
-                                    <input v-select type="text" placeholder="时间">
-                                </div>
-                            </div>
+                        <div v-else class="delete" @click.stop=deleteOrigin>
+                            <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-
+                    <div v-if="!originedit" class="default">设置选中容器为新流程起点</div>
+                    <div v-else class="originname">
+                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName }}</label>
+                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName"
+                            @blur="showIpnut = false">
+                        <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
+                            v-model="originDescribed"></textarea>
+                    </div>
                 </div>
-                <div v-else class="default">设置窗口或其中控件的交互行为</div>
+                <div class="interaction">
+                    <div class="title">
+                        <div class="text">交互</div>
+                        <div class="add" @click.stop="createAction">
+                            <svg-icon icon-class="add"></svg-icon>
+                        </div>
+                    </div>
+                    <div class="actions" v-if="numbers.length">
+
+                        <div class="actions-item" v-for="i in numbers" :key="i">
+                            <div class="item">
+                                <div class="arrow" :class="{ activation: showaction && acitonindex === i }"
+                                    @click.stop="showhandel(i)">
+                                    <svg-icon icon-class="arrows-dr"></svg-icon>
+                                </div>
+                                <div class="item-content">{{ i }}</div>
+                                <div class="delete" @click.stop="deleteAction(i)">
+                                    <svg-icon icon-class="delete"></svg-icon>
+                                </div>
+                            </div>
+                            <div class="item-setting" v-if="showaction && acitonindex === i">
+                                <div class="trigger">
+                                    <span>触发</span>
+                                    <Select class="select" id="select" :visibility="true" :source="trigger"
+                                        :selected="trigger.find(item => item.id === 0)?.data"></Select>
+                                </div>
+                                <div class="action">
+                                    <span>动作</span>
+                                    <Select class="select" id="select" :visibility="true" :source="actions"
+                                        :selected="actions.find(item => item.id === 0)?.data"></Select>
+                                </div>
+                                <div class="component-status">
+                                    <div class="state" v-for="i in variables" :key="i.variable.id">
+                                        <span>{{ i.variable.name }}：</span>
+                                        <Select class="select" id="select" :visibility="true" :source="genOptions(i.values.map((v, idx) => {
+                return [idx, v];
+            }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
+                                    </div>
+                                </div>
+                                <div class="target">
+                                    <span>目标</span>
+                                    <input id="target-input" type="text" placeholder="请选择目标容器" readonly
+                                        v-model="selectshape" @click="test">
+                                    <div class="svg-wrap">
+                                        <svg-icon icon-class="down"></svg-icon>
+                                    </div>
+                                    <div class="search-container" v-if="showtargerlist">
+                                        <div class="header-search">
+                                            <svg-icon icon-class="search"></svg-icon>
+                                            <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
+                                        </div>
+                                        <div class="item-list">
+                                            <div class="item" v-for="shape in DomList" :key="shape.id"
+                                                @click.stop="selectshape = shape.name">{{ shape.name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="retract">
+                                    <span>缩进</span>
+                                    <div class="retract-y"></div>
+                                    <div class="retract-x"></div>
+                                </div>
+                                <div class="link">
+                                    <span>链接</span>
+                                    <input type="text" placeholder="输入链接地址">
+                                </div>
+
+                                <div class="set-float">
+                                    <span>浮层设置</span>
+                                    <div class="content">
+                                        <div class="position">
+                                            <div v-for="i in 9" :key="i"></div>
+                                        </div>
+                                        <div class="margin">
+                                            <div v-for="i in 4" :key="i"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" id="closetab">
+                                        <label for="closetab">点击浮层外关闭浮层</label>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" id="color">
+                                        <label for="color">在浮层后添加遮罩</label>
+                                    </div>
+
+
+                                </div>
+                                <div class="set-animation">
+                                    <span>动画设置</span>
+                                    <div class="wrapper">
+                                        <div class="container">
+                                            <div class="containerA">A</div>
+                                            <div class="containerB">B</div>
+                                            <div class="containerC"></div>
+                                        </div>
+                                    </div>
+                                    <div class="animation">
+                                        <span>动画</span>
+                                        <Select class="select" id="select" :visibility="true" :source="animation"
+                                            :selected="animation.find(item => item.id === 0)?.data"></Select>
+                                    </div>
+                                    <div class="direction">
+                                        <div class="content">
+                                            <div class="icon" :class="{ 'select-item': selectitem === i }"
+                                                v-for=" i of Object.values(Direction)" :key="i"
+                                                @click.stop="selectitem = i">
+                                                <svg-icon :style="{ rotate: (`${setrotate.get(i)}` + 'deg') }"
+                                                    icon-class="right-arrows"></svg-icon>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="effect">
+                                        <span>效果</span>
+                                        <Select class="select" id="select" :width="100" :visibility="true"
+                                            :source="effect"
+                                            :selected="effect.find(item => item.id === 0)?.data"></Select>
+                                        <input v-select ref="animationtimevalue" type="text" placeholder="时间"
+                                            @change="changeinputvalue" :value="'300ms'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div v-else class="default">设置窗口或其中控件的交互行为</div>
+                </div>
+                <div class="overflow-roll">
+                    <div class="text">溢出滚动</div>
+                    <Select class="select" :source="overflowRoll"
+                        :selected="overflowRoll.find(i => i.id === 0)?.data"></Select>
+                </div>
             </div>
-            <div class="overflow-roll">
-                <div class="text">溢出滚动</div>
-                <Select class="select" :source="overflowRoll"
-                    :selected="overflowRoll.find(i => i.id === 0)?.data"></Select>
+            <div v-else>
+                <span class="tips">交互</span>
             </div>
-        </div>
-        <div v-else>
-            <span class="tips">交互</span>
-        </div>
+        </el-scrollbar>
     </div>
 </template>
 
@@ -117,7 +170,16 @@ import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import {
+    get_var_for_ref,
+    is_able_to_unbind,
+    is_symbolref_disa,
+    RefAttriListItem,
+    reset_all_attr_for_ref,
+    is_part_of_symbol
+} from "@/utils/symbol";
+import { useI18n } from 'vue-i18n';
 
 
 enum overflowRollType {
@@ -128,39 +190,56 @@ enum overflowRollType {
 }
 
 enum Actions {
-    JumpPage = 'jumppage',
-    ReturnPage = 'returnpage',
-    PageScroll = 'pagescroll',
-    OpenLink = 'openlink',
-    ComponentState = 'componentstate',
-    OpenFloatLayer = 'openfloatlayer',
-    CloseFloatLayer = 'closefloatlayer',
-    ChangeFloatLayer = 'changefloatlayer'
+    JumpPage = 'jump-page',
+    ReturnPage = 'return-page',
+    PageScroll = 'page-scroll',
+    OpenLink = 'open-link',
+    ComponentState = 'component-state',
+    OpenFloatLayer = 'open-float-layer',
+    CloseFloatLayer = 'close-float-layer',
+    ChangeFloatLayer = 'change-float-layer'
 
 }
 
 
 enum Trigger {
     Click = 'click',
-    DBLClick = 'dblclick',
-    RightClick = 'rightclick',
+    DBLClick = 'dbl-click',
+    RightClick = 'right-click',
     Drag = 'drag',
     Hover = 'hover',
-    MouseEnter = 'mouseenter',
-    MouseLeave = 'mouseleave',
-    MouseDown = 'mousedown',
-    MouseUp = 'mouseup',
+    MouseEnter = 'mouse-enter',
+    MouseLeave = 'mouse-leave',
+    MouseDown = 'mouse-down',
+    MouseUp = 'mouse-up',
     Delay = 'delay'
 }
 
 enum Animation {
     Immediately = 'immediately',
-    FadeInOut = 'fadeinout',
-    SlideIn = 'slidein',
-    SlideOut = 'slideout',
-    MoveIn = 'movein',
-    MoveOut = 'moveout',
-    PushIn = 'pushin'
+    FadeInOut = 'fade-in-out',
+    SlideIn = 'slide-in',
+    SlideOut = 'slide-out',
+    MoveIn = 'move-in',
+    MoveOut = 'move-out',
+    PushIn = 'push-in'
+}
+
+enum Effect {
+    LinearGradient = 'linear-gradient',
+    SlowIn = 'slow-in',
+    SlowOut = 'slow-out',
+    SlowInOut = 'slow-in-out',
+    SpringbackStart = 'springback-start',
+    SpringbackEnd = 'springback-end',
+    SpringbackStartEnd = 'springback-start-end'
+}
+
+enum Direction {
+    Right = 'right',
+    Left = 'left',
+    TOP = 'top',
+    Bottom = 'bottom'
 }
 
 
@@ -184,7 +263,55 @@ const showaction = ref<boolean>(false)
 const acitonindex = ref<number>(-1)
 const selectshape = ref<string>()
 
+const variables = ref<RefAttriListItem[]>([]);
+const { t } = useI18n()
 const searchvlue = ref<string>('')
+const animationtimevalue = ref<HTMLInputElement[]>()
+const selectitem = ref<string>('right')
+
+const regex = /^(\d+)/
+const changeinputvalue = () => {
+
+    const value = animationtimevalue.value![0].value
+
+    const maxvalue = (v: number) => {
+        return v <= 20000 ? v : 20000
+    }
+
+    if (Number(value)) {
+        animationtimevalue.value![0].value = maxvalue(Number(value)) + 'ms'
+    } else {
+        if (value.match(regex) !== null) {
+            const str = value.match(regex)
+            animationtimevalue.value![0].value = maxvalue(Number(str![1])) + 'ms'
+        } else {
+            animationtimevalue.value![0].value = '1ms'
+        }
+    }
+
+    animationtimevalue.value![0].blur()
+}
+
+const setrotate = new Map()
+
+for (let i of Object.values(Direction)) {
+    switch (i) {
+        case 'right':
+            setrotate.set(i, 0)
+            break;
+        case 'left':
+            setrotate.set(i, 180)
+            break;
+        case 'top':
+            setrotate.set(i, 90)
+            break;
+        case 'bottom':
+            setrotate.set(i, -90)
+            break;
+        default:
+            break;
+    }
+}
 
 const overflowRoll: SelectSource[] = genOptions([
     [overflowRollType.NotRoll, '不滚动'],
@@ -209,7 +336,7 @@ const trigger: SelectSource[] = genOptions([
 const actions: SelectSource[] = genOptions([
     [Actions.JumpPage, '跳转页面', 'jump-page'],
     [Actions.ReturnPage, '返回上一页面', 'retrun-page'],
-    [Actions.PageScroll, '页面内滚动', 'scroll-page'],
+    [Actions.PageScroll, '容器内滚动', 'scroll-page'],
     [Actions.OpenLink, '打开链接', 'open-link'],
     [Actions.ComponentState, '组件状态切换', 'component-state'],
     [Actions.OpenFloatLayer, '打开浮层', 'open-float-layer'],
@@ -226,6 +353,17 @@ const animation: SelectSource[] = genOptions([
     [Animation.MoveOut, '移出'],
     [Animation.PushIn, '推入']
 ])
+
+const effect: SelectSource[] = genOptions([
+    [Effect.LinearGradient, '线性渐变'],
+    [Effect.SlowIn, '缓入'],
+    [Effect.SlowOut, '缓出'],
+    [Effect.SlowInOut, '缓入缓出'],
+    [Effect.SpringbackStart, '后撤缓入'],
+    [Effect.SpringbackEnd, '停滞缓入'],
+    [Effect.SpringbackStartEnd, '弹性渐变']
+])
+
 
 const showtargerlist = ref<boolean>(false)
 const test = () => {
@@ -285,6 +423,21 @@ function _selection_change() {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
+
+        //暂时获取组件状态
+        const symref = props.context.selection.symbolrefview;
+        if (!symref) {
+            return;
+        }
+        const result = get_var_for_ref(symref, t);
+        variables.value = [];
+        if (!result) {
+            return;
+        }
+
+        variables.value = result.variables;
+        console.log(variables.value);
+
     }
     shapes.value = [];
     isPrototype.value = []
@@ -299,6 +452,7 @@ function _selection_change() {
 
     reflush_by_selection.value++;
     reflush.value++;
+
 }
 
 const selection_change = debounce(_selection_change, 160, { leading: true });
@@ -377,6 +531,11 @@ onUnmounted(() => {
     transform: rotate(90deg);
 }
 
+.select-item {
+    background-color: #fff;
+    box-shadow: 0 3px 3px #00000008;
+}
+
 @mixin flex($j, $a) {
     display: flex;
     justify-content: $j;
@@ -385,6 +544,7 @@ onUnmounted(() => {
 
 .container {
     width: 100%;
+    height: 100%;
     box-sizing: border-box;
 
     div .tips {
@@ -550,7 +710,9 @@ onUnmounted(() => {
 
             .trigger,
             .action,
-            .target {
+            .target,
+            .retract,
+            .link {
                 position: relative;
                 display: flex;
                 gap: 8px;
@@ -652,6 +814,26 @@ onUnmounted(() => {
                         }
                     }
                 }
+
+                .retract-y,
+                .retract-x {
+                    width: 65px;
+                    height: 32px;
+                    background-color: #F5F5F5;
+                    border-radius: 6px;
+                    box-sizing: border-box;
+                }
+
+                input {
+                    outline: none;
+                    border: none;
+                    padding: 10px 8px;
+                    height: 32px;
+                    width: 100%;
+                    border-radius: 6px;
+                    background-color: #F5F5F5;
+                    box-sizing: border-box;
+                }
             }
 
             .set-animation {
@@ -712,8 +894,10 @@ onUnmounted(() => {
                 }
 
                 .animation,
-                .effect {
+                .effect,
+                .direction {
                     display: flex;
+                    justify-content: flex-end;
                     gap: 8px;
                     margin-top: 8px;
 
@@ -732,6 +916,97 @@ onUnmounted(() => {
                         background-color: #F5F5F5;
                         box-sizing: border-box;
 
+                    }
+
+                    .content {
+                        display: grid;
+                        align-items: center;
+                        grid-template-columns: 1fr 1fr 1fr 1fr;
+                        grid-template-rows: 1fr;
+                        width: 140px;
+                        height: 32px;
+                        padding: 2px;
+                        border-radius: 6px;
+                        background-color: #F5F5F5;
+                        box-sizing: border-box;
+
+                        .icon {
+                            @include flex(center, center);
+                            width: 34px;
+                            height: 28px;
+                            border-radius: 4px;
+                            box-sizing: border-box;
+                            transition: all 0.3s;
+
+                            svg {
+                                width: 16px;
+                                height: 16px;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .set-float {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+
+                .content {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 4px;
+                    width: 100%;
+                    height: 70px;
+
+                    .position {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr;
+                        grid-template-rows: 1fr 1fr 1fr;
+                        gap: 2px;
+                        padding: 2px;
+                        border-radius: 6px;
+                        border: 1px solid #F5F5F5;
+                        box-sizing: border-box;
+
+                        // background-color: #F5F5F5;
+                        div {
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 3px;
+                            background-color: #F5F5F5;
+                        }
+                    }
+
+                    .margin {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        grid-template-rows: 1fr 1fr;
+                        gap: 4px;
+
+                        div {
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 6px;
+                            background-color: #F5F5F5;
+                        }
+                    }
+                }
+            }
+
+            .component-status {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+
+                .state {
+                    display: flex;
+                    align-items: center;
+                    width: 140px;
+
+                    span {
+                        white-space: nowrap;
                     }
                 }
             }

@@ -28,6 +28,7 @@ interface Props {
     mixed?: boolean;
     shapes?: ShapeView[];
     visibility?: boolean;
+    width?: number;
 }
 
 interface Emits {
@@ -98,7 +99,8 @@ function options() {
     }
     if (props.mixed) top = 0;
     oe.style.top = `${-(top + PADDING_TOP)}px`;
-
+    if (props.width) oe.style.width = props.width + 'px'
+    
     oe.addEventListener('keydown', esc);
     oe.addEventListener('blur', onBlur);
     oe.focus();
