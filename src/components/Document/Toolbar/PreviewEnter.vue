@@ -2,18 +2,18 @@
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
-import { useRoute } from 'vue-router';
+// import { useRoute } from 'vue-router';
 import { open_preview } from '@/utils/preview';
 import { ShapeType } from '@kcdesign/data';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
 }>();
-const route = useRoute();
+// const route = useRoute();
 const preview = () => {
     const selected = props.context.selection.selectedShapes;
     const artboard = selected.find(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
-    open_preview(route.query.id as string, props.context, t, artboard?.id);
+    // open_preview(route.query.id as string, props.context, t, artboard?.id);
 }
 </script>
 

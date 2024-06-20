@@ -1,6 +1,6 @@
 import { Matrix, PageView, Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
-import { router } from "@/router";
+// import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
 
 export enum ScaleType {
@@ -79,7 +79,7 @@ export class Preview extends WatchableObject {
         this.m_selectShape = s;
         this.m_shape_index = getFrameList(this.selectedPage!).findIndex(item => item.id === s?.id);
         this.notify(Preview.CHANGE_SHAPE);
-        this.updateUrl();
+        // this.updateUrl();
     }
     get shapeIndex() {
         return this.m_shape_index;
@@ -98,16 +98,16 @@ export class Preview extends WatchableObject {
         const ret = shapeId === this.m_selectShape?.id
         return ret;
     }
-    updateUrl() {
-        if (!this.selectedPage) return;
-        const page_id = this.selectedPage.id;
-        const query: any = {id: this.m_doc_id, page_id: page_id.slice(0, 8) }
-        if(this.selectedShape) query.frame_id = this.selectedShape.id.slice(0, 8);
-        router.replace({
-            path: '/prototype',
-            query: query,
-        });
-    }
+    // updateUrl() {
+    //     if (!this.selectedPage) return;
+    //     const page_id = this.selectedPage.id;
+    //     const query: any = {id: this.m_doc_id, page_id: page_id.slice(0, 8) }
+    //     if(this.selectedShape) query.frame_id = this.selectedShape.id.slice(0, 8);
+    //     router.replace({
+    //         path: '/prototype',
+    //         query: query,
+    //     });
+    // }
 
     setScaleMenu(type: ScaleType | undefined) {
         this.m_menu_options = type;

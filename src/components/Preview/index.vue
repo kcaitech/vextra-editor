@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { useRoute } from 'vue-router';
-import { router } from '@/router';
+// import { useRoute } from 'vue-router';
+// import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import * as share_api from '@/request/share'
+// import * as share_api from '@/request/share'
 import { ElMessage } from 'element-plus';
 import { importRemote, Repository, Page, CoopRepository, IStorage, PageView, PageListItem } from '@kcdesign/data';
-import { OssStorage, S3Storage, StorageOptions } from '@/utils/storage';
+// import { OssStorage, S3Storage, StorageOptions } from '@/utils/storage';
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-import kcdesk from '@/kcdesk';
+// import kcdesk from '@/kcdesk';
 import { WorkSpace } from '@/context/workspace';
-import { SCREEN_SIZE } from '@/settings';
+// import { SCREEN_SIZE } from '@/settings';
 import { initpal } from '../Document/initpal';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -23,7 +23,7 @@ import { getFrameList, keyboard } from '@/utils/preview';
 
 const { t } = useI18n();
 let context: Context | undefined;
-const route = useRoute();
+// const route = useRoute();
 const loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
@@ -38,82 +38,82 @@ const inited = ref(false);
 const docInfo: any = ref({});
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
-const getDocumentInfo = async () => {
-    try {
-        loading.value = true;
-        const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
-        const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-        const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
-        if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
-            if (docKeyRes.code === 403) {
-                if (docKeyRes.message === "审核不通过") {
-                    router.push("/files");
-                    ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
-                    return;
-                }
-                router.push("/files");
-                ElMessage.error({ duration: 3000, message: docKeyRes.message })
-                return;
-            } else {
-                router.push("/files");
-                ElMessage.error({ duration: 3000, message: docInfoRes.message })
-                return;
-            }
-        }
-        const docInfoData = docInfoRes.data;
-        const docKeyData = docKeyRes.data;
-        docInfo.value = docInfoData;
-        const repo = new Repository();
-        const storageOptions: StorageOptions = {
-            endPoint: docKeyData.endpoint,
-            region: docKeyData.region,
-            accessKey: docKeyData.access_key,
-            secretKey: docKeyData.secret_access_key,
-            sessionToken: docKeyData.session_token,
-            bucketName: docKeyData.bucket_name,
-        }
-        let storage: IStorage;
-        if (docKeyData.provider === "oss") {
-            storage = new OssStorage(storageOptions);
-        } else {
-            storage = new S3Storage(storageOptions);
-        }
-        const path = docInfoData.document.path;
-        const versionId = docInfoData.document.version_id ?? "";
-        const d = await importRemote(storage, path, "", versionId, repo)
-        const document = d.document;
-        documentLoader = d.loader;
-        if (document) {
-            const coopRepo = new CoopRepository(document, repo);
-            const file_name = docInfoData.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${t('product.name')}` : `${file_name} - ${t('product.name')}`;
-            kcdesk?.fileSetName(file_name);
-            context = new Context(document, coopRepo);
-            context.comment.setDocumentInfo(docInfoData);
-            null_context.value = false;
-            init_watcher();
-            init_keyboard_uints();
-            const docId = route.query.id as string;
-            const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
-            if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
-                router.push("/files");
-                return;
-            }
-            await context.communication.docResourceUpload.start(getToken, docId);
-            await context.communication.docSelectionOp.start(getToken, docId, context);
-            const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
-            const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
-            const frameId = route.query.frame_id as string;
-            context.preview.setDocInfoId(docInfoData.document.id);
-            switchPage(page?.id || context!.data.pagesList[0]?.id, frameId);
-            loading.value = false;
-        }
-    } catch (err) {
-        loading.value = false;
-        console.log(err);
-        throw err;
-    }
-}
+// const getDocumentInfo = async () => {
+//     try {
+//         loading.value = true;
+//         const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+//         const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+//         const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
+//         if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
+//             if (docKeyRes.code === 403) {
+//                 if (docKeyRes.message === "审核不通过") {
+//                     router.push("/files");
+//                     ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
+//                     return;
+//                 }
+//                 router.push("/files");
+//                 ElMessage.error({ duration: 3000, message: docKeyRes.message })
+//                 return;
+//             } else {
+//                 router.push("/files");
+//                 ElMessage.error({ duration: 3000, message: docInfoRes.message })
+//                 return;
+//             }
+//         }
+//         const docInfoData = docInfoRes.data;
+//         const docKeyData = docKeyRes.data;
+//         docInfo.value = docInfoData;
+//         const repo = new Repository();
+//         const storageOptions: StorageOptions = {
+//             endPoint: docKeyData.endpoint,
+//             region: docKeyData.region,
+//             accessKey: docKeyData.access_key,
+//             secretKey: docKeyData.secret_access_key,
+//             sessionToken: docKeyData.session_token,
+//             bucketName: docKeyData.bucket_name,
+//         }
+//         let storage: IStorage;
+//         if (docKeyData.provider === "oss") {
+//             storage = new OssStorage(storageOptions);
+//         } else {
+//             storage = new S3Storage(storageOptions);
+//         }
+//         const path = docInfoData.document.path;
+//         const versionId = docInfoData.document.version_id ?? "";
+//         const d = await importRemote(storage, path, "", versionId, repo)
+//         const document = d.document;
+//         documentLoader = d.loader;
+//         if (document) {
+//             const coopRepo = new CoopRepository(document, repo);
+//             const file_name = docInfoData.document?.name || document.name;
+//             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${t('product.name')}` : `${file_name} - ${t('product.name')}`;
+//             kcdesk?.fileSetName(file_name);
+//             context = new Context(document, coopRepo);
+//             context.comment.setDocumentInfo(docInfoData);
+//             null_context.value = false;
+//             init_watcher();
+//             init_keyboard_uints();
+//             const docId = route.query.id as string;
+//             const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
+//             if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
+//                 router.push("/files");
+//                 return;
+//             }
+//             await context.communication.docResourceUpload.start(getToken, docId);
+//             await context.communication.docSelectionOp.start(getToken, docId, context);
+//             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
+//             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
+//             const frameId = route.query.frame_id as string;
+//             context.preview.setDocInfoId(docInfoData.document.id);
+//             switchPage(page?.id || context!.data.pagesList[0]?.id, frameId);
+//             loading.value = false;
+//         }
+//     } catch (err) {
+//         loading.value = false;
+//         console.log(err);
+//         throw err;
+//     }
+// }
 
 function switchPage(id?: string, shapeId?: string) {
     if (!id) return
@@ -141,24 +141,24 @@ const setWindowTitle = (context: Context, page: PageView) => {
     const pages = context.data.pagesList
     const page_name = pages.find(item => item.id === page.id)?.name || '';
     window.document.title = file_name.length > 8 ? `▶ ${file_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${file_name} - ${page_name.slice(0, 8)}`;
-    kcdesk?.fileSetName(file_name);
+    // kcdesk?.fileSetName(file_name);
 }
 
 const selectedShape = (ctx: Context, page: PageView, id?: string) => {
-    const list = getFrameList(page);
-    if (!list.length) {
-        ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
-        ctx.preview.selectShape(undefined);
-        ctx.preview.updateUrl();
-        return;
-    }
-    if (id) {
-        const shape = list.find(item => item.id.slice(0, 8) === id);
-        ctx.preview.selectShape(shape || list[0]);
-    } else {
-        ctx.preview.selectShape(list[0]);
-    }
-    ctx.preview.updateUrl();
+    // const list = getFrameList(page);
+    // if (!list.length) {
+    //     ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
+    //     ctx.preview.selectShape(undefined);
+    //     ctx.preview.updateUrl();
+    //     return;
+    // }
+    // if (id) {
+    //     const shape = list.find(item => item.id.slice(0, 8) === id);
+    //     ctx.preview.selectShape(shape || list[0]);
+    // } else {
+    //     ctx.preview.selectShape(list[0]);
+    // }
+    // ctx.preview.updateUrl();
 }
 function previewWatcher(t: number) {
     if (t === Preview.CHANGE_PAGE) {
@@ -194,16 +194,15 @@ function workspaceWatcher(t: number, o?: any) {
 }
 
 function switchFullScreen() {
-    if (kcdesk) return;
-    const element = document.documentElement;
-    const isFullScreen = document.fullscreenElement;
-    if (isFullScreen === null) {
-        element.requestFullscreen && element.requestFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
-    } else {
-        document.exitFullscreen && document.exitFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
-    }
+    // const element = document.documentElement;
+    // const isFullScreen = document.fullscreenElement;
+    // if (isFullScreen === null) {
+    //     element.requestFullscreen && element.requestFullscreen();
+    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
+    // } else {
+    //     document.exitFullscreen && document.exitFullscreen();
+    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+    // }
 }
 let timerForLeft: any;
 const showHiddenLeft = () => {
@@ -257,7 +256,7 @@ function init_keyboard_uints() {
 }
 
 function init_screen_size() {
-    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+    // localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
 
 const changeLeftWidth = (width: number) => {
@@ -265,7 +264,7 @@ const changeLeftWidth = (width: number) => {
 }
 
 onMounted(() => {
-    getDocumentInfo();
+    // getDocumentInfo();
     init_screen_size();
     initpal().then(() => {
         inited.value = true;

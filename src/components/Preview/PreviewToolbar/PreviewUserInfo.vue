@@ -4,8 +4,8 @@ import Share from '../../Document/Toolbar/Share/Share.vue';
 import Scale from './PreviewScale.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
-import kcdesk from '@/kcdesk';
-import { SCREEN_SIZE } from '@/settings';
+// import kcdesk from '@/kcdesk';
+// import { SCREEN_SIZE } from '@/settings';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 interface Props {
@@ -16,16 +16,16 @@ const props = defineProps<Props>();
 const isFull = ref<boolean>(false);
 
 const switchFullScreen = () => {
-    if (kcdesk) return;
-    const element = document.documentElement;
-    const isFullScreen = document.fullscreenElement;
-    if (isFullScreen === null) {
-        element.requestFullscreen && element.requestFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
-    } else {
-        document.exitFullscreen && document.exitFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
-    }
+    // if (kcdesk) return;
+    // const element = document.documentElement;
+    // const isFullScreen = document.fullscreenElement;
+    // if (isFullScreen === null) {
+    //     element.requestFullscreen && element.requestFullscreen();
+    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
+    // } else {
+    //     document.exitFullscreen && document.exitFullscreen();
+    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+    // }
 }
 
 const openFill = () => {

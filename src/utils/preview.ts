@@ -1,4 +1,4 @@
-import kcdesk from "@/kcdesk";
+// import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
 import { PageView, ShapeType } from "@kcdesign/data";
@@ -134,7 +134,7 @@ export const setWindowTitle = (context: Context, page: PageView) => {
     const pages = context.data.pagesList
     const page_name = pages.find(item => item.id === page.id)?.name || '';
     window.document.title = _name.length > 8 ? `▶ ${_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${_name} - ${page_name.slice(0, 8)}`;
-    kcdesk?.fileSetName(_name);
+    // kcdesk?.fileSetName(_name);
 }
 
 export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
@@ -142,9 +142,9 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     if (!list.length) {
         ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
         ctx.preview.selectShape(undefined);
-        ctx.preview.updateUrl();
+        // ctx.preview.updateUrl();
         return;
     }
     ctx.preview.selectShape(list[0]);
-    ctx.preview.updateUrl();
+    // ctx.preview.updateUrl();
 }

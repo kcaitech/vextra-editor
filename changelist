@@ -522,3 +522,18 @@ Changes to be committed:
 	modified:   src/utils/keyboardUnits.ts
 	modified:   src/utils/pathedit.ts
 
+On branch branch_editor
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/components/Document/Attribute/Opacity/Opacity.vue
+	modified:   src/components/Document/ContentView.vue
+	modified:   src/components/Document/Rule/index.vue
+	modified:   src/components/Document/Toolbar/PreviewEnter.vue
+	deleted:    src/components/Login/HeaderComponent.vue
+	modified:   src/components/Preview/PreviewToolbar/PreviewBackToHome.vue
+	modified:   src/components/Preview/PreviewToolbar/PreviewUserInfo.vue
+	modified:   src/components/Preview/index.vue
+	modified:   src/context/preview.ts
+	modified:   src/openapi/toolbox/scout.ts
+	modified:   src/utils/preview.ts
+

@@ -100,7 +100,7 @@ const pageWatcher = (...args: any) => {
     }
 }
 
-function workspaceWatcher(t: number) {
+function workspaceWatcher(t: number | string) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION || t === WorkSpace.ROOT_UPDATE) {
         scaleRenderer.render();
         rootReferHandler.render();
@@ -134,7 +134,7 @@ function toolWatcher(t: number) {
     }
 }
 
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
         referLineSelection.updateByShapesSelected();

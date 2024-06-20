@@ -12,5 +12,6 @@ export interface IScout {
     isPointInPath: (d: string, point: {x: number, y: number}) => boolean
     isPointInStroke: (d: string, point: {x: number, y: number}) => boolean
     isPointInShape2: (shape: ShapeView, point: {x: number, y: number}) => boolean
+    isPointInStrokeByWidth: (d: string, point: {x: number, y: number}, width: number) => boolean
 }
 

@@ -61,7 +61,7 @@ let opacity_editor: AsyncOpacityEditor | undefined = undefined;
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
     popoverVisible.value = true;
-    props.context.esctask.save(v4(), min_mode_dialog);
+    props.context.escstack.save(v4(), min_mode_dialog);
     nextTick(() => {
         if (!popover.value) return;
         const index = mixModeList.findIndex(item => item === selectedMixMode.value);
