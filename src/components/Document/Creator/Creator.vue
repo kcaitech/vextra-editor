@@ -133,11 +133,10 @@ function move2(e: MouseEvent) {
 function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
-
-    if (!isDrag && props.context.tool.action.startsWith('add')) {
+    isDrag = false;
+    if (props.context.tool.action.startsWith('add')) {
 
         if (props.context.tool.action === Action.AddComment) {
-            isDrag = false;
             return addComment(e);
         }
     }
@@ -183,6 +182,7 @@ const addComment = (e: MouseEvent) => {
     if (commentInput.value) {
         return;
     }
+
     const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
@@ -330,13 +330,12 @@ onUnmounted(() => {
 <template>
     <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
-                      :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
-                      :rootWidth="rootWidth"
-                      @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
-                      :matrix="props.context.workspace.matrix"
-                      :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+            :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
+            @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
+            :matrix="props.context.workspace.matrix" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed"
+            :posi="posi"></CommentInput>
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
-        <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
+        <div v-if="mode === 'pen'" class="dot" :style="{ left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px' }"></div>
     </div>
 </template>
 <style scoped lang="scss">
