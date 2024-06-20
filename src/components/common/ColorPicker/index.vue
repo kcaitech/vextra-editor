@@ -476,7 +476,7 @@ function mousemove4Dot(e: MouseEvent) {
         } else if (y < saturationY) {
             dotPosition.top = -(DOT_SIZE / 2);
         } else {
-            dotPosition.top =  HUE_HEIGHT - (DOT_SIZE / 2)
+            dotPosition.top = HUE_HEIGHT - (DOT_SIZE / 2)
         }
 
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
@@ -894,7 +894,7 @@ const gradient_line = ref<HTMLDivElement>();
 
 //更新渐变颜色画板
 function update_stops(selected: string | undefined) {
-    if(sleep) return;
+    if (sleep) return;
     stop_els.value.length = 0;
     if (!props.gradient || props.fillType !== FillType.Gradient) {
         return;
@@ -1384,7 +1384,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             box-sizing: border-box;
-            border-width: 0px 0px 1px 0px;
+            border-width: 0 0 1px 0;
             border-style: solid;
             border-color: #F5F5F5;
             padding: 14px 12px;

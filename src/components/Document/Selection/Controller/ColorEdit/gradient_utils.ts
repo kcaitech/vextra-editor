@@ -1,6 +1,18 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D, TextShapeView, AttrGetter, Shape, TableCell, TableView, TableCellView } from "@kcdesign/data";
+import {
+    Color,
+    Stop,
+    ShapeView,
+    ShapeType,
+    Gradient,
+    GradientType,
+    BasicArray,
+    Point2D,
+    TextShapeView,
+    AttrGetter,
+    TableCellView
+} from "@kcdesign/data";
 import { importGradient } from "@kcdesign/data";
 import { v4 } from "uuid";
 
@@ -26,9 +38,9 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
                 const f_posi = stops[i - 1].position;
                 const a_len = alpha - stop.color.alpha;
                 const proportion = ((position - f_posi) * a_len) / (stop.position - f_posi);
-                if(a_len === 0) {
+                if (a_len === 0) {
                     n_alpha = alpha;
-                }else {
+                } else {
                     n_alpha = a_len > 0 ? alpha - proportion : alpha + proportion;
                 }
             } else {
@@ -86,9 +98,12 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
             } else {
                 let cells: (TableCellView)[];
                 if (table_s.tableRowStart < 0 || table_s.tableColStart < 0) {
-                  cells = shape.childs as (TableCellView)[];
+                    cells = shape.childs as (TableCellView)[];
                 } else {
-                  cells = table_s.getSelectedCells(true).reduce((cells, item) => { if (item.cell) cells.push(item.cell); return cells; }, [] as (TableCellView[]));
+                    cells = table_s.getSelectedCells(true).reduce((cells, item) => {
+                        if (item.cell) cells.push(item.cell);
+                        return cells;
+                    }, [] as (TableCellView[]));
                 }
                 const formats: any[] = [];
                 for (let i = 0; i < cells.length; i++) {
@@ -105,7 +120,10 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     }
 }
 
-export const get_temporary_stop = (position: number, dot1: { x: number, y: number }, dot2: { x: number, y: number }, shape: ShapeView, context: Context) => {
+export const get_temporary_stop = (position: number, dot1: { x: number, y: number }, dot2: {
+    x: number,
+    y: number
+}, shape: ShapeView, context: Context) => {
     const x1 = dot1.x + ((dot2.x - dot1.x) * position);
     const y1 = dot1.y + ((dot2.y - dot1.y) * position);
     const gradient = get_gradient(context, shape);

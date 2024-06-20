@@ -43,6 +43,7 @@ import { events } from "./events";
 import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
+import { Preview } from "./preview";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -141,6 +142,7 @@ export class Context extends WatchableObject implements IContext {
     private m_medias: PdMedia;
     private m_user: User;
     private m_attr: Attribute;
+    private m_preview: Preview
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -177,6 +179,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_medias = new PdMedia(this);
         this.m_user = new User();
         this.m_attr = new Attribute();
+        this.m_preview = new Preview(this);
         startLoadTask(data, this.m_taskMgr);
     }
 
@@ -355,6 +358,9 @@ export class Context extends WatchableObject implements IContext {
 
     get attr() {
         return this.m_attr;
+    }
+    get preview() {
+        return this.m_preview;
     }
 
     private createVDom(page: Page) {

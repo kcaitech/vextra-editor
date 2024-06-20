@@ -390,14 +390,6 @@ onUnmounted(() => {
         }
     }
 
-    >svg {
-        position: fixed;
-        left: 100000px;
-        top: 100000px;
-        opacity: 0;
-        z-index: -2023;
-    }
-
     .preview-canvas {
         position: relative;
         width: 100%;

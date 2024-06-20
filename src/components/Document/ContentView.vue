@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance, h } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance, h, onBeforeMount } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -46,6 +46,7 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
+import Rule from "./Rule.vue";
 
 interface Props {
     context: Context
@@ -192,12 +193,21 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
 }
 
 function search(e: MouseEvent) { // 常规图形检索
-    if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
+    const ctx = props.context;
+    if (ctx.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
-    const { x, y } = workspace.value.root;
+    const { x, y } = ctx.workspace.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
-    selectShapes(props.context, shapes);
+
+    if (ctx.user.isRuleVisible && !e.shiftKey) {
+        if (ctx.tool.referFinder?.(xy)) {
+            ctx.selection.unHoverShape();
+            return;
+        }
+    }
+
+    const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    selectShapes(ctx, shapes);
 }
 
 const search_once = debounce(search, 350) // 连续操作结尾处调用
@@ -343,7 +353,10 @@ function onMouseDown(e: MouseEvent) {
         } else {
             isMouseLeftPress = true;
             wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+            // 取消参考线选区
+            props.context.tool.referSelection.resetSelected();
         }
+
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) { // 右键按下，右键菜单处理
@@ -389,7 +402,7 @@ function onMouseMove_CV(e: MouseEvent) {
                 select(e);
             }
         } else if (e.buttons === 0) {
-            if (action === Action.AutoV || action === Action.AutoK) {
+            if (action === Action.AutoV) {
                 search(e); // 图形检索(hover)
             }
         }
@@ -643,6 +656,9 @@ const closeLoading = () => {
     emit('closeLoading');
 }
 watch(() => matrix, matrix_watcher, { deep: true });
+onBeforeMount(() => {
+    props.context.user.updateUserConfig();
+});
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -655,7 +671,6 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.color.watch(color_watcher);
-    props.context.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
     document.addEventListener('keydown', onKeyDown);
@@ -790,5 +805,6 @@ comps.push(...plugins.end);
         :style="{ 'background-color': background_color }">
 
         <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <Rule :context="props.context" :page="(props.page as PageView)"></Rule>
     </div>
 </template>

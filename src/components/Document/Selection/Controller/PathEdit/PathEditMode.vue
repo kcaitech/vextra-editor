@@ -177,6 +177,7 @@ function init() {
         props.context.tool.setAction(Action.Pen2);
         penMode.value = true;
     }
+    props.context.tool.notify(Tool.RULE_RENDER);
 }
 
 onMounted(() => {
@@ -197,6 +198,7 @@ onUnmounted(() => {
     new PathEditor(props.context).sortSegment();
     path.setContactStatus(false);
     path.saveEvent(undefined);
+    props.context.tool.notify(Tool.RULE_RENDER);
 })
 </script>
 <template>

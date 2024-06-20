@@ -72,7 +72,7 @@ function write() {
     pedal.value = true;
 
     nextTick(async () => {
-        const blob = await getBase64();
+        const blob = await getBlob();
         if (!blob) {
             message('info', t('clipboard.copyAsPNGFailed'));
             return;
@@ -87,7 +87,66 @@ function write() {
     })
 }
 
-function getBase64(): Promise<Blob | null> {
+/**
+ * @description quality = 0.5
+ */
+function write4LazyLoader(target: ShapeView) {
+    renderItems.length = 0;
+    pedal.value = false;
+
+    const selected = [target].map(s => toRaw(s));
+    if (!selected.length) {
+        return;
+    }
+
+    renderItems = selected;
+
+    const points: XY[] = [];
+    for (let i = 0; i < renderItems.length; i++) {
+        const shape = renderItems[i];
+        const frame = shape.frame;
+
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const max_border = getShapeBorderMax(shape);
+
+        const x = -left - max_border;
+        const y = -top - max_border;
+        const _right = frame.width + (right + max_border);
+        const _bottom = frame.height + (bottom + max_border);
+        console.log(x, y, width, height);
+        points.push(
+            ...[
+                { x, y },
+                { x: _right, y },
+                { x: _right, y: _bottom },
+                { x, y: _bottom }
+            ].map(p => shape.matrix2Root().computeCoord3(p))
+        )
+    }
+
+    const box = XYsBounding(points);
+    const page = props.context.preview.selectedPage!;
+    xy.value = { x: box.left - page.frame.x, y: box.top - page.frame.y };
+    width.value = box.right - box.left;
+    height.value = box.bottom - box.top;
+
+    pedal.value = true;
+
+    nextTick(async () => {
+        const b64 = await getBase64();
+        if (!b64) {
+            return;
+        }
+        emits('loaded', b64);
+        pedal.value = false;
+    })
+}
+
+const emits = defineEmits<{
+    (e: 'loaded', b64: string): void;
+}>();
+
+function getBlob(): Promise<Blob | null> {
     const svg = pageCard.value?.pageSvg as SVGElement;
     return new Promise((resolve) => {
         if (!svg) {
@@ -125,9 +184,48 @@ function getBase64(): Promise<Blob | null> {
     })
 }
 
-function menuWatcher(t: number) {
+function getBase64(): Promise<string | null> {
+    const svg = pageCard.value?.pageSvg as SVGElement;
+    return new Promise((resolve) => {
+        if (!svg) {
+            resolve(null);
+            return;
+        }
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) {
+            resolve(null);
+            return;
+        }
+
+        const _svg = svg.cloneNode(true) as SVGSVGElement;
+
+        document.body.appendChild(_svg);
+        const { width, height } = _svg.viewBox.baseVal;
+        _svg.setAttribute('width', `${width}`);
+        _svg.setAttribute('height', `${height}`);
+        canvas.width = width;
+        canvas.height = height;
+        const svgString = new XMLSerializer().serializeToString(_svg);
+        document.body.removeChild(_svg);
+        const img = new Image();
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+        img.onload = () => {
+            context.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg', 0.5))
+        }
+        img.onerror = () => {
+            resolve(null)
+        }
+    })
+}
+
+function menuWatcher(t: number, target: ShapeView) {
     if (t === Menu.WRITE_MEDIA) {
         write();
+    } else if (t === Menu.WRITE_MEDIA_LAZY) {
+        console.log('__target', target.name)
+        write4LazyLoader(target);
     }
 }
 

@@ -67,7 +67,7 @@ function _updater(t?: number | string) {
             } else {
                 state.value = state.value ^ GROUP;
             }
-            if (shapes.some(s => s.type === ShapeType.Artboard)) {
+            if (shapes.some(s => s.type === ShapeType.Artboard || s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef || s.type === ShapeType.SymbolUnion)) {
                 isBoolGroup.value = false;
             }
         }

@@ -1,4 +1,4 @@
-import { ShadowPosition } from "@kcdesign/data"
+import { ShadowPosition, BlurType } from "@kcdesign/data"
 
 export const shadow: any = {
     shadow_stting: '阴影',
@@ -15,3 +15,13 @@ export const shadow: any = {
 
 shadow[ShadowPosition.Inner] = '内阴影';
 shadow[ShadowPosition.Outer] = '外阴影';
+
+export const blur: any = {
+    blur: '模糊',
+    blur_setting: '模糊设置'
+}
+
+blur[BlurType.Gaussian] = '高斯模糊';
+blur[BlurType.Background] = '背景模糊';
+blur[BlurType.Zoom] = '缩放模糊';
+blur[BlurType.Motion] = '动感模糊';

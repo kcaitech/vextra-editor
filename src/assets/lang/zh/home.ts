@@ -1,4 +1,5 @@
-import { BorderPosition } from "@kcdesign/data"
+import { ScaleType } from "@/context/preview"
+import { BlendMode, BorderPosition } from "@kcdesign/data"
 
 export const system = {
     incorrect_input: '输入有误！',
@@ -65,7 +66,9 @@ export const system = {
     sensitive_reminder3: '含有敏感信息，无法访问。',
     pixel: '对齐像素',
     grid: '像素网格',
-    uploadMediaFail: '图片资源上传失败'
+    rule: '显示标尺',
+    uploadMediaFail: '图片资源上传失败',
+    internet:'进入官网'
 }
 
 export const home = {
@@ -150,7 +153,10 @@ export const home = {
     'distribute_v': '上下等距分布',
     people_are_visiting: '正在访问的人:',
     permissions: '权限:',
-    contact: '连接线'
+    contact: '连接线',
+    full: '进入全屏',
+    exit_full: '退出全屏',
+    not_preview_frame: '没有可演示的容器'
 }
 
 export const search = {
@@ -309,7 +315,12 @@ export const attr: any = {
 }
 
 export const login = {
-    login_failure: '登录失效，请重新登录'
+    login_failure: '登录失效，请重新登录',
+    welcome: '欢迎登录使用',
+    name: '墨师设计',
+    describe: '在线协作专业产品设计软件',
+    miniprogram:'微信小程序',
+    scan_code:'微信扫一扫'
 }
 
 export const comment = {
@@ -344,25 +355,7 @@ export const clipboard = {
     'copyAsPNG': '复制PNG图片'
 
 }
-export const opacity = {
-    normal: '正常',
-    become_dark: '变暗',
-    multiply: '正片叠底',
-    color_deepening: '颜色加深',
-    become_bright: '变亮',
-    filter: '滤色',
-    color_dodge: '颜色减淡',
-    superpose: '叠加',
-    soft_light: '柔光',
-    strong_light: '强光',
-    difference: '差值',
-    exclude: '排除',
-    hue: '色相',
-    saturation: '饱和度',
-    color: '颜色',
-    lightness: '明度',
-    darken: '加暗',
-    brighten: '提亮'
+export const opacity: any = {
 }
 export const message = {
     doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
@@ -391,6 +384,38 @@ export const date = {
     s: '秒前',
 }
 
+export const preview: any = {
+    actual_size: '实际尺寸',
+    previous_page: '上一页',
+    next_page: '下一页',
+    first_page: '第一页',
+    preview: '预览',
+    open: '在设计模式中打开'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
+
+opacity[BlendMode.Normal] = "正常";
+opacity[BlendMode.Darken] = "变暗";
+opacity[BlendMode.Multiply] = "正片叠底";
+opacity[BlendMode.ColorBurn] = "颜色加深";
+opacity[BlendMode.Lighten] = "变亮";
+opacity[BlendMode.Screen] = "滤色";
+opacity[BlendMode.ColorDodge] = "颜色减淡";
+opacity[BlendMode.Overlay] = "叠加";
+opacity[BlendMode.SoftLight] = "柔光";
+opacity[BlendMode.HardLight] = "强光";
+opacity[BlendMode.Difference] = "差值";
+opacity[BlendMode.Exclusion] = "排除";
+opacity[BlendMode.Hue] = "色相";
+opacity[BlendMode.Saturation] = "饱和度";
+opacity[BlendMode.Color] = "颜色";
+opacity[BlendMode.Luminosity] = "明度";
+opacity[BlendMode.PlusDarker] = "加暗";
+opacity[BlendMode.PlusLighter] = "提亮";
+
+preview[ScaleType.FillScreen] = '充满屏幕'
+preview[ScaleType.FitWidth] = '适应宽度'
+preview[ScaleType.FitScreen] = '适应屏幕'

@@ -102,12 +102,20 @@ export function scout(context: Context): Scout {
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
 
+    function isPointInStrokeByWidth(d: string, point: XY, width: number): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        path.setAttributeNS(null, 'stroke-width', `${width}`);
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+    }
+
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
+        console.log('__REMOVE_', s);
         if (s) document.body.removeChild(s);
     }
 
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

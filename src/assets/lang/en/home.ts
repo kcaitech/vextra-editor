@@ -1,4 +1,5 @@
-import { BorderPosition } from "@kcdesign/data";
+import { ScaleType } from "@/context/preview";
+import { BlendMode, BorderPosition } from "@kcdesign/data";
 
 export const system = {
     incorrect_input: 'Incorrect input!',
@@ -64,7 +65,9 @@ export const system = {
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.',
     pixel: 'Pixel Round',
     grid: 'Pixel grid',
-    uploadMediaFail: 'Image upload failed'
+    rule: 'Rule',
+    uploadMediaFail: 'Image upload failed',
+    internet: 'Go Home'
 }
 
 export const home = {
@@ -149,7 +152,10 @@ export const home = {
     'distribute_v': 'Distribute vertical spacing',
     people_are_visiting: 'People are visiting:',
     permissions: 'Permissions:',
-    contact: 'Contact'
+    contact: 'Contact',
+    full: 'Full screen',
+    exit_full: 'Exit full screen',
+    not_preview_frame: 'There is no demonstrable container'
 }
 
 export const search = {
@@ -308,7 +314,12 @@ export const attr: any = {
 }
 
 export const login = {
-    login_failure: 'Login failure'
+    login_failure: 'Login failure',
+    welcome: 'Welcome',
+    name: 'MossDesign',
+    describe: 'Online collaborative professional product design software',
+    miniprogram: 'MiniProgram',
+    scan_code: 'Scan wechat'
 }
 
 export const comment = {
@@ -342,25 +353,7 @@ export const clipboard = {
     'copyAsPNGFailed': 'Failed',
     'copyAsPNG': 'copy as PNG'
 }
-export const opacity = {
-    normal: 'Normal',
-    become_dark: 'Become dark',
-    multiply: 'Multiply',
-    color_deepening: 'Color deepening',
-    become_bright: 'Become bright',
-    filter: 'Filter',
-    color_dodge: 'Color dodge',
-    superpose: 'Superpose',
-    soft_light: 'Soft light',
-    strong_light: 'Strong light',
-    difference: 'Difference',
-    exclude: 'Exclude',
-    hue: 'Hue',
-    saturation: 'Saturation',
-    color: 'Color',
-    lightness: 'Lightness',
-    darken: 'Darken',
-    brighten: 'Brighten'
+export const opacity: any = {
 }
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
@@ -372,7 +365,7 @@ export const message = {
     link_success: 'Network connection successful',
     autosave: 'Automatic document saving',
     cancel: 'Cancel',
-    exit_document: 'Exit document',
+    exit_document: 'Exit',
     back_home: 'Back to home',
     unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
@@ -387,6 +380,38 @@ export const date = {
     just_now: 'Just now',
     s: 's',
 }
+
+export const preview: any = {
+    actual_size: 'Actual size',
+    previous_page: 'Previous page',
+    next_page: 'Next page',
+    first_page: 'First page',
+    preview: 'Preview',
+    open: 'Opens in Design mode'
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
+
+opacity[BlendMode.Normal] = "Normal";
+opacity[BlendMode.Darken] = "Become dark";
+opacity[BlendMode.Multiply] = "Multiply";
+opacity[BlendMode.ColorBurn] = "Color deepening";
+opacity[BlendMode.Lighten] = "Become bright";
+opacity[BlendMode.Screen] = "Filter";
+opacity[BlendMode.ColorDodge] = "Color dodge";
+opacity[BlendMode.Overlay] = "Superpose";
+opacity[BlendMode.SoftLight] = "Soft light";
+opacity[BlendMode.HardLight] = "Strong light";
+opacity[BlendMode.Difference] = "Difference";
+opacity[BlendMode.Exclusion] = "Exclude";
+opacity[BlendMode.Hue] = "Hue";
+opacity[BlendMode.Saturation] = "Saturation";
+opacity[BlendMode.Color] = "Color";
+opacity[BlendMode.Luminosity] = "Lightness";
+opacity[BlendMode.PlusDarker] = "Plus darker";
+opacity[BlendMode.PlusLighter] = "Plus lighter";
+
+preview[ScaleType.FillScreen] = 'Fill screen'
+preview[ScaleType.FitWidth] = 'Fit width'
+preview[ScaleType.FitScreen] = 'Fit screen'

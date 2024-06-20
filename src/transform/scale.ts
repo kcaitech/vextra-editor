@@ -3,6 +3,7 @@ import { FrameLike, TransformHandler } from "./handler";
 import { adapt2Shape, CtrlElementType, Matrix, Scaler, ScaleUnit, ShapeType, ShapeView } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { boundingBox2Root } from "@/utils/common";
+import { Tool } from "@/context/tool";
 
 type Box = {
     origin: XY;
@@ -310,7 +311,7 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        this.updateHorFixedStatus(x, target);
+        this.updateHorFixedStatus(assist.x, target);
     }
 
     private fixToAlignWhileModifyTopOrBottom() {
@@ -329,7 +330,7 @@ export class ScaleHandler extends TransformHandler {
             return;
         }
 
-        this.updateVerFixedStatus(y, assistResult);
+        this.updateVerFixedStatus(assist.y, assistResult);
     }
 
     private fixToAlignWhileModifyPoint() {
@@ -356,6 +357,11 @@ export class ScaleHandler extends TransformHandler {
         } else {
             this.__execute4multi();
         }
+
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER);
+        });
+
         this.updateCtrlView();
     }
 

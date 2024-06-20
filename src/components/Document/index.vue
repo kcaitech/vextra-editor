@@ -24,6 +24,7 @@ import { initpal } from './initpal';
 import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { IContext } from '@/openapi';
+import { scroll_to_view } from '@/utils/listview';
 // import HelpEntrance from '../Help/HelpEntrance.vue';
 
 const props = defineProps<{ context: IContext }>()
@@ -103,7 +104,7 @@ function mouseleave(t: 'left' | 'right') {
     }
 }
 
-function switchPage(id?: string) {
+function switchPage(id?: string, frame_id?: string) {
     if (!id) return
 
     const ctx: Context = props.context as Context;
@@ -122,6 +123,7 @@ function switchPage(id?: string) {
     })
 
 }
+
 
 function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;

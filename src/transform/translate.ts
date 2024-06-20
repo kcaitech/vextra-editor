@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { GroupShape, Matrix, ShapeView, TranslateUnit, Transporter, adapt2Shape } from "@kcdesign/data";
+import { adapt2Shape, GroupShape, Matrix, ShapeType, ShapeView, TranslateUnit, Transporter } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
@@ -8,6 +8,7 @@ import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { round2half } from "@/transform/line";
+import { Tool } from "@/context/tool";
 
 type BaseFrame4Trans = {
     rootXY: XY;
@@ -60,7 +61,9 @@ export class TranslateHandler extends TransformHandler {
 
         this.getFrames();
 
-        this.beforeTransform()
+        this.beforeTransform();
+
+        // console.log('__TRANSLATE CONSTRUCTOR__');
     }
 
     beforeTransform() {
@@ -279,8 +282,10 @@ export class TranslateHandler extends TransformHandler {
         let livingXs = [l, (l + r) / 2, r];
         let livingYs = [t, (t + b) / 2, b]
 
-        const assistResult = this.context.assist.alignPoints(livingXs, livingYs);
-        this.context.assist.notify(Assist.CLEAR);
+        const assist = this.context.assist;
+
+        const assistResult = assist.alignPoints(livingXs, livingYs);
+        assist.notify(Assist.CLEAR);
 
         if (!assistResult) {
             return;
@@ -307,8 +312,10 @@ export class TranslateHandler extends TransformHandler {
         const cx = (l + r) / 2;
         const cy = (t + b) / 2;
 
+        const fixedTarget = assist.fixedTarget;
+
         if (assistXWork) {
-            this.context.assist.multi_line_x = [
+            assist.multi_line_x = [
                 {
                     x: l,
                     pre: [
@@ -330,12 +337,43 @@ export class TranslateHandler extends TransformHandler {
                     ]
                 }
             ]
+            if (assistResult.sparkX && fixedTarget) {
+                // 高亮参考线
+                const boxXs = new Set<number>([l, r, cx]);
+                const lines = assist.m_guides_x.filter(i => boxXs.has(i.offsetRoot));
+                const paths = assist.highlight_guide_x;
+                paths.length = 0;
+
+                if (fixedTarget.type === ShapeType.Page) {
+                    const matrix = this.context.workspace.matrix;
+                    const height = this.context.workspace.root.height;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const x = matrix.computeCoord2(lines[i].offsetFix, 0).x;
+                        paths.push(`M${x} 0 L${x} ${height}`);
+                    }
+                } else {
+                    const matrix = fixedTarget.matrix2Root();
+                    matrix.multiAtLeft(this.context.workspace.matrix);
+                    const height = fixedTarget.frame.height;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const offset = lines[i].offsetFix;
+                        const start = matrix.computeCoord2(offset, 0);
+                        const end = matrix.computeCoord2(offset, height);
+                        paths.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            } else {
+                assist.highlight_guide_x = [];
+            }
         } else {
-            this.context.assist.multi_line_x = [];
+            assist.multi_line_x = [];
+            assist.highlight_guide_x = []
         }
 
         if (assistYWork) {
-            this.context.assist.multi_line_y = [
+            assist.multi_line_y = [
                 {
                     y: t,
                     pre: [
@@ -358,12 +396,43 @@ export class TranslateHandler extends TransformHandler {
                     ]
                 }
             ]
+            if (assistResult.sparkY && fixedTarget) {
+                // 高亮参考线
+                const boxYs = new Set<number>([t, b, cy]);
+                const lines = assist.m_guides_y.filter(i => boxYs.has(i.offsetRoot));
+                const paths = assist.highlight_guide_y;
+                paths.length = 0;
+
+                if (fixedTarget.type === ShapeType.Page) {
+                    const matrix = this.context.workspace.matrix;
+                    const width = this.context.workspace.root.width;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const y = matrix.computeCoord2(0, lines[i].offsetFix).y;
+                        paths.push(`M0 ${y} L${width} ${y}`);
+                    }
+                } else {
+                    const matrix = fixedTarget.matrix2Root();
+                    matrix.multiAtLeft(this.context.workspace.matrix);
+                    const width = fixedTarget.frame.width;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const offset = lines[i].offsetFix;
+                        const start = matrix.computeCoord2(0, offset);
+                        const end = matrix.computeCoord2(width, offset);
+                        paths.push(`M${start.x} ${start.y} L${end.x} ${end.y}`);
+                    }
+                }
+            } else {
+                assist.highlight_guide_y = [];
+            }
         } else {
-            this.context.assist.multi_line_y = [];
+            assist.multi_line_y = [];
+            assist.highlight_guide_y = [];
         }
 
         if (assistXWork || assistYWork) {
-            this.context.assist.notify(Assist.MULTI_LINE_ASSIST);
+            assist.notify(Assist.MULTI_LINE_ASSIST);
         }
     }
 
@@ -456,18 +525,24 @@ export class TranslateHandler extends TransformHandler {
             transformUnits.push({ shape, x, y });
         }
 
+        this.context.nextTick(this.page, () => {
+            this.context.tool.notify(Tool.RULE_RENDER_SIM);
+        });
+
         (this.asyncApiCaller as Transporter).execute(transformUnits);
     }
 
-    private __migrate() {
+    private __migrate(tailCollect = true) {
         // if (this.workspace.transforming && this.shapes.length > 50) return; @@@
         const t = this.asyncApiCaller as Transporter;
         if (!t) {
             return;
         }
 
+        const ctx = this.context;
+
         const pe = this.livingPoint;
-        const target_parent = this.context.selection.getEnvForMigrate(pe);
+        const target_parent = ctx.selection.getEnvForMigrate(pe);
 
         if (target_parent.id === t.current_env_id) {
             return;
@@ -478,14 +553,20 @@ export class TranslateHandler extends TransformHandler {
         const o_env = except.find(v => v.id === target_parent.id);
 
         if (o_env) {
-            t.backToStartEnv(o_env.data, this.context.workspace.t('compos.dlt'));
+            t.backToStartEnv(o_env.data, ctx.workspace.t('compos.dlt'));
         } else {
             const tp = adapt2Shape(target_parent) as GroupShape;
             const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
-            t.migrate(tp, _shapes, this.context.workspace.t('compos.dlt'));
+            t.migrate(tp, _shapes, ctx.workspace.t('compos.dlt'));
         }
 
-        this.context.assist.set_collect_target(this.shapes, true);
+        ctx.nextTick(ctx.selection.selectedPage!, () => {
+            ctx.tool.notify(Tool.RULE_RENDER);
+
+            if (tailCollect) {
+                ctx.assist.set_collect_target(this.shapes, true);
+            }
+        })
     }
 
     migrateOnce = debounce(this.__migrate, 160);
@@ -498,7 +579,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     fulfil() {
-        this.__migrate();
+        this.__migrate(false);
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
 

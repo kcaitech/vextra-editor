@@ -142,13 +142,13 @@ svg {
 }
 
 use {
-    stroke-width: 1px;
-    stroke: #ff2200;
+    stroke-width: 0.5px;
+    stroke: #ff4400;
 }
 
 .a-path {
-    stroke-width: 1px;
-    stroke: #ff2200;
+    stroke-width: 0.5px;
+    stroke: #ff4400;
     fill: none;
 }
 </style>

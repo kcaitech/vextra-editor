@@ -47,6 +47,7 @@ const togglePositinon = (position: ShadowPosition) => {
 
 const close = () => {
     isMenu.value = false;
+    document.removeEventListener('click', handleClick);
 }
 
 const handleClick = (e: MouseEvent) => {
@@ -70,8 +71,8 @@ onUnmounted(() => {
 
 <template>
     <div class="shadow-position">
-        <div class="context" @click="showMenu">{{ t(`shadow.${shadow.position}`) }}</div>
-        <div class="down" @click="showMenu" :class="{ 'active-down': isMenu }">
+        <div class="context" @click.stop="showMenu">{{ t(`shadow.${shadow.position}`) }}</div>
+        <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
             <svg-icon icon-class="down" />
         </div>
         <div class="select_menu" v-if="isMenu"
