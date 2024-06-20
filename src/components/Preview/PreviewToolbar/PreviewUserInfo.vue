@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import UserAvatar from '../../Document/Toolbar/UserAvatar.vue';
-import Share from '../../Document/Toolbar/Share/Share.vue';
+// import UserAvatar from '../../Document/Toolbar/UserAvatar.vue';
+// import Share from '../../Document/Toolbar/Share/Share.vue';
 import Scale from './PreviewScale.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 // import kcdesk from '@/kcdesk';
 // import { SCREEN_SIZE } from '@/settings';
 import { useI18n } from 'vue-i18n';
-import Tooltip from '@/components/common/Tooltip.vue';
+// import Tooltip from '@/components/common/Tooltip.vue';
 interface Props {
     context: Context
 }
@@ -28,19 +28,19 @@ const switchFullScreen = () => {
     // }
 }
 
-const openFill = () => {
-    const href = window.location.href;
-    const url = href.replace(/prototype/, 'document');
-    const p_window = props.context.preview.previewWindow;
+// const openFill = () => {
+//     const href = window.location.href;
+//     const url = href.replace(/prototype/, 'document');
+//     const p_window = props.context.preview.previewWindow;
 
-    if (p_window && !p_window.closed) {
-        p_window.location.href = url;
-        p_window.focus();
-    } else {
-        const newWindow = window.open(url);
-        if (newWindow) props.context.preview.setPreviewWindow(newWindow);
-    }
-}
+//     if (p_window && !p_window.closed) {
+//         p_window.location.href = url;
+//         p_window.focus();
+//     } else {
+//         const newWindow = window.open(url);
+//         if (newWindow) props.context.preview.setPreviewWindow(newWindow);
+//     }
+// }
 
 
 const watchFull = () => {
@@ -61,19 +61,19 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="user-info" @dblclick.stop>
-        <UserAvatar :context="props.context"></UserAvatar>
+        <!-- <UserAvatar :context="props.context"></UserAvatar>
         <Tooltip :content="t('preview.open')">
             <div class="open_fill" @click="openFill">
                 <span>{{ t('home.open_local_file') }}</span>
             </div>
         </Tooltip>
-        <Share :context="props.context"></Share>
+        <Share :context="props.context"></Share> -->
         <Scale :context="props.context"></Scale>
-        <Tooltip :content="isFull ? t('home.exit_full') : t('home.full')">
+        <!-- <Tooltip :content="isFull ? t('home.exit_full') : t('home.full')">
             <div class="full" @click="switchFullScreen">
                 <svg-icon :icon-class="isFull ? 'exit-full' : 'full'"></svg-icon>
             </div>
-        </Tooltip>
+        </Tooltip> -->
     </div>
 </template>
 

@@ -48,7 +48,7 @@ let timerForLeft: any;
 let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
-const null_context = ref<boolean>(true);
+// const null_context = ref<boolean>(true);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
@@ -714,17 +714,17 @@ function component_watcher(t: number) {
     }
 }
 
-const stop = watch(() => null_context.value, (v) => {
-    if (!v) {
-        const _name = props.context.data.name || '';
-        const file_name = docInfo.value.document?.name || _name;
-        const timer = setTimeout(() => {
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
-            // kcdesk?.fileSetName(file_name);
-            clearTimeout(timer);
-        }, 500)
-    }
-})
+// const stop = watch(() => null_context.value, (v) => {
+//     if (!v) {
+//         const _name = props.context.data.name || '';
+//         const file_name = docInfo.value.document?.name || _name;
+//         const timer = setTimeout(() => {
+//             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${product_name}` : `${file_name} - ${product_name}`;
+//             // kcdesk?.fileSetName(file_name);
+//             clearTimeout(timer);
+//         }, 500)
+//     }
+// })
 
 watch(fileName, (NewNanme) => {
     if (NewNanme) {
@@ -744,7 +744,7 @@ onMounted(() => {
     // init_doc();
     // openDocument();
 
-    null_context.value = false;
+    // null_context.value = false;
     // getUserInfo();
     init_watcher();
     init_keyboard_uints();
@@ -790,30 +790,30 @@ onUnmounted(() => {
     <div class="editor" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" v-if="showTop">
-            <Toolbar :context="context as Context" v-if="!loading && !null_context" />
+            <Toolbar :context="context as Context" v-if="!loading" />
         </div>
         <!-- <div id="visit">
             <ApplyFor></ApplyFor>
         </div> -->
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+        v-if="inited" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
             :right="rightWidth" :context="context as Context" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
-                <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context as Context"
+                <Navigation v-if="curPage !== undefined" id="navigation" :context="context as Context"
                     @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
                     :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
 
             <template #slot2>
-                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context as Context"
+                <ContentView v-if="curPage !== undefined" id="content" :context="context as Context"
                     @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
                     @closeLoading="closeLoading">
                 </ContentView>
             </template>
 
             <template #slot3>
-                <Attribute id="attributes" v-if="!null_context && !loading" :context="context as Context"
+                <Attribute id="attributes" v-if="!loading" :context="context as Context"
                     @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                     :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>

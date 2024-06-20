@@ -20,12 +20,16 @@ import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
 import { getFrameList, keyboard } from '@/utils/preview';
+import { IContext } from '@/openapi';
+
+const props = defineProps<{ context: IContext }>()
+const context = props.context as Context;
 
 const { t } = useI18n();
-let context: Context | undefined;
+// let context: Context | undefined;
 // const route = useRoute();
 const loading = ref<boolean>(false);
-const null_context = ref<boolean>(true);
+// const null_context = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
 const sub_loading = ref<boolean>(false);
@@ -35,9 +39,9 @@ let uninstall_keyboard_units: () => void = () => {
 const showTop = ref<boolean>(true);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const inited = ref(false);
-const docInfo: any = ref({});
-type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
+// const docInfo: any = ref({});
+// type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+// let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
 // const getDocumentInfo = async () => {
 //     try {
 //         loading.value = true;
@@ -136,11 +140,11 @@ function switchPage(id?: string, shapeId?: string) {
 }
 
 const setWindowTitle = (context: Context, page: PageView) => {
-    const _name = context?.data.name || '';
-    const file_name = docInfo.value.document?.name || _name;
-    const pages = context.data.pagesList
-    const page_name = pages.find(item => item.id === page.id)?.name || '';
-    window.document.title = file_name.length > 8 ? `▶ ${file_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${file_name} - ${page_name.slice(0, 8)}`;
+    // const _name = context?.data.name || '';
+    // const file_name = docInfo.value.document?.name || _name;
+    // const pages = context.data.pagesList
+    // const page_name = pages.find(item => item.id === page.id)?.name || '';
+    // window.document.title = file_name.length > 8 ? `▶ ${file_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${file_name} - ${page_name.slice(0, 8)}`;
     // kcdesk?.fileSetName(file_name);
 }
 
@@ -162,12 +166,12 @@ const selectedShape = (ctx: Context, page: PageView, id?: string) => {
 }
 function previewWatcher(t: number) {
     if (t === Preview.CHANGE_PAGE) {
-        if (context) {
+
             const ctx: Context = context;
             curPage.value = ctx.preview.selectedPage;
-        }
+        
     } else if (t === Preview.UI_CHANGE) {
-        if (!context) return;
+
         if (!context.preview.uiState) {
             if (showLeft.value && showTop.value) {
                 showHiddenLeft();
@@ -206,7 +210,7 @@ function switchFullScreen() {
 }
 let timerForLeft: any;
 const showHiddenLeft = () => {
-    if (!context) return;
+
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -241,17 +245,13 @@ function mouseleave() {
 
 
 function init_watcher() {
-    if (!context) {
-        return;
-    }
+
     context.preview.watch(previewWatcher);
     context.workspace.watch(workspaceWatcher);
 }
 
 function init_keyboard_uints() {
-    if (!context) {
-        return;
-    }
+
     uninstall_keyboard_units = keyboard(context);
 }
 
@@ -271,11 +271,13 @@ onMounted(() => {
     }).catch((e) => {
         console.log(e)
     })
+    // todo
+    switchPage(props.context.data.pagesList[0]?.id);
 })
 
 onUnmounted(() => {
-    context?.preview.unwatch(previewWatcher);
-    context?.workspace.unwatch(workspaceWatcher);
+    context.preview.unwatch(previewWatcher);
+    context.workspace.unwatch(workspaceWatcher);
     uninstall_keyboard_units();
 })
 
@@ -285,20 +287,20 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context"></Toolbar>
+            <Toolbar :context="context" v-if="!loading"></Toolbar>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-            v-if="inited && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-            :right="0" :context="context!" @changeLeftWidth="changeLeftWidth">
+        v-if="inited"  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
+            :right="0" :context="context" @changeLeftWidth="changeLeftWidth">
             <template #slot1>
-                <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
+                <Navigation v-if="curPage !== undefined" id="navigation" :context="context"
                     @mouseenter="mouseenter" :page="(curPage as PageView)" :showLeft="showLeft"
                     :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" @switchpage="switchPage">
                 </Navigation>
             </template>
 
             <template #slot2>
-                <PreviewContent v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                <PreviewContent v-if="curPage !== undefined" id="content" :context="context"
                     @mouseenter="mouseleave" :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
             </template>
         </ColSplitView>
