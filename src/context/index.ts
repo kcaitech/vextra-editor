@@ -8,6 +8,8 @@ import {
     TableView,
     TextShapeView,
     TableCellView,
+    IEventEmitter,
+    EventEmitter,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -35,11 +37,12 @@ import { Path } from "./path";
 import { ColorCtx } from "./color";
 import { startLoadTask } from "./loadtask";
 import { Attribute } from "./atrribute";
-import { DocumentProps, INet, IToolBox } from "@/openapi";
+import { DocumentProps, INet, IScout, IToolBox } from "@/openapi";
 import { PluginsMgr } from "./pluginsmgr";
 import { events } from "./events";
 import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
+import { scout, Scout } from "@/utils/scout";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -83,12 +86,36 @@ export class RepoWraper {
     // }
 }
 
+class ToolBox implements IToolBox {
+
+    _scout: Scout | undefined;
+    _event = new EventEmitter()
+    _storage: Map<string, any> = new Map();
+    _context: Context;
+
+    constructor(context: Context) {
+        this._context = context;
+    }
+
+    get scout(): IScout {
+        if (!this._scout) this._scout = scout(this._context);
+        return this._scout;
+    }
+    get storage(): Map<string, any> {
+        return this._storage;
+    }
+    get event(): IEventEmitter {
+        return this._event;
+    }
+
+}
+
 export class Context extends WatchableObject implements IContext {
     // 用EventEmitter及storage来进行界面组件之间的数据同步及通信
     // storage的key可以用组件路径也可用uuid等唯一标识
     // eventid同上，需要个唯一前缀。
     // 做到不同功能的组件之间可以完全解耦合
-    public storage: Map<string, any> = new Map();
+    // public storage: Map<string, any> = new Map();
 
     private m_data: Document;
     private m_editor: Editor;
@@ -152,8 +179,10 @@ export class Context extends WatchableObject implements IContext {
         this.m_attr = new Attribute();
         startLoadTask(data, this.m_taskMgr);
     }
+
+    private m_toolbox = new ToolBox(this);
     get toolbox(): IToolBox {
-        return this.selection; // todo
+        return this.m_toolbox; // todo
     }
 
     get escstack(): EscStack {

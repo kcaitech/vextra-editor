@@ -22,7 +22,7 @@ export namespace ContextEvents {
 }
 
 export interface IContext extends IWatchable {
-    get storage(): Map<string, any>;
+
     get data(): Document;
     get pluginsMgr(): IPluginsMgr;
     setNet(net: INet): void;

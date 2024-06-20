@@ -106,7 +106,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private m_selectShapes: ShapeView[] = [];
     private m_hoverShape?: ShapeView;
     private m_document: Document;
-    private m_scout: Scout | undefined;
+    // private m_scout: Scout | undefined;
     private m_tableselection: TableSelection;
     private m_textselection: TextSelectionLite;
 
@@ -140,11 +140,11 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     }
 
     get scout(): Scout {
-        return this.m_scout!;
+        return this.m_context.toolbox.scout;
     }
 
     scoutMount(context: Context) {
-        this.m_scout = scout(context);
+        // this.m_scout = scout(context);
     }
 
     // get artboarts() {
@@ -443,11 +443,11 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             m.multiAtLeft(wm);
             let path = this.hoveredShape.getPath().clone();
             path.transform(m);
-            if (this.m_scout!.isPointInPath(path.toString(), p)) return 'hover';
+            if (this.scout.isPointInPath(path.toString(), p)) return 'hover';
         }
         for (let i = 0, len = this.m_table_area.length; i < len; i++) {
             const a = this.m_table_area[i];
-            if (this.m_scout!.isPointInPath(a.area, p)) {
+            if (this.scout.isPointInPath(a.area, p)) {
                 area = a.id;
                 return area;
             }
