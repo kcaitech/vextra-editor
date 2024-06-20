@@ -21,7 +21,11 @@ import {
     TableCellType,
     Matrix,
     Page,
-    Transporter
+    Transporter,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    ColVector3D,
+    GroupShapeView,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
@@ -30,9 +34,8 @@ import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding, is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
-import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
-import { AsyncTransfer } from "@kcdesign/data";
+import { AsyncTransfer, TransformRaw, Document } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 
@@ -185,7 +188,7 @@ export class Clipboard {
         const origin_xy_list: XY[] = [];
         const first_env_id: string = shapes[0]?.parent?.id || '';
         let no_more_push = false;
-        const position_map: Map<string, PageXY> = new Map();
+        const position_map: Map<string, TransformRaw> = new Map();
         const points_map: Map<string, CurvePoint[]> = new Map();
         this.m_envs.clear();
 
@@ -201,7 +204,8 @@ export class Clipboard {
                 no_more_push = true;
             }
 
-            position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
+            position_map.set(shape.id, makeShapeTransform1By2(shape.transform2FromRoot) as TransformRaw);
+
             if (shape instanceof ContactShape) {
                 points_map.set(shape.id, shape.getPoints());
             }
@@ -217,14 +221,8 @@ export class Clipboard {
             return false;
         }
 
-        // 修改写入数据的frame，使之在多选的情况下每个图形之间的相对位置不变
         for (let i = 0, len = _shapes.length; i < len; i++) {
             const shape = _shapes[i];
-            const root_frame = position_map.get(shape.id);
-            // if (root_frame) {
-            //     shape.size.x = root_frame.x;
-            //     shape.size.y = root_frame.y;
-            // }
 
             const points = points_map.get(shape.id);
             if (points) {
@@ -1008,23 +1006,25 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
         // 2. 计算插入环境和位置（存在选区环境并满足插入其中的条件的情况下，需要在后续根据指定的插入环境多次计算位置）
         const selection_envs = get_envs_from_selection(context);
-        const is_exist_selection_envs = selection_envs.length && (data?.origin_xy_list?.length === source.length);
+        const is_exist_selection_envs = Boolean(selection_envs.length && (data?.origin_xy_list?.length === source.length));
+
         let __xys: XY[] = [];
-        if (is_exist_selection_envs) { // 送入选区内环境
-            __xys = get_xys_for_selection_envs(selection_envs, data.origin_xy_list, source)
+        if (is_exist_selection_envs) { // 选区内存在环境则优先送入选区内环境
+            // __xys = get_xys_for_selection_envs(selection_envs, data.origin_xy_list, source)
         } else {
             if (xy) {
                 modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
                 insert_env = get_env_by_xy(context, xy);
             } else {
-                // const box = get_source_box(source);
-                // if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                //     const wpc = context.workspace.center_on_page;
-                //     box.x = wpc.x - box.width / 2;
-                //     box.y = wpc.y - box.height / 2;
-                //     modify_frame_by_xy(box, source);
-                // }
-                // insert_env = get_env_by_box(context, box);
+                const box = get_source_box(source);
+                if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                    const wpc = context.workspace.center_on_page;
+                    box.x = wpc.x - box.width / 2;
+                    box.y = wpc.y - box.height / 2;
+                    // modify_frame_by_xy(box, source); 放到中间来
+                }
+
+                insert_env = get_env_by_box(context, box);
             }
         }
 
@@ -1044,7 +1044,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 const xy = __xys[i];
                 modify_frame_by_xy(xy, source);
                 const shapes = import_shape_from_clipboard(context.data, page_data, source);
-                actions.push({ env, shapes });
+                actions.push({ env: adapt2Shape(env) as GroupShape, shapes });
             }
             const __res = editor.pasteShapes3(actions);
             if (__res) {
@@ -1611,7 +1611,7 @@ function get_env_by_xy(context: Context, xy: XY) {
 
 function get_envs_from_selection(context: Context) {
     const shapes = context.selection.selectedShapes;
-    const envs: GroupShape[] = [];
+    const envs: GroupShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
         if (s.isVirtualShape) {
@@ -1621,7 +1621,7 @@ function get_envs_from_selection(context: Context) {
             continue;
         }
         if ([ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
-            envs.push(adapt2Shape(s) as GroupShape);
+            envs.push(s as GroupShapeView);
         }
     }
     return envs;
@@ -1700,4 +1700,46 @@ function getTextAsync(data: DataTransferItem): Promise<string> {
     return new Promise((resolve, reject) => {
         data.getAsString(val => resolve(val));
     });
+}
+
+function sourceBounding(source: Shape[]) {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+
+    for (let i = 0; i < source.length; i++) {
+        const shape = source[i];
+        const __transform = makeShapeTransform2By1(shape.transform);
+        const { width, height } = shape.size;
+        const { col0, col1, col2, col3 } = __transform.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(0, height),
+        ]);
+        const box = XYsBounding([col0, col1, col2, col3]);
+
+        if (box.top < top) {
+            top = box.top;
+        }
+        if (box.left < left) {
+            left = box.left;
+        }
+        if (box.right > right) {
+            right = box.right;
+        }
+        if (box.bottom > bottom) {
+            bottom = box.bottom;
+        }
+    }
+
+    return { left, top, right, bottom };
+}
+
+function fixToEnv(source: Shape[], env: GroupShapeView) {
+    const box = sourceBounding(source);
+
+
+
 }

@@ -195,7 +195,7 @@ export class ReferUnderContainerRenderer {
         // todo 若需要保证参考线的优先顺序，需要对URCM进行层级排序，但正常场景下几乎不会存在顺序问题，所以出于性能考虑先不排
 
         // 更新了渲染容器对象
-        console.log('RENDER TARGET CHANGE:', page.name, URCM.size, WUM.size, this.m_units.length, this.m_units);
+        // console.log('RENDER TARGET CHANGE:', page.name, URCM.size, WUM.size, this.m_units.length, this.m_units);
     }
 
     /**
