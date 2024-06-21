@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { PageView, Shape, adapt2Shape } from "@kcdesign/data";
-import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
+import {
+    adapt2Shape,
+    PageView,
+    Shape,
+    ShapeDirList2 as ShapeDirList,
+    ShapeDirListIter2 as ShapeDirListIter,
+    ShapeType,
+    ShapeView
+} from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
-import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
@@ -17,10 +23,19 @@ import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
-import { DragDetail, hover, modify_after_drag, modify_shape_lock_status, modify_shape_visible_status, multi_select_shape, range_select_shape, scroll_to_view } from "@/utils/listview";
+import {
+    DragDetail,
+    hover,
+    modify_after_drag,
+    modify_shape_lock_status,
+    modify_shape_visible_status,
+    multi_select_shape,
+    range_select_shape, scroll_to_view
+} from "@/utils/listview";
 import { v4 } from "uuid";
 import { menu_locate2 } from "@/utils/common";
 import { one_of_is_symbolref } from "@/utils/symbol";
+import { locateShape, LocateType } from "@/transform/locate";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -207,7 +222,8 @@ const modify_visible_status = (shape: ShapeView) => {
 }
 
 function shapeScrollToContentView(shape: ShapeView) {
-    scroll_to_view(props.context, shape);
+    // scroll_to_view(props.context, shape);
+    locateShape(props.context, shape, LocateType.Center);
 }
 
 function selectshape_right(shape: ShapeView, shiftKey: boolean) {

@@ -1,41 +1,43 @@
 import {
-    export_shape,
-    import_shape_from_clipboard,
-    Shape,
-    ShapeType,
+    adapt2Shape,
     AsyncCreator,
-    ShapeFrame,
-    GroupShape,
-    TextShape,
-    Text,
-    export_text,
-    import_text,
-    TextShapeEditor,
-    ImageShape,
-    transform_data,
+    AsyncTransfer,
+    ColVector3D,
     ContactShape,
     CurvePoint,
-    PathShape,
-    adapt2Shape,
-    ShapeView,
-    TableCellType,
-    Matrix,
-    Page,
-    Transporter,
+    Document,
+    export_shape,
+    export_text,
+    GroupShape,
+    GroupShapeView,
+    ImageShape,
+    import_shape_from_clipboard,
+    import_text,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    ColVector3D,
-    GroupShapeView,
+    Matrix,
+    Page,
+    PathShape,
+    Shape,
+    ShapeFrame,
+    ShapeType,
+    ShapeView,
+    TableCellType,
+    Text,
+    TextShape,
+    TextShapeEditor, Transform,
+    transform_data,
+    TransformRaw,
+    Transporter,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { Media, getName, upload_image, SVGReader } from '@/utils/content';
+import { getName, Media, SVGReader, upload_image } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
-import { XYsBounding, is_box_outer_view2 } from './common';
+import { is_box_outer_view2, XYsBounding } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
-import { AsyncTransfer, TransformRaw, Document } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 
@@ -1016,15 +1018,15 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
                 insert_env = get_env_by_xy(context, xy);
             } else {
-                const box = get_source_box(source);
-                if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                    const wpc = context.workspace.center_on_page;
-                    box.x = wpc.x - box.width / 2;
-                    box.y = wpc.y - box.height / 2;
-                    // modify_frame_by_xy(box, source); 放到中间来
-                }
-
-                insert_env = get_env_by_box(context, box);
+                // const box = get_source_box(source);
+                // if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                //     const wpc = context.workspace.center_on_page;
+                //     box.x = wpc.x - box.width / 2;
+                //     box.y = wpc.y - box.height / 2;
+                //     // modify_frame_by_xy(box, source); 放到中间来
+                // }
+                fixToEnv(context, source, page);
+                // insert_env = get_env_by_box(context, box);
             }
         }
 
@@ -1737,9 +1739,44 @@ function sourceBounding(source: Shape[]) {
     return { left, top, right, bottom };
 }
 
-function fixToEnv(source: Shape[], env: GroupShapeView) {
-    const box = sourceBounding(source);
+function fixToEnv(context: Context, source: Shape[], env: GroupShapeView) {
+    const { left, top, right, bottom } = sourceBounding(source);
+    const boxTransform = new Transform().setTranslate(ColVector3D.FromXY(left, top));
+    const clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+    const clientMatrixInverse = clientMatrix.getInverse();
 
+    const { col0: clientLT, col1: clientRB } = clientMatrix.transform([
+        ColVector3D.FromXY(left, top),
+        ColVector3D.FromXY(right, bottom)
+    ]);
 
+    let underRoot;
+    let inner;
+    let center;
+
+    if (env.type === ShapeType.Page) {
+        console.log('__ENV__', env.name);
+        underRoot = true;
+
+        const root = context.workspace.root;
+
+        inner = clientLT.x >= root.x
+            && clientLT.y >= root.y
+            && clientRB.x <= root.right
+            && clientRB.y <= root.bottom;
+
+        boxTransform.clone().addTransform(env.transform2FromRoot.getInverse());
+
+        if (inner) {
+            for (const shape of source) {
+                const t = makeShapeTransform2By1(shape.transform);
+                t.addTransform(env.transform2FromRoot.getInverse());
+                shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+            }
+        }
+    } else {
+        underRoot = false;
+
+    }
 
 }
