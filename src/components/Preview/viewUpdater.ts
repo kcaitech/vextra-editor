@@ -129,7 +129,6 @@ export class ViewUpdater {
         const cx = (box.right + box.left) / 2;
         const cy = (box.bottom + box.top) / 2;
 
-
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
         transformMatrix.trans(rootCX - cx, rootCY - cy);
@@ -381,7 +380,7 @@ export class ViewUpdater {
         if (!shape || !container || !this.m_page_card) {
             return;
         }
-        
+
         const matrix = this.getCenterMatrix();
         this.setAttri(matrix);
     }
@@ -491,18 +490,27 @@ export class ViewUpdater {
     getBoundingOnView() {
         const shape = this.m_current_view;
         const container = this.m_container;
-        if (!shape || !container || !this.m_page_card) {
+        const page = this.m_current_page;
+        if (!shape || !container || !this.m_page_card || !page) {
             return;
         }
-        const frame = shape.frame;
-        const m = this.matrix;
-        const points = [
-            m.computeCoord2(0, 0),
-            m.computeCoord2(frame.width, 0),
-            m.computeCoord2(frame.width, frame.height),
-            m.computeCoord2(0, frame.height)
-        ];
-        return XYsBounding(points);
+        const shape_root_m = shape.matrix2Root();
+        shape_root_m.trans(-page.transform.translateX, -page.transform.translateY);
+        const m = makeShapeTransform2By1(shape_root_m).clone(); // 图层到root
+        const clientTransform = makeShapeTransform2By1(this.matrix);
+
+        m.addTransform(clientTransform); //root到视图
+
+        const { width, height } = shape.size;
+        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(0, height)
+        ]);
+        const box = XYsBounding([lt, rt, rb, lb]);
+        
+        return box;
     }
 
     trans(e: WheelEvent) {
