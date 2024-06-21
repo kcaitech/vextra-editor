@@ -1,4 +1,4 @@
-import { Matrix, Page, Shape } from "@kcdesign/data";
+import { ColVector3D, Matrix, Page, Shape, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -93,43 +93,45 @@ export class ViewUpdater {
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
-        // svgEl.style['transform'] = m.toString();
+        svgEl.style['transform'] = m.toString();
 
         this.m_context.preview.setScale(this.getScale(m));
 
-        // this.matrix.reset(m);
+        this.matrix.reset(m);
     }
 
     private getCenterMatrix() {
         const shape = this.m_current_view;
         const container = this.m_container;
-
-        if (!shape || !container || !this.m_page_card) {
+        const page = this.m_current_page;
+        if (!shape || !container || !this.m_page_card || !page) {
             return new Matrix();
         }
+        const transformMatrix = new Matrix();
+        const shape_root_m = shape.matrix2Root();
+        shape_root_m.trans(-page.transform.translateX, -page.transform.translateY);
+        const m = makeShapeTransform2By1(shape_root_m).clone(); // 图层到root
+        const clientTransform = makeShapeTransform2By1(transformMatrix);
+
+        m.addTransform(clientTransform); //root到视图
+
+        const { width, height } = shape.size;
+        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(0, height)
+        ]);
+        const box = XYsBounding([lt, rt, rb, lb]);
 
         const root = container.getBoundingClientRect();
-        const frame = shape.frame;
 
-        const cx = frame.width / 2;
-        const cy = frame.height / 2;
+        const cx = (box.right + box.left) / 2;
+        const cy = (box.bottom + box.top) / 2;
 
-        const transformMatrix = new Matrix();
-        transformMatrix.trans(-cx, -cy);
-        if (shape.rotation) {
-            transformMatrix.rotate(shape.rotation / 360 * 2 * Math.PI);
-        }
-        // if (shape.isFlippedHorizontal) {
-        //     transformMatrix.flipHoriz();
-        // }
-        // if (shape.isFlippedVertical) {
-        //     transformMatrix.flipVert();
-        // }
-        transformMatrix.trans(cx, cy);
 
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
-
         transformMatrix.trans(rootCX - cx, rootCY - cy);
 
         return transformMatrix;
@@ -166,7 +168,7 @@ export class ViewUpdater {
     private __update(...args: any[]) {
         (this.m_page_card as any)?.repaint() // 执行PreviewPageCard内部重绘函数
 
-        if (args.includes('frame') || args.includes('rotation')) {
+        if (args.includes('frame') || args.includes('rotation') || args.includes('transform')) {
             this.modifyTransform();
         }
     }
@@ -379,7 +381,7 @@ export class ViewUpdater {
         if (!shape || !container || !this.m_page_card) {
             return;
         }
-
+        
         const matrix = this.getCenterMatrix();
         this.setAttri(matrix);
     }

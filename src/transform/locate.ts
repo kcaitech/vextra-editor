@@ -5,6 +5,7 @@ import {
     makeShapeTransform1By2,
     makeShapeTransform2By1,
     Matrix,
+    Shape,
     ShapeView
 } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
@@ -22,7 +23,7 @@ export interface LocateRoot {
     bottom: number;
 }
 
-export function locateShape(context: Context, shape: ShapeView, type: LocateType, __root?: LocateRoot, __clientMatrix?: Matrix) {
+export function locateShape(context: Context, shape: ShapeView, __root?: LocateRoot, __clientMatrix?: Matrix) {
     const root = __root ?? context.workspace.root; // 定位场景；
     const client = __clientMatrix ?? context.workspace.matrix;
 
