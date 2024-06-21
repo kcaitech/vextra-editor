@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeFrame, ShapeType,
+    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeFrame, ShapeSize, ShapeType,
     ShapeView, Style
 } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
@@ -8,6 +8,7 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
+import { TransformRaw } from "@kcdesign/data";
 
 interface Props {
     shapes: ShapeView[] | Shape[];
@@ -42,13 +43,15 @@ function assemble() {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
-
+    const size = new ShapeSize(100, 100);
+    const trans = new TransformRaw();
     const page = new Page(
         new BasicArray<number>(),
         'assemble-page',
         'assemble-page',
         ShapeType.Page,
-        new ShapeFrame(0, 0, 0, 0),
+        trans,
+        size,
         style,
         new BasicArray<Shape>(...shapes)
     );
@@ -68,10 +71,10 @@ function assemble() {
         const gs = pageSvg.value.childNodes;
 
         // 清除自己的transform、style，交给外层去处理，否在会出现内外相互抵消来实现效果的现象
-        gs.forEach(node => {
-            (node as Element).removeAttribute('transform');
-            (node as Element).removeAttribute('style');
-        });
+        // gs.forEach(node => {
+        //     (node as Element).removeAttribute('transform');
+        //     (node as Element).removeAttribute('style');
+        // });
     }
 }
 
@@ -98,7 +101,7 @@ onUnmounted(disassemble);
 </script>
 
 <template>
-    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
+    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
 </template>
 
 <style scoped lang="scss">

@@ -93,11 +93,11 @@ export class ViewUpdater {
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
-        svgEl.style['transform'] = m.toString();
+        // svgEl.style['transform'] = m.toString();
 
         this.m_context.preview.setScale(this.getScale(m));
 
-        this.matrix.reset(m);
+        // this.matrix.reset(m);
     }
 
     private getCenterMatrix() {

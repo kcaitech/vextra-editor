@@ -59,7 +59,7 @@ import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import { CursorType } from "@/utils/cursor2";
-import Rule from "./Rule";
+import Rule from "./Rule/index.vue";
 
 interface Props {
     context: Context
