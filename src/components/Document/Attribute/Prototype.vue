@@ -98,15 +98,26 @@
                                             <div v-for="i in 4" :key="i"></div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div class="checkbox">
                                         <input type="checkbox" id="closetab">
                                         <label for="closetab">点击浮层外关闭浮层</label>
                                     </div>
-                                    <div>
-                                        <input type="checkbox" id="color">
+                                    <div class="checkbox">
+                                        <input type="checkbox" id="color" v-model="addmask" @change="checkTarget($event)">
                                         <label for="color">在浮层后添加遮罩</label>
                                     </div>
-
+                                    <div v-if="addmask" class="setting">
+                                        <ColorPicker class="color" :color="(background_color as Color)"
+                                            :context="props.context" :auto_to_right_line="true"
+                                            @change="c => colorChangeFromPicker(c)">
+                                        </ColorPicker>
+                                        <input v-select type="text" @change.stop="(e: Event) => change_c(e)"
+                                            :value="clr_v" id="clr" ref="clr_ele" @click="clr_click" :spellcheck="false"
+                                            @blur="is_color_select = false">
+                                        <input v-select @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`"
+                                            id="alpha" @blur="is_alpha_select = false" @click="alpha_click"
+                                            ref="alpha_ele">
+                                    </div>
 
                                 </div>
                                 <div class="set-animation">
@@ -165,12 +176,12 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, Shape, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -180,6 +191,118 @@ import {
     is_part_of_symbol
 } from "@/utils/symbol";
 import { useI18n } from 'vue-i18n';
+import ColorPicker from "@/components/common/ColorPicker/index.vue";
+import { debounce as d } from "@/utils/timing_util";
+import { Reg_HEX } from "@/utils/color";
+import { message } from "@/utils/message";
+
+const background_color = ref(new Color(1, 239, 239, 239));
+const alpha_v = ref<number>(100);
+const clr_v = ref<string>('EFEFEF');
+const is_color_select = ref(false);
+const alpha_ele = ref<HTMLInputElement>();
+const clr_ele = ref<HTMLInputElement>();
+const is_alpha_select = ref(false);
+const addmask = ref<boolean>(false)
+
+
+//检测浮层设置是否已有目标
+const checkTarget = (e: Event) => {
+
+    console.log(selectshape.value);
+
+    if (selectshape.value === '') {
+        addmask.value = false
+        return
+    }
+}
+
+function toHex(r: number, g: number, b: number) {
+    const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
+    return hex(r) + hex(g) + hex(b);
+}
+
+const _colorChangeFromPicker = d((c: Color) => {
+    // const page = props.context.selection.selectedPage;
+    // if (!page) return;
+    // const editor = props.context.editor4Page(page);
+    // editor.setBackground(c);
+    background_color.value = c
+    clr_v.value = toHex(c.red, c.green, c.blue)
+}, 100)
+const colorChangeFromPicker = (c: Color) => {
+    _colorChangeFromPicker(c).catch((e) => {
+    });
+};
+
+function setColor(clr: string, alpha: number) {
+    const res = clr.match(Reg_HEX);
+    if (!res) return message('danger', t('system.illegal_input'));
+    const r = Number.parseInt(res[1], 16);
+    const g = Number.parseInt(res[2], 16);
+    const b = Number.parseInt(res[3], 16);
+    const nc = new Color(alpha, r, g, b);
+    //修改目标遮罩层颜色
+    background_color.value = nc
+    clr_v.value = toHex(nc.red, nc.green, nc.blue)
+
+}
+
+function change_c(e: Event) {
+    let value = (e.target as HTMLInputElement)?.value;
+    if (value.slice(0, 1) !== '#') value = "#" + value;
+    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
+    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
+    if (Reg_HEX.test(value)) {
+        setColor(value, alpha_v.value / 100);
+    } else {
+        message('danger', t('system.illegal_input'));
+    }
+    nextTick(() => {
+        clr_ele.value?.blur()
+    })
+}
+
+function change_a(e: Event) {
+    let value = (e.currentTarget as any)['value'];
+    value = Number(value) / 100;
+    if (isNaN(value)) {
+        return;
+    }
+    if (1 >= value && value >= 0) {
+        setColor("#" + clr_v.value, value);
+        alpha_v.value = value * 100;
+    } else if (value > 1) {
+        if (alpha_ele.value) {
+            alpha_ele.value.value = String(100);
+            setColor("#" + clr_v.value, 1);
+        }
+    } else if (value < 0) {
+        if (alpha_ele.value) {
+            alpha_ele.value.value = String(0);
+            setColor("#" + clr_v.value, 0);
+        }
+    }
+    alpha_ele.value?.blur()
+}
+
+function clr_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_color_select.value) return;
+    is_color_select.value = true;
+}
+
+function alpha_click(e: Event) {
+    const el = e.target as HTMLInputElement;
+    if (el.selectionStart !== el.selectionEnd) {
+        return;
+    }
+    if (is_alpha_select.value) return;
+    is_alpha_select.value = true;
+}
 
 
 enum overflowRollType {
@@ -261,7 +384,7 @@ const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
 const acitonindex = ref<number>(-1)
-const selectshape = ref<string>()
+const selectshape = ref<string>('')
 
 const variables = ref<RefAttriListItem[]>([]);
 const { t } = useI18n()
@@ -297,10 +420,10 @@ const setrotate = new Map()
 for (let i of Object.values(Direction)) {
     switch (i) {
         case 'right':
-            setrotate.set(i, 0)
+            setrotate.set(i, 180)
             break;
         case 'left':
-            setrotate.set(i, 180)
+            setrotate.set(i, 0)
             break;
         case 'top':
             setrotate.set(i, 90)
@@ -678,6 +801,7 @@ onUnmounted(() => {
             .item-content {
                 width: 172px;
                 height: 32px;
+                font-size: 12px;
                 background-color: #F5F5F5;
                 border-radius: 6px;
                 text-align: center;
@@ -827,6 +951,7 @@ onUnmounted(() => {
                 input {
                     outline: none;
                     border: none;
+                    font-size: 12px;
                     padding: 10px 8px;
                     height: 32px;
                     width: 100%;
@@ -950,7 +1075,10 @@ onUnmounted(() => {
             .set-float {
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+
+                span {
+                    line-height: 32px;
+                }
 
                 .content {
                     display: grid;
@@ -985,11 +1113,73 @@ onUnmounted(() => {
                         gap: 4px;
 
                         div {
-                            width: 100%;
+                            width: 47px;
                             height: 100%;
                             border-radius: 6px;
                             background-color: #F5F5F5;
                         }
+                    }
+                }
+
+                .checkbox {
+                    display: flex;
+                    align-items: center;
+                    line-height: 32px;
+
+                    input[type=checkbox] {
+                        position: relative;
+                        padding: 0;
+                        width: 14px;
+                        height: 14px;
+                    }
+
+                    input[type=checkbox]:checked::after {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        content: "";
+                        color: #FFFFFF;
+                        border-radius: 3px;
+                        border: 1px solid rgb(24, 120, 245);
+                        background-image: url('@/assets/select-icon.svg');
+                        background-repeat: no-repeat;
+                        background-position: center center;
+                        background-size: 60% 40%;
+                        background-color: rgb(24, 120, 245);
+                        box-sizing: border-box;
+                    }
+                }
+
+                .checkbox:has(input[type]:disabled) {
+                    opacity: 0.4;
+                }
+
+                .setting {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 10px 8px;
+                    width: 172px;
+                    height: 32px;
+                    background-color: #f5f5f5;
+                    border-radius: 6px;
+                    border: 1px solid transparent;
+                    box-sizing: border-box;
+
+                    input {
+                        outline: none;
+                        border: none;
+                        font-size: 12px;
+                        background-color: transparent;
+                    }
+
+                    #clr {
+                        width: 70%;
+                        padding: 0 8px;
+                    }
+
+                    #alpha {
+                        width: 30%;
                     }
                 }
             }
