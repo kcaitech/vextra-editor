@@ -92,7 +92,7 @@ export class PathCreator extends BaseCreator {
 
         const x1 = diffTranslate.x + (this.attributes.x || 0)
         const y1 = diffTranslate.y + (this.attributes.y || 0)
-        this.transform.translate({vector: new ColVector3D([x1, y1, 0])})
+        this.transform.translate(new ColVector3D([x1, y1, 0]))
         this.shape = shapeCreator.newPathShape("路径", new ShapeFrame(x1, y1, width, height), path, this.style)
 
         // dev code

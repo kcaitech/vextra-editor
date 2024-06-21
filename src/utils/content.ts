@@ -1084,10 +1084,11 @@ export function root_trans_direction(context: Context, e: WheelEvent, step: numb
 
 export function pre_modify_anchor(shape: ShapeView) {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
+    // todo flip
+    // if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    // if (shape.isFlippedVertical) {
+    //     rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    // }
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     return rotate;
 }
@@ -1098,10 +1099,11 @@ export function pre_modify_anchor(shape: ShapeView) {
  */
 export function shape_title_width(shape: ShapeView, matrix: Matrix) {
     let rotate = pre_modify_anchor(shape);
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
+    // todo flip
+    // if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    // if (shape.isFlippedVertical) {
+    //     rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    // }
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     const f = shape.frame;
     let width = 0;

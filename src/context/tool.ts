@@ -1,9 +1,10 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { Comment } from "./comment";
-import { ContextEvents } from "..";
+import { CursorType } from "@/utils/cursor2";
 import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { XY } from "@/context/selection";
+import { ContextEvents } from "@/openapi";
 
 const _uuid = '-E9BB37D8-8853-D650-4EF1-ACCF4E2D4BE5'
 

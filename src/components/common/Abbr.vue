@@ -33,8 +33,8 @@ function getPath() {
     m.trans(-f.width / 2, -f.height / 2);
     if (!props.shape.isNoTransform()) {
         if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
-        if (shape.isFlippedHorizontal) m.flipHoriz();
-        if (shape.isFlippedVertical) m.flipVert();
+        // if (shape.isFlippedHorizontal) m.flipHoriz();
+        // if (shape.isFlippedVertical) m.flipVert();
     }
     const box = XYsBounding(
         [

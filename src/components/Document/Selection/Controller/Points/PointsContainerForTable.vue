@@ -1,13 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import {
-    AsyncBaseAction,
-    CtrlElementType,
-    Matrix,
-    ShapeView,
-    adapt2Shape
-} from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref } from 'vue';
+import { adapt2Shape, AsyncBaseAction, CtrlElementType, Matrix, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
@@ -17,6 +11,7 @@ import { permIsEdit } from '@/utils/content';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from './common';
 import { TranslateHandler } from '@/transform/translate';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -340,7 +335,7 @@ function setCursor() {
     let deg = rotate;
     deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
 
-    cursor.setType('scale', deg);
+    cursor.setType(CursorType.Scale, deg);
 }
 
 watch(() => props.matrix, update);

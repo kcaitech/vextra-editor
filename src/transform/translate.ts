@@ -131,12 +131,13 @@ export class TranslateHandler extends TransformHandler {
             if (shape.rotation) {
                 rotationMatrix.rotate(shape.rotation / 180 * Math.PI);
             }
-            if (shape.isFlippedHorizontal) {
-                rotationMatrix.flipHoriz();
-            }
-            if (shape.isFlippedVertical) {
-                rotationMatrix.flipVert();
-            }
+            // todo flip
+            // if (shape.isFlippedHorizontal) {
+            //     rotationMatrix.flipHoriz();
+            // }
+            // if (shape.isFlippedVertical) {
+            //     rotationMatrix.flipVert();
+            // }
             rotationMatrix.trans(cx, cy);
 
             const m = new Matrix(rotationMatrix);
@@ -161,8 +162,11 @@ export class TranslateHandler extends TransformHandler {
                 width: frame.width,
                 height: frame.height,
                 rotate: shape.rotation || 0,
-                flipH: !!shape.isFlippedHorizontal,
-                flipV: !!shape.isFlippedVertical,
+                // todo flip
+                // flipH: !!shape.isFlippedHorizontal,
+                // flipV: !!shape.isFlippedVertical,
+                flipH: false,
+                flipV: false,
                 parentId: parent.id,
                 rotationMatrix,
                 offsetLivingPointX: 0,
@@ -483,12 +487,13 @@ export class TranslateHandler extends TransformHandler {
             if (shape.rotation) {
                 __m.rotate((shape.rotation || 0) / 180 * Math.PI);
             }
-            if (shape.isFlippedHorizontal) {
-                __m.flipHoriz();
-            }
-            if (shape.isFlippedVertical) {
-                __m.flipVert();
-            }
+            // todo flip
+            // if (shape.isFlippedHorizontal) {
+            //     __m.flipHoriz();
+            // }
+            // if (shape.isFlippedVertical) {
+            //     __m.flipVert();
+            // }
             __m.trans(cx, cy);
             __m.trans(shape.frame.x, shape.frame.y);
 

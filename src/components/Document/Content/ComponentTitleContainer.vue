@@ -88,8 +88,8 @@ function modify_anchor(shape: ShapeView, m2r: Matrix) {
 
 function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    // if (shape.isFlippedVertical) rotate = 360 - rotate;
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     if (rotate >= 0 && rotate < 45) {
     } else if (rotate >= 45 && rotate < 135) {
@@ -104,10 +104,10 @@ function modify_rotate(shape: ShapeView) {
 }
 function shape_title_width(shape: ShapeView, matrix: Matrix) {
     let rotate = pre_modify_anchor(shape);
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
+    // if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    // if (shape.isFlippedVertical) {
+    //     rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    // }
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     const f = shape.frame;
     let width = 0;

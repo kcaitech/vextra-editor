@@ -119,12 +119,12 @@ export class ViewUpdater {
         if (shape.rotation) {
             transformMatrix.rotate(shape.rotation / 360 * 2 * Math.PI);
         }
-        if (shape.isFlippedHorizontal) {
-            transformMatrix.flipHoriz();
-        }
-        if (shape.isFlippedVertical) {
-            transformMatrix.flipVert();
-        }
+        // if (shape.isFlippedHorizontal) {
+        //     transformMatrix.flipHoriz();
+        // }
+        // if (shape.isFlippedVertical) {
+        //     transformMatrix.flipVert();
+        // }
         transformMatrix.trans(cx, cy);
 
         const rootCX = root.width / 2;

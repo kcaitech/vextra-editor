@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { CtrlElementType, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { update_dot3 } from './common';
@@ -10,6 +10,7 @@ import { get_rotate_for_straight } from '@/utils/attri_setting';
 import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 import { LineHandler } from "@/transform/line";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     matrix: number[]
@@ -123,7 +124,7 @@ function setCursor(t: CtrlElementType, active = false) {
         deg = deg - 180;
     }
 
-    const type = t.endsWith('rotate') ? 'rotate' : 'extend';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     active
         ? cursor.setTypeForce(type, deg)

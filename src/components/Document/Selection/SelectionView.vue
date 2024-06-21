@@ -53,8 +53,8 @@ const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
-const theme = ref<SelectionTheme>(SelectionTheme.Normol);
-const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normol);
+const theme = ref<SelectionTheme>(SelectionTheme.Normal);
+const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
 const updateTrigger = ref<number>(0);
 
 function watchShapes() { // 监听选区相关shape的变化
@@ -166,7 +166,7 @@ function modify_tracing_class(shape: ShapeView) {
     if (is_symbol_class(shape)) {
         tracingStroke.value = SelectionTheme.Symbol;
     } else {
-        tracingStroke.value = SelectionTheme.Normol;
+        tracingStroke.value = SelectionTheme.Normal;
     }
 }
 
@@ -260,6 +260,7 @@ function modify_controller_frame(shapes: ShapeView[]) {
         controllerFrame.value = points;
         return;
     }
+
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
@@ -273,11 +274,14 @@ function modify_controller_frame(shapes: ShapeView[]) {
         for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
         points.push(...ps);
     }
+
     const b = XYsBounding(points);
-    controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, {
-        x: b.left,
-        y: b.bottom
-    }];
+    controllerFrame.value = [
+        { x: b.left, y: b.top },
+        { x: b.right, y: b.top },
+        { x: b.right, y: b.bottom },
+        { x: b.left, y: b.bottom }
+    ];
 }
 
 function for_virtual(shape: ShapeView) {
@@ -346,7 +350,7 @@ function modify_rotate(shapes: ShapeView[]) {
 }
 
 function modify_theme(shapes: ShapeView[]) {
-    theme.value = SelectionTheme.Normol;
+    theme.value = SelectionTheme.Normal;
     if (shapes.length !== 1) {
         return;
     }

@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ClientXY, PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
-import { ContactForm, CurvePoint } from '@kcdesign/data';
+import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 // import CommentInput from '../Content/CommentInput.vue';
@@ -11,8 +11,8 @@ import { useI18n } from 'vue-i18n';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/transform/pathEdit";
-import { PathShapeView } from "@kcdesign/data";
 import { CreatorExecute } from "./execute";
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context,
@@ -295,10 +295,10 @@ function init() {
         //     props.context.cursor.setType('comment', 0);
         // } else 
         if (action === Action.Pen) {
-            props.context.cursor.setType('pen', 0);
+            props.context.cursor.setType(CursorType.Pen, 0);
             mode.value = 'pen';
         } else {
-            props.context.cursor.setType('cross', 0)
+            props.context.cursor.setType(CursorType.Create, 0)
         }
 
         cursor.value = props.context.cursor.type;

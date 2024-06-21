@@ -1,6 +1,8 @@
-import { Color, Shadow, } from "@kcdesign/data"
-import { ColVector3D, Matrix, Point3D, NumberArray2D, Transform } from "@kcdesign/data"
-import { BaseCreator } from "./creator/base"
+import {Color, Shadow,} from "@kcdesign/data"
+import {Transform} from "@kcdesign/data"
+import {ColVector3D, Matrix2 as Matrix, LineThrough0, Line} from "@kcdesign/data"
+import {NumberArray2D} from "@kcdesign/data"
+import {BaseCreator} from "./creator/base"
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -115,8 +117,7 @@ export function parseTransform(transformContent: string) {
                     transform.rotateZ({ angle: numArgList[0] })
                 } else if (numArgList.length === 3) {
                     transform.rotateAt({
-                        axis: new ColVector3D([0, 0, 1]),
-                        point: new Point3D([numArgList[1], numArgList[2], 0]),
+                        axis: new Line(ColVector3D.FromXYZ(0, 0, 1), ColVector3D.FromXYZ(numArgList[0], numArgList[1], 0)),
                         angle: numArgList[0],
                     })
                 }
@@ -128,14 +129,14 @@ export function parseTransform(transformContent: string) {
                 transform.rotateZ({ angle: numArgList[0] })
             } else if (name === "rotate3d") {
                 transform.rotate({
-                    axis: new ColVector3D([numArgList[0], numArgList[1], numArgList[2]]),
+                    axis: new LineThrough0(ColVector3D.FromXYZ(numArgList[0], numArgList[1], numArgList[2])),
                     angle: numArgList[3],
                 })
             }
         } else if (name === "scale") {
             transform.scale({ vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 1]) })
         } else if (name === "translate") {
-            transform.translate({ vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 0]) })
+            transform.translate(new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 0]))
         } else {
             console.log("不支持的变换函数", name, args)
         }
@@ -464,7 +465,7 @@ export type Attributes = { // 保存元素的一些属性
     polylineX?: number,
     polylineY?: number,
 
-    useCreator?: BaseCreator,
+    useTargetCreator?: BaseCreator,
 }
 
 const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")

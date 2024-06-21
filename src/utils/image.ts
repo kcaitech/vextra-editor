@@ -110,8 +110,9 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         el.style.transform = `rotate(0deg)`;
         let rotateY = 0;
         let rotateX = 0;
-        shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-        shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
+        // todo flip
+        // shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
+        // shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
         rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
         const radian = rotate * Math.PI / 180;
         const sin = Math.sin(radian);
@@ -198,8 +199,9 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         el.style.transform = `rotate(0deg)`;
         let rotateY = 0;
         let rotateX = 0;
-        shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-        shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
+        // todo flip
+        // shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
+        // shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
         rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
         const radian = rotate * Math.PI / 180;
         const sin = Math.sin(radian);

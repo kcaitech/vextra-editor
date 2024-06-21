@@ -5,7 +5,6 @@ import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
-import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
@@ -172,25 +171,12 @@ onUnmounted(() => {
                  :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="props.params.data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
-    <ComponentTitleContainer :context="props.context" :data="props.params.data" :matrix="matrixWithFrame.toArray()">
-    </ComponentTitleContainer>
+
 </template>
 
 <style scoped>
 svg {
     position: absolute;
     transform-origin: top left;
-}
-
-.text {
-    position: fixed;
-    left: 300px;
-    top: 200px;
-    width: 600px;
-    height: 600px;
-    background-color: #fff;
-    border-right: 30px solid;
-    border-bottom: 50px solid;
-    border-radius: 30px;
 }
 </style>

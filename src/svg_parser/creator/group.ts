@@ -10,7 +10,7 @@ export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     if (!parentShape || !childShape) return;
 
     // 合并transform
-    child.transform = parent.transform.clone().addTransform(child.transform)
+    child.transform = child.transform.addTransform(parent.transform) // 先执行子级，再执行父级
     child.updateShapeAttrByTransform()
     // 合并透明度
     if (parent.attributes.opacity) {
@@ -74,11 +74,11 @@ export class GroupCreator extends BaseCreator {
 
         // 将子元素包围盒偏移至groupShape的左上角
         for (const child of children) {
-            child.creator.transform.translate({vector: new ColVector3D([-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0])})
+            child.creator.transform.translate(new ColVector3D([-childesShapeBox.lt.x, -childesShapeBox.lt.y, 0]))
             child.creator.updateShapeAttrByTransform()
         }
         // 将groupShape偏移至子元素包围盒原来的位置
-        this.transform.preTranslate({vector: new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0])})
+        this.transform.preTranslate(new ColVector3D([childesShapeBox.lt.x, childesShapeBox.lt.y, 0]))
         this.updateShapeAttrByTransform()
         // dev code
         // if (this.localAttributes["id"] === "组_59") {

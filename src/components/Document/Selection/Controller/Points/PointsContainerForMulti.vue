@@ -1,17 +1,17 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { CtrlElementType, Matrix } from '@kcdesign/data';
+import { CtrlElementType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot2 } from './common';
-import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
+import { getHorizontalAngle } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
 import { RotateHandler } from '@/transform/rotate';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
-    matrix: number[]
     context: Context
     frame: Point[]
     axle: { x: number, y: number }
@@ -26,26 +26,24 @@ interface Dot {
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
-const submatrix = new Matrix();
-const data: { dots: Dot[] } = reactive({ dots: [] });
-const { dots } = data;
-let startPosition: ClientXY = { x: 0, y: 0 };
+const dots = reactive<{ dots: Dot[] }>({ dots: [] }).dots;
+
 let isDragging = false;
 const dragActiveDis = 3;
+
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+
 let isRotateElement = false;
-let need_reset_cursor_after_transform = true;
 
 let scaler: ScaleHandler | undefined = undefined;
 let rotator: RotateHandler | undefined = undefined;
 
-// #region view
+let startPosition: ClientXY = { x: 0, y: 0 };
+
+let need_reset_cursor_after_transform = true;
+
 function update() {
-    // const s = Date.now();
-    matrix.reset(props.matrix);
     update_dot_path();
-    // console.log('绘制控点用时(ms):', Date.now() - s);
 }
 
 function update_dot_path() {
@@ -58,14 +56,10 @@ function update_dot_path() {
 }
 
 function passive_update() {
-    matrix.reset(props.matrix);
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
 }
 
-// #endregion
-
-// #region main flow
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
@@ -78,8 +72,6 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     cur_ctrl_type = ele;
 
-    startPosition = props.context.workspace.getContentXY(event);
-
     if (cur_ctrl_type.endsWith('rotate')) {
         rotator = new RotateHandler(props.context, event, props.context.selection.selectedShapes);
         isRotateElement = true;
@@ -89,6 +81,8 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
         isRotateElement = false;
     }
 
+    startPosition = props.context.workspace.getContentXY(event);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
@@ -96,12 +90,12 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = workspace.getContentXY(event)
+    const { x: mx, y: my } = workspace.getContentXY(event);
+
     if (isDragging) {
         if (isRotateElement) {
             rotator?.execute(event);
-
-            props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
+            props.context.cursor.setTypeForce(CursorType.Rotate, getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
             scaler?.execute(event);
         }
@@ -110,17 +104,11 @@ function point_mousemove(event: MouseEvent) {
 
         props.context.nextTick(props.context.selection.selectedPage!, () => {
             workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-        })
+        });
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-
-        // const shapes = shapes_organize(props.context.selection.selectedShapes);
-        // const page = props.context.selection.selectedPage!;
-
-        if (isRotateElement) {
-            rotator?.createApiCaller();
-        } else {
-            scaler?.createApiCaller();
-        }
+        isRotateElement
+            ? rotator?.createApiCaller()
+            : scaler?.createApiCaller();
 
         isDragging = true;
     }
@@ -134,9 +122,6 @@ function point_mouseup(event: MouseEvent) {
     clear_status();
 }
 
-// #endregion
-
-// #region utils
 function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
     let deg = 0;
@@ -157,26 +142,9 @@ function setCursor(t: CtrlElementType) {
     } else if (t === CtrlElementType.RectLBR) {
         deg = deg + 135;
     }
-    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
 
     cursor.setType(type, deg);
-}
-
-function clear_status() {
-    isDragging = false;
-
-    if (need_reset_cursor_after_transform) {
-        props.context.cursor.reset();
-    }
-
-    scaler?.fulfil();
-    rotator?.fulfil();
-
-    scaler = undefined;
-    rotator = undefined;
-
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
 }
 
 function point_mouseenter(t: CtrlElementType) {
@@ -189,21 +157,29 @@ function point_mouseleave() {
     props.context.cursor.reset();
 }
 
-function frame_watcher() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        passive_update();
+function clear_status() {
+    isDragging = false;
+
+    scaler?.fulfil();
+    rotator?.fulfil();
+
+    scaler = undefined;
+    rotator = undefined;
+
+    if (need_reset_cursor_after_transform) {
+        props.context.cursor.reset();
     }
+
+    document.removeEventListener('mousemove', point_mousemove);
+    document.removeEventListener('mouseup', point_mouseup);
 }
 
 function window_blur() {
     clear_status();
 }
 
-// #endregion
+watch(() => props.frame, passive_update);
 
-// #region lifecycle hooks
-watch(() => props.frame, frame_watcher);
-watch(() => props.matrix, update);
 onMounted(() => {
     window.addEventListener('blur', window_blur);
     update();
@@ -211,17 +187,23 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 })
-// #endregion
 </script>
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-              @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
-        </path>
-        <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
-           @mouseleave="point_mouseleave">
-            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
+        <path
+            class="r-path"
+            :d="p.r.p"
+            @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            @mouseenter="() => point_mouseenter(p.type2)"
+            @mouseleave="point_mouseleave"
+        />
+        <g
+            @mousedown.stop="(e) => point_mousedown(e, p.type)"
+            @mouseenter="() => point_mouseenter(p.type)"
+            @mouseleave="point_mouseleave"
+        >
+            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"/>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"/>
         </g>
     </g>
 </template>

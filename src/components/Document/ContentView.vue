@@ -8,7 +8,7 @@ import Selector, { SelectorFrame } from './Selection/Selector.vue';
 // import CommentView from './Content/CommentView.vue';
 import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
 import { Context } from '@/context';
-import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
+import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
@@ -17,16 +17,17 @@ import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
     _updateRoot,
-    is_drag,
-    drop,
-    right_select,
     adapt_page,
+    color2string,
+    drop,
     flattenShapes,
     get_menu_items,
-    selectShapes,
-    color2string,
     init_insert_table,
-    root_scale, root_trans
+    is_drag,
+    right_select,
+    root_scale,
+    root_trans,
+    selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import Placement from './Menu/Placement.vue';
@@ -37,7 +38,7 @@ import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 // import * as comment_api from '@/request/comment';
 import Creator from './Creator/Creator.vue';
-import { Wheel, fourWayWheel } from '@/utils/wheel';
+import { fourWayWheel, Wheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
 import { ColorCtx } from '@/context/color';
@@ -47,6 +48,8 @@ import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
+import { CursorType } from "@/utils/cursor2";
+
 
 interface Props {
     context: Context
@@ -170,7 +173,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    props.context.cursor.setType('grab', 0);
+    props.context.cursor.setType(CursorType.Grab, 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
@@ -235,12 +238,12 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType('grabbing', 0);
+    props.context.cursor.setType(CursorType.Grabbing, 0);
 }
 
 function pageViewDragEnd() {
     state = STATE_NONE;
-    props.context.cursor.setType('grab', 0)
+    props.context.cursor.setType(CursorType.Grab, 0)
 }
 
 /**
@@ -671,6 +674,7 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.color.watch(color_watcher);
+    props.context.user.updateUserConfig();
     rootRegister(true);
     updateBackground();
     document.addEventListener('keydown', onKeyDown);
@@ -695,12 +699,15 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
 })
 onUnmounted(() => {
+
     props.context.selection.scout?.remove();
     props.context.workspace.unwatch(workspace_watcher);
     // props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
+    props.context.cursor.remove();
     props.context.cursor.unwatch(cursor_watcher);
     props.context.tool.unwatch(tool_watcher);
+
     props.page.unwatch(page_watcher);
     props.context.color.unwatch(color_watcher);
     resizeObserver.disconnect();

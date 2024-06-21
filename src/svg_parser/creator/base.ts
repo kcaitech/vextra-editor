@@ -39,8 +39,9 @@ import {
     RadialGradient
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
-import {Transform, TransformMode} from "@kcdesign/data"
-import {ColVector3D} from "@kcdesign/data"
+import {Transform} from "@kcdesign/data"
+import {ColVector3D, ColVector2D} from "@kcdesign/data"
+import {makeShapeTransform2By1, updateShapeTransform1By2} from "@kcdesign/data"
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -266,20 +267,16 @@ export class BaseCreator extends BaseTreeNode {
                     })
                     if (creator.htmlElement?.tagName === "linearGradient") {
                         let x1: string | number = creator.localAttributes["x1"] || "0"
-                        if (x1.includes("%")) x1 = parseFloat(x1.replace("%", "")) / 100;
-                        else x1 = parseFloat(x1);
+                        x1 = x1.includes("%") ? parseFloat(x1.replace("%", "")) / 100 : parseFloat(x1)
 
                         let y1: string | number = creator.localAttributes["y1"] || "0"
-                        if (y1.includes("%")) y1 = parseFloat(y1.replace("%", "")) / 100;
-                        else y1 = parseFloat(y1);
+                        y1 = y1.includes("%") ? parseFloat(y1.replace("%", "")) / 100 : parseFloat(y1);
 
                         let x2: string | number = creator.localAttributes["x2"] || "1"
-                        if (x2.includes("%")) x2 = parseFloat(x2.replace("%", "")) / 100;
-                        else x2 = parseFloat(x2);
+                        x2 = x2.includes("%") ? parseFloat(x2.replace("%", "")) / 100 : parseFloat(x2);
 
                         let y2: string | number = creator.localAttributes["y2"] || "0"
-                        if (y2.includes("%")) y2 = parseFloat(y2.replace("%", "")) / 100;
-                        else y2 = parseFloat(y2);
+                        y2 = y2.includes("%") ? parseFloat(y2.replace("%", "")) / 100 : parseFloat(y2);
 
                         const parentX = parseFloat(this.localAttributes["x"] || "0")
                         const parentY = parseFloat(this.localAttributes["y"] || "0")
@@ -544,12 +541,7 @@ export class BaseCreator extends BaseTreeNode {
 
         // 抵消视图层在前后加的两次平移操作
         if (this.transform.hasRotation()) {
-            const res = this.transform.clone().preTranslate({
-                vector: new ColVector3D([w1 / 2, h1 / 2, 0]),
-            }).translate({
-                vector: new ColVector3D([-w1 / 2, -h1 / 2, 0]),
-                mode: TransformMode.Local,
-            }).decompose()
+            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate(new ColVector3D([-w1 / 2, -h1 / 2, 0])).decompose()
             translate = res.translate
             rotate = res.rotate
             skew = res.skew
@@ -568,28 +560,38 @@ export class BaseCreator extends BaseTreeNode {
         // }
 
         // 设置缩放
-        shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
-        shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
+        // shape.frame.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        // shape.frame.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
         // shape.scaleX = Math.abs(scale.x)
         // shape.scaleY = Math.abs(scale.y)
+        shape.size.width = (this.attributes.width || 0) * Math.abs(scale.x || 1)
+        shape.size.height = (this.attributes.height || 0) * Math.abs(scale.y || 1)
 
         // 设置斜切
         // shape.skewX = skew.x * 180 / Math.PI
 
         // 设置xy
-        shape.frame.x = translate.x
-        shape.frame.y = translate.y
+        // shape.frame.x = translate.x
+        // shape.frame.y = translate.y
         // dev code
         // console.log(shape.name)
         // console.log(translate.x, translate.y)
         // console.log(shape)
 
         // 设置旋转
-        shape.rotation = rotate.z * 180 / Math.PI
+        // shape.rotation = rotate.z * 180 / Math.PI
 
         // 设置翻转
-        shape.isFlippedVertical = this.transform.isFlipV
-        shape.isFlippedHorizontal = this.transform.isFlipH
+        // shape.isFlippedVertical = this.transform.isFlipV
+        // shape.isFlippedHorizontal = this.transform.isFlipH
+
+        // todo flip
+        const transform2 = makeShapeTransform2By1(shape.transform)
+        transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
+        transform2.setRotateZ(rotate.z)
+        transform2.setSkew({skew: skew})
+        transform2.setScale(new ColVector3D([scale.x, scale.y, scale.z]))
+        updateShapeTransform1By2(shape.transform, transform2)
     }
 
     updateShapeStyle() { // 设置shape的样式
@@ -693,7 +695,7 @@ export class BaseCreator extends BaseTreeNode {
             x -= this.parent.viewBox[0]
             y -= this.parent.viewBox[1]
         }
-        if (x !== 0 || y !== 0) this.transform.preTranslate({vector: new ColVector3D([x, y, 0])});
+        if (x !== 0 || y !== 0) this.transform.preTranslate(new ColVector3D([x, y, 0]));
 
         // // dev code
         // 抵消视图层在前后加的两次平移操作
@@ -736,10 +738,7 @@ export class SvgCreator extends BaseCreator {
                     // })
                 }
                 if (dx !== 0 || dy !== 0) for (const item of this.children) {
-                    item.transform.translate({
-                        vector: new ColVector3D([dx, dy, 0]),
-                        mode: TransformMode.Local,
-                    })
+                    item.transform.translate(new ColVector3D([dx, dy, 0]))
                 }
                 if (scaleX !== 1 || scaleY !== 1 || dx !== 0 || dy !== 0) for (const item of this.children) {
                     item.updateShapeAttrByTransform()

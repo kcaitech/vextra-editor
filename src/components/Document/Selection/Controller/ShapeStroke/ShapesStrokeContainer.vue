@@ -1,11 +1,10 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, toRaw } from 'vue';
 import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { reactive } from 'vue';
 import { is_symbol_class } from '@/utils/controllerFn';
-import { adapt2Shape } from "@kcdesign/data";
 
 const watchedShapes = new Map();
 
@@ -55,12 +54,12 @@ function update_paths() {
     const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
-        const shape = adapt2Shape(shapes[i]);
+        const shape = shapes[i];
         const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
         workspace.setCtrlPath(paths.value[0].path);
@@ -71,8 +70,8 @@ function update_themes() {
     const shapes = props.context.selection.selectedShapes;
     theme_map.clear();
     for (let i = 0; i < shapes.length; i++) {
-        const shape = adapt2Shape(shapes[i]);
-        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normol;
+        const shape = shapes[i];
+        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normal;
         theme_map.set(shape.id, theme);
     }
 }
@@ -95,8 +94,9 @@ function passive_update() {
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normal });
     }
+
     if (shapes.length === 1 && paths.value.length === 1) {
         props.context.workspace.setCtrlPath(paths.value[0].path);
     }
@@ -135,7 +135,7 @@ onUnmounted(() => {
 </script>
 <template>
     <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"></path>
+        <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"/>
     </g>
 </template>
 <style lang='scss' scoped></style>

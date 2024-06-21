@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
 import { Matrix, TextShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
@@ -12,6 +12,7 @@ import { WorkSpace } from '@/context/workspace';
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from '@/utils/common';
+import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context
@@ -91,7 +92,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan', 0);
+            props.context.cursor.setType(CursorType.Text, 0);
         }
         if (!editing.value) return;
         e.stopPropagation();
@@ -118,7 +119,7 @@ function dblFromPart(e: MouseEvent) {
         }
         editing.value = true;
         workspace.contentEdit(editing.value);
-        props.context.cursor.setType('scan', 0);
+        props.context.cursor.setType(CursorType.Text, 0);
         const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
@@ -196,7 +197,7 @@ function reset_hidden() {
 }
 
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan', 0);
+    if (editing.value) props.context.cursor.setType(CursorType.Text, 0);
 }
 
 function mouseleave() {
@@ -212,7 +213,7 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan', 0);
+    props.context.cursor.setType(CursorType.Text, 0);
     if (index !== undefined) {
         downIndex = { index, before: true };
         selection.setCursor(index, true);
