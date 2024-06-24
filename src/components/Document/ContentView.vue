@@ -424,6 +424,7 @@ function onMouseUp(e: MouseEvent) {
         isMouseLeftPress = false;
         selectEnd();
         // saveShapeCommentXY();
+        props.context.workspace.notify(WorkSpace.UPDATE_COMMENT_POS);
         if (selector_mount.value) {
             selectEnd();
         }

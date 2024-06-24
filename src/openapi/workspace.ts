@@ -1,7 +1,8 @@
-import { IWatchable } from "@kcdesign/data";
+import { IWatchable, Matrix } from "@kcdesign/data";
 
 export namespace WorkspaceEvents {
     export const transform_change = 'transform_change'
+    export const comment_change = 'comment_change'
 }
 
 export interface IWorkspace extends IWatchable {
@@ -15,6 +16,8 @@ export interface IWorkspace extends IWatchable {
     get element(): HTMLElement | undefined;
 
     get curScale(): number;
+
+    get matrix(): Matrix;
 
     translate(x: number, y: number): void;
     scale(ratio: number): void;

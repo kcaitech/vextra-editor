@@ -132,10 +132,10 @@ function selectionWatcher(t: number | string) {
         curPage.value = ctx.selection.selectedPage;
 
     }
-    // if (t === Selection.COMMENT_CHANGE_PAGE) {
-    //     const pageId = ctx.selection.commentPageId
-    //     switchPage(pageId)
-    // }
+    if (t === Selection.COMMENT_CHANGE_PAGE) {
+        const pageId = ctx.selection.commentPageId
+        switchPage(pageId)
+    }
 }
 
 const isLable = ref<boolean>(false);
