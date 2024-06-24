@@ -13,8 +13,10 @@ interface Props {
     }
     context: Context
 }
+
 const props = defineProps<Props>();
 const show_placement = ref<boolean>(false);
+
 function menu_watcher(t?: number) {
     if (t === Menu.SHOW_PLACEMENT) {
         show_placement.value = true;
@@ -30,11 +32,12 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div v-if="props.params.visible" class="container" :style="{ left: `${props.params.pos.x}px`, top: `${props.params.pos.y}px`, opacity: show_placement ? 1 : 0 }">
-        <div class="dot"></div>
-        <div class="pulse"></div>
-        <div class="pulse1"></div>
-    </div>
+<div v-if="props.params.visible" class="container"
+     :style="{ left: `${props.params.pos.x}px`, top: `${props.params.pos.y}px`, opacity: show_placement ? 1 : 0 }">
+    <div class="dot"></div>
+    <div class="pulse"></div>
+    <div class="pulse1"></div>
+</div>
 </template>
 <style lang="scss" scoped>
 @keyframes warn {

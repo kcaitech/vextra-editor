@@ -1,18 +1,26 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance, h, onBeforeMount } from 'vue';
+import {
+    reactive,
+    onMounted,
+    onUnmounted,
+    computed,
+    ref,
+    nextTick,
+    watch,
+    getCurrentInstance,
+    h,
+    onBeforeMount
+} from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
-import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-// import CommentView from './Content/CommentView.vue';
 import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
-import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
@@ -20,7 +28,6 @@ import {
     adapt_page,
     color2string,
     drop,
-    flattenShapes,
     get_menu_items,
     init_insert_table,
     is_drag,
@@ -36,7 +43,6 @@ import { Cursor } from "@/context/cursor";
 import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-// import * as comment_api from '@/request/comment';
 import Creator from './Creator/Creator.vue';
 import { fourWayWheel, Wheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
@@ -45,11 +51,9 @@ import { ColorCtx } from '@/context/color';
 import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
 import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
-import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
 import { CursorType } from "@/utils/cursor2";
-
 
 interface Props {
     context: Context
@@ -96,7 +100,6 @@ const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
-// const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
@@ -143,7 +146,6 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     }
 
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    // search_once(e) // 滚动过程进行常规图形检索
 }
 
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
@@ -213,7 +215,6 @@ function search(e: MouseEvent) { // 常规图形检索
     selectShapes(ctx, shapes);
 }
 
-const search_once = debounce(search, 350) // 连续操作结尾处调用
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
@@ -438,33 +439,6 @@ function onMouseUp(e: MouseEvent) {
     document.removeEventListener('mouseup', onMouseUp);
 }
 
-//移动shape时保存shape身上的评论坐标
-// const saveShapeCommentXY = () => {
-//     const shapesId = props.context.comment.commentShape;
-//     const page = props.context.selection.selectedPage;
-//     if (!page) return;
-//     const shapes: ShapeView[] = []
-//     shapesId.forEach((id: string) => {
-//         const shape = page.getShape(id);
-//         if (shape) {
-//             shapes.push(shape);
-//         }
-//     })
-//     const sleectShapes = flattenShapes(shapes)
-//     const commentList = props.context.comment.pageCommentList
-//     sleectShapes.forEach((item: ShapeView) => {
-//         commentList.forEach((comment: any, i: number) => {
-//             if (comment.target_shape_id === item.id) {
-//                 const { x, y } = item.frame2Root()
-//                 const x1 = comment.shape_frame.x2 + x;
-//                 const y1 = comment.shape_frame.y2 + y;
-//                 editShapeComment(i, x1, y1);
-//             }
-//         })
-//     })
-//     props.context.comment.editShapeComment(false, [])
-// }
-
 // mouseleave
 function onMouseLeave() {
     props.context.selection.unHoverShape();
@@ -492,26 +466,6 @@ function windowBlur() {
     document.removeEventListener('mouseup', onMouseUp);
 }
 
-// const editShapeComment = (index: number, x: number, y: number) => {
-//     const comment = documentCommentList.value[index]
-//     const id = comment.id
-//     const shapeId = comment.target_shape_id
-//     const { x2, y2 } = comment.shape_frame
-//     const data = {
-//         id: id,
-//         target_shape_id: shapeId,
-//         shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
-//     }
-//     editCommentShapePosition(data)
-// }
-const editCommentShapePosition = async (data: any) => {
-    // try {
-    //     await comment_api.editCommentAPI(data)
-    // } catch (err) {
-    //     console.log(err)
-    // }
-}
-
 //表格
 const closeModal = () => {
     cellSetting.value = false
@@ -524,17 +478,9 @@ function updateBackground(page?: PageView) {
     }
 }
 
-// function comment_watcher(type?: number) {
-//     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
-//     else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
-//     else if (type === Comment.UPDATE_COMMENT) {
-//         props.context.comment.updateCommentList(props.page.id)
-//         documentCommentList.value = props.context.comment.pageCommentList
-//     }
-// }
 const isvisible = ref(false);
 
-function menu_watcher(type?: number, mount?: string) {
+function menu_watcher(type: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
@@ -667,7 +613,6 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.workspace.init(t.bind(getCurrentInstance()));
     props.context.workspace.setFreezeStatus(true);
-    // props.context.comment.watch(comment_watcher);
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
@@ -699,10 +644,8 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
 })
 onUnmounted(() => {
-
     props.context.selection.scout?.remove();
     props.context.workspace.unwatch(workspace_watcher);
-    // props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.cursor.remove();
     props.context.cursor.unwatch(cursor_watcher);
@@ -729,67 +672,99 @@ comps.push(...plugins.begin);
 comps.push(
     {
         component: PageViewVue, params: {
-            get data() { return props.page },
-            get matrix() { return matrix },
+            get data() {
+                return props.page
+            },
+            get matrix() {
+                return matrix
+            },
             closeLoading
         }
     },
     {
         component: TextSelection, params: {
-            get matrix() { return matrix }
+            get matrix() {
+                return matrix
+            }
         }
     },
     {
         component: UsersSelection, params: {
-            get matrix() { return matrix },
-            get visible() { return avatarVisi.value }
+            get matrix() {
+                return matrix
+            },
+            get visible() {
+                return avatarVisi.value
+            }
         }
     },
     {
         component: SelectionView, params: {
-            get matrix() { return matrix },
+            get matrix() {
+                return matrix
+            },
         }
     },
     {
         component: Placement, params: {
-            get visible() { return contextMenu.value },
-            get pos() { return contextMenuPosition }
+            get visible() {
+                return contextMenu.value
+            },
+            get pos() {
+                return contextMenuPosition
+            }
         }
     },
     {
         component: () => {
             if (contextMenu.value) {
-                return h(ContextMenu, { site, "@close": contextMenuUnmount, "ref": contextMenuEl, context: props.context })
+                return h(ContextMenu, { site, "ref": contextMenuEl, context: props.context })
             }
         }
     },
     {
         component: CellSetting, params: {
-            get visible() { return cellSetting.value },
+            get visible() {
+                return cellSetting.value
+            },
             close: closeModal,
-            get cellStatus() { return cellStatus.value }
+            get cellStatus() {
+                return cellStatus.value
+            }
         }
     },
     {
         component: Selector, params: {
-            get visible() { return selector_mount.value },
-            get frame() { return selectorFrame }
+            get visible() {
+                return selector_mount.value
+            },
+            get frame() {
+                return selectorFrame
+            }
         }
     },
     {
         component: Creator, params: {
-            get visible() { return creatorMode.value },
+            get visible() {
+                return creatorMode.value
+            },
         }
     },
     {
         component: PathEditMode, params: {
-            get visible() { return path_edit_mode.value },
+            get visible() {
+                return path_edit_mode.value
+            },
         }
     },
     {
         component: Gradient, params: {
-            get visible() { return color_edit_mode.value },
-            get matrix() { return matrix },
+            get visible() {
+                return color_edit_mode.value
+            },
+            get matrix() {
+                return matrix
+            },
         }
     },
     {
@@ -797,7 +772,9 @@ comps.push(
     },
     {
         component: BatchExport, params: {
-            get visible() { return isvisible.value }
+            get visible() {
+                return isvisible.value
+            }
         }
     }
 )
@@ -806,12 +783,12 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
+<div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+     @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
+     :style="{ 'background-color': background_color }">
 
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <Rule :context="props.context" :page="(props.page as PageView)"></Rule>
-    </div>
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
+    <Rule :context="props.context" :page="(props.page as PageView)" />
+</div>
 </template>
