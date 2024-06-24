@@ -13,4 +13,4 @@ yarn.lock
 /deployment/ssh-port-forward-internal/ssh_pids.txt
 .env.*
 .env
-.task.*
+*.task.txt

@@ -1,30 +1,23 @@
 <script setup lang="ts">
 import ToolButton from './ToolButton.vue';
-import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
+import { useContact } from "@/components/Document/Creator/execute";
 const { t } = useI18n()
-const props = defineProps<{
+defineProps<{
   context: Context,
   params: {
     active: boolean,
-    select: (action: string) => void
   }
 }>();
-// const emit = defineEmits<{
-//   (e: "select", action: string): void;
-// }>();
-function select(action: string) {
-  // emit('select', action);
-  props.params.select(action)
-}
+
 </script>
 <template>
   <Tooltip :content="`${t('home.contact')} &nbsp;&nbsp; X`">
-    <ToolButton ref="button" @click="() => { select(Action.AddContact) }" :selected="props.params.active" style="width: 32px">
+      <ToolButton ref="button" @click="() => { useContact(context) }" :selected="params.active" style="width: 32px">
       <div class="svg-container">
-        <svg-icon icon-class="pattern-contact"></svg-icon>
+        <svg-icon icon-class="pattern-contact" />
       </div>
     </ToolButton>
   </Tooltip>

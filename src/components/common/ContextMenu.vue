@@ -54,11 +54,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div ref="menu" class="__context-menu" @mousemove.stop :style="{ width: `${props.width || 196}px` }">
-        <div class="header"></div>
-        <slot></slot>
-        <div class="bottom"></div>
-    </div>
+<div ref="menu" class="__context-menu" @mousemove.stop :style="{ width: `${props.width || 196}px` }">
+    <div class="header"></div>
+    <slot></slot>
+    <div class="bottom"></div>
+</div>
 </template>
 <style scoped lang="scss">
 .__context-menu {
@@ -66,10 +66,11 @@ onUnmounted(() => {
     z-index: 99;
     color: #262626;
     width: 240px;
+    min-height: 360px;
     display: flex;
     flex-direction: column;
     border-radius: 8px;
-    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
     background-color: #FFFFFF;
     border: 1px solid #EBEBEB;
 

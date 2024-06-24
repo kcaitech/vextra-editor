@@ -27,6 +27,15 @@ import { Menu } from "@/context/menu";
 import { hexToX } from "@/components/common/ColorPicker/utils";
 import { Color } from "@kcdesign/data";
 import { Attribute } from "@/context/atrribute";
+import {
+    useArrow, useContact, useCutout,
+    useEllipse,
+    useFrame,
+    useImage,
+    useLine,
+    useRect,
+    useText
+} from "@/components/Document/Creator/execute";
 
 // todo 键盘事件的权限处理
 
@@ -113,25 +122,25 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
     }
 }
 
-// keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
-//     const { metaKey, ctrlKey, shiftKey } = event;
-//     const isCtrl = ctrlKey || metaKey;
-//     if (isCtrl && shiftKey) {
-//         event.preventDefault();
-//         context.menu.notify(Menu.WRITE_MEDIA);
-//         return;
-//     }
-//     if (isCtrl && !shiftKey) {
-//         // context.workspace.notify(WorkSpace.COPY); // 拷贝
-//         return
-//     }
-//     event.preventDefault();
-//     if (shiftKey) {
-//         // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
-//         return;
-//     }
-//     context.tool.setAction(Action.AddComment)
-// }
+keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
+    const { metaKey, ctrlKey, shiftKey } = event;
+    const isCtrl = ctrlKey || metaKey;
+    if (isCtrl && shiftKey) {
+        event.preventDefault();
+        context.menu.notify(Menu.WRITE_MEDIA);
+        return;
+    }
+    if (isCtrl && !shiftKey) {
+        // context.workspace.notify(WorkSpace.COPY); // 拷贝
+        return
+    }
+    event.preventDefault();
+    if (shiftKey) {
+        // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
+        return;
+    }
+    // context.tool.setAction(Action.AddComment)
+}
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey && permIsEdit(context)) {
@@ -162,7 +171,7 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
 
     if (!shiftKey && permIsEdit(context)) {
         event.preventDefault();
-        context.tool.setAction(Action.AddFrame); // 容器工具
+        useFrame(context);
         return;
     }
 }
@@ -252,14 +261,13 @@ keydownHandler['KeyK'] = function (event: KeyboardEvent, context: Context) {
     if (!permIsEdit(context)) return;
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
-        context.tool.notify(Tool.SELECT_IMAGE) // 图片选择工具
+        useImage(context); // 图片选择工具
         return;
     }
     if (is_ctrl && event.altKey) {
         component(context); // 创建组件
         return;
     }
-    // context.tool.setAction(Action.AutoK); // 等比缩放工具
 }
 
 keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
@@ -271,14 +279,14 @@ keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (event.shiftKey) {
-        context.tool.setAction(Action.AddArrow); // 箭头工具
+        useArrow(context); // 箭头工具
         return;
     }
     if (event.altKey) {
         context.navi.notify(Navi.LIST_FOLD);
         return;
     }
-    context.tool.setAction(Action.AddLine); // 线段工具
+    useLine(context); // 线段工具
 }
 
 keydownHandler['KeyM'] = function (event: KeyboardEvent, context: Context) {
@@ -293,7 +301,7 @@ keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (!permIsEdit(context) || is_ctrl || event.shiftKey || event.altKey) return;
-    context.tool.setAction(Action.AddEllipse); // 椭圆工具
+    useEllipse(context) // 椭圆工具
 }
 
 keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
@@ -327,7 +335,8 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (event.altKey) return;
-    context.tool.setAction(Action.AddRect); // 矩形工具
+
+    useRect(context); // 矩形工具
 }
 
 keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
@@ -339,14 +348,14 @@ keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (is_ctrl || event.shiftKey) return;
-    context.tool.setAction(Action.AddCutout); // 切图工具
+    useCutout(context); // 切图工具
 }
 
 keydownHandler['KeyT'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (!permIsEdit(context) || is_ctrl || event.shiftKey || event.altKey) return;
-    context.tool.setAction(Action.AddText); // 文字工具
+    useText(context); // 文字工具
 }
 
 keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
@@ -411,7 +420,7 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
         return; // 剪切操作已经系统监听
     }
     if (event.shiftKey || event.altKey) return;
-    context.tool.setAction(Action.AddContact); // 连接线功能
+    useContact(context); // 连接线功能
 }
 
 keydownHandler['KeyY'] = function (event: KeyboardEvent, context: Context) {

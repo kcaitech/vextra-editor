@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ClientXY, PageXY, XY } from '@/context/selection';
+import { PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
 import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-// import CommentInput from '../Content/CommentInput.vue';
-// import { useRoute } from 'vue-router';
-// import { searchCommentShape } from '@/utils/comment';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/transform/pathEdit";
 import { CreatorExecute } from "./execute";
-import { CursorType } from "@/utils/cursor2";
 
 interface Props {
     context: Context,
@@ -28,16 +24,6 @@ const t = useI18n().t;
 let isDrag: boolean = false;
 let just_search: boolean = false;
 
-// #region
-// const commentInput = ref<boolean>(false);
-// const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
-// type CommentInputEl = InstanceType<typeof CommentInput>;
-// const commentEl = ref<CommentInputEl>();
-const shapeID = ref('')
-const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
-// const route = useRoute()
-const posi = ref({ x: 0, y: 0 });
-const rootWidth = ref<number>(props.context.workspace.root.width);
 const cursor = ref<string>('');
 
 const mode = ref<'normal' | 'pen'>('normal');
@@ -53,27 +39,32 @@ function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
+
+    downXY = e;
+
+    const ctx = props.context;
+
     // creator 中的特殊场景之一，该场景需要交给 PathEditor 处理。
     if (mode.value === 'pen') {
-        pathEditor = new PathEditor(props.context, e);
+        pathEditor = new PathEditor(ctx, e);
         pathEditor.createApiCaller(-1, -1, true);
 
         const vec = pathEditor.createVec();
         if (!vec) {
             return;
         }
-        const page = props.context.selection.selectedPage!;
-        props.context.nextTick(page, () => {
+        const page = ctx.selection.selectedPage!;
+        ctx.nextTick(page, () => {
             const _vec = page.getShape(vec.id);
             if (!_vec) {
                 return;
             }
 
-            props.context.selection.selectShape(_vec);
+            ctx.selection.selectShape(_vec);
+            ctx.workspace.setPathEditMode(true);
+            ctx.tool.setAction(Action.Pen2);
 
-            props.context.workspace.setPathEditMode(true);
-
-            const path = props.context.path;
+            const path = ctx.path;
 
             path.setContactStatus(true);
             path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
@@ -88,16 +79,13 @@ function down(e: MouseEvent) {
         return;
     }
 
-    const action = props.context.tool.action;
+    const action = ctx.tool.action;
 
     if (creatorHdl) {
         return;
     }
 
-    // if (action !== Action.AddComment) {
-        // commentInput.value = false;
-        creatorHdl = new CreatorExecute(props.context, e);
-    // }
+    creatorHdl = new CreatorExecute(ctx, e);
 
     if (action === Action.AddContact) {
         just_search = true;
@@ -137,85 +125,12 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 
-    // if (!isDrag && props.context.tool.action.startsWith('add')) {
-
-    //     if (props.context.tool.action === Action.AddComment) {
-    //         isDrag = false;
-    //         // return addComment(e);
-    //     }
-    // }
-
+    isDrag = false;
     creatorHdl?.fulfil();
     creatorHdl = undefined;
     just_search = false;
 }
 
-// #region 评论
-// const detectionShape = (e: MouseEvent) => {
-//     const workspace = props.context.workspace;
-//     const { x, y } = workspace.getContentXY(e);
-//     const xy = workspace.matrix.inverseCoord(x, y);
-//     const shapes = searchCommentShape(props.context, xy);
-//     if (shapes.length === 0) { //点击的位置是否有图形
-//         shapePosition.x = 0
-//         shapePosition.y = 0
-//         shapeID.value = props.context.selection.selectedPage!.id
-//     } else {
-//         const shape = shapes[0]
-//         const fp = shape.frame2Root();
-//         const frameXY = { x: fp.x, y: fp.y }
-//         shapePosition.x = xy.x - frameXY.x //评论输入框相对于shape的距离
-//         shapePosition.y = xy.y - frameXY.y
-//         shapeID.value = shape.id
-//     }
-//     return { x, y, xy }
-// }
-// const addComment = (e: MouseEvent) => {
-//     e.stopPropagation()
-//     const comment = props.context.comment;
-//     if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
-//         return
-//     }
-
-//     if (comment.isCommentInput) {
-//         comment.commentOpacity(false)
-//         comment.commentInput(false)
-//         return
-//     }
-
-//     if (commentInput.value) {
-//         return;
-//     }
-//     const { x, y, xy } = detectionShape(e)
-//     commentPosition.x = xy.x; //评论输入框在页面的坐标
-//     commentPosition.y = xy.y;
-
-//     posi.value.x = x // 评论弹出框的位置坐标
-//     posi.value.y = y
-//     commentInput.value = true;
-
-//     props.context.escstack.save('comment-input-visible', () => {
-//         const achieve = commentInput.value;
-//         commentInput.value = false;
-//         return achieve;
-//     })
-// }
-
-// const getCommentInputXY = (e: MouseEvent) => {
-//     const { x, y, xy } = detectionShape(e)
-//     commentPosition.x = xy.x;
-//     commentPosition.y = xy.y;
-//     posi.value.x = x
-//     posi.value.y = y
-// }
-//移动输入框
-// const mouseDownCommentInput = (e: MouseEvent) => {
-//     e.stopPropagation();
-//     const comment = props.context.comment;
-//     comment.moveCommentInput(true);
-//     document.addEventListener("mousemove", mouseMoveInput);
-//     document.addEventListener("mouseup", mouseUpCommentInput);
-// }
 const mouseMoveInput = (e: MouseEvent) => {
     e.stopPropagation()
     // getCommentInputXY(e)
@@ -227,22 +142,6 @@ const mouseUpCommentInput = (e: MouseEvent) => {
     document.removeEventListener('mouseup', mouseUpCommentInput);
     // comment.moveCommentInput(false);
 }
-
-// 取消评论输入框
-// const closeComment = (e?: MouseEvent) => {
-//     if (e && e.target instanceof Element && e.target.closest('#content') && !e.target.closest('.container-popup')) {
-//         commentInput.value = false;
-//     } else if (!e) {
-//         commentInput.value = false;
-//     }
-// }
-// // 调用评论API，并通知listTab组件更新评论列表
-// const completed = (succession: boolean, event?: MouseEvent) => {
-//     commentInput.value = false;
-//     if (succession && event) {
-//         addComment(event);
-//     }
-// }
 
 // #region 连接线
 function search_apex(e: MouseEvent) {
@@ -288,27 +187,6 @@ function windowBlur() {
     document.removeEventListener('mouseup', up);
 }
 
-function init() {
-    let timer: any = setTimeout(() => {
-        const action = props.context.tool.action;
-        // if (action === Action.AddComment) {
-        //     props.context.cursor.setType('comment', 0);
-        // } else 
-        if (action === Action.Pen) {
-            props.context.cursor.setType(CursorType.Pen, 0);
-            mode.value = 'pen';
-        } else {
-            props.context.cursor.setType(CursorType.Create, 0)
-        }
-
-        cursor.value = props.context.cursor.type;
-        clearTimeout(timer);
-        timer = null;
-    }, 20);
-    props.context.assist.set_collect_target([], true);
-    props.context.selection.unHoverShape();
-}
-
 function toolWatcher(t: number) {
     const action = props.context.tool.action;
     if (t === Tool.CHANGE_ACTION) {
@@ -320,7 +198,7 @@ function toolWatcher(t: number) {
 }
 
 onMounted(() => {
-    init();
+    // init();
     props.context.cursor.watch(cursor_watcher);
     props.context.tool.watch(toolWatcher);
     window.addEventListener('blur', windowBlur);
@@ -332,10 +210,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`" v-if="props.params.visible">
-        <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
-        <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
-    </div>
+<div v-if="props.params.visible" @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
+    <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
+    <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
+</div>
 </template>
 <style scoped lang="scss">
 .creator {

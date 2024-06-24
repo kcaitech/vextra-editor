@@ -40,6 +40,7 @@ import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
+import { WorkSpace } from "@/context/workspace";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -225,7 +226,7 @@ export class Clipboard {
 
         for (let i = 0, len = _shapes.length; i < len; i++) {
             const shape = _shapes[i];
-
+            shape.transform = position_map.get(shape.id)!;
             const points = points_map.get(shape.id);
             if (points) {
                 (shape as PathShape).pathsegs[0].points = points.map(i => new CurvePoint(i.crdtidx, v4(), i.x, i.y, i.mode)) as any;
@@ -265,6 +266,7 @@ export class Clipboard {
 
         return true;
     }
+
     writeBlob(blob: Blob) {
         try {
             if (navigator.clipboard && navigator.clipboard.write) {
@@ -1740,42 +1742,82 @@ function sourceBounding(source: Shape[]) {
 }
 
 function fixToEnv(context: Context, source: Shape[], env: GroupShapeView) {
-    const { left, top, right, bottom } = sourceBounding(source);
-    const boxTransform = new Transform().setTranslate(ColVector3D.FromXY(left, top));
-    const clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
-    const clientMatrixInverse = clientMatrix.getInverse();
+    const { left, top, right, bottom } = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
+
+    let clientMatrix = makeShapeTransform2By1(context.workspace.matrix); // Root到屏幕的转换矩阵
 
     const { col0: clientLT, col1: clientRB } = clientMatrix.transform([
         ColVector3D.FromXY(left, top),
         ColVector3D.FromXY(right, bottom)
-    ]);
+    ]); // 目标选区在屏幕上的左上角和右下角；
 
-    let underRoot;
-    let inner;
-    let center;
-
-    if (env.type === ShapeType.Page) {
-        console.log('__ENV__', env.name);
-        underRoot = true;
-
+    if (env.type === ShapeType.Page) { // 将粘贴在Root下
         const root = context.workspace.root;
 
-        inner = clientLT.x >= root.x
-            && clientLT.y >= root.y
-            && clientRB.x <= root.right
-            && clientRB.y <= root.bottom;
-
-        boxTransform.clone().addTransform(env.transform2FromRoot.getInverse());
+        const inner = clientLT.x >= 0
+            && clientLT.y >= 0
+            && clientRB.x <= root.width
+            && clientRB.y <= root.height;
 
         if (inner) {
+            console.log('将粘贴到ROOT下，并原位粘贴');
+            // 没有逃离屏幕可视区域，原位粘贴
             for (const shape of source) {
                 const t = makeShapeTransform2By1(shape.transform);
                 t.addTransform(env.transform2FromRoot.getInverse());
+
+                shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+            }
+        } else {
+            // 逃离了屏幕可视区域，尝试居中
+            console.log('将粘贴到ROOT下，但选区将溢出屏幕，尝试相对屏幕居中，并调整选区');
+
+            // 检查是否需要调整视图缩放比例
+            const { width, height } = context.workspace.root;
+            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, height)
+            ]);
+
+            const containWidth = col1.x - col0.x;
+            const containHeight = col1.y - col0.y;
+
+            // 如果ratioW大与1，则说明当前缩放比例下，整体宽度不足以容纳目标选区的宽度；
+            const ratioW = (right - left) / (containWidth * 0.92);
+            const ratioH = (bottom - top) / (containHeight * 0.92); // 不取1是为了周边留点空白；
+
+            const matrix = context.workspace.matrix;
+            if (ratioW > 1 || ratioH > 1) { // 调整视图比例
+                console.log('将以屏幕中点为中心，进行缩放');
+                matrix.trans(-width / 2, -height / 2);
+                matrix.scale(1 / Math.max(ratioW, ratioH));
+                matrix.trans(width / 2, height / 2);
+
+                clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+            }
+
+            const centerAfterScale = clientMatrix.clone()
+                .getInverse()
+                .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
+
+            const dx = centerAfterScale.x - (right + left) / 2;
+            const dy = centerAfterScale.y - (bottom + top) / 2;
+
+            const selectionTransform = new Transform()
+                .setTranslate(ColVector3D.FromXY(dx, dy));
+
+            // at last 调整选区内每个图层的位置
+            for (const shape of source) {
+                const t = makeShapeTransform2By1(shape.transform)
+                    .clone()
+                    .addTransform(selectionTransform)
+                    .addTransform(env.transform2FromRoot.getInverse());
+
                 shape.transform = makeShapeTransform1By2(t) as TransformRaw;
             }
         }
-    } else {
-        underRoot = false;
+    } else { // 将粘贴在指定的容器下
 
     }
 

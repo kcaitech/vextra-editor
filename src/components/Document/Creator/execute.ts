@@ -3,7 +3,8 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Action, ResultByAction, Tool } from "@/context/tool";
 import {
-    Color, ColVector3D,
+    Color,
+    ColVector3D,
     ContactForm,
     ContactLineView,
     CreatorApiCaller,
@@ -14,7 +15,8 @@ import {
     Matrix,
     ShapeFrame,
     ShapeType,
-    ShapeView, Transform
+    ShapeView,
+    Transform
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { v4 } from "uuid";
@@ -23,6 +25,143 @@ import { round2half } from "@/transform/line";
 import { getHorizontalAngle } from "@/utils/common";
 import { get_contact_environment } from "@/utils/contact";
 import { debounce } from "lodash";
+import { ContextEvents } from "@/openapi";
+import { CursorType } from "@/utils/cursor2";
+
+function __add_status_for_create(context: Context) {
+    context.menu.menuMount();
+    context.escstack.save('tool-action', context.tool.reset.bind(context.tool));
+    context.cursor.setType(CursorType.Create, 0);
+    context.notify(ContextEvents.action_change);
+}
+
+/**
+ * @description 使用容器工具
+ */
+export function useFrame(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddFrame);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用矩形工具
+ */
+export function useRect(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddRect);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用圆形工具
+ */
+export function useEllipse(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddEllipse);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用直线工具
+ */
+export function useLine(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddLine);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用箭头工具
+ */
+export function useArrow(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddArrow);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用多边形工具
+ */
+export function usePolygon(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.Polygon);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用星形工具
+ */
+export function useStar(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.Star);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用钢笔工具
+ */
+export function usePen(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.Pen);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用文本工具
+ */
+export function useText(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddText);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用切图工具
+ */
+export function useCutout(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddCutout);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用连接线工具
+ */
+export function useContact(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AddContact);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    __add_status_for_create(context);
+}
+
+/**
+ * @description 使用图片工具
+ */
+export function useImage(context: Context) {
+    context.tool.notify(Tool.SELECT_IMAGE);
+}
 
 export class CreatorExecute extends TransformHandler {
     readonly fixedPoint: XY;

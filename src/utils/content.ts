@@ -459,20 +459,24 @@ export function drop(e: DragEvent, context: Context, t: Function) {
         const fr = new FileReader();
         fr.onload = function (event) {
             const base64: any = event.target?.result;
-            if (base64) {
-                fr.onload = function (event) {
-                    const buff = event.target?.result;
-                    if (base64 && buff) {
-                        item.content = {name: file.name, frame, buff: new Uint8Array(buff as any), base64};
-                        const content = item!.content as Media;
-                        const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
-                        xy.x = xy.x - frame.width / 2;
-                        xy.y = xy.y - frame.height / 2;
-                        paster_image(context, xy, t, content);
-                    }
-                }
-                fr.readAsArrayBuffer(file);
+            if (!base64) {
+               return;
             }
+
+            fr.onload = function (event) {
+                const buff = event.target?.result;
+                if (!(base64 && buff)) {
+                    return;
+                }
+
+                item.content = {name: file.name, frame, buff: new Uint8Array(buff as any), base64};
+                const content = item!.content as Media;
+                const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
+                xy.x = xy.x - frame.width / 2;
+                xy.y = xy.y - frame.height / 2;
+                paster_image(context, xy, t, content);
+            }
+            fr.readAsArrayBuffer(file);
         }
         fr.readAsDataURL(file);
     }

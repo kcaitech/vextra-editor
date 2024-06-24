@@ -18,7 +18,6 @@ export const Action = {
     AddArrow: 'add-arrow' + _uuid,
     AddFrame: 'add-frame' + _uuid,
     AddText: 'add-text' + _uuid,
-    // AddComment: 'add-comment',
     AddImage: 'add-image' + _uuid,
     AddTable: 'table' + _uuid,
     AddContact: 'add-contact' + _uuid,
