@@ -115,7 +115,6 @@ function updateComps() {
                     get active() {
                         return selected.value === Action.AddFrame
                     },
-                    select,
                 }
             },
             { component: PathShape },
@@ -123,9 +122,8 @@ function updateComps() {
                 component: CreateText,
                 params: {
                     get active() {
-                        return selected.value === Action.AddText
+                        return selected.value === Action.AddText;
                     },
-                    select,
                 }
             },
             {
@@ -150,8 +148,7 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.AddContact
-                    },
-                    select
+                    }
                 }
             },
             {
@@ -159,8 +156,7 @@ function updateComps() {
                 params: {
                     get active() {
                         return selected.value === Action.AddCutout
-                    },
-                    select
+                    }
                 }
             },
             { component: VertLine }

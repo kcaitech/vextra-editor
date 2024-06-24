@@ -81,7 +81,7 @@ onUnmounted(() => {
          :width="width" :height="height" overflow="visible" :viewBox="genViewBox(bounds)"
          :style="{transform: `translate(${bounds.left}px,${bounds.top}px)`}"
     >
-        <PointsPathEditContainer :context="props.context"></PointsPathEditContainer>
+        <PointsPathEditContainer :context="props.context" />
     </svg>
 </template>
 <style lang="scss" scoped>

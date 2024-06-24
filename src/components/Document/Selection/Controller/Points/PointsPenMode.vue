@@ -771,7 +771,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path :d="maskPath" fill="transparent" @mousedown="down"></path>
+    <path :d="maskPath" fill="transparent" @mousedown="down" />
 
     <path v-if="livingPathVisible" :d="livingPath" stroke="#1878f5" fill="none" style="pointer-events: none"/>
 

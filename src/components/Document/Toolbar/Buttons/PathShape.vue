@@ -7,6 +7,14 @@ import { string_by_sys } from "@/utils/common";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import {
+  useArrow,
+  useEllipse,
+  useLine,
+  usePolygon,
+  useRect,
+  useStar
+} from "@/components/Document/Creator/execute";
 
 const { t } = useI18n();
 
@@ -172,7 +180,7 @@ onUnmounted(() => {
     </el-tooltip>
     <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
         <!--矩形-->
-        <div class="item" @click="() => { setAction(Action.AddRect) }">
+        <div class="item" @click="() => { useRect(context) }">
             <div v-if="currentTool === Action.AddRect" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -183,7 +191,7 @@ onUnmounted(() => {
             <div class="shortKey">R</div>
         </div>
         <!--圆形-->
-        <div class="item" @click="() => { setAction(Action.AddEllipse) }">
+        <div class="item" @click="() => { useEllipse(context) }">
             <div v-if="currentTool === Action.AddEllipse" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -194,7 +202,7 @@ onUnmounted(() => {
             <div class="shortKey">O</div>
         </div>
         <!--线条-->
-        <div class="item" @click="() => { setAction(Action.AddLine) }">
+        <div class="item" @click="() => { useLine(context) }">
             <div v-if="currentTool === Action.AddLine" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -205,7 +213,7 @@ onUnmounted(() => {
             <div class="shortKey">L</div>
         </div>
         <!--箭头-->
-        <div class="item" @click="() => { setAction(Action.AddArrow) }">
+        <div class="item" @click="() => { useArrow(context) }">
             <div v-if="currentTool === Action.AddArrow" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -215,7 +223,7 @@ onUnmounted(() => {
             </div>
             <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
         </div>
-        <div class="item" @click="() => { setAction(Action.Polygon) }">
+        <div class="item" @click="() => { usePolygon(context) }">
             <div v-if="currentTool === Action.Polygon" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>
@@ -226,7 +234,7 @@ onUnmounted(() => {
             <div class="shortKey"></div>
         </div>
         <!--星形-->
-        <div class="item" @click="() => { setAction(Action.Star) }">
+        <div class="item" @click="() => { useStar(context) }">
             <div v-if="currentTool === Action.Star" class="check">
                 <svg-icon icon-class="white-select"></svg-icon>
             </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Selection, XY } from "@/context/selection";
 import { dbl_action } from "@/utils/mouse_interactive";
 import Selector4PEM, { SelectorFrame } from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
@@ -17,16 +17,17 @@ import { scout_once } from "@/utils/common";
 import { PathEditor } from "@/transform/pathEdit";
 
 interface Props {
-    context: Context
+    context: Context;
     params: {
-        visible: boolean
+        visible: boolean;
     }
 }
 
 const props = defineProps<Props>();
+
 const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
-const mousedownOnClientXY: XY = { x: 0, y: 0 }; // 鼠标在page中的坐标
+let mousedownOnClientXY: XY = { x: 0, y: 0 };
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const clip_mode = ref<boolean>(false);
 let drag: boolean = false;
@@ -58,6 +59,7 @@ function down(e: MouseEvent) {
         scout_once(props.context, e);
         exit();
     }
+
     add_move_and_up_for_document(move2, up);
 }
 
@@ -95,23 +97,23 @@ function up(e: MouseEvent) {
 }
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
-    const { x, y } = props.context.workspace.root;
-    mousedownOnClientXY.x = e.clientX - x;
-    mousedownOnClientXY.y = e.clientY - y; //页面坐标系上的点
+    mousedownOnClientXY = { ...props.context.workspace.getContentXY(e) };
 }
 
 function select(e: MouseEvent) {
-    const { x: rx, y: ry } = props.context.workspace.root;
-    const { x: mx, y: my } = { x: e.clientX - rx, y: e.clientY - ry };
+    const { x: mx, y: my } = props.context.workspace.getContentXY(e);
     const { x: sx, y: sy } = mousedownOnClientXY;
+
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
+
     selectorFrame.value.top = top;
     selectorFrame.value.left = left;
     selectorFrame.value.width = right - left;
     selectorFrame.value.height = bottom - top;
+
     selectorFrame.value.includes = e.altKey;
     selector_mount.value = true;
 }
@@ -133,6 +135,7 @@ function clear_state() {
 function modify_cursor() {
     clip_mode.value = false;
     penMode.value = false;
+
     const action = props.context.tool.action;
     if (action === Action.PathClip) {
         switch_to_clip_mode();
@@ -158,13 +161,13 @@ function window_blur() {
     clear_state();
 }
 
-function selection_watcher(type: Number | string) {
+function selection_watcher(type: number | string) {
     if (type === Selection.CHANGE_SHAPE) {
         props.context.workspace.setPathEditMode(false);
     }
 }
 
-function tool_watcher(type: Number) {
+function tool_watcher(type: number) {
     if (type === Tool.CHANGE_ACTION) {
         modify_cursor();
     } else if (type === Tool.LABLE_CHANGE) {
@@ -172,17 +175,22 @@ function tool_watcher(type: Number) {
     }
 }
 
-function init() {
-    if (props.context.tool.action === Action.Pen) {
-        props.context.tool.setAction(Action.Pen2);
-        penMode.value = true;
+const stopWatchVisible = watch(() => props.params.visible, (v) => {
+    if (!v) {
+        props.context.selection.unwatch(selection_watcher);
+        props.context.tool.unwatch(tool_watcher);
+        props.context.tool.setAction(Action.AutoV);
+        const path = props.context.path;
+        path.reset();
+        window.removeEventListener('blur', window_blur);
+
+        new PathEditor(props.context).sortSegment();
+        path.setContactStatus(false);
+        path.saveEvent(undefined);
+        props.context.tool.notify(Tool.RULE_RENDER);
     }
-    props.context.tool.notify(Tool.RULE_RENDER);
-}
-
+})
 onMounted(() => {
-    init();
-
     props.context.selection.watch(selection_watcher);
     props.context.tool.watch(tool_watcher);
     window.addEventListener('blur', window_blur);
@@ -199,19 +207,23 @@ onUnmounted(() => {
     path.setContactStatus(false);
     path.saveEvent(undefined);
     props.context.tool.notify(Tool.RULE_RENDER);
+    stopWatchVisible();
 })
 </script>
 <template>
-    <div :class="{ wrapper: true, 'clip-mode': clip_mode, 'pen-mode': penMode }" @wheel.stop @mousedown.stop="down" v-if="params.visible"
-         @mousemove="move"
-         @wheel="onMouseWheel">
-        <ClipMode v-if="clip_mode" :context="context"></ClipMode>
-        <PenMode v-else-if="penMode" :context="context"></PenMode>
-        <CtrlPathEdit v-else :context="context"></CtrlPathEdit>
-
-        <Selector4PEM v-if="selector_mount" :context="context" :selector-frame="selectorFrame"></Selector4PEM>
-        <PathAssist :context="context"></PathAssist>
-    </div>
+<div v-if="params.visible"
+     :class="{ wrapper: true, 'clip-mode': clip_mode, 'pen-mode': penMode }"
+     @wheel.stop
+     @mousedown.stop="down"
+     @mousemove="move"
+     @wheel="onMouseWheel"
+>
+    <ClipMode v-if="clip_mode" :context="context"/>
+    <PenMode v-else-if="penMode" :context="context"/>
+    <CtrlPathEdit v-else :context="context"/>
+    <Selector4PEM v-if="selector_mount" :context="context" :selector-frame="selectorFrame"/>
+    <PathAssist :context="context"/>
+</div>
 </template>
 <style scoped lang="scss">
 .wrapper {

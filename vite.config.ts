@@ -48,6 +48,9 @@ export default defineConfig({
       rollupTypes: PRODUCTION
     }),
   ],
+  server: {
+    hmr: false
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
