@@ -266,6 +266,7 @@ export class Clipboard {
 
         return true;
     }
+
     writeBlob(blob: Blob) {
         try {
             if (navigator.clipboard && navigator.clipboard.write) {
@@ -1782,8 +1783,8 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView) {
             const containHeight = col1.y - col0.y;
 
             // 如果ratioW大与1，则说明当前缩放比例下，整体宽度不足以容纳目标选区的宽度；
-            const ratioW = (right - left) / containWidth * 0.95;
-            const ratioH = (bottom - top) / containHeight * 0.95; // 不取1是为了周边留点空白；
+            const ratioW = (right - left) / (containWidth * 0.92);
+            const ratioH = (bottom - top) / (containHeight * 0.92); // 不取1是为了周边留点空白；
 
             const matrix = context.workspace.matrix;
             if (ratioW > 1 || ratioH > 1) { // 调整视图比例
