@@ -10,7 +10,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import {
   useArrow,
   useEllipse,
-  useLine,
+  useLine, usePen,
   usePolygon,
   useRect,
   useStar
@@ -19,8 +19,8 @@ import {
 const { t } = useI18n();
 
 const props = defineProps<{
-    context: Context,
-    params: any
+  context: Context,
+  params: any
 }>();
 
 const currentTool = ref<string>(Action.AddRect);
@@ -31,353 +31,368 @@ const popoverXY = ref<XY>({ x: 0, y: 0 });
 
 // 当前工具Icon
 const pattern = computed<string>(() => {
-    switch (currentTool.value) {
-        case Action.AddRect:
-            return 'pattern-rectangle';
-        case Action.AddEllipse:
-            return 'pattern-oval';
-        case Action.AddLine:
-            return 'pattern-line';
-        case Action.AddArrow:
-            return 'pattern-arrow';
-        case Action.Pen:
-            return 'pattern-pen';
-        case Action.Polygon:
-            return 'pattern-polygon';
-        case Action.Star:
-            return 'pattern-star';
-        default:
-            return 'pattern-rectangle';
-    }
+  switch (currentTool.value) {
+    case Action.AddRect:
+      return 'pattern-rectangle';
+    case Action.AddEllipse:
+      return 'pattern-oval';
+    case Action.AddLine:
+      return 'pattern-line';
+    case Action.AddArrow:
+      return 'pattern-arrow';
+    case Action.Pen:
+      return 'pattern-pen';
+    case Action.Polygon:
+      return 'pattern-polygon';
+    case Action.Star:
+      return 'pattern-star';
+    default:
+      return 'pattern-rectangle';
+  }
 });
 
 // 当前工具Tips
 const tips = computed<string>(() => {
-    const defaultRect = `${t('shape.rect')}\u00a0\u00a0\u00a0\u00a0R`;
-    switch (currentTool.value) {
-        case Action.AddRect:
-            return defaultRect;
-        case Action.AddEllipse:
-            return `${t('shape.oval')}\u00a0\u00a0\u00a0\u00a0O`;
-        case Action.AddLine:
-            return `${t('shape.line')}\u00a0\u00a0\u00a0\u00a0L`;
-        case Action.AddArrow:
-            return string_by_sys(`${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0L`);
-        case Action.Pen:
-            return `${t('shape.pen')}\u00a0\u00a0\u00a0\u00a0P`;
-        case Action.Polygon:
-            return `${t('shape.polygon')}`;
-        case Action.Star:
-            return `${t('shape.star')}`;
-        default:
-            return defaultRect;
-    }
+  const defaultRect = `${t('shape.rect')}\u00a0\u00a0\u00a0\u00a0R`;
+  switch (currentTool.value) {
+    case Action.AddRect:
+      return defaultRect;
+    case Action.AddEllipse:
+      return `${t('shape.oval')}\u00a0\u00a0\u00a0\u00a0O`;
+    case Action.AddLine:
+      return `${t('shape.line')}\u00a0\u00a0\u00a0\u00a0L`;
+    case Action.AddArrow:
+      return string_by_sys(`${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0L`);
+    case Action.Pen:
+      return `${t('shape.pen')}\u00a0\u00a0\u00a0\u00a0P`;
+    case Action.Polygon:
+      return `${t('shape.polygon')}`;
+    case Action.Star:
+      return `${t('shape.star')}`;
+    default:
+      return defaultRect;
+  }
 });
 
 let timer: any = null;
 
 function enter() {
-    if (timer) {
-        clearTimeout(timer);
-    }
-    timer = setTimeout(() => {
-        tipsVisible.value = true;
-        clearTimeout(timer);
-        timer = null;
-    }, 600);
+  if (timer) {
+    clearTimeout(timer);
+  }
+  timer = setTimeout(() => {
+    tipsVisible.value = true;
+    clearTimeout(timer);
+    timer = null;
+  }, 600);
 }
 
 function leave() {
-    clearTimeout(timer);
-    tipsVisible.value = false;
+  clearTimeout(timer);
+  tipsVisible.value = false;
 }
 
 function toolWatcher(t: number) {
-    if (t === Tool.CHANGE_ACTION) {
-        const action = props.context.tool.action;
-        selected.value = action === Action.AddRect
-            || action === Action.AddEllipse
-            || action === Action.AddLine
-            || action === Action.AddArrow
-            || action === Action.Pen
-            || action === Action.Polygon
-            || action === Action.Star;
+  if (t === Tool.CHANGE_ACTION) {
+    const action = props.context.tool.action;
+    selected.value = action === Action.AddRect
+        || action === Action.AddEllipse
+        || action === Action.AddLine
+        || action === Action.AddArrow
+        || action === Action.Pen
+        || action === Action.Polygon
+        || action === Action.Star;
 
-        if (selected.value) {
-            currentTool.value = action;
-        }
+    if (selected.value) {
+      currentTool.value = action;
     }
+  }
 }
 
 function shot() {
-    props.context.tool.setAction(currentTool.value);
+  switch (currentTool.value) {
+    case Action.AddRect:
+      return useRect(props.context);
+    case Action.AddEllipse:
+      return useEllipse(props.context);
+    case Action.AddLine:
+      return useLine(props.context);
+    case Action.AddArrow:
+      return useArrow(props.context);
+    case Action.Pen:
+      return usePen(props.context);
+    case Action.Polygon:
+      return usePolygon(props.context);
+    case Action.Star:
+      return useStar(props.context);
+    default:
+      return useRect(props.context);
+  }
 }
 
 function showMenu(e: MouseEvent) {
-    const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
-    if (!el) {
-        return;
-    }
-    if (popover.value) {
-        popover.value = false;
-        return;
-    }
+  const el = (e.target as Element)!.closest('.path-button') as HTMLDivElement;
+  if (!el) {
+    return;
+  }
+  if (popover.value) {
+    popover.value = false;
+    return;
+  }
 
-    popover.value = true;
-    tipsVisible.value = false;
+  popover.value = true;
+  tipsVisible.value = false;
 
-    popoverXY.value.x = el.offsetLeft;
-    popoverXY.value.y = 45;
+  popoverXY.value.x = el.offsetLeft;
+  popoverXY.value.y = 45;
 
-    props.context.escstack.save('pathshape-menu', () => {
-        const achieve = popover.value;
-        popover.value = false;
-        return achieve;
-    });
+  props.context.escstack.save('pathshape-menu', () => {
+    const achieve = popover.value;
+    popover.value = false;
+    return achieve;
+  });
 
-    document.addEventListener('click', blur);
+  document.addEventListener('click', blur);
 }
 
 function blur(e: MouseEvent) {
-    if (
-        !(e.target as Element).closest('.popover-shape-tool')
-        || !(e.target as Element).closest('.tool-pathshape-menu-trigger')
-    ) {
-        popover.value = false;
-    }
+  if (
+      !(e.target as Element).closest('.popover-shape-tool')
+      || !(e.target as Element).closest('.tool-pathshape-menu-trigger')
+  ) {
+    popover.value = false;
+  }
 }
 
 const stop = watch(() => popover.value, (v) => {
-    if (!v) {
-        document.removeEventListener('click', blur);
-    }
+  !v && document.removeEventListener('click', blur);
 })
 
 function setAction(type: string) {
-    props.context.tool.setAction(type);
+  props.context.tool.setAction(type);
 }
 
 onMounted(() => {
-    props.context.tool.watch(toolWatcher);
+  props.context.tool.watch(toolWatcher);
 });
 onUnmounted(() => {
-    props.context.tool.unwatch(toolWatcher);
-    stop();
+  props.context.tool.unwatch(toolWatcher);
+  stop();
 })
 </script>
 
 <template>
-    <el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
-        <div :class="{'path-button': true, 'path-button-selected':selected}" @mouseenter.stop="enter"
-             @mouseleave.stop="leave" @click="shot">
-            <div class="svg-container">
-                <svg-icon :icon-class="pattern"></svg-icon>
-            </div>
-            <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
-                <svg-icon icon-class="white-down"></svg-icon>
-            </div>
-        </div>
-    </el-tooltip>
-    <div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
-        <!--矩形-->
-        <div class="item" @click="() => { useRect(context) }">
-            <div v-if="currentTool === Action.AddRect" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-rectangle"></svg-icon>
-                <span>{{ t('shape.rect') }}</span>
-            </div>
-            <div class="shortKey">R</div>
-        </div>
-        <!--圆形-->
-        <div class="item" @click="() => { useEllipse(context) }">
-            <div v-if="currentTool === Action.AddEllipse" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-oval"></svg-icon>
-                <span>{{ t('shape.oval') }}</span>
-            </div>
-            <div class="shortKey">O</div>
-        </div>
-        <!--线条-->
-        <div class="item" @click="() => { useLine(context) }">
-            <div v-if="currentTool === Action.AddLine" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-line"></svg-icon>
-                <span>{{ t('shape.line') }}</span>
-            </div>
-            <div class="shortKey">L</div>
-        </div>
-        <!--箭头-->
-        <div class="item" @click="() => { useArrow(context) }">
-            <div v-if="currentTool === Action.AddArrow" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-arrow"></svg-icon>
-                <span>{{ t('shape.arrow') }}</span>
-            </div>
-            <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
-        </div>
-        <div class="item" @click="() => { usePolygon(context) }">
-            <div v-if="currentTool === Action.Polygon" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-polygon"></svg-icon>
-                <span>{{ t('shape.polygon') }}</span>
-            </div>
-            <div class="shortKey"></div>
-        </div>
-        <!--星形-->
-        <div class="item" @click="() => { useStar(context) }">
-            <div v-if="currentTool === Action.Star" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-star"></svg-icon>
-                <span>{{ t('shape.star') }}</span>
-            </div>
-            <div class="shortKey"></div>
-        </div>
-        <div class="line"/>
-        <!--钢笔-->
-        <div class="item" @click="() => { setAction(Action.Pen) }">
-            <div v-if="currentTool=== Action.Pen" class="check">
-                <svg-icon icon-class="white-select"></svg-icon>
-            </div>
-            <div class="desc">
-                <svg-icon icon-class="pattern-pen"></svg-icon>
-                <span>{{ t('shape.pen') }}</span>
-            </div>
-            <div class="shortKey">P</div>
-        </div>
+<el-tooltip effect="dark" :content="tips" :show-after="600" :offset="10" :visible="!popover && tipsVisible">
+  <div :class="{'path-button': true, 'path-button-selected':selected}" @mouseenter.stop="enter"
+       @mouseleave.stop="leave" @click="shot">
+    <div class="svg-container">
+      <svg-icon :icon-class="pattern"></svg-icon>
     </div>
+    <div class="tool-pathshape-menu-trigger" @click.stop="showMenu">
+      <svg-icon icon-class="white-down"></svg-icon>
+    </div>
+  </div>
+</el-tooltip>
+<div v-if="popover" class="popover-shape-tool" :style="{ left: popoverXY.x + 'px', top: popoverXY.y + 'px' }">
+  <!--矩形-->
+  <div class="item" @click="() => { useRect(context) }">
+    <div v-if="currentTool === Action.AddRect" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-rectangle"></svg-icon>
+      <span>{{ t('shape.rect') }}</span>
+    </div>
+    <div class="shortKey">R</div>
+  </div>
+  <!--圆形-->
+  <div class="item" @click="() => { useEllipse(context) }">
+    <div v-if="currentTool === Action.AddEllipse" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-oval"></svg-icon>
+      <span>{{ t('shape.oval') }}</span>
+    </div>
+    <div class="shortKey">O</div>
+  </div>
+  <!--线条-->
+  <div class="item" @click="() => { useLine(context) }">
+    <div v-if="currentTool === Action.AddLine" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-line"></svg-icon>
+      <span>{{ t('shape.line') }}</span>
+    </div>
+    <div class="shortKey">L</div>
+  </div>
+  <!--箭头-->
+  <div class="item" @click="() => { useArrow(context) }">
+    <div v-if="currentTool === Action.AddArrow" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-arrow"></svg-icon>
+      <span>{{ t('shape.arrow') }}</span>
+    </div>
+    <div class="shortKey">{{ string_by_sys('Shift L') }}</div>
+  </div>
+  <div class="item" @click="() => { usePolygon(context) }">
+    <div v-if="currentTool === Action.Polygon" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-polygon"></svg-icon>
+      <span>{{ t('shape.polygon') }}</span>
+    </div>
+    <div class="shortKey"></div>
+  </div>
+  <!--星形-->
+  <div class="item" @click="() => { useStar(context) }">
+    <div v-if="currentTool === Action.Star" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-star"></svg-icon>
+      <span>{{ t('shape.star') }}</span>
+    </div>
+    <div class="shortKey"></div>
+  </div>
+  <div class="line"/>
+  <!--钢笔-->
+  <div class="item" @click="() => { setAction(Action.Pen) }">
+    <div v-if="currentTool=== Action.Pen" class="check">
+      <svg-icon icon-class="white-select"></svg-icon>
+    </div>
+    <div class="desc">
+      <svg-icon icon-class="pattern-pen"></svg-icon>
+      <span>{{ t('shape.pen') }}</span>
+    </div>
+    <div class="shortKey">P</div>
+  </div>
+</div>
 </template>
 
 <style scoped lang="scss">
 .path-button {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  color: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 48px;
+  height: 32px;
+
+  .svg-container {
     display: flex;
     align-items: center;
-    box-sizing: border-box;
-    color: #ffffff;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 48px;
-    height: 32px;
+    flex: 10;
+    flex-direction: row-reverse;
+    height: 100%;
 
-    .svg-container {
-        display: flex;
-        align-items: center;
-        flex: 10;
-        flex-direction: row-reverse;
-        height: 100%;
-
-        > svg {
-            width: 18px;
-            height: 18px;
-        }
+    > svg {
+      width: 18px;
+      height: 18px;
     }
+  }
 
-    .tool-pathshape-menu-trigger {
-        flex: 9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
+  .tool-pathshape-menu-trigger {
+    flex: 9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 
-        > svg {
-            width: 12px;
-            height: 12px;
-            transition: 0.2s;
-        }
+    > svg {
+      width: 12px;
+      height: 12px;
+      transition: 0.2s;
     }
+  }
 
-    .tool-pathshape-menu-trigger:hover {
-        > svg {
-            transform: translateY(2px);
-        }
+  .tool-pathshape-menu-trigger:hover {
+    > svg {
+      transform: translateY(2px);
     }
+  }
 }
 
 .path-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .path-button-selected {
-    background-color: var(--active-color) !important;
+  background-color: var(--active-color) !important;
 }
 
 
 .popover-shape-tool {
-    width: 158px;
+  width: 158px;
 
-    position: absolute;
-    padding: 6px 0;
+  position: absolute;
+  padding: 6px 0;
+  box-sizing: border-box;
+
+  background-color: #262626;
+  color: var(--theme-color-anti);
+
+  border-radius: 4px;
+
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
+
+  .item {
+    width: 100%;
+    height: 32px;
+
+    position: relative;
     box-sizing: border-box;
+    padding: 8px 12px 8px 32px;
 
-    background-color: #262626;
-    color: var(--theme-color-anti);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-default-fontsize);
 
-    border-radius: 4px;
+    .check {
+      position: absolute;
+      left: 8px;
 
-    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
 
-    .item {
-        width: 100%;
-        height: 32px;
-
-        position: relative;
-        box-sizing: border-box;
-        padding: 8px 12px 8px 32px;
-
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: var(--font-default-fontsize);
-
-        .check {
-            position: absolute;
-            left: 8px;
-
-            display: flex;
-            align-items: center;
-
-            > svg {
-                width: 12px;
-                height: 12px;
-            }
-        }
-
-        .desc {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            > svg {
-                width: 14px;
-                height: 14px;
-            }
-
-            > span {
-                margin-left: 8px;
-            }
-        }
+      > svg {
+        width: 12px;
+        height: 12px;
+      }
     }
 
-    .item:hover {
-        background-color: var(--active-color);
+    .desc {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      > svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      > span {
+        margin-left: 8px;
+      }
     }
+  }
+
+  .item:hover {
+    background-color: var(--active-color);
+  }
 }
 
 .line {
-    width: 100%;
-    height: 4px;
-    border-bottom: 1px solid #434343;
-    box-sizing: border-box;
+  width: 100%;
+  height: 4px;
+  border-bottom: 1px solid #434343;
+  box-sizing: border-box;
 }
 </style>
