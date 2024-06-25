@@ -239,7 +239,7 @@ export function end_transalte(context: Context) {
  */
 export function update_comment(context: Context, need_update_comment: boolean) {
     if (need_update_comment) {
-        // context.comment.notify(Comment.UPDATE_COMMENT_POS);
+        context.workspace.notify(WorkSpace.UPDATE_COMMENT_POS);
     }
     return false;
 }

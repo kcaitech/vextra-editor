@@ -90,7 +90,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static UPDATE_RENDER_ITEM = 7;
     // static CHANGE_COMMENT = 8;
     // static SOLVE_MENU_STATUS = 9;
-    // static COMMENT_CHANGE_PAGE = 10;
+    static COMMENT_CHANGE_PAGE = 10;
     // static SKIP_COMMENT = 11;
     // static PAGE_SORT = 12;
     // static ABOUT_ME = 13;
@@ -112,7 +112,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     // private m_comment_id: string = '';
     // private m_comment_status: boolean = false;
-    // private m_comment_page_id: string | undefined;
+    private m_comment_page_id: string | undefined;
     // private m_select_comment: boolean = false;
     // private m_comment_page_sort: boolean = false;
     // private m_comment_about_me: boolean = false;
@@ -160,9 +160,9 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     //     return this.m_comment_status;
     // }
 
-    // get commentPageId() {
-    //     return this.m_comment_page_id;
-    // }
+    get commentPageId() {
+        return this.m_comment_page_id;
+    }
 
     // get isSelectComment() {
     //     return this.m_select_comment;
@@ -198,10 +198,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
     }
 
-    // selectCommentPage(id: string) {
-    //     this.m_comment_page_id = id
-    //     this.notify(Selection.COMMENT_CHANGE_PAGE)
-    // }
+    selectCommentPage(id: string) {
+        this.m_comment_page_id = id
+        this.notify(Selection.COMMENT_CHANGE_PAGE)
+    }
 
     // setCommentSelect(s: boolean) {
     //     this.m_select_comment = s

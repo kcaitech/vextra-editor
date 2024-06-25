@@ -209,7 +209,7 @@ function mouseup4trans(e: MouseEvent) {
         document.removeEventListener('mouseup', up);
     }
     if (need_update_comment) {
-        // props.context.comment.notify(Comment.UPDATE_COMMENT_POS);
+        props.context.workspace.notify(WorkSpace.UPDATE_COMMENT_POS);
         need_update_comment = false;
     }
 }
