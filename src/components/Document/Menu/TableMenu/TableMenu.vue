@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ContextMenu from '@/components/common/ContextMenu.vue';
+import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import { XY, Selection } from '@/context/selection';
 import { Shape, ShapeView, TableShape, TableView } from "@kcdesign/data";
 import { Context } from '@/context';

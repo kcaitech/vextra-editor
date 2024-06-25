@@ -91,7 +91,7 @@ declare module '@vue/runtime-core' {
     ContactApex: typeof import('./src/components/Document/Selection/Controller/Points/ContactApex.vue')['default']
     ContactInit: typeof import('./src/components/Document/Toolbar/ContactInit.vue')['default']
     ContentView: typeof import('./src/components/Document/ContentView.vue')['default']
-    ContextMenu: typeof import('./src/components/common/ContextMenu.vue')['default']
+    ContextMenu: typeof import('./src/components/Document/Menu/ContextMenu.vue')['default']
     CreateComps: typeof import('./src/components/Document/Toolbar/Buttons/CreateComps.vue')['default']
     CreateContact: typeof import('./src/components/Document/Toolbar/Buttons/CreateContact.vue')['default']
     CreateImage: typeof import('./src/components/Document/Toolbar/Buttons/CreateImage.vue')['default']

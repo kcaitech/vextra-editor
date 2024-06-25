@@ -8,7 +8,7 @@ import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
-import ContextMenu from '@/components/common/ContextMenu.vue';
+import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import { Navi } from "@/context/navigate";
 // import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";

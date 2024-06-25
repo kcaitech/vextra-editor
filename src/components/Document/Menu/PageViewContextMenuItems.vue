@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ContextMenu from '@/components/common/ContextMenu.vue';
+import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
 import {
     Artboard,
@@ -49,7 +49,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
-const layerSubMenuVisiable = ref<boolean>(false);
+const layerSubMenuVisible = ref<boolean>(false);
 // const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isCutout = ref<boolean>(props.context.tool.isCutoutVisible);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
@@ -60,7 +60,7 @@ const contextMenuEl = ref<ContextMenuEl>();
 const copyAs = ref<boolean>(false);
 
 function showLayerSubMenu(e: MouseEvent, type: string) {
-    layerSubMenuVisiable.value = true;
+    layerSubMenuVisible.value = true;
     hoverItem.value = type;
     nextTick(() => {
         if (!contextMenuEl.value) return;
@@ -464,7 +464,7 @@ const mouseenter = (type: string) => {
  * 关闭图层菜单
  */
 function closeLayerSubMenu() {
-    layerSubMenuVisiable.value = false;
+    layerSubMenuVisible.value = false;
     hoverItem.value = '';
 }
 
@@ -498,7 +498,7 @@ onUnmounted(() => {
              @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon icon-class="down"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :width="196" ref="contextMenuEl" :site="site"
+            <ContextMenu v-if="layerSubMenuVisible" :width="196" ref="contextMenuEl" :site="site"
                          :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
