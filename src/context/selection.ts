@@ -1,6 +1,6 @@
 import {
     adapt2Shape,
-    ISave4Restore, PageView, 
+    ISave4Restore, PageView,
     ShapeType,
     ShapeView,
     SymbolRefView,
@@ -14,7 +14,8 @@ import {
     ArrayOpSelection,
     isDiffStringArr,
     SNumber,
-    TableCellType} from "@kcdesign/data";
+    TableCellType
+} from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -90,7 +91,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static UPDATE_RENDER_ITEM = 7;
     // static CHANGE_COMMENT = 8;
     // static SOLVE_MENU_STATUS = 9;
-    static COMMENT_CHANGE_PAGE = 10;
+    // static COMMENT_CHANGE_PAGE = 10;
     // static SKIP_COMMENT = 11;
     // static PAGE_SORT = 12;
     // static ABOUT_ME = 13;
@@ -198,10 +199,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
     }
 
-    selectCommentPage(id: string) {
-        this.m_comment_page_id = id
-        this.notify(Selection.COMMENT_CHANGE_PAGE)
-    }
+    // selectCommentPage(id: string) {
+    //     this.m_comment_page_id = id
+    //     this.notify(Selection.COMMENT_CHANGE_PAGE)
+    // }
 
     // setCommentSelect(s: boolean) {
     //     this.m_select_comment = s
@@ -225,9 +226,25 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     //     this.notify(Selection.ABOUT_ME)
     // }
 
-    selectPage(p: PageView | undefined) {
-        if (this.m_selectPage === p) {
+    async selectPage(p: PageView | string | undefined) {
+        if (typeof p === 'string') {
+            const id = p;
+            const ctx = this.m_context;
+            const pagesMgr = ctx.data.pagesMgr;
+            const cur_page = ctx.selection.selectedPage;
+            if (cur_page && cur_page.id === id) return cur_page;
+
+            const page = await pagesMgr.get(id);
+            if (page) {
+                const pagedom = ctx.getPageDom(page).dom;
+                ctx.selection.selectPage(pagedom);
+                return pagedom;
+            }
             return;
+        }
+
+        if (this.m_selectPage === p) {
+            return p;
         }
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
@@ -238,6 +255,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             //     query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
             // });
         }
+        return p;
     }
 
     async deletePage(id: string, index: number) {

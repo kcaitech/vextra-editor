@@ -19,5 +19,5 @@ export interface ISelection extends IWatchable {
     get selectedPage(): PageView | undefined
     get hoveredShape(): ShapeView | undefined
 
-    selectCommentPage(id: string): void;
+    selectPage(id: string): Promise<PageView | undefined>;
 }
