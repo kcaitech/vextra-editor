@@ -2,17 +2,18 @@ import { Matrix, PageView, Shape, ShapeType, ShapeView, WatchableObject } from "
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
+import { IPreview, PreviewEvents } from "@/openapi/preview";
 
 export enum ScaleType {
-    Actual = 0,
-    FitScreen = 1,
-    FitWidth  = 2,
-    FillScreen = 3
+    Actual = 'Actual',
+    FitScreen = 'fit_screen',
+    FitWidth  = 'fit_width',
+    FillScreen = 'fill_screen'
 }
 
-export class Preview extends WatchableObject {
-    static CHANGE_PAGE = 1;
-    static CHANGE_SHAPE = 2;
+export class Preview extends WatchableObject implements IPreview {
+    static CHANGE_PAGE = PreviewEvents.page_change;
+    static CHANGE_SHAPE = PreviewEvents.shape_change;
     static MATRIX_SCALE = 3;
     static MENU_CHANGE = 4;
     static NAVI_VISIBLE = 5;
@@ -62,6 +63,7 @@ export class Preview extends WatchableObject {
 
     selectPage(p: PageView | undefined) {
         if (this.m_selectPage === p) {
+            this.notify(Preview.CHANGE_PAGE);
             return;
         }
         this.m_selectPage = p;
@@ -74,6 +76,7 @@ export class Preview extends WatchableObject {
     }
     selectShape(s: Shape | undefined) {
         if (this.m_selectShape === s) {
+            this.notify(Preview.CHANGE_SHAPE);
             return;
         }
         this.m_selectShape = s;
@@ -98,16 +101,6 @@ export class Preview extends WatchableObject {
         const ret = shapeId === this.m_selectShape?.id
         return ret;
     }
-    // updateUrl() {
-    //     if (!this.selectedPage) return;
-    //     const page_id = this.selectedPage.id;
-    //     const query: any = {id: this.m_doc_id, page_id: page_id.slice(0, 8) }
-    //     if(this.selectedShape) query.frame_id = this.selectedShape.id.slice(0, 8);
-    //     router.replace({
-    //         path: '/prototype',
-    //         query: query,
-    //     });
-    // }
 
     setScaleMenu(type: ScaleType | undefined) {
         this.m_menu_options = type;

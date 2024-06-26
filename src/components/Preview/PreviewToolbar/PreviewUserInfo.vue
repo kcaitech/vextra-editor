@@ -7,7 +7,7 @@ import { Context } from '@/context';
 // import kcdesk from '@/kcdesk';
 // import { SCREEN_SIZE } from '@/settings';
 import { useI18n } from 'vue-i18n';
-// import Tooltip from '@/components/common/Tooltip.vue';
+import Tooltip from '@/components/common/Tooltip.vue';
 interface Props {
     context: Context
 }
@@ -58,22 +58,15 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('fullscreenchange', watchFull);
 })
+const plugins = props.context.pluginsMgr.search2('preview.toolbar.others');
+const comps: { component: any, params?: any }[] = []
+comps.push(...plugins.begin)
+comps.push({ component: Scale })
+comps.push(...plugins.end)
 </script>
 <template>
     <div class="user-info" @dblclick.stop>
-        <!-- <UserAvatar :context="props.context"></UserAvatar>
-        <Tooltip :content="t('preview.open')">
-            <div class="open_fill" @click="openFill">
-                <span>{{ t('home.open_local_file') }}</span>
-            </div>
-        </Tooltip>
-        <Share :context="props.context"></Share> -->
-        <Scale :context="props.context"></Scale>
-        <!-- <Tooltip :content="isFull ? t('home.exit_full') : t('home.full')">
-            <div class="full" @click="switchFullScreen">
-                <svg-icon :icon-class="isFull ? 'exit-full' : 'full'"></svg-icon>
-            </div>
-        </Tooltip> -->
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
 </template>
 
@@ -87,15 +80,6 @@ onUnmounted(() => {
 
     div {
         margin: auto 0 auto 8px;
-    }
-
-    .open_fill {
-        font-size: 13px;
-        background-color: #ffffff;
-        padding: 6px;
-        border-radius: 4px;
-        border: 1px solid #f5f5f5;
-        cursor: pointer;
     }
 
     .full {

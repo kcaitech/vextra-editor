@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
 import { PageView, Shape, ShapeType, adapt2Shape } from "@kcdesign/data";
@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
 import { Preview } from "@/context/preview";
+import { ElMessage } from "element-plus";
 
 type List = InstanceType<typeof ListView>;
 
@@ -90,7 +91,7 @@ function inputing() {
 
 const selectedShape = (shape: Shape) => {
     const page = props.context.preview.selectedPage;
-    if(!page) return;
+    if (!page) return;
     const s = page.data.childs.find(item => item.id === shape.id);
     props.context.preview.selectShape(s);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -192,7 +193,7 @@ function accurate_shift() {
     update();
 }
 
-const previewWatcher = (t: number) => {
+const previewWatcher = (t: number | string) => {
     if (t === Preview.CHANGE_PAGE) {
         update();
     }
@@ -220,28 +221,41 @@ const updateScrollH = () => {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
-const listUpdate= (...args: any[]) => {
-    if(args.includes('childs')) {
+const listUpdate = (...args: any[]) => {
+    if (args.includes('childs')) {
         const shape = props.context.preview.selectedShape;
         const page = props.context.preview.selectedPage;
-        if (!shape || !page) return;
-        const shapes = getFrameList(page);    
+        if (!page) return;
+        const shapes = getFrameList(page);
+        if (!shapes.length) {
+            ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
+            props.context.preview.selectShape(undefined);
+            return;
+        }
+        if (!shape) {
+            nextTick(() => {
+                props.context.preview.selectShape(shapes[0]);
+            })
+            return;
+        }
         const shape_index = props.context.preview.shapeIndex;
         const _shape = shapes.find(item => item.id === shape.id);
-        if(!_shape) {
-            if(shape_index === -1 || shape_index === shapes.length) {
+
+        if (!_shape) {
+            if (shape_index === -1 || shape_index === shapes.length) {
                 props.context.preview.selectShape(shapes[0]);
             } else {
                 props.context.preview.selectShape(shapes[shape_index]);
             }
         }
+
     }
     update();
 }
 
 const stopWatch = watch(() => props.page, (value, old) => {
-    old?.unwatch(update);
-    value.watch(update);
+    old?.unwatch(listUpdate);
+    value.watch(listUpdate);
 }, { immediate: true });
 
 onMounted(() => {

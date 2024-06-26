@@ -4,14 +4,9 @@ import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } fr
 import { initpal } from "@/components/Document/initpal";
 import { Context } from "@/context";
 import {
-    CoopRepository,
-    Document,
-    importRemote,
-    IStorage, Matrix,
+    Matrix,
     Page,
-    PageListItem,
     PageView,
-    Repository
 } from "@kcdesign/data";
 // import * as share_api from "@/request/share";
 import { ElMessage } from "element-plus";
@@ -36,16 +31,16 @@ const props = defineProps<{ context: IContext }>()
 const initialized = ref<boolean>(false);
 const { t } = useI18n();
 // let context: Context | undefined;
-const permType = ref<number>();
+// const permType = ref<number>();
 const docInfo: any = ref({});
-const noNetwork = ref(false)
-const loading = ref<boolean>(false);
-const null_context = ref<boolean>(true);
-const isRead = ref(false);
-const isEdit = ref(true);
-const permissionChange = ref(-1);
-const showHint = ref(false);
-const canComment = ref(false);
+// const noNetwork = ref(false)
+// const loading = ref<boolean>(false);
+// const null_context = ref<boolean>(true);
+// const isRead = ref(false);
+// const isEdit = ref(true);
+// const permissionChange = ref(-1);
+// const showHint = ref(false);
+// const canComment = ref(false);
 const curPage = shallowRef<PageView | undefined>(undefined);
 const showpagelist = ref<boolean>(false)
 const HEAD_HEIGHT = 0;
@@ -58,11 +53,11 @@ const emit = defineEmits<{
     (e: 'closeLoading'): void;
 }>();
 
-enum PermissionChange {
-    update,
-    close,
-    delete
-}
+// enum PermissionChange {
+//     update,
+//     close,
+//     delete
+// }
 
 const autosave = t('message.autosave');
 const link_success = t('message.link_success');
@@ -146,9 +141,9 @@ const countdown = ref(10);
 //     }
 // }
 
-let arr = ref<Array<SelectSource>>([])
-type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined; // eslint-disable-line
+const pagelists = ref<Array<SelectSource>>([])
+// type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
+// let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined; // eslint-disable-line
 
 // const getDocumentInfo = async () => {
 //     try {
@@ -373,20 +368,7 @@ function switchPage(id?: string) {
     if (showpagelist.value) showpagelist.value = !showpagelist.value
 
     const ctx: Context = props.context as Context;
-    const pagesMgr = ctx.data.pagesMgr;
-    const cur_page = ctx.selection.selectedPage;
-    if (cur_page && cur_page.id === id) return;
-    pagesMgr.get(id).then((page: Page | undefined) => {
-        if (page) {
-            // ctx.comment.toggleCommentPage()
-            curPage.value = undefined;
-            // ctx.comment.commentMount(false)
-            const pagedom = ctx.getPageDom(page).dom;
-            ctx.selection.selectPage(pagedom);
-            curPage.value = pagedom;
-        }
-    })
-
+    ctx.selection.selectPage(id);
 }
 
 
@@ -430,11 +412,11 @@ function workspace_watcher(type?: number | string) {
     }
 }
 
-function init_watcher() {
-    const ctx: Context = props.context as Context;
-    ctx.selection.watch(selectionWatcher);
-    ctx.workspace.watch(workspace_watcher);
-}
+// function init_watcher() {
+//     const ctx: Context = props.context as Context;
+//     ctx.selection.watch(selectionWatcher);
+//     ctx.workspace.watch(workspace_watcher);
+// }
 
 // function onBeforeUnload(event: any) {
 //     if (!context?.communication.docOp.hasPendingSyncCmd()) return; // 不需要弹框
@@ -493,6 +475,7 @@ function initMatrix(cur: PageView) {
     }
 
     matrix.value.reset(info.m.toArray());
+    ctx.workspace.matrix.reset(matrix.value.toArray())
     ctx.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
@@ -528,11 +511,23 @@ onMounted(() => {
     // window.addEventListener('beforeunload', onBeforeUnload);
     // window.addEventListener('unload', onUnload);
     // init_doc();
-    // initpal().then(() => {
-    //     initialized.value = true;
-    // }).catch((e) => {
-    //     console.log(e)
-    // })
+    initpal().then(() => {
+        initialized.value = true;
+    }).catch((e) => {
+        console.log(e)
+    })
+
+    const ctx: Context = props.context as Context;
+    for (let index = 0; index < ctx.data.pagesList.length; index++) {
+        let a: SelectSource = {
+            id: index,
+            data: { value: ctx.data.pagesList[index].id, content: ctx.data.pagesList[index].name }
+        }
+        pagelists.value.push(a)
+    }
+
+    ctx.selection.watch(selectionWatcher);
+    ctx.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     const ctx: Context = props.context as Context;
@@ -711,7 +706,7 @@ onUnmounted(() => {
 function scrollIntoView() {
     const item = document.querySelectorAll('.list-item');
     const el = document.querySelector('.pagelist');
-    const idx = arr.value.findIndex(item => item.data.value === curPage.value?.id)
+    const idx = pagelists.value.findIndex(item => item.data.value === curPage.value?.id)
     if (item) {
         el?.scrollTo({ top: idx * 44 })
     }
@@ -745,7 +740,7 @@ const pageParams = {
         </div>
         <transition name="fade">
             <div v-if="showpagelist" class="pagelist" @touchstart.stop @touchmove.stop @touchend.stop>
-                <div class="list-item" v-for="page in arr" :key="page.id"
+                <div class="list-item" v-for="page in pagelists" :key="page.id"
                     @click.stop="switchPage(page.data.value as string)">
                     <div class="choose" :style="{ visibility: curPage?.id === page.data.value ? 'visible' : 'hidden' }">
                     </div>
@@ -754,7 +749,7 @@ const pageParams = {
             </div>
         </transition>
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist = false">
-            <PageViewVue v-if="!null_context && curPage" :context="context as Context" :params="pageParams" />
+            <PageViewVue v-if="initialized && curPage" :context="context as Context" :params="pageParams" />
         </div>
     </div>
 </template>

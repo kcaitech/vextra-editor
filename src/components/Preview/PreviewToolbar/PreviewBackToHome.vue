@@ -86,6 +86,11 @@ function workspace_watcher(t?: any) {
     }
 }
 
+const plugins = props.context.pluginsMgr.search2('preview.toolbar.home');
+const comps: { component: any, params?: any }[] = []
+comps.push(...plugins.begin)
+comps.push(...plugins.end)
+
 onMounted(() => {
     init_name();
     props.context.workspace.watch(workspace_watcher);
@@ -97,12 +102,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container" @dblclick.stop>
-        <div class="home" @click="home" >
-            <svg-icon icon-class="home"></svg-icon>
-        </div>
-        <div class="rename">
-            <span>{{ name }}</span>
-        </div>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
     </div>
 </template>
 
@@ -113,47 +113,5 @@ onUnmounted(() => {
     justify-content: space-between;
     width: auto;
     height: 32px;
-
-    .home {
-        cursor: pointer;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 32px;
-        border-radius: 4px;
-
-        >svg {
-            width: 18px;
-            height: 18px;
-            fill: #FFFFFF;
-        }
-    }
-
-    .home:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .rename {
-        max-width: 224px;
-        line-height: 32px;
-        flex: 1;
-        box-sizing: border-box;
-        padding: 0px 8px;
-
-        span {
-            display: block;
-            max-width: 210px;
-            height: 32px;
-            color: #ffffff;
-            cursor: pointer;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-family: HarmonyOS Sans;
-            font-size: 14px;
-        }
-    }
 }
 </style>

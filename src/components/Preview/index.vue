@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-// import { useRoute } from 'vue-router';
-// import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 // import * as share_api from '@/request/share'
 import { ElMessage } from 'element-plus';
@@ -27,7 +25,6 @@ const context = props.context as Context;
 
 const { t } = useI18n();
 // let context: Context | undefined;
-// const route = useRoute();
 const loading = ref<boolean>(false);
 // const null_context = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
@@ -119,7 +116,7 @@ const inited = ref(false);
 //     }
 // }
 
-function switchPage(id?: string, shapeId?: string) {
+function switchPage(id?: string) {
     if (!id) return
     if (context) {
         const ctx: Context = context;
@@ -131,9 +128,8 @@ function switchPage(id?: string, shapeId?: string) {
                 curPage.value = undefined;
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.preview.selectPage(pagedom);
-                selectedShape(ctx, pagedom, shapeId);
+                selectedShape(ctx, pagedom);
                 curPage.value = pagedom;
-                setWindowTitle(ctx, pagedom);
             }
         })
     }
@@ -148,30 +144,20 @@ const setWindowTitle = (context: Context, page: PageView) => {
     // kcdesk?.fileSetName(file_name);
 }
 
-const selectedShape = (ctx: Context, page: PageView, id?: string) => {
-    // const list = getFrameList(page);
-    // if (!list.length) {
-    //     ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
-    //     ctx.preview.selectShape(undefined);
-    //     ctx.preview.updateUrl();
-    //     return;
-    // }
-    // if (id) {
-    //     const shape = list.find(item => item.id.slice(0, 8) === id);
-    //     ctx.preview.selectShape(shape || list[0]);
-    // } else {
-    //     ctx.preview.selectShape(list[0]);
-    // }
-    // ctx.preview.updateUrl();
+const selectedShape = (ctx: Context, page: PageView) => {
+    const list = getFrameList(page);
+    if (!list.length) {
+        ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
+        ctx.preview.selectShape(undefined);
+        return;
+    }
+    ctx.preview.selectShape(list[0]);
 }
-function previewWatcher(t: number) {
+function previewWatcher(t: number | string) {
     if (t === Preview.CHANGE_PAGE) {
-
-            const ctx: Context = context;
-            curPage.value = ctx.preview.selectedPage;
-        
+        const ctx: Context = context;
+        curPage.value = ctx.preview.selectedPage;
     } else if (t === Preview.UI_CHANGE) {
-
         if (!context.preview.uiState) {
             if (showLeft.value && showTop.value) {
                 showHiddenLeft();
@@ -271,8 +257,10 @@ onMounted(() => {
     }).catch((e) => {
         console.log(e)
     })
+    init_keyboard_uints();
     // todo
-    switchPage(props.context.data.pagesList[0]?.id);
+    init_watcher();
+    // switchPage(props.context.data.pagesList[0]?.id);
 })
 
 onUnmounted(() => {
@@ -289,19 +277,19 @@ onUnmounted(() => {
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context" v-if="!loading"></Toolbar>
         </div>
-        <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-        v-if="inited"  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
-            :right="0" :context="context" @changeLeftWidth="changeLeftWidth">
+        <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }" v-if="inited"
+            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }" :right="0" :context="context"
+            @changeLeftWidth="changeLeftWidth">
             <template #slot1>
-                <Navigation v-if="curPage !== undefined" id="navigation" :context="context"
-                    @mouseenter="mouseenter" :page="(curPage as PageView)" :showLeft="showLeft"
-                    :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" @switchpage="switchPage">
+                <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @mouseenter="mouseenter"
+                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
+                    @showNavigation="showHiddenLeft" @switchpage="switchPage">
                 </Navigation>
             </template>
 
             <template #slot2>
-                <PreviewContent v-if="curPage !== undefined" id="content" :context="context"
-                    @mouseenter="mouseleave" :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
+                <PreviewContent v-if="curPage !== undefined" id="content" :context="context" @mouseenter="mouseleave"
+                    :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
             </template>
         </ColSplitView>
         <SubLoading v-if="sub_loading"></SubLoading>

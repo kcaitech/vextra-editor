@@ -1,4 +1,3 @@
-import { ScaleType } from "@/context/preview"
 import { BlendMode, BorderPosition } from "@kcdesign/data"
 
 export const system = {
@@ -390,7 +389,10 @@ export const preview: any = {
     next_page: '下一页',
     first_page: '第一页',
     preview: '预览',
-    open: '在设计模式中打开'
+    open: '在设计模式中打开',
+    fill_screen: '充满屏幕',
+    fit_width: '适应宽度',
+    fit_screen: '适应屏幕',
 }
 
 attr[BorderPosition.Inner] = '内部';
@@ -415,7 +417,3 @@ opacity[BlendMode.Color] = "颜色";
 opacity[BlendMode.Luminosity] = "明度";
 opacity[BlendMode.PlusDarker] = "加暗";
 opacity[BlendMode.PlusLighter] = "提亮";
-
-preview[ScaleType.FillScreen] = '充满屏幕'
-preview[ScaleType.FitWidth] = '适应宽度'
-preview[ScaleType.FitScreen] = '适应屏幕'

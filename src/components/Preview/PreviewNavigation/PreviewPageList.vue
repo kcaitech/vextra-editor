@@ -28,7 +28,7 @@ const ListH = ref<number>(0)
 const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
 const cur_page_name = ref<string>(t('navi.page'));
-const previewWatcher = (type: number) => {
+const previewWatcher = (type: number | string) => {
     if (type === Preview.CHANGE_PAGE) {
         getPageName();
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);

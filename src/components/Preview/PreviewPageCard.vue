@@ -50,7 +50,7 @@ function assemble() {
         'assemble-page',
         ShapeType.Page,
         new TransformRaw(),
-        new ShapeSize(),
+        new ShapeSize(100, 100),
         style,
         new BasicArray<Shape>(...shapes)
     );
@@ -70,10 +70,10 @@ function assemble() {
         const gs = pageSvg.value.childNodes;
 
         // 清除自己的transform、style，交给外层去处理，否在会出现内外相互抵消来实现效果的现象
-        gs.forEach(node => {
-            (node as Element).removeAttribute('transform');
-            (node as Element).removeAttribute('style');
-        });
+        // gs.forEach(node => {
+        //     (node as Element).removeAttribute('transform');
+        //     (node as Element).removeAttribute('style');
+        // });
     }
 }
 
