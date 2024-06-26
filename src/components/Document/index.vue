@@ -108,20 +108,7 @@ function switchPage(id?: string, frame_id?: string) {
     if (!id) return
 
     const ctx: Context = props.context as Context;
-    const pagesMgr = ctx.data.pagesMgr;
-    const cur_page = ctx.selection.selectedPage;
-    if (cur_page && cur_page.id === id) return;
-    pagesMgr.get(id).then((page: Page | undefined) => {
-        if (page) {
-            // ctx.comment.toggleCommentPage()
-            curPage.value = undefined;
-            // ctx.comment.commentMount(false)
-            const pagedom = ctx.getPageDom(page).dom;
-            ctx.selection.selectPage(pagedom);
-            curPage.value = pagedom;
-        }
-    })
-
+    ctx.selection.selectPage(id);
 }
 
 
@@ -132,10 +119,10 @@ function selectionWatcher(t: number | string) {
         curPage.value = ctx.selection.selectedPage;
 
     }
-    if (t === Selection.COMMENT_CHANGE_PAGE) {
-        const pageId = ctx.selection.commentPageId
-        switchPage(pageId)
-    }
+    // if (t === Selection.COMMENT_CHANGE_PAGE) {
+    //     const pageId = ctx.selection.commentPageId
+    //     switchPage(pageId)
+    // }
 }
 
 const isLable = ref<boolean>(false);

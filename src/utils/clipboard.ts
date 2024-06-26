@@ -15,7 +15,6 @@ import {
     import_text,
     makeShapeTransform1By2,
     makeShapeTransform2By1,
-    Matrix,
     Page,
     PathShape,
     Shape,
@@ -35,7 +34,7 @@ import { PageXY, XY } from '@/context/selection';
 import { getName, Media, SVGReader, upload_image } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
-import { is_box_outer_view2, XYsBounding } from './common';
+import { XYsBounding } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
@@ -51,7 +50,6 @@ interface SystemClipboardItem {
 class ExfContext {
     symbols = new Set<string>()
     medias = new Set<string>()
-    referenced = new Set<string>()
 }
 
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
@@ -187,10 +185,7 @@ export class Clipboard {
             return false;
         }
 
-        // 记录每个图形相对root位置
-        const origin_xy_list: XY[] = [];
-        const first_env_id: string = shapes[0]?.parent?.id || '';
-        let no_more_push = false;
+        const origin_transform_map: any = {};
         const position_map: Map<string, TransformRaw> = new Map();
         const points_map: Map<string, CurvePoint[]> = new Map();
         this.m_envs.clear();
@@ -198,14 +193,7 @@ export class Clipboard {
         for (let i = 0, len = shapes.length; i < len; i++) {
             const shape = shapes[i];
 
-            const f = shape.frame;
-            if (!no_more_push) {
-                origin_xy_list.push({ x: f.x, y: f.y });
-            }
-            if (shape.parent?.id !== first_env_id) {
-                origin_xy_list.length = 0;
-                no_more_push = true;
-            }
+            origin_transform_map[`${shape.id}`] = shape.transform.clone();
 
             position_map.set(shape.id, makeShapeTransform1By2(shape.transform2FromRoot) as TransformRaw);
 
@@ -235,9 +223,9 @@ export class Clipboard {
 
         const media = sort_media(this.context.data, ctx);
         const data = {
+            originTransform: origin_transform_map,
             shapes: _shapes,
             media,
-            origin_xy_list
         }
 
         const h = encode_html(identity, data);
@@ -864,8 +852,6 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
 
 /**
  * @description 封装html数据
- * @param { string } identity 封装类型，分为段落、图层
- * @param { text } 如果为段落，会另存一份纯文本
  */
 function encode_html(identity: string, data: any, text?: string): string {
     // encodeURIComponent 确保转义正确
@@ -993,13 +979,15 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             if (r) context.selection.selectShape(page.shapes.get(r.id));
         })
     } else if (is_shape) {
-        // 1. 解析剪切板中的图层
+        // 1. 解析剪切板中的Shape
         const data = JSON.parse(text_html.split(identity)[1]);
 
-        const source = data?.shapes;
+        const source = data.shapes;
         if (!source) {
             throw new Error('invalid source');
         }
+
+        const originTransform: any = data.originTransform; // 原环境下transform信息
 
         const page = context.selection.selectedPage!;
 
@@ -1010,91 +998,77 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
         // 2. 计算插入环境和位置（存在选区环境并满足插入其中的条件的情况下，需要在后续根据指定的插入环境多次计算位置）
         const selection_envs = get_envs_from_selection(context);
-        const is_exist_selection_envs = Boolean(selection_envs.length && (data?.origin_xy_list?.length === source.length));
+        const is_exist_selection_envs = !!selection_envs.length;
 
-        let __xys: XY[] = [];
-        if (is_exist_selection_envs) { // 选区内存在环境则优先送入选区内环境
-            // __xys = get_xys_for_selection_envs(selection_envs, data.origin_xy_list, source)
-        } else {
+        if (!is_exist_selection_envs) {
             if (xy) {
-                modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
-                insert_env = get_env_by_xy(context, xy);
+                fixToXY(context, source, xy);
             } else {
-                // const box = get_source_box(source);
-                // if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                //     const wpc = context.workspace.center_on_page;
-                //     box.x = wpc.x - box.width / 2;
-                //     box.y = wpc.y - box.height / 2;
-                //     // modify_frame_by_xy(box, source); 放到中间来
-                // }
-                fixToEnv(context, source, page);
-                // insert_env = get_env_by_box(context, box);
+                fixToEnv(context, source, page, originTransform);
             }
         }
 
-        // 3. 将图层导入文档（还未插入文档）
-        const medias = data?.media;
-        const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
-        if (!shapes.length) {
-            throw new Error('invalid source: !shapes.length');
-        }
+        // 3. 初始化多媒体资源Container
+        const medias = data.media;
 
         // 4. 插入文档
         const editor = context.editor4Page(page);
         if (is_exist_selection_envs) {
-            let actions: { env: GroupShape, shapes: Shape[] }[] = [];
+            const actions: { env: GroupShape, shapes: Shape[] }[] = [];
+
             for (let i = 0; i < selection_envs.length; i++) {
+                const __source = JSON.parse(JSON.stringify(source)); // 保证每个环境各自一份
+
                 const env = selection_envs[i];
-                const xy = __xys[i];
-                modify_frame_by_xy(xy, source);
-                const shapes = import_shape_from_clipboard(context.data, page_data, source);
+
+                fixToEnv(context, __source, env, originTransform);
+
+                const shapes = i > 0
+                    ? import_shape_from_clipboard(context.data, page_data, __source)
+                    : import_shape_from_clipboard(context.data, page_data, __source, medias);
+
                 actions.push({ env: adapt2Shape(env) as GroupShape, shapes });
             }
+
             const __res = editor.pasteShapes3(actions);
+
             if (__res) {
                 insert_result = { shapes: __res };
             }
         } else {
-            insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
-            if (!insert_result) {
-                return false;
+            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+
+            if (!shapes.length) {
+                throw new Error('invalid source: !shapes.length');
             }
+
+            insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
+
+            if (!insert_result) return false;
         }
 
         // 5. 根据插入结果构建新的选区
         context.nextTick(page, () => {
             if (insert_result) {
                 const selects: ShapeView[] = [];
+
                 insert_result.shapes.forEach((s) => {
                     const v = page.shapes.get(s.id);
                     if (v) selects.push(v);
                 })
-                context.selection.rangeSelectShape(selects);
+
+                selects.length && context.selection.rangeSelectShape(selects);
             }
-        })
+        });
 
         // 6. 上传图层内嵌的静态资源到服务端
         after_import(context, medias);
     } else {
         console.log('handle_text_html_string:', context.workspace.t('clipboard.invalid_data'));
-        // message('info', context.workspace.t('clipboard.invalid_data'));
         return false;
     }
 
     return true;
-}
-
-function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
-    const lt_shape_xy = { x: Infinity, y: Infinity };
-    for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
-        const frame = shapes[i].frame;
-        if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
-        if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
-    }
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        let shape = shapes[i];
-        shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
-    }
 }
 
 async function get_html_from_datatransferitem(data: any) {
@@ -1515,88 +1489,6 @@ function get_plain(items: DataTransferItemList) {
     return;
 }
 
-function get_source_box(source: Shape[]) {
-    let left = Infinity;
-    let top = Infinity;
-    let right = -Infinity;
-    let bottom = -Infinity;
-
-    for (let i = 0; i < source.length; i++) {
-        const shape = source[i];
-        let f: { x: number, y: number, height: number, width: number } = { ...shape.frame };
-        if (is_transform(shape)) {
-            const m = get_matrix(shape);
-            const rt = m.computeCoord2(f.width, 0);
-            const rb = m.computeCoord2(f.width, f.height);
-            const lb = m.computeCoord2(0, f.height);
-
-            const box = XYsBounding([f, rt, rb, lb]);
-            f.x = box.left;
-            f.y = box.top;
-            f.width = box.right - f.x;
-            f.height = box.bottom - f.y;
-        }
-
-        if (left > f.x) {
-            left = f.x;
-        }
-        if (top > f.y) {
-            top = f.y;
-        }
-        if (right < f.x + f.width) {
-            right = f.x + f.width;
-        }
-        if (bottom < f.y + f.height) {
-            bottom = f.y + f.height;
-        }
-    }
-
-    return { x: left, y: top, width: right - left, height: bottom - top };
-
-    function is_transform(shape: Shape) {
-        // todo flip
-        // return shape.rotation || shape.isFlippedHorizontal || shape.isFlippedVertical;
-        return shape.rotation;
-    }
-
-    function get_matrix(shape: Shape) {
-        const f = shape.frame;
-        const m = new Matrix();
-        m.trans(-f.x, -f.y);
-        // todo flip
-        // if (shape.isFlippedHorizontal) {
-        //     m.flipHoriz();
-        // }
-        // if (shape.isFlippedVertical) {
-        //     m.flipVert();
-        // }
-        if (shape.rotation) {
-            m.rotate(-(shape.rotation / 180 * Math.PI));
-        }
-
-        return new Matrix(m.inverse);
-    }
-}
-
-function get_env_by_box(context: Context, box: { x: number, y: number, width: number, height: number }) {
-    const layers_on_xy = context.selection.getLayers(box);
-    for (let i = 0; i < layers_on_xy.length; i++) {
-        const s = layers_on_xy[i];
-        if (s.isVirtualShape) {
-            continue;
-        }
-        if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
-            continue;
-        }
-        if (s.frame.width <= box.width || s.frame.height <= box.height) {
-            continue;
-        }
-
-        return adapt2Shape(s);
-    }
-    return adapt2Shape(context.selection.selectedPage!);
-}
-
 function get_env_by_xy(context: Context, xy: XY) {
     const layers_on_xy = context.selection.getLayers(xy);
     for (let i = 0; i < layers_on_xy.length; i++) {
@@ -1608,9 +1500,9 @@ function get_env_by_xy(context: Context, xy: XY) {
             continue;
         }
 
-        return adapt2Shape(s);
+        return s;
     }
-    return adapt2Shape(context.selection.selectedPage!);
+    return context.selection.selectedPage!;
 }
 
 function get_envs_from_selection(context: Context) {
@@ -1629,69 +1521,6 @@ function get_envs_from_selection(context: Context) {
         }
     }
     return envs;
-}
-
-function get_xys_for_selection_envs(envs: GroupShape[], xys: XY[], source: Shape[]) { // todo 处理一下逃出区域后的居中效果
-    const ltxy = { x: Infinity, y: Infinity };
-    xys.forEach((i, index) => {
-        const s = source[index];
-        if (!s) {
-            return;
-        }
-
-        const m = new Matrix();
-        const frame = s.frame;
-        // todo flip
-        // if (!s.rotation && !s.isFlippedHorizontal && !s.isFlippedVertical) {
-        if (!s.rotation) {
-            m.trans(i.x, i.y);
-        } else {
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-            m.trans(-cx, -cy);
-            if (s.rotation) m.rotate(s.rotation / 180 * Math.PI);
-            // todo flip
-            // if (s.isFlippedHorizontal) m.flipHoriz();
-            // if (s.isFlippedVertical) m.flipVert();
-            m.trans(cx, cy);
-            m.trans(i.x, i.y);
-        }
-
-        const __i = m.computeCoord2(0, 0);
-        if (__i.x < ltxy.x) {
-            ltxy.x = __i.x;
-        }
-        if (__i.y < ltxy.y) {
-            ltxy.y = __i.y;
-        }
-    });
-
-    const box = get_source_box(source);
-
-    const __xys: XY[] = [];
-    for (let index = 0; index < envs.length; index++) {
-        const e = envs[index];
-        const f = e.frame;
-        const matrix = e.matrix2Root();
-        if (ltxy.x > f.width || ltxy.y > f.height) { // 居中处理
-            const ec = matrix.computeCoord2(f.width / 2, f.height / 2);
-            __xys.push({ x: ec.x - box.width / 2, y: ec.y - box.height / 2 });
-        } else {
-            __xys.push(matrix.computeCoord(ltxy));
-        }
-    }
-    return __xys;
-}
-
-function handleHtmlAsync(data: DataTransferItem, ctx: Clipboard) {
-    return new Promise(resolve => {
-        data.getAsString(val => {
-            const html = decode_html(val);
-            ctx.modify_cache('inner-html', val);
-            const successFirst: boolean = handle_text_html_string(ctx.context, html);
-            resolve(successFirst);
-        })
-    });
 }
 
 function getHtmlAsync(data: DataTransferItem): Promise<string> {
@@ -1741,7 +1570,44 @@ function sourceBounding(source: Shape[]) {
     return { left, top, right, bottom };
 }
 
-function fixToEnv(context: Context, source: Shape[], env: GroupShapeView) {
+function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+
+    for (let i = 0; i < source.length; i++) {
+        const shape = source[i];
+        const _t = originTransform[`${shape.id}`];
+        if (!_t) continue;
+        const __transform = makeShapeTransform2By1(_t);
+        const { width, height } = shape.size;
+        const { col0, col1, col2, col3 } = __transform.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(0, height),
+        ]);
+        const box = XYsBounding([col0, col1, col2, col3]);
+
+        if (box.top < top) {
+            top = box.top;
+        }
+        if (box.left < left) {
+            left = box.left;
+        }
+        if (box.right > right) {
+            right = box.right;
+        }
+        if (box.bottom > bottom) {
+            bottom = box.bottom;
+        }
+    }
+
+    return { left, top, right, bottom };
+}
+
+function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: any) {
     const { left, top, right, bottom } = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
 
     let clientMatrix = makeShapeTransform2By1(context.workspace.matrix); // Root到屏幕的转换矩阵
@@ -1818,7 +1684,64 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView) {
             }
         }
     } else { // 将粘贴在指定的容器下
+        console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
+        const { width: envWidth, height: envHeight } = env.size;
 
+        const env2root = env.transform2FromRoot;
+        const {
+            col0: envLT,
+            col1: envRT,
+            col2: envRB,
+            col3: envLB
+        } = env2root.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(envWidth, 0),
+            ColVector3D.FromXY(envWidth, envHeight),
+            ColVector3D.FromXY(0, envHeight),
+        ]);
+
+        const envBound = XYsBounding([envLT, envRT, envRB, envLB]);
+        const envBoundWidth = envBound.right - envBound.left;
+        const envBoundHeight = envBound.bottom - envBound.top;
+
+        const sourceOriginBound = sourceOriginTransformBounding(source, originTransform);
+
+        const targetSelectionTransform = new Transform();
+
+        if (sourceOriginBound.left > envBoundWidth || sourceOriginBound.right < 0) {
+            const shapeCX = (sourceOriginBound.left + sourceOriginBound.right) / 2;
+            targetSelectionTransform.translate(ColVector3D.FromXY(envBoundWidth / 2 - shapeCX, 0));
+        }
+        if (sourceOriginBound.top > envBoundHeight || sourceOriginBound.bottom < 0) {
+            const shapeCY = (sourceOriginBound.top + sourceOriginBound.bottom) / 2;
+            targetSelectionTransform.translate(ColVector3D.FromXY(0, envBoundHeight / 2 - shapeCY));
+        }
+
+        for (const shape of source) {
+            const _t = originTransform[`${shape.id}`];
+            if (!_t) continue;
+
+            const __transform = makeShapeTransform2By1(_t)
+                .addTransform(targetSelectionTransform);
+
+            shape.transform = makeShapeTransform1By2(__transform) as TransformRaw;
+        }
     }
+}
 
+function fixToXY(context: Context, source: Shape[], xy: XY) {
+    const env = get_env_by_xy(context, xy);
+    console.log('__ENV__', env.name);
+
+    const selectionTransform = new Transform()
+        .translate(ColVector3D.FromXY(xy.x, xy.y));
+
+    for (const shape of source) {
+        const t = makeShapeTransform2By1(shape.transform)
+            .clone()
+            .addTransform(selectionTransform)
+            .addTransform(env.transform2FromRoot.getInverse());
+
+        shape.transform = makeShapeTransform1By2(t) as TransformRaw;
+    }
 }
