@@ -577,7 +577,10 @@ export class BaseCreator extends BaseTreeNode {
 
         // 抵消视图层在前后加的两次平移操作
         if (this.transform.hasRotation()) {
-            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate(new ColVector3D([-w1 / 2, -h1 / 2, 0])).decompose()
+            const res = this.transform.clone()
+                .preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0]))
+                .translate(new ColVector3D([-w1 / 2, -h1 / 2, 0]))
+                .decompose()
             translate = res.translate
             rotate = res.rotate
             skew = res.skew
@@ -621,7 +624,6 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
-        // todo flip
         const transform2 = makeShapeTransform2By1(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)
