@@ -25,7 +25,6 @@ const spacePressed = ref<boolean>(false);
 function page_watcher() {
     const shape = props.context.preview.selectedShape;
     const page = props.context.preview.selectedPage;
-
     cur_shape.value = shape;
 
     if (!shape || !page) return;
@@ -89,6 +88,10 @@ const previewWatcher = (t: number | string, s?: boolean) => {
     if (t === Preview.CHANGE_PAGE) {
         changePage();
     } else if (t === Preview.CHANGE_SHAPE) {
+        if (!viewUpdater.pageCard?.pageSvg|| !viewUpdater.currentPage) {
+            changePage();
+            return;
+        }
         page_watcher();
     } else if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
@@ -342,9 +345,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-                  :context="context" :shapes="[cur_shape]"/>
+            :context="context" :shapes="[cur_shape]" />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

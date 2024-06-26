@@ -257,6 +257,7 @@ onMounted(() => {
     }).catch((e) => {
         console.log(e)
     })
+    init_keyboard_uints();
     // todo
     init_watcher();
     // switchPage(props.context.data.pagesList[0]?.id);

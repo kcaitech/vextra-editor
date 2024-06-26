@@ -47,6 +47,14 @@ export class ViewUpdater {
         this.m_page_card = card;
     }
 
+    get currentPage() {
+        return this.m_current_page;
+    }
+
+    setCurrentPage(page: Page | undefined) {
+        this.m_current_page = page;
+    }
+
     // 停止监听播放对象内部元素(子孙元素)变化
     private m_stop_last_bubble: () => void = () => {
     };
@@ -376,12 +384,13 @@ export class ViewUpdater {
     modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
-
+        
         if (!shape || !container || !this.m_page_card) {
             return;
         }
 
         const matrix = this.getCenterMatrix();
+        
         this.setAttri(matrix);
     }
 
