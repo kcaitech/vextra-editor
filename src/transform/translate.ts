@@ -1,6 +1,15 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import { adapt2Shape, GroupShape, Matrix, ShapeType, ShapeView, TranslateUnit, Transporter } from "@kcdesign/data";
+import {
+    adapt2Shape, ColVector3D,
+    GroupShape, makeShapeTransform2By1,
+    Matrix,
+    ShapeType,
+    ShapeView,
+    Transform,
+    TranslateUnit,
+    Transporter
+} from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
@@ -16,11 +25,8 @@ type BaseFrame4Trans = {
     y: number;
     width: number;
     height: number;
-    rotate: number;
-    flipH: boolean;
-    flipV: boolean;
+
     parentId: string;
-    rotationMatrix: Matrix;
     offsetLivingPointX: number;
     offsetLivingPointY: number;
 }
@@ -108,7 +114,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private getFrames() {
-        const matrixParent2rootCache = new Map<string, Matrix>();
+        const matrixParent2rootCache = new Map<string, Transform>();
         let left = Infinity;
         let right = -Infinity;
         let top = Infinity;
@@ -118,79 +124,52 @@ export class TranslateHandler extends TransformHandler {
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
+            const parent = shape.parent!;
+            if (!parent) continue;
+            const { width, height } = shape.size;
+            if (!matrixParent2rootCache.has(parent.id)) {
+                matrixParent2rootCache.set(parent.id, parent.transform2FromRoot)
+            }
 
             this.shapesSet.add(shape.id)
 
-            const frame = shape.frame;
+            const m = makeShapeTransform2By1(shape.transform).clone();
+            m.addTransform(matrixParent2rootCache.get(parent.id)!);
 
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-
-            const rotationMatrix = new Matrix();
-            rotationMatrix.trans(-cx, -cy);
-            if (shape.rotation) {
-                rotationMatrix.rotate(shape.rotation / 180 * Math.PI);
-            }
-            // todo flip
-            // if (shape.isFlippedHorizontal) {
-            //     rotationMatrix.flipHoriz();
-            // }
-            // if (shape.isFlippedVertical) {
-            //     rotationMatrix.flipVert();
-            // }
-            rotationMatrix.trans(cx, cy);
-
-            const m = new Matrix(rotationMatrix);
-            m.trans(frame.x, frame.y);
-
-            const parent = shape.parent!;
-
-            let parent2rootMatrix = matrixParent2rootCache.get(parent.id)!;
-            if (!parent2rootMatrix) {
-                parent2rootMatrix = parent.matrix2Root();
-                matrixParent2rootCache.set(parent.id, parent2rootMatrix);
-            }
-
-            m.multiAtLeft(parent2rootMatrix);
-
-            const rootXY = m.computeCoord2(0, 0);
+            const { col0: LT, col1: RT, col2: RB, col3: LB } = m.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(0, height),
+            ])
 
             this.baseFrames4trans.set(shape.id, {
-                rootXY,
-                x: frame.x,
-                y: frame.y,
-                width: frame.width,
-                height: frame.height,
-                rotate: shape.rotation || 0,
-                // todo flip
-                // flipH: !!shape.isFlippedHorizontal,
-                // flipV: !!shape.isFlippedVertical,
-                flipH: false,
-                flipV: false,
+                rootXY: LT,
+                x: shape.transform.translateX,
+                y: shape.transform.translateY,
+                width,
+                height,
+
+
                 parentId: parent.id,
-                rotationMatrix,
                 offsetLivingPointX: 0,
                 offsetLivingPointY: 0
             });
 
-            if (rootXY.x < left) {
-                left = rootXY.x;
+            if (LT.x < left) {
+                left = LT.x;
             }
-            if (rootXY.x > right) {
-                right = rootXY.x;
+            if (LT.x > right) {
+                right = LT.x;
             }
-            if (rootXY.y < top) {
-                top = rootXY.y;
+            if (LT.y < top) {
+                top = LT.y;
             }
-            if (rootXY.y > bottom) {
-                bottom = rootXY.y;
+            if (LT.y > bottom) {
+                bottom = LT.y;
             }
 
-            const points = [
-                m.computeCoord2(frame.width, 0),
-                m.computeCoord2(frame.width, frame.height),
-                m.computeCoord2(0, frame.height)
-            ];
+            const points = [RT, RB, LB];
 
             for (let i = 0; i < 3; i++) {
                 const p = points[i];
@@ -270,8 +249,6 @@ export class TranslateHandler extends TransformHandler {
 
         this.livingBox.right = this.livingBox.x + width;
         this.livingBox.bottom = this.livingBox.y + height;
-
-        console.log('BOX', this.livingBox);
 
         let l = this.livingBox.x;
         let t = this.livingBox.y;
