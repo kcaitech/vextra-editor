@@ -84,7 +84,6 @@ const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
@@ -256,8 +255,6 @@ function contextMenuMount(e: MouseEvent) {
     menu.menuMount();
     selection.unHoverShape();
 
-    site.x = e.clientX;
-    site.y = e.clientY;
     const root = workspace.root;
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
@@ -720,7 +717,16 @@ comps.push(
     {
         component: () => {
             if (contextMenu.value) {
-                return h(ContextMenu, { context: props.context, site, items: contextMenuItems.value, "ref": contextMenuEl })
+                return h(ContextMenu, {
+                    ref: contextMenuEl,
+
+                    context: props.context,
+                    items: contextMenuItems.value,
+
+                    onClose: () => {
+                        contextMenu.value = false;
+                    }
+                });
             }
         }
     },

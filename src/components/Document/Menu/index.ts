@@ -7,7 +7,7 @@ export enum MenuItemType {
     All,
     Copy,
     CopyAs,
-    cut,
+    Cut,
 
     Paste,
     PasteHere,
@@ -44,7 +44,9 @@ export enum MenuItemType {
     Cutout,
 
     Layers,
-    EditComps
+    EditComps,
+    Rule,
+    Pixel
 }
 
 export enum MountedAreaType { // 不同区域生成不同的菜单项
@@ -200,7 +202,7 @@ export function getMenuItems(context: Context, event: MouseEvent, area: MountedA
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = new Set([MenuItemType.All, MenuItemType.Paste, MenuItemType.OnlyText]);
             } else {
-                contextMenuItems = new Set([...BASE_ITEM, MenuItemType.cut, MenuItemType.Paste, MenuItemType.OnlyText]);
+                contextMenuItems = new Set([...BASE_ITEM, MenuItemType.Cut, MenuItemType.Paste, MenuItemType.OnlyText]);
             }
         } else {
             contextMenuItems = new Set(BASE_ITEM);
@@ -211,7 +213,7 @@ export function getMenuItems(context: Context, event: MouseEvent, area: MountedA
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = new Set([MenuItemType.All, MenuItemType.Paste, MenuItemType.OnlyText, MenuItemType.InsertCol, MenuItemType.DeleteCol, MenuItemType.SplitCell]);
             } else {
-                contextMenuItems = new Set([...BASE_ITEM, MenuItemType.cut, MenuItemType.Paste, MenuItemType.OnlyText, MenuItemType.InsertCol, MenuItemType.DeleteCol, MenuItemType.SplitCell]);
+                contextMenuItems = new Set([...BASE_ITEM, MenuItemType.Cut, MenuItemType.Paste, MenuItemType.OnlyText, MenuItemType.InsertCol, MenuItemType.DeleteCol, MenuItemType.SplitCell]);
             }
         } else {
             contextMenuItems = new Set(BASE_ITEM);

@@ -1731,10 +1731,11 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
 
 function fixToXY(context: Context, source: Shape[], xy: XY) {
     const env = get_env_by_xy(context, xy);
-    console.log('__ENV__', env.name);
-
+    const bounding = sourceBounding(source);
+    const dx = xy.x - bounding.left;
+    const dy = xy.y - bounding.top;
     const selectionTransform = new Transform()
-        .translate(ColVector3D.FromXY(xy.x, xy.y));
+        .setTranslate(ColVector3D.FromXY(dx, dy));
 
     for (const shape of source) {
         const t = makeShapeTransform2By1(shape.transform)
