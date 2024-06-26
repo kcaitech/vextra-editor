@@ -238,9 +238,6 @@ export function end_transalte(context: Context) {
  * @description 当移动图形上挂有评论时，需要更新评论位置信息
  */
 export function update_comment(context: Context, need_update_comment: boolean) {
-    if (need_update_comment) {
-        context.workspace.notify(WorkSpace.UPDATE_COMMENT_POS);
-    }
     return false;
 }
 

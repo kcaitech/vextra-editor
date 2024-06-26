@@ -2,15 +2,15 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointActionType, PointHandler } from '@/transform/point';
-import { CurvePoint, Matrix, ShapeFrame, StarShapeView } from '@kcdesign/data';
+import { CurvePoint, ShapeFrame, StarShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
 import { fixedZero } from '@/utils/common';
+import { getTransformCol } from '@/utils/content';
 
 
 interface Props {
-    matrix: number[]
     context: Context
     shape: StarShapeView
     theme: SelectionTheme
@@ -23,7 +23,6 @@ interface Point {
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
 const radius_dot = ref<Point>({ x: 0, y: 0 });
 const count_dot = ref<Point>({ x: 0, y: 0 });
 const inner_angle_dot = ref<Point>({ x: 0, y: 0 });
@@ -41,7 +40,6 @@ let changeType: PointActionType | undefined;
 let pointModifyHandler: PointHandler | undefined = undefined;
 
 function update() {
-    matrix.reset(props.matrix);
     update_dot_position();
 }
 
@@ -74,7 +72,7 @@ function getCountPosition() {
     const nextY = curPoint.y + ((nextPoint.y - curPoint.y) * t2);
 
     const mid = bezierCurvePoint(0.5, { x: perX, y: perY }, preHandle, nextHandle, { x: nextX, y: nextY })
-    const p = matrix.computeCoord2(mid.x, mid.y);
+    const p = getTransformCol(props.context, shape, mid.x, mid.y);
 
     return p;
 }
@@ -99,7 +97,7 @@ function getInnerAnglePosition() {
     const nextY = curPoint.y + ((nextPoint.y - curPoint.y) * t2);
 
     const mid = bezierCurvePoint(0.5, { x: perX, y: perY }, preHandle, nextHandle, { x: nextX, y: nextY })
-    const p = matrix.computeCoord2(mid.x, mid.y);
+    const p = getTransformCol(props.context, shape, mid.x, mid.y);
 
     return p;
 }
@@ -121,7 +119,7 @@ function getRadiusPosition() {
     radius.value = cornerInfo.radius || 0;
     max_radius.value = point.radius || 0;
     const offset = 19 / props.context.workspace.matrix.m00;
-    const p = matrix.computeCoord2(point.x * width, (point.y * height) + (cornerInfo.radius || offset));
+    const p = getTransformCol(props.context, shape, point.x * width, (point.y * height) + (cornerInfo.radius || offset));
     return p;
 }
 
@@ -198,9 +196,10 @@ const countDotMove = (e: MouseEvent) => {
 
 const innerAngleDotMove = (e: MouseEvent, frame: ShapeFrame) => {
     let offset = 0;
+    const shape = props.shape;
     const { x, y } = getInnerAngleMax();
-    const start = matrix.computeCoord2(x * frame.width, y * frame.height);
-    const end = matrix.computeCoord2(frame.width / 2, frame.height / 2);
+    const start = getTransformCol(props.context, shape, x * frame.width, y * frame.height);
+    const end = getTransformCol(props.context, shape, frame.width / 2, frame.height / 2);
     offset = 1 - getRadiusValue(start, end, e, props.context);
 
     return offset;
@@ -216,8 +215,9 @@ const getInnerAngleMax = () => {
 
 const radiusDotMove = (e: MouseEvent, frame: ShapeFrame) => {
     let radius = 0;
-    const start = matrix.computeCoord2(frame.width / 2, 0);
-    const end = matrix.computeCoord2(frame.width / 2, frame.height / 2);
+    const shape = props.shape;
+    const start = getTransformCol(props.context, shape, frame.width / 2, 0);
+    const end = getTransformCol(props.context, shape, frame.width / 2, frame.height / 2);
     radius = getRadiusPercent(start, end, e) * (frame.height / 2);
     return Math.round(radius);
 }
@@ -295,7 +295,6 @@ const point_mouseleave = (e: MouseEvent) => {
     cursor_enter.value = false;
 }
 
-watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);

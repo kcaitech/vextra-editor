@@ -3,9 +3,9 @@
  * @description 单选通用型控件
  */
 
-import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { ShapeView } from '@kcdesign/data';
+import { PolygonShapeView, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -15,6 +15,7 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
+import { point_map } from "./Points/map"
 
 interface Props {
     context: Context;
@@ -121,21 +122,11 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
-const is_enter = ref(false);
-const mouseenter = () => {
-    if (props.context.workspace.transforming) {
-        return;
-    }
-
-    is_enter.value = true;
-}
-
-const mouseleave = () => {
-    is_enter.value = false;
-}
-
 const stop = watchEffect(updateControllerView);
 
+const pointVisible = computed(() => {
+    return bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90;
+})
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -154,39 +145,17 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg"
-         xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-         data-area="controller"
-         preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100"
-         width="100"
-         height="100"
-         overflow="visible"
-         :class="{ hidden: selection_hidden }"
-         @mousedown="mousedown"
-         @mouseenter="mouseenter"
-         @mouseleave="mouseleave"
-    >
-        <ShapesStrokeContainer :context="props.context"/>
-        <BarsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :shape="props.shape"
-            :c-frame="props.controllerFrame"
-            :theme="theme"
-        />
-        <PointsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :shape="props.shape"
-            :axle="axle"
-            :c-frame="props.controllerFrame"
-            :theme="theme"
-        />
-        <!--        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"-->
-        <!--                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"-->
-        <!--                   :theme="theme"></component>-->
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
+        viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
+        @mousedown="mousedown">
+        <ShapesStrokeContainer :context="props.context" />
+        <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
+            :theme="theme" />
+        <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
+            :c-frame="props.controllerFrame" :theme="theme" />
+        <component v-if="!shape.data.haveEdit" :pointVisible="pointVisible" :is="point_map.get(shape.type)"
+            :context="props.context" :shape="props.shape as PolygonShapeView" :theme="theme"></component>
     </svg>
 </template>
 <style lang='scss' scoped>

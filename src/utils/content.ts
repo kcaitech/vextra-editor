@@ -5,10 +5,12 @@ import {
     adapt2Shape,
     AsyncCreator,
     Color,
+    ColVector3D,
     ContactForm,
     GroupShape,
     GroupShapeView,
     ImageShape,
+    makeShapeTransform2By1,
     Matrix,
     Page,
     PathShapeView,
@@ -1427,4 +1429,15 @@ export const lessen = (context: Context) => {
     if (closestIndex === -1) return cur_scale;
     const scale = scale_sizes[closestIndex];
     page_scale(context, scale)
+}
+
+// 图形到页面的坐标
+export const getTransformCol = (context: Context, shape: ShapeView, x: number, y: number) => {
+    const matrix = new Matrix(context.workspace.matrix);
+    const shape_root_m = shape.matrix2Root();
+    let m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix);
+    m.addTransform(clientTransform); //root到视图
+    const { col0 } = m.transform([ColVector3D.FromXY(x, y)]);
+    return { x: col0.x, y: col0.y };
 }

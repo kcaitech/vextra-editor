@@ -152,7 +152,6 @@ function point_mouseup(event: MouseEvent) {
     props.context.cursor.reset();
 }
 
-let need_update_comment = false;
 let transporter: TranslateHandler | undefined = undefined;
 
 // #region trans
@@ -207,10 +206,6 @@ function mouseup4trans(e: MouseEvent) {
         transporter = undefined;
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
-    }
-    if (need_update_comment) {
-        props.context.workspace.notify(WorkSpace.UPDATE_COMMENT_POS);
-        need_update_comment = false;
     }
 }
 
