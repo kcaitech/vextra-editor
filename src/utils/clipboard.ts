@@ -994,26 +994,29 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         const page_data = adapt2Shape(page) as Page;
 
         let insert_result: { shapes: Shape[] } | false = false;
-        let insert_env: Shape = adapt2Shape(page);
 
         // 2. 计算插入环境和位置（存在选区环境并满足插入其中的条件的情况下，需要在后续根据指定的插入环境多次计算位置）
         const selection_envs = get_envs_from_selection(context);
         const is_exist_selection_envs = !!selection_envs.length;
 
-        if (!is_exist_selection_envs) {
-            if (xy) {
-                fixToXY(context, source, xy);
-            } else {
-                fixToEnv(context, source, page, originTransform);
-            }
-        }
 
         // 3. 初始化多媒体资源Container
         const medias = data.media;
 
         // 4. 插入文档
         const editor = context.editor4Page(page);
-        if (is_exist_selection_envs) {
+        if (xy) {
+            const insert_env = fixToXY(context, source, xy);
+
+            const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
+            if (!shapes.length) {
+                throw new Error('invalid source: !shapes.length');
+            }
+
+            insert_result = editor.pasteShapes1(adapt2Shape(insert_env) as GroupShape, shapes);
+
+            if (!insert_result) return false;
+        } else if (is_exist_selection_envs) {
             const actions: { env: GroupShape, shapes: Shape[] }[] = [];
 
             for (let i = 0; i < selection_envs.length; i++) {
@@ -1036,13 +1039,17 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                 insert_result = { shapes: __res };
             }
         } else {
+            const bounding = sourceBounding(source);
+            const insert_env = get_env_by_xy(context, { x: bounding.left, y: bounding.top });
+            fixToEnv(context, source, insert_env as GroupShapeView, originTransform);
+
             const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
 
             if (!shapes.length) {
                 throw new Error('invalid source: !shapes.length');
             }
 
-            insert_result = editor.pasteShapes1(insert_env as GroupShape, shapes);
+            insert_result = editor.pasteShapes1(adapt2Shape(insert_env) as GroupShape, shapes);
 
             if (!insert_result) return false;
         }
@@ -1727,10 +1734,13 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             shape.transform = makeShapeTransform1By2(__transform) as TransformRaw;
         }
     }
+
+    return { left, top };
 }
 
 function fixToXY(context: Context, source: Shape[], xy: XY) {
     const env = get_env_by_xy(context, xy);
+
     const bounding = sourceBounding(source);
     const dx = xy.x - bounding.left;
     const dy = xy.y - bounding.top;
@@ -1745,4 +1755,6 @@ function fixToXY(context: Context, source: Shape[], xy: XY) {
 
         shape.transform = makeShapeTransform1By2(t) as TransformRaw;
     }
+
+    return env;
 }
