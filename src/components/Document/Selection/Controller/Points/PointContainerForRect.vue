@@ -2,14 +2,15 @@
 import { Context } from '@/context';
 import { SelectionTheme, XY } from '@/context/selection';
 import { PointHandler } from '@/transform/point';
-import { CurvePoint, Matrix, PolygonShapeView, ShapeFrame } from '@kcdesign/data';
+import { ColVector3D, CurvePoint, Matrix, PolygonShapeView, ShapeFrame, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { getCornerControlPoint, getRadiusValue } from './common';
 import { fixedZero } from '@/utils/common';
+import { getTransformCol } from '@/utils/content';
+import { WorkSpace } from '@/context/workspace';
 
 
 interface Props {
-    matrix: number[]
     context: Context
     shape: PolygonShapeView
     theme: SelectionTheme
@@ -22,7 +23,6 @@ interface Point {
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
 const radius_dot = ref<Point[]>();
 const cursor_point = ref<Point>({ x: 0, y: 0 });
 const max_radius = ref<number[]>([0, 0, 0, 0]);
@@ -34,7 +34,6 @@ let changeR: number = -1;
 let pointModifyHandler: PointHandler | undefined = undefined;
 
 function update() {
-    matrix.reset(props.matrix);
     update_dot_position();
 }
 
@@ -43,11 +42,10 @@ const update_dot_position = () => {
     if (radius) radius_dot.value = radius;
 }
 
-
 function getRadiusPosition() {
     const { width, height } = props.shape.frame;
     const shape = props.shape;
-    let result: Point[] = [];
+    let result: ColVector3D[] = [];
     const segment = shape?.segments[0];
     if (!segment) {
         return [];
@@ -78,11 +76,17 @@ function getRadiusPosition() {
             x += r > offset ? r : offset;
             y -= r > offset ? r : offset;
         }
-        const p = matrix.computeCoord2(x, y);
+        const p = ColVector3D.FromXY(x, y);
 
         result.push(p);
     }
-    return result;
+    const matrix = new Matrix(props.context.workspace.matrix);
+    const shape_root_m = shape.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix);
+    m.addTransform(clientTransform); //root到视图
+    const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform(result);
+    return [{ x: lt.x, y: lt.y }, { x: rt.x, y: rt.y }, { x: rb.x, y: rb.y }, { x: lb.x, y: lb.y }];
 }
 
 let downClientXY: XY = { x: 0, y: 0 };
@@ -108,6 +112,7 @@ function point_mousemove(e: MouseEvent) {
             pointModifyHandler.createApiCaller();
         }
         let r = radiusDotMove(e);
+
         const isAlt = props.context.selection.is_interval;
         const max_r = maxRadius(props.shape.frame);
         if (r > max_r) r = max_r;
@@ -128,12 +133,15 @@ const getMovePoint = (e: MouseEvent) => {
     if (!radius_dot.value) return;
     const shape = props.shape;
     const curDot = radius_dot.value[changeR];
-    const clinetXY = props.context.workspace.getContentXY(e);
     const frame = shape.frame;
-    let m = new Matrix(shape.matrix2Root()); // 图形转页面矩阵
-    m.multiAtLeft(props.context.workspace.matrix); // 页面转视图
-    m = new Matrix(m.inverse); // 视图转图形
-    const xy = m.computeCoord3(clinetXY);
+    const clinetXY = props.context.workspace.getContentXY(e);
+    const matrix = new Matrix(props.context.workspace.matrix);
+    const shape_root_m = shape.matrix2Root();
+    let m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix);
+    m.addTransform(clientTransform); //root到视图
+    const _m = m.getInverse(); // 视图转图形
+    const { col0: xy } = _m.transform([ColVector3D.FromXY(clinetXY.x, clinetXY.y)]);
     xy.x /= frame.width;
     xy.y /= frame.height;
     const d0 = Math.hypot(xy.x - 0, xy.y - 0);
@@ -156,33 +164,35 @@ const maxRadius = (frame: ShapeFrame) => {
     const { width, height } = frame;
     return Math.min(width / 2, height / 2);
 }
+
+// 圆角移动的大小
 const radiusDotMove = (e: MouseEvent) => {
     let radius = 0;
-    const { width, height } = props.shape.frame;
-    const max_r = maxRadius(props.shape.frame);
+    const shape = props.shape;
+    const { width, height } = shape.frame;
+    const max_r = maxRadius(shape.frame);
     if (changeR === 0) {
-        const start = matrix.computeCoord2(0, 0);
-        const end = matrix.computeCoord2(max_r, max_r);
+        const start = getTransformCol(props.context, shape, 0, 0);
+        const end = getTransformCol(props.context, shape, max_r, max_r);
         radius = getRadiusValue(start, end, e, props.context) * max_r;
     }
     if (changeR === 1) {
-        const start = matrix.computeCoord2(width, 0);
-        const end = matrix.computeCoord2(width - max_r, max_r);
+        const start = getTransformCol(props.context, shape, width, 0);
+        const end = getTransformCol(props.context, shape, width - max_r, max_r);
         radius = getRadiusValue(start, end, e, props.context) * max_r;
     }
     if (changeR === 2) {
-        const start = matrix.computeCoord2(width, height);
-        const end = matrix.computeCoord2(width - max_r, height - max_r);
+        const start = getTransformCol(props.context, shape, width, height);
+        const end = getTransformCol(props.context, shape, width - max_r, height - max_r);
         radius = getRadiusValue(start, end, e, props.context) * max_r;
     }
     if (changeR === 3) {
-        const start = matrix.computeCoord2(0, height);
-        const end = matrix.computeCoord2(max_r, height - max_r);
+        const start = getTransformCol(props.context, shape, 0, height);
+        const end = getTransformCol(props.context, shape, max_r, height - max_r);
         radius = getRadiusValue(start, end, e, props.context) * max_r;
     }
     return Math.round(radius);
 }
-
 
 function dot_mousemove(e: MouseEvent) {
     if (cursor_down.value) return;
@@ -214,18 +224,25 @@ const point_mouseleave = (e: MouseEvent) => {
     cursor_enter.value = false;
 }
 
-watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);
     update();
 })
+
+const workspaceWatcher = (t: number | string) => {
+    if(t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    }
+}
 onMounted(() => {
     props.shape.watch(update);
+    props.context.workspace.watch(workspaceWatcher);
     update();
 })
 onUnmounted(() => {
     props.shape.unwatch(update);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 
@@ -233,17 +250,17 @@ onUnmounted(() => {
     <!-- 圓角 -->
     <g v-if="radius_dot && radius_dot.length === 4">
         <g v-for="(dot, index) in radius_dot" :key="index" v-show="pointVisible"
-           :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
-           @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
-           @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+            :style="`transform: translate(${dot.x - 4}px, ${dot.y - 4}px);`" ref="radiusDotEl"
+            @mousedown.stop="(e) => point_mousedown(e, index)" @mousemove="dot_mousemove"
+            @mouseenter="(e) => point_mouseenter(e, index)" @mouseleave="point_mouseleave">
+            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1" />
+            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1" />
             <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                     stroke-width="1"/>
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
+                stroke-width="1" />
+            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1" />
         </g>
         <foreignObject v-if="cursor_enter || cursor_down" :x="cursor_point.x + 10" :y="cursor_point.y + 15"
-                       width="100px" height="28px">
+            width="100px" height="28px">
             <div class="percent_container">
                 <span>圆角 {{ fixedZero(max_radius[changeR]) }} </span>
             </div>

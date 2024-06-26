@@ -2,7 +2,6 @@ import { IWatchable, Matrix } from "@kcdesign/data";
 
 export namespace WorkspaceEvents {
     export const transform_change = 'transform_change'
-    export const comment_change = 'comment_change'
 }
 
 export interface IWorkspace extends IWatchable {
