@@ -85,7 +85,7 @@ const togglePage = (p: number) => {
     props.context.preview.selectShape(frameList[index]);
 }
 
-const previewWatcher = (t: number, s?: boolean) => {
+const previewWatcher = (t: number | string, s?: boolean) => {
     if (t === Preview.CHANGE_PAGE) {
         changePage();
     } else if (t === Preview.CHANGE_SHAPE) {

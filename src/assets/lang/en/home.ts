@@ -1,4 +1,3 @@
-import { ScaleType } from "@/context/preview";
 import { BlendMode, BorderPosition } from "@kcdesign/data";
 
 export const system = {
@@ -387,7 +386,10 @@ export const preview: any = {
     next_page: 'Next page',
     first_page: 'First page',
     preview: 'Preview',
-    open: 'Opens in Design mode'
+    open: 'Opens in Design mode',
+    fill_screen: 'Fill screen',
+    fit_width: 'Fit width',
+    fit_screen: 'Fit screen',
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
@@ -411,7 +413,3 @@ opacity[BlendMode.Color] = "Color";
 opacity[BlendMode.Luminosity] = "Lightness";
 opacity[BlendMode.PlusDarker] = "Plus darker";
 opacity[BlendMode.PlusLighter] = "Plus lighter";
-
-preview[ScaleType.FillScreen] = 'Fill screen'
-preview[ScaleType.FitWidth] = 'Fit width'
-preview[ScaleType.FitScreen] = 'Fit screen'

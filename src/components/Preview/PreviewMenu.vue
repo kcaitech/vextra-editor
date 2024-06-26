@@ -126,21 +126,21 @@ onUnmounted(() => {
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FitScreen" icon-class="choose"></svg-icon>
             </div>
-            <div class="text">{{t(`preview.${ScaleType.FitScreen}`)}}</div>
+            <div class="text">{{t('preview.fit_screen')}}</div>
             <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="item" @click.stop="changeScale(ScaleType.FillScreen)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FillScreen" icon-class="choose"></svg-icon>
             </div>
-            <div class="text">{{t(`preview.${ScaleType.FillScreen}`)}}</div>
+            <div class="text">{{t('preview.fill_screen')}}</div>
             <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="item" @click.stop="changeScale(ScaleType.FitWidth)">
             <div class="choose">
                 <svg-icon v-if="scaleType === ScaleType.FitWidth" icon-class="choose"></svg-icon>
             </div>
-            <div class="text">{{t(`preview.${ScaleType.FitWidth}`)}}</div>
+            <div class="text">{{t('preview.fit_width')}}</div>
             <div class="key"><span class="span">Z</span></div>
         </div>
         <div class="line"></div>

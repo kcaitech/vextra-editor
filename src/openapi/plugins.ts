@@ -41,7 +41,9 @@ export type PluginLocate =
     'navigation' |
     'content' |
     'attributes' | 
-    'devmode.toolbar.tools';
+    'devmode.toolbar.tools' | 
+    'preview.toolbar.home' |
+    'preview.toolbar.others';
 
 export interface IPlugin {
     get locate(): PluginLocate,

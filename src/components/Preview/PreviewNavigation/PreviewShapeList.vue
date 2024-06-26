@@ -192,7 +192,7 @@ function accurate_shift() {
     update();
 }
 
-const previewWatcher = (t: number) => {
+const previewWatcher = (t: number | string) => {
     if (t === Preview.CHANGE_PAGE) {
         update();
     }
