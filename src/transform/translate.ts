@@ -271,6 +271,8 @@ export class TranslateHandler extends TransformHandler {
         this.livingBox.right = this.livingBox.x + width;
         this.livingBox.bottom = this.livingBox.y + height;
 
+        console.log('BOX', this.livingBox);
+
         let l = this.livingBox.x;
         let t = this.livingBox.y;
         let r = this.livingBox.right;
