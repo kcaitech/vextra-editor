@@ -8,6 +8,7 @@ import { getCornerControlPoint } from './common';
 import { bezierCurvePoint } from '@/utils/pathedit';
 import { fixedZero } from '@/utils/common';
 import { getTransformCol } from '@/utils/content';
+import { WorkSpace } from '@/context/workspace';
 
 
 interface Props {
@@ -243,12 +244,20 @@ watch(() => props.shape, (value, old) => {
     value.watch(update);
     update();
 })
+
+const workspaceWatcher = (t: number | string) => {
+    if(t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    }
+}
 onMounted(() => {
     props.shape.watch(update);
+    props.context.workspace.watch(workspaceWatcher);
     update();
 })
 onUnmounted(() => {
     props.shape.unwatch(update);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 </script>
 

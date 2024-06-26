@@ -122,6 +122,18 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
+const is_enter = ref(false);
+const mouseenter = () => {
+    if (props.context.workspace.transforming) {
+        return;
+    }
+    is_enter.value = true;
+}
+
+const mouseleave = () => {
+    is_enter.value = false;
+}
+
 const stop = watchEffect(updateControllerView);
 
 const pointVisible = computed(() => {
@@ -149,12 +161,15 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
         viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
         @mousedown="mousedown">
+        <path
+            :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
+            fill="transparent" @mouseenter="mouseenter" @mouseleave="mouseleave"></path>
         <ShapesStrokeContainer :context="props.context" />
         <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
             :theme="theme" />
         <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
             :c-frame="props.controllerFrame" :theme="theme" />
-        <component v-if="!shape.data.haveEdit" :pointVisible="pointVisible" :is="point_map.get(shape.type)"
+        <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"
             :context="props.context" :shape="props.shape as PolygonShapeView" :theme="theme"></component>
     </svg>
 </template>
