@@ -64,6 +64,9 @@ onMounted(() => {
     props.context.selection.watch(selectionWatcher);
 
     props.data.watch(pageWatcher);
+
+    titleRenderer.updateUnderRootContainerMap();
+    titleRenderer.fullUpdate();
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);

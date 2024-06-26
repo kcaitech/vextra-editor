@@ -15,7 +15,7 @@ import {
 } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
-import ContextMenu from '@/components/common/ContextMenu.vue';
+import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
 import { debounce } from "lodash";

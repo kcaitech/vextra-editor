@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import {
-    reactive,
-    onMounted,
-    onUnmounted,
     computed,
-    ref,
-    nextTick,
-    watch,
     getCurrentInstance,
     h,
-    onBeforeMount
+    nextTick,
+    onBeforeMount,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
+    watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
-import ContextMenu from '../common/ContextMenu.vue';
+import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
+import { Color, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -28,16 +28,13 @@ import {
     adapt_page,
     color2string,
     drop,
-    get_menu_items,
     init_insert_table,
     is_drag,
-    right_select,
     root_scale,
     root_trans,
     selectShapes
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
-import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action, Tool } from "@/context/tool";
@@ -54,6 +51,7 @@ import Grid from "@/components/Document/Grid.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
 import { CursorType } from "@/utils/cursor2";
+import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
 
 interface Props {
     context: Context
@@ -71,7 +69,6 @@ const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
-// const comment = computed(() => props.context.comment);
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
@@ -86,9 +83,7 @@ const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中�
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
-const contextMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
-const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
@@ -250,47 +245,55 @@ function pageViewDragEnd() {
 /**
  * @description 打开右键菜单
  */
-const menu_over_left = ref(0);
+const contextMenuItems = ref<Set<MenuItemType>>(new Set());
 
 function contextMenuMount(e: MouseEvent) {
-    const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
+    const workspace = props.context.workspace;
+    const selection = props.context.selection;
+    const menu = props.context.menu;
+
     menu.menuMount();
     selection.unHoverShape();
-    site.x = e.clientX;
-    site.y = e.clientY;
+
     const root = workspace.root;
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
-    contextMenuItems.value = [];
-    const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
-    contextMenuItems.value = get_menu_items(props.context, area, e); // 根据点击环境确定菜单选项
+
+    contextMenuItems.value.clear();
+    const area = getArea(props.context, e); // 判断点击环境
+
+    contextMenuItems.value = getMenuItems(props.context, e, area); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
+
+    if (shapes.length > 1 && (area !== MountedAreaType.TextSelection && area !== MountedAreaType.TableCell)) {
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems.value.push('layers');
+        contextMenuItems.value.add(MenuItemType.Layers);
     }
+
     const _shapes = selection.selectedShapes
     if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.value.push('edit');
+        contextMenuItems.value.add(MenuItemType.EditComps);
     }
-    if (area === 'table_cell') {
+
+    if (area === MountedAreaType.TableCell) {
         const table = props.context.tableSelection;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-            contextMenuItems.value.push('split_cell');
-            contextMenuItems.value = contextMenuItems.value.filter(item => item !== 'merge_cell');
+            contextMenuItems.value.add(MenuItemType.SplitCell);
+            contextMenuItems.value.delete(MenuItemType.MergeCell);
         }
     }
+
     contextMenu.value = true; // 数据准备就绪之后打开菜单
     menu.menuMount('content');
     // 打开菜单之后调整菜单位置
     nextTick(() => {
-        if (!contextMenuEl.value) {
-            return;
-        }
+        if (!contextMenuEl.value) return;
+
         const el = contextMenuEl.value.menu;
-        menu_over_left.value = menu_locate(props.context, contextMenuPosition, el) || 0;
-        props.context.escstack.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+        menu_locate(props.context, contextMenuPosition, el);
+
+        props.context.escstack.save(v4(), contextMenuUnmount);
     })
 }
 
@@ -669,6 +672,7 @@ const plugins = props.context.pluginsMgr.search2("content");
 comps.push(...plugins.begin);
 
 comps.push(
+    // 页面
     {
         component: PageViewVue, params: {
             get data() {
@@ -680,6 +684,7 @@ comps.push(
             closeLoading
         }
     },
+    // 筛选结果文本高亮
     {
         component: TextSelection, params: {
             get matrix() {
@@ -687,6 +692,7 @@ comps.push(
             }
         }
     },
+    // 协作用户选区
     {
         component: UsersSelection, params: {
             get matrix() {
@@ -697,6 +703,7 @@ comps.push(
             }
         }
     },
+    // 本地选区
     {
         component: SelectionView, params: {
             get matrix() {
@@ -704,23 +711,24 @@ comps.push(
             },
         }
     },
-    {
-        component: Placement, params: {
-            get visible() {
-                return contextMenu.value
-            },
-            get pos() {
-                return contextMenuPosition
-            }
-        }
-    },
+    // 菜单
     {
         component: () => {
             if (contextMenu.value) {
-                return h(ContextMenu, { site, "ref": contextMenuEl, context: props.context })
+                return h(ContextMenu, {
+                    ref: contextMenuEl,
+
+                    context: props.context,
+                    items: contextMenuItems.value,
+
+                    onClose: () => {
+                        contextMenu.value = false;
+                    }
+                });
             }
         }
     },
+    // 表格菜单
     {
         component: CellSetting, params: {
             get visible() {
@@ -732,6 +740,7 @@ comps.push(
             }
         }
     },
+    // 图层框选器
     {
         component: Selector, params: {
             get visible() {
@@ -742,6 +751,7 @@ comps.push(
             }
         }
     },
+    // 图层创建器
     {
         component: Creator, params: {
             get visible() {
@@ -749,6 +759,7 @@ comps.push(
             },
         }
     },
+    // 路径编辑界面
     {
         component: PathEditMode, params: {
             get visible() {
@@ -756,6 +767,7 @@ comps.push(
             },
         }
     },
+    // 渐变色编辑界面
     {
         component: Gradient, params: {
             get visible() {
@@ -766,9 +778,11 @@ comps.push(
             },
         }
     },
+    // 像素网格
     {
         component: Grid
     },
+    // 图层导出载体
     {
         component: BatchExport, params: {
             get visible() {
@@ -782,12 +796,20 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-     @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent
-     :style="{ 'background-color': background_color }">
-
+<div
+    ref="root"
+    :class="cursor"
+    :data-area="rootId"
+    :reflush="reflush !== 0 ? reflush : undefined"
+    :style="{ 'background-color': background_color }"
+    @wheel="onMouseWheel"
+    @mousedown="onMouseDown"
+    @mousemove="onMouseMove_CV"
+    @mouseleave="onMouseLeave"
+    @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }"
+    @dragover.prevent
+>
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <Rule :context="props.context" :page="(props.page as PageView)" />
+    <Rule :context="props.context" :page="(props.page as PageView)"/>
 </div>
 </template>

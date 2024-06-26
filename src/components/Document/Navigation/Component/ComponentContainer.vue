@@ -4,7 +4,7 @@ import ComponentRootCollapse from './ComponentRootCollapse.vue';
 import ComponentLocalData from './ComponentLocalData.vue';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ContextMenu from '@/components/common/ContextMenu.vue'
+import ContextMenu from '@/components/Document/Menu/ContextMenu.vue'
 import { Component } from '@/context/component';
 import { Shape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';

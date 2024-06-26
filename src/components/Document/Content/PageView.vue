@@ -167,10 +167,9 @@ onUnmounted(() => {
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
          :width="width" :height="height" :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="show_c" :context="props.context" :data="props.params.data" :matrix="props.params.matrix"
-                 :transform="matrixWithFrame.toArray()">
-    </ShapeCutout>
-    <ShapeTitles v-if="show_t" :context="props.context" :data="props.params.data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ShapeCutout v-if="show_c" :context="props.context" :data="params.data" :matrix="props.params.matrix"
+                 :transform="matrixWithFrame.toArray()" />
+    <ShapeTitles v-if="show_t" :context="props.context" :data="params.data" />
 
 </template>
 
