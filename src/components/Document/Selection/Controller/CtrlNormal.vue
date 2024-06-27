@@ -160,10 +160,10 @@ onUnmounted(() => {
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
         viewBox="0 0 100 100" width="100" height="100" overflow="visible" :class="{ hidden: selection_hidden }"
-        @mousedown="mousedown">
+        @mousedown="mousedown" @mouseenter="mouseenter" @mouseleave="mouseleave">
         <path
             :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
-            fill="transparent" @mouseenter="mouseenter" @mouseleave="mouseleave"></path>
+            fill="transparent"></path>
         <ShapesStrokeContainer :context="props.context" />
         <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
             :theme="theme" />

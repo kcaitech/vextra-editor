@@ -130,30 +130,16 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg"
-         xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-         data-area="controller"
-         preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100"
-         width="100"
-         height="100"
-         :class="{ hidden: selection_hidden }"
-         overflow="visible"
-         @mousedown="mousedown"
-    >
-        <ShapesStrokeContainer :context="props.context"/>
-        <BarsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :frame="props.controllerFrame"
-        />
-        <PointsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :axle="axle"
-            :frame="props.controllerFrame"
-        />
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
+        viewBox="0 0 100 100" width="100" height="100" :class="{ hidden: selection_hidden }" overflow="visible"
+        @mousedown="mousedown">
+        <path
+            :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
+            fill="transparent"></path>
+        <ShapesStrokeContainer :context="props.context" />
+        <BarsContainer v-if="partVisible" :context="props.context" :frame="props.controllerFrame" />
+        <PointsContainer v-if="partVisible" :context="props.context" :axle="axle" :frame="props.controllerFrame" />
     </svg>
 </template>
 <style lang='scss' scoped>
