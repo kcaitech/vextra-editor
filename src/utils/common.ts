@@ -558,7 +558,6 @@ export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<s
     m.multiAtLeft(_m);
 
     const origin = m.computeCoord2(0, 0);
-    // const origin = _m.computeCoord2(frame.x, frame.y);
 
     let left = origin.x;
     let right = origin.x;

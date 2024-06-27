@@ -434,12 +434,25 @@ export class TranslateHandler extends TransformHandler {
                 PI = __p;
             }
 
-            const transform = makeShapeTransform1By2(
-                base.originTransform
-                    .clone()
-                    .translate(ColVector3D.FromXY(deltaX, deltaY))
-                    .addTransform(PI)
-            ) as TransformRaw;
+            const __t = base.originTransform
+                .clone()
+                .translate(ColVector3D.FromXY(deltaX, deltaY))
+
+            if (this.alignPixel) {
+                const decompose = __t.clone().decomposeTranslate();
+                const intX = Math.round(decompose.x);
+                const intY = Math.round(decompose.y);
+                const offsetX = intX - decompose.x;
+                const offsetY = intY - decompose.y;
+
+                if (offsetX || offsetY) {
+                    __t.translate(ColVector3D.FromXY(offsetX, offsetY));
+                }
+            }
+
+            __t.addTransform(PI);
+
+            const transform = makeShapeTransform1By2(__t) as TransformRaw;
 
             transformUnits.push({ shape, transform });
         }
