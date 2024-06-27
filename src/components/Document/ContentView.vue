@@ -720,7 +720,7 @@ comps.push(
 
                     context: props.context,
                     items: contextMenuItems.value,
-
+                    layers: shapesContainsMousedownOnPageXY,
                     onClose: () => {
                         contextMenu.value = false;
                     }

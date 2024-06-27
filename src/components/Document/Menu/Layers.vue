@@ -13,6 +13,8 @@ const selectedShapes = computed(() => props.context.selection.selectedShapes);
 const props = defineProps<Props>();
 const hoverItem = ref('');
 function select(shape: ShapeView) {
+  console.log(shape, 'shape');
+  
   props.context.selection.selectShape(shape);
   emit('close');
 }
@@ -27,7 +29,7 @@ function mouseout() {
 </script>
 <template>
   <div class="items-wrap">
-    <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
+    <div class="item" v-for="shape in props.layers" :key="shape.id" @click.stop="select(shape)"
       @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
       <div>
           <svg-icon :icon-class="hoverItem === shape.id ? 'white-select' : 'page-select'" v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>

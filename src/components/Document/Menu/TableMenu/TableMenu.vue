@@ -6,13 +6,12 @@ import { XY, Selection } from '@/context/selection';
 import { Shape, ShapeView, TableShape, TableView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { TableSelection } from '@/context/tableselection';
+import { MenuItemType } from "@/components/Document/Menu/index";
 
 const { t } = useI18n();
 interface Props {
   context: Context,
-  layers?: ShapeView[],
-  items: string[],
-  site?: { x: number, y: number }
+  items: Set<MenuItemType>,
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -24,10 +23,10 @@ const isSplitCell = ref<boolean>(false);
 const splitCellOpen = ref(false);
 function showLayerSubMenu(e: MouseEvent, show: string) {
   e.stopPropagation();
-  const { width, left } = (e.target as Element).getBoundingClientRect();
-  const { width: width2, left: left2 } = props.context.workspace.root.element.getBoundingClientRect()
-  layerSubMenuPosition.x = (width2 + left2) - (width + left) > width ? width : -width;
-  layerSubMenuPosition.y = -4;
+  const { width, right } = (e.target as Element).getBoundingClientRect();
+  const { right: right2 } = props.context.workspace.root;
+  layerSubMenuPosition.x = right2 - (right + 4) >= width ? -174 : width;
+  layerSubMenuPosition.y = -6;
   if (show === 'split') {
     isSplitCell.value = true;
   } else {
@@ -123,15 +122,16 @@ function closeLayerSubMenu() {
 
 </script>
 <template>
-  <div class="line" v-if="props.items.includes('delete_column') && props.items.includes('only_text')"></div>
-  <div v-if="props.items.includes('delete_column')" class="item layer-select"
+  <div class="line" v-if="items.has(MenuItemType.DeleteCol) && items.has(MenuItemType.OnlyText)"></div>
+    <!-- 删除行列 -->
+  <div v-if="items.has(MenuItemType.DeleteCol)" class="item layer-select"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
     <div class="layer-icon">
       <svg-icon :icon-class="isDeleteColumn ? 'white-down' : 'down'"></svg-icon>
     </div>
-    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174" :site="site"
-      :context="props.context" :style="{ left: layerSubMenuPosition.x + 'px', top: layerSubMenuPosition.y + 'px' }">
+    <div class="context_menu" v-if="isDeleteColumn"
+      :style="{ top: layerSubMenuPosition.y + 'px', right: layerSubMenuPosition.x + 'px' }">
       <div class="item" @click="spliceRow">
         <span>{{ t('table.del_select_row') }}</span>
         <span></span>
@@ -144,16 +144,17 @@ function closeLayerSubMenu() {
         <span>{{ t('table.del_table') }}</span>
         <span></span>
       </div>
-    </ContextMenu>
+    </div>
   </div>
-  <div class="item layer-select" v-if="props.items.includes('split_cell')"
+  <!-- 拆分单元格 -->
+  <div class="item layer-select" v-if="items.has(MenuItemType.SplitCell)"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
     <div class="layer-icon">
       <svg-icon :icon-class="isSplitCell ? 'white-down' : 'down'"></svg-icon>
     </div>
-    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174" :site="site"
-      :context="props.context" :style="{ left: layerSubMenuPosition.x + 'px', top: layerSubMenuPosition.y + 'px' }">
+    <div class="context_menu" v-if="isSplitCell"
+      :style="{ top: layerSubMenuPosition.y + 'px', right: layerSubMenuPosition.x + 'px' }">
       <div class="item" @click="splitCell('row')">
         <span>{{ t('table.split_towrow') }}</span>
         <span></span>
@@ -162,13 +163,13 @@ function closeLayerSubMenu() {
         <span>{{ t('table.split_towcol') }}</span>
         <span></span>
       </div>
-    </ContextMenu>
+    </div>
   </div>
-  <div class="item" v-if="props.items.includes('insert_column')" @click="openInsertCell('insert')">
+  <div class="item" v-if="items.has(MenuItemType.InsertCol)" @click="openInsertCell('insert')">
     <span>{{ t('table.insert_column') }}</span>
     <span></span>
   </div>
-  <div class="item" v-if="props.items.includes('merge_cell')" @click="mergeCell">
+  <div class="item" v-if="items.has(MenuItemType.MergeCell)" @click="mergeCell">
     <span>{{ t('table.merge_cell') }}</span>
     <span></span>
   </div>
@@ -183,6 +184,7 @@ function closeLayerSubMenu() {
   flex-direction: row;
   align-items: center;
   box-sizing: border-box;
+  font-size: var(--font-default-fontsize);
 
   >span {
     margin-left: 20px;
@@ -255,6 +257,22 @@ function closeLayerSubMenu() {
   >.shortkey {
     margin-left: auto;
   }
+}
+
+.context_menu {
+  position: absolute;
+  z-index: 99;
+  color: #262626;
+  width: 174px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
+  border: 1px solid #EBEBEB;
+  padding: 6px 0;
+
+  cursor: auto !important;
 }
 
 .choose {
