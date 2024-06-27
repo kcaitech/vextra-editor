@@ -120,13 +120,13 @@ onUnmounted(() => {
             <!--                                   :status_set="dlt_set" :is-attri="props.isAttri" :card-type="props.cardType">-->
             <!--            </ComponentRootCollapse>-->
         </el-scrollbar>
-        <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"
-            :context="props.context" @close="compMenuUnmount">
-            <div class="items-wrap" v-for="(item, index) in compMenuItems" :key="index"
-                @click="(e: any) => compMenuUnmount(e, item.name, item.shape)">
-                <span>{{ t(`compos.${item.name}`) }}</span>
-            </div>
-        </ContextMenu>
+<!--        <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"-->
+<!--            :context="props.context" @close="compMenuUnmount">-->
+<!--            <div class="items-wrap" v-for="(item, index) in compMenuItems" :key="index"-->
+<!--                @click="(e: any) => compMenuUnmount(e, item.name, item.shape)">-->
+<!--                <span>{{ t(`compos.${item.name}`) }}</span>-->
+<!--            </div>-->
+<!--        </ContextMenu>-->
     </div>
 </template>
 <style scoped lang="scss">
