@@ -127,7 +127,7 @@ export class RotateHandler extends TransformHandler {
             return;
         }
         this.__execute();
-        this.updateCtrlView();
+        this.updateCtrlView(1);
     }
 
     protected keydown(event: KeyboardEvent) {

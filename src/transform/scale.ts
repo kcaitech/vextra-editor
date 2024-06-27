@@ -1,7 +1,8 @@
 import {Context} from "@/context";
 import {FrameLike, TransformHandler} from "./handler";
 import {
-    adapt2Shape, ColVector3D,
+    adapt2Shape,
+    ColVector3D,
     CtrlElementType,
     Matrix,
     Scaler,
@@ -12,8 +13,6 @@ import {
 } from "@kcdesign/data";
 import {XY} from "@/context/selection";
 import {boundingBox2Root} from "@/utils/common";
-import { Tool } from "@/context/tool";
-
 
 type Box = {
     origin: XY;
@@ -117,11 +116,19 @@ export class ScaleHandler extends TransformHandler {
             this.shiftStatus = true;
             this.passiveExecute();
         }
+        if (event.altKey) {
+            this.altStatus = true;
+            this.passiveExecute();
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
         if (event.code === "ShiftLeft") {
             this.shiftStatus = false;
+            this.passiveExecute();
+        }
+        if (event.code === "AltLeft") {
+            this.altStatus = false;
             this.passiveExecute();
         }
     }
@@ -394,47 +401,115 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private __execute() {
-        if (!this.shapes.length) {
-            return;
-        }
-
-        // if (this.shapes.length === 1) {
-        //     this.__execute4single();
-        // } else {
-        //     this.__execute4multi();
-        // }
+        if (!this.shapes.length) return;
 
         // 光标在选区坐标系下的坐标
         const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
         const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
+        const {width: selectionWidth, height: selectionHeight} = this.selectionSize;
+
         // 选区的左上角和右下角（在原选区坐标系下）
         const ltPointForSelection = ColVector3D.FromXY(0, 0);
-        const rbPointForSelection = ColVector3D.FromXY(this.selectionSize.width, this.selectionSize.height);
+        const rbPointForSelection = ColVector3D.FromXY(selectionWidth, selectionHeight);
+
+        const ratio = selectionWidth / selectionHeight;
+
+        const CET = this.ctrlElementType;
+        const ALT = this.altStatus;
+        const SHIFT = this.shiftStatus;
 
         // 左
-        if (this.ctrlElementType === CtrlElementType.RectLT         // 左上
-            || this.ctrlElementType === CtrlElementType.RectLB      // 左下
-            || this.ctrlElementType === CtrlElementType.RectLeft    // 左
-        ) ltPointForSelection.x = cursorPointFromSelection.x;
+        if (CET === CtrlElementType.RectLT         // 左上
+            || CET === CtrlElementType.RectLB      // 左下
+            || CET === CtrlElementType.RectLeft    // 左
+        ) {
+            const delta = cursorPointFromSelection.x - ltPointForSelection.x;
+            ltPointForSelection.x = cursorPointFromSelection.x;
+
+            if (ALT) {
+                rbPointForSelection.x -= delta;
+            }
+            if (SHIFT) {
+                const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                const dy = (selectionHeight - afterHeight) / 2;
+
+                ltPointForSelection.y += dy;
+                rbPointForSelection.y -= dy;
+            }
+        }
 
         // 上
-        if (this.ctrlElementType === CtrlElementType.RectLT         // 左上
-            || this.ctrlElementType === CtrlElementType.RectRT      // 右上
-            || this.ctrlElementType === CtrlElementType.RectTop     // 上
-        ) ltPointForSelection.y = cursorPointFromSelection.y;
+        if (CET === CtrlElementType.RectLT         // 左上
+            || CET === CtrlElementType.RectRT      // 右上
+            || CET === CtrlElementType.RectTop     // 上
+        ) {
+            const delta = cursorPointFromSelection.y - ltPointForSelection.y;
+            ltPointForSelection.y = cursorPointFromSelection.y;
+
+            if (ALT) {
+                rbPointForSelection.y -= delta;
+            }
+            if (SHIFT) {
+                const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                const dx = (selectionWidth - afterWidth) / 2;
+
+                ltPointForSelection.x += dx;
+                rbPointForSelection.x -= dx;
+            }
+        }
 
         // 右
-        if (this.ctrlElementType === CtrlElementType.RectRT         // 右上
-            || this.ctrlElementType === CtrlElementType.RectRB      // 右下
-            || this.ctrlElementType === CtrlElementType.RectRight   // 右
-        ) rbPointForSelection.x = cursorPointFromSelection.x;
+        if (CET === CtrlElementType.RectRT         // 右上
+            || CET === CtrlElementType.RectRB      // 右下
+            || CET === CtrlElementType.RectRight   // 右
+        ) {
+            const delta = cursorPointFromSelection.x - rbPointForSelection.x;
+            rbPointForSelection.x = cursorPointFromSelection.x;
+
+            if (ALT) {
+                ltPointForSelection.x -= delta;
+            }
+            if (SHIFT) {
+                if (CET === CtrlElementType.RectRight) {
+                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const dy = (selectionHeight - afterHeight) / 2;
+
+                    ltPointForSelection.y += dy;
+                    rbPointForSelection.y -= dy;
+                }
+            }
+        }
 
         // 下
-        if (this.ctrlElementType === CtrlElementType.RectLB         // 左下
-            || this.ctrlElementType === CtrlElementType.RectRB      // 右下
-            || this.ctrlElementType === CtrlElementType.RectBottom  // 下
-        ) rbPointForSelection.y = cursorPointFromSelection.y;
+        if (CET === CtrlElementType.RectLB         // 左下
+            || CET === CtrlElementType.RectRB      // 右下
+            || CET === CtrlElementType.RectBottom  // 下
+        ) {
+            const delta = cursorPointFromSelection.y - rbPointForSelection.y;
+            rbPointForSelection.y = cursorPointFromSelection.y;
+
+            if (ALT) {
+                ltPointForSelection.y -= delta;
+            }
+
+            if (SHIFT) {
+                if (CET === CtrlElementType.RectBottom) {
+                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+
+                    const dx = (selectionWidth - afterWidth) / 2;
+
+                    ltPointForSelection.x += dx;
+                    rbPointForSelection.x -= dx;
+                }
+                // else if (CET === CtrlElementType.RectRB) {
+                //     const currentWidth = Math.abs(ltPointForSelection.x - rbPointForSelection.x);
+                //     const targetWidth = Math.abs(rbPointForSelection.y - ltPointForSelection.y) * ratio;
+                //
+                //     rbPointForSelection.x += targetWidth - currentWidth;
+                // }
+            }
+        }
 
         // 选区变换后的大小
         const sizeForSelection = {
@@ -482,32 +557,8 @@ export class ScaleHandler extends TransformHandler {
             }
         }));
 
-        this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.RULE_RENDER);
-        });
-
-        this.updateCtrlView();
+        this.updateCtrlView(1);
     }
-
-    // private __execute4single() {
-    //     if (this.ctrlElementType === CtrlElementType.RectLeft) {
-    //         this.__execute4singleLeft();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectRight) {
-    //         this.__execute4singleRight();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectTop) {
-    //         this.__execute4singleTop();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectBottom) {
-    //         this.__execute4singleBottom();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectLT) {
-    //         this.__execute4singleLT();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectRT) {
-    //         this.__execute4singleRT();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectRB) {
-    //         this.__execute4singleRB();
-    //     } else if (this.ctrlElementType === CtrlElementType.RectLB) {
-    //         this.__execute4singleLB();
-    //     }
-    // }
 
     private __modifyOffset(targetXY: XY, transformedXY: XY, baseX: number, baseY: number) {
         const alignPixel = this.alignPixel;

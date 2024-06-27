@@ -670,7 +670,7 @@ export class PathEditor extends TransformHandler {
 
         (this.asyncApiCaller as PathModifier).execute(this.shape, units);
 
-        this.updateCtrlView();
+        this.updateCtrlView(0);
     }
 
     private __gen(actions: ModifyUnits, points: CurvePoint[], segment: number, indexes: number[], dx: number, dy: number) {
@@ -745,7 +745,7 @@ export class PathEditor extends TransformHandler {
 
         (this.asyncApiCaller as PathModifier).breakOffHandle(this.shape, segment, index);
 
-        this.updateCtrlView();
+        this.updateCtrlView(0);
     }
 
     private recovery() {
@@ -777,7 +777,7 @@ export class PathEditor extends TransformHandler {
 
         this.curveModeBefore = undefined;
 
-        this.updateCtrlView();
+        this.updateCtrlView(0);
     }
 
     protected keydown(event: KeyboardEvent) {
@@ -864,7 +864,7 @@ export class PathEditor extends TransformHandler {
 
                 this.path.editing(true);
 
-                this.updateCtrlView();
+                this.updateCtrlView(0);
             }
         }
 
@@ -935,7 +935,7 @@ export class PathEditor extends TransformHandler {
             this.path.setPreviousPathId(_vec.id);
         }
 
-        this.updateCtrlView();
+        this.updateCtrlView(0);
 
         return _vec;
     }
@@ -1112,7 +1112,7 @@ export class PathEditor extends TransformHandler {
 
         caller.execute4handle(this.shape, index, side, from, to, segment);
 
-        this.updateCtrlView();
+        this.updateCtrlView(0);
     }
 
     closeSegmentAt(segmentIndex: number) {
