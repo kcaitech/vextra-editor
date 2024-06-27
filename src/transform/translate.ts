@@ -2,11 +2,10 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
     adapt2Shape, ColVector3D,
-    GroupShape, makeShapeTransform2By1,
-    Matrix,
+    GroupShape, makeShapeTransform1By2, makeShapeTransform2By1,
     ShapeType,
     ShapeView,
-    Transform,
+    Transform, TransformRaw,
     TranslateUnit,
     Transporter
 } from "@kcdesign/data";
@@ -20,15 +19,7 @@ import { round2half } from "@/transform/line";
 import { Tool } from "@/context/tool";
 
 type BaseFrame4Trans = {
-    rootXY: XY;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-
-    parentId: string;
-    offsetLivingPointX: number;
-    offsetLivingPointY: number;
+    originTransform: Transform
 }
 
 export class TranslateHandler extends TransformHandler {
@@ -62,8 +53,8 @@ export class TranslateHandler extends TransformHandler {
 
         this.fixedPoint = { ...this.livingPoint };
 
-        this.context.assist.set_collect_target(shapes);
-        this.context.assist.set_trans_target(shapes);
+        context.assist.set_collect_target(shapes);
+        context.assist.set_trans_target(shapes);
 
         this.getFrames();
 
@@ -144,16 +135,7 @@ export class TranslateHandler extends TransformHandler {
             ])
 
             this.baseFrames4trans.set(shape.id, {
-                rootXY: LT,
-                x: shape.transform.translateX,
-                y: shape.transform.translateY,
-                width,
-                height,
-
-
-                parentId: parent.id,
-                offsetLivingPointX: 0,
-                offsetLivingPointY: 0
+                originTransform: m
             });
 
             if (LT.x < left) {
@@ -210,11 +192,6 @@ export class TranslateHandler extends TransformHandler {
         this.originSelectionBox = box;
 
         this.livingBox = { ...this.originSelectionBox };
-
-        this.baseFrames4trans.forEach(base => {
-            base.offsetLivingPointX = base.rootXY.x - left;
-            base.offsetLivingPointY = base.rootXY.y - top;
-        })
 
         this.boxOffsetLivingPointX = this.livingPoint.x - left;
         this.boxOffsetLivingPointY = this.livingPoint.y - top;
@@ -430,90 +407,56 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __execute() {
-        if (this.coping) {
-            return;
-        }
+        if (this.coping) return;
 
-        if (this.altStatus) {
-            this.context.nextTick(this.page, () => {
-                this.context.selection.notify(Selection.PASSIVE_CONTOUR);
-            })
-        }
-
+        const { x: originX, y: originY } = this.originSelectionBox;
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
-
-        const __root2parentMatrixCache = new Map<string, Matrix>();
-
-        const isAlign = this.alignPixel;
+        const deltaX = livingX - originX;
+        const deltaY = livingY - originY;
 
         const transformUnits: TranslateUnit[] = [];
+        const PIC = new Map<string, Transform>();
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
 
             const base = this.baseFrames4trans.get(shape.id);
+            if (!base) continue;
 
-            if (!base) {
-                continue;
+            const parent = shape.parent;
+            if (!parent) continue;
+
+            let PI = PIC.get(parent.id);
+            if (!PI) {
+                const __p = parent.transform2FromRoot.getInverse();
+
+                PIC.set(parent.id, __p);
+                PI = __p;
             }
 
-            const frame = shape.frame;
+            const transform = makeShapeTransform1By2(
+                base.originTransform
+                    .clone()
+                    .translate(ColVector3D.FromXY(deltaX, deltaY))
+                    .addTransform(PI)
+            ) as TransformRaw;
 
-            const __m = new Matrix();
-            const cx = frame.width / 2;
-            const cy = frame.height / 2;
-            __m.trans(-cx, -cy);
-            if (shape.rotation) {
-                __m.rotate((shape.rotation || 0) / 180 * Math.PI);
-            }
-            // todo flip
-            // if (shape.isFlippedHorizontal) {
-            //     __m.flipHoriz();
-            // }
-            // if (shape.isFlippedVertical) {
-            //     __m.flipVert();
-            // }
-            __m.trans(cx, cy);
-            __m.trans(shape.frame.x, shape.frame.y);
-
-            const _targetXY = __m.computeCoord2(0, 0);
-
-            const parent = shape.parent!;
-            let m = __root2parentMatrixCache.get(parent.id)!;
-            if (!m) {
-                m = new Matrix(parent.matrix2Root().inverse);
-                __root2parentMatrixCache.set(parent.id, m);
-            }
-
-            const __tx = base.offsetLivingPointX + livingX;
-            const __ty = base.offsetLivingPointY + livingY;
-
-            let tx = __tx;
-            let ty = __ty;
-
-            if (isAlign) {
-                if (shape.isStraight) {
-                    tx = round2half(tx);
-                    ty = round2half(ty);
-                } else {
-                    tx = Math.round(tx);
-                    ty = Math.round(ty);
-                }
-            }
-
-            const targetXY = m.computeCoord2(tx, ty);
-
-            const x = shape.frame.x + (targetXY.x - _targetXY.x);
-            const y = shape.frame.y + (targetXY.y - _targetXY.y);
-
-            transformUnits.push({ shape, x, y });
+            transformUnits.push({ shape, transform });
         }
 
-        this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.RULE_RENDER_SIM);
+        (this.asyncApiCaller as Transporter).execute(transformUnits);
+
+        const ctx = this.context;
+
+        ctx.nextTick(this.page, () => {
+            ctx.tool.notify(Tool.RULE_RENDER_SIM);
         });
 
-        (this.asyncApiCaller as Transporter).execute(transformUnits);
+        if (this.altStatus) {
+            ctx.nextTick(this.page, () => {
+                ctx.selection.notify(Selection.PASSIVE_CONTOUR);
+            })
+        }
     }
 
     private __migrate(tailCollect = true) {
@@ -593,9 +536,6 @@ export class TranslateHandler extends TransformHandler {
                 this.passiveExecute();
                 this.context.selection.notify(Selection.PASSIVE_CONTOUR);
             }
-        }
-        if (event.ctrlKey) {
-            console.log("livingBox:", this.livingBox)
         }
     }
 
