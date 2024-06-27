@@ -54,6 +54,7 @@ const layersMenu = ref<HTMLDivElement>();
 const cursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const cutout = ref<boolean>(props.context.tool.isCutoutVisible);
 const title = ref<boolean>(props.context.tool.isShowTitle);
+const layersHeight = ref();
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
@@ -74,6 +75,7 @@ function showLayerSubMenu(e: MouseEvent, type: MenuItemType) {
     nextTick(() => {
         if (!layersMenu.value) return;
         const el = layersMenu.value;
+        layersHeight.value = menu.value?.getBoundingClientRect().height;
         if (el) {
             const target = (e.target as HTMLElement);
             const rect = target.getBoundingClientRect();
@@ -426,7 +428,9 @@ onUnmounted(() => {
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon icon-class="down" />
-            <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers">
+            <div class="layers_menu" ref="layersMenu" v-if="true" :style="{ 'max-height': layersHeight + 'px' }">
+            <!-- <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers" -->
+                <!-- :style="{ 'max-height': layersHeight + 'px' }"> -->
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
             </div>
         </div>
@@ -661,8 +665,10 @@ onUnmounted(() => {
             border: 1px solid #EBEBEB;
             padding: 6px 0;
             top: -6px;
+            box-sizing: border-box;
             cursor: auto !important;
         }
+
         .sub-item {
             padding: 0 8px;
             width: 100%;

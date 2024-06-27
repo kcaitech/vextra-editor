@@ -13,8 +13,6 @@ const selectedShapes = computed(() => props.context.selection.selectedShapes);
 const props = defineProps<Props>();
 const hoverItem = ref('');
 function select(shape: ShapeView) {
-  console.log(shape, 'shape');
-  
   props.context.selection.selectShape(shape);
   emit('close');
 }
@@ -29,12 +27,13 @@ function mouseout() {
 </script>
 <template>
   <div class="items-wrap">
-    <div class="item" v-for="shape in props.layers" :key="shape.id" @click.stop="select(shape)"
+    <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
       @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
       <div>
-          <svg-icon :icon-class="hoverItem === shape.id ? 'white-select' : 'page-select'" v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
+        <svg-icon :icon-class="hoverItem === shape.id ? 'white-select' : 'page-select'"
+          v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
       </div>
-      <span :style="{ marginLeft: selectedShapes ? '8px' : '20px'}">{{ shape.name }}</span>
+      <span :style="{ marginLeft: selectedShapes ? '8px' : '20px' }">{{ shape.name }}</span>
     </div>
   </div>
 </template>
@@ -78,5 +77,15 @@ function mouseout() {
     background-color: var(--active-color);
     color: #FFFFFF;
   }
+  overflow-x: auto;
+  &::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3.5px;
+    background: #efefef;
+  }
 }
+
 </style>
