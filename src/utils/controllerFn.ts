@@ -66,10 +66,10 @@ export function d(s: { x: number, y: number }, e: { x: number, y: number }): num
     return d;
 }
 
-export function getDelta(s: Shape, p: PageXY) {
-    const f2r = s.frame2Root();
-    return { dx: p.x - f2r.x, dy: p.y - f2r.y };
-}
+// export function getDelta(s: ShapeView, p: PageXY) {
+//     const f2r = s.frame2Root();
+//     return { dx: p.x - f2r.x, dy: p.y - f2r.y };
+// }
 
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));

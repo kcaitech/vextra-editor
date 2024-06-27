@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
 import { AsyncApiCaller, PageView } from "@kcdesign/data";
+import { Tool } from "@/context/tool";
 
 export type FrameLike = {
     x: number;
@@ -71,9 +72,13 @@ export class TransformHandler {
         document.removeEventListener('keyup', this.__keyup);
     }
 
-    updateCtrlView() {
+    updateCtrlView(rule: number) {
         this.context.nextTick(this.context.selection.selectedPage!, () => {
+
             this.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+            if (rule) {
+                this.context.tool.notify(Tool.RULE_RENDER);
+            }
         })
     }
 }
