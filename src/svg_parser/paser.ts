@@ -3,7 +3,7 @@ import {
     ResourceMgr,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
-import {BaseCreator, SvgCreator} from "./creator/base"
+import {BaseCreator, ContextType, SvgCreator} from "./creator/base"
 import {NoneCreator} from "./creator/none"
 import {GroupCreator} from "./creator/group"
 import {PathCreator} from "./creator/path"
@@ -17,12 +17,14 @@ import {UseCreator} from "./creator/use"
 
 export class Parser {
     svgRoot: Element
-    context: any = {
-        mediaResourceMgr: new ResourceMgr<{ buff: Uint8Array, base64: string }>([uuid(), "medias"]),
-    }
+    context: ContextType
 
     constructor(root: Element) {
         this.svgRoot = root
+        this.context = {
+            mediaResourceMgr: new ResourceMgr<{ buff: Uint8Array, base64: string }>([uuid(), "medias"]),
+            styleMap: this.styleMap,
+        }
     }
 
     create(node: Element) { // 处理svg元素内的一个节点，并返回其子节点
@@ -63,7 +65,41 @@ export class Parser {
         return children
     }
 
-    parse(filename?: string): Shape | undefined {
+    styleMap: {
+        [key: string]   // class、id
+            : string    // css content
+    } = {}
+
+    // 解析css
+    parseCSS() {
+        for (const style of this.svgRoot.querySelectorAll('style')) {
+            const styleInner = style.innerHTML
+            const regex = /(.*?)\{(.*?)}/g;
+            let match
+            while ((match = regex.exec(styleInner)) !== null) {
+                const selectorText = match[1].trim()
+                const selectorList: string[] = []
+                for (let selector of selectorText.split(',')) {
+                    selector = selector.trim()
+                    if (selector) selectorList.push(selector.trim());
+                }
+                if (selectorList.length === 0) continue;
+
+                const cssContent = match[2].trim()
+                if (!cssContent) continue;
+
+                for (const selector of selectorList) {
+                    let content = this.styleMap[selector] || ''
+                    if (content && !content.endsWith(';')) content += ';';
+                    this.styleMap[selector] = content + cssContent
+                }
+            }
+        }
+    }
+
+    parse(): Shape | undefined {
+        this.parseCSS()
+
         // 创建creator树
         const stack0 = [this.svgRoot]
         while (stack0.length) {

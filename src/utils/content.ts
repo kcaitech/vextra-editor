@@ -496,12 +496,12 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 parseResult.shape.name = file.name.replace(".svg", "");
 
                 if (xy) {
-                    parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;
-                    parseResult.shape.frame.y = xy.y - parseResult.shape.frame.height / 2;
+                    parseResult.shape.x = xy.x - parseResult.shape.frame.width / 2;
+                    parseResult.shape.y = xy.y - parseResult.shape.frame.height / 2;
                 } else {
                     const __xy = adjust_content_xy(context, parseResult.shape.frame as any, false);
-                    parseResult.shape.frame.x = __xy.x;
-                    parseResult.shape.frame.y = __xy.y;
+                    parseResult.shape.x = __xy.x;
+                    parseResult.shape.y = __xy.y;
                 }
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);

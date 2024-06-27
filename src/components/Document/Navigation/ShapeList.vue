@@ -223,7 +223,7 @@ const modify_visible_status = (shape: ShapeView) => {
 
 function shapeScrollToContentView(shape: ShapeView) {
     // scroll_to_view(props.context, shape);
-    locateShape(props.context, shape, LocateType.Center);
+    locateShape(props.context, shape);
 }
 
 function selectshape_right(shape: ShapeView, shiftKey: boolean) {

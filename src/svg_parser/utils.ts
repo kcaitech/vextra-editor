@@ -136,7 +136,7 @@ export function parseTransform(transformContent: string) {
         } else if (name === "scale") {
             transform.scale({ vector: new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 1]) })
         } else if (name === "translate") {
-            transform.translate(new ColVector3D([numArgList[0], numArgList[1], numArgList[2] || 0]))
+            transform.translate(new ColVector3D([numArgList[0], numArgList[1] || numArgList[0], numArgList[2] || 0]))
         } else {
             console.log("不支持的变换函数", name, args)
         }
