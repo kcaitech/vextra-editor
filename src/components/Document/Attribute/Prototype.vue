@@ -1,24 +1,25 @@
 <template>
     <div class="container">
         <el-scrollbar height="100%">
-            <div v-if="isPrototype.length">
+            <div v-if="isProtoType">
                 <div v-if="isPrototype.length < 2" class="origin">
                     <div class="title">
                         <div class="text" :style="{ color: originedit ? '#000' : '' }">流程起点</div>
-                        <div v-if="!originedit" class="add" @click.stop=createOrigin>
+                        <div v-if="prototypestart" class="add" @click.stop=createOrigin>
                             <svg-icon icon-class="add"></svg-icon>
                         </div>
                         <div v-else class="delete" @click.stop=deleteOrigin>
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <div v-if="!originedit" class="default">设置选中容器为新流程起点</div>
+                    <div v-if="!prototypestart" class="default">设置选中容器为新流程起点</div>
                     <div v-else class="originname">
-                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName }}</label>
-                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName"
-                            @blur="showIpnut = false">
+                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ prototypestart.name
+                            }}</label>
+                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="prototypestart.name"
+                            @blur="showIpnut = false" @change="setPrototypeStartPoint" autocomplete="off">
                         <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
-                            v-model="originDescribed"></textarea>
+                            v-model="prototypestart.desc" @change="setPrototypeStartPoint"></textarea>
                     </div>
                 </div>
                 <div class="interaction">
@@ -103,7 +104,8 @@
                                         <label for="closetab">点击浮层外关闭浮层</label>
                                     </div>
                                     <div class="checkbox">
-                                        <input type="checkbox" id="color" v-model="addmask" @change="checkTarget($event)">
+                                        <input type="checkbox" id="color" v-model="addmask"
+                                            @change="checkTarget($event)">
                                         <label for="color">在浮层后添加遮罩</label>
                                     </div>
                                     <div v-if="addmask" class="setting">
@@ -195,6 +197,7 @@ import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { debounce as d } from "@/utils/timing_util";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
+import { PrototypeStartingPoint, ArtboradView } from '@kcdesign/data';
 
 const background_color = ref(new Color(1, 239, 239, 239));
 const alpha_v = ref<number>(100);
@@ -365,6 +368,10 @@ enum Direction {
     Bottom = 'bottom'
 }
 
+type Prototypestart = {
+    name: string,
+    desc: string
+}
 
 const props = defineProps<{ context: Context }>();
 const baseAttr = ref(true);
@@ -377,8 +384,8 @@ const reflush = ref<number>(0);
 const reflush_by_selection = ref<number>(0);
 const reflush_by_shapes = ref<number>(0);
 const isPrototype = ref<ShapeView[]>([])
-const originName = ref<string>()
-const originDescribed = ref<string>()
+const originName = ref<string>('')
+const originDescribed = ref<string>('')
 const originNameNumber = ref<number>(0)
 const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
@@ -391,6 +398,9 @@ const { t } = useI18n()
 const searchvlue = ref<string>('')
 const animationtimevalue = ref<HTMLInputElement[]>()
 const selectitem = ref<string>('right')
+const prototypestart = ref<Prototypestart>({ name: "", desc: "" })
+
+
 
 const regex = /^(\d+)/
 const changeinputvalue = () => {
@@ -496,11 +506,29 @@ const test = () => {
 
 const createOrigin = () => {
     originName.value = '流程 ' + ++originNameNumber.value
-    originedit.value = true
+    originDescribed.value = ''
+    originedit.value = true;
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setProtoXX(shape, new PrototypeStartingPoint(originName.value, originDescribed.value));
 }
 
 const deleteOrigin = () => {
     originedit.value = false
+}
+
+const setPrototypeStartPoint = () => {
+    console.log('change');
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = isPrototype.value[0];
+    const { name, desc } = prototypestart.value!
+    if (!shape) return;
+    e.setProtoXX(shape as ShapeView, new PrototypeStartingPoint(name, desc));
+
+    console.log('change-end');
 }
 
 
@@ -535,18 +563,22 @@ const DomList = computed(() => {
 })
 
 
+const isProtoType=ref<boolean>(false)
+
 // 图层选区变化
 function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     symbol_attribute.value = false;
-
     const selectedShapes = props.context.selection.selectedShapes;
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
-
+        isProtoType.value=false
+        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
+            isProtoType.value=true
+        }
         //暂时获取组件状态
         const symref = props.context.selection.symbolrefview;
         if (!symref) {
@@ -557,13 +589,11 @@ function _selection_change() {
         if (!result) {
             return;
         }
-
         variables.value = result.variables;
-        console.log(variables.value);
 
     }
     shapes.value = [];
-    isPrototype.value = []
+    // isPrototype.value = []
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
@@ -590,6 +620,7 @@ function workspace_watcher(t: number) {
 
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
 function watch_shapes() {
+
     watchedShapes.forEach((v, k) => {
         v.unwatch(update_by_shapes);
         watchedShapes.delete(k);
@@ -611,19 +642,30 @@ function update_by_shapes(...args: any[]) {
     reflush.value++;
 }
 
-function isCheckPrototype() {
-    props.context.selection.selectedShapes.forEach(item => {
-        console.log(item);
-
-    })
-}
-
 function selection_watcher(t: number) {
     if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
     selection_change();
     watch_shapes();
+    updateData()
+}
+
+function updateData() {
+    const selecteds = props.context.selection.selectedShapes;
+    if (selecteds.length < 1) return;
+    if (selecteds.length === 1) {
+        const shape = selecteds[0]
+        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
+            if ((shape as ArtboradView).prototypeStartPoint) {
+                const { name, desc } = (shape as ArtboradView).prototypeStartPoint;
+                prototypestart.value.name = name
+                prototypestart.value.desc = desc
+            } else {
+
+            }
+        }
+    }
 }
 
 onMounted(() => {
@@ -632,6 +674,7 @@ onMounted(() => {
     watch_shapes()
     update_by_shapes()
     selection_change();
+    updateData()
 })
 
 onUnmounted(() => {
@@ -720,6 +763,7 @@ onUnmounted(() => {
                 width: 100%;
                 font-size: 12px;
                 line-height: 32px;
+                height: 32px;
                 padding: 0 12px;
                 background-color: #F5F5F5;
                 border-radius: 6px;
