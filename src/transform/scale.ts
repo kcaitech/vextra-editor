@@ -1,18 +1,14 @@
-import {Context} from "@/context";
-import {FrameLike, TransformHandler} from "./handler";
+import { Context } from "@/context";
+import { FrameLike, TransformHandler } from "./handler";
 import {
-    adapt2Shape,
     ColVector3D,
     CtrlElementType,
-    Matrix,
-    Scaler,
-    ScaleUnit,
-    ShapeType,
+    Scaler, ShapeSize,
     ShapeView,
     Transform
 } from "@kcdesign/data";
-import {XY} from "@/context/selection";
-import {boundingBox2Root} from "@/utils/common";
+import { XY } from "@/context/selection";
+import { boundingBox2Root } from "@/utils/common";
 
 type Box = {
     origin: XY;
@@ -36,11 +32,9 @@ export class ScaleHandler extends TransformHandler {
     readonly ctrlElementType: CtrlElementType;
 
     private livingPoint: XY;
-    private relativeFlip: { fh: boolean, fv: boolean } = {fh: false, fv: false};
-    private fixedRatioWhileScaling: boolean = false;
 
     // base frame
-    private originSelectionBox: FrameLike = {x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0};
+    private originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     private baseFrames: BaseFrames = new Map();
 
     // align
@@ -52,16 +46,9 @@ export class ScaleHandler extends TransformHandler {
     // cache
     private __baseFramesCache: BaseFrames = new Map();
 
-    // extra params for single action
-    private tMatrix: Matrix = new Matrix();
-    private parent2root: Matrix = new Matrix();
-    private toParent: Matrix = new Matrix();
-    private toRoot: Matrix = new Matrix();
-    private rotation: number = 0;
-
     selectionTransform: Transform = new Transform();  // 选区的Transform
     selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
-    selectionSize = {width: 0, height: 0}; // 选区的size
+    selectionSize = { width: 0, height: 0 }; // 选区的size
     transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
     shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
     shapeSizeList: { width: number, height: number }[] = []; // shape的size列表
@@ -149,10 +136,6 @@ export class ScaleHandler extends TransformHandler {
                 continue;
             }
 
-            if (shape.frameType > 1 && shape.rotation) {
-                this.fixedRatioWhileScaling = true;
-            }
-
             const f = boundingBox2Root(shape, matrixParent2rootCache);
 
             if (f.boxX < left) {
@@ -186,41 +169,8 @@ export class ScaleHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        const shape = this.shapes[0];
-        const f = shape.frame;
-
-        const __m = new Matrix();
-        const cx = f.width / 2;
-        const cy = f.height / 2;
-
-        __m.trans(-cx, -cy);
-        if (shape.rotation) {
-            __m.rotate((shape.rotation || 0) / 180 * Math.PI);
-        }
-        // todo flip
-        // if (shape.isFlippedHorizontal) {
-        //     __m.flipHoriz();
-        // }
-        // if (shape.isFlippedVertical) {
-        //     __m.flipVert();
-        // }
-        __m.trans(cx, cy);
-        __m.trans(f.x, f.y);
-        __m.multiAtLeft(shape.parent!.matrix2Root());
-        this.tMatrix = new Matrix(__m.inverse);
-
-        this.toParent = shape.matrix2Parent();
-        this.parent2root = shape.parent!.matrix2Root();
-
-        this.toRoot = new Matrix(this.toParent);
-        this.toRoot.multiAtLeft(this.parent2root);
-
-        this.rotation = shape.rotation || 0;
-
-        this.fixedRatioWhileScaling = false;
-
         this.shapeSizeList = this.shapes.map(shape => {
-            return {width: shape.size.width, height: shape.size.height}
+            return { width: shape.size.width, height: shape.size.height }
         });
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
@@ -245,13 +195,6 @@ export class ScaleHandler extends TransformHandler {
             .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
             .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
         ) : [new Transform()];
-    }
-
-    /**
-     * @description 锁定宽高比例
-     */
-    private isFixedRatio() {
-        return this.fixedRatioWhileScaling || this.shiftStatus;
     }
 
     private livingPointAlignByAssist() {
@@ -352,13 +295,13 @@ export class ScaleHandler extends TransformHandler {
         const y1 = this.originSelectionBox.y;
         const y2 = this.originSelectionBox.bottom;
 
-        const assist = {...this.livingPoint};
+        const assist = { ...this.livingPoint };
         if (this.alignPixel) {
             assist.x = Math.round(assist.x);
             assist.y = Math.round(assist.y);
         }
 
-        const target = this.context.assist.alignX(assist, [{x, y: y1}, {x, y: y2}]);
+        const target = this.context.assist.alignX(assist, [{ x, y: y1 }, { x, y: y2 }]);
         if (!target) {
             return;
         }
@@ -371,13 +314,13 @@ export class ScaleHandler extends TransformHandler {
         const x1 = this.originSelectionBox.x;
         const x2 = this.originSelectionBox.right;
 
-        const assist = {...this.livingPoint};
+        const assist = { ...this.livingPoint };
         if (this.alignPixel) {
             assist.x = Math.round(assist.x);
             assist.y = Math.round(assist.y);
         }
 
-        const assistResult = this.context.assist.alignY(assist, [{x: x1, y}, {x: x2, y}]);
+        const assistResult = this.context.assist.alignY(assist, [{ x: x1, y }, { x: x2, y }]);
         if (!assistResult) {
             return;
         }
@@ -386,7 +329,7 @@ export class ScaleHandler extends TransformHandler {
     }
 
     private fixToAlignWhileModifyPoint() {
-        let assist = {...this.livingPoint};
+        let assist = { ...this.livingPoint };
         if (this.alignPixel) {
             assist.x = Math.round(assist.x);
             assist.y = Math.round(assist.y);
@@ -407,7 +350,7 @@ export class ScaleHandler extends TransformHandler {
         const cursorPointFromRoot = ColVector3D.FromXY(this.livingPoint.x, this.livingPoint.y);
         const cursorPointFromSelection = ColVector3D.FromMatrix(this.selectionTransformInverse.transform(cursorPointFromRoot));
 
-        const {width: selectionWidth, height: selectionHeight} = this.selectionSize;
+        const { width: selectionWidth, height: selectionHeight } = this.selectionSize;
 
         // 选区的左上角和右下角（在原选区坐标系下）
         const ltPointForSelection = ColVector3D.FromXY(0, 0);
@@ -502,12 +445,6 @@ export class ScaleHandler extends TransformHandler {
                     ltPointForSelection.x += dx;
                     rbPointForSelection.x -= dx;
                 }
-                // else if (CET === CtrlElementType.RectRB) {
-                //     const currentWidth = Math.abs(ltPointForSelection.x - rbPointForSelection.x);
-                //     const targetWidth = Math.abs(rbPointForSelection.y - ltPointForSelection.y) * ratio;
-                //
-                //     rbPointForSelection.x += targetWidth - currentWidth;
-                // }
             }
         }
 
@@ -527,437 +464,179 @@ export class ScaleHandler extends TransformHandler {
             1,
         ]));
 
-        // shape最终的Transform
-        const transformList = this.shapeTransformListInSelection.map((transform, i) => transform.clone() // 在选区坐标系下
-            .addTransform(transformForSelection) // 在Root坐标系下
-            .addTransform(this.transformCache.get(this.shapes[i].parent!)!.getInverse()) // 在Parent坐标系下
-        );
+        const units: { shape: ShapeView, size: ShapeSize, transform2: Transform }[] = [];
 
-        // 分离缩放系数到shape宽高
-        const shapeSizeList: {
-            width: number,
-            height: number,
-        }[] = [];
-        for (let i = 0; i < transformList.length; i++) {
-            const transform = transformList[i];
-            const scale = transform.decomposeScale();
-            shapeSizeList.push({
-                width: this.shapeSizeList[i].width * Math.abs(scale.x),
-                height: this.shapeSizeList[i].height * Math.abs(scale.y),
-            });
-            transform.clearScaleSize();
+        const shapes = this.shapes;
+        const cache = this.transformCache;
+        const sizes = this.shapeSizeList;
+
+        this.shapeTransformListInSelection.forEach((transform, i) => {
+            const shape = shapes[i];
+
+            const t = transform.clone()
+                .addTransform(transformForSelection)
+                .addTransform(cache.get(shape.parent!)!.getInverse());
+
+            const oSize = sizes[i];
+
+            const scale = t.decomposeScale();
+            const size = {
+                width: oSize.width * Math.abs(scale.x),
+                height: oSize.height * Math.abs(scale.y)
+            } as ShapeSize;
+            t.clearScaleSize();
+
+            units.push({
+                shape,
+                size,
+                transform2: t
+            })
+        });
+
+        if (this.alignPixel) {
+            for (const unit of units) {
+                const { shape, size, transform2 } = unit;
+
+                const decompose = transform2.clone().decomposeTranslate();
+                const intX = Math.round(decompose.x);
+                const intY = Math.round(decompose.y);
+                const offsetX = intX - decompose.x;
+                const offsetY = intY - decompose.y;
+
+                if (offsetX || offsetY) {
+                    transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
+                }
+            }
         }
 
         // 更新shape
-        (this.asyncApiCaller as Scaler).execute(transformList.map((transform, i) => {
-            return {
-                shape: this.shapes[i],
-                size: shapeSizeList[i],
-                transform2: transform,
-            }
-        }));
+        (this.asyncApiCaller as Scaler).execute(units);
 
         this.updateCtrlView(1);
     }
 
-    private __modifyOffset(targetXY: XY, transformedXY: XY, baseX: number, baseY: number) {
-        const alignPixel = this.alignPixel;
-        targetXY.x = alignPixel ? Math.round(targetXY.x) : targetXY.x;
-        targetXY.y = alignPixel ? Math.round(targetXY.y) : targetXY.y;
 
-        transformedXY.x = baseX + (targetXY.x - transformedXY.x);
-        transformedXY.y = baseY + (targetXY.y - transformedXY.y);
-    }
-
-    // private __execute4singleLeft() {
-    //     const shape = this.shapes[0];
+    // private __modifyTransform(shape: ShapeView, baseXY: XY, width: number, height: number) {
+    //     const minimum_WH = 0.01;
     //
-    //     const base = this.baseFrames.get(shape.id);
-    //     if (!base) {
-    //         console.error('!base');
-    //         return;
-    //     }
+    //     let needFlipH = false;
+    //     let needFlipV = false;
     //
-    //     let __livingPoint = {...this.livingPoint};
-    //
-    //     const {baseX, baseY, baseWidth, baseHeight} = base;
-    //
-    //     const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
-    //     let w = baseWidth - pointOnShape.x;
-    //     let h = baseHeight;
-    //     if (this.isFixedRatio()) {
-    //         const scale = Math.abs(w / baseWidth); // 等比缩放不会使另一个轴上的数变成复数
-    //         h = baseHeight * scale;
-    //         pointOnShape.y = -baseHeight * (scale - 1) / 2;
+    //     if (width < 0) {
+    //         if (!this.relativeFlip.fh) {
+    //             needFlipH = true;
+    //             this.relativeFlip.fh = true;
+    //         }
+    //         width = -width;
     //     } else {
-    //         pointOnShape.y = 0;
+    //         if (this.relativeFlip.fh) {
+    //             this.relativeFlip.fh = false;
+    //             needFlipH = true;
+    //         }
     //     }
     //
-    //     let target = this.toRoot.computeCoord3(pointOnShape);
+    //     if (height < 0) {
+    //         if (!this.relativeFlip.fv) {
+    //             needFlipV = true;
+    //             this.relativeFlip.fv = true;
+    //         }
+    //         height = -height;
+    //     } else {
+    //         if (this.relativeFlip.fv) {
+    //             needFlipV = true;
+    //             this.relativeFlip.fv = false;
+    //         }
+    //     }
+    //     if (this.rotation) {
+    //         if (needFlipH) {
+    //             this.rotation = 360 - this.rotation;
+    //         }
+    //         if (needFlipV) {
+    //             this.rotation = 360 - this.rotation;
+    //         }
+    //     }
     //
-    //     const {
-    //         targetWidth,
-    //         targetHeight,
+    //     if (width < minimum_WH) {
+    //         width = minimum_WH;
+    //     }
+    //
+    //     if (height < minimum_WH) {
+    //         height = minimum_WH;
+    //     }
+    //
+    //     const alignPixel = this.alignPixel && !this.rotation; // 暂定有角度的时候就不进行对齐像素
+    //
+    //     let isWidthFromZero = false;
+    //     let isHeightFromZero = false;
+    //     if (alignPixel) {
+    //         width = Math.round(width);
+    //         height = Math.round(height);
+    //         if (width === 0) {
+    //             width = 1;
+    //             isWidthFromZero = true;
+    //         }
+    //         if (height === 0) {
+    //             height = 1;
+    //             isHeightFromZero = true;
+    //         }
+    //     }
+    //     let targetRotation = this.rotation;
+    //     const __shape = adapt2Shape(shape); // 可优化
+    //     // todo flip
+    //     // const targetFlipH = needFlipH ? !__shape.isFlippedHorizontal : !!__shape.isFlippedHorizontal;
+    //     // const targetFlipV = needFlipV ? !__shape.isFlippedVertical : !!__shape.isFlippedVertical;
+    //     const targetFlipH = false;
+    //     const targetFlipV = false;
+    //
+    //     const cx1 = width / 2;
+    //     const cy1 = height / 2;
+    //
+    //     const m1 = new Matrix();
+    //
+    //     m1.trans(-cx1, -cy1);
+    //     if (targetRotation) {
+    //         m1.rotate(targetRotation / 180 * Math.PI);
+    //     }
+    //     if (targetFlipH) {
+    //         m1.flipHoriz();
+    //     }
+    //     if (targetFlipV) {
+    //         m1.flipVert();
+    //     }
+    //     m1.trans(cx1, cy1);
+    //     m1.trans(baseXY.x, baseXY.y);
+    //
+    //     return {
+    //         targetWidth: width,
+    //         targetHeight: height,
     //         needFlipH,
     //         needFlipV,
     //         targetRotation,
-    //         transformedMatrix,
+    //         transformedMatrix: m1,
     //         isWidthFromZero,
-    //         targetFlipH
-    //     } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
-    //     const targetXY = this.parent2root.inverseCoord(target);
-    //
-    //     if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
-    //         const floatX = shape.parent.frame.x % 1;
-    //         const floatY = shape.parent.frame.y % 1;
-    //
-    //         if (floatX || floatY) {
-    //             targetXY.x += floatX;
-    //             targetXY.y += floatY;
-    //             transformedMatrix.trans(floatX, floatY);
-    //         }
-    //     }
-    //     const _targetXY = transformedMatrix.computeCoord2(0, 0);
-    //
-    //     if (isWidthFromZero) {
-    //         if (targetFlipH) {
-    //             _targetXY.x--;
-    //         } else {
-    //             _targetXY.x++;
-    //         }
-    //     }
-    //
-    //     this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
-    //
-    //     (this.asyncApiCaller as Scaler).execute([{
-    //         shape,
-    //         targetXY: _targetXY,
-    //         baseWidth,
-    //         baseHeight,
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation,
-    //     }]);
-    // }
-    //
-    // private __execute4singleRight() {
-    //     const shape = this.shapes[0];
-    //
-    //     const base = this.baseFrames.get(shape.id);
-    //     if (!base) {
-    //         console.error('!base');
-    //         return;
-    //     }
-    //
-    //     let __livingPoint = {...this.livingPoint};
-    //
-    //     const {baseX, baseY, baseWidth, baseHeight} = base;
-    //
-    //     const pointOnShape = this.tMatrix.computeCoord3(__livingPoint);
-    //
-    //     let w = pointOnShape.x;
-    //     let h = baseHeight;
-    //
-    //     if (this.isFixedRatio()) {
-    //         const scale = Math.abs(w / baseWidth);
-    //         h = baseHeight * scale;
-    //         pointOnShape.y = -baseHeight * (scale - 1) / 2;
-    //     } else {
-    //         pointOnShape.y = 0;
-    //     }
-    //
-    //     const {
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation,
-    //         transformedMatrix
-    //     } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
-    //     const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(0, pointOnShape.y));
-    //     if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
-    //         const floatX = shape.parent.frame.x % 1;
-    //         const floatY = shape.parent.frame.y % 1;
-    //
-    //         if (floatX || floatY) {
-    //             targetXY.x += floatX;
-    //             targetXY.y += floatY;
-    //             transformedMatrix.trans(floatX, floatY);
-    //         }
-    //     }
-    //     const _targetXY = transformedMatrix.computeCoord2(0, 0);
-    //
-    //     this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
-    //
-    //     (this.asyncApiCaller as Scaler).execute([{
-    //         shape,
-    //         targetXY: _targetXY,
-    //         baseWidth,
-    //         baseHeight,
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation,
-    //     }]);
-    // }
-    //
-    // private __execute4singleTop() {
-    //     const shape = this.shapes[0];
-    //
-    //     const base = this.baseFrames.get(shape.id);
-    //     if (!base) {
-    //         console.error('!base');
-    //         return;
-    //     }
-    //
-    //     const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
-    //
-    //     const {baseX, baseY, baseWidth, baseHeight} = base;
-    //
-    //     let w = baseWidth;
-    //     let h = baseHeight - pointOnShape.y;
-    //
-    //     if (this.isFixedRatio()) {
-    //         const scale = Math.abs(h / baseHeight);
-    //         w = baseWidth * scale;
-    //         pointOnShape.x = -baseWidth * (scale - 1) / 2;
-    //     } else {
-    //         pointOnShape.x = 0;
-    //     }
-    //
-    //     const {
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation,
-    //         transformedMatrix,
     //         isHeightFromZero,
+    //         targetFlipH,
     //         targetFlipV
-    //     } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
-    //
-    //     const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord3(pointOnShape));
-    //
-    //     if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
-    //         const floatX = shape.parent.frame.x % 1;
-    //         const floatY = shape.parent.frame.y % 1;
-    //
-    //         if (floatX || floatY) {
-    //             targetXY.x += floatX;
-    //             targetXY.y += floatY;
-    //             transformedMatrix.trans(floatX, floatY);
-    //         }
-    //     }
-    //     const _targetXY = transformedMatrix.computeCoord2(0, 0);
-    //
-    //     if (isHeightFromZero) {
-    //         if (targetFlipV) {
-    //             _targetXY.y--;
-    //         } else {
-    //             _targetXY.y++;
-    //         }
-    //     }
-    //
-    //     this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
-    //
-    //     (this.asyncApiCaller as Scaler).execute([{
-    //         shape,
-    //         targetXY: _targetXY,
-    //         baseWidth,
-    //         baseHeight,
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation
-    //     }]);
-    // }
-    //
-    // private __execute4singleBottom() {
-    //     const shape = this.shapes[0];
-    //
-    //     const base = this.baseFrames.get(shape.id);
-    //     if (!base) {
-    //         console.error('!base');
-    //         return;
-    //     }
-    //
-    //     const pointOnShape = this.tMatrix.computeCoord3(this.livingPoint);
-    //
-    //     const {baseX, baseY, baseWidth, baseHeight} = base;
-    //
-    //     let w = baseWidth;
-    //     let h = pointOnShape.y;
-    //
-    //     if (this.isFixedRatio()) {
-    //         const scale = Math.abs(h / baseHeight);
-    //         w = baseWidth * scale;
-    //         pointOnShape.x = -baseWidth * (scale - 1) / 2;
-    //     } else {
-    //         pointOnShape.x = 0;
-    //     }
-    //
-    //     const {
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation,
-    //         transformedMatrix
-    //     } = this.__modifyTransform(shape, {x: baseX, y: baseY}, w, h);
-    //     const targetXY = this.parent2root.inverseCoord(this.toRoot.computeCoord2(pointOnShape.x, 0));
-    //
-    //     if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
-    //         const floatX = shape.parent.frame.x % 1;
-    //         const floatY = shape.parent.frame.y % 1;
-    //
-    //         if (floatX || floatY) {
-    //             targetXY.x += floatX;
-    //             targetXY.y += floatY;
-    //             transformedMatrix.trans(floatX, floatY);
-    //         }
-    //     }
-    //     const _targetXY = transformedMatrix.computeCoord2(0, 0);
-    //
-    //     this.__modifyOffset(targetXY, _targetXY, baseX, baseY);
-    //
-    //     (this.asyncApiCaller as Scaler).execute([{
-    //         shape,
-    //         targetXY: _targetXY,
-    //         baseWidth,
-    //         baseHeight,
-    //         targetWidth,
-    //         targetHeight,
-    //         needFlipH,
-    //         needFlipV,
-    //         targetRotation
-    //     }]);
+    //     };
     // }
 
-    private __modifyTransform(shape: ShapeView, baseXY: XY, width: number, height: number) {
-        const minimum_WH = 0.01;
-
-        let needFlipH = false;
-        let needFlipV = false;
-
-        if (width < 0) {
-            if (!this.relativeFlip.fh) {
-                needFlipH = true;
-                this.relativeFlip.fh = true;
-            }
-            width = -width;
-        } else {
-            if (this.relativeFlip.fh) {
-                this.relativeFlip.fh = false;
-                needFlipH = true;
-            }
-        }
-
-        if (height < 0) {
-            if (!this.relativeFlip.fv) {
-                needFlipV = true;
-                this.relativeFlip.fv = true;
-            }
-            height = -height;
-        } else {
-            if (this.relativeFlip.fv) {
-                needFlipV = true;
-                this.relativeFlip.fv = false;
-            }
-        }
-        if (this.rotation) {
-            if (needFlipH) {
-                this.rotation = 360 - this.rotation;
-            }
-            if (needFlipV) {
-                this.rotation = 360 - this.rotation;
-            }
-        }
-
-        if (width < minimum_WH) {
-            width = minimum_WH;
-        }
-
-        if (height < minimum_WH) {
-            height = minimum_WH;
-        }
-
-        const alignPixel = this.alignPixel && !this.rotation; // 暂定有角度的时候就不进行对齐像素
-
-        let isWidthFromZero = false;
-        let isHeightFromZero = false;
-        if (alignPixel) {
-            width = Math.round(width);
-            height = Math.round(height);
-            if (width === 0) {
-                width = 1;
-                isWidthFromZero = true;
-            }
-            if (height === 0) {
-                height = 1;
-                isHeightFromZero = true;
-            }
-        }
-        let targetRotation = this.rotation;
-        const __shape = adapt2Shape(shape); // 可优化
-        // todo flip
-        // const targetFlipH = needFlipH ? !__shape.isFlippedHorizontal : !!__shape.isFlippedHorizontal;
-        // const targetFlipV = needFlipV ? !__shape.isFlippedVertical : !!__shape.isFlippedVertical;
-        const targetFlipH = false;
-        const targetFlipV = false;
-
-        const cx1 = width / 2;
-        const cy1 = height / 2;
-
-        const m1 = new Matrix();
-
-        m1.trans(-cx1, -cy1);
-        if (targetRotation) {
-            m1.rotate(targetRotation / 180 * Math.PI);
-        }
-        if (targetFlipH) {
-            m1.flipHoriz();
-        }
-        if (targetFlipV) {
-            m1.flipVert();
-        }
-        m1.trans(cx1, cy1);
-        m1.trans(baseXY.x, baseXY.y);
-
-        return {
-            targetWidth: width,
-            targetHeight: height,
-            needFlipH,
-            needFlipV,
-            targetRotation,
-            transformedMatrix: m1,
-            isWidthFromZero,
-            isHeightFromZero,
-            targetFlipH,
-            targetFlipV
-        };
-    }
-
-    private __getTargetXY(shape: ShapeView, target: XY, refer: XY, base: Box) {
-        const alignPixel = this.alignPixel && !this.rotation;
-        if (alignPixel) {
-            target.x = Math.round(target.x);
-            target.y = Math.round(target.y);
-        }
-
-        const dx = target.x - refer.x;
-        const dy = target.y - refer.y;
-
-        // console.log('tx&rx', target.x, refer.x);
-
-        return {
-            x: base.baseX + dx,
-            y: base.baseY + dy
-        };
-    }
+    // private __getTargetXY(shape: ShapeView, target: XY, refer: XY, base: Box) {
+    //     const alignPixel = this.alignPixel && !this.rotation;
+    //     if (alignPixel) {
+    //         target.x = Math.round(target.x);
+    //         target.y = Math.round(target.y);
+    //     }
+    //
+    //     const dx = target.x - refer.x;
+    //     const dy = target.y - refer.y;
+    //
+    //     // console.log('tx&rx', target.x, refer.x);
+    //
+    //     return {
+    //         x: base.baseX + dx,
+    //         y: base.baseY + dy
+    //     };
+    // }
 
     // private __execute4singleLT() {
     //     const shape = this.shapes[0];
@@ -1358,113 +1037,113 @@ export class ScaleHandler extends TransformHandler {
     //     }
     // }
 
-    private generateTransformUnits(
-        referencePoint1: XY,
-        referencePoint2: XY,
-        scaleX: number,
-        scaleY: number,
-        needFlipH: boolean,
-        needFlipV: boolean
-    ) {
-        const matrixCache: Map<string, Matrix> = new Map();
-        const transformUnits: ScaleUnit[] = [];
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
-
-            const baseFrame = this.baseFrames.get(shape.id);
-            if (!baseFrame) {
-                continue;
-            }
-
-            const origin = baseFrame.origin;
-
-            const disX = origin.x - referencePoint1.x;
-            const disY = origin.y - referencePoint1.y;
-
-            let targetXY = {
-                x: referencePoint2.x + scaleX * disX,
-                y: referencePoint2.y + scaleY * disY
-            };
-
-            const parent = shape.parent!;
-
-            let m = matrixCache.get(parent.id)!;
-            if (!m) {
-                m = new Matrix(parent.matrix2Root().inverse);
-                matrixCache.set(parent.id, m);
-            }
-
-            let width = Math.abs(baseFrame.baseWidth * scaleX);
-            let height = Math.abs(baseFrame.baseHeight * scaleY);
-
-            const alignPixel = this.alignPixel;
-
-            width = Math.max(alignPixel ? Math.round(width) : width, 1);
-            height = Math.max(alignPixel ? Math.round(height) : height, 1);
-
-            if (needFlipH) {
-                baseFrame.baseRotation = 360 - baseFrame.baseRotation;
-            }
-            if (needFlipV) {
-                baseFrame.baseRotation = 360 - baseFrame.baseRotation;
-            }
-
-            const __m = new Matrix();
-            const cx = width / 2;
-            const cy = height / 2;
-            __m.trans(-cx, -cy);
-            if (baseFrame.baseRotation) {
-                __m.rotate(baseFrame.baseRotation / 180 * Math.PI);
-            }
-            // todo flip
-            // const targetFlipH = needFlipH ? !shape.isFlippedHorizontal : shape.isFlippedHorizontal;
-            // const targetFlipV = needFlipV ? !shape.isFlippedVertical : shape.isFlippedVertical;
-            const targetFlipH = false;
-            const targetFlipV = false;
-            if (targetFlipH) {
-                __m.flipHoriz();
-            }
-            if (targetFlipV) {
-                __m.flipVert();
-            }
-            __m.trans(cx, cy);
-            __m.trans(baseFrame.baseX, baseFrame.baseY);
-
-            if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
-                const floatX = shape.parent.frame.x % 1;
-                const floatY = shape.parent.frame.y % 1;
-
-                if (floatX || floatY) {
-                    targetXY.x += floatX;
-                    targetXY.y += floatY;
-                    __m.trans(floatX, floatY);
-                }
-            }
-
-            const _targetXY = __m.computeCoord2(0, 0);
-            targetXY = m.computeCoord3(targetXY);
-
-            targetXY.x = alignPixel ? Math.round(targetXY.x) : targetXY.x;
-            targetXY.y = alignPixel ? Math.round(targetXY.y) : targetXY.y;
-
-            _targetXY.x = baseFrame.baseX + (targetXY.x - _targetXY.x);
-            _targetXY.y = baseFrame.baseY + (targetXY.y - _targetXY.y);
-
-            transformUnits.push({
-                shape,
-                targetXY: _targetXY,
-                targetWidth: width,
-                targetHeight: height,
-                baseWidth: baseFrame.baseWidth,
-                baseHeight: baseFrame.baseHeight,
-                needFlipH: needFlipH,
-                needFlipV: needFlipV,
-                targetRotation: baseFrame.baseRotation
-            });
-        }
-
-        return transformUnits;
-    }
+    // private generateTransformUnits(
+    //     referencePoint1: XY,
+    //     referencePoint2: XY,
+    //     scaleX: number,
+    //     scaleY: number,
+    //     needFlipH: boolean,
+    //     needFlipV: boolean
+    // ) {
+    //     const matrixCache: Map<string, Matrix> = new Map();
+    //     const transformUnits: ScaleUnit[] = [];
+    //     for (let i = 0; i < this.shapes.length; i++) {
+    //         const shape = this.shapes[i];
+    //
+    //         const baseFrame = this.baseFrames.get(shape.id);
+    //         if (!baseFrame) {
+    //             continue;
+    //         }
+    //
+    //         const origin = baseFrame.origin;
+    //
+    //         const disX = origin.x - referencePoint1.x;
+    //         const disY = origin.y - referencePoint1.y;
+    //
+    //         let targetXY = {
+    //             x: referencePoint2.x + scaleX * disX,
+    //             y: referencePoint2.y + scaleY * disY
+    //         };
+    //
+    //         const parent = shape.parent!;
+    //
+    //         let m = matrixCache.get(parent.id)!;
+    //         if (!m) {
+    //             m = new Matrix(parent.matrix2Root().inverse);
+    //             matrixCache.set(parent.id, m);
+    //         }
+    //
+    //         let width = Math.abs(baseFrame.baseWidth * scaleX);
+    //         let height = Math.abs(baseFrame.baseHeight * scaleY);
+    //
+    //         const alignPixel = this.alignPixel;
+    //
+    //         width = Math.max(alignPixel ? Math.round(width) : width, 1);
+    //         height = Math.max(alignPixel ? Math.round(height) : height, 1);
+    //
+    //         if (needFlipH) {
+    //             baseFrame.baseRotation = 360 - baseFrame.baseRotation;
+    //         }
+    //         if (needFlipV) {
+    //             baseFrame.baseRotation = 360 - baseFrame.baseRotation;
+    //         }
+    //
+    //         const __m = new Matrix();
+    //         const cx = width / 2;
+    //         const cy = height / 2;
+    //         __m.trans(-cx, -cy);
+    //         if (baseFrame.baseRotation) {
+    //             __m.rotate(baseFrame.baseRotation / 180 * Math.PI);
+    //         }
+    //         // todo flip
+    //         // const targetFlipH = needFlipH ? !shape.isFlippedHorizontal : shape.isFlippedHorizontal;
+    //         // const targetFlipV = needFlipV ? !shape.isFlippedVertical : shape.isFlippedVertical;
+    //         const targetFlipH = false;
+    //         const targetFlipV = false;
+    //         if (targetFlipH) {
+    //             __m.flipHoriz();
+    //         }
+    //         if (targetFlipV) {
+    //             __m.flipVert();
+    //         }
+    //         __m.trans(cx, cy);
+    //         __m.trans(baseFrame.baseX, baseFrame.baseY);
+    //
+    //         if (this.alignPixel && shape.parent && shape.parent.type === ShapeType.Page) {
+    //             const floatX = shape.parent.frame.x % 1;
+    //             const floatY = shape.parent.frame.y % 1;
+    //
+    //             if (floatX || floatY) {
+    //                 targetXY.x += floatX;
+    //                 targetXY.y += floatY;
+    //                 __m.trans(floatX, floatY);
+    //             }
+    //         }
+    //
+    //         const _targetXY = __m.computeCoord2(0, 0);
+    //         targetXY = m.computeCoord3(targetXY);
+    //
+    //         targetXY.x = alignPixel ? Math.round(targetXY.x) : targetXY.x;
+    //         targetXY.y = alignPixel ? Math.round(targetXY.y) : targetXY.y;
+    //
+    //         _targetXY.x = baseFrame.baseX + (targetXY.x - _targetXY.x);
+    //         _targetXY.y = baseFrame.baseY + (targetXY.y - _targetXY.y);
+    //
+    //         transformUnits.push({
+    //             shape,
+    //             targetXY: _targetXY,
+    //             targetWidth: width,
+    //             targetHeight: height,
+    //             baseWidth: baseFrame.baseWidth,
+    //             baseHeight: baseFrame.baseHeight,
+    //             needFlipH: needFlipH,
+    //             needFlipV: needFlipV,
+    //             targetRotation: baseFrame.baseRotation
+    //         });
+    //     }
+    //
+    //     return transformUnits;
+    // }
 
     // private __executeSide4Left() {
     //     const box = this.originSelectionBox;
