@@ -738,7 +738,7 @@ onMounted(() => {
     // const project_id = localStorage.getItem('project_id') || '';
     // upload(project_id);
     localStorage.setItem('project_id', '');
-    switchPage(props.context.data.pagesList[0]?.id);
+    // switchPage(props.context.data.pagesList[0]?.id);
 
     initpal().then(() => {
         inited.value = true;
