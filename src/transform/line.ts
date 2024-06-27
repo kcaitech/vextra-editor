@@ -199,7 +199,7 @@ export class LineHandler extends TransformHandler {
             return;
         }
         this.__execute();
-        this.updateCtrlView();
+        this.updateCtrlView(1);
     }
 
     private __execute() {
@@ -215,11 +215,7 @@ export class LineHandler extends TransformHandler {
             this.execute4lineEndRotate();
         }
 
-        this.updateCtrlView();
-
-        this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.RULE_RENDER);
-        });
+        this.updateCtrlView(1);
     }
 
     private execute4lineStart() {
