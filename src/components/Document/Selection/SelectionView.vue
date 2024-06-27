@@ -250,7 +250,7 @@ function createController2() {
 
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
-        const s = shapes[0], m = s.matrix2Root(), f = s.data.size;
+        const s = shapes[0], m = s.matrix2Root(), f = s.size;
         const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         m.multiAtLeft(matrix);
         for (let i = 0; i < 4; i++) {
@@ -265,7 +265,7 @@ function modify_controller_frame(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
         if (s.type === ShapeType.Contact) continue;
-        const m = s.matrix2Root(), f = s.data.size;
+        const m = s.matrix2Root(), f = s.size;
         m.multiAtLeft(matrix);
         const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
             x: 0,
