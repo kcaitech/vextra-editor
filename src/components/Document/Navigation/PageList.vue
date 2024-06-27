@@ -199,7 +199,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     const menu = props.context.menu
     menu.menuMount();
     pageMenuPosition.value.x = e.clientX
-    pageMenuPosition.value.y = e.clientY - 75
+    pageMenuPosition.value.y = e.clientY - 85
     pageMenuItems = [
         { name: 'copy_link', id: id, disable: false },
         { name: 'duplicate', id: id, disable: false },
@@ -217,6 +217,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
+    document.addEventListener('mousedown', handleClickOutside);
     chartMenuMount(e);
 }
 
@@ -238,6 +239,14 @@ const chartMenuMount = (e: MouseEvent) => {
 
 function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') pageMenuUnmount();
+}
+
+function handleClickOutside(event: MouseEvent) {
+    event.stopPropagation()
+    if (event.target instanceof Element && !event.target.closest('.context_menu')) {
+        pageMenu.value = false;
+        document.removeEventListener('mousedown', handleClickOutside);
+    }
 }
 
 function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
@@ -263,9 +272,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         })
     } else if (item === 'copy_link') {
         e?.stopPropagation();
-        // const docInfo = props.context.comment.isDocumentInfo?.document;
-        // const page_url = location.origin + `/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
-        // copyLink(page_url, t);
+        const page_url = location.href + ' ' + `邀请您进入《${document.title}》，点击链接开始协作`
+        copyLink(page_url, t);
     } else if (item === 'delete') {
         e?.stopPropagation();
         // props.context.comment.toggleCommentPage()
@@ -366,13 +374,12 @@ onUnmounted(() => {
                 :allowDrag="allow_to_drag()" location="pagelist" @rename="rename" @onMouseDown="mousedown"
                 @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
-                :context="props.context" @close="pageMenuUnmount">
+            <div class="context_menu" v-if="pageMenu" ref="contextMenuEl" :style="{ top: pageMenuPosition.y + 'px', left: pageMenuPosition.x + 'px' }">
                 <div :class="item.disable ? 'items-wrap-disable' : 'items-wrap'" v-for="(item, index) in pageMenuItems"
                     :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
                     <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
-            </ContextMenu>
+            </div>
         </div>
     </div>
 </template>
@@ -435,6 +442,22 @@ onUnmounted(() => {
 
         >.container {
             height: 100%;
+        }
+
+        .context_menu {
+            position: absolute;
+            z-index: 99;
+            color: #262626;
+            width: 196px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+            background-color: #FFFFFF;
+            border: 1px solid #EBEBEB;
+            padding: 6px 0;
+
+            cursor: auto !important;
         }
     }
 

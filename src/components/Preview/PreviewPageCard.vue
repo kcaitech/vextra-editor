@@ -43,14 +43,15 @@ function assemble() {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
-
+    const size = new ShapeSize(100, 100);
+    const trans = new TransformRaw();
     const page = new Page(
         new BasicArray<number>(),
         'assemble-page',
         'assemble-page',
         ShapeType.Page,
-        new TransformRaw(),
-        new ShapeSize(100, 100),
+        trans,
+        size,
         style,
         new BasicArray<Shape>(...shapes)
     );
@@ -100,7 +101,7 @@ onUnmounted(disassemble);
 </script>
 
 <template>
-    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
+    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
 </template>
 
 <style scoped lang="scss">

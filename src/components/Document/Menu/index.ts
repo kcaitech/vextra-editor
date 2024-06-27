@@ -113,7 +113,6 @@ export function getArea(context: Context, e: MouseEvent) {
 
     if (shape) {
         const type = shape.type;
-
         if (type === ShapeType.Group || type === ShapeType.BoolShape) {
             selection.selectShape(shape);
             return MountedAreaType.Group;

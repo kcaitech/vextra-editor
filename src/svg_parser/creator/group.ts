@@ -69,8 +69,8 @@ export class GroupCreator extends BaseCreator {
         // 根据子元素包围盒更新groupShape的宽高
         this.attributes.width = childesShapeBox.w
         this.attributes.height = childesShapeBox.h
-        groupShape.frame.width = childesShapeBox.w
-        groupShape.frame.height = childesShapeBox.h
+        groupShape.size.width = childesShapeBox.w
+        groupShape.size.height = childesShapeBox.h
 
         // 将子元素包围盒偏移至groupShape的左上角
         for (const child of children) {

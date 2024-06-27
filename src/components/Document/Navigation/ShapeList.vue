@@ -36,6 +36,7 @@ import { v4 } from "uuid";
 import { menu_locate2 } from "@/utils/common";
 import { one_of_is_symbolref } from "@/utils/symbol";
 import { locateShape, LocateType } from "@/transform/locate";
+import { MenuItemType } from "../Menu";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -157,7 +158,7 @@ function _notifySourceChange(t?: number | string, shape?: ShapeView) {
                 }
             }
         })
-        if(t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
+        if (t === 'changed') props.context.navi.notify(Navi.COMP_LIST_CHANGED);
     } else if (t === Selection.EXTEND) {
         if (shape) {
             toggleExpand(shape.id)
@@ -223,7 +224,7 @@ const modify_visible_status = (shape: ShapeView) => {
 
 function shapeScrollToContentView(shape: ShapeView) {
     // scroll_to_view(props.context, shape);
-    locateShape(props.context, shape, LocateType.Center);
+    locateShape(props.context, shape);
 }
 
 function selectshape_right(shape: ShapeView, shiftKey: boolean) {
@@ -238,7 +239,10 @@ function selectshape_right(shape: ShapeView, shiftKey: boolean) {
         selection.selectShape(shape);
     }
 }
-
+/**
+ * @description 打开右键菜单
+ */
+const contextMenuItems = ref<Set<MenuItemType>>(new Set());
 const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
     const menu = props.context.menu;
     menu.menuMount();
@@ -249,26 +253,28 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
-        chartMenuItems.value = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container', 'component', 'forward', 'back', 'top', 'bottom'];
+        contextMenuItems.value.clear();
+        contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Lock, MenuItemType.Copy, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Component, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom]);
         if (selected.length === 1) {
             if (selected[0].type === ShapeType.SymbolRef) {
-                chartMenuItems.value.push('edit');
+                contextMenuItems.value.add(MenuItemType.EditComps);
             }
             if (selected[0].type === ShapeType.Symbol || selected[0].type === ShapeType.SymbolUnion) {
-                const index = chartMenuItems.value.findIndex((item) => item === 'component');
-                if (index > -1) chartMenuItems.value.splice(index, 1);
+                const index = contextMenuItems.value.has(MenuItemType.Component);
+                if (index) contextMenuItems.value.delete(MenuItemType.Component);
             }
         }
         const types = selection_types(selected);
-        if (types & 1) chartMenuItems.value.push('un_group');
-        if (types & 2) chartMenuItems.value.push('dissolution');
-        if ((types & 4) && one_of_is_symbolref(selected)) chartMenuItems.value.push('instance');
+        if (types & 1) contextMenuItems.value.add(MenuItemType.UnGroup);
+        if (types & 2) contextMenuItems.value.add(MenuItemType.Dissolution);
+        if ((types & 4) && one_of_is_symbolref(selected)) contextMenuItems.value.add(MenuItemType.Instance);
         if (types & 8) {
-            const index = chartMenuItems.value.findIndex((item) => item === 'component');
-            if (index > -1) chartMenuItems.value.splice(index, 1);
+            const index = contextMenuItems.value.has(MenuItemType.Component);
+            if (index) contextMenuItems.value.delete(MenuItemType.Component);
         }
         if (props.context.readonly || props.context.tool.isLable) {
-            chartMenuItems.value = ['all', 'copy'];
+            contextMenuItems.value.clear();
+            contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Copy]);
         }
         chartMenuMount(e);
     }
@@ -491,8 +497,9 @@ onUnmounted(() => {
                 <div class="menu-f" @click="show_types">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
+                <input ref="search_el" type="text" id="xpxp" v-model="keywords"
+                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
+                    @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
                     :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
@@ -503,7 +510,8 @@ onUnmounted(() => {
                 </div>
             </div>
             <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
+                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
+                </ShapeTypes>
             </div>
             <div class="blocks" v-if="includes_type.length">
                 <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
@@ -527,15 +535,15 @@ onUnmounted(() => {
                 :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
             </SearchPanel>
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
-                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
-                :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
-                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
-                @set-visible="modify_visible_status" @set-lock="modify_lock_status" @item-mousedown="list_mousedown"
-                orientation="vertical" @drag-start="start_to_drag" @after-drag-2="after_drag">
+                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0"
+                :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
+                @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView"
+                @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
+                @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
+                @after-drag-2="after_drag">
             </ListView>
-            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop>
-                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
-                </PageViewContextMenuItems>
+            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
+                :items="contextMenuItems">
             </ContextMenu>
         </div>
     </div>

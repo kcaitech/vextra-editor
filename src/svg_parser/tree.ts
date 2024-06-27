@@ -136,14 +136,14 @@ export class BaseTreeNode {
                 let currentCreator = creator
                 while (stack1.length > 0) {
                     const parentStack = stack1[stack1.length - 1]
-                    if (parentStack[0] !== currentCreator.parent) throw new Error("treeNode父级元素不匹配");
+                    const parentCreator = parentStack[0]
+                    if (parentCreator !== currentCreator.parent) throw new Error("treeNode父级元素不匹配");
 
                     if (--parentStack[1] > 0) break;
                     stack1.pop()
 
-                    for (const child of parentStack[0].children) handler.afterSiblingDo?.(child);
+                    for (const child of parentCreator.children) handler.afterSiblingDo?.(child);
 
-                    const parentCreator = parentStack[0]
                     handler.afterChildrenDo?.(parentCreator)
 
                     currentCreator = parentCreator

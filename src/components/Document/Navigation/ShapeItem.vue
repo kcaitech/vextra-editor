@@ -99,12 +99,12 @@ function hoverShape(e: MouseEvent) {
 }
 
 function unHoverShape(e: MouseEvent) {
+    is_tool_visible.value = false;
     if (e.buttons !== 0) {
         return;
     }
     e.stopPropagation();
     emits("unhovershape");
-    is_tool_visible.value = false
 }
 
 const setLock = (e: MouseEvent) => {

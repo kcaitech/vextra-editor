@@ -21,6 +21,7 @@ import {
     CornerType,
     BorderSideSetting,
     SideType,
+    ResourceMgr,
 } from "@kcdesign/data"
 import {v4 as uuid} from "uuid"
 import {
@@ -40,8 +41,14 @@ import {
 } from "../utils"
 import {BaseTreeNode, TreeNodeTraverseHandler} from "../tree"
 import {Transform} from "@kcdesign/data"
-import {ColVector3D, ColVector2D} from "@kcdesign/data"
+import {ColVector3D} from "@kcdesign/data"
 import {makeShapeTransform2By1, updateShapeTransform1By2} from "@kcdesign/data"
+
+export type ContextType = {
+    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+    styleMap: { [key: string]: string }
+    [key: string]: any
+}
 
 export class BaseCreator extends BaseTreeNode {
     context: any
@@ -63,7 +70,7 @@ export class BaseCreator extends BaseTreeNode {
     shape: Shape | undefined = undefined
     style?: Style
 
-    constructor(context: any, root: BaseCreator | undefined, parent: BaseCreator | undefined, htmlElement?: {
+    constructor(context: ContextType, root: BaseCreator | undefined, parent: BaseCreator | undefined, htmlElement?: {
         root: Element,
         node: Element,
     }) {
@@ -166,9 +173,30 @@ export class BaseCreator extends BaseTreeNode {
         if (style) {
             this.attributes.style = style
             this.attributes.styleAttributes = getAllStyleFromString(style)
-            if ("transform" in this.attributes.styleAttributes) {
-                this.attributes.styleTransform = this.attributes.styleAttributes.transform
+        }
+        const styleMap = this.context['styleMap']
+        let classSelector = this.localAttributes["class"]
+        if (classSelector) classSelector = '.' + classSelector;
+        let idSelector = this.localAttributes["id"]
+        if (idSelector) idSelector = '#' + idSelector;
+        for (const styleSelector of [classSelector, idSelector]) {
+            if (!styleSelector) continue;
+            const styleContent = styleMap[styleSelector]
+            if (!styleContent) continue;
+            if (style) {
+                if (!this.attributes.style!.endsWith(';')) this.attributes.style += ';';
+                this.attributes.style += styleContent
+                this.attributes.styleAttributes = {
+                    ...this.attributes.styleAttributes,
+                    ...getAllStyleFromString(styleContent),
+                }
+            } else {
+                this.attributes.style = styleContent
+                this.attributes.styleAttributes = getAllStyleFromString(styleContent)
             }
+        }
+        if (this.attributes.styleAttributes && "transform" in this.attributes.styleAttributes) {
+            this.attributes.styleTransform = this.attributes.styleAttributes.transform
         }
 
         // x、y
@@ -378,7 +406,11 @@ export class BaseCreator extends BaseTreeNode {
         }
 
         // stroke
-        const stroke = this.localAttributes["stroke"]
+        let stroke
+        if (this.attributes.styleAttributes && "stroke" in this.attributes.styleAttributes) {
+            stroke = this.attributes.styleAttributes.stroke
+        }
+        if (!stroke) stroke = this.localAttributes["stroke"];
         const dashArray: number[] = this.localAttributes["stroke-dasharray"]?.split(/,|\s+/).filter(arg => arg && arg.trim()).map(item => parseFloat(item)) || [0, 0]
         if (stroke) {
             const strokeColor = parseFillColor(stroke, 1)
@@ -396,7 +428,11 @@ export class BaseCreator extends BaseTreeNode {
             }
         }
         // stroke-width
-        const strokeWidth = this.localAttributes["stroke-width"]
+        let strokeWidth
+        if (this.attributes.styleAttributes && "stroke-width" in this.attributes.styleAttributes) {
+            strokeWidth = this.attributes.styleAttributes['stroke-width']
+        }
+        if (!strokeWidth) strokeWidth = this.localAttributes["stroke-width"];
         if (strokeWidth) {
             this.attributes.strokeWidth = parseFloat(strokeWidth)
             if (this.attributes.stroke) this.attributes.stroke.width = this.attributes.strokeWidth;
@@ -541,7 +577,10 @@ export class BaseCreator extends BaseTreeNode {
 
         // 抵消视图层在前后加的两次平移操作
         if (this.transform.hasRotation()) {
-            const res = this.transform.clone().preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0])).translate(new ColVector3D([-w1 / 2, -h1 / 2, 0])).decompose()
+            const res = this.transform.clone()
+                .preTranslate(new ColVector3D([w1 / 2, h1 / 2, 0]))
+                .translate(new ColVector3D([-w1 / 2, -h1 / 2, 0]))
+                .decompose()
             translate = res.translate
             rotate = res.rotate
             skew = res.skew
@@ -585,7 +624,6 @@ export class BaseCreator extends BaseTreeNode {
         // shape.isFlippedVertical = this.transform.isFlipV
         // shape.isFlippedHorizontal = this.transform.isFlipH
 
-        // todo flip
         const transform2 = makeShapeTransform2By1(shape.transform)
         transform2.setTranslate(new ColVector3D([translate.x, translate.y, 0]))
         transform2.setRotateZ(rotate.z)

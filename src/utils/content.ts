@@ -5,10 +5,12 @@ import {
     adapt2Shape,
     AsyncCreator,
     Color,
+    ColVector3D,
     ContactForm,
     GroupShape,
     GroupShapeView,
     ImageShape,
+    makeShapeTransform2By1,
     Matrix,
     Page,
     PathShapeView,
@@ -494,12 +496,12 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 parseResult.shape.name = file.name.replace(".svg", "");
 
                 if (xy) {
-                    parseResult.shape.frame.x = xy.x - parseResult.shape.frame.width / 2;
-                    parseResult.shape.frame.y = xy.y - parseResult.shape.frame.height / 2;
+                    parseResult.shape.x = xy.x - parseResult.shape.frame.width / 2;
+                    parseResult.shape.y = xy.y - parseResult.shape.frame.height / 2;
                 } else {
                     const __xy = adjust_content_xy(context, parseResult.shape.frame as any, false);
-                    parseResult.shape.frame.x = __xy.x;
-                    parseResult.shape.frame.y = __xy.y;
+                    parseResult.shape.x = __xy.x;
+                    parseResult.shape.y = __xy.y;
                 }
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);
@@ -1427,4 +1429,15 @@ export const lessen = (context: Context) => {
     if (closestIndex === -1) return cur_scale;
     const scale = scale_sizes[closestIndex];
     page_scale(context, scale)
+}
+
+// 图形到页面的坐标
+export const getTransformCol = (context: Context, shape: ShapeView, x: number, y: number) => {
+    const matrix = new Matrix(context.workspace.matrix);
+    const shape_root_m = shape.matrix2Root();
+    let m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix);
+    m.addTransform(clientTransform); //root到视图
+    const { col0 } = m.transform([ColVector3D.FromXY(x, y)]);
+    return { x: col0.x, y: col0.y };
 }
