@@ -299,7 +299,7 @@ const height = computed(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
         @mousemove="move" @mousedown="down" @mouseleave="leave">

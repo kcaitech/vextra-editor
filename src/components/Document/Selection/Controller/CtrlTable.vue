@@ -35,7 +35,6 @@ const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<ClientXY>({ x: 0, y: 0 });
 const editingCell = shallowRef<TableCellView>();
-// const editingCellView = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
     if (editingCell.value) {
@@ -51,6 +50,7 @@ let m_col: number = 0, down_x: number = 0;
 let m_row: number = 0, down_y: number = 0;
 let layout: TableLayout;
 let submatrix_inverse: Matrix;
+
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -78,10 +78,8 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    // if (editingCell.value) {
-    //     updateCellView();
-    // }
 }
+
 const width = computed(() => {
     const w = bounds.right - bounds.left;
     return w < 10 ? 10 : w;
@@ -90,20 +88,23 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
+
 function isEditingText() {
-    const ret = editingCell.value &&
+    return editingCell.value &&
         editingCell.value.cellType === TableCellType.Text &&
-        editingCell.value.text
-    return ret;
+        editingCell.value.text;
 }
+
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
     cell_menu.value = false;
     props.context.tableSelection.setTableMenuVisible(false);
 }
+
 function modify_selection_hidden() {
     if (hidden_holder) {
         clearTimeout(hidden_holder);
@@ -125,6 +126,7 @@ function selection_watcher(t: number | string) {
         modify_selection_hidden();
     }
 }
+
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_EDITING_CELL) {
         editingCell.value = props.context.tableSelection.editingCell;
@@ -132,26 +134,12 @@ function table_selection_watcher(t: number) {
     }
 }
 
-// function updateCellView() {
-//     const cell = editingCell.value;
-//     if (cell) {
-//         editingCellView.value = cell;
-//         if (!editingCellView.value) {
-//             props.context.nextTick(props.context.selection.selectedPage!, () => {
-//                 editingCellView.value = props.shape.cells.get(cell.id);
-//             })
-//         }
-//     }
-//     else {
-//         editingCellView.value = undefined;
-//     }
-// }
-
 function init() {
     // props.context.tableSelection.resetSelection();
     editingCell.value = undefined;
     update();
 }
+
 /**
  * @description 更新小菜单状态
  * @param cmt 小菜单类型
@@ -160,14 +148,18 @@ function init() {
 function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
     if (props.context.menu.cellMenuType) {
         cell_menu_type.value = props.context.menu.cellMenuType;
-        if(cmt === CellMenu.SelectRow) {
+        if (cmt === CellMenu.SelectRow) {
             props.context.tableSelection.setTableMenuVisible(cm);
         }
     } else {
         cell_menu_type.value = cmt;
     }
-    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu.value = cm;
+
+    cell_menu_posi.value.x = x;
+    cell_menu_posi.value.y = y
+    cell_menu.value = cm;
 }
+
 function move(e: MouseEvent) {
     if (e.buttons !== 0) return;
     x_checked = false, y_checked = false;
@@ -199,8 +191,10 @@ function move(e: MouseEvent) {
         }
     }
 }
+
 let isDragging = false;
 let downXY = { x: 0, y: 0 };
+
 function down(e: MouseEvent) {
     if (e.button !== 0) {
         return;
@@ -224,6 +218,7 @@ function down(e: MouseEvent) {
         downXY.y = e.y;
     }
 }
+
 function move_x(e: MouseEvent) {
     if (isDragging) {
         const root = props.context.workspace.root;
@@ -239,6 +234,7 @@ function move_x(e: MouseEvent) {
     }
 
 }
+
 function up_x() {
     const dx = down_x - m_x.value;
     const scale = props.context.workspace.matrix.m00;
@@ -249,6 +245,7 @@ function up_x() {
     document.removeEventListener('mouseup', up_x);
     isDragging = false;
 }
+
 function move_y(e: MouseEvent) {
     if (isDragging) {
         const root = props.context.workspace.root;
@@ -264,6 +261,7 @@ function move_y(e: MouseEvent) {
     }
 
 }
+
 function up_y(e: MouseEvent) {
     const root = props.context.workspace.root;
     const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
@@ -277,33 +275,38 @@ function up_y(e: MouseEvent) {
     document.removeEventListener('mouseup', up_y);
     isDragging = false;
 }
+
 function get_x_by_col(col: number) {
     const table = props.shape;
     layout = table.getLayout();
     const cols = layout.colWidths;
     let growx = 0;
-    for (let i = 0; i < col; i++)  growx += cols[i];
+    for (let i = 0; i < col; i++) growx += cols[i];
     const xy1 = submatrix.computeCoord2(growx, 0);
     const xy2 = submatrix.computeCoord2(growx, layout.height);
     x1 = xy1.x, y1 = xy1.y, x2 = xy2.x, y2 = xy2.y;
     down_x = xy1.x, m_x.value = xy1.x;
 }
+
 function get_y_by_row(row: number) {
     const table = props.shape;
     layout = table.getLayout();
     const rows = layout.rowHeights;
     let growy = 0;
-    for (let i = 0; i < row; i++)  growy += rows[i];
+    for (let i = 0; i < row; i++) growy += rows[i];
     const xy1 = submatrix.computeCoord2(0, growy);
     const xy2 = submatrix.computeCoord2(layout.width, growy);
     x1 = xy1.x, y1 = xy1.y, x2 = xy2.x, y2 = xy2.y;
     down_y = xy1.y, m_y.value = xy1.y;
 }
+
 function leave() {
     props.context.cursor.reset();
 }
+
 const selection_hidden = ref<boolean>(false);
 let hidden_holder: any = null;
+
 function reset_hidden() {
     selection_hidden.value = false;
     clearTimeout(hidden_holder);
@@ -325,6 +328,7 @@ function remove_page_watcher() {
         page.unwatch(update);
     }
 }
+
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -348,43 +352,42 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :class="{ hidden: selection_hidden }"
-        preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds) :width="width" :height="height"
-        :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
-        @mouseleave="leave" data-area="controller">
-        <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell"
-            :table="props.shape" :matrix="submatrixArray">
-        </TableSelectionView>
-        <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
-            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
-        <!-- 列宽缩放 -->
-        <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame">
-        </BarsContainer>
-        <!-- 表头 -->
-        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame" @get-menu="update_menu_posi"></TableHeader>
-        <!-- 表格拖拽 -->
-        <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame">
-        </PointsContainer>
-        <!-- 列宽缩放 -->
-        <g>
-            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                stroke-width="3"></line>
-            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                stroke-width="3"></line>
-        </g>
-    </svg>
-    <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
-        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
-    <!-- 小菜单 -->
-    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
-        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
+<svg xmlns="http://www.w3.org/2000/svg" :class="{ hidden: selection_hidden }"
+     preserveAspectRatio="xMinYMin meet" viewBox="0 0 50 50" width="50" height="50"
+     overflow="visible" @mousemove="move" @mousedown="down"
+     @mouseleave="leave" data-area="controller">
+    <!-- 表格选区 check -->
+    <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell"
+                        :table="props.shape" :matrix="submatrixArray">
+    </TableSelectionView>
+    <!-- 文本选区 -->
+    <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
+                :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
+    <!-- 列宽缩放 -->
+    <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+                   :c-frame="props.controllerFrame">
+    </BarsContainer>
+    <!-- 表头 -->
+    <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+                 :c-frame="props.controllerFrame" @get-menu="update_menu_posi"></TableHeader>
+    <!-- 表格拖拽 -->
+    <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+                     :c-frame="props.controllerFrame">
+    </PointsContainer>
+    <!-- 列宽缩放 -->
+    <g>
+        <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
+              stroke-width="3"/>
+        <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
+              stroke-width="3"/>
+    </g>
+</svg>
+<!-- 输入 -->
+<TextInput v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
+           :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
+<!-- 小菜单 -->
+<TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
+                :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
 </template>
 
 <style lang='scss' scoped>
