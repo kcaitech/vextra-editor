@@ -125,7 +125,7 @@ function write4LazyLoader(target: ShapeView) {
     }
 
     const box = XYsBounding(points);
-    const page = props.context.preview.selectedPage!;
+    const page = props.context.selection.selectedPage!;
     xy.value = { x: box.left - page.frame.x, y: box.top - page.frame.y };
     width.value = box.right - box.left;
     height.value = box.bottom - box.top;
@@ -224,7 +224,6 @@ function menuWatcher(t: number, target: ShapeView) {
     if (t === Menu.WRITE_MEDIA) {
         write();
     } else if (t === Menu.WRITE_MEDIA_LAZY) {
-        console.log('__target', target.name)
         write4LazyLoader(target);
     }
 }

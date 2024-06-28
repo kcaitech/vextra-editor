@@ -141,10 +141,10 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     const list = getFrameList(page);
     if (!list.length) {
         ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
-        ctx.preview.selectShape(undefined);
+        ctx.selection.selectShape(undefined);
         // ctx.preview.updateUrl();
         return;
     }
-    ctx.preview.selectShape(list[0]);
+    ctx.selection.selectShape(list[0]);
     // ctx.preview.updateUrl();
 }

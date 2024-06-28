@@ -75,24 +75,24 @@ const setPosition = () => {
 }
 
 const togglePage = (p: number) => {
-    const shape = props.context.preview.selectedShape;
-    const page = props.context.preview.selectedPage;
+    const shape = props.context.selection.selectedPvShape;
+    const page = props.context.selection.selectedPage;
     if (!shape || !page) return;
     const frameList = getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return;
     index += p;
     if (index < 0 || index > (frameList.length - 1)) return;
-    props.context.preview.selectShape(frameList[index]);
+    props.context.selection.selectShape(frameList[index]);
 }
 const firstPage = () => {
-    const shape = props.context.preview.selectedShape;
-    const page = props.context.preview.selectedPage;
+    const shape = props.context.selection.selectedPvShape;
+    const page = props.context.selection.selectedPage;
     if (!shape || !page) return emit('close');
     const frameList = getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return emit('close');
-    props.context.preview.selectShape(frameList[0]);
+    props.context.selection.selectShape(frameList[0]);
     emit('close');
 }
 

@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import { Document, Page, PageListItem, PageView } from "@kcdesign/data";
 import { Preview } from "@/context/preview";
 import { selectedShape, setWindowTitle } from "@/utils/preview";
+import { Selection } from "@/context/selection";
 
 type List = InstanceType<typeof ListView>;
 
@@ -29,13 +30,13 @@ const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
 const cur_page_name = ref<string>(t('navi.page'));
 const previewWatcher = (type: number | string) => {
-    if (type === Preview.CHANGE_PAGE) {
+    if (type === Selection.CHANGE_PAGE) {
         getPageName();
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 const getPageName = () => {
-    const page = props.context.preview.selectedPage;
+    const page = props.context.selection.selectedPage;
     if (!page) return;
     const pages = props.context.data.pagesList
     const name = pages.find(item => item.id === page.id)?.name
@@ -46,7 +47,7 @@ const pageList = ref<HTMLDivElement>()
 
 function document_watcher(...args: any[]) {
     if (args.includes('pagesList')) {
-        const page = props.context.preview.selectedPage;
+        const page = props.context.selection.selectedPage;
         if (page) {
             const _page = props.context.data.pagesList.find(item => item.id === page.id);
             if (!_page) {
@@ -57,7 +58,7 @@ function document_watcher(...args: any[]) {
                     props.context.data.pagesMgr.get(first_page.id).then((page: Page | undefined) => {
                         if (page) {
                             const pagedom = props.context.getPageDom(page).dom;
-                            props.context.preview.selectPage(pagedom);
+                            props.context.selection.selectPage(pagedom);
                             selectedShape(props.context, pagedom, t);
                             setWindowTitle(props.context, pagedom);
                         }
@@ -67,7 +68,7 @@ function document_watcher(...args: any[]) {
                     props.context.data.pagesMgr.get(select_page.id).then((page: Page | undefined) => {
                         if (page) {
                             const pagedom = props.context.getPageDom(page).dom;
-                            props.context.preview.selectPage(pagedom);
+                            props.context.selection.selectPage(pagedom);
                             selectedShape(props.context, pagedom, t);
                             setWindowTitle(props.context, pagedom);
                         }
@@ -82,12 +83,12 @@ function document_watcher(...args: any[]) {
 
 class Iter implements IDataIter<ItemData> {
     private __document: Document;
-    private __preview: Preview;
+    private __preview: Selection;
     private __index: number;
 
     constructor(context: Context, index: number) {
         this.__document = context.data;
-        this.__preview = context.preview;
+        this.__preview = context.selection;
         this.__index = index;
     }
 
@@ -138,7 +139,7 @@ function toggle() {
     getPageName();
     emit('fold', fold.value);
     nextTick(() => {
-        const id = props.context.preview.selectedPage?.id;
+        const id = props.context.selection.selectedPage?.id;
         const index = props.context.data.pagesList.findIndex((item) => item.id === id);
         if (list_body.value) {
             ListH.value = list_body.value.clientHeight
@@ -167,7 +168,7 @@ const scrollList = (index: number) => {
 }
 
 const setSelectedPageVisible = () => {
-    const page = props.context.preview.selectedPage;
+    const page = props.context.selection.selectedPage;
     if (!page) return;
     const index = props.context.data.pagesList.findIndex((item) => item.id === page.id);
     scrollList(index);
@@ -178,7 +179,7 @@ const setSelectedPageVisible = () => {
 
 onMounted(() => {
     getPageName();
-    props.context.preview.watch(previewWatcher);
+    props.context.selection.watch(previewWatcher);
     props.context.data.watch(document_watcher);
     if (list_body.value) {
         pageH.value = list_body.value.clientHeight; //list可视高度
@@ -187,7 +188,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    props.context.preview.unwatch(previewWatcher);
+    props.context.selection.unwatch(previewWatcher);
     props.context.data.unwatch(document_watcher);
 });
 </script>
