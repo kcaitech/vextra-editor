@@ -3,13 +3,12 @@ import { Context } from "@/context";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
-import { PageView, Shape, ShapeType, adapt2Shape } from "@kcdesign/data";
-import { ShapeView } from "@kcdesign/data";
+import { PageView, Shape, ShapeType } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
-import { Preview } from "@/context/preview";
 import { ElMessage } from "element-plus";
+import { Selection } from "@/context/selection";
 
 type List = InstanceType<typeof ListView>;
 
@@ -90,10 +89,10 @@ function inputing() {
 }
 
 const selectedShape = (shape: Shape) => {
-    const page = props.context.preview.selectedPage;
+    const page = props.context.selection.selectedPage;
     if (!page) return;
     const s = page.data.childs.find(item => item.id === shape.id);
-    props.context.preview.selectShape(s);
+    props.context.selection.selectShape(s);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -120,7 +119,7 @@ function leave_search() {
 }
 const update = () => {
     arboardList = [];
-    const page = props.context.preview.selectedPage;
+    const page = props.context.selection.selectedPage;
     if (page) {
         arboardList = getFrameList(page);
     }
@@ -194,15 +193,15 @@ function accurate_shift() {
 }
 
 const previewWatcher = (t: number | string) => {
-    if (t === Preview.CHANGE_PAGE) {
+    if (t === Selection.CHANGE_PAGE) {
         update();
     }
-    if (t === Preview.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         update();
     }
 }
 const updateScrollH = () => {
-    const shape = props.context.preview.selectedShape;
+    const shape = props.context.selection.selectedPvShape;
     if (!shape) return;
     let list_h = 0;
     if (listBody.value) {
@@ -223,18 +222,18 @@ const updateScrollH = () => {
 
 const listUpdate = (...args: any[]) => {
     if (args.includes('childs')) {
-        const shape = props.context.preview.selectedShape;
-        const page = props.context.preview.selectedPage;
+        const shape = props.context.selection.selectedPvShape;
+        const page = props.context.selection.selectedPage;
         if (!page) return;
         const shapes = getFrameList(page);
         if (!shapes.length) {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
-            props.context.preview.selectShape(undefined);
+            props.context.selection.selectShape(undefined);
             return;
         }
         if (!shape) {
             nextTick(() => {
-                props.context.preview.selectShape(shapes[0]);
+                props.context.selection.selectShape(shapes[0]);
             })
             return;
         }
@@ -243,9 +242,9 @@ const listUpdate = (...args: any[]) => {
 
         if (!_shape) {
             if (shape_index === -1 || shape_index === shapes.length) {
-                props.context.preview.selectShape(shapes[0]);
+                props.context.selection.selectShape(shapes[0]);
             } else {
-                props.context.preview.selectShape(shapes[shape_index]);
+                props.context.selection.selectShape(shapes[shape_index]);
             }
         }
 
@@ -261,13 +260,13 @@ const stopWatch = watch(() => props.page, (value, old) => {
 onMounted(() => {
     update();
     props.page.watch(listUpdate);
-    props.context.preview.watch(previewWatcher);
+    props.context.selection.watch(previewWatcher);
     props.context.navi.watch(navi_watcher);
 });
 
 onUnmounted(() => {
     props.page.unwatch(listUpdate);
-    props.context.preview.watch(previewWatcher);
+    props.context.selection.watch(previewWatcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
 });

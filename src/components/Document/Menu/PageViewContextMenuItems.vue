@@ -717,7 +717,7 @@ onUnmounted(() => {
             <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
             <span>{{ t('system.artboart_title_visible') }}</span>
         </div>
-        <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
+        <!-- <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu> -->
     </div>
 </template>
 <style lang='scss' scoped>

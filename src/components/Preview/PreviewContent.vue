@@ -7,6 +7,7 @@ import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
+import { Selection } from '@/context/selection';
 
 const props = defineProps<{
     context: Context
@@ -23,8 +24,8 @@ const pageCard = ref<PCard>();
 const spacePressed = ref<boolean>(false);
 
 function page_watcher() {
-    const shape = props.context.preview.selectedShape;
-    const page = props.context.preview.selectedPage;
+    const shape = props.context.selection.selectedPvShape;
+    const page = props.context.selection.selectedPage;
     cur_shape.value = shape;
 
     if (!shape || !page) return;
@@ -42,12 +43,12 @@ function page_watcher() {
 }
 
 function changePage() {
-    const page = props.context.preview.selectedPage;
+    const page = props.context.selection.selectedPage;
     if (!page) return;
 
     const frameList = getFrameList(page);
 
-    const shape = props.context.preview.selectedShape || frameList[0];
+    const shape = props.context.selection.selectedPvShape || frameList[0];
     if (!shape) {
         return;
     }
@@ -63,14 +64,14 @@ function changePage() {
     curPage.value = index + 1;
 
     nextTick(() => {
-        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value as any);
+        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedPvShape, pageCard.value as any);
         initMatrix();
     });
 }
 
 const togglePage = (p: number) => {
-    const shape = props.context.preview.selectedShape;
-    const page = props.context.preview.selectedPage;
+    const shape = props.context.selection.selectedPvShape;
+    const page = props.context.selection.selectedPage;
 
     if (!shape || !page) return;
 
@@ -81,19 +82,11 @@ const togglePage = (p: number) => {
     if (index === -1) return;
     index += p;
     if (index < 0 || index > (frameList.length - 1)) return;
-    props.context.preview.selectShape(frameList[index]);
+    props.context.selection.selectShape(frameList[index]);
 }
 
 const previewWatcher = (t: number | string, s?: boolean) => {
-    if (t === Preview.CHANGE_PAGE) {
-        changePage();
-    } else if (t === Preview.CHANGE_SHAPE) {
-        if (!viewUpdater.pageCard?.pageSvg|| !viewUpdater.currentPage) {
-            changePage();
-            return;
-        }
-        page_watcher();
-    } else if (t === Preview.MENU_CHANGE) {
+    if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
             viewUpdater.modifyTransform();
@@ -124,6 +117,19 @@ const previewWatcher = (t: number | string, s?: boolean) => {
         }
     }
 }
+
+const selectionWatcher = (t: number | string) => {
+    if (t === Selection.CHANGE_PAGE) {
+        changePage();
+    } else if (t === Selection.CHANGE_SHAPE) {
+        if (!viewUpdater.pageCard?.pageSvg || !viewUpdater.currentPage) {
+            changePage();
+            return;
+        }
+        page_watcher();
+    }
+}
+
 const initMatrix = () => {
     const type = props.context.preview.scaleType;
     if (type === ScaleType.FillScreen) {
@@ -144,7 +150,7 @@ const initMatrix = () => {
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
-    const shape = props.context.preview.selectedShape;
+    const shape = props.context.selection.selectedPvShape;
     if (!shape) return;
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
@@ -177,7 +183,7 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
-    const shape = props.context.preview.selectedShape;
+    const shape = props.context.selection.selectedPvShape;
     if (!shape) return;
     e.stopPropagation();
     isMenu.value = false;
@@ -271,7 +277,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 const isSpacePressed = () => {
-    const shape = props.context.preview.selectedShape;
+    const shape = props.context.selection.selectedPvShape;
     if (!preview.value || !shape) return;
     const root = preview.value.getBoundingClientRect();
     const frame = shape.frame;
@@ -320,12 +326,13 @@ const is_overlay = ref(true);
 
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
+    props.context.selection.watch(selectionWatcher);
 
     // 等cur_shape触发pageCard的挂载
     page_watcher();
     nextTick(() => {
         // 然后初始化视图渲染管理器
-        viewUpdater.mount(preview.value!, props.context.preview.selectedPage!.data, props.context.preview.selectedShape, pageCard.value as any);
+        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedPvShape, pageCard.value as any);
     })
 
     if (preview.value) {
@@ -335,6 +342,7 @@ onMounted(() => {
 onUnmounted(() => {
     observer.disconnect();
     props.context.preview.unwatch(previewWatcher);
+    props.context.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
 

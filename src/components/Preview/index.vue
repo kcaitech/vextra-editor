@@ -19,6 +19,7 @@ import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
 import { getFrameList, keyboard } from '@/utils/preview';
 import { IContext } from '@/openapi';
+import { Selection } from '@/context/selection';
 
 const props = defineProps<{ context: IContext }>()
 const context = props.context as Context;
@@ -121,13 +122,13 @@ function switchPage(id?: string) {
     if (context) {
         const ctx: Context = context;
         const pagesMgr = ctx.data.pagesMgr;
-        const cur_page = context.preview.selectedPage;
+        const cur_page = context.selection.selectedPage;
         if (cur_page && cur_page.id === id) return;
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
                 curPage.value = undefined;
                 const pagedom = ctx.getPageDom(page).dom;
-                ctx.preview.selectPage(pagedom);
+                ctx.selection.selectPage(pagedom);
                 selectedShape(ctx, pagedom);
                 curPage.value = pagedom;
             }
@@ -148,16 +149,13 @@ const selectedShape = (ctx: Context, page: PageView) => {
     const list = getFrameList(page);
     if (!list.length) {
         ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
-        ctx.preview.selectShape(undefined);
+        ctx.selection.selectShape(undefined);
         return;
     }
-    ctx.preview.selectShape(list[0]);
+    ctx.selection.selectShape(list[0]);
 }
 function previewWatcher(t: number | string) {
-    if (t === Preview.CHANGE_PAGE) {
-        const ctx: Context = context;
-        curPage.value = ctx.preview.selectedPage;
-    } else if (t === Preview.UI_CHANGE) {
+    if (t === Preview.UI_CHANGE) {
         if (!context.preview.uiState) {
             if (showLeft.value && showTop.value) {
                 showHiddenLeft();
@@ -180,6 +178,13 @@ function workspaceWatcher(t: number, o?: any) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
+    }
+}
+
+const selectionWatcher = (t: number | string) => {
+    if (t === Selection.CHANGE_PAGE) {
+        const ctx: Context = context;
+        curPage.value = ctx.selection.selectedPage;
     }
 }
 
@@ -234,6 +239,7 @@ function init_watcher() {
 
     context.preview.watch(previewWatcher);
     context.workspace.watch(workspaceWatcher);
+    context.selection.watch(selectionWatcher);
 }
 
 function init_keyboard_uints() {
@@ -266,6 +272,7 @@ onMounted(() => {
 onUnmounted(() => {
     context.preview.unwatch(previewWatcher);
     context.workspace.unwatch(workspaceWatcher);
+    context.selection.unwatch(selectionWatcher);
     uninstall_keyboard_units();
 })
 
