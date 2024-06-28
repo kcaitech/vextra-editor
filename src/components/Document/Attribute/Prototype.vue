@@ -2,10 +2,10 @@
     <div class="container">
         <el-scrollbar height="100%">
             <div v-if="isProtoType">
-                <div v-if="isPrototype.length < 2" class="origin">
+                <div v-if="shapes.length < 2 && isProtoType" class="origin">
                     <div class="title">
-                        <div class="text" :style="{ color: originedit ? '#000' : '' }">流程起点</div>
-                        <div v-if="prototypestart" class="add" @click.stop=createOrigin>
+                        <div class="text" :style="{ color: prototypestart ? '#000' : '' }">流程起点</div>
+                        <div v-if="!prototypestart" class="add" @click.stop=createOrigin>
                             <svg-icon icon-class="add"></svg-icon>
                         </div>
                         <div v-else class="delete" @click.stop=deleteOrigin>
@@ -14,12 +14,12 @@
                     </div>
                     <div v-if="!prototypestart" class="default">设置选中容器为新流程起点</div>
                     <div v-else class="originname">
-                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ prototypestart.name
+                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName
                             }}</label>
-                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="prototypestart.name"
+                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName"
                             @blur="showIpnut = false" @change="setPrototypeStartPoint" autocomplete="off">
                         <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
-                            v-model="prototypestart.desc" @change="setPrototypeStartPoint"></textarea>
+                            v-model="originDescribed" @change="setPrototypeStartPoint"></textarea>
                     </div>
                 </div>
                 <div class="interaction">
@@ -47,6 +47,7 @@
                                     <span>触发</span>
                                     <Select class="select" id="select" :visibility="true" :source="trigger"
                                         :selected="trigger.find(item => item.id === 0)?.data"></Select>
+                                    <input type="text" v-model="timeoutvalue">
                                 </div>
                                 <div class="action">
                                     <span>动作</span>
@@ -178,7 +179,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView, BasicArray, PrototypeEvents, PrototypeEvent } from "@kcdesign/data"
 import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -197,7 +198,8 @@ import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { debounce as d } from "@/utils/timing_util";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
-import { PrototypeStartingPoint, ArtboradView } from '@kcdesign/data';
+import { PrototypeStartingPoint, ArtboradView, PrototypeInterAction } from '@kcdesign/data';
+import { v4 } from 'uuid';
 
 const background_color = ref(new Color(1, 239, 239, 239));
 const alpha_v = ref<number>(100);
@@ -398,7 +400,7 @@ const { t } = useI18n()
 const searchvlue = ref<string>('')
 const animationtimevalue = ref<HTMLInputElement[]>()
 const selectitem = ref<string>('right')
-const prototypestart = ref<Prototypestart>({ name: "", desc: "" })
+const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
 
 
 
@@ -512,23 +514,43 @@ const createOrigin = () => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setProtoXX(shape, new PrototypeStartingPoint(originName.value, originDescribed.value));
+    e.setPrototypeStart(shape, new PrototypeStartingPoint(originName.value, originDescribed.value));
+    updateData()
 }
 
 const deleteOrigin = () => {
-    originedit.value = false
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0]
+    if (!shape) return;
+    e.delPrototypeStart(shape as ShapeView);
+    updateData()
+
 }
 
 const setPrototypeStartPoint = () => {
     console.log('change');
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
-    const shape = isPrototype.value[0];
-    const { name, desc } = prototypestart.value!
+    const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setProtoXX(shape as ShapeView, new PrototypeStartingPoint(name, desc));
+    e.setPrototypeStart(shape as ShapeView, new PrototypeStartingPoint(originName.value, originDescribed.value));
 
     console.log('change-end');
+}
+
+function updateData() {
+    const selecteds = props.context.selection.selectedShapes;
+    if (selecteds.length === 1) {
+        const shape = selecteds[0]
+        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
+            prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
+            if (prototypestart.value) {
+                originName.value = prototypestart.value.name
+                originDescribed.value = prototypestart.value.desc
+            }
+        }
+    }
 }
 
 
@@ -538,6 +560,14 @@ const createAction = () => {
     numbers.value.push(++i)
     acitonindex.value = i
     showaction.value = true
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
+    const Action =new ()
+    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction([] as unknown as BasicArray<number>, Event,v4()));
+
 }
 
 const deleteAction = (i: number) => {
@@ -563,44 +593,39 @@ const DomList = computed(() => {
 })
 
 
-const isProtoType=ref<boolean>(false)
+const isProtoType = ref<boolean>(false)
 
 // 图层选区变化
 function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
-    symbol_attribute.value = false;
     const selectedShapes = props.context.selection.selectedShapes;
+
+    isProtoType.value = false
     if (selectedShapes.length === 1) {
-        symbol_attribute.value = true;
         const shape = selectedShapes[0];
-        shapeType.value = shape.type;
-        isProtoType.value=false
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            isProtoType.value=true
+            isProtoType.value = true
         }
-        //暂时获取组件状态
-        const symref = props.context.selection.symbolrefview;
-        if (!symref) {
-            return;
-        }
-        const result = get_var_for_ref(symref, t);
-        variables.value = [];
-        if (!result) {
-            return;
-        }
-        variables.value = result.variables;
+        // //暂时获取组件状态
+        // const symref = props.context.selection.symbolrefview;
+        // if (!symref) {
+        //     return;
+        // }
+        // const result = get_var_for_ref(symref, t);
+        // variables.value = [];
+        // if (!result) {
+        //     return;
+        // }
+        // variables.value = result.variables;
 
     }
+
     shapes.value = [];
-    // isPrototype.value = []
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
         shapes.value.push(shape);
-        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            isPrototype.value.push(shape)
-        }
     }
 
     reflush_by_selection.value++;
@@ -651,22 +676,7 @@ function selection_watcher(t: number) {
     updateData()
 }
 
-function updateData() {
-    const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1) return;
-    if (selecteds.length === 1) {
-        const shape = selecteds[0]
-        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            if ((shape as ArtboradView).prototypeStartPoint) {
-                const { name, desc } = (shape as ArtboradView).prototypeStartPoint;
-                prototypestart.value.name = name
-                prototypestart.value.desc = desc
-            } else {
 
-            }
-        }
-    }
-}
 
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
