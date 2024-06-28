@@ -368,7 +368,7 @@ onUnmounted(() => {
   <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCell!" :matrix="editingCellMatrix"
               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
   <!-- 列宽缩放 -->
-  <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+  <BarsContainer :context="props.context" :shape="props.shape"
                  :c-frame="props.controllerFrame">
   </BarsContainer>
   <!-- 表头 -->
