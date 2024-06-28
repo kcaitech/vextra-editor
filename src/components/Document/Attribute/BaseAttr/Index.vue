@@ -538,7 +538,6 @@ function draggingRotate(e: MouseEvent) {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('rotating');
     }
-
     lockMouseHandler.executeRotate(e.movementX);
 }
 

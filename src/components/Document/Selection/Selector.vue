@@ -27,6 +27,11 @@ const selectedShapes: Map<string, ShapeView> = new Map();
 let changed: boolean = false;
 
 function select() {
+    const { top, left, width, height } = props.params.frame;
+
+    if (width === height && height === 0) {
+        return
+    }
     const pageMatirx = new Matrix(props.context.workspace.matrix.inverse);
 
     const selection = props.context.selection;
@@ -36,14 +41,11 @@ function select() {
         return;
     }
 
-    const { top, left, width, height } = props.params.frame;
-
     const p1: XY = pageMatirx.computeCoord2(left, top); // lt
     const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
     const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
     const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
     const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
-
     changed = false;
 
     if (selectedShapes.size) {

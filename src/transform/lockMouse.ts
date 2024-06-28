@@ -48,6 +48,7 @@ export class LockMouse extends TransformHandler {
 
     executeRotate(deg: number) {
         (this.asyncApiCaller as LockMouseHandler).executeRotate(this.shapes, deg);
+        this.updateCtrlView(1);
     }
 
     executeCounts(count: number) {

@@ -530,13 +530,13 @@ export class CreatorExecute extends TransformHandler {
 
             const selection = this.context.selection;
             this.context.nextTick(selection.selectedPage!, () => {
-                    this.shape = selection.selectedPage!.getShape(shape.id);
-                    if (!this.shape) {
-                        return;
-                    }
-                    this.context.assist.set_trans_target([(this.shape)]);
-                    selection.selectShape(this.shape);
+                this.shape = selection.selectedPage!.getShape(shape.id);
+                if (!this.shape) {
+                    return;
                 }
+                this.context.assist.set_trans_target([(this.shape)]);
+                selection.selectShape(this.shape);
+            }
             );
         } else {
             const _start = { x: this.fixedPoint.x, y: this.fixedPoint.y + 0.5 };
@@ -750,18 +750,24 @@ export class CreatorExecute extends TransformHandler {
         const frame = this.frame;
 
         const xy = { ...this.livingPoint };
-        frame.x = xy.x - 50;
-        frame.y = xy.y - 50;
-
-        const targetTransform = this.getTargetTransform(env, frame);
-
-        this.fixedByUserConfig();
 
         const type = ResultByAction(action);
 
         if (!type) {
             return;
         }
+
+        frame.x = xy.x - 50;
+        frame.y = xy.y - 50;
+
+        if (type === ShapeType.Text) {
+            frame.x = xy.x;
+            frame.y = xy.y - 10;
+        }
+
+        const targetTransform = this.getTargetTransform(env, frame);
+
+        this.fixedByUserConfig();
 
         const namePrefix = this.workspace.t(`shape.${type}`);
 
