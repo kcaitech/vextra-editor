@@ -293,7 +293,18 @@ export class RotateHandler extends TransformHandler {
         }
 
         const cursorAngle = this.cursorAngle; // 光标向量的角度
-        const deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
+        let deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
+
+        const Q = (15 / 180 * Math.PI);
+
+        if (this.shiftStatus) {
+            let ex = deltaAngle % Q;
+            if (ex < Q / 2) {
+                deltaAngle = deltaAngle - ex;
+            } else {
+                deltaAngle = deltaAngle + (Q - ex);
+            }
+        }
 
         // 选区变换后的Transform
         const transformForSelection = this.selectionTransform.clone().rotateAt({
