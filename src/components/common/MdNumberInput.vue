@@ -1,9 +1,4 @@
 <script lang="ts" setup>
-// 取代IconText, 一个输入框要做的就两个事情：展示值、修改值
-// 为什么IconText各种可选属性在里面，独立功能相关的逻辑也写在了里面
-// 杂乱的Dom结构让人看了头要爆炸，这样的代码会让人丧失写代码的欲望😣
-//                                -- 来自一个靓仔👦的自我反省
-
 import { ref } from "vue";
 
 interface Props {
