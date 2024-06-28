@@ -67,6 +67,7 @@ function _updateInputPos() {
     }
     const locatepoints = props.shape.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
+
     const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
 
     if (cursor.length !== 2) return;
@@ -78,6 +79,7 @@ function _updateInputPos() {
     const root = props.root || props.context.workspace.root;
     inputpos.value.left = x + root.x;
     inputpos.value.top = y + root.y;
+    
     inputel.value.focus();
 }
 

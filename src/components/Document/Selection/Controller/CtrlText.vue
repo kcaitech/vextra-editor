@@ -293,10 +293,10 @@ onBeforeUnmount(() => {
                     :selection="props.context.selection.getTextSelection(props.shape)">
         </SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+        <BarsContainer v-if="!editing" :context="props.context" :shape="props.shape"
                        :c-frame="props.controllerFrame" :theme="theme" @dblclick="dblFromPart">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+        <PointsContainer v-if="!editing" :context="props.context" :shape="props.shape"
                          :c-frame="props.controllerFrame" :axle="axle" :theme="theme" @dblclick="dblFromPart">
         </PointsContainer>
     </svg>

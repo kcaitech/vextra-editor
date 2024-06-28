@@ -428,9 +428,8 @@ onUnmounted(() => {
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon icon-class="down" />
-            <div class="layers_menu" ref="layersMenu" v-if="true" :style="{ 'max-height': layersHeight + 'px' }">
-            <!-- <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers" -->
-                <!-- :style="{ 'max-height': layersHeight + 'px' }"> -->
+            <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
+                :style="{ 'max-height': layersHeight + 'px' }">
                 <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
             </div>
         </div>
