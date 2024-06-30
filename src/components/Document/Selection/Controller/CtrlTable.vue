@@ -89,10 +89,6 @@ const height = computed(() => {
   return h < 10 ? 10 : h;
 })
 
-function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-  return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
-}
-
 function isEditingText() {
   return editingCell.value &&
       editingCell.value.cellType === TableCellType.Text &&
@@ -130,12 +126,10 @@ function selection_watcher(t: number | string) {
 function table_selection_watcher(t: number) {
   if (t === TableSelection.CHANGE_EDITING_CELL) {
     editingCell.value = props.context.tableSelection.editingCell;
-    // updateCellView();
   }
 }
 
 function init() {
-  // props.context.tableSelection.resetSelection();
   editingCell.value = undefined;
   update();
 }
@@ -182,8 +176,6 @@ function move(e: MouseEvent) {
     props.context.cursor.reset();
   } else {
     let deg = props.shape.rotation || 0;
-    // if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-    // if (props.shape.isFlippedVertical) deg = 360 - deg;
     if (x_checked) {
       props.context.cursor.setType(CursorType.Scale, deg);
     } else if (y_checked) {

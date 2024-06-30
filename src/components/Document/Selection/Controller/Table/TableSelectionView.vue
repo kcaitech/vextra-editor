@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
-import { Shape, ShapeType, TableCell, TableCellView, TableShape, TableView } from '@kcdesign/data';
+import {
+    ColVector3D, makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    ShapeType,
+    TableCellView,
+    TableView, Transform
+} from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
-import { get_transform } from '../Points/common';
 
 interface Props {
     context: Context
@@ -15,14 +20,17 @@ interface Props {
     table: TableView
     matrix: number[]
 }
+
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
 }
+
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
 let transform: string;
+
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
@@ -35,7 +43,9 @@ function update_cell_selection(gen_menu_posi?: boolean) {
         gen_view(props.table, cells, gen_menu_posi);
     }
 }
+
 const t1 = () => update_cell_selection(true);
+
 function gen_view(table: TableView, cells: { cell: TableCellView | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
     const t2r = table.matrix2Root();
     const m = props.context.workspace.matrix;
@@ -43,14 +53,14 @@ function gen_view(table: TableView, cells: { cell: TableCellView | undefined, ro
     let points: ClientXY[] = [];
     const grid = (table).getLayout().grid;
     let row_p = undefined;
-    if(props.context.tableSelection.tableMenuVRowVisible) {
+    if (props.context.tableSelection.tableMenuVRowVisible) {
         const f = grid.get(props.context.tableSelection.tableRowStart, 0).frame;
         row_p = t2r.computeCoord2(f.x, f.y + (f.height / 2));
     }
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
         const f = grid.get(cell.rowIdx, cell.colIdx).frame;
-        const cps = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
+        const cps = [{x: f.x, y: f.y}, {x: f.x + f.width, y: f.y}, {x: f.x + f.width, y: f.y + f.height}, {x: f.x, y: f.y + f.height}];
         for (let j = 0; j < 4; j++) {
             const p = cps[j];
             points.push(t2r.computeCoord2(p.x, p.y));
@@ -61,6 +71,7 @@ function gen_view(table: TableView, cells: { cell: TableCellView | undefined, ro
         _get_menu_position(points, row_p);
     }
 }
+
 function update_triangle() {
     triangle.value = false;
     const selection = props.context.selection;
@@ -72,19 +83,18 @@ function update_triangle() {
         const grid = (shape as TableView).getLayout().grid;
         const g = grid.get(cell.index.row, cell.index.col);
         if (!g) return false;
+
         const f = grid.get(cell.index.row, cell.index.col).frame;
-        const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
-        t2r.multiAtLeft(m);
-        const rb = t2r.computeCoord2(f.x + f.width, f.y + f.height);
 
-        const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(shape);
+        const trans = shape.transform2FromRoot;
+        const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
 
-        transform = `translate(${rb.x}px, ${rb.y}px) `;
-        transform += `scale(${m.m00})`;
-        if (isFlippedHorizontal) transform += 'rotateY(180deg) ';
-        if (isFlippedVertical) transform += 'rotateX(180deg) ';
-        if (rotate) transform += `rotate(${rotate}deg) `;
-        transform += `translate(-24px, -24px) `;
+        const __t = new Transform()
+            .translate(ColVector3D.FromXY(f.x + f.width - 22, f.y + f.height - 22))
+            .addTransform(trans)
+            .addTransform(mClient);
+
+        transform = makeShapeTransform1By2(__t).toString();
 
         triangle.value = true;
     }
@@ -95,13 +105,13 @@ function selection_watcher(t: number | string) {
         update_cell_selection();
         watchCells.forEach((v) => v.unwatch(t1));
         watchCells.clear();
-    }
-    else if (t === Selection.CHANGE_PAGE) {
+    } else if (t === Selection.CHANGE_PAGE) {
         update_cell_selection();
         watchCells.forEach((v) => v.unwatch(t1));
         watchCells.clear();
     }
 }
+
 function table_selection_watcher(t: number, gen_menu_posi: any) {
     if (t === TableSelection.CHANGE_TABLE_CELL) {
         update_cell_selection(gen_menu_posi);
@@ -119,6 +129,7 @@ function select_cell_by_triangle(e: MouseEvent) {
         e.stopPropagation();
     }
 }
+
 function _get_menu_position(points: ClientXY[], row_p?: ClientXY) {
     // const tableSelection = props.context.tableSelection, rows = tableSelection.tableRowStart, rowe = tableSelection.tableRowEnd;
     // const pl = points.length, p1 = points[0], p2 = points[(pl / (rowe - rows + 1)) - 3];
@@ -128,7 +139,7 @@ function _get_menu_position(points: ClientXY[], row_p?: ClientXY) {
     //     const b = XYsBounding(points);
     //     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
     // }
-    if(row_p) {
+    if (row_p) {
         emits("get-menu", row_p.x, row_p.y, CellMenu.SelectRow, true);
     } else {
 
@@ -138,6 +149,7 @@ function _get_menu_position(points: ClientXY[], row_p?: ClientXY) {
 }
 
 let watchCells: Map<string, TableCellView> = new Map();
+
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     if (table_selection.tableRowStart > -1) {
@@ -156,15 +168,20 @@ function cells_watcher() {
         watchCells = needWatch;
     }
 }
+
 function table_watcher() {
     update_cell_selection(true);
     cells_watcher();
 }
+
 watch(() => props.cell, (c, oc) => {
     if (c) c.watch(update_triangle)
     if (oc) oc.unwatch(update_triangle);
 })
-watch(() => props.matrix, () => { update_cell_selection(true); update_triangle(); });
+watch(() => props.matrix, () => {
+    update_cell_selection(true);
+    update_triangle();
+});
 watch(() => props.table, (v, o) => {
     if (o) o.unwatch(table_watcher);
     v.watch(table_watcher);
@@ -187,7 +204,7 @@ onUnmounted(() => {
     <g v-if="triangle" :style="{ transform }">
         <path stroke-opacity="0.75" d="M20 10 v10 h-10 z" stroke="#444444" stroke-width="2px" fill="transparent"></path>
         <rect width="20" height="20" fill="transparent" @mousedown="(e) => select_cell_by_triangle(e)"
-            style="cursor: pointer;"></rect>
+              style="cursor: pointer;"></rect>
     </g>
 </template>
 <style scoped lang="scss"></style>
