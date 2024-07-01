@@ -327,8 +327,6 @@ export class RotateHandler extends TransformHandler {
             }
         }));
 
-        this.context.nextTick(this.page, () => {
-            this.context.tool.notify(Tool.RULE_RENDER);
-        });
+        this.updateCtrlView(1);
     }
 }

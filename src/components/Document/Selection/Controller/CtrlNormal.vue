@@ -163,7 +163,7 @@ onUnmounted(() => {
         @mousedown="mousedown" @mouseenter="mouseenter" @mouseleave="mouseleave">
         <path
             :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
-            fill="transparent"></path>
+            fill="transparent" />
         <ShapesStrokeContainer :context="props.context" />
         <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
             :theme="theme" />
