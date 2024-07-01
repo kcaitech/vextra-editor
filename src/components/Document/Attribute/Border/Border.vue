@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode, PathShape, PathShapeView } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -112,9 +112,12 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('layout') || args.includes('borders'))) [
-        updateData()
-    ]
+    if ((args.includes('layout') || args.includes('borders'))) {
+        updateData();
+    }
+    if (args.includes('pathsegs') || args.includes('points')) {
+        layout();
+    }
 }
 
 function updateData() {
@@ -577,35 +580,17 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
-function set_scale_mode(idx: number, mode: ImageScaleMode) {
-    const _idx = borders.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
-    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.setFillImageScaleMode4Cell(_idx, mode, range)
-    } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_image_scale_mode(shapes, _idx, mode);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFillImageScaleMode(actions);
-        }
-    }
-}
-
 function layout() {
     show_apex.value = false;
     const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    if (shapes.length === 1) {
-        const type = shapes[0].type;
-        show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
-    } else if (shapes.length > 1) {
-        show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
-    }
+    
+    show_apex.value = line_end_point(shapes);
+}
+
+const line_end_point = (shapes: ShapeView[]) => {
+    const segment = shapes.every(v => ((v instanceof PathShapeView) && v.segments.length === 1 && !v.segments[0].isClosed));
+    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
+    return endpoint;
 }
 
 function update_by_shapes() {
@@ -978,7 +963,6 @@ const strokeClick = (e: Event) => {
                 </div>
 
             </div>
-            <!--                </div>-->
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
             :trigger="props.trigger">
