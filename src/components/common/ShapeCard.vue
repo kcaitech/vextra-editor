@@ -41,8 +41,9 @@ function mount() {
         return;
     }
 
-    const __view = new __Construct(ctx, { data })
-    const __el = (__view as any).renderStatic();
+    const __view = new __Construct(ctx, { data }) as any;
+    __view.onMounted();
+    const __el = __view.renderStatic();
     __el.el = container.value;
 
     elpatch(__el, undefined);
@@ -51,9 +52,9 @@ function mount() {
 onMounted(mount);
 </script>
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width ?? size ?? 100"
-         :height="height ?? size ?? 100" :viewBox='gen_view_box()' overflow="hidden">
-        <g ref="container"></g>
-    </svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width ?? size ?? 100"
+     :height="height ?? size ?? 100" :viewBox='gen_view_box()' overflow="hidden">
+    <g ref="container"></g>
+</svg>
 </template>

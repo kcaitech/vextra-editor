@@ -179,7 +179,7 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container" :style="{ cursor: isAttri ? 'auto' : 'grab' }">
         <Tooltip :content="tip_name" v-if="render_preview">
             <div>
-                <ShapeCard :shape="render_item" class="render-wrap"></ShapeCard>
+                <ShapeCard :shape="render_item" class="render-wrap" />
                 <div :class="{ status: true, selected, danger }"></div>
             </div>
         </Tooltip>
