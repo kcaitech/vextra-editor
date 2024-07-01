@@ -535,8 +535,6 @@ export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<s
     const parent = shape.parent!;
 
     const frame = shape.frame;
-    const baseX = frame.x;
-    const baseY = frame.y;
     const baseWidth = frame.width;
     const baseHeight = frame.height;
 
@@ -582,16 +580,12 @@ export function boundingBox2Root(shape: ShapeView, parent2rootMatrixCache: Map<s
     }
 
     return {
-        origin,
-
-        baseX,
-        baseY,
         baseWidth,
         baseHeight,
-        baseRotation: shape.rotation || 0,
 
         boxX: left,
         boxY: top,
+
         boxWidth: right - left,
         boxHeight: bottom - top
     };

@@ -3,7 +3,7 @@
  * @description 单选通用型控件
  */
 
-import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
 import { PolygonShapeView, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
