@@ -227,7 +227,6 @@ export class Assist extends WatchableObject {
         const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
         this.m_shape_inner = [];
         this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
-
         if (this.m_context.user.isRuleVisible) {
             this.collectGuides();
         }
@@ -817,5 +816,39 @@ export class Assist extends WatchableObject {
         this.multi_line_y = [];
         this.m_except.clear();
         this.notify(Assist.CLEAR);
+    }
+    // 水平相交的图形
+    horIntersect(top: number, bottom: number) {
+        let result: ShapeView[] = [];
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const inner_shape = this.m_shape_inner[i];
+            const matrix = this.m_context.workspace.matrix;
+            const m = inner_shape.matrix2Root();
+            m.multiAtLeft(matrix);
+            const frame = inner_shape.frame;
+            const t_y = m.computeCoord2(0, 0).y;
+            const b_y = m.computeCoord2(0, frame.height).y;
+            if (top < b_y && bottom > t_y) {
+                result.push(inner_shape);
+            }
+        }
+        return result;
+    }
+    // 垂直相交的图形
+    verIntersect(left: number, right: number) {
+        let result: ShapeView[] = [];
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const inner_shape = this.m_shape_inner[i];
+            const matrix = this.m_context.workspace.matrix;
+            const m = inner_shape.matrix2Root();
+            m.multiAtLeft(matrix);
+            const frame = inner_shape.frame;
+            const l_x = m.computeCoord2(0, 0).x;
+            const r_x = m.computeCoord2(frame.width, 0).x;
+            if (left < r_x && right > l_x) {
+                result.push(inner_shape);
+            }
+        }
+        return result;
     }
 }

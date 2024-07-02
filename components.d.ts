@@ -330,6 +330,7 @@ declare module '@vue/runtime-core' {
     ShortCut: typeof import('./src/components/Help/ShortCut.vue')['default']
     ShowHiddenLeft: typeof import('./src/components/Document/Navigation/ShowHiddenLeft.vue')['default']
     Simple: typeof import('./src/components/Document/Content/Simple.vue')['default']
+    SpaceAssist: typeof import('./src/components/Document/Assist/spaceAssist.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']
     StaticAbbrCard: typeof import('./src/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
