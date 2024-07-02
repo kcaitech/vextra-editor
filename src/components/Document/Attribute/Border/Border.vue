@@ -70,6 +70,7 @@ let table: TableShape;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 const reflush_side = ref(0);
+const reflush_apex = ref(0);
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -117,6 +118,7 @@ function watcher(...args: any[]) {
     }
     if (args.includes('pathsegs') || args.includes('points')) {
         layout();
+        reflush_apex.value++;
     }
 }
 
@@ -965,7 +967,7 @@ const strokeClick = (e: Event) => {
             </div>
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-            :trigger="props.trigger">
+            :trigger="props.trigger" :reflush_apex="reflush_apex">
         </Apex>
     </div>
     <teleport to="body">

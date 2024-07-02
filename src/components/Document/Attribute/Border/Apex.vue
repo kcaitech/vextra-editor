@@ -14,6 +14,7 @@ interface Props {
     shapes: ShapeView[]
     view: number
     trigger: any[]
+    reflush_apex: number
 }
 const props = defineProps<Props>();
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
@@ -90,7 +91,7 @@ function apexStyleSelect(selected: SelectItem) {
 
 const shaow_apex = ref(false);
 function init_v() {
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
+    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(s => s.type !== ShapeType.Group);
     const len = shapes.length;
     s_mixed.value = false;
     e_mixed.value = false;
@@ -125,8 +126,9 @@ function init_v() {
 }
 
 const apexStyle = () => {
-    const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
+    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(s => s.type !== ShapeType.Group);
     const len = shapes.length;
+    shaow_apex.value = shapes.every(v => ((v instanceof PathShapeView) && v.segments.length > 1));
     apex_mixed.value = false;
     if (len === 1) {
         const s = shapes[0];
@@ -180,12 +182,16 @@ const stop2 = watch(() => props.view, init_v);
 const stop3 = watch(() => props.trigger, v => { // 监听选区图层变化
     if (v.length > 0 && (v.includes('style') || v.includes('variable'))) init_v();
 });
+const stop4 = watch(() => props.reflush_apex, () => {
+    apexStyle();
+})
 
 onMounted(init_v);
 onUnmounted(() => {
     stop();
     stop2();
     stop3();
+    stop4();
 });
 </script>
 <template>
