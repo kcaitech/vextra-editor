@@ -488,7 +488,12 @@ export class ScaleHandler extends TransformHandler {
 
             t.clearScaleSize();
 
-            units.push({ shape, size, transform2: t, scale });
+            const __scale = {
+                x: Math.abs(scale.x),
+                y: Math.abs(scale.y)
+            };
+
+            units.push({ shape, size, transform2: t, scale: __scale });
         });
 
         if (this.alignPixel) {
