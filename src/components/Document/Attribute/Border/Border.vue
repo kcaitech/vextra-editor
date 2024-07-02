@@ -588,7 +588,7 @@ function layout() {
 }
 
 const line_end_point = (shapes: ShapeView[]) => {
-    const segment = shapes.every(v => ((v instanceof PathShapeView) && v.segments.length === 1 && !v.segments[0].isClosed));
+    const segment = shapes.every(v => ((v instanceof PathShapeView) && ((v.segments.length === 1 && !v.segments[0].isClosed) || v.segments.length > 1)));
     const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
     return endpoint;
 }
