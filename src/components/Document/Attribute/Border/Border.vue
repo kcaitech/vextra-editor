@@ -116,7 +116,7 @@ function watcher(...args: any[]) {
     if ((args.includes('layout') || args.includes('borders'))) {
         updateData();
     }
-    if (args.includes('pathsegs') || args.includes('points')) {
+    if (args.includes('pathsegs') && args.includes('points')) {
         layout();
         reflush_apex.value++;
     }
