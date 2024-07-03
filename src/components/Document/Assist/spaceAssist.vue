@@ -5,7 +5,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 
 interface Props {
     context: Context
@@ -24,8 +24,11 @@ const getIntersectShapes = () => {
         points.push(...ps);
     }
     const b = XYsBounding(points);
-    console.log(b);
-    props.context.assist.verIntersect(b.top, b.bottom)
+    const h_shape = props.context.assist.horIntersect(b.left, b.right);
+    const v_shape = props.context.assist.verIntersect(b.top, b.bottom);
+    console.log(h_shape, '垂直');
+    console.log(v_shape, '水平');
+    
 }
 
 const selectedWatcher = (t: number) => {
