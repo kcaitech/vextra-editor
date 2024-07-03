@@ -210,7 +210,6 @@ onUnmounted(() => {
         </div>
     </div>
     <div class="apex-select-wrap" v-if="shaow_apex">
-        <div class="name">端点</div>
         <div class="select-apex">
             <Select class="select" :selected="borderApexStyle" :item-view="BorderApexStyleItem"
                 :value-view="BorderApexStyleSelectedItem" :source="borderApexStyleOptionsSource"
@@ -225,9 +224,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    margin-top: 2px;
-    padding-top: 8px;
-    border-top: 1px solid #F0F0F0;
+    padding-top: 10px;
     justify-content: space-between;
     gap: 6px;
 
@@ -270,9 +267,8 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         flex: 1;
-        justify-content: flex-end;
         height: 100%;
-        gap: 6px;
+        margin-left: 19px;        
         box-sizing: border-box;
 
         .select {
