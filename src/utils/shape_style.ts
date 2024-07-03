@@ -390,6 +390,14 @@ export function get_actions_border_Apex(shapes: ShapeView[], type: MarkerType, e
     }
     return actions;
 }
+
+export function get_actions_border_endpoint(shapes: ShapeView[], type: MarkerType) {
+    const actions: BatchAction2[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: (shapes[i]), value: type });
+    }
+    return actions;
+}
 export function get_actions_border_exchange(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
