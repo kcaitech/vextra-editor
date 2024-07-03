@@ -34,10 +34,10 @@ let drag: boolean = false;
 
 const penMode = ref<boolean>(false);
 
-function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+function onMouseWheel(e: WheelEvent) {
     e.preventDefault();
     const { ctrlKey, metaKey, deltaX, deltaY } = e;
-    if (ctrlKey || metaKey) { // 缩放
+    if (ctrlKey || metaKey) {
         root_scale(props.context, e);
     } else {
         if (Math.abs(deltaX) + Math.abs(deltaY) < 100) {
@@ -188,6 +188,12 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
         path.setContactStatus(false);
         path.saveEvent(undefined);
         props.context.tool.notify(Tool.RULE_RENDER);
+        clip_mode.value = false;
+        penMode.value = false;
+    } else {
+        props.context.selection.watch(selection_watcher);
+        props.context.tool.watch(tool_watcher);
+        window.addEventListener('blur', window_blur);
     }
 })
 onMounted(() => {

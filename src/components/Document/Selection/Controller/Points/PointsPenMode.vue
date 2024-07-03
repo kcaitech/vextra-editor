@@ -56,18 +56,14 @@ const preparePointVisible = ref<boolean>(false);
 
 // 每次更新都是全局更新，虽然计算量大的场景少，但要是可以有局部更新的方案会更好
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        return;
-    }
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
 
     dots.length = 0;
     segments.length = 0;
 
     const matrix = init_matrix();
 
-    if (!(shape as PathShapeView)?.segments?.length) {
-        return;
-    }
+    if (!(shape as PathShapeView)?.segments?.length) return;
 
     dots.push(...get_path_by_point(shape, matrix, props.context.path.selectedPoints));
     segments.push(...get_segments(shape, matrix, props.context.path.selectedSides));
@@ -139,9 +135,7 @@ function passiveUpdate() {
     dots.length = 0;
     segments.length = 0;
 
-    if (!(shape as PathShapeView)?.segments?.length) {
-        return;
-    }
+    if (!(shape as PathShapeView)?.segments?.length) return;
 
     const matrix = init_matrix();
 
@@ -157,9 +151,7 @@ function passiveUpdate() {
  * training...
  */
 function point_mousedown(event: MouseEvent, segment: number, index: number) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
     event.stopPropagation();
 
@@ -170,9 +162,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 
     if (isContacting) { // 连接状态
         const last = path.lastPoint;
-        if (!last) {
-            return; // 连接状态却没有lastPoint，说明出了预期以外的问题
-        }
+        if (!last) return; // 连接状态却没有lastPoint，说明出了预期以外的问题
 
         const lastSegment = last.segment;
         const lastIndex = last.index;
@@ -187,9 +177,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             } else {
                 console.log(`将在路径【${lastSegment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
                 const point = (shape as PathShapeView)?.segments[segment]?.points[index];
-                if (!point) {
-                    return;
-                }
+                if (!point) return;
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
@@ -199,9 +187,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             }
         } else {
             const __segment = (shape as PathShapeView).segments[segment];
-            if (!__segment) {
-                return;
-            }
+            if (!__segment) return;
 
             const points = __segment.points;
 
@@ -219,9 +205,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             } else {
                 console.log(`将在路径【${lastSegment}】的${lastIndex + 1}的位置上加入一个点并保持链接状态`);
                 const point = (shape as PathShapeView)?.segments[segment]?.points[index];
-                if (!point) {
-                    return;
-                }
+                if (!point) return;
 
                 pathModifier = new PathEditor(props.context, event);
                 pathModifier.createApiCaller();
@@ -232,9 +216,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
         }
     } else { // 非连接状态
         const __segment = (shape as PathShapeView).segments[segment];
-        if (!__segment) {
-            return;
-        }
+        if (!__segment) return;
 
         const points = __segment.points;
 
@@ -248,9 +230,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             if (result) {
                 const { segment: _segment, activeIndex } = result;
                 const point = (shape as PathShapeView)?.segments[_segment]?.points[activeIndex];
-                if (!point) {
-                    return;
-                }
+                if (!point) return;
 
                 path.select_point(_segment, activeIndex);
                 path.setLastPoint({ point: point as CurvePoint, segment: _segment, index: activeIndex });
@@ -270,9 +250,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             // 不需要调换点的顺序
             console.log(`从末尾处延续路径【${segment}】，并进入连接状态`);
             const point = (shape as PathShapeView)?.segments[segment]?.points[index];
-            if (!point) {
-                return;
-            }
+            if (!point) return;
 
             path.setLastPoint({ point: point as CurvePoint, segment, index })
             path.setContactStatus(true);
@@ -292,18 +270,13 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
             console.log(`将新增一条路径，并进入链接状态`);
 
             const point = (shape as PathShapeView)?.segments[segment]?.points[index];
-            if (!point) {
-                return;
-            }
+            if (!point) return;
 
             pathModifier = new PathEditor(props.context, event);
             pathModifier.createApiCaller();
             const addRes = pathModifier.addSegmentForPen(preXY.value, point as CurvePoint);
 
-            if (!addRes) {
-                return;
-            }
-
+            if (!addRes) return;
             props.context.path.setContactStatus(true);
 
             props.context.escstack.save('contact-status', () => {
@@ -321,9 +294,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
 function checkStatus() {
     const path = props.context.path;
     const params = path.bridgeParam;
-    if (!params) {
-        return;
-    }
+    if (!params) return;
 
     const { segment, index, handler, e } = params;
 
@@ -419,9 +390,7 @@ function enter(event: MouseEvent, segment: number, index: number) {
     clear_high_light();
 
     const path = props.context.path;
-    if (path.no_hover) {
-        return;
-    }
+    if (path.no_hover) return;
 
     new_high_light.value = `${segment}-${index}`;
 }
@@ -571,9 +540,7 @@ function modifyLivingPath() {
 
     const path = props.context.path;
 
-    if (!path.lastPoint) {
-        return;
-    }
+    if (!path.lastPoint) return;
 
     const shape = props.context.selection.selectedShapes[0] as PathShapeView;
     const { segment, index } = path.lastPoint;
@@ -587,9 +554,7 @@ function modifyLivingPath() {
             previous = __seg.points[__seg.points.length - 1];
         }
 
-        if (!previous) {
-            return;
-        }
+        if (!previous) return;
     }
 
     const m = new Matrix(shape.matrix2Root());
@@ -612,9 +577,7 @@ function modifyLivingPath() {
  * training...
  */
 function down(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0) return;
 
     downXY = { x: e.x, y: e.y };
 
@@ -635,9 +598,7 @@ function down(e: MouseEvent) {
         pathModifier.createApiCaller();
         const addRes = pathModifier.addSegmentForPen(preXY.value);
 
-        if (!addRes) {
-            return;
-        }
+        if (!addRes) return;
 
         props.context.path.setContactStatus(true);
 
@@ -666,9 +627,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
 
     const path = props.context.path;
 
-    if (!path.lastPoint) {
-        return;
-    }
+    if (!path.lastPoint) return;
 
     const shape = props.context.selection.selectedShapes[0] as PathShapeView;
     const { segment, index } = path.lastPoint;
@@ -682,9 +641,7 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
             previous = __seg.points[__seg.points.length - 1];
         }
 
-        if (!previous) {
-            return;
-        }
+        if (!previous) return;
     }
 
     const m = new Matrix(shape.matrix2Root());
@@ -692,20 +649,12 @@ function fixPreLine(e: MouseEvent, segmentIndex: number, toIndex: number) {
     m.multiAtLeft(props.context.workspace.matrix);
 
     const toSegment = (shape as PathShapeView)?.segments[segmentIndex];
-    if (!toSegment) {
-
-        return;
-
-    }
+    if (!toSegment) return;
     const toPoint = toSegment?.points[toIndex];
-    if (!toPoint) {
-        return;
-    }
+    if (!toPoint) return;
 
     const hasTo = toPoint.hasTo;
-    if (!hasTo) {
-        return;
-    }
+    if (!hasTo) return;
 
     const p1 = m.computeCoord3(previous);
     const p2 = m.computeCoord3(toPoint);
@@ -771,38 +720,38 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path :d="maskPath" fill="transparent" @mousedown="down" />
+<path :d="maskPath" fill="transparent" @mousedown="down"/>
 
-    <path v-if="livingPathVisible" :d="livingPath" stroke="#1878f5" fill="none" style="pointer-events: none"/>
+<path v-if="livingPathVisible" :d="livingPath" stroke="#1878f5" fill="none" style="pointer-events: none"/>
 
-    <g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
-        <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
-           @mouseleave="leave">
-            <path class="path" :d="p.path"/>
-        </g>
+<g v-for="(seg, si) in segments" :key="si" data-area="controller-element">
+    <g v-for="(p, i) in seg" :key="i" @mouseenter="(e) => enter(e, si, i)"
+       @mouseleave="leave">
+        <path class="path" :d="p.path"/>
     </g>
+</g>
 
-    <Handle :context="props.context"/>
-    <!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
-    <!--    <text v-for="(p, i) in dots"-->
-    <!--          :key="i"-->
-    <!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
-    <!--        {{ `${p.segment},${p.index}` }}-->
-    <!--    </text>-->
-    <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
-          class="point" rx="4" ry="4" data-area="controller-element"
-          @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
-          @mousemove="(e) => fixPreLine(e,p.segment, p.index)"
-          :class="{ point: true, selected: p.selected }"/>
-    <rect
-        v-if="preparePointVisible"
-        class="point"
-        style="pointer-events: none"
-        :x="preXY.x - 4"
-        :y="preXY.y - 4"
-        rx="4"
-        ry="4"
-    />
+<Handle :context="props.context"/>
+<!--    &lt;!&ndash;点序 for Dev&ndash;&gt;-->
+<!--    <text v-for="(p, i) in dots"-->
+<!--          :key="i"-->
+<!--          :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`, 'pointer-events': 'none'}">-->
+<!--        {{ `${p.segment},${p.index}` }}-->
+<!--    </text>-->
+<rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
+      class="point" rx="4" ry="4" data-area="controller-element"
+      @mousedown.stop="(e) => point_mousedown(e, p.segment, p.index)"
+      @mousemove="(e) => fixPreLine(e,p.segment, p.index)"
+      :class="{ point: true, selected: p.selected }"/>
+<rect
+    v-if="preparePointVisible"
+    class="point"
+    style="pointer-events: none"
+    :x="preXY.x - 4"
+    :y="preXY.y - 4"
+    rx="4"
+    ry="4"
+/>
 </template>
 <style lang='scss' scoped>
 .point {
