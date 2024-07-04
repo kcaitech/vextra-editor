@@ -14,7 +14,7 @@ interface Emits {
     (e: 'action', temp: TL): void;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 const emits = defineEmits<Emits>();
 
 </script>

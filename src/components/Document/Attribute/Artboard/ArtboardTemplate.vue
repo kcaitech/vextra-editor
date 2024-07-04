@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { templates, TL } from "@/components/Document/Attribute/Artboard/template";
 import Folder from "@/components/Document/Attribute/Artboard/Folder.vue";
-import { onBeforeMount, onMounted, ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 
