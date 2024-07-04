@@ -20,8 +20,21 @@ function modify(index: number) {
 }
 
 function action(template: TL) {
-    props.context.tool.setArtboardTemp(template.width, template.height, template.name);
+    let name = template.name;
+    let reg = new RegExp(`^${name} - [0-9]+$`);
+    let max = 0;
+    const artboardList = props.context.selection.selectedPage!.artboardList;
+    artboardList.forEach(a => {
+        if (!reg.test(a.name)) return;
+        const index = a.name.lastIndexOf(' ');
+        const end = Number(a.name.slice(index + 1));
+        if (isNaN(end)) return;
+        if (end > max) max = end;
+    });
+    name = template.name + ' - ' + (max ? max + 1 : 1);
+    props.context.tool.setArtboardTemp(template.width, template.height, name);
 }
+
 onBeforeMount(() => {
     const templateStatus = JSON.parse(localStorage.getItem('templateStatus') || '[]') as boolean[];
     if (templateStatus.length === templates.length) {
@@ -35,22 +48,22 @@ onBeforeMount(() => {
 })
 </script>
 <template>
-    <div class="board-template">
-        <div class="header">
-            {{ t('attr.frameSize') }}
-        </div>
-        <el-scrollbar style="height: calc(100% - 40px)">
-            <Folder
-                v-for="(f, index) in templates"
-                :key="index"
-                :title="f.title"
-                :extend="extendStatus[index]"
-                :list="f.children"
-                @toggle="() => {modify(index)}"
-                @action="(tl: TL) => {action(tl)}"
-            ></Folder>
-        </el-scrollbar>
+<div class="board-template">
+    <div class="header">
+        {{ t('attr.frameSize') }}
     </div>
+    <el-scrollbar style="height: calc(100% - 40px)">
+        <Folder
+            v-for="(f, index) in templates"
+            :key="index"
+            :title="f.title"
+            :extend="extendStatus[index]"
+            :list="f.children"
+            @toggle="() => {modify(index)}"
+            @action="(tl: TL) => {action(tl)}"
+        ></Folder>
+    </el-scrollbar>
+</div>
 </template>
 <style scoped lang="scss">
 .board-template {
