@@ -508,9 +508,13 @@ function isCreatorSupportAction(action: string | undefined) {
 
 function tool_watcher(type: number) {
     if (type === Tool.CHANGE_ACTION) {
+        if (props.context.workspace.is_path_edit_mode) return;
         creatorMode.value = isCreatorSupportAction(props.context.curAction);
-    } else if (type === Tool.INSERT_FRAME) insertFrame();
-    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
+    } else if (type === Tool.INSERT_FRAME) {
+        insertFrame();
+    } else if (type === Tool.INSERT_TABLE) {
+        init_insert_table(props.context, t);
+    }
 }
 
 function workspace_watcher(type?: number | string, param?: string | MouseEvent | Color) {
@@ -522,6 +526,7 @@ function workspace_watcher(type?: number | string, param?: string | MouseEvent |
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
         path_edit_mode.value = props.context.workspace.is_path_edit_mode;
+        creatorMode.value = false;
     }
 }
 

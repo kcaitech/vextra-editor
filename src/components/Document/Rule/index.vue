@@ -131,6 +131,8 @@ function toolWatcher(t: number) {
         scaleRenderer.render();
     } else if (t === Tool.RULE_RENDER_SIM) {
         scaleRenderer.render(true);
+    } else if (t === Tool.RULE_CLEAR) {
+        scaleRenderer.clearBlocks();
     }
 }
 
