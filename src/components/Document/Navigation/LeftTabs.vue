@@ -15,7 +15,7 @@ const { t } = useI18n();
 interface Props {
     context: Context
     page: PageView
-    leftTriggleVisible: boolean
+    leftTriggerVisible: boolean
     showLeft: boolean
 }
 
@@ -134,10 +134,10 @@ const plugins = props.context.pluginsMgr.search2('navigation');
             <!-- begin plugin -->
             <component v-for="p in plugins.begin" :is=p.component :context="props.context" :params="p.params" />
             <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
+                :showLeft="showLeft" :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft">
             </ShapeTab>
             <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
+                :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <!-- end plugin -->
             <component v-for="p in plugins.end" :is=p.component :context="props.context" :params="p.params" />
         </div>
