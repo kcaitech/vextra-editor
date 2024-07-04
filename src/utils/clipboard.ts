@@ -1358,14 +1358,7 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
 
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
-        // let _s = s;
         let p = s.parent!;
-
-        //
-        // if (p.type === ShapeType.SymbolUnion) {
-        //     _s = p;
-        //     p = p.parent!;
-        // }
 
         const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
