@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { User } from "@/context/user";
 import { WorkSpace } from "@/context/workspace";
-import { ArtboradView, GuideAxis, PageView } from '@kcdesign/data';
+import { ArtboradView, GuideAxis, PageView, ShapeView } from '@kcdesign/data';
 import { Block, Tool } from "@/context/tool";
 import { Selection } from "@/context/selection";
 import { formatNumber, ReferLineHandler, ReferUnit } from "@/components/Document/Rule/refer";
@@ -140,6 +140,7 @@ function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_SHAPE) {
         scaleRenderer.render();
         referLineSelection.updateByShapesSelected();
+        forWatchOne();
     } else if (t === Selection.CHANGE_PAGE) {
         const page = props.context.selection.selectedPage!;
 
@@ -418,6 +419,28 @@ function updateHolder() {
     }, 500);
 }
 
+let one: ShapeView | undefined;
+
+function oneAction(...args: any) {
+    if (!args.includes('layout') || props.context.workspace.transforming) {
+        return;
+    }
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        scaleRenderer.render(true);
+    })
+}
+
+function forWatchOne() {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length) {
+        one = selected[0];
+        one.watch(oneAction);
+    } else {
+        one?.unwatch(oneAction);
+        one = undefined;
+    }
+}
+
 watch(() => props.page, (n, o) => {
     o.unwatch(pageWatcher);
     n.watch(pageWatcher);
@@ -437,6 +460,7 @@ onMounted(() => {
     document.addEventListener('keydown', keydown);
     ruleVisible.value = props.context.user.isRuleVisible;
     scaleRenderer.render();
+    forWatchOne();
 });
 onUnmounted(() => {
     props.context.tool.unwatch(toolWatcher);
@@ -447,83 +471,84 @@ onUnmounted(() => {
     referLineSelection.removeScout();
     referUnderContainerRenderer.clearContainerWatcher();
     document.removeEventListener('keydown', keydown);
+    one?.unwatch(oneAction);
 })
 </script>
 <template>
-    <div v-if="ruleVisible" class="rule-container">
-        <svg width="100" height="100" viewBox="0 0 100 100">
-            <g v-for="(unit, key) in lineUnits" :key="key">
-                <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
-            </g>
-            <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
-            <g v-if="hovered.valid" :class="hovered.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downHover">
-                <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.desc }}</text>
-                <path
-                    v-for="(p, i) in hovered.path"
-                    :key="i"
-                    :d="p.data"
-                    :stroke="hovered.theme"
-                    :stroke-dasharray="p.dash ? '3, 3' : 'none'"
-                />
-                <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
-            </g>
-            <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'"
-               @mousedown="downSelect">
-                <text v-if="selected.path.length" class="offset-desc" :style="{transform: selected.transform }">
-                    {{ selected.desc }}
-                </text>
-                <path
-                    v-for="(p, i) in selected.path"
-                    :key="i"
-                    :d="p.data"
-                    :stroke="selected.theme"
-                    :stroke-dasharray="p.dash ? '3, 3' : 'none'"
-                />
-                <path v-for="(p, i) in selected.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
-            </g>
-        </svg>
-        <div class="contact-block"/>
-        <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
-            <div v-for="(s, i) in scalesHor"
-                 :key="i"
-                 :style="{transform: `translateX(${s.offset}px)`, opacity: s.opacity}"
-                 class="scale"
-            >
-                <div class="scale-number">
-                    {{ s.data }}
-                </div>
-                <div class="dot"></div>
+<div v-if="ruleVisible" class="rule-container">
+    <svg width="100" height="100" viewBox="0 0 100 100">
+        <g v-for="(unit, key) in lineUnits" :key="key">
+            <path v-for="(line, k) in unit.lines" :d="line.path" :key="k" stroke="#ff4400" stroke-width="0.5"/>
+        </g>
+        <path v-for="(line, i) in rootLines.lines" :d="line.path" :key="i" stroke="#ff4400" stroke-width="0.5"/>
+        <g v-if="hovered.valid" :class="hovered.axis === GuideAxis.X ? 'x-line' :'y-line'" @mousedown="downHover">
+            <text class="offset-desc" :style="{transform: hovered.transform }">{{ hovered.desc }}</text>
+            <path
+                v-for="(p, i) in hovered.path"
+                :key="i"
+                :d="p.data"
+                :stroke="hovered.theme"
+                :stroke-dasharray="p.dash ? '3, 3' : 'none'"
+            />
+            <path v-for="(p, i) in hovered.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
+        </g>
+        <g v-if="selected.valid" :class="selected.axis === GuideAxis.X ? 'x-line' :'y-line'"
+           @mousedown="downSelect">
+            <text v-if="selected.path.length" class="offset-desc" :style="{transform: selected.transform }">
+                {{ selected.desc }}
+            </text>
+            <path
+                v-for="(p, i) in selected.path"
+                :key="i"
+                :d="p.data"
+                :stroke="selected.theme"
+                :stroke-dasharray="p.dash ? '3, 3' : 'none'"
+            />
+            <path v-for="(p, i) in selected.path" :d="p.data" :key="i" stroke="transparent" stroke-width="14"/>
+        </g>
+    </svg>
+    <div class="contact-block"/>
+    <div class="d-hor" @mousemove="moveStop" @mousedown="downHor">
+        <div v-for="(s, i) in scalesHor"
+             :key="i"
+             :style="{transform: `translateX(${s.offset}px)`, opacity: s.opacity}"
+             class="scale"
+        >
+            <div class="scale-number">
+                {{ s.data }}
             </div>
-            <div v-for="(b, i) in blocksHor"
-                 :key="i"
-                 :style="{transform: `translateX(${b.offsetStart}px)`, width: (b.offsetEnd - b.offsetStart) + 'px'}"
-                 class="block"
-            >
-                <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
-                <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
-            </div>
+            <div class="dot"></div>
         </div>
-        <div class="d-ver" @mousemove="moveStop" @mousedown="downVer">
-            <div v-for="(s, i) in scalesVer"
-                 :key="i"
-                 :style="{transform: `translateY(${s.offset}px)`, opacity: s.opacity}"
-                 class="scale"
-            >
-                <div class="scale-number">
-                    {{ s.data }}
-                </div>
-                <div class="dot"></div>
-            </div>
-            <div v-for="(b, i) in blocksVer"
-                 :key="i"
-                 :style="{transform: `translateY(${b.offsetStart}px)`, height: (b.offsetEnd - b.offsetStart) + 'px'}"
-                 class="block"
-            >
-                <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
-                <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
-            </div>
+        <div v-for="(b, i) in blocksHor"
+             :key="i"
+             :style="{transform: `translateX(${b.offsetStart}px)`, width: (b.offsetEnd - b.offsetStart) + 'px'}"
+             class="block"
+        >
+            <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
+            <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
         </div>
     </div>
+    <div class="d-ver" @mousemove="moveStop" @mousedown="downVer">
+        <div v-for="(s, i) in scalesVer"
+             :key="i"
+             :style="{transform: `translateY(${s.offset}px)`, opacity: s.opacity}"
+             class="scale"
+        >
+            <div class="scale-number">
+                {{ s.data }}
+            </div>
+            <div class="dot"></div>
+        </div>
+        <div v-for="(b, i) in blocksVer"
+             :key="i"
+             :style="{transform: `translateY(${b.offsetStart}px)`, height: (b.offsetEnd - b.offsetStart) + 'px'}"
+             class="block"
+        >
+            <div v-if="!b.hidden" class="start-data"> {{ formatNumber(b.dataStart) }}</div>
+            <div class="end-data"> {{ formatNumber(b.dataEnd) }}</div>
+        </div>
+    </div>
+</div>
 </template>
 <style scoped lang="scss">
 .rule-container {
