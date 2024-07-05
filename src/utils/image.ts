@@ -99,14 +99,14 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         const { left, top, right, bottom } = getShadowMax(shape);
         let g_x = 0;
         let g_y = 0;
-        const max_border = getShapeBorderMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
         if (shape.type === ShapeType.Group) {
           const { x, y, width, height } = getGroupChildBounds(shape);
           g_x = shape.frame.x - x;
           g_y = shape.frame.y - y;
         }
-        const x = left + max_border + g_x;
-        const y = top + max_border + g_y;
+        const x = left + l_max + g_x;
+        const y = top + t_max + g_y;
         el.style.transform = `rotate(0deg)`;
         let rotateY = 0;
         let rotateX = 0;
@@ -188,14 +188,14 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         const { left, top, right, bottom } = getShadowMax(shape);
         let g_x = 0;
         let g_y = 0;
-        const max_border = getShapeBorderMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
         if (shape.type === ShapeType.Group) {
           const { x, y, width, height } = getGroupChildBounds(shape);
           g_x = shape.frame.x - x;
           g_y = shape.frame.y - y;
         }
-        const x = left + max_border + g_x;
-        const y = top + max_border + g_y;
+        const x = left + l_max + g_x;
+        const y = top + t_max + g_y;
         el.style.transform = `rotate(0deg)`;
         let rotateY = 0;
         let rotateX = 0;

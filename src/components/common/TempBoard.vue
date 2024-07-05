@@ -46,12 +46,12 @@ function write() {
         const frame = shape.frame;
 
         const { left, top, right, bottom } = getShadowMax(shape);
-        const max_border = getShapeBorderMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
 
-        const x = -left - max_border;
-        const y = -top - max_border;
-        const _right = frame.width + (right + max_border);
-        const _bottom = frame.height + (bottom + max_border);
+        const x = -left - l_max;
+        const y = -top - t_max;
+        const _right = frame.width + (right + l_max + r_max);
+        const _bottom = frame.height + (bottom + t_max + b_max);
         console.log(x, y, width, height);
         points.push(
             ...[
@@ -107,12 +107,12 @@ function write4LazyLoader(target: ShapeView) {
         const frame = shape.frame;
 
         const { left, top, right, bottom } = getShadowMax(shape);
-        const max_border = getShapeBorderMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
 
-        const x = -left - max_border;
-        const y = -top - max_border;
-        const _right = frame.width + (right + max_border);
-        const _bottom = frame.height + (bottom + max_border);
+        const x = -left - l_max;
+        const y = -top - t_max;
+        const _right = frame.width + (right + l_max + r_max);
+        const _bottom = frame.height + (bottom + t_max + b_max);
         console.log(x, y, width, height);
         points.push(
             ...[

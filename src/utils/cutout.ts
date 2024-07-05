@@ -21,12 +21,12 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
         if (selectedShapes.get(shape.id) || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
         const { width, height } = shape.frame;
-        const max_border = getShapeBorderMax(shape) * 6;
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
         const { left, top, right, bottom } = getShadowMax(shape);
-        const _x = - (left + max_border);
-        const _y = - (top + max_border);
-        const _w = (left + max_border) + (right + max_border);
-        const _h = (top + max_border) + (bottom + max_border);
+        const _x = - (left + l_max);
+        const _y = - (top + t_max);
+        const _w = (left + l_max) + (right + r_max);
+        const _h = (top + t_max) + (bottom + b_max);
         const ps: XY[] = [{ x: _x, y: _y }, { x: width + _w, y: _y }, { x: width + _w, y: height + _h }, { x: _x, y: height + _h }, { x: _x, y: _y }];
         for (let i = 0; i < 5; i++) {
             const p = ps[i];
@@ -45,16 +45,29 @@ function private_set(key: string, value: ShapeView, selectedShapes: Map<string, 
 
 export const getShapeBorderMax = (shape: ShapeView) => {
     const borders = shape.getBorders();
-    if (!borders.length) return 0;
-    let max = 0;
+    let l_max = 0;
+    let t_max = 0;
+    let r_max = 0;
+    let b_max = 0;
+    if (!borders.length) return { l_max, t_max, r_max, b_max };
     for (let i = 0; i < borders.length; i++) {
         const border = borders[i];
         if (!border.isEnabled || border.position === BorderPosition.Inner) continue;
-        if (border.thickness > max) {
-            max = border.position === BorderPosition.Center ? border.thickness / 2 : border.thickness;
+        const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight } = border.sideSetting;
+        if (thicknessBottom > b_max) {
+            b_max = border.position === BorderPosition.Center ? thicknessBottom / 2 : thicknessBottom;
+        }
+        if (thicknessLeft > l_max) {
+            l_max = border.position === BorderPosition.Center ? thicknessLeft / 2 : thicknessLeft;
+        }
+        if (thicknessTop > t_max) {
+            t_max = border.position === BorderPosition.Center ? thicknessTop / 2 : thicknessTop;
+        }
+        if (thicknessRight > r_max) {
+            r_max = border.position === BorderPosition.Center ? thicknessRight / 2 : thicknessRight;
         }
     }
-    return max;
+    return { l_max, t_max, r_max, b_max };
 }
 
 export const getShadowMax = (shape: ShapeView) => {
@@ -161,23 +174,29 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
     return {
-        x: min_p.x,
-        y: min_p.y,
-        width: max_p.x - min_p.x,
-        height: max_p.y - min_p.y
+        x,
+        y,
+        width,
+        height
     }
+    // return {
+    //     x: min_p.x,
+    //     y: min_p.y,
+    //     width: max_p.x - min_p.x,
+    //     height: max_p.y - min_p.y
+    // }
 }
 
 const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
     const bounds_points = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const max_border = getShapeBorderMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
         const { left, top, right, bottom } = getShadowMax(shape);
-        const l = (left + max_border);
-        const t = (top + max_border);
-        const r = (left + max_border) + (right + max_border);
-        const b = (top + max_border) + (bottom + max_border);
+        const l = (left + l_max);
+        const t = (top + t_max);
+        const r = (left + l_max) + (right + r_max);
+        const b = (top + t_max) + (bottom + b_max);
         let frame = shape.frame;
         const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
         const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
