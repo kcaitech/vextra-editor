@@ -34,11 +34,13 @@ app.directive('select', {
     mounted: (el) => {
         el.addEventListener("focus", () => {
             nextTick(() => {
+                el.setSelectionRange(0,0)
                 el.select()
             })
         })
     }
 })
+
 app.use(pinia)
 app.mount("#app")
 

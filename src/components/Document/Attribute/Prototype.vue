@@ -1,11 +1,11 @@
 <template>
     <div class="container">
         <el-scrollbar height="100%">
-            <div v-if="isProtoType">
-                <div v-if="shapes.length < 2 && isProtoType" class="origin">
-                    <div class="title">
-                        <div class="text" :style="{ color: prototypestart ? '#000' : '' }">流程起点</div>
-                        <div v-if="!prototypestart" class="add" @click.stop=createOrigin>
+            <div v-if="isProtoType?.length">
+                <div v-if="isProtoType.length < 2" class="origin">
+                    <div class="title" @click.stop=createOrigin>
+                        <div class="text" :class="{ active: prototypestart }">流程起点</div>
+                        <div v-if="!prototypestart" class="add">
                             <svg-icon icon-class="add"></svg-icon>
                         </div>
                         <div v-else class="delete" @click.stop=deleteOrigin>
@@ -23,38 +23,46 @@
                     </div>
                 </div>
                 <div class="interaction">
-                    <div class="title">
-                        <div class="text">交互</div>
-                        <div class="add" @click.stop="createAction">
+                    <div class="title" @click.stop="createAction">
+                        <div class="text" :class="{ active: prototypeinteraction?.length }">交互</div>
+                        <div class="add">
                             <svg-icon icon-class="add"></svg-icon>
                         </div>
                     </div>
-                    <div class="actions" v-if="numbers.length">
+                    <div class="actions" v-if="prototypeinteraction?.length">
 
-                        <div class="actions-item" v-for="i in numbers" :key="i">
+                        <div class="actions-item" v-for="action in prototypeinteraction" :key="action.id">
                             <div class="item">
-                                <div class="arrow" :class="{ activation: showaction && acitonindex === i }"
-                                    @click.stop="showhandel(i)">
+                                <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }"
+                                    @click.stop="showhandel(action.id)">
                                     <svg-icon icon-class="arrows-dr"></svg-icon>
                                 </div>
-                                <div class="item-content">{{ i }}</div>
-                                <div class="delete" @click.stop="deleteAction(i)">
+                                <div class="item-content">{{ trigger.find(item => item.data.value ===
+                action.event.interactionType)?.data.content }}</div>
+                                <div class="delete" @click.stop="deleteAction(action.id)">
                                     <svg-icon icon-class="delete"></svg-icon>
                                 </div>
                             </div>
-                            <div class="item-setting" v-if="showaction && acitonindex === i">
+                            <div class="item-setting" v-if="showaction && acitonindex === action.id">
                                 <div class="trigger">
                                     <span>触发</span>
-                                    <Select class="select" id="select" :visibility="true" :source="trigger"
-                                        :selected="trigger.find(item => item.id === 0)?.data"></Select>
-                                    <input type="text" v-model="timeoutvalue">
+                                    <Select class="select" id="select" :visibility="true" :minwidth="100"
+                                        :source="trigger"
+                                        :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
+                                        @select="setPrototypeActionEvent($event, action.id)"></Select>
+                                    <input ref="aftertimeout"
+                                        v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT" type="text"
+                                        :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
+                                        @change="setPrototypeActionEventTime(action.id)">
                                 </div>
                                 <div class="action">
                                     <span>动作</span>
-                                    <Select class="select" id="select" :visibility="true" :source="actions"
-                                        :selected="actions.find(item => item.id === 0)?.data"></Select>
+                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions[0].connectionType &&
+                item.data.type === action.actions[0].navigationType)?.data"
+                                        @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                 </div>
-                                <div class="component-status">
+                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SWAPSTATE"
+                                    class="component-status">
                                     <div class="state" v-for="i in variables" :key="i.variable.id">
                                         <span>{{ i.variable.name }}：</span>
                                         <Select class="select" id="select" :visibility="true" :source="genOptions(i.values.map((v, idx) => {
@@ -62,13 +70,17 @@
             }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
                                     </div>
                                 </div>
-                                <div class="target">
+                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.INTERNALNODE"
+                                    class="target">
                                     <span>目标</span>
-                                    <input id="target-input" type="text" placeholder="请选择目标容器" readonly
-                                        v-model="selectshape" @click="test">
-                                    <div class="svg-wrap">
-                                        <svg-icon icon-class="down"></svg-icon>
+                                    <div class="targetname" @click.stop="test(action.id)">
+                                        <span :style="{ color: action.actions[0].targetNodeID ? '#000' : '#c8c8c8' }">{{
+                getTargetNodeName(action.actions[0].targetNodeID) ?? '请选择容器' }}</span>
+                                        <div class="svg-wrap">
+                                            <svg-icon icon-class="down"></svg-icon>
+                                        </div>
                                     </div>
+
                                     <div class="search-container" v-if="showtargerlist">
                                         <div class="header-search">
                                             <svg-icon icon-class="search"></svg-icon>
@@ -76,21 +88,31 @@
                                         </div>
                                         <div class="item-list">
                                             <div class="item" v-for="shape in DomList" :key="shape.id"
-                                                @click.stop="selectshape = shape.name">{{ shape.name }}</div>
+                                                @click.stop="selectTargetNode(action.id, shape.id)">
+                                                <svg-icon
+                                                    :style="{ visibility: action.actions[0].targetNodeID === shape.id ? 'visible' : 'hidden' }"
+                                                    :icon-class="'be70ff3e-5c87-4ddc-90b9-13ae648a20f31' === shape.id ? 'white-select' : 'page-select'"></svg-icon>
+                                                <span>{{ shape.name }}</span>
+
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="retract">
+                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SCROLLTO"
+                                    class="retract">
                                     <span>缩进</span>
                                     <div class="retract-y"></div>
                                     <div class="retract-x"></div>
                                 </div>
-                                <div class="link">
+                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.URL"
+                                    class="link">
                                     <span>链接</span>
-                                    <input type="text" placeholder="输入链接地址">
+                                    <input v-select ref="connectionURL" type="text" placeholder="输入链接地址"
+                                        :value="action.actions[0].connectionURL"
+                                        @change="setPrototypeActionURL(action.id)">
                                 </div>
-
-                                <div class="set-float">
+                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.OVERLAY"
+                                    class="set-float">
                                     <span>浮层设置</span>
                                     <div class="content">
                                         <div class="position">
@@ -123,7 +145,7 @@
                                     </div>
 
                                 </div>
-                                <div class="set-animation">
+                                <div v-if="action.actions[0].connectionType === 'INTERNAL_NODE'" class="set-animation">
                                     <span>动画设置</span>
                                     <div class="wrapper">
                                         <div class="container">
@@ -135,11 +157,12 @@
                                     <div class="animation">
                                         <span>动画</span>
                                         <Select class="select" id="select" :visibility="true" :source="animation"
-                                            :selected="animation.find(item => item.id === 0)?.data"></Select>
+                                            :selected="animation.find(item => action.actions[0].transitionType?.includes(item.data.value as string))?.data"
+                                            @select="setPrototypeActionTransition(action.id)"></Select>
                                     </div>
-                                    <div class="direction">
+                                    <div v-if="action.actions[0].transitionType?.split('_').findLast(d=>['left','right','top','bottom'].includes(d.toLowerCase()))" class="direction">
                                         <div class="content">
-                                            <div class="icon" :class="{ 'select-item': selectitem === i }"
+                                            <div class="icon" :class="{ 'select-item': action.actions[0].transitionType?.split('_')[3] === i }"
                                                 v-for=" i of Object.values(Direction)" :key="i"
                                                 @click.stop="selectitem = i">
                                                 <svg-icon :style="{ rotate: (`${setrotate.get(i)}` + 'deg') }"
@@ -147,9 +170,10 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="effect">
+                                    <div v-if="action.actions[0].transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
+                                        class="effect">
                                         <span>效果</span>
-                                        <Select class="select" id="select" :width="100" :visibility="true"
+                                        <Select class="select" id="select" :minwidth="100" :visibility="true"
                                             :source="effect"
                                             :selected="effect.find(item => item.id === 0)?.data"></Select>
                                         <input v-select ref="animationtimevalue" type="text" placeholder="时间"
@@ -179,7 +203,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView, BasicArray, PrototypeEvents, PrototypeEvent } from "@kcdesign/data"
+import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType } from "@kcdesign/data"
 import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -198,8 +222,9 @@ import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { debounce as d } from "@/utils/timing_util";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
-import { PrototypeStartingPoint, ArtboradView, PrototypeInterAction } from '@kcdesign/data';
+import { PrototypeStartingPoint, ArtboradView, PrototypeInterAction, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType } from '@kcdesign/data';
 import { v4 } from 'uuid';
+
 
 const background_color = ref(new Color(1, 239, 239, 239));
 const alpha_v = ref<number>(100);
@@ -344,13 +369,13 @@ enum Trigger {
 }
 
 enum Animation {
-    Immediately = 'immediately',
-    FadeInOut = 'fade-in-out',
-    SlideIn = 'slide-in',
-    SlideOut = 'slide-out',
-    MoveIn = 'move-in',
-    MoveOut = 'move-out',
-    PushIn = 'push-in'
+    INSTANT = 'INSTANT_TRANSITION',
+    DISSOLVE = 'DISSOLVE',
+    SLIDE = 'SLIDE',
+    SLIDEOUT = 'SLIDE_OUT',
+    MOVE = 'MOVE',
+    MOVEOUT = 'MOVE_OUT',
+    PUSH = 'PUSH'
 }
 
 enum Effect {
@@ -392,7 +417,7 @@ const originNameNumber = ref<number>(0)
 const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
-const acitonindex = ref<number>(-1)
+const acitonindex = ref<string>('')
 const selectshape = ref<string>('')
 
 const variables = ref<RefAttriListItem[]>([]);
@@ -401,9 +426,11 @@ const searchvlue = ref<string>('')
 const animationtimevalue = ref<HTMLInputElement[]>()
 const selectitem = ref<string>('right')
 const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
+const prototypeinteraction = ref<PrototypeInterAction[]>()
 
-
-
+const aftertimeout = ref<HTMLInputElement[]>()
+const connectionURL = ref<HTMLInputElement[]>()
+const DomList = ref<ShapeView[]>([])
 const regex = /^(\d+)/
 const changeinputvalue = () => {
 
@@ -456,37 +483,38 @@ const overflowRoll: SelectSource[] = genOptions([
 ])
 
 const trigger: SelectSource[] = genOptions([
-    [Trigger.Click, '单击'],
-    [Trigger.DBLClick, '双击'],
-    [Trigger.RightClick, '右键'],
-    [Trigger.Drag, '拖拽'],
-    [Trigger.Hover, '悬停'],
-    [Trigger.MouseEnter, '光标移入'],
-    [Trigger.MouseLeave, '光标移出'],
-    [Trigger.MouseDown, '按下鼠标'],
-    [Trigger.MouseUp, '松开鼠标'],
-    [Trigger.Delay, '延迟'],
+    [PrototypeEvents.ONCLICK, '单击'],
+    [PrototypeEvents.DBCLICK, '双击'],
+    [PrototypeEvents.RIGHTCLICK, '右键'],
+    [PrototypeEvents.DRAG, '拖拽'],
+    [PrototypeEvents.HOVER, '悬停'],
+    [PrototypeEvents.MOUSEENTER, '光标移入'],
+    [PrototypeEvents.MOUSELEAVE, '光标移出'],
+    [PrototypeEvents.MOUSEDOWN, '按下鼠标'],
+    [PrototypeEvents.MOUSEUP, '松开鼠标'],
+    [PrototypeEvents.AFTERTIMEOUT, '延迟'],
 ])
 
 const actions: SelectSource[] = genOptions([
-    [Actions.JumpPage, '跳转页面', 'jump-page'],
-    [Actions.ReturnPage, '返回上一页面', 'retrun-page'],
-    [Actions.PageScroll, '容器内滚动', 'scroll-page'],
-    [Actions.OpenLink, '打开链接', 'open-link'],
-    [Actions.ComponentState, '组件状态切换', 'component-state'],
-    [Actions.OpenFloatLayer, '打开浮层', 'open-float-layer'],
-    [Actions.CloseFloatLayer, '关闭浮层', 'close-float-layer'],
-    [Actions.ChangeFloatLayer, '替换浮层', 'change-float-layer'],
+    [PrototypeConnectionType.NONE, '无'],
+    [PrototypeConnectionType.INTERNALNODE, '跳转页面', 'jump-page', PrototypeNavigationType.NAVIGATE],
+    [PrototypeConnectionType.BACK, '返回上一页面', 'retrun-page'],
+    [PrototypeConnectionType.INTERNALNODE, '容器内滚动', 'scroll-page', PrototypeNavigationType.SCROLLTO],
+    [PrototypeConnectionType.URL, '打开链接', 'open-link'],
+    [PrototypeConnectionType.INTERNALNODE, '组件状态切换', 'component-state', PrototypeNavigationType.SWAPSTATE],
+    [PrototypeConnectionType.INTERNALNODE, '打开浮层', 'open-float-layer', PrototypeNavigationType.OVERLAY],
+    [PrototypeConnectionType.CLOSE, '关闭浮层', 'close-float-layer'],
+    [PrototypeConnectionType.INTERNALNODE, '替换浮层', 'change-float-layer', PrototypeNavigationType.SWAP],
 ])
 
 const animation: SelectSource[] = genOptions([
-    [Animation.Immediately, '即时'],
-    [Animation.FadeInOut, '淡入淡出'],
-    [Animation.SlideIn, '滑入'],
-    [Animation.SlideOut, '滑出'],
-    [Animation.MoveIn, '移入'],
-    [Animation.MoveOut, '移出'],
-    [Animation.PushIn, '推入']
+    [Animation.INSTANT, '即时'],
+    [Animation.DISSOLVE, '淡入淡出'],
+    [Animation.SLIDE, '滑入'],
+    [Animation.SLIDEOUT, '滑出'],
+    [Animation.MOVE, '移入'],
+    [Animation.MOVEOUT, '移出'],
+    [Animation.PUSH, '推入']
 ])
 
 const effect: SelectSource[] = genOptions([
@@ -501,12 +529,60 @@ const effect: SelectSource[] = genOptions([
 
 
 const showtargerlist = ref<boolean>(false)
-const test = () => {
-    console.log('1111');
+
+function checktargetlist(e: MouseEvent) {
+    const muen = document.querySelector('.search-container')
+    if (!muen) return;
+    if (!muen.contains(e.target as HTMLElement)) {
+        showtargerlist.value = false
+    }
+}
+
+function onblur() {
+    console.log('失焦');
+    showtargerlist.value = false
+}
+
+watch(showtargerlist, () => {
+    if (showtargerlist.value) {
+        document.addEventListener('click', checktargetlist);
+        nextTick(() => {
+            const muen = document.querySelector('.search-container');
+            (muen as HTMLDivElement).addEventListener('blur', onblur);
+            (muen as HTMLDivElement).focus()
+        })
+    }
+
+})
+
+const test = (id: string) => {
+    const shapes = props.context.selection.selectedPage?.childs
+    const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+    if (!shapes) return;
+    DomList.value = []
+    for (let index = 0; index < shapes.length; index++) {
+        const shape = shapes[index];
+        if (types.includes(shape.type)) {
+            const actions = (shape as ArtboradView).prototypeInterAction
+            if (actions?.length) {
+                for (let index = 0; index < actions.length; index++) {
+                    const e = actions[index];
+                    if (e.id === id) break
+                    DomList.value?.push(shape)
+                }
+            } else {
+                DomList.value?.push(shape)
+            }
+        }
+    }
     showtargerlist.value = !showtargerlist.value
 }
 
+
+//创建原型起始节点
 const createOrigin = () => {
+    if (prototypestart.value) return;
+    showIpnut.value = true
     originName.value = '流程 ' + ++originNameNumber.value
     originDescribed.value = ''
     originedit.value = true;
@@ -518,6 +594,8 @@ const createOrigin = () => {
     updateData()
 }
 
+
+//删除原型起始节点
 const deleteOrigin = () => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
@@ -528,6 +606,8 @@ const deleteOrigin = () => {
 
 }
 
+
+//设置原型起始节点
 const setPrototypeStartPoint = () => {
     console.log('change');
     const page = props.context.selection.selectedPage!;
@@ -539,44 +619,156 @@ const setPrototypeStartPoint = () => {
     console.log('change-end');
 }
 
+//设置原型动作-其他
+const setPrototypeActionEvent = (data: SelectItem, id: string) => {
+    const value = data.value
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeActionEvent(shape as ShapeView, id, value as PrototypeEvents)
+    updateData()
+}
+
+//设置原型动作-延时
+const setPrototypeActionEventTime = (id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    if (aftertimeout.value) {
+        const time = Number(aftertimeout.value[0].value.split('ms')[0])
+        const T = time < 1 ? 1 : time > 20000 ? 20000 : time
+        e.setPrototypeActionEventTime(shape as ShapeView, id, T / 1000)
+    }
+    updateData()
+}
+
+
+//设置连接类型和导航类型
+const setPrototypeActionConnNav = (data: SelectItem, id: string) => {
+    const conn = data.value
+    const nav = data.type
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    if (nav) {
+        e.setPrototypeActionConnNav(shape as ShapeView, id, conn as PrototypeConnectionType, nav as PrototypeNavigationType)
+    } else {
+        e.setPrototypeActionConnNav(shape as ShapeView, id, conn as PrototypeConnectionType, undefined)
+    }
+    updateData()
+}
+
+//设置链接
+
+const setPrototypeActionURL = (id: string) => {
+    if (!connectionURL.value) return
+    const value = connectionURL.value[0].value
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    if (value) e.setPrototypeActionConnectionURL(shape as ShapeView, id, value)
+    connectionURL.value[0].blur()
+}
+
+//设置目标
+const selectTargetNode = (id: string, targetid: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeActionTargetNodeID(shape as ShapeView, id, targetid)
+    showtargerlist.value = false
+    updateData()
+}
+
+const getTargetNodeName = (target: string | undefined) => {
+    if (!target) return;
+    const shape = props.context.selection.selectedPage?.childs.filter(i => i.id === target)
+    if (shape) return shape[0].name
+}
+
+//设置动画类型
+const setPrototypeActionTransition = (id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeActionTransitionType(shape as ShapeView, id, PrototypeTransitionType.MOVEOUTTOBOTTOM)
+    updateData()
+}
+
+//更新原型数据
 function updateData() {
     const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length === 1) {
+    console.log(isProtoType.value);
+    if (!isProtoType.value?.length) return;
+    if (isProtoType.value.length === 1) {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
+            prototypeinteraction.value = (shape as ArtboradView).prototypeInterAction;
             if (prototypestart.value) {
                 originName.value = prototypestart.value.name
                 originDescribed.value = prototypestart.value.desc
             }
+            if (prototypeinteraction.value) {
+                for (let index = 0; index < prototypeinteraction.value.length; index++) {
+                    const element = prototypeinteraction.value[index];
+                    getTargetNodeName(element.actions[0].targetNodeID)
+                }
+            }
         }
+
     }
+
+    let test: any[] = []
+    for (let index = 0; index < isProtoType.value.length; index++) {
+        const shape = isProtoType.value[index];
+        const i = (shape as ArtboradView).prototypeInterAction;
+        console.log(i);
+
+        if (i) test = test.concat(...i)
+    }
+    prototypeinteraction.value = [...new Set(test)].reverse()
+
 }
 
 
-const numbers = ref<number[]>([])
-let i = 0
+//创建原型动画
 const createAction = () => {
-    numbers.value.push(++i)
-    acitonindex.value = i
     showaction.value = true
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
-    const Action =new ()
-    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction([] as unknown as BasicArray<number>, Event,v4()));
-
+    const Action = new BasicArray<PrototypeActions>(new PrototypeActions(v4(), PrototypeConnectionType.NONE))
+    Action[0].transitionType = PrototypeTransitionType.INSTANTTRANSITION
+    let id = v4()
+    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction([] as unknown as BasicArray<number>, id, Event, Action));
+    acitonindex.value = id
+    updateData()
 }
 
-const deleteAction = (i: number) => {
-    numbers.value = numbers.value.filter(item => item != i)
+//删除原型动画
+const deleteAction = (id: string) => {
+    console.log(id);
+
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.deletePrototypeAction(shape as ShapeView, id)
+    updateData()
 }
 
-const showhandel = (i: number) => {
-    if (acitonindex.value !== i) {
-        acitonindex.value = i
+const showhandel = (id: string) => {
+    if (acitonindex.value !== id) {
+        acitonindex.value = id
         if (!showaction.value) {
             showaction.value = true
         }
@@ -586,48 +778,46 @@ const showhandel = (i: number) => {
     }
 }
 
-const DomList = computed(() => {
-    return props.context.selection.selectedPage?.childs.filter(i => {
-        return (i.isContainer || i.type === ShapeType.SymbolRef) && i.name.includes(searchvlue.value)
-    })
-})
 
 
-const isProtoType = ref<boolean>(false)
+const isProtoType = ref<ShapeView[]>()
 
 // 图层选区变化
 function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     const selectedShapes = props.context.selection.selectedShapes;
+    console.log(selectedShapes);
 
-    isProtoType.value = false
-    if (selectedShapes.length === 1) {
-        const shape = selectedShapes[0];
-        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            isProtoType.value = true
-        }
-        // //暂时获取组件状态
-        // const symref = props.context.selection.symbolrefview;
-        // if (!symref) {
-        //     return;
-        // }
-        // const result = get_var_for_ref(symref, t);
-        // variables.value = [];
-        // if (!result) {
-        //     return;
-        // }
-        // variables.value = result.variables;
+    isProtoType.value = []
+    // if (selectedShapes.length === 1) {
+    //     const shape = selectedShapes[0];
+    //     if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
+    //         isProtoType.value.push(shape)
+    //     }
+    //     // //暂时获取组件状态
+    //     // const symref = props.context.selection.symbolrefview;
+    //     // if (!symref) {
+    //     //     return;
+    //     // }
+    //     // const result = get_var_for_ref(symref, t);
+    //     // variables.value = [];
+    //     // if (!result) {
+    //     //     return;
+    //     // }
+    //     // variables.value = result.variables;
 
-    }
+    // }
 
     shapes.value = [];
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
+        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
+            isProtoType.value.push(shape)
+        }
         shapes.value.push(shape);
     }
-
     reflush_by_selection.value++;
     reflush.value++;
 
@@ -698,6 +888,10 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.active {
+    color: #000 !important;
+}
+
 .flex {
     display: flex;
     justify-content: space-between;
@@ -750,7 +944,12 @@ onUnmounted(() => {
             .delete {
                 width: 28px;
                 height: 28px;
+                border-radius: var(--default-radius);
                 @include flex(center, center);
+
+                &:hover {
+                    background-color: #F5F5F5;
+                }
             }
 
             svg {
@@ -920,7 +1119,9 @@ onUnmounted(() => {
                     }
                 }
 
-                #target-input {
+                .targetname {
+                    display: flex;
+                    align-items: center;
                     cursor: default;
                     outline: none;
                     border: none;
@@ -942,9 +1143,10 @@ onUnmounted(() => {
                     top: 38px;
                     left: 32px;
                     width: 140px;
-                    padding: 6px;
+                    padding: 6px 0;
                     border-radius: 4px;
                     background-color: white;
+                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
                     box-sizing: border-box;
                     z-index: 1;
 
@@ -952,10 +1154,11 @@ onUnmounted(() => {
                         display: flex;
                         align-items: center;
                         gap: 6px;
-                        width: 100%;
+                        margin: 0 6px;
                         height: 32px;
                         padding: 10px 8px;
                         border-radius: 6px;
+                        margin-bottom: 6px;
                         background-color: #F5F5F5;
                         box-sizing: border-box;
 
@@ -988,7 +1191,22 @@ onUnmounted(() => {
                         }
 
                         .item {
+                            display: flex;
+                            justify-content: flex-start;
+                            align-items: center;
+                            gap: 8px;
                             height: 32px;
+                            padding: 0 6px;
+
+                            svg {
+                                flex: 0 0 12px;
+                                height: 12px;
+                            }
+
+                            &:hover {
+                                background-color: var(--active-color);
+                                color: white;
+                            }
                         }
                     }
                 }
@@ -1010,8 +1228,13 @@ onUnmounted(() => {
                     height: 32px;
                     width: 100%;
                     border-radius: 6px;
+                    border: 1px solid transparent;
                     background-color: #F5F5F5;
                     box-sizing: border-box;
+
+                    &:focus {
+                        border: 1px solid #1878F5;
+                    }
                 }
             }
 

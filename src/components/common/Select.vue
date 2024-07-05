@@ -9,7 +9,8 @@ import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
     content: string,
-    icon?: string
+    icon?: string,
+    type?: string
 }
 export interface SelectSource {
     id: number,
@@ -28,7 +29,7 @@ interface Props {
     mixed?: boolean;
     shapes?: ShapeView[];
     visibility?: boolean;
-    width?: number;
+    minwidth?: number;
 }
 
 interface Emits {
@@ -42,6 +43,7 @@ const TOPBAR_HEIGHT = (() => {
 })();
 const PADDING = 10;
 const PADDING_TOP = 4;
+const TAB_HEIGHT = 40;
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
@@ -93,14 +95,14 @@ function options() {
             top = curValueIndex.value * item_height;
         }
     }
-    const TOP = zero - TOPBAR_HEIGHT
+    const TOP = zero - TOPBAR_HEIGHT - TAB_HEIGHT
     if (top > TOP) {
-        top = top - PADDING;
+        top = TOP - PADDING;
     }
     if (props.mixed) top = 0;
     oe.style.top = `${-(top + PADDING_TOP)}px`;
-    if (props.width) oe.style.width = props.width + 'px'
-    
+    if (props.minwidth) oe.style.minWidth = props.minwidth + 'px'
+
     oe.addEventListener('keydown', esc);
     oe.addEventListener('blur', onBlur);
     oe.focus();
@@ -141,7 +143,7 @@ function render() {
         source.value = cloneDeep(props.source);
     }
     if (props.selected && source.value.length) {
-        const index = source.value.findIndex(i => i.data.value === props.selected!.value);
+        const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);
         if (index > -1 || props.mixed) {
             curValueIndex.value = index;
             curValue.value = props.selected;
@@ -288,7 +290,7 @@ onMounted(render)
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
-        z-index: 999;
+        z-index: 9999;
         border: 1px solid #EBEBEB;
         padding: 4px 0;
         box-sizing: border-box;
