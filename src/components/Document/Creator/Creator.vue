@@ -39,8 +39,6 @@ function down(e: MouseEvent) {
 
     const ctx = props.context;
 
-    console.log('__DOWN_MODE__', mode.value);
-
     // creator 中的特殊场景之一，该场景需要交给 PathEditor 处理。
     if (mode.value === 'pen') {
         pathEditor = new PathEditor(ctx, e);

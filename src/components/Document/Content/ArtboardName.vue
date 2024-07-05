@@ -97,7 +97,8 @@ const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
     if (esc.value) return
     if (value.length === 0 || value.trim().length === 0) return
-    emit('rename', value, props.data.shape)
+    emit('rename', value, props.data.shape);
+    emit('hover', props.data.shape);
 }
 
 const hoverShape = (e: MouseEvent) => {
