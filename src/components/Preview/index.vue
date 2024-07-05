@@ -17,7 +17,7 @@ import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
-import { getFrameList, keyboard } from '@/utils/preview';
+import { getFrameList, keyboard, selectedShape } from '@/utils/preview';
 import { IContext } from '@/openapi';
 import { Selection } from '@/context/selection';
 
@@ -129,31 +129,13 @@ function switchPage(id?: string) {
                 curPage.value = undefined;
                 const pagedom = ctx.getPageDom(page).dom;
                 ctx.selection.selectPage(pagedom);
-                selectedShape(ctx, pagedom);
+                selectedShape(ctx, pagedom, t);
                 curPage.value = pagedom;
             }
         })
     }
 }
 
-const setWindowTitle = (context: Context, page: PageView) => {
-    // const _name = context?.data.name || '';
-    // const file_name = docInfo.value.document?.name || _name;
-    // const pages = context.data.pagesList
-    // const page_name = pages.find(item => item.id === page.id)?.name || '';
-    // window.document.title = file_name.length > 8 ? `▶ ${file_name.slice(0, 8)}... - ${page_name.slice(0, 8)}` : `▶ ${file_name} - ${page_name.slice(0, 8)}`;
-    // kcdesk?.fileSetName(file_name);
-}
-
-const selectedShape = (ctx: Context, page: PageView) => {
-    const list = getFrameList(page);
-    if (!list.length) {
-        ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` })
-        ctx.selection.selectShape(undefined);
-        return;
-    }
-    ctx.selection.selectShape(list[0]);
-}
 function previewWatcher(t: number | string) {
     if (t === Preview.UI_CHANGE) {
         if (!context.preview.uiState) {
@@ -264,7 +246,6 @@ onMounted(() => {
         console.log(e)
     })
     init_keyboard_uints();
-    // todo
     init_watcher();
     // switchPage(props.context.data.pagesList[0]?.id);
 })
