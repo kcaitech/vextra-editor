@@ -52,6 +52,7 @@ import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
 import { CursorType } from "@/utils/cursor2";
 import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
+import TempBoard from "@/components/common/TempBoard.vue";
 
 interface Props {
     context: Context
@@ -786,6 +787,9 @@ comps.push(
     // 像素网格
     {
         component: Grid
+    },
+    {
+        component: TempBoard
     },
     // 图层导出载体
     {
