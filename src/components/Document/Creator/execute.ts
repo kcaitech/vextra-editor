@@ -28,7 +28,7 @@ import { debounce } from "lodash";
 import { ContextEvents } from "@/openapi";
 import { CursorType } from "@/utils/cursor2";
 
-function __add_status_for_create(context: Context) {
+export function __add_status_for_create(context: Context) {
     context.menu.menuMount();
     context.escstack.save('tool-action', context.tool.reset.bind(context.tool));
     context.cursor.setType(CursorType.Create, 0);

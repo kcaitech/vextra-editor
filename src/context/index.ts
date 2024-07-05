@@ -44,6 +44,7 @@ import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
+import { __add_status_for_create } from "@/components/Document/Creator/execute";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -197,6 +198,7 @@ export class Context extends WatchableObject implements IContext {
     }
     setCurAction(uuid: string): void {
         this.tool.setAction(uuid);
+        __add_status_for_create(this);
     }
 
 

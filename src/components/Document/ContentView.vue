@@ -784,9 +784,11 @@ comps.push(
     },
     // 图层导出载体
     {
-        component: BatchExport, params: {
-            get visible() {
-                return isvisible.value
+        component: () => {
+            if (isvisible.value) {
+                return h(BatchExport, {
+                    context: props.context
+                });
             }
         }
     }
@@ -796,20 +798,11 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div
-    ref="root"
-    :class="cursor"
-    :data-area="rootId"
-    :reflush="reflush !== 0 ? reflush : undefined"
-    :style="{ 'background-color': background_color }"
-    @wheel="onMouseWheel"
-    @mousedown="onMouseDown"
-    @mousemove="onMouseMove_CV"
-    @mouseleave="onMouseLeave"
-    @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }"
-    @dragover.prevent
->
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <Rule :context="props.context" :page="(props.page as PageView)"/>
-</div>
+    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+    </div>
 </template>

@@ -13,12 +13,8 @@ import { Action } from "@/context/tool";
 
 const { t } = useI18n();
 
-
 const props = defineProps<{
     context: Context
-    params: {
-        visible: boolean
-    }
 }>();
 
 type ExportInfo = {
@@ -113,6 +109,8 @@ const getExportShapes = () => {
         const childs = Array.from(page.shapes.values());
         exportShapes.value = childs.filter(s => s.isVisible && s.exportOptions && s.exportOptions.exportFormats.length > 0);
     }
+    console.log(exportShapes.value, 'exportShapes.value');
+    
     getExportInfo();
 }
 
@@ -401,7 +399,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="export-dialog" ref="dialog" :style="`transform: translate(${left}px, ${top}px)`" @click.stop v-if="params.visible"
+    <div class="export-dialog" ref="dialog" :style="`transform: translate(${left}px, ${top}px)`" @click.stop
         @mousedown.stop @wheel.stop>
         <div class="header" @mousedown="mousedown">
             <div class="title">{{ t('cutoutExport.export') }}</div>
