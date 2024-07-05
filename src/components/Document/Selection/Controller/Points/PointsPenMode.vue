@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { CurvePoint, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { ClientXY, XY } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { Segment, get_segments } from "@/utils/pathedit";
@@ -35,15 +35,11 @@ const dragActiveDis = 5;
 const new_high_light = ref<string>('');
 const add_rect = ref<string>('');
 let shape: ShapeView;
-let startPosition: ClientXY = { x: 0, y: 0 };
-let isDragging = false;
+
 let bridged = false;
 
 let pathModifier: PathEditor | undefined;
 let downXY: XY = { x: 0, y: 0 };
-
-let current_segment: number = -1;
-let current_curve_point_index: number = -1;
 
 const preXY = ref<XY>({ x: -10, y: -10 });
 
@@ -147,9 +143,6 @@ function passiveUpdate() {
     buildMap();
 }
 
-/**
- * training...
- */
 function point_mousedown(event: MouseEvent, segment: number, index: number) {
     if (event.button !== 0) return;
 
@@ -298,8 +291,6 @@ function checkStatus() {
 
     const { segment, index, handler, e } = params;
 
-    current_segment = segment;
-    current_curve_point_index = index;
     downXY = { x: e.x, y: e.y };
 
     const point = (props.context.selection.selectedShapes[0] as PathShapeView)
@@ -340,9 +331,7 @@ function checkStatus() {
 }
 
 function point_mousemove(event: MouseEvent) {
-    if (bridged) {
-        return;
-    }
+    if (bridged) return;
     if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         console.log('emit dragActiveDis');
         launch_bridging(event);
@@ -351,9 +340,7 @@ function point_mousemove(event: MouseEvent) {
 
 function launch_bridging(event: MouseEvent) {
     const last = props.context.path.lastPoint;
-    if (!last || !pathModifier) {
-        return;
-    }
+    if (!last || !pathModifier) return;
     props.context.path.setBridgeParams({ handler: pathModifier, segment: last.segment, index: last.index, e: event });
     props.context.path.bridging({ segment: -1, index: -1, event });
 
@@ -367,9 +354,7 @@ function bridging_completed() {
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
+    if (event.button !== 0) return;
 
     clearStatus();
 }
@@ -573,9 +558,6 @@ function modifyLivingPath() {
     livingPathVisible.value = true;
 }
 
-/**
- * training...
- */
 function down(e: MouseEvent) {
     if (e.button !== 0) return;
 

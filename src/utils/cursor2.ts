@@ -33,6 +33,9 @@ export class CursorPicker {
     // 动态光标类型
     static DYNAMIC = [CursorType.Rotate, CursorType.Scale];
 
+    static PEN = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJESURBVHgB7Zm9jcJAFIRHuojMJTi9jJBwSyC87NwBdIBLcAe4A64D3AEhISVAB3s7sGuWHxvzI7Rr3ieNZARYmrdv3voHEARBEARBEARBEARBEARBEARBEIRXMzTaWi2MMqMUH8TGSF/R0miKQ4F6DVe+Nq6UulYMFmluNMab+ML7+Ia3ykmSYL1eYzQaYTAYYLfbUYn9zY9Rbo8HRjurqFFGOk3TvXg8HA71drvVjtVqpYuiaOqOlVFhzxMlXN19DGi0qQiOzWaj5/O5Ho/H2nRLW1QSRERptF9lGrxVBJ/lcqmzLKv/g8tBmiGCXUXBDkC3yvcUoUNU2GEpAqaOgTP7aBEc/D2j4hWjQOCUsDHw8/5MEQgjgmMXBI2CF4NXFsEblgoBcxGDVxVhOp3GG4OmIlD8zI7hd21EH4NrRfDFFucO0Eb0MXA07Pf7a4E2ehEDgut3jo1d4+hNDJh9PNABpBcxWCwWF+YZi1uDkPQmBmxndgi7gSvfxbz7H/oQg2fAsXN+ETA3d4NHYLfgND5BF6FESwweNc9BOJlMoiiCwoti4Jt3F0yz2cyfB0E+eK1j0HXIdTXv8HaFPwRKCbvN3TPtu5gnPB8C3xVSowpnV3xlWT5tnnDAIpJtMcWhG+p3CG1d0cU84RMje74KkcC5kOHsbRKfEFdVdZd5fuddGmeIEAU7I+DdFuN+8zkiJ8VZV7TdGPXN/Dk5bBHyPP84844cXhE46SneRX6CeUeOhgcn+ADzDoXTawgeZxAEQejAP1zPK4aP9mgsAAAAAElFTkSuQmCC";
+
+
     private m_style: HTMLStyleElement;
     private m_class_map: Map<string, string> = new Map();
     private m_salt = '';
@@ -68,6 +71,8 @@ export class CursorPicker {
                 return CursorPicker.ROTATE_SLICE;
             case CursorType.Extend:
                 return CursorPicker.EXTEND;
+            case CursorType.Pen:
+                return CursorPicker.PEN;
             default:
                 return CursorPicker.DEFAULT;
         }
@@ -96,6 +101,8 @@ export class CursorPicker {
             classStr += `cursor: grabbing !important;`
         } else if (type === CursorType.Text) {
             classStr += 'cursor: text !important;'
+        } else if (type === CursorType.Pen) {
+            classStr += `cursor: -webkit-image-set(url(${url}) 2x) 13 13, auto !important;`
         } else {
             classStr += `cursor: url("${url}") 16 16, auto !important;`
         }

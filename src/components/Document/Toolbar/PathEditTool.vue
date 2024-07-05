@@ -68,12 +68,12 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="wrapper">
-        <Auto :active="props.selected === Action.AutoV" @select="select"></Auto>
-        <Pen :active="props.selected === Action.Pen2" @select="select"></Pen>
-        <Curve :active="is_curve_active()" @select="select"></Curve>
-        <PathClip :active="props.selected === Action.PathClip" @select="select"></PathClip>
-    </div>
+<div class="wrapper">
+    <Auto :active="props.selected === Action.AutoV" @select="select"></Auto>
+    <Pen :active="props.selected === Action.Pen" @select="select"></Pen>
+    <Curve :active="is_curve_active()" @select="select"></Curve>
+    <PathClip :active="props.selected === Action.PathClip" @select="select"></PathClip>
+</div>
 </template>
 <style scoped lang="scss">
 .wrapper {

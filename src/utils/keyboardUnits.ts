@@ -32,7 +32,7 @@ import {
     useEllipse,
     useFrame,
     useImage,
-    useLine,
+    useLine, usePen,
     useRect,
     useText
 } from "@/components/Document/Creator/execute";
@@ -309,11 +309,13 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
 
-    if (context.workspace.is_path_edit_mode) {
-        context.tool.setAction(Action.Pen2);
-    } else {
-        context.tool.setAction(Action.Pen); // 钢笔工具
-    }
+    usePen(context); // 钢笔工具
+
+    // if (context.workspace.is_path_edit_mode) {
+    //     context.tool.setAction(Action.Pen2);
+    // } else {
+    //     context.tool.setAction(Action.Pen); // 钢笔工具
+    // }
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {

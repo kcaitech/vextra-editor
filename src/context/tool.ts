@@ -25,7 +25,6 @@ export const Action = {
     Curve: 'curve' + _uuid,
     PathClip: 'path-clip' + _uuid,
     Pen: 'add-vector' + _uuid,
-    Pen2: 'vector' + _uuid,
     Pencil: 'add-free-path' + _uuid,
     Polygon: 'add-polygon' + _uuid,
     Star: 'add-star' + _uuid,
@@ -79,6 +78,7 @@ export class Tool extends WatchableObject {
     static RULE_RENDER_SIM = 15;
     static HOVER_REFER_CHANGE = 16;
     static REFER_FOCUS_CHANGE = 17;
+    static RULE_CLEAR = 18;
     private m_current_action: string = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;

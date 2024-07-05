@@ -154,7 +154,8 @@ export class Assist extends WatchableObject {
 
         const parents: Map<string, ShapeView> = new Map();
         for (let i = 0; i < shapes.length; i++) {
-            const parent = shapes[i].parent!;
+            const parent = shapes[i].parent;
+            if (!parent) continue;
             parents.set(parent.id, parent);
         }
 

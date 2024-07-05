@@ -119,8 +119,10 @@ export function usePen(context: Context) {
     const tool = context.tool;
     tool.setAction(Action.Pen);
     tool.notify(Tool.CHANGE_ACTION);
-
-    __add_status_for_create(context);
+    context.menu.menuMount();
+    context.escstack.save('tool-action', context.tool.reset.bind(context.tool));
+    context.cursor.setType(CursorType.Pen, 0);
+    context.notify(ContextEvents.action_change);
 }
 
 /**
@@ -530,13 +532,13 @@ export class CreatorExecute extends TransformHandler {
 
             const selection = this.context.selection;
             this.context.nextTick(selection.selectedPage!, () => {
-                this.shape = selection.selectedPage!.getShape(shape.id);
-                if (!this.shape) {
-                    return;
+                    this.shape = selection.selectedPage!.getShape(shape.id);
+                    if (!this.shape) {
+                        return;
+                    }
+                    this.context.assist.set_trans_target([(this.shape)]);
+                    selection.selectShape(this.shape);
                 }
-                this.context.assist.set_trans_target([(this.shape)]);
-                selection.selectShape(this.shape);
-            }
             );
         } else {
             const _start = { x: this.fixedPoint.x, y: this.fixedPoint.y + 0.5 };

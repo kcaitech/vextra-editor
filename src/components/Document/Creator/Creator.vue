@@ -3,8 +3,7 @@ import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
 import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/transform/pathEdit";
@@ -20,7 +19,6 @@ interface Props {
 const props = defineProps<Props>();
 
 const dragActiveDis = 5;
-const t = useI18n().t;
 let isDrag: boolean = false;
 let just_search: boolean = false;
 
@@ -34,15 +32,14 @@ let pathEditor: PathEditor | undefined;
 let creatorHdl: undefined | CreatorExecute = undefined;
 let downXY: XY = { x: 0, y: 0 };
 
-// #endregion
 function down(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0) return;
 
     downXY = e;
 
     const ctx = props.context;
+
+    console.log('__DOWN_MODE__', mode.value);
 
     // creator 中的特殊场景之一，该场景需要交给 PathEditor 处理。
     if (mode.value === 'pen') {
@@ -50,40 +47,37 @@ function down(e: MouseEvent) {
         pathEditor.createApiCaller(-1, -1, true);
 
         const vec = pathEditor.createVec();
-        if (!vec) {
-            return;
-        }
+        if (!vec) return;
         const page = ctx.selection.selectedPage!;
         ctx.nextTick(page, () => {
             const _vec = page.getShape(vec.id);
-            if (!_vec) {
-                return;
-            }
+            if (!_vec) return;
 
             ctx.selection.selectShape(_vec);
             ctx.workspace.setPathEditMode(true);
-            ctx.tool.setAction(Action.Pen2);
 
-            const path = ctx.path;
+            nextTick(() => {
+                ctx.tool.setAction(Action.Pen);
 
-            path.setContactStatus(true);
-            path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
+                const path = ctx.path;
 
-            const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
-            if (point) {
-                path.setLastPoint({ point, segment: 0, index: 0 });
-            }
+                path.setContactStatus(true);
+                path.setBridgeParams({ handler: pathEditor!, segment: 0, index: 0, e });
 
-            mode.value = 'normal';
+                const point = (_vec as PathShapeView).segments[0].points[0] as CurvePoint;
+                if (point) {
+                    path.setLastPoint({ point, segment: 0, index: 0 });
+                }
+
+                mode.value = 'normal';
+            })
         });
         return;
     }
 
     const action = ctx.tool.action;
 
-    if (creatorHdl) {
-        return;
-    }
+    if (creatorHdl) return;
 
     creatorHdl = new CreatorExecute(ctx, e);
 
@@ -97,9 +91,7 @@ function down(e: MouseEvent) {
 }
 
 function move(e: MouseEvent) {
-    if (e.buttons !== 1) {
-        return;
-    }
+    if (e.buttons !== 1) return;
 
     if (isDrag) {
         creatorHdl?.modifyFrame(e);
@@ -133,14 +125,10 @@ function up(e: MouseEvent) {
 
 const mouseMoveInput = (e: MouseEvent) => {
     e.stopPropagation()
-    // getCommentInputXY(e)
 }
 const mouseUpCommentInput = (e: MouseEvent) => {
-    // detectionShape(e)
-    // const comment = props.context.comment;
     document.removeEventListener('mousemove', mouseMoveInput);
     document.removeEventListener('mouseup', mouseUpCommentInput);
-    // comment.moveCommentInput(false);
 }
 
 // #region 连接线
@@ -189,6 +177,7 @@ function windowBlur() {
 
 function toolWatcher(t: number) {
     const action = props.context.tool.action;
+
     if (t === Tool.CHANGE_ACTION) {
         mode.value = 'normal';
         if (action === Action.Pen) {
@@ -198,7 +187,6 @@ function toolWatcher(t: number) {
 }
 
 onMounted(() => {
-    // init();
     props.context.cursor.watch(cursor_watcher);
     props.context.tool.watch(toolWatcher);
     window.addEventListener('blur', windowBlur);

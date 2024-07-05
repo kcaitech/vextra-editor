@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Selection, XY } from "@/context/selection";
 import { dbl_action } from "@/utils/mouse_interactive";
 import Selector4PEM, { SelectorFrame } from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
-import { Matrix } from "@kcdesign/data";
 import { Action, Tool } from "@/context/tool";
 import { root_scale, root_trans } from "@/utils/content";
 import { WorkSpace } from "@/context/workspace";
@@ -27,15 +26,15 @@ const props = defineProps<Props>();
 
 const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
-let mousedownOnClientXY: XY = { x: 0, y: 0 };
-const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const clip_mode = ref<boolean>(false);
-let drag: boolean = false;
-
 const penMode = ref<boolean>(false);
+
+let mousedownOnClientXY: XY = { x: 0, y: 0 };
+let drag: boolean = false;
 
 function onMouseWheel(e: WheelEvent) {
     e.preventDefault();
+    const matrix = props.context.workspace.matrix;
     const { ctrlKey, metaKey, deltaX, deltaY } = e;
     if (ctrlKey || metaKey) {
         root_scale(props.context, e);
@@ -46,13 +45,12 @@ function onMouseWheel(e: WheelEvent) {
             root_trans(props.context, e);
         }
     }
+
     props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 function down(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0) return;
     setMousedownXY(e);
     props.context.path.reset();
     if (dbl_action()) {
@@ -133,13 +131,15 @@ function clear_state() {
 }
 
 function modify_cursor() {
+    if (!props.params.visible) return;
+
     clip_mode.value = false;
     penMode.value = false;
 
     const action = props.context.tool.action;
     if (action === Action.PathClip) {
         switch_to_clip_mode();
-    } else if (action === Action.Pen2) {
+    } else if (action === Action.Pen) {
         penMode.value = true;
     }
 }
@@ -180,6 +180,7 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
         props.context.selection.unwatch(selection_watcher);
         props.context.tool.unwatch(tool_watcher);
         props.context.tool.setAction(Action.AutoV);
+        props.context.cursor.reset();
         const path = props.context.path;
         path.reset();
         window.removeEventListener('blur', window_blur);
@@ -194,6 +195,7 @@ const stopWatchVisible = watch(() => props.params.visible, (v) => {
         props.context.selection.watch(selection_watcher);
         props.context.tool.watch(tool_watcher);
         window.addEventListener('blur', window_blur);
+        props.context.tool.notify(Tool.RULE_CLEAR);
     }
 })
 onMounted(() => {

@@ -6,9 +6,9 @@
 <script setup lang="ts">
 import {Context} from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
-import {Page, PageView} from "@kcdesign/data";
+import {PageView} from "@kcdesign/data";
 
-const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
+const props = defineProps<{ context: Context, page: PageView, leftTriggerVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const showHiddenLeft = () => {
@@ -18,5 +18,5 @@ const showHiddenLeft = () => {
 
 <template>
     <Tabs :context="props.context" v-bind="$attrs" :page="page" :showLeft="showLeft"
-          :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></Tabs>
+          :leftTriggerVisible="leftTriggerVisible" @showNavigation="showHiddenLeft"></Tabs>
 </template>

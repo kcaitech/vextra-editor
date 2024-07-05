@@ -404,4 +404,11 @@ export class ScaleRenderer {
         // 3. 修改特定刻度的透明度，避免方块的数值和刻度的数值重叠在一起
         this.modifyScaleOpacity();
     }
+
+    clearBlocks() {
+        this.m_blocks_ver.length = 0;
+        this.m_blocks_hor.length = 0;
+
+        this.modifyScaleOpacity();
+    }
 }

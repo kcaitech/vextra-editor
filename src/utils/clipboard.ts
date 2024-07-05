@@ -1041,6 +1041,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         } else {
             const bounding = sourceBounding(source);
             const insert_env = get_env_by_xy(context, { x: bounding.left, y: bounding.top });
+
             fixToEnv(context, source, insert_env as GroupShapeView, originTransform);
 
             const shapes = import_shape_from_clipboard(context.data, page_data, source, medias);
@@ -1357,14 +1358,7 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
 
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
-        // let _s = s;
         let p = s.parent!;
-
-        //
-        // if (p.type === ShapeType.SymbolUnion) {
-        //     _s = p;
-        //     p = p.parent!;
-        // }
 
         const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
@@ -1500,12 +1494,13 @@ function get_env_by_xy(context: Context, xy: XY) {
     const layers_on_xy = context.selection.getLayers(xy);
     for (let i = 0; i < layers_on_xy.length; i++) {
         const s = layers_on_xy[i];
-        if (s.isVirtualShape) {
-            continue;
-        }
+        if (s.isVirtualShape) continue;
         if (![ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             continue;
         }
+
+        const t = s.transform2FromRoot.decomposeTranslate();
+        if (Math.abs(t.x - xy.x) < 0.001 && Math.abs(t.y - xy.y) < 0.01) continue;
 
         return s;
     }

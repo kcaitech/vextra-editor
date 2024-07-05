@@ -52,6 +52,7 @@ import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
 import { CursorType } from "@/utils/cursor2";
 import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
+import TempBoard from "@/components/common/TempBoard.vue";
 
 interface Props {
     context: Context
@@ -508,9 +509,13 @@ function isCreatorSupportAction(action: string | undefined) {
 
 function tool_watcher(type: number) {
     if (type === Tool.CHANGE_ACTION) {
+        if (props.context.workspace.is_path_edit_mode) return;
         creatorMode.value = isCreatorSupportAction(props.context.curAction);
-    } else if (type === Tool.INSERT_FRAME) insertFrame();
-    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
+    } else if (type === Tool.INSERT_FRAME) {
+        insertFrame();
+    } else if (type === Tool.INSERT_TABLE) {
+        init_insert_table(props.context, t);
+    }
 }
 
 function workspace_watcher(type?: number | string, param?: string | MouseEvent | Color) {
@@ -522,6 +527,7 @@ function workspace_watcher(type?: number | string, param?: string | MouseEvent |
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
         path_edit_mode.value = props.context.workspace.is_path_edit_mode;
+        creatorMode.value = false;
     }
 }
 
@@ -781,6 +787,9 @@ comps.push(
     // 像素网格
     {
         component: Grid
+    },
+    {
+        component: TempBoard
     },
     // 图层导出载体
     {
