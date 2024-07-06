@@ -2,13 +2,12 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
     ColVector3D,
-    CtrlElementType,
+    CtrlElementType, Matrix,
     Scaler, ShapeSize,
     ShapeView,
     Transform
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
-import { boundingBox2Root } from "@/utils/common";
 
 type Box = {
     baseWidth: number;
@@ -38,26 +37,28 @@ export class ScaleHandler extends TransformHandler {
     private verFixedStatus: boolean = false;
     private verFixedValue: number = 0;
 
-    // cache
-    private __baseFramesCache: BaseFrames = new Map();
-
     selectionTransform: Transform = new Transform();  // 选区的Transform
     selectionTransformInverse: Transform = new Transform();  // 选区Transform的逆
     selectionSize = { width: 0, height: 0 }; // 选区的size
+
     transformCache: Map<ShapeView, Transform> = new Map(); // transform缓存
+    transformInverseCache: Map<ShapeView, Transform> = new Map();
+
     shapeTransformListInSelection: Transform[] = []; // shape在选区坐标系下的Transform
+
     shapeSizeList: { width: number, height: number }[] = []; // shape的size列表
 
     constructor(context: Context, event: MouseEvent, selected: ShapeView[], ctrlElementType: CtrlElementType) {
         super(context, event);
+
         this.shapes = selected;
 
         this.ctrlElementType = ctrlElementType;
         this.livingPoint = this.workspace.getRootXY(event);
         this.getBaseFrames();
 
-        this.context.assist.set_collect_target(selected);
-        this.context.assist.set_trans_target(selected);
+        context.assist.set_collect_target(selected);
+        context.assist.set_trans_target(selected);
     }
 
     createApiCaller() {
@@ -115,19 +116,86 @@ export class ScaleHandler extends TransformHandler {
         }
     }
 
+    private box2root(shape: ShapeView, parent2rootMatrixCache: Map<string, Matrix>) {
+        const parent = shape.parent!;
+
+        const frame = shape.frame;
+        const baseWidth = frame.width;
+        const baseHeight = frame.height;
+
+        const points = [
+            { x: 0, y: 0 },
+            { x: frame.width, y: 0 },
+            { x: frame.width, y: frame.height },
+            { x: 0, y: frame.height }
+        ];
+
+        let m = shape.matrix2Parent();
+
+        let _m = parent2rootMatrixCache.get(parent.id)!;
+        if (!_m) {
+            _m = parent.matrix2Root();
+            parent2rootMatrixCache.set(parent.id, _m);
+        }
+
+        m.multiAtLeft(_m);
+
+        const origin = m.computeCoord2(0, 0);
+
+        let left = origin.x;
+        let right = origin.x;
+        let top = origin.y;
+        let bottom = origin.y;
+
+        for (let i = 1; i < 4; i++) {
+            const p = m.computeCoord3(points[i]);
+
+            if (p.x < left) {
+                left = p.x;
+            }
+            if (p.x > right) {
+                right = p.x;
+            }
+            if (p.y < top) {
+                top = p.y;
+            }
+            if (p.y > bottom) {
+                bottom = p.y;
+            }
+        }
+
+        return {
+            baseWidth,
+            baseHeight,
+
+            boxX: left,
+            boxY: top,
+
+            boxWidth: right - left,
+            boxHeight: bottom - top
+        };
+    }
+
     private getBaseFrames() {
+        const shapes = this.shapes;
+
+        if (!shapes.length) return;
+
         const matrixParent2rootCache = new Map();
+
+        const boundingBox2Root = this.box2root
 
         let left = Infinity;
         let top = Infinity;
         let right = -Infinity;
         let bottom = -Infinity;
 
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
-            const cache = this.__baseFramesCache.get(shape.id);
+        const cache = this.transformCache;
+        const inverseCache = this.transformInverseCache;
+        const bases = this.baseFrames;
 
-            if (cache) continue;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
 
             const f = boundingBox2Root(shape, matrixParent2rootCache);
 
@@ -149,8 +217,13 @@ export class ScaleHandler extends TransformHandler {
                 bottom = _bottom;
             }
 
-            this.baseFrames.set(shape.id, f);
-            this.__baseFramesCache.set(shape.id, f);
+            bases.set(shape.id, f);
+
+            if (!cache.has(shape.parent!)) {
+                const transform = shape.parent!.transform2FromRoot.clone();
+                cache.set(shape.parent!, transform);
+                inverseCache.set(shape.parent!, transform.getInverse());
+            }
         }
 
         this.originSelectionBox = {
@@ -162,35 +235,34 @@ export class ScaleHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        this.shapeSizeList = this.shapes.map(shape => {
-            return { width: shape.size.width, height: shape.size.height }
-        });
+        this.shapeSizeList = shapes.map(shape => ({ width: shape.size.width, height: shape.size.height }));
+
+        const alpha = shapes[0];
+        const multi = shapes.length > 1;
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
-        this.selectionTransform = this.shapes.length > 1
+        this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : this.shapes[0].transform2FromRoot.clone();
+            : alpha.transform2FromRoot.clone();
 
-        this.selectionTransformInverse = this.selectionTransform.getInverse();
+        const selectionInverse = this.selectionTransform.getInverse();
+        this.selectionTransformInverse = selectionInverse;
 
-        this.selectionSize = this.shapes.length > 1 ? {
-            width: this.originSelectionBox.width,
-            height: this.originSelectionBox.height
-        } : {
-            width: this.shapes[0].size.width,
-            height: this.shapes[0].size.height
-        };
-
-        for (const shape of this.shapes) {
-            if (!this.transformCache.has(shape.parent!)) {
-                this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
-            }
-        }
-        this.shapeTransformListInSelection = this.shapes.length > 1
-            ? this.shapes.map((shape, i) => shape.transform2.clone()  // 在Parent坐标系下
-                .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
-                .addTransform(this.selectionTransform.getInverse()))  // 在选区坐标系下
+        this.shapeTransformListInSelection = multi
+            ? shapes.map((shape, i) => shape.transform2.clone()  // 在Parent坐标系下
+                .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
+                .addTransform(selectionInverse))  // 在选区坐标系下
             : [new Transform()];
+
+        this.selectionSize = multi
+            ? {
+                width: this.originSelectionBox.width,
+                height: this.originSelectionBox.height
+            }
+            : {
+                width: alpha.size.width,
+                height: alpha.size.height
+            };
     }
 
     private livingPointAlignByAssist() {
@@ -453,10 +525,12 @@ export class ScaleHandler extends TransformHandler {
         // Transform = T·R·K·S
         // 不修改旋转和斜切，只修改平移和缩放
         const transformForSelection = this.selectionTransform.clone();
-        transformForSelection.setTranslate(this.selectionTransform.transform(ltPointForSelection).col0);
+        const __scale = transformForSelection.decomposeScale();
+
+        transformForSelection.setTranslate(transformForSelection.transform(ltPointForSelection).col0);
         transformForSelection.setScale(new ColVector3D([
-            sizeForSelection.width / this.selectionSize.width * (this.selectionTransform.decomposeScale().x > 0 ? 1 : -1),
-            sizeForSelection.height / this.selectionSize.height * (this.selectionTransform.decomposeScale().y > 0 ? 1 : -1),
+            sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1),
+            sizeForSelection.height / this.selectionSize.height * (__scale.y > 0 ? 1 : -1),
             1,
         ]));
 
@@ -468,7 +542,7 @@ export class ScaleHandler extends TransformHandler {
         }[] = [];
 
         const shapes = this.shapes;
-        const cache = this.transformCache;
+        const inverseCache = this.transformInverseCache;
         const sizes = this.shapeSizeList;
 
         this.shapeTransformListInSelection.forEach((transform, i) => {
@@ -476,7 +550,7 @@ export class ScaleHandler extends TransformHandler {
 
             const t = transform.clone()
                 .addTransform(transformForSelection)
-                .addTransform(cache.get(shape.parent!)!.getInverse());
+                .addTransform(inverseCache.get(shape.parent!)!);
 
             const scale = t.decomposeScale();
 
@@ -497,10 +571,17 @@ export class ScaleHandler extends TransformHandler {
         });
 
         if (this.alignPixel) {
+            const bases = this.baseFrames;
+
             for (const unit of units) {
                 const { shape, size, transform2 } = unit;
 
-                const decompose = transform2.clone().decomposeTranslate();
+                const box = bases.get(shape.id);
+                if (!box) continue;
+
+                const decompose = transform2.clone()
+                    .decomposeTranslate();
+
                 const intX = Math.round(decompose.x);
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
@@ -508,6 +589,18 @@ export class ScaleHandler extends TransformHandler {
 
                 if (offsetX || offsetY) {
                     transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
+                }
+
+                if (size.width > 0 && size.width < 1) {
+                    size.width = 1;
+                } else {
+                    size.width = Math.round(size.width);
+                }
+
+                if (size.height > 0 && size.height < 1) {
+                    size.height = 1;
+                } else {
+                    size.height = Math.round(size.height);
                 }
             }
         }
