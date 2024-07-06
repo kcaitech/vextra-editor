@@ -527,7 +527,9 @@ function workspace_watcher(type?: number | string, param?: string | MouseEvent |
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
         path_edit_mode.value = props.context.workspace.is_path_edit_mode;
-        creatorMode.value = false;
+        if (props.context.tool.action !== Action.AddContact) {
+            creatorMode.value = false;
+        }
     }
 }
 
@@ -807,11 +809,11 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <Rule :context="props.context" :page="(props.page as PageView)" />
-    </div>
+<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
+    <Rule :context="props.context" :page="(props.page as PageView)"/>
+</div>
 </template>

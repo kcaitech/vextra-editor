@@ -152,7 +152,6 @@ function contact_init(e: MouseEvent, apex?: ContactForm) {
     document.addEventListener("mouseup", up);
 }
 
-// #endregion
 function e_contact_to(apex: ContactForm, p2: PageXY) {
     creatorHdl?.contactTo(apex, p2);
 }
@@ -196,7 +195,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div v-if="props.params.visible" @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
+<div v-if="props.params.visible" style="background-color: rgba(0, 0, 0,0.08)" @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
     <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
     <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
 </div>
