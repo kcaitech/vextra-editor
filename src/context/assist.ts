@@ -820,15 +820,17 @@ export class Assist extends WatchableObject {
     // 水平相交的图形
     horIntersect(top: number, bottom: number) {
         let result: ShapeView[] = [];
+        const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
+        const matrix = this.m_context.workspace.matrix;
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
-            const matrix = this.m_context.workspace.matrix;
+            if (shapes.includes(inner_shape.id)) continue;
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
             const frame = inner_shape.frame;
-            const t_y = m.computeCoord2(0, 0).y;
-            const b_y = m.computeCoord2(0, frame.height).y;
-            if (top < b_y && bottom > t_y) {
+            const lt = m.computeCoord2(0, 0);
+            const lb = m.computeCoord2(0, frame.height);
+            if (top <= lb.y && bottom >= lt.y) {
                 result.push(inner_shape);
             }
         }
@@ -837,15 +839,17 @@ export class Assist extends WatchableObject {
     // 垂直相交的图形
     verIntersect(left: number, right: number) {
         let result: ShapeView[] = [];
+        const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
+        const matrix = this.m_context.workspace.matrix;
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
-            const matrix = this.m_context.workspace.matrix;
+            if (shapes.includes(inner_shape.id)) continue;
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
             const frame = inner_shape.frame;
             const l_x = m.computeCoord2(0, 0).x;
             const r_x = m.computeCoord2(frame.width, 0).x;
-            if (left < r_x && right > l_x) {
+            if (left <= r_x && right >= l_x) {
                 result.push(inner_shape);
             }
         }
