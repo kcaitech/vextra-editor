@@ -3,7 +3,9 @@ import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
     alignXFromPointGroup,
+    alignXFromSpacePoint,
     alignYFromPointGroup,
+    alignYFromSpacePoint,
     finder,
     get_tree,
     modify_pt_x4p,
@@ -65,6 +67,8 @@ export class Assist extends WatchableObject {
     private m_except: Map<string, ShapeView> = new Map();
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
+    private m_space_adsorb_x: number[] = [];
+    private m_space_adsorb_y: number[] = [];
 
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
@@ -83,6 +87,13 @@ export class Assist extends WatchableObject {
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    setSpaceAdsorbX(xs: number[]) {
+        this.m_space_adsorb_x = xs;
+    }
+    setSpaceAdsorbY(ys: number[]) {
+        this.m_space_adsorb_y = ys;
     }
 
     setNodesX2(xys: XY[]) {
@@ -787,6 +798,21 @@ export class Assist extends WatchableObject {
         if (this.m_guides_y.length) {
             const gy = this.m_guides_y.map(g => g.offsetRoot);
             const ry = alignYFromPointGroup(dy, gy, livingYs);
+            dy = ry.dy;
+            targetY = ry.targetY;
+            assistResult.sparkY = ry.spark;
+        }
+
+        //间距吸附
+
+        if (this.m_space_adsorb_x.length) {
+            const rx = alignXFromSpacePoint(dx, this.m_space_adsorb_x, livingXs);
+            dx = rx.dx;
+            targetX = rx.targetX;
+            assistResult.sparkX = rx.spark;
+        }
+        if (this.m_space_adsorb_y.length) {
+            const ry = alignYFromSpacePoint(dy, this.m_space_adsorb_y, livingYs);
             dy = ry.dy;
             targetY = ry.targetY;
             assistResult.sparkY = ry.spark;

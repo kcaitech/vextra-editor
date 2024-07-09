@@ -20,6 +20,8 @@ import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
 import { getFrameList, keyboard } from '@/utils/preview';
+import { NetworkStatus } from '@/communication/modules/network_status';
+import { NetworkStatusType } from '@/communication/types';
 
 const { t } = useI18n();
 let context: Context | undefined;
@@ -264,6 +266,16 @@ const changeLeftWidth = (width: number) => {
     Left.value.leftWidth = width;
 }
 
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: NetworkStatusType) => {
+    if (status === NetworkStatusType.Offline) {
+        console.log("网络断开连接")
+    } else {
+        console.log("网络连接成功")
+    }
+})
+
 onMounted(() => {
     getDocumentInfo();
     init_screen_size();
@@ -278,6 +290,7 @@ onUnmounted(() => {
     context?.preview.unwatch(previewWatcher);
     context?.workspace.unwatch(workspaceWatcher);
     uninstall_keyboard_units();
+    networkStatus.close();
 })
 
 </script>

@@ -4,7 +4,7 @@ import { Assist } from '@/context/assist';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
-import { ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
@@ -21,7 +21,13 @@ const props = defineProps<Props>();
 const hor_spacings: Map<number, Box[]> = new Map();
 const ver_spacings: Map<number, Box[]> = new Map();
 const spaceing_boxs = ref<Box[]>([]);
+const spaceing_ver_line = ref<Box[]>([]);
+const spaceing_hor_line = ref<Box[]>([]);
 const getIntersectShapes = () => {
+    spaceing_ver_line.value = [];
+    spaceing_hor_line.value = [];
+    props.context.assist.setSpaceAdsorbX([]);
+    props.context.assist.setSpaceAdsorbY([]);
     if (!props.context.workspace.transforming) {
         spaceing_boxs.value = [];
         return;
@@ -37,7 +43,7 @@ const getIntersectShapes = () => {
         const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
         points.push(...ps);
     }
-    const b = XYsBounding(points);
+    const b = XYsBounding(points); // 选中图形在视图上的位置
     const h_shapes = props.context.assist.horIntersect(b.top, b.bottom); // 水平相交的图形
     const v_shapes = props.context.assist.verIntersect(b.left, b.right); // 垂直相交的图形
     const hor = getHorDistance(b, h_shapes);
@@ -45,7 +51,7 @@ const getIntersectShapes = () => {
     spaceing_boxs.value = [...hor, ...ver];
 }
 
-const getBoxs = (box: Box, shapes: ShapeView[]) => {
+const getBoxs = (box: Box, shapes: ShapeView[]) => {  // 获取shape在视图上的位置
     const matrix = props.context.workspace.matrix;
     const selected = props.context.selection.selectedShapes;
     const boxs: { b: Box, shape: ShapeView }[] = [{ b: box, shape: selected[0] }];
@@ -64,13 +70,13 @@ const getBoxs = (box: Box, shapes: ShapeView[]) => {
         }
         boxs.push({ b: _box, shape });
     }
-
     return boxs;
 }
 
 const getHorDistance = (box: Box, shapes: ShapeView[]) => {
     if (shapes.length < 2) return [];
     hor_spacings.clear();
+    let adsorbXs = [];
     const selected = props.context.selection.selectedShapes;
     const boxs = getBoxs(box, shapes);
     boxs.sort((a, b) => a.b.left - b.b.left); // 对水平相交的图形进行左到右排序
@@ -121,10 +127,13 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
             }
         }
     }
+    let before = false;
+    let after = false;
     let before_bounds: Box[] = [];
     let after_bounds: Box[] = [];
     let before_spacings: Box | undefined; // 移动shape左侧间距位置
     let after_spacings: Box | undefined; // 移动shape右侧间距位置
+
     if (boxs[move_index - 1]) {
         for (let index = move_index - 1; index > -1; index--) {
             const space = boxs[move_index].b.left - boxs[index].b.right; // 移动shape与相邻shape之间的间距是否大于0？
@@ -136,11 +145,16 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
                     left: boxs[index].b.right,
                     right: boxs[move_index].b.left
                 }
+                const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, false); // 吸附位置
+                adsorbXs.push(...adsorbx);
                 if (hor_spacings.has(left_space)) {
                     const b = hor_spacings.get(left_space);
                     if (b) {
                         const before_bound = b.filter(item => item.right < box.left);
-                        before_bounds.push(...before_bound, box);  // 存入当前移动shape与之左侧shape之间相等的间距
+                        if (before_bound.length) {
+                            before_bounds.push(...before_bound, box);  // 存入当前移动shape与之左侧shape之间相等的间距
+                            before = true;
+                        }
                     }
                 }
                 before_spacings = box;
@@ -159,11 +173,16 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
                     left: boxs[move_index].b.right,
                     right: boxs[index].b.left
                 }
+                const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, true);
+                adsorbXs.push(...adsorbx);
                 if (hor_spacings.has(right_space)) {
                     const b = hor_spacings.get(right_space);
                     if (b) {
                         const before_bound = b.filter(item => item.left > box.right);
-                        after_bounds.push(...before_bound, box);
+                        if (before_bound.length) {
+                            after_bounds.push(...before_bound, box);
+                            after = true;
+                        }
                     }
                 }
                 after_spacings = box;
@@ -171,9 +190,28 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
             }
         }
     }
-    if (right_space === left_space && (after_spacings && before_spacings)) { //移动shape左右间距相等时
+    if (after_spacings && before_spacings) {
+        const center = (after_spacings.right + before_spacings.left) / 2
+        adsorbXs.push(center);
+    }
+    if (Math.abs(right_space - left_space) < 3 && (after_spacings && before_spacings)) { //移动shape左右间距相等时
         after_bounds.push(after_spacings!, before_spacings!);
     }
+    if (Math.abs(right_space - left_space) > 3) {
+        if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
+        if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
+    } else {
+        if (right_space > 0 && before_spacings) {
+            spaceing_hor_line.value.push(before_spacings);
+        }
+    }
+    const matrix = props.context.workspace.matrix;
+    const m = new Matrix(matrix.inverse);
+    adsorbXs = adsorbXs.map(item => {
+        const { x } = m.computeCoord2(item, 0);
+        return x;
+    })
+    props.context.assist.setSpaceAdsorbX(adsorbXs);
     const result = [...after_bounds, ...before_bounds];
     return result.length > 1 ? result : [];
 }
@@ -181,6 +219,7 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
 const getVerDistance = (box: Box, shapes: ShapeView[]) => {
     if (shapes.length < 2) return [];
     ver_spacings.clear();
+    let adsorbYs = [];
     const selected = props.context.selection.selectedShapes;
     const boxs = getBoxs(box, shapes);
     boxs.sort((a, b) => a.b.top - b.b.bottom);
@@ -231,6 +270,8 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
             }
         }
     }
+    let before = false;
+    let after = false;
     let before_bounds: Box[] = [];
     let after_bounds: Box[] = [];
     let before_spacings: Box | undefined;
@@ -247,14 +288,19 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
                         left: boxs[move_index].b.left,
                         right: boxs[move_index].b.right
                     }
+                    const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, false); // 吸附位置
+                    adsorbYs.push(...adsorby);
                     if (ver_spacings.has(top_space)) {
                         const b = ver_spacings.get(top_space);
                         if (b) {
                             const before_bound = b.filter(item => item.bottom < box.top);
-                            before_bounds.push(...before_bound, box);
+                            if (before_bound.length) {
+                                before_bounds.push(...before_bound, box);
+                                before = true;
+                            }
                         }
                     }
-                    after_spacings = box;
+                    before_spacings = box;
                     break;
                 }
             }
@@ -271,29 +317,85 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
                     left: boxs[move_index].b.left,
                     right: boxs[move_index].b.right
                 }
+                const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, true); // 吸附位置
+                adsorbYs.push(...adsorby);
                 if (ver_spacings.has(bottom_space)) {
                     const b = ver_spacings.get(bottom_space);
                     if (b) {
                         const after_bound = b.filter(item => item.top > box.bottom);
-                        after_bounds.push(...after_bound, box);
+                        if (after_bound.length) {
+                            after_bounds.push(...after_bound, box);
+                            after = true;
+                        }
                     }
                 }
-                before_spacings = box;
+                after_spacings = box;
                 break;
             }
         }
     }
-    if (bottom_space === top_space && (after_spacings && before_spacings)) {
+    if (after_spacings && before_spacings) {
+        const center = (after_spacings.bottom + before_spacings.top) / 2
+        adsorbYs.push(center);
+    }
+    if (Math.abs(top_space - bottom_space) < 3 && (after_spacings && before_spacings)) {
         after_bounds.push(after_spacings!, before_spacings!);
     }
+    if (Math.abs(top_space - bottom_space) > 3) {
+        if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
+        if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
+    } else {
+        if (top_space > 0 && before_spacings) {
+
+            spaceing_ver_line.value.push(before_spacings);
+        }
+    }
+
+    const matrix = props.context.workspace.matrix;
+    const m = new Matrix(matrix.inverse);
+    adsorbYs = adsorbYs.map(item => {
+        const { y } = m.computeCoord2(0, item);
+        return y;
+    })
+    props.context.assist.setSpaceAdsorbY(adsorbYs);
     const result = [...after_bounds, ...before_bounds];
-    console.log(result, 'result');
-    
     return result.length > 1 ? result : [];
 }
 
-const _update = () => {
-    getIntersectShapes();
+const getAdsorbX = (box: Box, center: number, before: boolean) => {
+    const spacings = [];
+    for (const [key, value] of hor_spacings) {
+        if (!before) {
+            const before_bound = value.filter(item => item.right < box.left);
+            if (before_bound.length) {
+                spacings.push(box.left + key + center);
+            }
+        } else {
+            const after_bound = value.filter(item => item.left > box.right);
+            if (after_bound.length) {
+                spacings.push(box.right - (key + center));
+            }
+        }
+    }
+    return spacings;
+}
+
+const getAdsorbY = (box: Box, center: number, before: boolean) => {
+    const spacings = [];
+    for (const [key, value] of ver_spacings) {
+        if (!before) {
+            const before_bound = value.filter(item => item.bottom < box.top);
+            if (before_bound.length) {
+                spacings.push(box.top + key + center);
+            }
+        } else {
+            const after_bound = value.filter(item => item.top > box.bottom);
+            if (after_bound.length) {
+                spacings.push(box.bottom - (key + center));
+            }
+        }
+    }
+    return spacings;
 }
 
 const selectedWatcher = (t: number) => {
@@ -311,14 +413,16 @@ function clear() {
     hor_spacings.clear();
     ver_spacings.clear();
     spaceing_boxs.value = [];
+    spaceing_ver_line.value = [];
+    spaceing_hor_line.value = [];
 }
+
 function assist_watcher(t: number) {
     if (t === Assist.CLEAR && spaceing_boxs.value.length) {
         if (props.context.workspace.transforming) return;
         clear();
     }
 }
-
 
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
 function watch_shapes() {
@@ -332,6 +436,21 @@ function watch_shapes() {
         v.watch(getIntersectShapes);
         watchedShapes.set(v.id, v)
     });
+}
+
+const filterAlpha = (a: number) => {
+    const matrix = props.context.workspace.matrix;
+    const m = new Matrix(matrix.inverse);
+    const start = m.computeCoord2(0, 0);
+    const { x } = m.computeCoord2(a, 0);
+    let alpha = Math.round((x - start.x) * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
 }
 
 onMounted(() => {
@@ -351,9 +470,44 @@ onUnmounted(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="100"
         height="100" viewBox="0 0 100 100" style="position: absolute">
+        <!-- 间距盒子 -->
         <rect v-for="(box, index) in spaceing_boxs" :key="index" :x="box.left" :y="box.top"
             :width="box.right - box.left" :height="box.bottom - box.top" fill="red" opacity="0.2"></rect>
+        <!-- 水平间距线 -->
+        <path v-for="(box, index) in spaceing_hor_line" :key="index"
+            :d="`M ${box.left} ${(box.top + box.bottom) / 2} L ${box.right} ${(box.top + box.bottom) / 2} M ${box.left} ${((box.top + box.bottom) / 2) - 4} L ${box.left} ${((box.top + box.bottom) / 2) + 4} M ${box.right} ${((box.top + box.bottom) / 2) - 4} L ${box.right} ${((box.top + box.bottom) / 2) + 4}`"
+            stroke="#ff2200"></path>
+        <!-- 垂直间距线 -->
+        <path v-for="(box, index) in spaceing_ver_line" :key="index"
+            :d="`M ${(box.left + box.right) / 2} ${box.top} L ${(box.left + box.right) / 2} ${box.bottom} M ${((box.left + box.right) / 2) - 4} ${box.top} L ${((box.left + box.right) / 2) + 4} ${box.top} M ${((box.left + box.right) / 2) - 4} ${box.bottom} L ${((box.left + box.right) / 2) + 4} ${box.bottom}`"
+            stroke="#ff2200"></path>
     </svg>
+    <!-- 水平间距大小 -->
+    <template v-for="(item, index) in spaceing_hor_line" :key="index">
+        <span class="size" v-if="+(item.right - item.left).toFixed(0) !== 0"
+            :style="{ left: `${(item.left + item.right) / 2}px`, top: `${(item.top + item.bottom) / 2}px`, transform: `translate(-50%, 5px)` }">{{
+            filterAlpha(item.right - item.left)
+        }}</span>
+    </template>
+    <!-- 垂直间距大小 -->
+    <template v-for="(item, index) in spaceing_ver_line" :key="index">
+        <span class="size" v-if="+(item.right - item.left).toFixed(0) !== 0"
+            :style="{ left: `${(item.left + item.right) / 2}px`, top: `${(item.top + item.bottom) / 2}px`, transform: `translate(5px, -50%)` }">{{
+            filterAlpha(item.bottom - item.top)
+        }}</span>
+    </template>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.size {
+    position: absolute;
+    font-size: 12px;
+    height: 25px;
+    background-color: #ff2200;
+    border-radius: 4px;
+    color: #fff;
+    padding: 0 5px;
+    line-height: 2;
+    z-index: 10000;
+}
+</style>
