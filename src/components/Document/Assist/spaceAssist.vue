@@ -23,6 +23,7 @@ const ver_spacings: Map<number, Box[]> = new Map();
 const spaceing_boxs = ref<Box[]>([]);
 const spaceing_ver_line = ref<Box[]>([]);
 const spaceing_hor_line = ref<Box[]>([]);
+let ss = ref<number[]>([])
 const getIntersectShapes = () => {
     spaceing_ver_line.value = [];
     spaceing_hor_line.value = [];
@@ -58,15 +59,17 @@ const getBoxs = (box: Box, shapes: ShapeView[]) => {  // 获取shape在视图上
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const m = shape.matrix2Root();
+        const points: { x: number, y: number }[] = [];
         m.multiAtLeft(matrix);
-        const frame = shape.frame;
-        const lt = m.computeCoord2(0, 0);
-        const rb = m.computeCoord2(frame.width, frame.height);
+        const f = shape.frame;
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        points.push(...ps);
+        const b = XYsBounding(points);
         const _box: Box = {
-            top: lt.y,
-            bottom: rb.y,
-            left: lt.x,
-            right: rb.x
+            top: b.top,
+            bottom: b.bottom,
+            left: b.left,
+            right: b.right
         }
         boxs.push({ b: _box, shape });
     }
@@ -90,6 +93,8 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
         if (move_index > i) { // 移动shape左侧的间距和间距位置
             if (i + 1 !== move_index) {
                 const space = Number((boxs[i + 1].b.left - b.b.right).toFixed(4));
+                console.log(b, boxs[i + 1].b, space);
+                
                 if (space > 0) {
                     const box = {
                         top: Math.min(boxs[i + 1].b.top, b.b.top),
@@ -127,6 +132,7 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
             }
         }
     }
+    
     let before = false;
     let after = false;
     let before_bounds: Box[] = [];
@@ -146,6 +152,8 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
                     right: boxs[move_index].b.left
                 }
                 const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, false); // 吸附位置
+                console.log(adsorbx, 'adsorbx', hor_spacings);
+                
                 adsorbXs.push(...adsorbx);
                 if (hor_spacings.has(left_space)) {
                     const b = hor_spacings.get(left_space);
@@ -205,6 +213,7 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
             spaceing_hor_line.value.push(before_spacings);
         }
     }
+    ss.value = adsorbXs
     const matrix = props.context.workspace.matrix;
     const m = new Matrix(matrix.inverse);
     adsorbXs = adsorbXs.map(item => {
@@ -472,7 +481,7 @@ onUnmounted(() => {
         height="100" viewBox="0 0 100 100" style="position: absolute">
         <!-- 间距盒子 -->
         <rect v-for="(box, index) in spaceing_boxs" :key="index" :x="box.left" :y="box.top"
-            :width="box.right - box.left" :height="box.bottom - box.top" fill="red" opacity="0.2"></rect>
+            :width="box.right - box.left" :height="box.bottom - box.top" fill="red" opacity="0.1"></rect>
         <!-- 水平间距线 -->
         <path v-for="(box, index) in spaceing_hor_line" :key="index"
             :d="`M ${box.left} ${(box.top + box.bottom) / 2} L ${box.right} ${(box.top + box.bottom) / 2} M ${box.left} ${((box.top + box.bottom) / 2) - 4} L ${box.left} ${((box.top + box.bottom) / 2) + 4} M ${box.right} ${((box.top + box.bottom) / 2) - 4} L ${box.right} ${((box.top + box.bottom) / 2) + 4}`"
@@ -481,6 +490,7 @@ onUnmounted(() => {
         <path v-for="(box, index) in spaceing_ver_line" :key="index"
             :d="`M ${(box.left + box.right) / 2} ${box.top} L ${(box.left + box.right) / 2} ${box.bottom} M ${((box.left + box.right) / 2) - 4} ${box.top} L ${((box.left + box.right) / 2) + 4} ${box.top} M ${((box.left + box.right) / 2) - 4} ${box.bottom} L ${((box.left + box.right) / 2) + 4} ${box.bottom}`"
             stroke="#ff2200"></path>
+            <path v-for="(n, i) in ss" :key="i" :d="`M ${n} 0 L ${n} 1000`" stroke="#ff2200"></path>
     </svg>
     <!-- 水平间距大小 -->
     <template v-for="(item, index) in spaceing_hor_line" :key="index">

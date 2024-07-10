@@ -11,6 +11,7 @@ import {
     modify_pt_x4p,
     modify_pt_y4p
 } from "@/utils/assist";
+import { XYsBounding } from "@/utils/common";
 
 export interface PointGroup1 {
     lt: PageXY
@@ -851,12 +852,14 @@ export class Assist extends WatchableObject {
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
             if (shapes.includes(inner_shape.id)) continue;
+            const points: { x: number, y: number }[] = [];
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
-            const frame = inner_shape.frame;
-            const lt = m.computeCoord2(0, 0);
-            const lb = m.computeCoord2(0, frame.height);
-            if (top <= lb.y && bottom >= lt.y) {
+            const f = inner_shape.frame;
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            points.push(...ps);
+            const b = XYsBounding(points);
+            if (top <= b.bottom && bottom >= b.top) {
                 result.push(inner_shape);
             }
         }
@@ -870,12 +873,14 @@ export class Assist extends WatchableObject {
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
             if (shapes.includes(inner_shape.id)) continue;
+            const points: { x: number, y: number }[] = [];
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
-            const frame = inner_shape.frame;
-            const l_x = m.computeCoord2(0, 0).x;
-            const r_x = m.computeCoord2(frame.width, 0).x;
-            if (left <= r_x && right >= l_x) {
+            const f = inner_shape.frame;
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            points.push(...ps);
+            const b = XYsBounding(points);
+            if (left <= b.right && right >= b.left) {
                 result.push(inner_shape);
             }
         }
