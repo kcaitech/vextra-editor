@@ -221,11 +221,11 @@ const getInfo = (shape: ShapeView) => {
             info.height = _h + top + bottom;
         } else {
             const { left, top, right, bottom } = getShadowMax(shape);
-            const max_border = getShapeBorderMax(shape);
-            info.x = (shape.frame.x - left - max_border);
-            info.y = (shape.frame.y - top - max_border);
-            info.width = (shape.frame.width + (left + max_border) + (right + max_border));
-            info.height = (shape.frame.height + (top + max_border) + (bottom + max_border));
+            const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
+            info.x = (shape.frame.x - left - l_max);
+            info.y = (shape.frame.y - top - t_max);
+            info.width = (shape.frame.width + (left + l_max) + (right + r_max));
+            info.height = (shape.frame.height + (top + t_max) + (bottom + b_max));
         }
         info.children.push(shape);
     }
