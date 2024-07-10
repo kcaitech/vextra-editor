@@ -38,7 +38,6 @@ import {
 } from "@/components/Document/Creator/execute";
 
 // todo 键盘事件的权限处理
-
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
@@ -48,8 +47,7 @@ function keydown(event: KeyboardEvent, context: Context) {
 
     const rf = context.keyHandlers[event.code];
     if (rf) {
-        rf(event, context);
-        return;
+        return rf(event, context);
     }
 
     const f = keydownHandler[event.code];
