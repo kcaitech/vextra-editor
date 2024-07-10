@@ -235,13 +235,12 @@ const get_text = () => {
         width: 28px;
         height: 28px;
         border-radius: var(--default-radius);
+        transition: .2s;
 
         >svg {
             width: 16px;
             height: 16px;
         }
-
-        transition: .2s;
     }
 
     .delete:hover {

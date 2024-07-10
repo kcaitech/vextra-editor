@@ -16,7 +16,6 @@ import {
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/Document/Menu/ContextMenu.vue';
-import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import {ShapeView, ShapeType} from "@kcdesign/data";
-import {onMounted, ref} from "vue";
+import { ShapeView, ShapeType } from "@kcdesign/data";
+import { onMounted, ref } from "vue";
 
 interface Props {
     data: ShapeView
@@ -19,32 +19,34 @@ function montage() {
     }
 
 }
+
 onMounted(montage);
 </script>
 <template>
-    <div class="wrapper">
-        <div v-for="(s, i) in slices" :key="i" class="prefix">
-            <div>{{ s }}</div>
-            <div class="split"> / </div>
-        </div>
-        <div>{{ props.data.name }}</div>
+<div class="wrapper">
+    <div v-for="(s, i) in slices" :key="i" class="prefix">
+        <div>{{ s }}</div>
+        <div class="split"> /</div>
     </div>
+    <div>{{ props.data.name }}</div>
+</div>
 </template>
 <style scoped lang="scss">
 .wrapper {
     display: flex;
     align-items: center;
+    font-size: var(--font-default-fontsize);
 
-    >.prefix {
+    > .prefix {
         display: flex;
         align-items: center;
         color: var(--grey-dark);
 
-        >div {
+        > div {
             white-space: pre;
         }
 
-        >.split {
+        > .split {
             font-weight: 900;
         }
     }
@@ -56,5 +58,5 @@ onMounted(montage);
         text-overflow: ellipsis;
     }
 
-    font-size: var(--font-default-fontsize);
-}</style>
+}
+</style>

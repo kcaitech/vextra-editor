@@ -2,11 +2,13 @@
 import { Context } from "@/context";
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import ComponentList from "./Component/ComponentList.vue";
+
 interface Props {
     context: Context
     leftTriggleVisible: boolean
     showLeft: boolean
 }
+
 const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const showHiddenLeft = () => {
@@ -15,10 +17,10 @@ const showHiddenLeft = () => {
 </script>
 
 <template>
-    <div class="comps-container">
-        <ComponentList :context="props.context"></ComponentList>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" />
-    </div>
+<div class="comps-container">
+    <ComponentList :context="props.context"></ComponentList>
+    <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"/>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -55,12 +57,11 @@ const showHiddenLeft = () => {
         font-size: 12px;
         border-bottom-color: transparent;
         border-radius: 4px;
+        padding-left: 4px;
 
         &:hover {
             background-color: var(--grey-light);
         }
-
-        padding-left: 4px;
     }
 
 
