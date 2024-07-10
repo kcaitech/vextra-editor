@@ -15,7 +15,7 @@ import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
-import spaceAssist from "@/components/Document/Assist/spaceAssist.vue";
+import gapAssist from "@/components/Document/Assist/gapAssist.vue";
 
 export interface Point {
     x: number
@@ -482,7 +482,7 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <spaceAssist :context="props.context"></spaceAssist>
+    <gapAssist :context="props.context"></gapAssist>
     <!-- 标注线 -->
     <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"
                :update-trigger="updateTrigger"></LableLine>

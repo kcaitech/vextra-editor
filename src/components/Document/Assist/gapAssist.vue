@@ -47,8 +47,8 @@ const getIntersectShapes = () => {
     const b = XYsBounding(points); // 选中图形在视图上的位置
     const h_shapes = props.context.assist.horIntersect(b.top, b.bottom); // 水平相交的图形
     const v_shapes = props.context.assist.verIntersect(b.left, b.right); // 垂直相交的图形
-    const hor = getHorDistance(b, h_shapes);
-    const ver = getVerDistance(b, v_shapes);
+    const hor = getHorGaps(b, h_shapes);
+    const ver = getVerGaps(b, v_shapes);
     spaceing_boxs.value = [...hor, ...ver];
 }
 
@@ -76,7 +76,7 @@ const getBoxs = (box: Box, shapes: ShapeView[]) => {  // 获取shape在视图上
     return boxs;
 }
 
-const getHorDistance = (box: Box, shapes: ShapeView[]) => {
+const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     if (shapes.length < 2) return [];
     hor_spacings.clear();
     let adsorbXs = [];
@@ -92,47 +92,45 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
         if (move_index === i) continue;
         if (move_index > i) { // 移动shape左侧的间距和间距位置
             if (i + 1 !== move_index) {
-                const space = Number((boxs[i + 1].b.left - b.b.right).toFixed(4));
-                console.log(b, boxs[i + 1].b, space);
-                
-                if (space > 0) {
+                const gap = Number((boxs[i + 1].b.left - b.b.right).toFixed(4));
+                if (gap > 0) {
                     const box = {
                         top: Math.min(boxs[i + 1].b.top, b.b.top),
                         bottom: Math.max(boxs[i + 1].b.bottom, b.b.bottom),
                         left: b.b.right,
                         right: boxs[i + 1].b.left
                     }
-                    if (hor_spacings.has(space)) {  //水平方向有无当前间距？ 存入多个间距位置
-                        const bounds = hor_spacings.get(space);
+                    if (hor_spacings.has(gap)) {  //水平方向有无当前间距？ 存入多个间距位置
+                        const bounds = hor_spacings.get(gap);
                         bounds!.push(box);
-                        hor_spacings.set(space, bounds!);
+                        hor_spacings.set(gap, bounds!);
                     } else {
-                        hor_spacings.set(space, [box]);
+                        hor_spacings.set(gap, [box]);
                     }
                 }
             }
         } else { // 移动shape右侧的间距和间距位置
             if (i + 1 < boxs.length) {
-                const space = Number((boxs[i + 1].b.left - b.b.right).toFixed(4));
-                if (space > 0) {
+                const gap = Number((boxs[i + 1].b.left - b.b.right).toFixed(4));
+                if (gap > 0) {
                     const box = {
                         top: Math.min(boxs[i + 1].b.top, b.b.top),
                         bottom: Math.max(boxs[i + 1].b.bottom, b.b.bottom),
                         left: b.b.right,
                         right: boxs[i + 1].b.left
                     }
-                    if (hor_spacings.has(space)) {
-                        const bounds = hor_spacings.get(space);
+                    if (hor_spacings.has(gap)) {
+                        const bounds = hor_spacings.get(gap);
                         bounds!.push(box);
-                        hor_spacings.set(space, bounds!);
+                        hor_spacings.set(gap, bounds!);
                     } else {
-                        hor_spacings.set(space, [box]);
+                        hor_spacings.set(gap, [box]);
                     }
                 }
             }
         }
     }
-    
+
     let before = false;
     let after = false;
     let before_bounds: Box[] = [];
@@ -142,9 +140,9 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
 
     if (boxs[move_index - 1]) {
         for (let index = move_index - 1; index > -1; index--) {
-            const space = boxs[move_index].b.left - boxs[index].b.right; // 移动shape与相邻shape之间的间距是否大于0？
-            if (space > 0) {
-                left_space = Number(space.toFixed(4));
+            const gap = boxs[move_index].b.left - boxs[index].b.right; // 移动shape与相邻shape之间的间距是否大于0？
+            if (gap > 0) {
+                left_space = Number(gap.toFixed(4));
                 const box = {
                     top: boxs[move_index].b.top,
                     bottom: boxs[move_index].b.bottom,
@@ -152,13 +150,10 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
                     right: boxs[move_index].b.left
                 }
                 const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, false); // 吸附位置
-                console.log(adsorbx, 'adsorbx', hor_spacings);
-                
                 adsorbXs.push(...adsorbx);
-                if (hor_spacings.has(left_space)) {
-                    const b = hor_spacings.get(left_space);
-                    if (b) {
-                        const before_bound = b.filter(item => item.right < box.left);
+                for (const [key, value] of hor_spacings) {
+                    if (Math.abs(key - left_space) < 3) { // 移动shape左侧有无相同间距
+                        const before_bound = value.filter(item => item.right < box.left);
                         if (before_bound.length) {
                             before_bounds.push(...before_bound, box);  // 存入当前移动shape与之左侧shape之间相等的间距
                             before = true;
@@ -172,9 +167,9 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
     }
     if (boxs[move_index + 1]) {
         for (let index = move_index + 1; index < boxs.length; index++) {
-            const space = boxs[index].b.left - boxs[move_index].b.right;
-            if (space > 0) {
-                right_space = Number(space.toFixed(4));
+            const gap = boxs[index].b.left - boxs[move_index].b.right;
+            if (gap > 0) {
+                right_space = Number(gap.toFixed(4));
                 const box = {
                     top: boxs[move_index].b.top,
                     bottom: boxs[move_index].b.bottom,
@@ -183,10 +178,9 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
                 }
                 const adsorbx = getAdsorbX(box, (boxs[move_index].b.right - boxs[move_index].b.left) / 2, true);
                 adsorbXs.push(...adsorbx);
-                if (hor_spacings.has(right_space)) {
-                    const b = hor_spacings.get(right_space);
-                    if (b) {
-                        const before_bound = b.filter(item => item.left > box.right);
+                for (const [key, value] of hor_spacings) {
+                    if (Math.abs(key - right_space) < 3) { // 移动shape右侧有无相同间距
+                        const before_bound = value.filter(item => item.left > box.right);
                         if (before_bound.length) {
                             after_bounds.push(...before_bound, box);
                             after = true;
@@ -225,7 +219,7 @@ const getHorDistance = (box: Box, shapes: ShapeView[]) => {
     return result.length > 1 ? result : [];
 }
 
-const getVerDistance = (box: Box, shapes: ShapeView[]) => {
+const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     if (shapes.length < 2) return [];
     ver_spacings.clear();
     let adsorbYs = [];
@@ -241,39 +235,39 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
         if (move_index === i) continue;
         if (move_index > i) {
             if (i + 1 !== move_index) {
-                const space = Number((boxs[i + 1].b.top - b.b.bottom).toFixed(4));
-                if (space > 0) {
+                const gap = Number((boxs[i + 1].b.top - b.b.bottom).toFixed(4));
+                if (gap > 0) {
                     const box = {
                         top: b.b.bottom,
                         bottom: boxs[i + 1].b.top,
                         left: Math.min(boxs[i + 1].b.left, b.b.left),
                         right: Math.max(boxs[i + 1].b.right, b.b.right)
                     }
-                    if (ver_spacings.has(space)) {
-                        const bounds = ver_spacings.get(space);
+                    if (ver_spacings.has(gap)) {
+                        const bounds = ver_spacings.get(gap);
                         bounds!.push(box);
-                        ver_spacings.set(space, bounds!);
+                        ver_spacings.set(gap, bounds!);
                     } else {
-                        ver_spacings.set(space, [box]);
+                        ver_spacings.set(gap, [box]);
                     }
                 }
             }
         } else {
             if (i + 1 < boxs.length) {
-                const space = Number((boxs[i + 1].b.top - b.b.bottom).toFixed(4));
-                if (space > 0) {
+                const gap = Number((boxs[i + 1].b.top - b.b.bottom).toFixed(4));
+                if (gap > 0) {
                     const box = {
                         top: b.b.bottom,
                         bottom: boxs[i + 1].b.top,
                         left: Math.min(boxs[i + 1].b.left, b.b.left),
                         right: Math.max(boxs[i + 1].b.right, b.b.right)
                     }
-                    if (ver_spacings.has(space)) {
-                        const bounds = ver_spacings.get(space);
+                    if (ver_spacings.has(gap)) {
+                        const bounds = ver_spacings.get(gap);
                         bounds!.push(box);
-                        ver_spacings.set(space, bounds!);
+                        ver_spacings.set(gap, bounds!);
                     } else {
-                        ver_spacings.set(space, [box]);
+                        ver_spacings.set(gap, [box]);
                     }
                 }
             }
@@ -287,9 +281,9 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
     let after_spacings: Box | undefined;
     if (boxs[move_index - 1]) {
         for (let index = move_index - 1; index > -1; index--) {
-            const space = boxs[move_index].b.top - boxs[index].b.bottom;
-            if (space > 0) {
-                top_space = Number(space.toFixed(4));
+            const gap = boxs[move_index].b.top - boxs[index].b.bottom;
+            if (gap > 0) {
+                top_space = Number(gap.toFixed(4));
                 if (top_space > 0) {
                     const box = {
                         top: boxs[index].b.bottom,
@@ -299,10 +293,9 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
                     }
                     const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, false); // 吸附位置
                     adsorbYs.push(...adsorby);
-                    if (ver_spacings.has(top_space)) {
-                        const b = ver_spacings.get(top_space);
-                        if (b) {
-                            const before_bound = b.filter(item => item.bottom < box.top);
+                    for (const [key, value] of ver_spacings) {
+                        if (Math.abs(key - top_space) < 3) {
+                            const before_bound = value.filter(item => item.bottom < box.top);
                             if (before_bound.length) {
                                 before_bounds.push(...before_bound, box);
                                 before = true;
@@ -317,9 +310,9 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
     }
     if (boxs[move_index + 1]) {
         for (let index = move_index + 1; index < boxs.length; index++) {
-            const space = boxs[index].b.top - boxs[move_index].b.bottom;
-            if (space > 0) {
-                bottom_space = Number(space.toFixed(4));
+            const gap = boxs[index].b.top - boxs[move_index].b.bottom;
+            if (gap > 0) {
+                bottom_space = Number(gap.toFixed(4));
                 const box = {
                     top: boxs[move_index].b.bottom,
                     bottom: boxs[index].b.top,
@@ -328,10 +321,9 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
                 }
                 const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, true); // 吸附位置
                 adsorbYs.push(...adsorby);
-                if (ver_spacings.has(bottom_space)) {
-                    const b = ver_spacings.get(bottom_space);
-                    if (b) {
-                        const after_bound = b.filter(item => item.top > box.bottom);
+                for (const [key, value] of ver_spacings) {
+                    if (Math.abs(key - bottom_space) < 3) {
+                        const after_bound = value.filter(item => item.top > box.bottom);
                         if (after_bound.length) {
                             after_bounds.push(...after_bound, box);
                             after = true;
@@ -355,7 +347,6 @@ const getVerDistance = (box: Box, shapes: ShapeView[]) => {
         if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
     } else {
         if (top_space > 0 && before_spacings) {
-
             spaceing_ver_line.value.push(before_spacings);
         }
     }
@@ -490,7 +481,7 @@ onUnmounted(() => {
         <path v-for="(box, index) in spaceing_ver_line" :key="index"
             :d="`M ${(box.left + box.right) / 2} ${box.top} L ${(box.left + box.right) / 2} ${box.bottom} M ${((box.left + box.right) / 2) - 4} ${box.top} L ${((box.left + box.right) / 2) + 4} ${box.top} M ${((box.left + box.right) / 2) - 4} ${box.bottom} L ${((box.left + box.right) / 2) + 4} ${box.bottom}`"
             stroke="#ff2200"></path>
-            <path v-for="(n, i) in ss" :key="i" :d="`M ${n} 0 L ${n} 1000`" stroke="#ff2200"></path>
+        <!-- <path v-for="(n, i) in ss" :key="i" :d="`M ${n} 0 L ${n} 1000`" stroke="#ff2200"></path> -->
     </svg>
     <!-- 水平间距大小 -->
     <template v-for="(item, index) in spaceing_hor_line" :key="index">
