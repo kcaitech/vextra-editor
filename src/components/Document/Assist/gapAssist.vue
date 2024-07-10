@@ -481,7 +481,8 @@ onUnmounted(() => {
         <path v-for="(box, index) in spaceing_ver_line" :key="index"
             :d="`M ${(box.left + box.right) / 2} ${box.top} L ${(box.left + box.right) / 2} ${box.bottom} M ${((box.left + box.right) / 2) - 4} ${box.top} L ${((box.left + box.right) / 2) + 4} ${box.top} M ${((box.left + box.right) / 2) - 4} ${box.bottom} L ${((box.left + box.right) / 2) + 4} ${box.bottom}`"
             stroke="#ff2200"></path>
-        <!-- <path v-for="(n, i) in ss" :key="i" :d="`M ${n} 0 L ${n} 1000`" stroke="#ff2200"></path> -->
+        <!-- 吸附线 -->
+        <!-- <path v-for="(n, i) in ss" :key="i" :d="`M ${n} 0 L ${n} 1500`" stroke="#ff2200"></path> -->
     </svg>
     <!-- 水平间距大小 -->
     <template v-for="(item, index) in spaceing_hor_line" :key="index">
