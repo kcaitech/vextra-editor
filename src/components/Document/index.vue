@@ -238,7 +238,7 @@ onMounted(() => {
         inited.value = true;
     }).catch((e) => {
         console.log(e)
-    })
+    });
 })
 
 onUnmounted(() => {
