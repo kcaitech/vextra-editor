@@ -1250,8 +1250,8 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
 
     if (parseResult.shape) {
         const xy = _xy || adjust_content_xy(context, parseResult.shape.frame, false);
-        parseResult.shape.frame.x = xy.x;
-        parseResult.shape.frame.y = xy.y;
+        parseResult.shape.transform.translateX = xy.x;
+        parseResult.shape.transform.translateY = xy.y;
 
         const page = context.selection.selectedPage!;
         const editor = context.editor4Page(page);
