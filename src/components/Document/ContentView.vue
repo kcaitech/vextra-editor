@@ -171,13 +171,14 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
+    props.context.cursor.stash();
     props.context.cursor.setType(CursorType.Grab, 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
     spacePressed.value = false;
     workspace.value.pageDragging(false);
-    props.context.cursor.reset();
+    props.context.cursor.rollback();
 }
 
 

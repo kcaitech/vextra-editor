@@ -156,50 +156,50 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div style="position: relative; box-sizing: border-box" ref="atrrdialog">
-        <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
-            <template #tool>
-                <div class="edit-comps">
-                    <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
-                        <svg-icon icon-class="relevance"></svg-icon>
-                    </div>
-                </div>
-            </template>
-        </TypeHeader>
-        <div class="attr_con" ref="card_ref" v-if="is_bind">
-            <div class="module_item_left" @click="edit_visible">
-                <div class="module_name-2">
-                    <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="eye-open"></svg-icon>
-                    </div>
-                    <div class="name">
-                        <span style="width: 40%;">{{ is_bind.name }}</span>
-                        <span style="width: 60%;"> {{ dlt_value ? '显示' : '隐藏' }}</span>
-                    </div>
+<div style="position: relative; box-sizing: border-box" ref="atrrdialog">
+    <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
+        <template #tool>
+            <div class="edit-comps">
+                <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
+                    <svg-icon icon-class="relevance"></svg-icon>
                 </div>
             </div>
-            <div class="delete" @click="_delete">
-                <svg-icon icon-class="delete"></svg-icon>
+        </template>
+    </TypeHeader>
+    <div class="attr_con" ref="card_ref" v-if="is_bind">
+        <div class="module_item_left" @click="edit_visible">
+            <div class="module_name-2">
+                <div style="width: 30px;" class="svg">
+                    <svg-icon icon-class="eye-open"></svg-icon>
+                </div>
+                <div class="name">
+                    <span style="width: 40%;">{{ is_bind.name }}</span>
+                    <span style="width: 60%;"> {{ dlt_value ? '显示' : '隐藏' }}</span>
+                </div>
             </div>
         </div>
-        <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-                       :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
-                       :dialog_posi="dialog_posi"
-                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
-                       @save-layer-show="save_layer_show"
-                       :symbol="sym_layer">
-            <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                                  :context="props.context" :placeholder="t('compos.place_select_layer')"
-                                  :selectId="selectId">
-                </SelectLayerInput>
-            </template>
-            <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
-                                     :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
-            </template>
-        </CompLayerShow>
+        <div class="delete" @click="_delete">
+            <svg-icon icon-class="delete"></svg-icon>
+        </div>
     </div>
+    <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
+                   :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
+                   :dialog_posi="dialog_posi"
+                   :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+                   @save-layer-show="save_layer_show"
+                   :symbol="sym_layer">
+        <template #layer>
+            <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
+                              :context="props.context" :placeholder="t('compos.place_select_layer')"
+                              :selectId="selectId">
+            </SelectLayerInput>
+        </template>
+        <template #default_value>
+            <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
+                                 :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
+        </template>
+    </CompLayerShow>
+</div>
 </template>
 <style lang="scss" scoped>
 .edit-comps {
@@ -245,6 +245,7 @@ onUnmounted(() => {
     background-color: #F5F5F5;
     width: calc(100% - 32px);
     height: 32px;
+
     &:hover {
         background-color: #EBEBEB;
     }
@@ -313,14 +314,15 @@ onUnmounted(() => {
     align-items: center;
     width: 28px;
     height: 28px;
+    transition: .2s;
 
     > svg {
         width: 16px;
         height: 16px;
     }
+
     &:hover {
-            background-color: #F5F5F5;
-        }
-    transition: .2s;
+        background-color: #F5F5F5;
+    }
 }
 </style>

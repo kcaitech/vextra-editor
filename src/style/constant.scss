@@ -121,6 +121,7 @@
     --el-svg-monochrome-grey: var(--el-border-color);
     --el-font-size-base: 10px;
 }
+
 .network_error_message {
     position: fixed;
     font-size: var(--font-default-fontsize);
@@ -134,29 +135,31 @@
     padding: 7px 30px;
     border: 1px solid var(--active-color);
     border-radius: 4px;
-  
+
     .loading-spinner {
-      >div {
-        border: 2px solid transparent;
-        border-top: 2px solid #000;
-        border-left: 2px solid #000;
-        border-bottom: 2px solid #000;
-        border-radius: 50%;
-        width: 12px;
-        height: 12px;
-        color: #000;
-      }
-  
-      animation: spin 1s linear infinite;
+        > div {
+            border: 2px solid transparent;
+            border-top: 2px solid #000;
+            border-left: 2px solid #000;
+            border-bottom: 2px solid #000;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            color: #000;
+        }
+
+        & {
+            animation: spin 1s linear infinite;
+        }
     }
-  
+
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-  
-      100% {
-        transform: rotate(360deg);
-      }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
-  }
+}

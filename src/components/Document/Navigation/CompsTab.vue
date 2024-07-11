@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import ComponentList from "./Component/ComponentList.vue";
+
 interface Props {
     context: Context
 }
+
 const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
@@ -49,12 +51,11 @@ const emit = defineEmits<{ (e: 'showNavigation'): void }>()
         font-size: 12px;
         border-bottom-color: transparent;
         border-radius: 4px;
+        padding-left: 4px;
 
         &:hover {
             background-color: var(--grey-light);
         }
-
-        padding-left: 4px;
     }
 
 

@@ -449,6 +449,7 @@ onUnmounted(() => {
     width: 28px;
     height: 28px;
     border-radius: 6px;
+    transition: .2s;
 
     >svg {
         width: 16px;
@@ -458,7 +459,5 @@ onUnmounted(() => {
     &:hover {
         background-color: #F5F5F5;
     }
-
-    transition: .2s;
 }
 </style>

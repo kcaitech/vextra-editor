@@ -1739,13 +1739,12 @@ onUnmounted(() => {
                     align-items: center;
                     justify-content: center;
                     border-radius: var(--default-radius);
+                    transition: .2s;
 
                     >svg {
                         width: 16px;
                         height: 16px;
                     }
-
-                    transition: .2s;
                 }
 
                 .add:hover {

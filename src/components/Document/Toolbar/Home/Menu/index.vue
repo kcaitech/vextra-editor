@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref, reactive, computed } from 'vue';
+import { nextTick, ref } from 'vue';
 import { Context } from '@/context';
-import { useI18n } from 'vue-i18n';
-import { XY } from '@/context/selection';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ExportVue from "./Export.vue"
 import ViewVue from "./View.vue"
-// import GuideVue from "./Guide.vue"
-
-const { t } = useI18n();
 
 interface Props {
     context: Context,
@@ -16,30 +11,10 @@ interface Props {
     site?: { x: number, y: number }
 }
 
-// interface Emits {
-//     (e: 'rename'): void;
-// }
-
 const props = defineProps<Props>();
-// const emit = defineEmits<Emits>();
 const popoverVisible = ref<boolean>(false);
-const childMenuVisible = ref<boolean>(false);
 const trigger = ref<HTMLDivElement>(); // 按钮 Dom
 const popover = ref<HTMLDivElement>(); // 菜单 Dom
-const childMenuPosition: XY = reactive({ x: 0, y: 0 });
-// const route = useRoute();
-// const without_editing_permissions = ref<boolean>(!permIsEdit(props.context) || props.context.tool.isLable);
-
-function showChildFileMenu(e: MouseEvent) {
-    childMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
-    childMenuPosition.y = -10;
-    childMenuVisible.value = true
-}
-
-const closeChildFileMenu = () => {
-    childMenuVisible.value = false
-}
-
 /**
  * @description 打开菜单，根据按钮位置确定菜单位置
  */
@@ -82,12 +57,12 @@ function close() {
 
 </script>
 <template>
-    <div class="icon" @click="showMenu" ref="trigger">
-        <svg-icon icon-class="menu"></svg-icon>
-    </div>
-    <div ref="popover" class="popover-f" v-if="popoverVisible">
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close" />
-    </div>
+<div class="icon" @click="showMenu" ref="trigger">
+    <svg-icon icon-class="menu"></svg-icon>
+</div>
+<div ref="popover" class="popover-f" v-if="popoverVisible">
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>
+</div>
 </template>
 <style scoped lang="scss">
 .icon {
@@ -100,7 +75,7 @@ function close() {
     flex: 0 0 32px;
     cursor: pointer;
 
-    >svg {
+    > svg {
         width: 18px;
         height: 18px;
         color: #FFFFFF;
@@ -122,10 +97,10 @@ function close() {
     border-radius: 4px;
     outline: none;
     padding: 4px 0;
-    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
 
-    >div,
-    >span {
+    > div,
+    > span {
         position: relative;
         width: 100%;
         height: 32px;
@@ -140,7 +115,7 @@ function close() {
         }
     }
 
-    >.disabled {
+    > .disabled {
         opacity: 0.4;
         pointer-events: none;
     }

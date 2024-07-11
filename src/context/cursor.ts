@@ -1,19 +1,17 @@
 import { WatchableObject } from "@kcdesign/data";
-import { Context } from ".";
 import { CursorPicker, CursorType } from "@/utils/cursor2";
 
 export class Cursor extends WatchableObject {
     static CHANGE_CURSOR = 1;
     static RESET = 2;
     private m_current_cursor_type: string = '';
-    private m_context: Context;
     private m_styler: CursorPicker;
     private m_freeze: boolean = false;
     private m_auto: string = '';
+    private m_stash: string = '';
 
-    constructor(context: Context) {
+    constructor() {
         super();
-        this.m_context = context;
         this.m_styler = new CursorPicker();
     }
 
@@ -58,11 +56,23 @@ export class Cursor extends WatchableObject {
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
 
+    stash() {
+        this.m_stash = this.m_current_cursor_type;
+    }
+
+    rollback() {
+        if (this.m_stash) {
+            this.m_current_cursor_type = this.m_stash;
+            this.notify(Cursor.CHANGE_CURSOR, this.m_current_cursor_type);
+        } else {
+            this.reset();
+        }
+    }
+
     reset() {
         if (this.m_freeze) {
             return;
         }
-
         this.m_current_cursor_type = this.m_auto;
 
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);

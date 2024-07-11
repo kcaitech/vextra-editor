@@ -4,6 +4,7 @@ import { get_rotation } from "@/utils/attri_setting";
 import { ShapeView } from "@kcdesign/data";
 import { watchEffect } from "vue";
 import { watch, ref, onMounted } from "vue";
+
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,
@@ -32,6 +33,7 @@ const inputValue = ref(props.text);
 const isActived = ref(false);
 const shapes = ref<ShapeView[]>([]);
 const saveValue = ref('');
+
 function onChange(e: Event) {
     if (props.disabled) {
         return;
@@ -40,9 +42,10 @@ function onChange(e: Event) {
     try {
         if (props.svgicon == 'angle') {
             const raduis = value.replace("°", "");
-            value = String(eval(raduis)); // 危险！！！
+            // value = String(eval(raduis)); // 危险！！！
+            value = String(raduis);
         } else {
-            value = String(eval(value)); // 危险！！！
+            value = String(value);
         }
     } catch (error) {
         return inputValue.value = String(props.text)
@@ -70,6 +73,7 @@ function onChange(e: Event) {
     }
     emit("onchange", value, shapes.value as ShapeView[]);
 }
+
 const saveInputValue = () => {
     const value = input.value!.value;
     saveValue.value = value;
@@ -86,7 +90,7 @@ const onBlur = (e: MouseEvent) => {
             document.removeEventListener('click', onBlur);
         }, 10)
     }
-    if(!input.value) return;
+    if (!input.value) return;
     const el = input.value;
     if (el.selectionStart !== el.selectionEnd) {
         return;
@@ -175,10 +179,12 @@ watch(scale, () => {
         emit("onchange", result!, shapes)
     }
 }, { deep: true });
+
 function blur2() {
     isActived.value = false
     is_select.value = false;
 }
+
 watch(screenWidth, () => {
     screenWidth.value = window.innerWidth;
 })
@@ -198,20 +204,21 @@ onMounted(() => {
 </script>
 
 <template>
-    <div :class="{ icontext: true, disabled: props.disabled, actived: isActived }">
-        <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
+<div :class="{ icontext: true, disabled: props.disabled, actived: isActived }">
+    <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
         width: `${props.frame ? frame?.width : 18}px`,
         height: `${props.frame ? frame?.height : 18}px`,
         transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
         cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
     }"></svg-icon>
-        <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
-        props.ticon }}</span>
-        <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="inputValue" @keydown="onKeyBlur"
-            :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange"
-            @input="saveInputValue" />
-    </div>
+    <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon"/>
+    <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
+            props.ticon
+        }}</span>
+    <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="inputValue" @keydown="onKeyBlur"
+           :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange"
+           @input="saveInputValue"/>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -226,7 +233,7 @@ onMounted(() => {
     box-sizing: border-box;
 
 
-    >.icon {
+    > .icon {
         color: grey;
         width: 14px;
         height: 14px;
@@ -237,7 +244,7 @@ onMounted(() => {
         box-sizing: border-box;
     }
 
-    >.deicon {
+    > .deicon {
         color: grey;
         width: 14px;
         height: 14px;
@@ -245,11 +252,11 @@ onMounted(() => {
         text-align: center;
     }
 
-    >span {
+    > span {
         line-height: 14px;
     }
 
-    >input {
+    > input {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;

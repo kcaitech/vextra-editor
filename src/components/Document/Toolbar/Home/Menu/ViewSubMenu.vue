@@ -22,7 +22,6 @@ const emit = defineEmits<{
 const surplusX = ref<number>(0);
 const subMenu = ref<HTMLDivElement>();
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
-// const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isPixel = ref<boolean>(props.context.user.isPixelAlignMent);
 const isGrid = ref<boolean>(props.context.user.isPixelGrid);
 const isRule = ref<boolean>(props.context.user.isRuleVisible);
@@ -178,7 +177,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     border-radius: 4px;
-    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
     background-color: #262626;
     overflow: hidden;
     padding: 4px 0;

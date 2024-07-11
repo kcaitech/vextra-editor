@@ -10,18 +10,19 @@ import {
     TableCellView,
     IEventEmitter,
     EventEmitter,
+    Document,
+    Page,
+    DocEditor,
+    Editor,
+    PageEditor,
+    ShapeEditor,
+    TextShapeEditor
 } from "@kcdesign/data";
-import { Document } from "@kcdesign/data";
-import { Page } from "@kcdesign/data";
-import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
-import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
-// import { Comment } from "./comment";
 import { Menu } from "./menu";
 import { Tool } from "./tool";
 import { Navi } from "./navigate";
-// import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
 import { Assist } from "./assist";
 import { TeamWork } from "./teamwork";
@@ -44,7 +45,6 @@ import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
-import { __add_status_for_create } from "@/components/Document/Creator/execute";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -103,9 +103,11 @@ class ToolBox implements IToolBox {
         if (!this._scout) this._scout = scout(this._context);
         return this._scout;
     }
+
     get storage(): Map<string, any> {
         return this._storage;
     }
+
     get event(): IEventEmitter {
         return this._event;
     }
@@ -128,12 +130,10 @@ export class Context extends WatchableObject implements IContext {
     private m_selection: Selection;
     private m_workspace: WorkSpace;
     private m_pluginsMgr: PluginsMgr;
-    // private m_comment: Comment;
     private m_menu: Menu;
     private m_tool: Tool;
     private m_navi: Navi;
     private m_cursor: Cursor;
-    // private m_communication?: ICommunication;
     private m_escstack: EscStack;
     private m_assist: Assist;
     private m_teamwork: TeamWork;
@@ -162,13 +162,11 @@ export class Context extends WatchableObject implements IContext {
         repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
         this.m_pluginsMgr = new PluginsMgr();
-        // this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
-        // this.m_communication = new Communication();
-        this.m_cursor = new Cursor(this); // 光标变换
+        this.m_cursor = new Cursor(); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Assist(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
@@ -185,6 +183,7 @@ export class Context extends WatchableObject implements IContext {
     }
 
     private m_toolbox = new ToolBox(this);
+
     get toolbox(): IToolBox {
         return this.m_toolbox; // todo
     }
@@ -196,31 +195,33 @@ export class Context extends WatchableObject implements IContext {
     get curAction(): string | undefined {
         return this.tool.action;
     }
+
     setCurAction(uuid: string): void {
         this.tool.setAction(uuid);
-        __add_status_for_create(this);
     }
-
 
     keyHandlers: {
         [key: string]: (
             event: KeyboardEvent, context: IContext) => void
     } = {}
+
     registKeyHandler(keyCode: string, handler: (
         event: KeyboardEvent, context: IContext) => void): void {
         this.keyHandlers[keyCode] = handler;
     }
+
     hasPendingSyncCmd(): boolean {
         return this.m_coopRepo.hasPendingSyncCmd();
     }
+
     setNet(net: INet): void {
         this.m_net = net;
         this.m_coopRepo.setNet(net);
     }
+
     get net() {
         return this.m_net;
     }
-
 
     get editor(): Editor {
         return this.m_editor;
@@ -275,6 +276,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_props.readonly = readonly;
         this.notify(events.context_readonly_change, readonly)
     }
+
     get readonly() {
         return !!this.m_props.readonly;
     }
@@ -295,10 +297,6 @@ export class Context extends WatchableObject implements IContext {
         return this.m_pluginsMgr;
     }
 
-    // get comment() {
-    //     return this.m_comment;
-    // }
-
     get menu() {
         return this.m_menu;
     }
@@ -310,13 +308,6 @@ export class Context extends WatchableObject implements IContext {
     get navi() {
         return this.m_navi;
     }
-
-    // set communication(c: ICommunication | undefined) {
-    //     this.m_communication = c;
-    // }
-    // get communication() {
-    //     return this.m_communication;
-    // }
 
     get cursor() {
         return this.m_cursor;
@@ -338,10 +329,6 @@ export class Context extends WatchableObject implements IContext {
         return this.m_selection.textSelection;
     }
 
-    // get escstack() {
-    //     return this.m_escstack;
-    // }
-
     get component() {
         return this.m_component;
     }
@@ -361,6 +348,7 @@ export class Context extends WatchableObject implements IContext {
     get attr() {
         return this.m_attr;
     }
+
     get preview() {
         return this.m_preview;
     }
@@ -369,8 +357,6 @@ export class Context extends WatchableObject implements IContext {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
-        // dom.update(props, true);
-        // console.log("dom.nodeCount: " + dom.nodeCount);
         const ret = { dom, ctx: domCtx }
         this.m_vdom.set(page.id, ret);
         return ret;

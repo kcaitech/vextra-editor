@@ -38,7 +38,6 @@ import {
 } from "@/components/Document/Creator/execute";
 
 // todo 键盘事件的权限处理
-
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
@@ -47,10 +46,7 @@ function keydown(event: KeyboardEvent, context: Context) {
     }
 
     const rf = context.keyHandlers[event.code];
-    if (rf) {
-        rf(event, context);
-        return;
-    }
+    rf && rf(event, context);
 
     const f = keydownHandler[event.code];
     f && f(event, context);
@@ -70,12 +66,10 @@ export function setup(context: Context) {
     document.addEventListener('keydown', down);
     document.addEventListener('keyup', up);
 
-    const remove_keyboard_units = () => {
+    return () => {
         document.removeEventListener('keydown', down);
         document.removeEventListener('keyup', up);
     }
-
-    return remove_keyboard_units;
 }
 
 keydownHandler[''] = function (event: KeyboardEvent, context: Context) {
@@ -130,16 +124,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
         context.menu.notify(Menu.WRITE_MEDIA);
         return;
     }
-    if (isCtrl && !shiftKey) {
-        // context.workspace.notify(WorkSpace.COPY); // 拷贝
-        return
-    }
     event.preventDefault();
-    if (shiftKey) {
-        // context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
-        return;
-    }
-    // context.tool.setAction(Action.AddComment)
 }
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {

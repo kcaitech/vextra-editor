@@ -30,9 +30,14 @@ import { CursorType } from "@/utils/cursor2";
 
 export function __add_status_for_create(context: Context) {
     context.menu.menuMount();
-    context.escstack.save('tool-action', context.tool.reset.bind(context.tool));
+
     context.cursor.setType(CursorType.Create, 0);
     context.notify(ContextEvents.action_change);
+
+    context.escstack.save('tool-action', () => {
+        context.cursor.reset();
+        return context.tool.reset();
+    });
 }
 
 /**
@@ -163,6 +168,14 @@ export function useContact(context: Context) {
  */
 export function useImage(context: Context) {
     context.tool.notify(Tool.SELECT_IMAGE);
+}
+
+export function useComment(context: Context) {
+    context.cursor.setType(CursorType.Comment, 0);
+    context.escstack.save('tool-action', () => {
+        context.cursor.reset();
+        return context.tool.reset();
+    });
 }
 
 export class CreatorExecute extends TransformHandler {
