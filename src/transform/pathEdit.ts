@@ -1142,6 +1142,10 @@ export class PathEditor extends TransformHandler {
         return res;
     }
 
+    cancelContactStatus() {
+        this.path.setContactStatus(false);
+    }
+
     mergeSegment(segmentIndex: number, toSegmentIndex: number, at: 'start' | 'end') {
         if (!this.isInitMatrix) {
             this.init();
