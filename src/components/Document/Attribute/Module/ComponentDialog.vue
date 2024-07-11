@@ -100,12 +100,11 @@ onUnmounted(() => {
         font-size: 12px;
         border-bottom-color: transparent;
         border-radius: 4px;
+        padding-left: 4px;
 
         &:hover {
             background-color: var(--grey-light);
         }
-
-        padding-left: 4px;
     }
 }
 

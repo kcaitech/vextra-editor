@@ -402,12 +402,11 @@ onUnmounted(() => {
         color: #000000;
         border-radius: 4px;
         box-sizing: border-box;
+        transition: 0.2s;
 
         &:hover {
             background-color: #F5F5F5;
         }
-
-        transition: 0.3s;
 
         .mode_box {
             flex: 1;

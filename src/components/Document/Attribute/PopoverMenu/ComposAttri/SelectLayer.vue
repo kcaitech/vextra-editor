@@ -16,6 +16,7 @@ interface Props {
 
 interface Emits {
     (e: 'close'): void;
+
     (e: 'change', data: string[]): void;
 }
 
@@ -59,6 +60,7 @@ function toggle(i: number) {
     }
     reflush.value = reflush.value++;
 }
+
 const handleCheck = (v: string) => {
 
     const i = checkList.value.findIndex(i => v === i);
@@ -111,55 +113,57 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
-        <div class="heard">
+<div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
+    <div class="heard">
             <span class="title">{{
-                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                `${t('compos.select_layer')}`
-            }}</span>
-            <div class="close">
-                <div class="toggle_list" @click.stop="emits('close')">
-                    <svg-icon icon-class="close"></svg-icon>
-                </div>
+                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                        `${t('compos.select_layer')}`
+                }}</span>
+        <div class="close">
+            <div class="toggle_list" @click.stop="emits('close')">
+                <svg-icon icon-class="close"></svg-icon>
             </div>
-        </div>
-        <div class="container" v-if="selectList.length">
-            <!-- 组件实例 -->
-            <div style="height: 100%;" ref="top_wrapper">
-                <el-scrollbar>
-                    <!-- 可变组件折叠 -->
-                    <template v-for="(item, i) in selectList" :key="i">
-                        <div class="collapse-title" @click="toggle(i)" v-if="selectList.length > 1" :reflush="reflush">
-                            <div class="shrink">
-                                <svg-icon icon-class="triangle-icon"
-                                    :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"></svg-icon>
-                            </div>
-                            <span>{{ item.state }}</span>
-                        </div>
-                        <div class="demo-collapse" :style="{ marginTop: selectList.length > 1 ? '0' : '4px' }"
-                            v-if="unfold.has(i)" :reflush="reflush">
-                            <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @change="(v) => handleCheck(v)" :layerId="props.layerId"
-                                :container="scroll_container">
-                            </component>
-                        </div>
-                    </template>
-                </el-scrollbar>
-                <div class="button">
-                    <button type="button" @click.stop="confirmSelect" :disabled="checkList.length ? false : true">{{
-                        t('compos.confirm') }}</button>
-                </div>
-            </div>
-        </div>
-        <div class="null"
-            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
-            {{ t('compos.text_layer_null') }}
-        </div>
-        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-            t('compos.instance_null')
-        }}
         </div>
     </div>
+    <div class="container" v-if="selectList.length">
+        <!-- 组件实例 -->
+        <div style="height: 100%;" ref="top_wrapper">
+            <el-scrollbar>
+                <!-- 可变组件折叠 -->
+                <template v-for="(item, i) in selectList" :key="i">
+                    <div class="collapse-title" @click="toggle(i)" v-if="selectList.length > 1" :reflush="reflush">
+                        <div class="shrink">
+                            <svg-icon icon-class="triangle-icon"
+                                      :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"></svg-icon>
+                        </div>
+                        <span>{{ item.state }}</span>
+                    </div>
+                    <div class="demo-collapse" :style="{ marginTop: selectList.length > 1 ? '0' : '4px' }"
+                         v-if="unfold.has(i)" :reflush="reflush">
+                        <component v-if="scroll_container" :is="CompoSelectList" :context="context"
+                                   :contents="item.data" @change="(v) => handleCheck(v)" :layerId="props.layerId"
+                                   :container="scroll_container">
+                        </component>
+                    </div>
+                </template>
+            </el-scrollbar>
+            <div class="button">
+                <button type="button" @click.stop="confirmSelect" :disabled="checkList.length ? false : true">{{
+                        t('compos.confirm')
+                    }}
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="null"
+         v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+        {{ t('compos.text_layer_null') }}
+    </div>
+    <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
+            t('compos.instance_null')
+        }}
+    </div>
+</div>
 </template>
 
 <style lang="scss" scoped>
@@ -267,12 +271,11 @@ onUnmounted(() => {
             font-size: 12px;
             border-bottom-color: transparent;
             border-radius: 4px;
+            padding-left: 4px;
 
             &:hover {
                 background-color: var(--grey-light);
             }
-
-            padding-left: 4px;
         }
     }
 
@@ -307,7 +310,7 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
-    >span {
+    > span {
         font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -318,7 +321,7 @@ onUnmounted(() => {
         height: 14px;
         width: 14px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
             transition: all 0.3s;

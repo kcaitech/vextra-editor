@@ -110,9 +110,11 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
 }
 
 export function insertFrameTemplate(context: Context) {
-    const selection = context.selection, workspace = context.workspace, tool = context.tool;
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const tool = context.tool;
+
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
-    const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
         const editor = context.editor4Page(parent);
@@ -120,7 +122,8 @@ export function insertFrameTemplate(context: Context) {
         const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const { x, y } = landFinderOnPage(matrix, context, frame);
-        frame.x = x, frame.y = y;
+        frame.x = x;
+        frame.y = y;
         const fillColor = new Color(1, 255, 255, 255);
         const fill = new Fill(new BasicArray(), v4(), true, FillType.SolidColor, fillColor);
         let artboard: Shape | false = editor.createArtboard(tf.name, frame, fill);
@@ -133,7 +136,8 @@ export function insertFrameTemplate(context: Context) {
             }
         })
     }
-    context.tool.setAction(Action.AutoV);
+    tool.setAction(Action.AutoV);
+    context.cursor.reset();
 }
 
 export function collect(context: Context): ShapeView[] {
