@@ -12,6 +12,21 @@ interface UserConfig {
     rule: boolean;
 }
 
+export type DocSelectionData = {
+    select_page_id: string,
+    select_shape_id_list: string[],
+    hover_shape_id?: string,
+    cursor_start?: number,
+    cursor_end?: number,
+    cursor_at_before?: boolean,
+    // 以下字段仅读取时有效
+    user_id?: string,
+    permission?: number,
+    avatar?: string,
+    nickname?: string,
+    enter_time?: number,
+}
+
 export class User extends WatchableObject {
     static GRID_STATUS_CHANGE = 1;
     static RULE_STATUS_CHANGE = 2;

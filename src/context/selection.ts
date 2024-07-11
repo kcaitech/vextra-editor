@@ -33,6 +33,8 @@ import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
 // import { router } from "@/router";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
+import { skipUserSelectShapes } from "@/utils/content";
+import { DocSelectionData } from "./user";
 
 interface Saved {
     page: Page | undefined,
@@ -101,6 +103,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static SHOW_INTERVAL = 17;
     static PASSIVE_CONTOUR = 18;
 
+    static CHANGE_USER_STATE = 19;
+
     // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
@@ -128,6 +132,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     private m_label_fixed_group: ShapeView[] = [];
     private m_label_living_group: ShapeView[] = [];
+    private userSelectionList: DocSelectionData[] = []
 
     private m_hover_stroke: number = 14;
 
@@ -818,5 +823,17 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     setHoverStroke(val: number) {
         this.m_hover_stroke = val;
+    }
+
+    locateShape(shapes: ShapeView[]) {
+        skipUserSelectShapes(this.m_context, shapes);
+    }
+
+    get getUserSelection() {
+        return this.userSelectionList;
+    }
+    userSelectionData(data: DocSelectionData[]) {
+        this.userSelectionList = data;
+        this.notify(Selection.CHANGE_USER_STATE);
     }
 }

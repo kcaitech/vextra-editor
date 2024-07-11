@@ -891,10 +891,17 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     const points: ClientXY[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const item = shapes[i];
-        const frame = item.frame;
-        const m = item.matrix2Root();
-        m.multiAtLeft(matrix);
-        points.push(...[[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => m.computeCoord(p[0], p[1])));
+        const { width, height } = item.size;
+        const m = item.transform2FromRoot; // 图层到Root；
+        const clientTransform = makeShapeTransform2By1(matrix);
+        m.addTransform(clientTransform); // root 到 client
+        const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(0, height),
+        ]);
+        points.push(lt, rt, rb, lb);
     }
     const box = XYsBounding(points);
     const width = box.right - box.left;
@@ -905,6 +912,7 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     if (del.x || del.y) {
         matrix.trans(del.x, del.y);
     }
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 export function map_from_shapes(shapes: ShapeView[], init?: Map<string, ShapeView>) {
