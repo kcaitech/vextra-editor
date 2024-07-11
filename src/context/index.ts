@@ -45,7 +45,6 @@ import { IContext } from "@/openapi";
 import { EscStack } from "./escstack";
 import { scout, Scout } from "@/utils/scout";
 import { Preview } from "./preview";
-import { __add_status_for_create } from "@/components/Document/Creator/execute";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -167,7 +166,7 @@ export class Context extends WatchableObject implements IContext {
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
-        this.m_cursor = new Cursor(this); // 光标变换
+        this.m_cursor = new Cursor(); // 光标变换
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Assist(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
@@ -199,7 +198,6 @@ export class Context extends WatchableObject implements IContext {
 
     setCurAction(uuid: string): void {
         this.tool.setAction(uuid);
-        __add_status_for_create(this);
     }
 
     keyHandlers: {
@@ -224,7 +222,6 @@ export class Context extends WatchableObject implements IContext {
     get net() {
         return this.m_net;
     }
-
 
     get editor(): Editor {
         return this.m_editor;

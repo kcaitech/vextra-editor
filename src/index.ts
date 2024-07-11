@@ -24,6 +24,8 @@ export * from "./openapi";
 
 const t = (i18n as any).global.t;
 
+export { useComment } from '@/components/Document/Creator/execute'
+
 async function _open(props: DocumentProps) {
     const repo = new Repository();
     let cooprepo: CoopRepository | undefined;
@@ -34,8 +36,7 @@ async function _open(props: DocumentProps) {
         data = document
         cooprepo = new CoopRepository(data, repo)
         loader_ = loader
-    }
-    else if (props.source === 'file') {
+    } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
             const lzdata = new LzDataLocal(new Zip(props.file));
             data = await importSketch(props.file.name, lzdata, repo)
@@ -44,8 +45,7 @@ async function _open(props: DocumentProps) {
             data = await importFigma(props.file, repo)
             cooprepo = new CoopRepository(data, repo)
         }
-    }
-    else if (props.source === 'new') {
+    } else if (props.source === 'new') {
         data = createDocument(t('system.new_file'), repo);
         cooprepo = new CoopRepository(data, repo)
         cooprepo.setInitingDocument(true);
@@ -84,8 +84,6 @@ export async function openDocument(props: DocumentProps) {
     // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
     return { context, loader: loader }
 }
-
-
 
 export const DocumentVue = _DocumentVue
 export const MobileDocumentVue = _MobileDocumentVue

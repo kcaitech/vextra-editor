@@ -9,7 +9,8 @@ export enum CursorType {
     Text = 'text',
     Grab = 'grab',
     Grabbing = 'grabbing',
-    Pen = 'pen'
+    Pen = 'pen',
+    Comment = 'comment'
 }
 
 export class CursorPicker {
@@ -30,11 +31,13 @@ export class CursorPicker {
     // 扩展
     static EXTEND = "data:image/svg+xml,<svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'><g filter='url(%23filter0_d_228_7)'><path d='M20.9098 11.0302L15.8939 6L11.2424 11.1643L14.5819 11.1731L14.6343 14.9508C13.4995 14.9443 12.3397 14.9437 11.0993 14.962L11.0993 11.0518L6 15.9975L11.0993 20.7201L11.1544 17.3811H14.668L14.7215 21.2374L11.3827 21.2837L16.1712 25.9981L21.0501 21.1496L17.1403 21.2038C17.1018 19.8585 17.0869 18.6079 17.0779 17.3811H21.2196V20.7201L26 15.9975L21.2196 11.0518V14.962C19.7518 14.9836 18.3969 14.9788 17.0628 14.9691C17.0539 13.7224 17.0391 12.4523 17 11.0844L20.9098 11.0302Z' fill='black'/><path d='M15.9087 6.58129L19.9592 10.6433L16.9944 10.6845L16.5885 10.6901L16.6001 11.0959C16.6392 12.4596 16.6539 13.7264 16.6629 14.9719L16.6657 15.3662L17.0599 15.3691C18.3949 15.3788 19.7533 15.3836 21.2255 15.3619L21.6196 15.3561V14.962V12.0412L25.4374 15.991L21.6196 19.7627V17.3811V16.9811H21.2196H17.0779H16.6749L16.6779 17.384C16.6869 18.612 16.7018 19.8659 16.7405 21.2153L16.7517 21.6092L17.1459 21.6038L20.0664 21.5633L16.1699 25.4355L12.3456 21.6703L14.727 21.6373L15.127 21.6318L15.1214 21.2318L15.0679 17.3755L15.0625 16.9811H14.668H11.1544H10.761L10.7545 17.3745L10.7141 19.8182L6.58144 15.9908L10.6993 11.997L10.6993 14.962V15.3679L11.1052 15.3619C12.3418 15.3437 13.4986 15.3443 14.632 15.3508L15.0399 15.3531L15.0342 14.9452L14.9818 11.1676L14.9764 10.7742L14.5829 10.7731L12.1389 10.7666L15.9087 6.58129Z' stroke='white' stroke-width='0.8'/></g><defs><filter id='filter0_d_228_7' x='2' y='2' width='28' height='27.9981' filterUnits='userSpaceOnUse' color-interpolation-filters='sRGB'><feFlood flood-opacity='0' result='BackgroundImageFix'/><feColorMatrix in='SourceAlpha' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0' result='hardAlpha'/><feOffset/><feGaussianBlur stdDeviation='2'/><feComposite in2='hardAlpha' operator='out'/><feColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0'/><feBlend mode='normal' in2='BackgroundImageFix' result='effect1_dropShadow_228_7'/><feBlend mode='normal' in='SourceGraphic' in2='effect1_dropShadow_228_7' result='shape'/></filter></defs></svg>"
 
+    // 评论
+    static COMMENT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABACAYAAABFqxrgAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAP/SURBVHgB7ZnPS1RRFMfPmxl1zPyRYUlaTIsIhGDCNq2sCFpUIITrBvdKrluM0jp04TJQ/wTXLppWLiQcSSwisEAhEFEbzRmd8fX9vnlXnmaINe/dN3E/cHj3/XDuOeeee+69RxGDWFIl2LZ9D5ckpMe9Jjyvs5BNyDQkY1lWVv4naDzkrX025iEpqXZgRMJr/MbGhj02NmanUik7kUjYLS0tNj+jJJNJu7e3156cnLSXl5e9zuBNQqoRKP6cdivjh4eHjxh9mtBRHmfwd15INQGF00p7jvxZjPcKo4WR4SEt1QBHTGnM0Ze/MP648HcUxWIxJWFmd3f3upoClXKA/O6IDfYjIcU6ODj4Si0nJiYq6gAlnFoE/WRwH5Gwsbe31++kciQzzmXxwQnMLUyyBNHwQEKGVSqVFqgcs7r44AA5Ni2QG95JmKJhbW3tjooC8dEBciwaNjc3HyoddHvDqq+vv89GJpMRv4HhMjU15bRjsdhtce3X6oTu7u5YXV3dU7anp6clCLLZ8rGipqamR0IyJeJIih8Yntz6is/TgcLES5CHvnV2dtaL5kMkOz+vFnAJwAHi5gVPn+zf0hYOZR0kKgHDvKCAQ2I4dutzwsjICCNB65xkFIhuJZqamgKfj8g9zjWfz3/c2tpy2jHRiBqJIEFidK5IjLnm5mYZGhoK4R7aZ1B8ca4rKysziIQD0UlfXx+TYmvQq4MqtmDT9KStre286FwisY+PICcE6gSeTcj29vaneDx+LQz7hEAjgZskFQWzs7Mv8ewypEZ0wkhAYroQlBNUqQ2rwirub7a2tjZRB9FMYNMhnU47fezv7+cGBgYe49mVrq6uWtH9fxd3FHx3gnIAmZube41nNyDNbmLWC5XwMxJ4RhgdHT10wMLCwpva2tpbeHdJdOcCD75EAo3n6KviCafAzMzMK7xLonbRies5CUtVqVLTgUYz83P5YzFVGU/W19fn+/v7n6F2wL3yVXdfoH8aeDiyRFYSGj8+Pj6I37/rToEOCB1wYgToPDtwJC0UVVahaIf8A1j2viMCvoDs4uLi58HBwfcopuZRtdopFAo8O/+AFCAnbpO1OQHTQRC+JSj6CLctqPlFoXhZqViMFWHLbYt6fgzHie6V8KMSQn8vGo3u4G9+NjQ05OCEvPvuj+cEnesk+27A9vUiRrIR0RBBVBz5AAZZSGyHxuIbUd+4bfWshEf7kAIML8Cxu+3t7fmlpaUipwfqJvZpiuiCfTMvxKW8ZEUaGxsll8t5R/iIfu57b1sZRyeo0S669yp5hpvyouAYGnFXi0Nx76PetrvBcdre7+1yXcIrBoPBYDAYDAaDwWAwGAwGg8FgMBgMBoPBoJ1fvWrb7M26VTYAAAAASUVORK5CYII=";
+
     // 动态光标类型
     static DYNAMIC = [CursorType.Rotate, CursorType.Scale];
 
     static PEN = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJESURBVHgB7Zm9jcJAFIRHuojMJTi9jJBwSyC87NwBdIBLcAe4A64D3AEhISVAB3s7sGuWHxvzI7Rr3ieNZARYmrdv3voHEARBEARBEARBEARBEARBEARBEIRXMzTaWi2MMqMUH8TGSF/R0miKQ4F6DVe+Nq6UulYMFmluNMab+ML7+Ia3ykmSYL1eYzQaYTAYYLfbUYn9zY9Rbo8HRjurqFFGOk3TvXg8HA71drvVjtVqpYuiaOqOlVFhzxMlXN19DGi0qQiOzWaj5/O5Ho/H2nRLW1QSRERptF9lGrxVBJ/lcqmzLKv/g8tBmiGCXUXBDkC3yvcUoUNU2GEpAqaOgTP7aBEc/D2j4hWjQOCUsDHw8/5MEQgjgmMXBI2CF4NXFsEblgoBcxGDVxVhOp3GG4OmIlD8zI7hd21EH4NrRfDFFucO0Eb0MXA07Pf7a4E2ehEDgut3jo1d4+hNDJh9PNABpBcxWCwWF+YZi1uDkPQmBmxndgi7gSvfxbz7H/oQg2fAsXN+ETA3d4NHYLfgND5BF6FESwweNc9BOJlMoiiCwoti4Jt3F0yz2cyfB0E+eK1j0HXIdTXv8HaFPwRKCbvN3TPtu5gnPB8C3xVSowpnV3xlWT5tnnDAIpJtMcWhG+p3CG1d0cU84RMje74KkcC5kOHsbRKfEFdVdZd5fuddGmeIEAU7I+DdFuN+8zkiJ8VZV7TdGPXN/Dk5bBHyPP84844cXhE46SneRX6CeUeOhgcn+ADzDoXTawgeZxAEQejAP1zPK4aP9mgsAAAAAElFTkSuQmCC";
-
 
     private m_style: HTMLStyleElement;
     private m_class_map: Map<string, string> = new Map();
@@ -73,6 +76,8 @@ export class CursorPicker {
                 return CursorPicker.EXTEND;
             case CursorType.Pen:
                 return CursorPicker.PEN;
+            case CursorType.Comment:
+                return CursorPicker.COMMENT;
             default:
                 return CursorPicker.DEFAULT;
         }
@@ -103,6 +108,8 @@ export class CursorPicker {
             classStr += 'cursor: text !important;'
         } else if (type === CursorType.Pen) {
             classStr += `cursor: -webkit-image-set(url(${url}) 2x) 13 13, auto !important;`
+        } else if (type === CursorType.Comment) {
+            classStr += `cursor: -webkit-image-set(url(${url}) 2x) 16 14, auto !important;`
         } else {
             classStr += `cursor: url("${url}") 16 16, auto !important;`
         }
