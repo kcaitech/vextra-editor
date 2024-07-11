@@ -50,9 +50,9 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
 import Rule from "./Rule/index.vue";
-import { CursorType } from "@/utils/cursor2";
 import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
 import TempBoard from "@/components/common/TempBoard.vue";
+import Space from "@/components/Document/Space/index.vue";
 
 interface Props {
     context: Context
@@ -66,16 +66,11 @@ const emit = defineEmits<{
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<Props>();
-const STATE_NONE = 0;
-const STATE_CHECKMOVE = 1;
-const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
-let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
-const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
@@ -99,7 +94,6 @@ const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
-const overview = ref<boolean>(false);
 let firstTime = false;
 
 function page_watcher(...args: any) {
@@ -144,43 +138,24 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-function onKeyDown(e: KeyboardEvent) { // 键盘监听
-    if (e.target instanceof HTMLInputElement) return;
-    if (e.repeat) return;
+function onKeyDown(e: KeyboardEvent) {
+    if (e.repeat || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (e.code === 'Space') {
         if (workspace.value.select || spacePressed.value) return;
-        overview.value = true;
-        preToDragPage();
+        spacePressed.value = true;
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
-        _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
+        _search(true);
     }
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement) return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
     if (spacePressed.value && e.code === 'Space') {
-        overview.value = false;
-        endDragPage();
+        spacePressed.value = false;
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
-        _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
+        _search(false);
     }
 }
-
-function preToDragPage() { // 编辑器准备拖动页面
-    spacePressed.value = true;
-    workspace.value.setCtrl('page');
-    workspace.value.pageDragging(true);
-    props.context.selection.unHoverShape();
-    props.context.cursor.stash();
-    props.context.cursor.setType(CursorType.Grab, 0);
-}
-
-function endDragPage() { // 编辑器完成拖动页面
-    spacePressed.value = false;
-    workspace.value.pageDragging(false);
-    props.context.cursor.rollback();
-}
-
 
 function insertFrame() {
     insertFrameTemplate(props.context);
@@ -210,38 +185,6 @@ function search(e: MouseEvent) { // 常规图形检索
 
     const shapes = ctx.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(ctx, shapes);
-}
-
-function pageViewDragStart(e: MouseEvent) {
-    state = STATE_CHECKMOVE;
-    prePt.x = e.screenX;
-    prePt.y = e.screenY;
-}
-
-function pageViewDragging(e: MouseEvent) {
-    if (workspace.value.controller !== 'page') return;
-    const dx = e.screenX - prePt.x;
-    const dy = e.screenY - prePt.y;
-    if (state === STATE_MOVEING) {
-        matrix.trans(dx, dy);
-        prePt.x = e.screenX;
-        prePt.y = e.screenY;
-    } else {
-        const diff = Math.hypot(dx, dy);
-        if (diff > dragActiveDis) {
-            state = STATE_MOVEING;
-            matrix.trans(dx, dy);
-            prePt.x = e.screenX;
-            prePt.y = e.screenY;
-        }
-    }
-    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType(CursorType.Grabbing, 0);
-}
-
-function pageViewDragEnd() {
-    state = STATE_NONE;
-    props.context.cursor.setType(CursorType.Grab, 0)
 }
 
 /**
@@ -357,14 +300,10 @@ function onMouseDown(e: MouseEvent) {
         const action = props.context.tool.action;
         if (action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
-        if (spacePressed.value) {
-            pageViewDragStart(e); // 空格键press，准备拖动页面
-        } else {
-            isMouseLeftPress = true;
-            wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
-            // 取消参考线选区
-            props.context.tool.referSelection.resetSelected();
-        }
+        isMouseLeftPress = true;
+        wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
+        // 取消参考线选区
+        props.context.tool.referSelection.resetSelected();
 
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
@@ -383,9 +322,7 @@ function onMouseMove(e: MouseEvent) {
     if (workspace.value.controller !== 'page') {
         return;
     }
-    if (e.buttons == 1 && spacePressed.value) {
-        pageViewDragging(e); // 拖拽页面
-    }
+
     if (isDragging && wheel) {
         wheel.moving(e);
         clearInterval(timer);
@@ -421,17 +358,11 @@ function onMouseMove_CV(e: MouseEvent) {
 
 // mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
-    if (spacePressed.value) {
-        pageViewDragEnd();
-    } else {
-        isMouseLeftPress = false;
+    if (e.button !== 0) return;
+    isMouseLeftPress = false;
+    selectEnd();
+    if (selector_mount.value) {
         selectEnd();
-        if (selector_mount.value) {
-            selectEnd();
-        }
     }
     if (wheel) {
         wheel = wheel.remove();
@@ -816,5 +747,7 @@ comps.push(...plugins.end);
      @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
     <Rule :context="props.context" :page="(props.page as PageView)"/>
+    <!-- 页面调整，确保在ContentView顶层 -->
+    <Space :context="props.context" :visible="spacePressed"/>
 </div>
 </template>

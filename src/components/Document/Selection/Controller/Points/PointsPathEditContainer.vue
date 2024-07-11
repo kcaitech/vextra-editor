@@ -32,7 +32,6 @@ const dragActiveDis = 3;
 const new_high_light = ref<string>('');
 const add_rect = ref<string>('');
 let shape: ShapeView;
-let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let move: any;
 let bridged = false;

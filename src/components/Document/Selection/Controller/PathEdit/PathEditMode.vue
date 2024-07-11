@@ -5,8 +5,6 @@ import { Selection, XY } from "@/context/selection";
 import { dbl_action } from "@/utils/mouse_interactive";
 import Selector4PEM, { SelectorFrame } from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
 import { Action, Tool } from "@/context/tool";
-import { root_scale, root_trans } from "@/utils/content";
-import { WorkSpace } from "@/context/workspace";
 import CtrlPathEdit from "@/components/Document/Selection/Controller/CtrlPathEdit.vue";
 import PathAssist from "@/components/Document/Assist/PathAssist.vue";
 import { add_move_and_up_for_document, remove_move_and_up_from_document } from "@/utils/mouse";
@@ -31,23 +29,6 @@ const penMode = ref<boolean>(false);
 
 let mousedownOnClientXY: XY = { x: 0, y: 0 };
 let drag: boolean = false;
-
-function onMouseWheel(e: WheelEvent) {
-    e.preventDefault();
-    const matrix = props.context.workspace.matrix;
-    const { ctrlKey, metaKey, deltaX, deltaY } = e;
-    if (ctrlKey || metaKey) {
-        root_scale(props.context, e);
-    } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) {
-            matrix.trans(-deltaX, -deltaY);
-        } else {
-            root_trans(props.context, e);
-        }
-    }
-
-    props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-}
 
 function down(e: MouseEvent) {
     if (e.button !== 0) return;
@@ -221,10 +202,8 @@ onUnmounted(() => {
 <template>
 <div v-if="params.visible"
      :class="{ wrapper: true, 'clip-mode': clip_mode, 'pen-mode': penMode }"
-     @wheel.stop
      @mousedown.stop="down"
      @mousemove="move"
-     @wheel="onMouseWheel"
 >
     <ClipMode v-if="clip_mode" :context="context"/>
     <PenMode v-else-if="penMode" :context="context"/>
