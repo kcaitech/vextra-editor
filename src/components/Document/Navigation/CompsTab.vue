@@ -1,23 +1,17 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import ComponentList from "./Component/ComponentList.vue";
 interface Props {
     context: Context
-    leftTriggleVisible: boolean
-    showLeft: boolean
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-const showHiddenLeft = () => {
-    emit('showNavigation')
-}
+
 </script>
 
 <template>
     <div class="comps-container">
         <ComponentList :context="props.context"></ComponentList>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft" />
     </div>
 </template>
 

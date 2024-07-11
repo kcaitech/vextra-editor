@@ -9,6 +9,7 @@ import { Page, PageView } from "@kcdesign/data";
 // import { Comment } from "@/context/comment";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
+import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 
 const { t } = useI18n();
 
@@ -115,7 +116,6 @@ onUnmounted(() => {
 })
 
 const plugins = props.context.pluginsMgr.search2('navigation');
-
 </script>
 
 <template>
@@ -140,6 +140,8 @@ const plugins = props.context.pluginsMgr.search2('navigation');
                 :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <!-- end plugin -->
             <component v-for="p in plugins.end" :is=p.component :context="props.context" :params="p.params" />
+            <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggerVisible" @showNavigation="showHiddenLeft">
+            </ShowHiddenLeft>
         </div>
     </div>
 </template>
