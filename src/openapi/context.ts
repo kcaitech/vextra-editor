@@ -47,4 +47,6 @@ export interface IContext extends IWatchable {
     get toolbox(): IToolBox;
 
     get preview(): IPreview;
+
+    setReadonly(readonly: boolean): void;
 }

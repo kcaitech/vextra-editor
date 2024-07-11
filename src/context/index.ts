@@ -272,8 +272,7 @@ export class Context extends WatchableObject implements IContext {
     get props() {
         return this.m_props;
     }
-
-    set readonly(readonly: boolean) {
+    setReadonly(readonly: boolean) {
         this.m_props.readonly = readonly;
         this.notify(events.context_readonly_change, readonly)
     }

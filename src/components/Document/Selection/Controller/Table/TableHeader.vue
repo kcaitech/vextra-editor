@@ -49,7 +49,7 @@ const data: {
     ys: []
 });
 
-let {xbars, xs, ybars, ys} = data;
+let { xbars, xs, ybars, ys } = data;
 
 const hidden = ref<boolean>(false);
 
@@ -72,7 +72,7 @@ function update_position() {
         ys = [];
 
         const table = props.shape;
-        const {width, height} = table.size;
+        const { width, height } = table.size;
 
         layout = table.getLayout();
 
@@ -80,7 +80,7 @@ function update_position() {
         const mClient = makeShapeTransform2By1(props.context.workspace.matrix);
         m.addTransform(mClient);
 
-        const {col0: lt, col1: rt, col2: lb} = m.transform([
+        const { col0: lt, col1: rt, col2: lb } = m.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, 0),
             ColVector3D.FromXY(0, height)
@@ -117,7 +117,7 @@ function update_position() {
             const __s = preWidth;
             const currentWidth = cols[index];
 
-            const {col0: start, col1: end, col2: point} = offsetYTrans.transform([
+            const { col0: start, col1: end, col2: point } = offsetYTrans.transform([
                 ColVector3D.FromXY(__s + delta, 0),
                 ColVector3D.FromXY(__s + currentWidth - delta, 0),
                 ColVector3D.FromXY(__s + currentWidth, 0)
@@ -126,11 +126,11 @@ function update_position() {
 
             preWidth += currentWidth;
 
-            xs.push({point, index});
+            xs.push({ point, index });
 
             if (Math.hypot(start.x - end.x, start.y - end.y) < 14) continue;
 
-            xbars.push({start, end, index});
+            xbars.push({ start, end, index });
         }
 
         const rows = layout.rowHeights;
@@ -144,7 +144,7 @@ function update_position() {
             const __s = preHeight;
             const currentHeight = rows[index];
 
-            const {col0: start, col1: end, col2: point} = offsetXTrans.transform([
+            const { col0: start, col1: end, col2: point } = offsetXTrans.transform([
                 ColVector3D.FromXY(0, __s + delta),
                 ColVector3D.FromXY(0, __s + currentHeight - delta),
                 ColVector3D.FromXY(0, __s + currentHeight)
@@ -152,11 +152,11 @@ function update_position() {
 
             preHeight += currentHeight;
 
-            ys.push({point, index});
+            ys.push({ point, index });
 
             if (Math.hypot(start.x - end.x, start.y - end.y) < 14) continue;
 
-            ybars.push({start, end, index})
+            ybars.push({ start, end, index })
         }
     } else {
         hidden.value = true;
@@ -192,7 +192,7 @@ function x_dot_mouseenter(index: number) {
             .translateInLocal(ColVector3D.FromXY(-10, -14))
     ).toString();
 
-    const {col0, col1} = m.transform([
+    const { col0, col1 } = m.transform([
         ColVector3D.FromXY(width, 0),
         ColVector3D.FromXY(width, props.shape.size.height)
     ]);
@@ -226,7 +226,7 @@ function y_dot_mouseenter(index: number) {
             .translateInLocal(ColVector3D.FromXY(-14, -10))
     ).toString();
 
-    const {col0, col1} = m.transform([
+    const { col0, col1 } = m.transform([
         ColVector3D.FromXY(0, height),
         ColVector3D.FromXY(props.shape.size.width, height)
     ]);
@@ -265,10 +265,9 @@ function select_col(index: number) {
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
-    const xy = m.computeCoord2(((xs[index].index + (xs[index - 1]?.index || 0)) / 2) / wm.m00, 0);
     index_col = idx, m_index_col = idx;
     props.context.menu.setCellMenuType(CellMenu.selectCol);
-    emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
+    emits("get-menu", (xs[index].point.x + (xs[index - 1]?.point.x || 0)) / 2, xs[index].point.y, CellMenu.selectCol, true);
     // document.addEventListener('mousemove', move_x);
     // document.addEventListener('mouseup', up);
     // move = move_x;
@@ -283,10 +282,9 @@ function select_row(index: number) {
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
-    const xy = m.computeCoord2(0, ((ys[index].index + (ys[index - 1]?.index || 0)) / 2) / wm.m00);
     index_row = idx, m_index_row = idx;
     props.context.menu.setCellMenuType(CellMenu.SelectRow);
-    emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
+    emits("get-menu", ys[index].point.x, (ys[index].point.y + (ys[index - 1]?.point.y || 0)) / 2, CellMenu.SelectRow, true);
     // document.addEventListener('mousemove', move_y);
     // document.addEventListener('mouseup', up);
     // move = move_y;
@@ -387,32 +385,19 @@ onUnmounted(() => {
 <template>
     <g :class="{ hidden }">
         <path v-for="(x, ids) in xbars" :key="ids" :d="`M${x.start.x} ${x.start.y} L ${x.end.x} ${x.end.y}`"
-              stroke-width="8" stroke-linecap="round" class="bar" @mousedown.stop="() => select_col(x.index)"/>
-        <circle
-            v-for="(p, ids) in xs"
-            :key="ids"
-            :cx="p.point.x" :cy="p.point.y"
-            r="4" stroke="none" class="dot"
-            @mouseenter="() => {x_dot_mouseenter(p.index)}"
-        />
+            stroke-width="8" stroke-linecap="round" class="bar" @mousedown.stop="() => select_col(x.index)" />
+        <circle v-for="(p, ids) in xs" :key="ids" :cx="p.point.x" :cy="p.point.y" r="4" stroke="none" class="dot"
+            @mouseenter="() => { x_dot_mouseenter(p.index) }" />
         <path v-for="(y, ids) in ybars" :key="ids" :d="`M${y.start.x} ${y.start.y} L ${y.end.x} ${y.end.y}`"
-              stroke-width="8" stroke-linecap="round" class="bar" @mousedown.stop="() => select_row(y.index)"/>
-        <circle
-            v-for="(p, ids) in ys"
-            :key="ids"
-            :cx="p.point.x" :cy="p.point.y"
-            r="4" stroke="none" class="dot"
-            @mouseenter="() => {y_dot_mouseenter(p.index)}"
-        />
+            stroke-width="8" stroke-linecap="round" class="bar" @mousedown.stop="() => select_row(y.index)" />
+        <circle v-for="(p, ids) in ys" :key="ids" :cx="p.point.x" :cy="p.point.y" r="4" stroke="none" class="dot"
+            @mouseenter="() => { y_dot_mouseenter(p.index) }" />
         <g v-if="show_add_x">
-            <line :x1="addP1.x" :y1="addP1.y" :x2="addP2.x" :y2="addP2.y" class="line"/>
+            <line :x1="addP1.x" :y1="addP1.y" :x2="addP2.x" :y2="addP2.y" class="line" />
             <g :style="`transform: ${addTransform}`">
-                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
-                     width="20" height="20" @mouseleave="x_dot_mouseleave"
-                     @mousedown.stop="add_cols"
-                     class="add"
-                >
-                    <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff"/>
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    @mouseleave="x_dot_mouseleave" @mousedown.stop="add_cols" class="add">
+                    <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                     <path
                         d="M828.704099 196.575729C744.096116 112.384034 631.648434 66.016073 512 66.016073s-232.1288 46.367961-316.736783 130.559656C110.624271 280.800108 64 392.831501 64 512c0 119.199462 46.624271 231.199892 131.232254 315.424271 84.607983 84.191695 197.088348 130.559656 316.736783 130.559656s232.1288-46.367961 316.704099-130.559656c84.67163-84.255342 131.295901-196.288456 131.263217-315.455235C959.967316 392.800538 913.375729 280.800108 828.704099 196.575729zM736.00086 544.00086 544.00086 544.00086l0 192c0 17.695686-14.336138 32.00086-32.00086 32.00086s-32.00086-14.303454-32.00086-32.00086L479.99914 544.00086 288.00086 544.00086c-17.664722 0-32.00086-14.336138-32.00086-32.00086s14.336138-32.00086 32.00086-32.00086l192 0L480.00086 288.00086c0-17.664722 14.336138-32.00086 32.00086-32.00086s32.00086 14.336138 32.00086 32.00086l0 192 192 0c17.695686 0 32.00086 14.336138 32.00086 32.00086S753.696546 544.00086 736.00086 544.00086z"
                         fill="#1878f5"></path>
@@ -421,13 +406,11 @@ onUnmounted(() => {
 
         </g>
         <g v-if="show_add_y">
-            <line :x1="addP1.x" :y1="addP1.y" :x2="addP2.x" :y2="addP2.y" class="line"/>
+            <line :x1="addP1.x" :y1="addP1.y" :x2="addP2.x" :y2="addP2.y" class="line" />
             <g :style="`transform: ${addTransform}`">
-                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
-                     width="20" height="20" @mouseleave="y_dot_mouseleave"
-                     @mousedown.stop="add_rows" class="add"
-                >
-                    <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff"/>
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    @mouseleave="y_dot_mouseleave" @mousedown.stop="add_rows" class="add">
+                    <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                     <path
                         d="M828.704099 196.575729C744.096116 112.384034 631.648434 66.016073 512 66.016073s-232.1288 46.367961-316.736783 130.559656C110.624271 280.800108 64 392.831501 64 512c0 119.199462 46.624271 231.199892 131.232254 315.424271 84.607983 84.191695 197.088348 130.559656 316.736783 130.559656s232.1288-46.367961 316.704099-130.559656c84.67163-84.255342 131.295901-196.288456 131.263217-315.455235C959.967316 392.800538 913.375729 280.800108 828.704099 196.575729zM736.00086 544.00086 544.00086 544.00086l0 192c0 17.695686-14.336138 32.00086-32.00086 32.00086s-32.00086-14.303454-32.00086-32.00086L479.99914 544.00086 288.00086 544.00086c-17.664722 0-32.00086-14.336138-32.00086-32.00086s14.336138-32.00086 32.00086-32.00086l192 0L480.00086 288.00086c0-17.664722 14.336138-32.00086 32.00086-32.00086s32.00086 14.336138 32.00086 32.00086l0 192 192 0c17.695686 0 32.00086 14.336138 32.00086 32.00086S753.696546 544.00086 736.00086 544.00086z"
                         fill="#1878f5"></path>

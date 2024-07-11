@@ -96,8 +96,8 @@ const cursorParams = {
 const _comps = shallowRef<{ component: any, params?: any }[]>([])
 
 function updateComps() {
-    const comps = _comps.value;
-    comps.length = 0;
+    _comps.value = [];
+    let comps = _comps.value;
 
     const toolsPlugins = props.context.pluginsMgr.search2('toolbar.tools');
     comps.push(...toolsPlugins.begin)
@@ -181,10 +181,8 @@ function updateComps() {
                     select
                 }
             })
+        comps.push(...toolsPlugins.end)
     }
-
-    comps.push(...toolsPlugins.end)
-
 }
 
 updateComps()
