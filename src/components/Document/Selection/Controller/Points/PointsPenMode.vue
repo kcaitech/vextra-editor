@@ -176,6 +176,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
+                pathModifier.cancelContactStatus();
                 asyncEnvMount();
             }
         } else {
@@ -204,6 +205,7 @@ function point_mousedown(event: MouseEvent, segment: number, index: number) {
                 pathModifier.createApiCaller();
                 const __xy = { x: point.x, y: point.y };
                 pathModifier.addPointForPen(last.segment, last.index + 1, preXY.value, __xy);
+                pathModifier.cancelContactStatus();
                 asyncEnvMount();
             }
         }

@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
 import { Action, Tool } from '@/context/tool';
 import { ContactForm, CurvePoint, PathShapeView } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import ContactInit from '../Toolbar/ContactInit.vue';
 import { Cursor } from '@/context/cursor';
 import { PathEditor } from "@/transform/pathEdit";
@@ -196,8 +196,8 @@ onUnmounted(() => {
 </script>
 <template>
 <div v-if="props.params.visible" @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
-    <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
-    <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"></div>
+    <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"/>
+    <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"/>
 </div>
 </template>
 <style scoped lang="scss">
