@@ -1,3 +1,4 @@
+import { DocSelectionData } from "@/context/user";
 import { IWatchable, PageView, Shape, ShapeView } from "@kcdesign/data";
 
 export namespace SelectionEvents {
@@ -22,4 +23,6 @@ export interface ISelection extends IWatchable {
 
     selectPage(p: PageView | string): Promise<PageView | undefined>;
     selectShape(shape?: ShapeView | Shape): void;
+    locateShape(shapes: ShapeView[]): void;
+    userSelectionData(data: DocSelectionData[]): void;
 }
