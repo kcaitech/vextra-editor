@@ -4,8 +4,6 @@ import { ShapeType, ShapeView, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from '@/context/selection';
 import { permIsEdit } from '@/utils/content';
-// import { Perm } from '@/context/workspace';
-import { forbidden_to_modify_frame } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { TitleAttri } from "@/components/Document/Content/titleRenderer";
 
@@ -32,15 +30,11 @@ let transporter: TranslateHandler | undefined = undefined;
 let startPosition: XY = { x: 0, y: 0 };
 
 const onRename = () => {
-    if (!permIsEdit(props.context) || props.context.tool.isLable) {
-        return;
-    }
+    if (!permIsEdit(props.context) || props.context.tool.isLable) return;
 
     isInput.value = true
     nextTick(() => {
-        if (!nameInput.value) {
-            return;
-        }
+        if (!nameInput.value) return;
 
         if (inputSpan.value) {
             inputSpan.value.innerHTML = props.data.name
@@ -154,9 +148,7 @@ function down(e: MouseEvent) {
 }
 
 function move(e: MouseEvent) {
-    if (e.buttons !== 1) {
-        return;
-    }
+    if (e.buttons !== 1) return;
 
     if (isDragging) {
         transporter?.execute(e);
@@ -167,9 +159,7 @@ function move(e: MouseEvent) {
 }
 
 function up(e: MouseEvent) {
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0) return;
 
     isDragging = false;
     transporter?.fulfil();
@@ -181,9 +171,7 @@ function up(e: MouseEvent) {
 }
 
 function move2(e: MouseEvent) {
-    if (e.buttons === 0) {
-        e.stopPropagation();
-    }
+    if (e.buttons === 0) e.stopPropagation();
 }
 
 function windowBlur() {
