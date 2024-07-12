@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShapeView, ShapeView, ColVector3D } from '@kcdesign/data';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShapeView, ShapeView, ColVector3D, Matrix, makeShapeTransform2By1 } from '@kcdesign/data';
 import { getShadowMax, getShapeBorderMax, getGroupChildBounds } from '@/utils/cutout';
 import JSZip from 'jszip';
 import { XYsBounding } from './common';
@@ -106,19 +106,14 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
           const matrix = el.style.transform;
           const m = shape.transform2FromRoot;
           const size = shape.size;
+          m.translateX(-m.m03);
+          m.translateY(-m.m13);
           const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
             ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
             ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
             ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
             ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
           ]);
-          const { col0: lt2, col1: rt2, col2: rb2, col3: lb2 } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(0, height),
-          ]);
-          const origin = XYsBounding([lt2, rt2, rb2, lb2]);
           const box = XYsBounding([lt, rt, rb, lb]);
           // 解析 matrix 值
           let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
@@ -127,7 +122,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
           let b = Number(values[1]); // 倾斜Y
           let c = Number(values[2]); // 倾斜X
           let d = Number(values[3]); // 缩放Y
-          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${origin.left - box.left}, ${origin.top - box.top})`;
+          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${-box.left}, ${-box.top})`;
           const newWidth = box.right - box.left;
           const newHeight = box.bottom - box.top;
           pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
@@ -210,19 +205,14 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
           const matrix = el.style.transform;
           const m = shape.transform2FromRoot;
           const size = shape.size;
+          m.translateX(-m.m03);
+          m.translateY(-m.m13);
           const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
             ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
             ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
             ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
             ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
           ]);
-          const { col0: lt2, col1: rt2, col2: rb2, col3: lb2 } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(0, height),
-          ]);
-          const origin = XYsBounding([lt2, rt2, rb2, lb2]);
           const box = XYsBounding([lt, rt, rb, lb]);
           // 解析 matrix 值
           let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
@@ -231,11 +221,7 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
           let b = Number(values[1]); // 倾斜Y
           let c = Number(values[2]); // 倾斜X
           let d = Number(values[3]); // 缩放Y
-          const transx = (-(origin.right - origin.left) / 2) + ((box.right - box.left) / 2);
-          const transy = (-(origin.bottom - origin.top) / 2) + ((box.bottom - box.top) / 2);
-          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${0}, ${0})`;
-          console.log(box, 'newMatrix');
-
+          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${-box.left}, ${-box.top})`;
           const newWidth = box.right - box.left;
           const newHeight = box.bottom - box.top;
           cloneSvg.setAttribute("width", `${newWidth * format.scale}`);

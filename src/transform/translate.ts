@@ -69,6 +69,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     async createApiCaller() {
+        if (this.context.readonly) return;
         this.context.selection.unHoverShape();
 
         this.workspace.translating(true);
@@ -407,7 +408,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __execute() {
-        if (this.coping) return;
+        if (this.coping || this.context.readonly) return;
 
         const { x: originX, y: originY } = this.originSelectionBox;
         const livingX = this.livingBox.x;

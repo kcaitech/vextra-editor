@@ -330,7 +330,6 @@ const getExportUrl = async () => {
 }
 
 const download = () => {
-    if (exportItems.length === 1) return;
     const exportList = exportItems.filter(item => item.checked);
     if (exportList.length === 0) return;
     const { format, curShape, url } = exportList[0];
