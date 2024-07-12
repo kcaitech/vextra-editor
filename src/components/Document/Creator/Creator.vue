@@ -104,7 +104,6 @@ function move(e: MouseEvent) {
 function move2(e: MouseEvent) {
     if (just_search || e.buttons === 0) {
         dotXY.value = props.context.workspace.getContentXY(e);
-
         if (props.context.tool.action === Action.AddContact) {
             search_apex(e);
         }
@@ -183,6 +182,10 @@ function toolWatcher(t: number) {
     }
 }
 
+function mouseenter(event: MouseEvent) {
+    dotXY.value = props.context.workspace.getContentXY(event);
+}
+
 onMounted(() => {
     props.context.cursor.watch(cursor_watcher);
     props.context.tool.watch(toolWatcher);
@@ -195,7 +198,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div v-if="props.params.visible" @mousedown="down" @mousemove="move2" :class="`creator ${cursor}`">
+<div
+    v-if="props.params.visible"
+    :class="`creator ${cursor}`"
+    @mousedown="down"
+    @mousemove="move2"
+    @mouseenter="mouseenter"
+>
     <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"/>
     <div v-if="mode === 'pen'" class="dot" :style="{left: (dotXY.x - 4) + 'px', top: (dotXY.y - 4) + 'px'}"/>
 </div>
