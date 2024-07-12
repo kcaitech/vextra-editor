@@ -334,10 +334,7 @@ function checkStatus() {
 
 function point_mousemove(event: MouseEvent) {
     if (bridged) return;
-    if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
-        console.log('emit dragActiveDis');
-        launch_bridging(event);
-    }
+    if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) launch_bridging(event);
 }
 
 function launch_bridging(event: MouseEvent) {
