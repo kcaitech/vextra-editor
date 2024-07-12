@@ -40,6 +40,17 @@ export function __add_status_for_create(context: Context) {
     });
 }
 
+export function useAuto(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AutoV);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    context.menu.menuMount();
+
+    context.cursor.setType(CursorType.Auto, 0);
+    context.notify(ContextEvents.action_change);
+}
+
 /**
  * @description 使用容器工具
  */

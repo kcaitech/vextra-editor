@@ -154,9 +154,7 @@ export function startEdit(context: Context) {
     }
 
     if (shape.pathType) {
-        if (forbidden_to_modify_frame(shape) || !permIsEdit(context)) {
-            return;
-        }
+        if (forbidden_to_modify_frame(shape) || !permIsEdit(context)) return;
 
         workspace.setPathEditMode(true); // --开启对象编辑
         context.escstack.save('path-edit', () => {

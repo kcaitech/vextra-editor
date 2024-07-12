@@ -53,6 +53,7 @@ import Rule from "./Rule/index.vue";
 import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
 import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
+import Placement from "@/components/Document/Menu/Placement.vue"
 
 interface Props {
     context: Context
@@ -246,6 +247,7 @@ function contextMenuMount(e: MouseEvent) {
  * @description 关闭右键菜单
  */
 function contextMenuUnmount() {
+    props.context.menu.notify(Menu.HIDE_PLACEMENT);
     const exe_result = contextMenu.value;
     contextMenu.value = false;
     return exe_result;
@@ -661,9 +663,7 @@ comps.push(
                     context: props.context,
                     items: contextMenuItems.value,
                     layers: shapesContainsMousedownOnPageXY,
-                    onClose: () => {
-                        contextMenu.value = false;
-                    }
+                    onClose: contextMenuUnmount
                 });
             }
         }
@@ -724,6 +724,14 @@ comps.push(
     },
     {
         component: TempBoard
+    },
+    {
+        component: Placement,
+        params: {
+            get site() {
+                return contextMenuPosition
+            }
+        }
     },
     // 图层导出载体
     {

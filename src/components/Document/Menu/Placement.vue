@@ -1,23 +1,37 @@
 <script lang="ts" setup>
 import { XY } from "@/context/selection";
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Context } from "@/context";
+import { Menu } from "@/context/menu";
 
 interface Props {
-    site: XY;
+    context: Context;
+    params: {
+        site: XY;
+    }
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const pulse = ref<HTMLDivElement>();
+const pulse = ref<boolean>(false);
 
-function locate() {
-    if (!pulse) return;
-
+function menuWatcher(t: any) {
+    if (t === Menu.HIDE_PLACEMENT || t === Menu.SHUTDOWN_MENU) {
+        pulse.value = false;
+    } else if (t === Menu.SHOW_PLACEMENT) {
+        pulse.value = true;
+    }
 }
 
+onMounted(() => {
+    props.context.menu.watch(menuWatcher);
+});
+onUnmounted(() => {
+    props.context.menu.unwatch(menuWatcher);
+})
 </script>
 <template>
-<div ref="pulse" class="container">
+<div v-if="pulse" class="container" :style="{ left:params.site.x + 'px',top:params.site.y + 'px' }">
     <div class="dot"></div>
     <div class="pulse"></div>
     <div class="pulse1"></div>
