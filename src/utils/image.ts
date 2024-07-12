@@ -1,6 +1,7 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShapeView, ShapeView } from '@kcdesign/data';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShapeView, ShapeView, ColVector3D } from '@kcdesign/data';
 import { getShadowMax, getShapeBorderMax, getGroupChildBounds } from '@/utils/cutout';
 import JSZip from 'jszip';
+import { XYsBounding } from './common';
 export function get_frame(file: any) {
   const frame: { width: number, height: number } = { width: 100, height: 100 };
   const img = new Image();
@@ -93,36 +94,47 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
     document.body.appendChild(pcloneSvg);
     if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
       const el = pcloneSvg.children[0] as SVGSVGElement;
-      let rotate = shape.rotation || 0;
       if (el) {
         const { width, height } = pcloneSvg.viewBox.baseVal
         const { left, top, right, bottom } = getShadowMax(shape);
-        let g_x = 0;
-        let g_y = 0;
         const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-        if (shape.type === ShapeType.Group) {
-          const { x, y, width, height } = getGroupChildBounds(shape);
-          g_x = shape.frame.x - x;
-          g_y = shape.frame.y - y;
+        if (isNoTransform(shape)) {
+          pcloneSvg.setAttribute("width", `${width * format.scale}`);
+          pcloneSvg.setAttribute("height", `${height * format.scale}`);
+          pcloneSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        } else {
+          const matrix = el.style.transform;
+          const m = shape.transform2FromRoot;
+          const size = shape.size;
+          const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+            ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
+            ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
+            ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
+            ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
+          ]);
+          const { col0: lt2, col1: rt2, col2: rb2, col3: lb2 } = m.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(0, height),
+          ]);
+          const origin = XYsBounding([lt2, rt2, rb2, lb2]);
+          const box = XYsBounding([lt, rt, rb, lb]);
+          // 解析 matrix 值
+          let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
+          // 转换为数字并修改值（这里假设你要修改缩放值）
+          let a = Number(values[0]); // 缩放X
+          let b = Number(values[1]); // 倾斜Y
+          let c = Number(values[2]); // 倾斜X
+          let d = Number(values[3]); // 缩放Y
+          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${origin.left - box.left}, ${origin.top - box.top})`;
+          const newWidth = box.right - box.left;
+          const newHeight = box.bottom - box.top;
+          pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+          pcloneSvg.setAttribute("height", `${newHeight * format.scale}`);
+          pcloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+          el.style.transform = newMatrix;
         }
-        const x = left + l_max + g_x;
-        const y = top + t_max + g_y;
-        el.style.transform = `rotate(0deg)`;
-        let rotateY = 0;
-        let rotateX = 0;
-        // todo flip
-        // shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-        // shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
-        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-        const radian = rotate * Math.PI / 180;
-        const sin = Math.sin(radian);
-        const cos = Math.cos(radian);
-        const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-        const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-        pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
-        pcloneSvg.setAttribute("height", `${newHeight * format.scale}`);
-        pcloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
-        el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
       }
       const { width, height } = pcloneSvg.getBoundingClientRect();
       canvas.width = width;
@@ -173,7 +185,10 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
     };
   });
 }
-
+const isNoTransform = (shape: ShapeView) => {
+  const t = shape.transform;
+  return t.m00 == 1 && t.m01 === 0 && t.m10 === 0 && t.m11 === 1;
+}
 export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: ShapeView): Promise<void> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -186,32 +201,48 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
       if (el) {
         const { width, height } = cloneSvg.viewBox.baseVal
         const { left, top, right, bottom } = getShadowMax(shape);
-        let g_x = 0;
-        let g_y = 0;
         const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-        if (shape.type === ShapeType.Group) {
-          const { x, y, width, height } = getGroupChildBounds(shape);
-          g_x = shape.frame.x - x;
-          g_y = shape.frame.y - y;
+        if (isNoTransform(shape)) {
+          cloneSvg.setAttribute("width", `${width * format.scale}`);
+          cloneSvg.setAttribute("height", `${height * format.scale}`);
+          cloneSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        } else {
+          const matrix = el.style.transform;
+          const m = shape.transform2FromRoot;
+          const size = shape.size;
+          const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
+            ColVector3D.FromXY(-(left + l_max), -(top + t_max)),
+            ColVector3D.FromXY(size.width + right + r_max, -(top + t_max)),
+            ColVector3D.FromXY(size.width + right + r_max, size.height + bottom + b_max),
+            ColVector3D.FromXY(-(left + l_max), size.height + bottom + b_max),
+          ]);
+          const { col0: lt2, col1: rt2, col2: rb2, col3: lb2 } = m.transform([
+            ColVector3D.FromXY(0, 0),
+            ColVector3D.FromXY(width, 0),
+            ColVector3D.FromXY(width, height),
+            ColVector3D.FromXY(0, height),
+          ]);
+          const origin = XYsBounding([lt2, rt2, rb2, lb2]);
+          const box = XYsBounding([lt, rt, rb, lb]);
+          // 解析 matrix 值
+          let values = matrix.match(/matrix.*\((.+)\)/)![1].split(', ');
+          // 转换为数字并修改值（这里假设你要修改缩放值）
+          let a = Number(values[0]); // 缩放X
+          let b = Number(values[1]); // 倾斜Y
+          let c = Number(values[2]); // 倾斜X
+          let d = Number(values[3]); // 缩放Y
+          const transx = (-(origin.right - origin.left) / 2) + ((box.right - box.left) / 2);
+          const transy = (-(origin.bottom - origin.top) / 2) + ((box.bottom - box.top) / 2);
+          const newMatrix = `matrix(${a}, ${b}, ${c}, ${d}, ${0}, ${0})`;
+          console.log(box, 'newMatrix');
+
+          const newWidth = box.right - box.left;
+          const newHeight = box.bottom - box.top;
+          cloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+          cloneSvg.setAttribute("height", `${newHeight * format.scale}`);
+          cloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
+          el.style.transform = newMatrix;
         }
-        const x = left + l_max + g_x;
-        const y = top + t_max + g_y;
-        el.style.transform = `rotate(0deg)`;
-        let rotateY = 0;
-        let rotateX = 0;
-        // todo flip
-        // shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
-        // shape.isFlippedVertical ? rotateX = 180 : rotateX = 0;
-        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-        const radian = rotate * Math.PI / 180;
-        const sin = Math.sin(radian);
-        const cos = Math.cos(radian);
-        const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
-        const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-        cloneSvg.setAttribute("width", `${newWidth * format.scale}`);
-        cloneSvg.setAttribute("height", `${newHeight * format.scale}`);
-        cloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
-        el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
       }
       const { width, height } = cloneSvg.getBoundingClientRect();
       canvas.width = width;
