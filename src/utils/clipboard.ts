@@ -126,6 +126,7 @@ export class Clipboard {
     }
 
     write(event?: ClipboardEvent): boolean {
+        console.log('__write__')
         try {
             const text = this.text;
             if (text) {

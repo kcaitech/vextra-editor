@@ -491,20 +491,14 @@ function copy_watcher(event: ClipboardEvent) {
 }
 
 function cut_watcher(event: ClipboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
-    if (!permIsEdit(props.context)) {
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
     }
     props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
-    if (!permIsEdit(props.context)) {
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
     }
     return props.context.workspace.clipboard.paste(t, event);

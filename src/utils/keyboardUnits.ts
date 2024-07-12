@@ -124,7 +124,6 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
         context.menu.notify(Menu.WRITE_MEDIA);
         return;
     }
-    event.preventDefault();
 }
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
