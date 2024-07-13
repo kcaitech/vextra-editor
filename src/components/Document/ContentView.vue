@@ -53,7 +53,8 @@ import Rule from "./Rule/index.vue";
 import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/components/Document/Menu";
 import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
-import Placement from "@/components/Document/Menu/Placement.vue"
+import Placement from "@/components/Document/Menu/Placement.vue";
+import Doge from "@/watchdog/HonestDoge.vue";
 
 interface Props {
     context: Context
@@ -751,5 +752,7 @@ comps.push(...plugins.end);
     <Rule :context="props.context" :page="(props.page as PageView)"/>
     <!-- 页面调整，确保在ContentView顶层 -->
     <Space :context="props.context" :visible="spacePressed"/>
+    <!-- Doge -->
+    <Doge/>
 </div>
 </template>
