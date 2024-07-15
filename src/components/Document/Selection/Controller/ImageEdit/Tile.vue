@@ -4,7 +4,9 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { ColorHandler } from '@/transform/color';
-import { ColorPicker, Matrix, ShapeView } from '@kcdesign/data';
+import { getHorizontalAngle, XYsBounding } from '@/utils/common';
+import { CursorType } from '@/utils/cursor2';
+import { ColorPicker, ColVector3D, CtrlElementType, makeShapeTransform2By1, Matrix, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
@@ -26,6 +28,8 @@ const transform = ref('');
 let colorEditor: ColorPicker | undefined;
 let startPosition: ClientXY = { x: 0, y: 0 };
 const cur_shape = ref<ShapeView>();
+let need_reset_cursor_after_transform = true;
+
 
 let isDragging = false;
 const dragActiveDis = 3;
@@ -54,13 +58,13 @@ const update_position = () => {
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     const shape = shapes[0];
-    const m = shape.matrix2Root();
-    m.multiAtLeft(matrix as Matrix);
-    const trans = m.computeCoord2(0, 0);
+    const m = shape.transform2FromRoot; // 图层到Root；
+    const root_m = shape.transform2FromRoot;
+    const clientTransform = makeShapeTransform2By1(props.context.workspace.matrix);
+    m.addTransform(clientTransform); // root 到 client
     image_width.value *= matrix.m00;
     image_height.value *= matrix.m00;
-    let rotate = shape.rotation || 0;
-    transform.value = `translate(${trans.x}px, ${trans.y}px) rotate(${rotate}deg)`
+    transform.value = `matrix(${root_m.m00}, ${root_m.m10}, ${root_m.m01}, ${root_m.m11}, ${m.m03}, ${m.m13})`
 }
 let direction = Direction.X;
 const onMouseDown = (e: MouseEvent, d: Direction) => {
@@ -131,8 +135,62 @@ const onMouseUp = (e: MouseEvent) => {
     isDragging = false;
     colorEditor?.commit();
     colorEditor = undefined;
+    if (need_reset_cursor_after_transform) {
+        props.context.cursor.reset();
+    }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+}
+
+function getVectors() {
+    const shapes = props.context.selection.selectedShapes;
+    const shape = shapes[0];
+
+    const { width, height } = shape.size;
+
+    const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
+    const fromRoot = shape.transform2FromRoot;
+    const fromClient = fromRoot.addTransform(clientMatrix);
+    const {
+        col0: vecLT,
+        col1: vecRT,
+        col2: vecRB,
+        col3: vecLB
+    } = fromClient.transform([
+        ColVector3D.FromXY(0, 0),
+        ColVector3D.FromXY(width, 0),
+        ColVector3D.FromXY(width, height),
+        ColVector3D.FromXY(0, height),
+    ]);
+    return [vecLT, vecRT, vecRB, vecLB];
+}
+
+function setCursor(t: CtrlElementType) {
+    const cursor = props.context.cursor;
+
+    const apex = getVectors();
+    let deg = 90;
+
+    if (t === CtrlElementType.RectTop) {
+        deg += getHorizontalAngle(apex[0], apex[1]);
+    } else if (t === CtrlElementType.RectRight) {
+        deg += getHorizontalAngle(apex[1], apex[2]);
+    } else if (t === CtrlElementType.RectBottom) {
+        deg += getHorizontalAngle(apex[2], apex[3]);
+    } else if (t === CtrlElementType.RectLeft) {
+        deg += getHorizontalAngle(apex[3], apex[0]);
+    }
+
+    cursor.setType(CursorType.Scale, deg);
+}
+function bar_mouseenter(type: CtrlElementType) {
+    need_reset_cursor_after_transform = false;
+    setCursor(type);
+}
+
+function bar_mouseleave() {
+    need_reset_cursor_after_transform = true;
+    props.context.cursor.reset();
 }
 
 const colorWatcher = (t: number) => {
@@ -244,13 +302,16 @@ onUnmounted(() => {
             </g>
             <!-- 中下 -->
             <rect :x="0" :y="image_height - 6" :width="Math.abs(image_width - 16)" :height="12" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.Y)"></rect>
+                @mousedown="(e) => onMouseDown(e, Direction.Y)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectBottom)"
+                @mouseleave="bar_mouseleave"></rect>
             <!-- 中右 -->
             <rect :x="image_width - 6" y="0" :width="12" :height="Math.abs(image_height - 16)" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.X)"></rect>
+                @mousedown="(e) => onMouseDown(e, Direction.X)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectRight)"
+                @mouseleave="bar_mouseleave"></rect>
             <!-- 右下 -->
             <rect :x="image_width - 16" :y="image_height - 16" width="22" height="22" fill="transparent"
-                @mousedown="(e) => onMouseDown(e, Direction.Angle)"></rect>
+                @mousedown="(e) => onMouseDown(e, Direction.Angle)" @mouseenter="() => bar_mouseenter(CtrlElementType.RectRB)"
+                @mouseleave="bar_mouseleave"></rect>
         </g>
     </svg>
 </template>
