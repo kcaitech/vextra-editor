@@ -10,6 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { PathEditor } from "@/transform/pathEdit";
 import { Assist } from "@/context/assist";
+import { getHorizontalAngle } from "@/utils/common";
 
 interface Props {
     context: Context
@@ -434,6 +435,133 @@ function matrix_watcher(t: number | string) {
     }
 }
 
+function isEqu(a: number, b: number) {
+    return Math.abs(a - b) < 0.00001;
+}
+
+function fixXYByShift(e: MouseEvent) {
+    // 1. 8边；
+    // 2. 吸附；
+
+    if (!e.shiftKey) return;
+
+    const _previous = getLastPoint();
+    if (!_previous) return;
+
+    const m = new Matrix(shape.matrix2Root());
+    m.preScale(shape.frame.width, shape.frame.height);
+    m.multiAtLeft(props.context.workspace.matrix);
+
+    const previous = m.computeCoord3(_previous);
+    const livingXY = props.context.workspace.getContentXY(e);
+    const angle = getHorizontalAngle(previous, livingXY);
+
+    if (angle >= 0 && angle < 22.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate(-a * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 22.5 && angle < 67.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((0.25 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 67.5 && angle < 112.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((0.5 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 112.5 && angle < 157.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((0.75 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 157.5 && angle < 202.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((1 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 202.5 && angle < 247.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((1.25 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 247.5 && angle < 292.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((1.5 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else if (angle >= 292.5 && angle < 337.5) {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((1.75 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    } else {
+        const a = angle / 180;
+        const __m = new Matrix();
+        __m.rotate((2 - a) * Math.PI, previous.x, previous.y);
+
+        const __l = __m.computeCoord3(livingXY);
+
+        livingXY.x = __l.x;
+        livingXY.y = __l.y;
+    }
+
+    return livingXY;
+}
+
+function getLastPoint() {
+    const path = props.context.path;
+    if (!path.lastPoint || !path.isContacting) return;
+
+    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
+    const { segment, index } = path.lastPoint;
+    let previous = (shape as PathShapeView)?.segments[segment]?.points[index];
+
+    if (!previous) {
+        const __seg = (shape as PathShapeView)?.segments[segment];
+        if (__seg) {
+            previous = __seg.points[__seg.points.length - 1];
+        }
+
+        if (!previous) return;
+    }
+
+    return previous;
+}
+
 function documentMove(e: MouseEvent) {
     props.context.path.saveEvent(e);
     const __client = props.context.workspace.getContentXY(e);
@@ -446,9 +574,7 @@ function documentMove(e: MouseEvent) {
     let TX = 0;
     let TY = 0;
 
-    if (!mapX.size && !mapY.size) {
-        buildMap();
-    }
+    if (!mapX.size && !mapY.size) buildMap();
 
     const xs = Array.from(mapX.keys());
     const ys = Array.from(mapY.keys());
@@ -503,6 +629,8 @@ function documentMove(e: MouseEvent) {
     }
 
     preXY.value = __client;
+    const _fixed = fixXYByShift(e);
+    if (_fixed) preXY.value = _fixed;
 
     livingPath.value = '';
 
@@ -522,24 +650,8 @@ function modifyLivingPath() {
     livingPathVisible.value = false;
     preparePointVisible.value = false;
 
-    const path = props.context.path;
-
-    if (!path.lastPoint) return;
-
-    const shape = props.context.selection.selectedShapes[0] as PathShapeView;
-    const { segment, index } = path.lastPoint;
-    let previous = (shape as PathShapeView)?.segments[segment]?.points[index];
-
-    if (!path.isContacting) return;
-
-    if (!previous) {
-        const __seg = (shape as PathShapeView)?.segments[segment];
-        if (__seg) {
-            previous = __seg.points[__seg.points.length - 1];
-        }
-
-        if (!previous) return;
-    }
+    const previous = getLastPoint();
+    if (!previous) return;
 
     const m = new Matrix(shape.matrix2Root());
     m.preScale(shape.frame.width, shape.frame.height);
