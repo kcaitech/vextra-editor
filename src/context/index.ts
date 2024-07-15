@@ -149,6 +149,7 @@ export class Context extends WatchableObject implements IContext {
     private m_arrange: Arrange
     private m_props: DocumentProps;
     private m_net?: INet;
+    private m_readonly?: boolean;
 
     constructor(data: Document, repo: CoopRepository, props: DocumentProps) {
         super();
@@ -273,12 +274,12 @@ export class Context extends WatchableObject implements IContext {
         return this.m_props;
     }
     setReadonly(readonly: boolean) {
-        this.m_props.readonly = readonly;
+        this.m_readonly = readonly;
         this.notify(events.context_readonly_change, readonly)
     }
 
     get readonly() {
-        return !!this.m_props.readonly;
+        return !!this.m_readonly;
     }
 
     get coopRepo(): CoopRepository {

@@ -27,6 +27,7 @@ const emits = defineEmits<{
 }>();
 let colorEditor: ColorPicker | undefined;
 const paint_filter = ref<PaintFilter>();
+
 function change(e: Event) {
     if (e.target) {
         const files = (e.target as HTMLInputElement).files;
@@ -74,6 +75,7 @@ function change(e: Event) {
         img.src = URL.createObjectURL(file);
     }
 }
+
 function selectImage() {
     const filepicker = document.getElementById('fillfilepicker');
     if (filepicker) {
@@ -116,39 +118,44 @@ watch(() => props.paintFilter, (v) => {
 
 </script>
 <template>
-    <div class="container">
-        <div class="header">
-            <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
-                @changeMode="(mode) => emits('changeMode', mode)" @changeRotate="emits('changeRotate')"
-                @changeScale="(s) => emits('changeScale', s)"></PatternMode>
-        </div>
-        <div class="body">
-            <div class="mask" @click="selectImage">
-                <img :src="image" alt="">
-                <div class="pic-picker">
-                    <div> {{ '选择图片' }}</div>
-                </div>
-                <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
-                    @change.stop="(e: Event) => { change(e) }" />
+<div class="container">
+    <div class="header">
+        <PatternMode :context="context" :scale="scale" :imageScaleMode="imageScaleMode"
+                     @changeMode="(mode) => emits('changeMode', mode)" @changeRotate="emits('changeRotate')"
+                     @changeScale="(s) => emits('changeScale', s)"></PatternMode>
+    </div>
+    <div class="body">
+        <div class="mask" @click="selectImage">
+            <img :src="image" alt="">
+            <div class="pic-picker">
+                <div> {{ '选择图片' }}</div>
             </div>
-        </div>
-        <div class="tool">
-            <pattern-tool-bit type="亮度" :value="paint_filter?.exposure || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="对比度" :value="paint_filter?.contrast || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="饱和度" :value="paint_filter?.saturation || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="色温" :value="paint_filter?.temperature || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="色调" :value="paint_filter?.tint || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="阴影" :value="paint_filter?.shadow || 0"
-                @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange" @onUp="endChange" />
-            <pattern-tool-bit type="色相" :value="(paint_filter?.hue || 0) * (100 / 180)"
-                @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange" />
+            <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
+                   @change.stop="(e: Event) => { change(e) }"/>
         </div>
     </div>
+    <div class="tool">
+        <pattern-tool-bit type="亮度" :value="paint_filter?.exposure || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange"
+                          @onUp="endChange"/>
+        <pattern-tool-bit type="对比度" :value="paint_filter?.contrast || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange"
+                          @onUp="endChange"/>
+        <pattern-tool-bit type="饱和度" :value="paint_filter?.saturation || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange"
+                          @onUp="endChange"/>
+        <pattern-tool-bit type="色温" :value="paint_filter?.temperature || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange"
+                          @onUp="endChange"/>
+        <pattern-tool-bit type="色调" :value="paint_filter?.tint || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange"/>
+        <pattern-tool-bit type="阴影" :value="paint_filter?.shadow || 0"
+                          @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange"
+                          @onUp="endChange"/>
+        <pattern-tool-bit type="色相" :value="(paint_filter?.hue || 0) * (100 / 180)"
+                          @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange"/>
+    </div>
+</div>
 
 
 </template>
@@ -192,7 +199,7 @@ watch(() => props.paintFilter, (v) => {
                 object-fit: contain;
             }
 
-            >.pic-picker {
+            > .pic-picker {
                 position: absolute;
                 width: 100%;
                 height: 100%;
@@ -221,12 +228,12 @@ watch(() => props.paintFilter, (v) => {
         }
 
         .mask:hover {
-            >.pic-picker {
+            > .pic-picker {
+                background-color: rgba(0, 0, 0, 0.1);
+
                 div {
                     visibility: visible;
                 }
-
-                background-color: rgba(0, 0, 0, 0.1);
             }
         }
     }

@@ -61,15 +61,14 @@ export class Preview extends WatchableObject {
     }
     get shapeIndex() {
         const page = this.m_context.selection.selectedPage;
-        const shape = this.m_context.selection.selectedPvShape;
-        const index = getFrameList(page!).findIndex(item => item.id === shape?.id);
-        return index;
+        const shape = this.m_context.selection.selectedShapes[0];
+        return getFrameList(page!).findIndex(item => item.id === shape?.id);
+
     }
 
     isSelectedShape(shape: ShapeView | Shape | string) {
         const shapeId = typeof shape === 'string' ? shape : shape.id;
-        const ret = shapeId === this.m_context.selection.selectedPvShape?.id
-        return ret;
+        return shapeId === this.m_context.selection.selectedShapes[0]?.id
     }
 
     setScaleMenu(type: ScaleType | undefined) {

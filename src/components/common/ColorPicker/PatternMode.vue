@@ -281,12 +281,11 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         border-radius: 4px;
+        cursor: pointer;
 
         &:hover {
             background-color: #f5f5f5;
         }
-
-        cursor: pointer;
 
         svg {
             width: 14px;

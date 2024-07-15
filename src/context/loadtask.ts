@@ -31,22 +31,22 @@ export function startLoadTask(data: Document, taskMgr: TaskMgr) {
 
         taskMgr.add(pageloadTask, TaskPriority.normal);
 
-        let hasLoadFreeSymbols = false;
-        const freesymbolTask = new class implements Task {
-            
-            isValid(): boolean {
-                return true;
-            }
-            isDone(): boolean {
-                return hasLoadFreeSymbols;
-            }
-            async run(): Promise<void> {
-                const loader = data.__freesymbolsLoader;
-                loader && await loader();
-                hasLoadFreeSymbols = true;
-            }
-        }
-        taskMgr.add(freesymbolTask, TaskPriority.normal);
+        // let hasLoadFreeSymbols = false;
+        // const freesymbolTask = new class implements Task {
+        //
+        //     isValid(): boolean {
+        //         return true;
+        //     }
+        //     isDone(): boolean {
+        //         return hasLoadFreeSymbols;
+        //     }
+        //     async run(): Promise<void> {
+        //         const loader = data.__freesymbolsLoader;
+        //         loader && await loader();
+        //         hasLoadFreeSymbols = true;
+        //     }
+        // }
+        // taskMgr.add(freesymbolTask, TaskPriority.normal);
 
         taskMgr.startLoop();
 }
