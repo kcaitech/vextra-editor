@@ -3,7 +3,7 @@ import normal from "@/assets/doge-normal.png";
 import warning from "@/assets/doge-warning.png";
 import { onMounted, onUnmounted, ref } from "vue";
 
-const assetsStatus = ref<normal | warning>(normal);
+const assetsStatus = ref(normal);
 const network = ref<number>(1);
 
 const HEIGHT = 90;
