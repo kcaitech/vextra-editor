@@ -14,6 +14,7 @@ const emergencyCount = ref<number>(0);
 const HEIGHT = 108;
 const HEIGHT_CSS = `${HEIGHT}px`;
 const TOP_CSS = `-${HEIGHT - 58}px`;
+const fixed = ref<boolean>(false);
 
 function record() {
     window.open(`${window.location.origin}/watch`);
@@ -26,7 +27,13 @@ function enter() {
 }
 
 function leave() {
+    if (fixed.value) return;
     boardOpacity.value = 0;
+}
+
+function modifyFixedStatus() {
+    fixed.value = !fixed.value;
+    boardOpacity.value = fixed.value ? 1 : 0;
 }
 
 function checkNetworkStatus() {
@@ -90,7 +97,7 @@ onUnmounted(() => {
         <img v-if="emergencyVisible" title="emergency" style="width: 36px; position: absolute; top: 36px; left: 16px;"
              :src="emergency"
              alt="emergency">
-        <img title="老实小狗" style="width: 96px;" :src="assetsStatus" alt="老实小狗">
+        <img title="老实小狗" style="width: 96px;" :src="assetsStatus" alt="老实小狗" @click="modifyFixedStatus">
     </div>
 
     <div class="board" :style="{opacity: boardOpacity, 'pointer-events': boardOpacity ? 'auto' : 'none'}">
