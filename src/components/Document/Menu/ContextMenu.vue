@@ -493,8 +493,11 @@ onUnmounted(() => {
         <span>{{ t('system.only_text') }}</span>
         <Key code="Alt Ctrl V"/>
     </div>
-    <div v-if="items.has(MenuItemType.PasteHere)" class="menu-item" @click="pasteHere" @mouseenter="hereEnter"
-         @mouseleave="hereOut">
+    <div v-if="items.has(MenuItemType.PasteHere)" class="menu-item"
+         @click="pasteHere"
+         @mouseenter="hereEnter"
+         @mouseleave="hereOut"
+    >
         <span>{{ t('system.paste_here') }}</span>
     </div>
     <div v-if="items.has(MenuItemType.Replace)" class="menu-item" @click="_replace">
