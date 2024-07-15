@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // import { router } from '@/router';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
-import { initpal } from "@/components/Document/initpal";
+import { initpal } from '@/components/common/initpal';
 import { Context } from "@/context";
 import {
     Matrix,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { PageView, Shape, XYsBounding } from '@kcdesign/data';
+import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
@@ -17,14 +17,14 @@ const props = defineProps<{
 type PCard = InstanceType<typeof PageCard>
 const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
-const cur_shape = ref<Shape>();
+const cur_shape = ref<ShapeView>();
 const listLength = ref(0);
 const curPage = ref(0);
 const pageCard = ref<PCard>();
 const spacePressed = ref<boolean>(false);
 
 function page_watcher() {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
     cur_shape.value = shape;
 
@@ -48,7 +48,7 @@ function changePage() {
 
     const frameList = getFrameList(page);
 
-    const shape = props.context.selection.selectedPvShape || frameList[0];
+    const shape = props.context.selection.selectedShapes[0] || frameList[0];
     if (!shape) {
         return;
     }
@@ -64,13 +64,13 @@ function changePage() {
     curPage.value = index + 1;
 
     nextTick(() => {
-        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedPvShape, pageCard.value as any);
+        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         initMatrix();
     });
 }
 
 const togglePage = (p: number) => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
 
     if (!shape || !page) return;
@@ -150,7 +150,7 @@ const initMatrix = () => {
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
@@ -183,7 +183,7 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     e.stopPropagation();
     isMenu.value = false;
@@ -277,7 +277,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 const isSpacePressed = () => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     if (!preview.value || !shape) return;
     const root = preview.value.getBoundingClientRect();
     const frame = shape.frame;
@@ -332,7 +332,7 @@ onMounted(() => {
     page_watcher();
     nextTick(() => {
         // 然后初始化视图渲染管理器
-        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedPvShape, pageCard.value as any);
+        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
     })
 
     if (preview.value) {

@@ -1,5 +1,5 @@
 import { DocSelectionData } from "@/context/user";
-import { IWatchable, PageView, Shape, ShapeView } from "@kcdesign/data";
+import { IWatchable, PageView, ShapeView } from "@kcdesign/data";
 
 export namespace SelectionEvents {
     export const text_change = 'text_change'
@@ -17,12 +17,12 @@ export interface ITextSelection {
 export interface ISelection extends IWatchable {
     get textSelection(): ITextSelection
     get selectedShapes(): ShapeView[]
-    get selectedPvShape(): Shape | undefined
+    // get selectedPvShape(): Shape | undefined
     get selectedPage(): PageView | undefined
     get hoveredShape(): ShapeView | undefined
 
     selectPage(p: PageView | string): Promise<PageView | undefined>;
-    selectShape(shape?: ShapeView | Shape): void;
+    selectShape(shape?: ShapeView): void;
     locateShape(shapes: ShapeView[]): void;
     userSelectionData(data: DocSelectionData[]): void;
 }

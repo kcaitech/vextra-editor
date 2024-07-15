@@ -67,7 +67,7 @@ export class TextSelectionLite extends WatchableObject implements ITextSelection
         return { index: -1, before: false, placeholder: false, attr: undefined };
     }
 
-    setCursor(index: number, before: boolean) {
+    setCursor(index: number, before: boolean) {console.log("setCursor")
         const shape = this.shape;
         if (!shape) return;
         if (index < 0) index = 0;
@@ -87,7 +87,7 @@ export class TextSelectionLite extends WatchableObject implements ITextSelection
         }
     }
 
-    selectText(start: number, end: number) {
+    selectText(start: number, end: number) {console.log("selectText")
         const shape = this.shape;
         if (!shape) return;
         // 不只选择'\n'

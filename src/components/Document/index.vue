@@ -14,7 +14,7 @@ import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import { initpal } from './initpal';
+import { initpal } from '@/components/common/initpal';
 import { setup as keyboardUnits } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { IContext } from '@/openapi';
