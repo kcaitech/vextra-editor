@@ -170,7 +170,6 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
     const selection = props.context.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
-    // console.log(type, n, 'bool', shapes[0] instanceof GroupShape);
 
     const name = t(`bool.${n}`)
     if (shapes.length && page) {
@@ -182,17 +181,10 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
                 const editor = props.context.editor4Page(page);
                 editor.boolgroup2(adapt2Shape(shapes[0]) as GroupShape, name, type)
             }
-            // props.context.selection.notify(Selection.CHANGE_SHAPE)
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(filter_for_group1(shapes));
             const editor = props.context.editor4Page(page)
-            const g = editor.boolgroup(shapessorted.map(s => adapt2Shape(s)), name, type)
-            // if (g) {
-            //     props.context.nextTick(page, () => {
-            //         const s = page.getShape(g.id);
-            //         props.context.selection.selectShape(s)
-            //     })
-            // }
+            editor.boolgroup(shapessorted.map(s => adapt2Shape(s)), name, type)
         }
     }
 }
