@@ -79,7 +79,7 @@ function _updateInputPos() {
     const root = props.root || props.context.workspace.root;
     inputpos.value.left = x + root.x;
     inputpos.value.top = y + root.y;
-    
+
     inputel.value.focus();
 }
 
@@ -225,7 +225,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        props.selection.setCursor(composingStartIndex + text.length, true);
+        props.selection.setCursor(composingStartIndex + text.length, text.length > 0);
     }
     inputel.value.value = ''
 }
