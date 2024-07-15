@@ -184,10 +184,14 @@ onUnmounted(() => {
 
             <template #body>
                 <div class="row" v-for="(f) in fills" :key="f.id">
-                    <span class="named" style="height: 34px;" v-if="!f.fill.fillType || f.fill.fillType === FillType.SolidColor">{{
+                    <span class="named" style="height: 34px;"
+                        v-if="!f.fill.fillType || f.fill.fillType === FillType.SolidColor">{{
             t('lable.pure_color') }}</span>
-                    <span class="named" :style="{ height: `${28 * f.fill.gradient!.stops.length}px` }" v-else>{{
+                    <span class="named" :style="{ height: `${28 * f.fill.gradient!.stops.length}px` }"
+                        v-else-if="f.fill.fillType === FillType.Gradient">{{
             t(`color.${f.fill.gradient!.gradientType}`) }}</span>
+                    <span class="named" style="height: 34px;" v-else-if="f.fill.fillType === FillType.Pattern">{{
+            t(`pattern.image`) }}</span>
                     <div class="color_box" v-if="!f.fill.fillType || f.fill.fillType === FillType.SolidColor">
                         <div class="color"
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
@@ -205,7 +209,7 @@ onUnmounted(() => {
             filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
                         </LableTootip>
                     </div>
-                    <div v-else>
+                    <div v-else-if="f.fill.fillType === FillType.Gradient">
                         <div v-for="stop in f.fill.gradient!.stops" :key="stop.id" class="color_box"
                             style="height: 28px;">
                             <div class="color"
@@ -291,9 +295,11 @@ onUnmounted(() => {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .hovered {
     padding: 3px;
     border-radius: 3px;
+
     &:hover {
         border-radius: 2px;
         background-color: #EBEBEB;

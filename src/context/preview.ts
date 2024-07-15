@@ -2,7 +2,6 @@ import { Matrix, PageView, Shape, ShapeType, ShapeView, WatchableObject } from "
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
-import { IPreview, PreviewEvents } from "@/openapi/preview";
 
 export enum ScaleType {
     Actual = 'Actual',
@@ -11,7 +10,7 @@ export enum ScaleType {
     FillScreen = 'fill_screen'
 }
 
-export class Preview extends WatchableObject implements IPreview {
+export class Preview extends WatchableObject {
     static MATRIX_SCALE = 3;
     static MENU_CHANGE = 4;
     static NAVI_VISIBLE = 5;

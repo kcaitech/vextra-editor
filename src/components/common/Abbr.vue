@@ -9,11 +9,12 @@ interface Props {
     view: number
     shape: ShapeView
     theme: string
+    icon: number
 }
 
 const props = defineProps<Props>();
 const path = ref<string>('');
-
+const is_image = ref(false);
 const flex_abbr = computed<boolean>(() => {
     return props.shape.isPathIcon;
 });
@@ -21,11 +22,18 @@ const icon_class = computed<string>(() => {
     return `layer-${props.shape.type}`;
 });
 
+const update_icon = () => {
+    is_image.value = props.shape.isImageFill || false;
+    if(!is_image.value) {
+        getPath();
+    }
+};
+
 function getPath() {
     if (!flex_abbr.value) {
         return;
     }
-
+    if (is_image.value) return;
     const shape = props.shape.data;
 
     const f = shape.frame;
@@ -64,16 +72,22 @@ function getPath() {
 }
 
 const e = watch(() => props.view, getPath);
-onMounted(getPath);
-onUnmounted(e);
+const update = watch(() => props.icon, update_icon);
+onMounted(() => {
+    update_icon();
+    getPath();
+});
+onUnmounted(() => {
+    e();
+    update();
+});
 </script>
 <template>
     <div class="abbr-container">
-        <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
+        <svg v-if="flex_abbr && !is_image" viewBox="-12 -12 124 124">
             <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
         </svg>
-        <svg-icon v-else-if="props.shape.type === ShapeType.Image" :icon-class="icon_class" :fill="theme"
-            :stroke="theme"></svg-icon>
+        <svg-icon v-else-if="is_image" icon-class="layer-image" :fill="theme" :stroke="theme"></svg-icon>
         <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
     </div>
 </template>

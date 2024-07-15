@@ -15,7 +15,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Color, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { Color, Matrix, Page, PageView, ShapeType, ShapeView, ImageScaleMode } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -55,6 +55,7 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import Doge from "@/watchdog/HonestDoge.vue";
+import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 
 interface Props {
     context: Context
@@ -95,6 +96,7 @@ const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
+const image_tile_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
 
@@ -512,6 +514,11 @@ function color_watcher(t: number) {
         const gradient = props.context.color.gradient;
         const selected = props.context.selection.selectedShapes;
         color_edit_mode.value = mode && !!gradient && selected.length === 1;
+    } else if (t === ColorCtx.CHANGE_IMAGE_MODE) {
+        image_tile_mode.value = false;
+        const selected = props.context.selection.selectedShapes;
+        const mode = props.context.color.imageScaleMode;
+        image_tile_mode.value = (mode === ImageScaleMode.Tile || mode === ImageScaleMode.Crop) && selected.length === 1;
     }
 }
 
@@ -749,10 +756,11 @@ comps.push(...plugins.end);
      @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
      @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
+    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
     <Rule :context="props.context" :page="(props.page as PageView)"/>
     <!-- 页面调整，确保在ContentView顶层 -->
     <Space :context="props.context" :visible="spacePressed"/>
     <!-- Doge -->
-    <!-- <Doge/>-->
+    <!-- <Doge/> -->
 </div>
 </template>

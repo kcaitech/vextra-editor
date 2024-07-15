@@ -16,6 +16,7 @@ import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
 import { point_map } from "./Points/map"
+import { ColorCtx } from "@/context/color";
 
 interface Props {
     context: Context;
@@ -139,9 +140,16 @@ const stop = watchEffect(updateControllerView);
 const pointVisible = computed(() => {
     return bounds.bottom - bounds.top > 90 && bounds.right - bounds.left > 90;
 })
+const color_watcher = (t: number, hidden: boolean) => {
+    if (t === ColorCtx.HIDDEN_SELECTED) {
+        selection_hidden.value = hidden;
+    }
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
+    props.context.color.watch(color_watcher);
     window.addEventListener('blur', windowBlur);
 
     check_status();
@@ -149,6 +157,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.color.unwatch(color_watcher);
     window.removeEventListener('blur', windowBlur);
 
     props.context.cursor.reset();

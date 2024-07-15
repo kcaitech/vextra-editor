@@ -65,7 +65,7 @@ function change(e: Event) {
         img.onload = function () {
             frame.width = img.width;
             frame.height = img.height;
-
+            const origin = { width: img.width, height: img.height }
             reader.onload = function (evt) {
                 buff = evt?.target?.result;
                 if (!buff) {
@@ -82,7 +82,7 @@ function change(e: Event) {
                     }
                     const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
                     const container: any = {};
-                    insert_imgs(props.context, t, [media], container);
+                    insert_imgs(props.context, t, [media], origin, container);
                     after_import(props.context, container);
                     picker.value && ((picker.value as HTMLInputElement).value = '');
                 }
@@ -121,6 +121,7 @@ function multiple(files: any) {
         img.onload = function () {
             frame.width = img.width;
             frame.height = img.height;
+            const origin = { width: img.width, height: img.height }
             reader.onload = function (evt) {
                 if (evt.target?.result) {
                     buff = evt.target.result;
@@ -135,7 +136,7 @@ function multiple(files: any) {
                                         iteration();
                                     } else {
                                         media.push({ name: file.name, frame, buff: new Uint8Array(buff), base64 });
-                                        insert_imgs(props.context, t, media, container);
+                                        insert_imgs(props.context, t, media, container, origin);
                                         after_import(props.context, container);
                                         if (picker.value) {
                                             (picker.value as HTMLInputElement).value = '';
@@ -176,12 +177,12 @@ onUnmounted(() => {
     <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
         <ToolButton ref="button" @click="select" :selected="props.params.active" style="width: 32px">
             <div class="svg-container">
-                <svg-icon icon-class="picture"/>
+                <svg-icon icon-class="picture" />
             </div>
         </ToolButton>
     </Tooltip>
     <input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker"
-           @change="(e: Event) => { change(e) }"/>
+        @change="(e: Event) => { change(e) }" />
 </template>
 <style scoped lang="scss">
 .svg-container {

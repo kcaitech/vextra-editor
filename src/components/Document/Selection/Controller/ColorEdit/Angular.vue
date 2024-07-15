@@ -277,8 +277,7 @@ const add_stop = (e: MouseEvent) => {
     const page = props.context.selection.selectedPage!;
     const stop = new Stop(new BasicArray(), v4(), posi, _stop.color);
     if (locat.type !== 'text' && locat.type !== 'table_text') {
-        const gradient_type = locat.type === 'fills' ? shape.getFills() : shape.getBorders();
-        const idx = gradient_type.length - locat.index - 1;
+        const idx = locat.index;
         const editor = props.context.editor4Page(page);
         const actions = get_aciton_gradient_stop(s, idx, stop, locat.type);
         editor.addShapesGradientStop(actions);
