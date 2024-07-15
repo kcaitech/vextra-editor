@@ -753,6 +753,6 @@ comps.push(...plugins.end);
     <!-- 页面调整，确保在ContentView顶层 -->
     <Space :context="props.context" :visible="spacePressed"/>
     <!-- Doge -->
-     <Doge/>
+    <!-- <Doge/> -->
 </div>
 </template>
