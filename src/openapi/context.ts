@@ -37,7 +37,7 @@ export interface IContext extends IWatchable {
 
     registKeyHandler(keyCode: string, handler: (event: KeyboardEvent, context: IContext) => void): void,
 
-    getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx }
+    // getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx }
 
     get workspace(): IWorkspace;
     get escstack(): IEscStack;
