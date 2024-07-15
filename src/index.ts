@@ -30,12 +30,12 @@ async function _open(props: DocumentProps) {
     const repo = new Repository();
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
-    let loader_: DataLoader | undefined
+    // let loader_: DataLoader | undefined
     if (props.source === 'storage') {
         const { document, loader } = await importRemote(props.storage, props.path, props.fid, props.versionId, repo);
         data = document
         cooprepo = new CoopRepository(data, repo)
-        loader_ = loader
+        // loader_ = loader
     } else if (props.source === 'file') {
         if (props.fmt === 'sketch') {
             const lzdata = new LzDataLocal(new Zip(props.file));
@@ -59,20 +59,20 @@ async function _open(props: DocumentProps) {
     if (cooprepo) cooprepo.setBaseVer(new RadixConvert(62).from(data!.lastCmdId))
 
     if (data) {
-        return { data, cooprepo: cooprepo!, loader: loader_ }
+        return { data, cooprepo: cooprepo! }
     }
 }
 
 export async function openDocument(props: DocumentProps) {
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
-    let loader: DataLoader | undefined
+    // let loader: DataLoader | undefined
     try {
         const result = await _open(props);
         if (!result) return;
         cooprepo = result.cooprepo;
         data = result.data;
-        loader = result.loader;
+        // loader = result.loader;
     } catch (e) {
         console.error(e)
         return;
@@ -82,7 +82,7 @@ export async function openDocument(props: DocumentProps) {
     const context = new Context(data, cooprepo, props) as IContext;
     // if (props.communication) context.communication = props.communication;
     // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
-    return { context, loader: loader }
+    return context;
 }
 
 export const DocumentVue = _DocumentVue
