@@ -1,4 +1,4 @@
-import { ColVector3D, Matrix, Page, Shape, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, Page, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -14,7 +14,7 @@ export class ViewUpdater {
     private readonly m_context: Context;
 
     private m_current_page: Page | undefined; // 当前页
-    private m_current_view: Shape | undefined; // 当前播放对象
+    private m_current_view: ShapeView | undefined; // 当前播放对象
     private m_page_card: PCard | undefined; // 渲染卡片
 
     private matrix: Matrix = new Matrix();
@@ -305,7 +305,7 @@ export class ViewUpdater {
         this.setAttri(matrix);
     }
 
-    mount(container: HTMLDivElement, page: Page, current: Shape | undefined, pageCard: PCard | undefined) {
+    mount(container: HTMLDivElement, page: Page, current: ShapeView | undefined, pageCard: PCard | undefined) {
         this.m_container = container;
 
         this.m_current_page = page;
@@ -321,7 +321,7 @@ export class ViewUpdater {
         const updater = this.updater.bind(this);
 
         this.m_stop_last = this.m_current_view.watch(updater);
-        this.m_stop_last_bubble = this.m_current_view.bubblewatch(bubble);
+        this.m_stop_last_bubble = this.m_current_view.data.bubblewatch(bubble);
 
         if (!this.m_current_page) {
             return;
@@ -332,7 +332,7 @@ export class ViewUpdater {
     /**
      * @description 切换播放对象
      */
-    atTarget(shape?: Shape) {
+    atTarget(shape?: ShapeView) {
         // console.log("__TARGET__", shape?.name);
 
         if (shape && (shape.id === this.m_current_view?.id)) {
@@ -354,7 +354,7 @@ export class ViewUpdater {
         const updater = this.updater.bind(this);
 
         this.m_stop_last = this.m_current_view.watch(updater);
-        this.m_stop_last_bubble = this.m_current_view.bubblewatch(bubble);
+        this.m_stop_last_bubble = this.m_current_view.data.bubblewatch(bubble);
     }
 
     /**

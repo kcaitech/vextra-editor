@@ -75,7 +75,7 @@ const setPosition = () => {
 }
 
 const togglePage = (p: number) => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
     if (!shape || !page) return;
     const frameList = getFrameList(page);
@@ -86,7 +86,7 @@ const togglePage = (p: number) => {
     props.context.selection.selectShape(frameList[index]);
 }
 const firstPage = () => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
     if (!shape || !page) return emit('close');
     const frameList = getFrameList(page);

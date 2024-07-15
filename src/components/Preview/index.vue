@@ -9,7 +9,7 @@ import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 // import kcdesk from '@/kcdesk';
 import { WorkSpace } from '@/context/workspace';
 // import { SCREEN_SIZE } from '@/settings';
-import { initpal } from '../Document/initpal';
+import { initpal } from '@/components/common/initpal';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';

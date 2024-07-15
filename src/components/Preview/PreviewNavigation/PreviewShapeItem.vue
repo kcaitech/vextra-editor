@@ -8,7 +8,7 @@ import ShapeCard from "./PreviewShapeCard.vue";
 
 export interface ItemData {
     id: string
-    shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
+    shape: () => ShapeView // 作用function，防止vue对shape内部数据进行proxy
     selected: boolean
     context: Context
 }
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const emit = defineEmits<{
-    (e: 'selectShape', shape: Shape): void;
+    (e: 'selectShape', shape: ShapeView): void;
 }>();
 
 const props = defineProps<Props>();
