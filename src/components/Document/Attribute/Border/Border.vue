@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode, PathShape, PathShapeView } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -70,6 +70,7 @@ let table: TableShape;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 const reflush_side = ref(0);
+const reflush_apex = ref(0);
 
 const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
@@ -112,9 +113,13 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('layout') || args.includes('borders'))) [
-        updateData()
-    ]
+    if ((args.includes('layout') || args.includes('borders'))) {
+        updateData();
+    }
+    if (args.includes('pathsegs') && args.includes('points')) {
+        layout();
+        reflush_apex.value++;
+    }
 }
 
 function updateData() {
@@ -580,12 +585,14 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 function layout() {
     show_apex.value = false;
     const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    if (shapes.length === 1) {
-        const type = shapes[0].type;
-        show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
-    } else if (shapes.length > 1) {
-        show_apex.value = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact))
-    }
+    
+    show_apex.value = line_end_point(shapes);
+}
+
+const line_end_point = (shapes: ShapeView[]) => {
+    const segment = shapes.every(v => ((v instanceof PathShapeView) && ((v.segments.length === 1 && !v.segments[0].isClosed) || v.segments.length > 1)));
+    const endpoint = shapes.every(v => (v.type === ShapeType.Line || v.type === ShapeType.Contact || segment));
+    return endpoint;
 }
 
 function update_by_shapes() {
@@ -958,10 +965,9 @@ const strokeClick = (e: Event) => {
                 </div>
 
             </div>
-            <!--                </div>-->
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-            :trigger="props.trigger">
+            :trigger="props.trigger" :reflush_apex="reflush_apex">
         </Apex>
     </div>
     <teleport to="body">
