@@ -109,7 +109,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     private m_selectPage?: PageView;
     private m_selectShapes: ShapeView[] = [];
-    private m_selectPreviewShape: Shape | undefined;
+    // private m_selectPreviewShape: Shape | undefined;
     private m_hoverShape?: ShapeView;
     private m_document: Document;
     // private m_scout: Scout | undefined;
@@ -374,24 +374,25 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         return finder_env_for_migrate(this.scout!, range, position, this.m_shapes_set) || this.selectedPage!;
     }
 
-    selectShape(shape?: ShapeView | Shape) {
+    selectShape(shape?: ShapeView) {
         if (!shape) {
             this.resetSelectShapes();
-            if (this.m_selectPreviewShape) {
-                this.m_selectPreviewShape = undefined;
-                this.notify(Selection.CHANGE_SHAPE);
-            }
+            // if (this.m_selectPreviewShape) {
+            //     this.m_selectPreviewShape = undefined;
+            //     this.notify(Selection.CHANGE_SHAPE);
+            // }
         } else {
             this.m_selectShapes.length = 0;
-            shape instanceof ShapeView ? this.m_selectShapes.push(shape) : this.m_selectPreviewShape = shape;
+            // shape instanceof ShapeView ? this.m_selectShapes.push(shape) : this.m_selectPreviewShape = shape;
+            this.m_selectShapes.push(shape);
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
 
-    get selectedPvShape(): Shape | undefined {
-        return this.m_selectPreviewShape;
-    }
+    // get selectedPvShape(): Shape | undefined {
+    //     return this.m_selectPreviewShape;
+    // }
 
     unSelectShape(shape: ShapeView) {
         const index = this.m_selectShapes.findIndex((s: ShapeView) => s.id === shape.id);

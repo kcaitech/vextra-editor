@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./PreviewShapeItem.vue";
-import { PageView, Shape, ShapeType } from "@kcdesign/data";
+import { PageView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { debounce } from "lodash";
 import { Navi } from "@/context/navigate";
@@ -13,9 +13,9 @@ import { Selection } from "@/context/selection";
 type List = InstanceType<typeof ListView>;
 
 class Iter implements IDataIter<ItemData> {
-    private __it: Shape[];
+    private __it: ShapeView[];
     private __index: number;
-    constructor(it: Shape[], index: number) {
+    constructor(it: ShapeView[], index: number) {
         this.__it = it;
         this.__index = index;
     }
@@ -25,7 +25,7 @@ class Iter implements IDataIter<ItemData> {
     }
 
     next(): ItemData {
-        const shape: Shape = this.__it[this.__index];
+        const shape: ShapeView = this.__it[this.__index];
         this.__index++;
         if (!shape) throw new Error("shape data is null");
         const item = {
@@ -43,7 +43,7 @@ class Iter implements IDataIter<ItemData> {
 const props = defineProps<{ context: Context, page: PageView, pageHeight: number }>();
 const { t } = useI18n();
 const itemHieght = 52;
-let arboardList: Shape[] = [];
+let arboardList: ShapeView[] = [];
 const shapeList = ref<HTMLDivElement>()
 const shapeH = ref(0);
 const keywords = ref<string>('');
@@ -91,7 +91,7 @@ function inputing() {
 const selectedShape = (shape: Shape) => {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    const s = page.data.childs.find(item => item.id === shape.id);
+    const s = page.childs.find(item => item.id === shape.id);
     props.context.selection.selectShape(s);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
@@ -140,8 +140,8 @@ const update = () => {
     listHeight();
     updateScrollH();
 }
-function getFrameList(page: PageView): Shape[] {
-    return page.data.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
+function getFrameList(page: PageView): ShapeView[] {
+    return page.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
 function navi_watcher(t: number) {
     if (t === Navi.TO_SEARCH) {
@@ -201,7 +201,7 @@ const previewWatcher = (t: number | string) => {
     }
 }
 const updateScrollH = () => {
-    const shape = props.context.selection.selectedPvShape;
+    const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     let list_h = 0;
     if (listBody.value) {
@@ -222,7 +222,7 @@ const updateScrollH = () => {
 
 const listUpdate = (...args: any[]) => {
     if (args.includes('childs')) {
-        const shape = props.context.selection.selectedPvShape;
+        const shape = props.context.selection.selectedShapes[0];
         const page = props.context.selection.selectedPage;
         if (!page) return;
         const shapes = getFrameList(page);
