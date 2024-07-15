@@ -23,7 +23,7 @@ const isEnd = computed(() => {
     align-items: center;
 
     >svg {
-        width: 100%;
+        width: 40px;
         height: auto;
     }
 
