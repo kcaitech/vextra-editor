@@ -842,9 +842,8 @@ const setMixedTextColor = () => {
     textFormat();
 }
 
-const togger_gradient_type = (type: GradientType | 'solid') => {
-    const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
-    const g = type !== 'solid' && getGradient(gradient.value, type, textColor.value!);
+const togger_gradient_type = (type: GradientType, fillType: FillType) => {
+    const g = fillType === FillType.Gradient && getGradient(gradient.value, type, textColor.value!);
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -1293,7 +1292,7 @@ onUnmounted(() => {
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
                         :locat="{ index: 0, type: 'table_text' }" :fill-type="fillType"
                         :gradient="gradient instanceof Gradient ? gradient : undefined"
-                        @gradient-type="(type) => togger_gradient_type(type)"
+                        @gradient-type="(type, fillType) => togger_gradient_type(type, fillType)"
                         @change="c => getColorFromPicker(c, 'color')"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
@@ -1306,7 +1305,7 @@ onUnmounted(() => {
                         @change="(e) => onColorChange(e, 'color')" @click="(e) => click(e, is_font_color_select)"
                         @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false" />
@@ -1327,8 +1326,8 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="!colorIsMulti && !mixed && !textColor" style="margin-bottom: 6px;">
                 <div class="color-title">
                     <div class="nocheck" style="font-family: HarmonyOS Sans;font-size: 12px;width: 58px">{{
-                        t('attr.font_color')
-                        }}
+            t('attr.font_color')
+        }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>

@@ -764,20 +764,19 @@ const setMixedTextColor = () => {
     }
 }
 
-const togger_gradient_type = (type: GradientType | 'solid') => {
+const togger_gradient_type = (type: GradientType, fillType: FillType) => {
     const editor = props.context.editor4TextShape(props.shape);
-    const fillType = type === 'solid' ? FillType.SolidColor : FillType.Gradient;
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextFillType(fillType, 0, Infinity)
-            if (type !== 'solid') {
+            if (fillType === FillType.Gradient) {
                 const g = getGradient(gradient.value, type, textColor.value!);
                 editor.setTextGradient(g, 0, Infinity);
             }
         } else {
             editor.setTextFillType(fillType, textIndex, selectLength)
-            if (type !== 'solid') {
+            if (fillType === FillType.Gradient) {
                 const g = getGradient(gradient.value, type, textColor.value!);
                 editor.setTextGradient(g, textIndex, selectLength);
             }
@@ -785,7 +784,7 @@ const togger_gradient_type = (type: GradientType | 'solid') => {
         }
     } else {
         editor.setTextFillTypeMulti(props.textShapes, fillType);
-        if (type !== 'solid') {
+        if (fillType === FillType.Gradient) {
             const g = getGradient(gradient.value, type, textColor.value!);
             editor.setTextGradientMulti(props.textShapes, g);
         }
@@ -1262,14 +1261,14 @@ onUnmounted(() => {
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && !mixed && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px; width: 58px">{{
-                    t('attr.font_color')
-                    }}
+            t('attr.font_color')
+        }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true" :late="32"
                         :locat="{ index: 0, type: 'text' }" :fill-type="fillType" :gradient="gradient"
                         @change="c => getColorFromPicker(c, 'color')"
-                        @gradient-type="(type) => togger_gradient_type(type)"
+                        @gradient-type="(type, fillType) => togger_gradient_type(type, fillType)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(c, index)"
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(p, c, id)"
                         @gradient-reverse="gradient_reverse" @gradient-rotate="gradient_rotate"
@@ -1281,7 +1280,7 @@ onUnmounted(() => {
                         @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput"
                         @click="(e) => click(e, is_font_color_select)" @blur="is_font_color_select = false" />
                     <span class="sizeColor" style="line-height: 14px;" v-else-if="fillType === FillType.Gradient &&
-                        gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
+            gradient">{{ t(`color.${gradient.gradientType}`) }}</span>
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="filterAlpha() + '%'" @change="(e) => onAlphaChange(e, 'color')"
                         @click="(e) => click(e, is_font_alpha_select)" @blur="is_font_alpha_select = false"
