@@ -82,11 +82,14 @@ const stop = watch(() => props.data.shape, (value, old) => {
     value.watch(updater);
     watchShapes();
 }, { immediate: true })
-
+const update_icon = ref(0);
 function updater(...args: any[]) {
     if (args.includes('frame') || args.includes('points')) {
         update_abbr_view();
         return;
+    }
+    if(args.includes('fills')) {
+        update_icon.value++;
     }
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
@@ -341,7 +344,7 @@ onUnmounted(() => {
         :class="{ container: true, component: is_component(), selected: props.data.selected, selectedChild: selectedChild(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
         @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }">
-            <Abbr :view="abbr_view" :shape="data.shape" :theme="symbol_c ? '#7f58f9' : '#595959'"></Abbr>
+            <Abbr :view="abbr_view" :shape="data.shape" :icon="update_icon" :theme="symbol_c ? '#7f58f9' : '#595959'"></Abbr>
         </div>
         <div class="text" :class="{ container: true, selected: false }"
             :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">

@@ -366,6 +366,8 @@ function layout() {
         if (is_straight(shape) || shape.type === ShapeType.Contact) {
             s_length = true;
         }
+    } else if (selected.length > 1) {
+        s_radius = selected.some(item => !!item.radiusType);
     }
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
@@ -649,9 +651,9 @@ const textBehaviour = () => {
     if (all_text) {
         model_disable_state.width = false;
         model_disable_state.height = false;
-        const fixwh = shapes.some(item => item.text.attr?.textBehaviour === TextBehaviour.FixWidthAndHeight);
+        const fixwh = shapes.some(item => (item as TextShapeView).text.attr?.textBehaviour === TextBehaviour.FixWidthAndHeight);
         if (fixwh) return;
-        const fixw = shapes.some(item => item.text.attr?.textBehaviour === TextBehaviour.Fixed);
+        const fixw = shapes.some(item => (item as TextShapeView).text.attr?.textBehaviour === TextBehaviour.Fixed);
         if (fixw) {
             model_disable_state.height = true;
             return;

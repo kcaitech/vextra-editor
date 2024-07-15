@@ -396,14 +396,14 @@ export function RGB2SB(color: Color): { s: number, b: number } {
   const { red, green, blue } = color;
   const max = Math.max(red, green, blue);
   const min = Math.min(red, green, blue);
-  let  s = 0, b = 0;
+  let s = 0, b = 0;
   if (max === min && min === 0) {
     s = 0;
   } else {
     s = (max - min) / max;
   }
   b = max / 255;
-  return {  s, b };
+  return { s, b };
 }
 export function validate(model: Model, field: number, value: number): boolean {
   if (isNaN(value)) return false;
@@ -599,13 +599,19 @@ function c2s(c: Color) {
   return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
 }
 export function block_style_generator(color: Color, gradient?: Gradient, fillType?: FillType) {
+  if (fillType === FillType.Pattern) return {
+    border: 'none',
+    display: 'flex',
+    'align-items': 'center',
+    'justify-content': 'center'
+  }
   let style: any = {
     'background-color': toRGBA(color),
   }
   if (!gradient || !fillType) {
     return style;
   }
-  if(fillType === FillType.Gradient) {
+  if (fillType === FillType.Gradient) {
     delete style['background-color'];
     if (gradient.gradientType === GradientType.Linear) {
       style = get_linear_gradient(gradient);
@@ -663,29 +669,29 @@ export function stops_generator(gradient: Gradient, width: number, selected = -1
 }
 // 16进制色彩转10进制
 export function hexToX(hex: string): number[] {
-    hex = hex.slice(1);
-    let result: number[] = [];
-    if (hex.length === 3) {
-        let temp = hex.split('');
-        result = temp.map(v => {
-            const __v = `0x${v}${v}`;
-            return Number(parseInt(__v, 16));
-        })
-    } else if (hex.length === 6) {
-        let temp = hex.split('');
-        for (let i = 0; i < 6; i = i + 2) {
-            const __v = `0x${temp[i]}${temp[i + 1]}`;
-            result.push(Number(parseInt(__v, 16)));
-        }
+  hex = hex.slice(1);
+  let result: number[] = [];
+  if (hex.length === 3) {
+    let temp = hex.split('');
+    result = temp.map(v => {
+      const __v = `0x${v}${v}`;
+      return Number(parseInt(__v, 16));
+    })
+  } else if (hex.length === 6) {
+    let temp = hex.split('');
+    for (let i = 0; i < 6; i = i + 2) {
+      const __v = `0x${temp[i]}${temp[i + 1]}`;
+      result.push(Number(parseInt(__v, 16)));
     }
-    return result
+  }
+  return result
 }
 
 function get_linear_gradient(gradient: Gradient) {
   const { from, to, stops } = gradient;
   const rotate = getHorizontalAngle({ x: from.x * 10, y: from.y * 10 }, { x: to.x * 10, y: to.y * 10 });
   const colors = [];
-  if(stops.length === 1) {
+  if (stops.length === 1) {
     return {
       'background': toRGBA(stops[0].color),
     }
@@ -705,7 +711,7 @@ function get_linear_gradient(gradient: Gradient) {
 function get_radial_gradient(gradient: Gradient) {
   const { stops } = gradient;
   const colors = [];
-  if(stops.length === 1) {
+  if (stops.length === 1) {
     return {
       'background': toRGBA(stops[0].color),
 
