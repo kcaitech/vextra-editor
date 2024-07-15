@@ -12,15 +12,12 @@ import Contact from "../Buttons/CreateContact.vue";
 import Cutout from "../Buttons/Cutout.vue";
 import { WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
-import { useI18n } from 'vue-i18n'
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
 import Export from "../Buttons/Export.vue";
 import VertLine from "./VertLine.vue"
 import CompsVue from "./Comps.vue"
 import { watchReadyonly } from "@/components/common/watchreadonly";
-
-const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -33,15 +30,6 @@ const is_path_edit = ref<boolean>(false);
 
 function select(action: string) {
     props.context.tool.setAction(action);
-    // if (action === Action.AddComment) {
-    //     nextTick(() => {
-    //         props.context.comment.commentInput(false);
-    //     })
-    // }
-}
-
-function selectComps() {
-    props.context.tool.notify(Tool.COMPONENT);
 }
 
 const isLable = ref(props.context.tool.isLable);
@@ -62,7 +50,6 @@ function workspace_watcher(t: number) {
 
 // hooks
 onMounted(() => {
-    // hangdlePerm()
     props.context.tool.watch(tool_watcher);
     props.context.workspace.watch(workspace_watcher);
 });
@@ -78,9 +65,6 @@ const readonly = watchReadyonly(props.context, () => {
 });
 
 const cursorParams = {
-    // get d() {
-    //     return selected.value
-    // },
     select,
     get is_lable() {
         return isLable.value
@@ -228,7 +212,7 @@ updateDevComps()
 
     <!-- 路径编辑 -->
     <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
-        :selected="selected"></PathEditTool>
+        :selected="selected"/>
 </template>
 
 <style scoped lang="scss">

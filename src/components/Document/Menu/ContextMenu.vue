@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, h } from 'vue';
 import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
@@ -21,7 +21,8 @@ import {
     Artboard,
     ShapeType,
     ShapeView,
-    SymbolRefShape, SymbolRefView,
+    SymbolRefShape,
+    SymbolRefView,
     TableCellType,
     TableCellView,
     TextShapeView
@@ -419,6 +420,19 @@ function copyAsPNG() {
     emits('close');
 }
 
+const plugins = props.context.pluginsMgr.search2("content.menu");
+const comps: { component: any, params?: any }[] = [];
+comps.push({
+    component: () => {
+        if (props.items.has(MenuItemType.Comment)) {
+            return h(plugins.end[0].component, {
+                params: {},
+                context: props.context,
+                onClose: () => emits('close')
+            })
+        }
+    }
+});
 onMounted(() => {
     props.context.menu.watch(menu_watcher)
     document.addEventListener('mousedown', handleClickOutside);
@@ -429,8 +443,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div ref="menu" class="__context-menu" :style="{ width: `${width || 196}px` }" @mousedown.stop @mousemove.stop
-     @click.stop>
+<div ref="menu"
+     class="__context-menu"
+     :style="{ width: `${width || 196}px` }"
+     @mousedown.stop
+     @mousemove.stop
+     @click.stop
+>
     <div class="header"/>
     <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
          @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
@@ -543,6 +562,7 @@ onUnmounted(() => {
                 fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
         </svg>
     </div>
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
     <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
         <span>{{ t('system.hide_operation_interface') }}</span>
         <Key code="Ctrl(Shift) \"></Key>
@@ -653,11 +673,10 @@ onUnmounted(() => {
         }
 
         > svg {
-            width: 12px;
-            height: 12px;
-            transform: rotate(-90deg);
-            position: absolute;
-            right: 14px;
+            width: 9px;
+            height: 9px;
+
+            right: 10px;
         }
 
         .layers_menu {
@@ -668,7 +687,7 @@ onUnmounted(() => {
             display: flex;
             flex-direction: column;
             border-radius: 8px;
-            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
             background-color: #FFFFFF;
             border: 1px solid #EBEBEB;
             padding: 6px 0;
