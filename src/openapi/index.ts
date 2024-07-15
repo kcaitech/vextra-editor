@@ -6,7 +6,6 @@ export * from "./net"
 export * from "./selection"
 export * from "./workspace"
 export * from "./toolbox"
-export * from "./preview"
 export type DocumentProps = (
     { source: 'storage', storage: IStorage, path: string, fid: string, versionId: string } |
     { source: 'file', file: File, fmt: 'sketch' | 'fig' } |

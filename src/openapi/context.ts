@@ -4,7 +4,6 @@ import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
 import { IWorkspace } from "./workspace";
 import { IToolBox } from "./toolbox";
-import { IPreview } from "./preview";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 // import { Selection } from "@/context/selection";
@@ -45,8 +44,6 @@ export interface IContext extends IWatchable {
     // setEscstack(stack: EscStack): void;
 
     get toolbox(): IToolBox;
-
-    get preview(): IPreview;
 
     setReadonly(readonly: boolean): void;
 }
