@@ -29,6 +29,8 @@ import {
     finder_layers,
     finder_contact,
     finder_container, finder2, finder_env_for_migrate,
+    Scout2,
+    scout2,
 } from "@/utils/scout";
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
@@ -113,6 +115,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_hoverShape?: ShapeView;
     private m_document: Document;
     private m_scout: Scout | undefined;
+    private m_scout2: Scout2 | undefined;
     private m_tableselection: TableSelection;
     private m_textselection: TextSelectionLite;
 
@@ -151,6 +154,13 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     scoutMount(context: Context) {
         this.m_scout = scout(context);
+    }
+
+    get scout2(): Scout2 {
+        return this.m_scout2!;
+    }
+    scout2Mount() {
+        this.m_scout2 = scout2();
     }
 
     // get artboarts() {

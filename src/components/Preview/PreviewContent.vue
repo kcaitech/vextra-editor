@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { PageView, Shape, XYsBounding } from '@kcdesign/data';
+import { GroupShape, PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { getFrameList } from '@/utils/preview';
+import { finderShape, getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -298,6 +298,28 @@ function onKeyUp(e: KeyboardEvent) {
     }
 }
 
+const onMouseMove_CV = (e: MouseEvent) => {
+    if (e.buttons === 0) {
+        search(e); // 图形检索(hover)
+    }
+}
+
+function search(e: MouseEvent) { // 常规图形检索
+    const ctx = props.context;
+    const shape = props.context.preview.selectedShape;
+    if (!shape) return;
+    if (ctx.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
+    const { clientX, clientY } = e;
+    if (!preview.value) return;
+    const { x, y } = preview.value.getBoundingClientRect();
+    const matrix = viewUpdater.v_matrix;
+    const xy = { x: clientX - x, y: clientY - y };
+    if (ctx.selection.scout2) {
+        const shapes = finderShape(matrix, ctx.selection.scout2, [shape], xy, preview.value);
+        console.log(shapes, 'shaope', xy);
+    }
+}
+
 const closeMenu = () => {
     isMenu.value = false;
 }
@@ -317,6 +339,7 @@ const is_overlay = ref(true);
 
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
+    props.context.selection.scout2Mount();
 
     // 等cur_shape触发pageCard的挂载
     page_watcher();
@@ -330,6 +353,7 @@ onMounted(() => {
     }
 })
 onUnmounted(() => {
+    props.context.selection.scout2?.remove();
     observer.disconnect();
     props.context.preview.unwatch(previewWatcher);
     document.removeEventListener('keydown', onKeyDown);
@@ -342,9 +366,9 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-                  :context="context" :shapes="[cur_shape]"/>
+            :context="context" :shapes="[cur_shape]" />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

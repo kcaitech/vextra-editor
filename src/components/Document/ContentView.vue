@@ -57,7 +57,7 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
-import Rule from "./Rule";
+import Rule from './Rule/index.vue'
 
 interface Props {
     context: Context
