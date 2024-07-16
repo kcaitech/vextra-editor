@@ -180,6 +180,51 @@ export function alignYFromPointGroup(dy: number, ys: number[], livingYs: number[
     return { dy: livingD, targetY, spark };
 }
 
+export function alignXFromSpacePoint(dx: number, xs: number[], livingXs: number[]) {
+    let livingD = dx;
+    let livingAD = Math.abs(dx);
+    let targetX = 0;
+    let spark = false;
+
+    const x = livingXs[1];
+
+    for (let j = 0; j < xs.length; j++) {
+        const fixedX = xs[j];
+        const d = fixedX - x;
+        const ad = Math.abs(d);
+
+        if (ad < livingAD) {
+            livingD = d;
+            livingAD = ad;
+            targetX = fixedX;
+            spark = true;
+        }
+    }
+    return { dx: livingD, targetX, spark };
+}
+
+export function alignYFromSpacePoint(dy: number, ys: number[], livingYs: number[]) {
+    let livingD = dy;
+    let livingAD = Math.abs(dy);
+    let targetY = 0;
+    let spark = false;
+
+    const y = livingYs[1];
+
+    for (let j = 0; j < ys.length; j++) {
+        const fixedY = ys[j];
+        const d = fixedY - y;
+        const ad = Math.abs(d);
+
+        if (ad < livingAD) {
+            livingD = d;
+            livingAD = ad;
+            targetY = fixedY;
+            spark = true;
+        }
+    }
+    return { dy: livingD, targetY, spark };
+}
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     let working = false;
     for (let i = 0, len = apexX.length; i < len; i++) {

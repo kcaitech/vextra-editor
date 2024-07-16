@@ -17,7 +17,7 @@ import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
-import { getFrameList, keyboard, selectedShape } from '@/utils/preview';
+import { keyboard, selectedShape } from '@/utils/preview';
 import { IContext } from '@/openapi';
 import { Selection } from '@/context/selection';
 

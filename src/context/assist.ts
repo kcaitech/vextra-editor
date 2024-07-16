@@ -3,12 +3,15 @@ import { PageXY, XY } from "./selection";
 import { Context } from ".";
 import {
     alignXFromPointGroup,
+    alignXFromSpacePoint,
     alignYFromPointGroup,
+    alignYFromSpacePoint,
     finder,
     get_tree,
     modify_pt_x4p,
     modify_pt_y4p
 } from "@/utils/assist";
+import { XYsBounding } from "@/utils/common";
 
 export interface PointGroup1 {
     lt: PageXY
@@ -65,6 +68,8 @@ export class Assist extends WatchableObject {
     private m_except: Map<string, ShapeView> = new Map();
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
+    private m_space_adsorb_x: number[] = [];
+    private m_space_adsorb_y: number[] = [];
 
     multi_line_x: { x: number, pre: XY[] }[] = [];
     multi_line_y: { y: number, pre: XY[] }[] = [];
@@ -83,6 +88,13 @@ export class Assist extends WatchableObject {
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    setSpaceAdsorbX(xs: number[]) {
+        this.m_space_adsorb_x = xs;
+    }
+    setSpaceAdsorbY(ys: number[]) {
+        this.m_space_adsorb_y = ys;
     }
 
     setNodesX2(xys: XY[]) {
@@ -228,7 +240,6 @@ export class Assist extends WatchableObject {
         const target: ShapeView = this.m_collect_target || this.m_context.selection.selectedPage!;
         this.m_shape_inner = [];
         this.m_shape_inner.push(...finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis));
-
         if (this.m_context.user.isRuleVisible) {
             this.collectGuides();
         }
@@ -794,6 +805,21 @@ export class Assist extends WatchableObject {
             assistResult.sparkY = ry.spark;
         }
 
+        //间距吸附
+
+        if (this.m_space_adsorb_x.length) {
+            const rx = alignXFromSpacePoint(dx, this.m_space_adsorb_x, livingXs);
+            dx = rx.dx;
+            targetX = rx.targetX;
+            assistResult.sparkX = rx.spark;
+        }
+        if (this.m_space_adsorb_y.length) {
+            const ry = alignYFromSpacePoint(dy, this.m_space_adsorb_y, livingYs);
+            dy = ry.dy;
+            targetY = ry.targetY;
+            assistResult.sparkY = ry.spark;
+        }
+
         if (Math.abs(dx) < this.stickness) {
             assistResult.dx = dx;
             assistResult.sticked_by_x = true;
@@ -818,5 +844,47 @@ export class Assist extends WatchableObject {
         this.multi_line_y = [];
         this.m_except.clear();
         this.notify(Assist.CLEAR);
+    }
+    // 水平相交的图形
+    horIntersect(top: number, bottom: number) {
+        let result: ShapeView[] = [];
+        const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
+        const matrix = this.m_context.workspace.matrix;
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const inner_shape = this.m_shape_inner[i];
+            if (shapes.includes(inner_shape.id)) continue;
+            const points: { x: number, y: number }[] = [];
+            const m = inner_shape.matrix2Root();
+            m.multiAtLeft(matrix);
+            const f = inner_shape.frame;
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            points.push(...ps);
+            const b = XYsBounding(points);
+            if (top <= b.bottom && bottom >= b.top) {
+                result.push(inner_shape);
+            }
+        }
+        return result;
+    }
+    // 垂直相交的图形
+    verIntersect(left: number, right: number) {
+        let result: ShapeView[] = [];
+        const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
+        const matrix = this.m_context.workspace.matrix;
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const inner_shape = this.m_shape_inner[i];
+            if (shapes.includes(inner_shape.id)) continue;
+            const points: { x: number, y: number }[] = [];
+            const m = inner_shape.matrix2Root();
+            m.multiAtLeft(matrix);
+            const f = inner_shape.frame;
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+            points.push(...ps);
+            const b = XYsBounding(points);
+            if (left <= b.right && right >= b.left) {
+                result.push(inner_shape);
+            }
+        }
+        return result;
     }
 }

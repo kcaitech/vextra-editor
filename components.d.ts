@@ -135,6 +135,7 @@ declare module '@vue/runtime-core' {
     Footer: typeof import('./src/components/Login/Footer.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
     FrameChild: typeof import('./src/components/Document/Toolbar/Buttons/FrameChild.vue')['default']
+    GapAssist: typeof import('./src/components/Document/Assist/gapAssist.vue')['default']
     Gradient: typeof import('./src/components/Document/Selection/Controller/ColorEdit/Gradient.vue')['default']
     Grid: typeof import('./src/components/Document/Grid.vue')['default']
     GridView: typeof import('./src/components/common/GridView.vue')['default']
