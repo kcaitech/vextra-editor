@@ -15,9 +15,10 @@ import { Action, Tool } from "@/context/tool";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import PathShape from "@/components/Document/Toolbar/Buttons/PathShape.vue";
 import Export from "../Buttons/Export.vue";
-import VertLine from "./VertLine.vue"
-import CompsVue from "./Comps.vue"
+import VertLine from "./VertLine.vue";
+import CompsVue from "./Comps.vue";
 import { watchReadyonly } from "@/components/common/watchreadonly";
+import Mask from "@/components/Document/Toolbar/Buttons/Mask.vue";
 
 interface Props {
     context: Context
@@ -153,8 +154,8 @@ function updateComps() {
         comps.push({ component: VertLine })
 
         comps.push({ component: GroupUngroup })
-    }
-    else {
+        comps.push({ component: Mask });
+    } else {
         comps.push(
             {
                 component: Export,
@@ -171,7 +172,10 @@ function updateComps() {
 
 updateComps()
 
+console.log('__comps__', _comps.value);
+
 const devcomps = shallowRef<{ component: any, params?: any }[]>([])
+
 function updateDevComps() {
     const comps = devcomps.value;
     comps.length = 0;
@@ -197,22 +201,23 @@ function updateDevComps() {
     comps.push(...toolsPlugins.end)
 
 }
+
 updateDevComps()
 </script>
 
 <template>
-    <!-- 正常工具栏 --><!-- 可编辑或者只读 -->
-    <div v-if="!isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-        <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params" />
-    </div>
-    <!-- 开发模式 --><!-- 可编辑或者只读 -->
-    <div v-if="isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
-        <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params" />
-    </div>
+<!-- 正常工具栏 --><!-- 可编辑或者只读 -->
+<div v-if="!isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
+    <component v-for="c in _comps" :is=c.component :context="props.context" :params="c.params"/>
+</div>
+<!-- 开发模式 --><!-- 可编辑或者只读 -->
+<div v-if="isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
+    <component v-for="c in devcomps" :is=c.component :context="props.context" :params="c.params"/>
+</div>
 
-    <!-- 路径编辑 -->
-    <PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
-        :selected="selected"/>
+<!-- 路径编辑 -->
+<PathEditTool v-if="is_path_edit" class="editor-tools" :context="props.context" @select="select"
+              :selected="selected"/>
 </template>
 
 <style scoped lang="scss">
