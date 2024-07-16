@@ -12,7 +12,7 @@ import {
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
@@ -197,13 +197,29 @@ const flattenShape = () => {
     const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
-        if (shapes.length === 1 && shapes[0] instanceof BoolShapeView) {
-            const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
-            if (flatten) {
-                props.context.nextTick(page, () => {
-                    const s = page.getShape(flatten.id);
-                    props.context.selection.selectShape(s)
+        if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
+            if (shapes[0].type === ShapeType.Group) {
+                const editor = props.context.editor4Page(page);
+                const bool = editor.boolgroup2(adapt2Shape(shapes[0]) as GroupShape, shapes[0].name, BoolOp.Union);
+                nextTick(() => {
+                    if (bool) {
+                        const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
+                        if (flatten) {
+                            props.context.nextTick(page, () => {
+                                const s = page.getShape(flatten.id);
+                                props.context.selection.selectShape(s)
+                            })
+                        }
+                    }
                 })
+            } else {
+                const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
+                if (flatten) {
+                    props.context.nextTick(page, () => {
+                        const s = page.getShape(flatten.id);
+                        props.context.selection.selectShape(s)
+                    })
+                }
             }
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(shapes);
@@ -222,8 +238,8 @@ const flattenShape = () => {
 
 <template>
 
-    <BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup" @flatten-shape="flattenShape"
-        :disabled="!isBoolGroup"></BooleanObject>
+    <BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup"
+        @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
 
 </template>
 

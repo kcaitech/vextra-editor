@@ -118,24 +118,33 @@ const getBoolGroupType = (shapes: ShapeView[]) => {
         const type = (shapes[0] as BoolShapeView).getBoolOp()
         if (type.op === 'union') {
             selectBool.value = 'union'
+            boolType.value = BoolOp.Union
         } else if (type.op === 'subtract') {
             selectBool.value = 'subtract'
+            boolType.value = BoolOp.Subtract
         } else if (type.op === 'intersect') {
             selectBool.value = 'intersection'
+            boolType.value = BoolOp.Intersect
         } else if (type.op === 'diff') {
             selectBool.value = 'difference'
+            boolType.value = BoolOp.Diff
         }
         if (type.op === 'none') {
             state.value = true
         } else {
             state.value = false
+            boolName.value = selectBool.value
         }
     } else if (shapes.length > 1) {
         selectBool.value = 'union';
         state.value = true
+        boolName.value = 'union'
+        boolType.value = BoolOp.Union
     } else {
         selectBool.value = 'union';
         state.value = false
+        boolName.value = 'union'
+        boolType.value = BoolOp.Union
     }
 }
 
@@ -162,15 +171,14 @@ onUnmounted(() => {
         <template v-for="(item, index) in patterns" :key="item.value">
             <div class="line" v-if="index === 4"></div>
             <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool"
-                        :d="selectBool" :state="state"></DropSelect>
+                :d="selectBool" :state="state"></DropSelect>
         </template>
     </div>
     <el-tooltip class="box-item" effect="dark" :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600"
-                :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
+        :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
         <ToolButton ref="button" @click="changeBool"
-                    :style="{opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' :'auto'}" :selected="false"
-                    @mouseenter.stop="onMouseenter"
-                    @mouseleave.stop="onMouseleave">
+            :style="{ opacity: disabled ? 0.4 : 1, pointerEvents: disabled ? 'none' : 'auto' }" :selected="false"
+            @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
             <div class="svg-container" :class="{ active: state }">
                 <svg-icon :icon-class="selectBool"></svg-icon>
             </div>
@@ -193,7 +201,7 @@ onUnmounted(() => {
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 18px;
         height: 18px;
     }
@@ -216,7 +224,7 @@ onUnmounted(() => {
     padding: 10px 8px 10px 0;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 12px;
         height: 12px;
     }
