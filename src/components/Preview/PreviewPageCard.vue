@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeFrame, ShapeSize, ShapeType,
+    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeSize, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from "@kcdesign/data";
@@ -68,13 +68,7 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
-        const gs = pageSvg.value.childNodes;
-
-        // 清除自己的transform、style，交给外层去处理，否在会出现内外相互抵消来实现效果的现象
-        // gs.forEach(node => {
-        //     (node as Element).removeAttribute('transform');
-        //     (node as Element).removeAttribute('style');
-        // });
+        pageSvg.value.childNodes;
     }
 }
 
@@ -89,8 +83,6 @@ watch(() => props.shapes, () => {
 
 
 function repaint() {
-    console.log('__REPAINT__');
-    // 暂时用这个
     assemble();
 }
 

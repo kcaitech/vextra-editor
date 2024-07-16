@@ -1,4 +1,4 @@
-<script setup lang="ts">
+    <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
