@@ -15,6 +15,7 @@ type List = InstanceType<typeof ListView>;
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeView[];
     private __index: number;
+
     constructor(it: ShapeView[], index: number) {
         this.__it = it;
         this.__index = index;
@@ -117,6 +118,7 @@ function leave_search() {
     input_blur();
     document.removeEventListener('keydown', esc)
 }
+
 const update = () => {
     arboardList = [];
     const page = props.context.selection.selectedPage;
@@ -140,9 +142,11 @@ const update = () => {
     listHeight();
     updateScrollH();
 }
+
 function getFrameList(page: PageView): ShapeView[] {
     return page.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
+
 function navi_watcher(t: number) {
     if (t === Navi.TO_SEARCH) {
         to_search();
@@ -251,6 +255,18 @@ const listUpdate = (...args: any[]) => {
     }
     update();
 }
+// let stopPassiveUpdate: any = null;
+//
+// function passiveUpdate() {
+//     let timer: any = setInterval(() => {
+//         update();
+//     }, 30000);
+//
+//     return () => {
+//         clearInterval(timer);
+//         timer = null;
+//     }
+// }
 
 const stopWatch = watch(() => props.page, (value, old) => {
     old?.unwatch(listUpdate);
@@ -259,6 +275,7 @@ const stopWatch = watch(() => props.page, (value, old) => {
 
 onMounted(() => {
     update();
+    // stopPassiveUpdate = passiveUpdate();
     props.page.watch(listUpdate);
     props.context.selection.watch(previewWatcher);
     props.context.navi.watch(navi_watcher);
@@ -269,37 +286,38 @@ onUnmounted(() => {
     props.context.selection.watch(previewWatcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
+    // stopPassiveUpdate();
 });
 
 </script>
 
 <template>
-    <div class="shapelist-wrap" ref="shapeList">
-        <div class="header" @click.stop>
-            <div class="search" ref="search_wrap">
-                <div class="tool-container" @click="preto_search">
-                    <svg-icon icon-class="search"></svg-icon>
-                </div>
-                <input ref="search_el" type="text" id="xpxp" v-model="keywords"
-                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
-                    @change="search" @input="inputing" @focus="input_focus">
-                <div @click="clear_text" class="close"
-                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
-                    <svg-icon icon-class="close-x"></svg-icon>
-                </div>
-                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
-                    :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
-                    Aa
-                </div>
+<div class="shapelist-wrap" ref="shapeList">
+    <div class="header" @click.stop>
+        <div class="search" ref="search_wrap">
+            <div class="tool-container" @click="preto_search">
+                <svg-icon icon-class="search"></svg-icon>
+            </div>
+            <input ref="search_el" type="text" id="xpxp" v-model="keywords"
+                   :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
+                   @change="search" @input="inputing" @focus="input_focus">
+            <div @click="clear_text" class="close"
+                 :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
+                <svg-icon icon-class="close-x"></svg-icon>
+            </div>
+            <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
+                 :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                Aa
             </div>
         </div>
-        <div class="body" ref="listBody">
-            <ListView ref="shapelist" location="shapelist" :shapeHeight="shapeH" :source="listviewSource"
-                :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
-                :context="props.context" orientation="vertical" @selectShape="selectedShape">
-            </ListView>
-        </div>
     </div>
+    <div class="body" ref="listBody">
+        <ListView ref="shapelist" location="shapelist" :shapeHeight="shapeH" :source="listviewSource"
+                  :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
+                  :context="props.context" orientation="vertical" @selectShape="selectedShape">
+        </ListView>
+    </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -334,19 +352,19 @@ onUnmounted(() => {
             overflow: hidden;
             transition: 0.32s;
 
-            >.tool-container {
+            > .tool-container {
                 margin-right: 2px;
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
 
-                >svg {
+                > svg {
                     width: 12px;
                     height: 12px;
                 }
             }
 
-            >input {
+            > input {
                 width: calc(100% - 64px);
                 border: none;
                 outline: none;
@@ -359,7 +377,7 @@ onUnmounted(() => {
                 transition: 0.3s;
             }
 
-            >.close {
+            > .close {
                 flex-shrink: 0;
                 width: 14px;
                 height: 14px;
@@ -370,14 +388,14 @@ onUnmounted(() => {
                 justify-content: center;
                 transition: 0.15s;
 
-                >svg {
+                > svg {
                     color: rgb(111, 111, 111);
                     width: 10px;
                     height: 10px;
                 }
             }
 
-            >.accurate {
+            > .accurate {
                 flex-shrink: 0;
                 user-select: none;
                 height: 100%;
@@ -406,7 +424,7 @@ onUnmounted(() => {
         overflow: hidden;
         box-sizing: border-box;
 
-        >.container {
+        > .container {
             height: 100%;
         }
     }

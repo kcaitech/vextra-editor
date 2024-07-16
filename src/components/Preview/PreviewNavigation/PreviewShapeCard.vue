@@ -33,7 +33,8 @@ function mount() {
         return;
     }
 
-    const __view = new __Construct(ctx, { data })
+    const __view = new __Construct(ctx, { data }) as any;
+    __view.onMounted();
     const __el = (__view as any).renderStatic();
     __el.el = container.value;
 
