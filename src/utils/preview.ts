@@ -161,7 +161,7 @@ export function finderShape(matrix: Matrix, scout: Scout2, scope: (Shape | Shape
             continue;
         }
    
-        if (!scout.isPointInShape(item, hot, matrix.m00)) {
+        if (!scout.isPointInShape(item, hot, matrix)) {
             continue;
         }
 

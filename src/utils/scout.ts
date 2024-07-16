@@ -25,10 +25,10 @@ export interface Scout {
 export interface Scout2 {
     path: SVGPathElement
     remove: () => void
-    isPointInShape: (shape: ShapeView | Shape, point: PageXY, scale: number) => boolean
+    isPointInShape: (shape: ShapeView | Shape, point: PageXY, matrix: Matrix) => boolean
     isPointInPath: (d: string, point: PageXY) => boolean
     isPointInStroke: (d: string, point: PageXY) => boolean
-    isPointInShape2: (shape: ShapeView, point: PageXY, scale: number) => boolean
+    isPointInShape2: (shape: ShapeView, point: PageXY, matrix: Matrix) => boolean
 }
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
@@ -148,15 +148,21 @@ export function scout2(): Scout2 {
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(shape: ShapeView | Shape, point: PageXY, scale: number): boolean {
-        const d = getPathOnPageString(shape);
+    function isPointInShape(shape: ShapeView | Shape, point: PageXY, matrix: Matrix): boolean {
+        const _path = shape.getPath().clone();
+        const m2page = shape.matrix2Root();
+        m2page.multiAtLeft(matrix);
+        console.log(m2page, 'm2page');
+        
+        _path.transform(m2page);
+        const d = _path.toString();
 
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
 
         path.setAttributeNS(null, 'd', d);
 
-        let stroke = 14 / scale;
+        let stroke = 14 / matrix.m00;
 
         let isClosed = true;
 
@@ -169,7 +175,7 @@ export function scout2(): Scout2 {
                 }
             }
         }
-        
+
         path.setAttributeNS(null, 'stroke-width', `${stroke}`);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
         // if (isClosed) {
@@ -178,8 +184,8 @@ export function scout2(): Scout2 {
         //     return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
         // }
     }
-    function isPointInShape2(shape: ShapeView, point: PageXY, scale: number): boolean {
-        const d = getPathOnPageStringCustomOffset(shape, 1 / scale);
+    function isPointInShape2(shape: ShapeView, point: PageXY, matrix: Matrix): boolean {
+        const d = getPathOnPageStringCustomOffset(shape, 1 / matrix.m00);
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
