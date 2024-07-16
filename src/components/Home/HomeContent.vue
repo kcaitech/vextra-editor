@@ -4,6 +4,7 @@
             <div class="start">
                 <div class="content">
                     <div class="title">{{ t("start.title") }}</div>
+                    <!-- <img src="../../assets/slogan.svg" alt="slogan"> -->
                     <div class="description">
                         {{ t("start.description_1") }}
                         {{ t("start.description_2") }}
@@ -139,6 +140,11 @@ function autoPlay() {
 function checkLang() {
     return window.navigator.language.includes('zh')
 }
+
+const font=new FontFace("zihunbiantaoti","@/assets/fonts/zihun.ttf")
+
+console.log(font);
+
 
 onMounted(() => {
     if (autoplay.value) autoPlay()

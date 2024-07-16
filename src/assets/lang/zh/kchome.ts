@@ -1,5 +1,5 @@
 export const start = {
-    title: '随时都可写 什么都能画',
+    title: '一起来设计吧',
     description_1: '专业产品设计软件，支持产品文稿写作、UI设计、设计演示、切图标注交付，',
     description_2: '为产品研发团队提供一站式协同设计新体验',
 
@@ -35,6 +35,6 @@ export const end = {
 }
 
 export const pub = {
-    login_1: '免费体验',
+    login_1: '开始设计',
     login_2: '立即免费体验'
 }

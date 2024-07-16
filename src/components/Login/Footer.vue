@@ -15,8 +15,7 @@ const data = [
 const skipTotarget = (i: string) => {
     switch (i) {
         case "产品介绍":
-            router.push({ path: '/' })
-            window.scrollY = 300
+            window.open("https://kdocs.cn/l/cm596JlSFAHF", "_blank")
             break;
         case "关于我们":
             router.push({ path: '/' })
@@ -26,9 +25,6 @@ const skipTotarget = (i: string) => {
             break;
         case "隐私协议":
             router.push({ path: 'privacypolicy' })
-            break;
-        case "邮箱: contact@kcaitech.com":
-            router.push({ path: '/' })
             break;
         default:
             break;
@@ -186,7 +182,7 @@ const skipTotarget = (i: string) => {
 }
 
 @media (max-width:1440px) {
-    .header{
+    .header {
         margin: 0;
         padding: 56px 40px;
         box-sizing: border-box;

@@ -34,7 +34,7 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     
     comsMap.set(ShapeType.Artboard, ArtboradDom);
     comsMap.set(ShapeType.Group, GroupShapeDom);
-    comsMap.set(ShapeType.Image, ImageShapeDom);
+    comsMap.set(ShapeType.Image, RectShapeDom);
     comsMap.set(ShapeType.BoolShape, BoolShapeDom);
     comsMap.set(ShapeType.Path, PathShapeDom);
     comsMap.set(ShapeType.Path2, PathShapeDom2);

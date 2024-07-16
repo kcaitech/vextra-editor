@@ -6,6 +6,7 @@ import {
     AsyncCreator,
     Color,
     ContactForm,
+    getFormatFromBase64,
     GroupShape,
     GroupShapeView,
     ImageShape,
@@ -37,6 +38,7 @@ import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/svg_parser";
 import { sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
+import { v4 } from "uuid";
 
 export interface Media {
     name: string
@@ -361,7 +363,7 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
 }
 
 // 图片从init到insert
-export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: { width: number, height: number }) {
     const selection = context.selection;
     const page = selection.selectedPage;
     let asyncCreator: AsyncCreator | undefined;
@@ -383,7 +385,7 @@ export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t
         }
         frame.height = _m.frame.height;
         frame.width = _m.frame.width;
-        new_shape = asyncCreator.init_media(page.data, (page.data as GroupShape), _name as string, frame, _m);
+        new_shape = asyncCreator.init_media(page.data, (page.data as GroupShape), _name as string, frame, _m, origin);
     }
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
@@ -392,14 +394,14 @@ export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t
     }
 }
 
-export function insert_imgs(context: Context, t: Function, media: Media[], upload_container?: any) {
+export function insert_imgs(context: Context, t: Function, media: Media[], origin: { width: number, height: number }, upload_container?: any) {
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
         const xy = adjust_content_xy(context, media[0].frame as any);
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
-            const img = init_insert_image(context, xy, t, media[i]);
+            const img = init_insert_image(context, xy, t, media[i], origin);
             if (img) {
                 new_shapes.push(img);
             }
@@ -407,8 +409,9 @@ export function insert_imgs(context: Context, t: Function, media: Media[], uploa
             if (!upload_container) {
                 continue;
             }
-
-            upload_container[(img as ImageShape).imageRef] = media[i];
+            if (img) {
+                upload_container[img.style.fills[0].imageRef || ''] = media[i];
+            }
         }
     }
     if (new_shapes.length) {
@@ -421,6 +424,20 @@ export function insert_imgs(context: Context, t: Function, media: Media[], uploa
             })
             context.selection.rangeSelectShape(selects);
         })
+    }
+    context.workspace.setFreezeStatus(false);
+}
+
+export function modify_imgs(context: Context, media: Media[], upload_container?: any) {
+    if (media && media.length) {
+        for (let i = 0; i < media.length; i++) {
+            if (!upload_container) {
+                continue;
+            }
+            const format = getFormatFromBase64(media[i].base64);
+            const ref = `${v4()}.${format}`;
+            upload_container[ref] = media[i];
+        }
     }
     context.workspace.setFreezeStatus(false);
 }
@@ -455,6 +472,7 @@ export function drop(e: DragEvent, context: Context, t: Function) {
     img.onload = function () {
         frame.width = img.width;
         frame.height = img.height;
+        const origin = { width: img.width, height: img.height }
 
         const fr = new FileReader();
         fr.onload = function (event) {
@@ -468,7 +486,7 @@ export function drop(e: DragEvent, context: Context, t: Function) {
                         const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
                         xy.x = xy.x - frame.width / 2;
                         xy.y = xy.y - frame.height / 2;
-                        paster_image(context, xy, t, content);
+                        paster_image(context, xy, t, content, origin);
                     }
                 }
                 fr.readAsArrayBuffer(file);

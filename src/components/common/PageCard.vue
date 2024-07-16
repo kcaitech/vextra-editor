@@ -91,6 +91,9 @@ defineExpose({ pageSvg });
 
 <style scoped lang="scss">
 svg {
+    position: absolute;
+    top: 10000px;
+    left: 10000px;
     transform-origin: top left;
 }
 </style>

@@ -539,7 +539,7 @@ onUnmounted(() => {
     > svg {
         pointer-events: none;
         position: absolute;
-        z-index: 10;
+        z-index: 2;
         overflow: visible;
 
 
@@ -586,7 +586,7 @@ onUnmounted(() => {
         overflow-x: clip;
         pointer-events: auto;
         cursor: row-resize;
-        z-index: 9;
+        z-index: 1;
 
         > .scale {
             pointer-events: none;
@@ -649,7 +649,7 @@ onUnmounted(() => {
         overflow-y: clip;
         pointer-events: auto;
         cursor: col-resize;
-        z-index: 9;
+        z-index: 1;
 
         > .scale {
             pointer-events: none;

@@ -386,6 +386,8 @@ function layout() {
         if (is_straight(shape) || shape.type === ShapeType.Contact) {
             s_length = true;
         }
+    } else if (selected.length > 1) {
+        s_radius = selected.some(item => !!item.radiusType);
     }
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
@@ -685,10 +687,9 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                           @dragstart="dragstart" @dragging="draggingX" @dragend="dragend"
-                           @wheel="wheelX"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
             <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                           @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
             <div v-if="s_adapt" class="adapt" @click="adapt">
                 <Tooltip :content="t('attr.adapt')">
                     <svg-icon icon-class="adapt"></svg-icon>
@@ -698,10 +699,9 @@ onUnmounted(() => {
         </div>
         <div class="tr">
             <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
-                           @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
             <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
-                           :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH"
-                           @dragend="dragend2">
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
             </MdNumberInput>
             <Tooltip :content="t('attr.constrainProportions')">
                 <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
@@ -714,19 +714,17 @@ onUnmounted(() => {
         </div>
         <div class="tr">
             <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
-                           :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                           @dragend="dragend"></MdNumberInput>
+                :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
+                @dragend="dragend"></MdNumberInput>
             <div class="flip-wrapper">
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
-                    <div
-                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="fliph">
                         <svg-icon icon-class="fliph"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
-                    <div
-                        :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
                         @click="flipv">
                         <svg-icon icon-class="flipv"></svg-icon>
                     </div>
@@ -736,12 +734,12 @@ onUnmounted(() => {
         </div>
         <div class="tr" v-if="s_counts">
             <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
-                           :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
-                           @dragend="dragend"></MdNumberInput>
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
+                @dragend="dragend"></MdNumberInput>
             <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
-                           :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
-                           :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
-                           @dragend="dragend"></MdNumberInput>
+                :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
+                @dragend="dragend"></MdNumberInput>
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
@@ -778,7 +776,7 @@ onUnmounted(() => {
         margin-bottom: 8px;
 
 
-        > .icontext {
+        >.icontext {
             background-color: var(--input-background);
         }
 
@@ -801,13 +799,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }
@@ -833,7 +831,7 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 width: 14px;
                 height: 14px;
@@ -850,7 +848,7 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -875,7 +873,7 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 14px;
                     height: 14px;
@@ -896,7 +894,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -921,14 +919,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }

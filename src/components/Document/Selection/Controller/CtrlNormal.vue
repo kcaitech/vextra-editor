@@ -12,6 +12,7 @@ import BarsContainer from "./Bars/BarsContainer.vue";
 import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
 import { point_map } from "./Points/map"
+import { ColorCtx } from "@/context/color";
 
 
 interface Props {
@@ -170,15 +171,23 @@ const mouseleave = () => {
     is_enter.value = false;
 }
 
+const color_watcher = (t: number, hidden: boolean) => {
+    if (t === ColorCtx.HIDDEN_SELECTED) {
+        selection_hidden.value = hidden;
+    }
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
+    props.context.color.watch(color_watcher);
     window.addEventListener('blur', windowBlur);
     check_status();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.color.unwatch(color_watcher);
     window.removeEventListener('blur', windowBlur);
     props.context.cursor.reset();
     reset_hidden();
@@ -187,20 +196,20 @@ watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox="viewBox" :width="width" :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
-         overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
-         @mouseenter="mouseenter" @mouseleave="mouseleave">
+        data-area="controller" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox="viewBox" :width="width" :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown"
+        overflow="visible" :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
+        @mouseenter="mouseenter" @mouseleave="mouseleave">
         <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
         <BarsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
+            :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
         <PointsContainer v-if="partVisible" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                         :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
+            :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
         <component v-if="!shape.data.haveEdit" :pointVisible="is_enter && pointVisible" :is="point_map.get(shape.type)"
-                   :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"
-                   :theme="theme"></component>
+            :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape as PolygonShapeView"
+            :theme="theme"></component>
         <!--        <path :d="testPathData" stroke="green" stroke-width="1" fill="none"/>-->
     </svg>
 </template>
