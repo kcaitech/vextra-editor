@@ -48,11 +48,7 @@ export class ViewUpdater {
     }
 
     get currentPage() {
-        return this.m_current_page;
-    }
-
-    setCurrentPage(page: Page | undefined) {
-        this.m_current_page = page;
+        return this.m_context.selection.selectedPage;
     }
 
     // 停止监听播放对象内部元素(子孙元素)变化

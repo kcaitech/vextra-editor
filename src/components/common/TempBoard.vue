@@ -112,7 +112,6 @@ function write4LazyLoader(target: ShapeView) {
         const y = -top - t_max;
         const _right = frame.width + (right + l_max + r_max);
         const _bottom = frame.height + (bottom + t_max + b_max);
-        console.log(x, y, width, height);
         points.push(
             ...[
                 { x, y },
@@ -177,8 +176,6 @@ function getBlob(): Promise<Blob | null> {
                 resolve(blob);
             }, 'image/png');
         }
-        console.log(img.src);
-        
         img.onerror = () => {
             resolve(null)
         }

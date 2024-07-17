@@ -238,9 +238,6 @@ const addmask = ref<boolean>(false)
 
 //检测浮层设置是否已有目标
 const checkTarget = (e: Event) => {
-
-    console.log(selectshape.value);
-
     if (selectshape.value === '') {
         addmask.value = false
         return

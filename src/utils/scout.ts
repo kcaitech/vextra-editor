@@ -30,7 +30,7 @@ export function scout(context: Context): Scout {
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(shape: ShapeView, point: PageXY): boolean {
+    function isPointInShape(shape: ShapeView, point: PageXY, matrix?: Matrix): boolean {
         const d = getPathOnPageString(shape);
 
         SVGPoint.x = point.x;
@@ -38,7 +38,7 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        const scale = context.workspace.curScale;
+        const scale = matrix?.m00 || context.workspace.curScale;
 
         let stroke = 14 / scale;
 

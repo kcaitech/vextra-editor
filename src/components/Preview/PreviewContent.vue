@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
+import { Matrix, PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { getFrameList } from '@/utils/preview';
+import { finderShape, getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -160,11 +160,6 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     }
 }
 
-function page_scale(scale: number) {
-    props.context.preview.setScale(scale);
-    initMatrix();
-}
-
 const observer = new ResizeObserver(initMatrix);
 
 watch(() => props.showTop, (v) => {
@@ -314,6 +309,19 @@ const onMouseMove_CV = (e: MouseEvent) => {
 }
 
 function search(e: MouseEvent) { // 常规图形检索
+    const shapes = props.context.selection.selectedShapes[0];
+    const page = props.context.selection.selectedPage;
+
+    if (!preview.value || !shapes || !page) return;
+    const scout = props.context.selection.scout;
+    const matrix = new Matrix(viewUpdater.v_matrix);
+    const { x, y } = preview.value.getBoundingClientRect();
+    matrix.multiAtLeft(shapes.matrix2Root());
+    const xy = matrix.computeCoord2(e.clientX - x, e.clientY - y);
+    console.log(xy, 'xy');
+
+    const shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
+    console.log(shape, 'shape');
 
 }
 
@@ -351,6 +359,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     observer.disconnect();
+    props.context.selection.scout?.remove();
     props.context.preview.unwatch(previewWatcher);
     props.context.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', onKeyDown);
