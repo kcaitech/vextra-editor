@@ -147,7 +147,6 @@ onMounted(() => {
         dom.dom.render();
         dom.ctx.loop(window.requestAnimationFrame);
         props.context.nextTick(props.params.data, () => {
-            // emit('closeLoading');
             if (props.params.closeLoading) props.params.closeLoading();
         })
     }

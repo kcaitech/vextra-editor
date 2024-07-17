@@ -19,6 +19,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const emits = defineEmits<{
+    (e: 'start-loop'): void;
+}>();
+
 const pageSvg = ref<SVGSVGElement>();
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
@@ -70,6 +74,7 @@ function assemble() {
         pageDom.dom.render();
         pageDom.ctx.loop(window.requestAnimationFrame);
         pageSvg.value.childNodes;
+        emits('start-loop');
     }
 }
 
@@ -96,7 +101,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
+<svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
 </template>
 
 <style scoped lang="scss">
