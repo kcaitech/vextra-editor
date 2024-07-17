@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { getFrameList } from '@/utils/preview';
+import { finderShape, getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -307,6 +307,16 @@ function onKeyUp(e: KeyboardEvent) {
     }
 }
 
+const onMouseMove_CV = (e: MouseEvent) => {
+    if (e.buttons === 0) {
+        search(e); // 图形检索(hover)
+    }
+}
+
+function search(e: MouseEvent) { // 常规图形检索
+ 
+}
+
 const closeMenu = () => {
     isMenu.value = false;
 }
@@ -353,7 +363,7 @@ onUnmounted(() => {
 
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
             :context="context" :shapes="[cur_shape]" />
         <div class="toggle" v-if="listLength">

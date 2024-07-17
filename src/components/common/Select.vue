@@ -8,11 +8,13 @@ import { ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
-    content: string
+    content: string,
+    icon?: string,
+    type?: string
 }
 export interface SelectSource {
     id: number,
-    data: SelectItem
+    data: SelectItem,
 }
 
 interface Props {
@@ -26,6 +28,8 @@ interface Props {
     itemView?: any;
     mixed?: boolean;
     shapes?: ShapeView[];
+    visibility?: boolean;
+    minwidth?: number;
 }
 
 interface Emits {
@@ -39,6 +43,7 @@ const TOPBAR_HEIGHT = (() => {
 })();
 const PADDING = 10;
 const PADDING_TOP = 4;
+const TAB_HEIGHT = 40;
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
@@ -90,12 +95,13 @@ function options() {
             top = curValueIndex.value * item_height;
         }
     }
-    const TOP = zero - TOPBAR_HEIGHT
+    const TOP = zero - TOPBAR_HEIGHT - TAB_HEIGHT
     if (top > TOP) {
-        top = top - PADDING;
+        top = TOP - PADDING;
     }
     if (props.mixed) top = 0;
     oe.style.top = `${-(top + PADDING_TOP)}px`;
+    if (props.minwidth) oe.style.minWidth = props.minwidth + 'px'
 
     oe.addEventListener('keydown', esc);
     oe.addEventListener('blur', onBlur);
@@ -137,7 +143,7 @@ function render() {
         source.value = cloneDeep(props.source);
     }
     if (props.selected && source.value.length) {
-        const index = source.value.findIndex(i => i.data.value === props.selected!.value);
+        const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);
         if (index > -1 || props.mixed) {
             curValueIndex.value = index;
             curValue.value = props.selected;
@@ -160,6 +166,9 @@ onMounted(render)
 <template>
     <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle">
+            <div class="icon-img" v-if="curValue?.icon">
+                <svg-icon :icon-class="curValue?.icon"></svg-icon>
+            </div>
             <div v-if="!props.valueView || mixed" class="value-wrap" :style="{ opacity: showOP ? 0.3 : 1 }">{{
             curValue?.content }}
             </div>
@@ -183,6 +192,15 @@ onMounted(render)
             <div v-else-if="props.itemView">
                 <component v-for="(c, idx) in source" v-bind="$attrs" :is="props.itemView" :key="c.id" :data="c.data"
                     :isCurValue="idx === curValueIndex" @select="select" />
+            </div>
+            <div v-else-if="visibility">
+                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
+                    @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
+                    <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
+                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
+                    <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
+                    <div class="content-wrap"> {{ c.data.content }}</div>
+                </div>
             </div>
             <div v-else>
                 <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)"
@@ -213,6 +231,23 @@ onMounted(render)
         border-radius: var(--default-radius);
         padding: 0 9px;
         box-sizing: border-box;
+
+        .icon-img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #1878F5;
+            margin-right: 8px;
+            overflow: hidden;
+            display: flex;
+
+            svg {
+                margin: auto;
+                width: 12px;
+                height: 12px;
+                color: white;
+            }
+        }
 
         .value-wrap {
             flex: 1;
@@ -255,7 +290,7 @@ onMounted(render)
         box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
-        z-index: 999;
+        z-index: 9999;
         border: 1px solid #EBEBEB;
         padding: 4px 0;
         box-sizing: border-box;
@@ -276,6 +311,7 @@ onMounted(render)
             display: flex;
 
             align-items: center;
+            gap: 8px;
 
             .content-wrap {
                 flex: 1;
@@ -288,6 +324,11 @@ onMounted(render)
             >svg {
                 flex: 0 0 12px;
                 height: 12px;
+            }
+
+            .icon {
+                fill: currentColor;
+                color: #8C8C8C;
             }
         }
 
@@ -304,6 +345,10 @@ onMounted(render)
         .item-default:hover {
             background-color: var(--active-color);
             color: #FFFFFF;
+
+            .icon {
+                color: #fff;
+            }
         }
     }
 }

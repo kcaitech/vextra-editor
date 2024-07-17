@@ -4,6 +4,7 @@ import {
     GroupShapeView,
     Matrix,
     PathShapeView,
+    Shape,
     ShapeType,
     ShapeView,
     SymbolRefView
@@ -81,8 +82,8 @@ export function scout(context: Context): Scout {
         return is_point_in_stroke;
     }
 
-    function isPointInShape2(shape: ShapeView, point: PageXY): boolean {
-        const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
+    function isPointInShape2(shape: ShapeView, point: PageXY, scale?: number): boolean {
+        const d = getPathOnPageStringCustomOffset(shape, 1 / (scale || context.workspace.matrix.m00));
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
@@ -131,7 +132,7 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-export function getPathOnPageString(shape: ShapeView): string { // path坐标系：页面
+export function getPathOnPageString(shape: ShapeView | Shape): string { // path坐标系：页面
     const path = shape.getPath().clone();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
