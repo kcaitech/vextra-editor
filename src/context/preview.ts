@@ -28,6 +28,7 @@ export class Preview extends WatchableObject {
     private m_navi_visible: boolean = true;
     private m_menu_options: ScaleType | undefined = ScaleType.Actual;
     private m_visible_ui: boolean = true;
+    private m_menu_visible: boolean = false;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -96,5 +97,12 @@ export class Preview extends WatchableObject {
 
     get uiState() {
         return this.m_visible_ui;
+    }
+
+    setMenuVisible(visible: boolean) {
+        this.m_menu_visible = visible;
+    }
+    get menuVisible() {
+        return this.m_menu_visible;
     }
 }

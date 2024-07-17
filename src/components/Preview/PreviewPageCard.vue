@@ -68,6 +68,7 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
+        pageDom.ctx.loop(window.requestAnimationFrame);
         pageSvg.value.childNodes;
     }
 }
@@ -89,7 +90,9 @@ function repaint() {
 defineExpose({ pageSvg, repaint });
 
 onMounted(assemble);
-onUnmounted(disassemble);
+onUnmounted(() => {
+    disassemble();
+});
 </script>
 
 <template>

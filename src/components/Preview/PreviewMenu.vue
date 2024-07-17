@@ -97,6 +97,7 @@ const firstPage = () => {
 }
 
 onMounted(() => {
+    props.context.preview.setMenuVisible(true);
     updateScaleType();
     setPosition();
     props.context.preview.watch(previewWatcher);
@@ -105,6 +106,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.context.preview.watch(previewWatcher);
+    props.context.preview.setMenuVisible(false);
     document.removeEventListener('click', close);
     document.removeEventListener('keydown', keyClose);
 })

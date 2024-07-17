@@ -31,7 +31,7 @@ export function scout(context: Context): Scout {
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(shape: ShapeView, point: PageXY, matrix?: Matrix): boolean {
+    function isPointInShape(shape: ShapeView, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
 
         SVGPoint.x = point.x;
@@ -39,7 +39,7 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        const scale = matrix?.m00 || context.workspace.curScale;
+        const scale = context.workspace.curScale;
 
         let stroke = 14 / scale;
 
@@ -114,8 +114,8 @@ export function scout(context: Context): Scout {
         return is_point_in_stroke;
     }
 
-    function isPointInShape2(shape: ShapeView, point: PageXY, scale?: number): boolean {
-        const d = getPathOnPageStringCustomOffset(shape, 1 / (scale || context.workspace.matrix.m00));
+    function isPointInShape2(shape: ShapeView, point: PageXY): boolean {
+        const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
@@ -147,7 +147,7 @@ export function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth }
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth, isPointInShapeForPreview }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

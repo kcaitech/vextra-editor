@@ -3,11 +3,12 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { Matrix, PageView, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { finderShape, getFrameList } from '@/utils/preview';
+import { finderShape, getFrameList, selectShapes } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 import { Selection } from '@/context/selection';
+import ControlsView from './PreviewControls/ControlsView.vue';
 
 const props = defineProps<{
     context: Context
@@ -317,10 +318,9 @@ function search(e: MouseEvent) {
     const matrix = new Matrix(viewUpdater.v_matrix);
     const { x, y } = preview.value.getBoundingClientRect();
     matrix.multiAtLeft(shapes.matrix2Root());
-    const xy = matrix.computeCoord2(e.clientX - x, e.clientY - y);
-
+    const xy = { x: e.clientX - x, y: e.clientY - y };
     const shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
-
+    selectShapes(props.context, shape);
 }
 
 const closeMenu = () => {
@@ -340,31 +340,6 @@ const viewUpdater = new ViewUpdater(props.context);
 
 const is_overlay = ref(true);
 
-const __path = ref<string>('');
-
-/**
- * @description 获取Shape到Preview视口下一级的坐标系
- */
-function getPreviewMatrix(shape: ShapeView) {
-    const m = shape.matrix2Parent();
-    let p = shape.parent;
-    while (p && p.type !== ShapeType.Page) {
-        m.multiAtLeft(p.matrix2Parent());
-        p = p.parent;
-    }
-    return m;
-}
-
-function getTestPath() {
-    const shape = props.context.selection.selectedShapes[0].childs[0];
-    const path = shape.getPath().clone();
-    const m = getPreviewMatrix(shape);
-    m.multiAtLeft(viewUpdater.v_matrix.clone());
-    path.transform(m)
-    __path.value = path.toString();
-}
-
-(window as any).__test = getTestPath;
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
@@ -394,26 +369,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-              :context="context" :shapes="[cur_shape]"/>
-    <div class="toggle" v-if="listLength">
-        <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
+            :context="context" :shapes="[cur_shape]" />
+        <div class="toggle" v-if="listLength">
+            <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow"></svg-icon>
+            </div>
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"></svg-icon>
-        </div>
+        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+        <ControlsView :context="context" :matrix="viewUpdater.v_matrix"></ControlsView>
+        <div class="overlay" v-if="is_overlay"></div>
     </div>
-    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-    <div class="overlay" v-if="is_overlay"></div>
-    <svg x="0" y="0" height="10" width="10" viewBox="0 0 10 10" overflow="visible"
-         style="position: absolute; left: 0; top: 0; background-color: red">
-        <path v-if="__path" :d="__path" stroke="blue" fill="transparent" stroke-width="6"/>
-    </svg>
-</div>
 </template>
 
 <style scoped lang="scss">

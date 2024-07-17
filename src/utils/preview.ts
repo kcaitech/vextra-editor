@@ -157,8 +157,11 @@ export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], ho
         if (!item.isVisible) {
             continue;
         }
-
-        if (!scout.isPointInShape(item, hot, matrix)) {
+        const path = item.getPath().clone();
+        const m = getPreviewMatrix(item);
+        m.multiAtLeft(matrix.clone());
+        path.transform(m);
+        if (!scout.isPointInShapeForPreview(item, hot, path.toString(), matrix)) {
             continue;
         }
 
@@ -185,5 +188,28 @@ export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], ho
         if (result) {
             return result;
         }
+    }
+}
+
+/**
+ * @description 获取Shape到Preview视口下一级的坐标系
+ */
+export function getPreviewMatrix(shape: ShapeView) {
+    const m = shape.matrix2Parent();
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        m.multiAtLeft(p.matrix2Parent());
+        p = p.parent;
+    }
+    return m;
+}
+
+export function selectShapes(context: Context, shapes: ShapeView | undefined) {
+    const hoveredShape = shapes;
+    const selection = context.selection;
+    if (hoveredShape) {
+        selection.hoverShape(hoveredShape);
+    } else {
+        selection.unHoverShape();
     }
 }
