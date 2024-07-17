@@ -172,8 +172,6 @@ function updateComps() {
 
 updateComps()
 
-console.log('__comps__', _comps.value);
-
 const devcomps = shallowRef<{ component: any, params?: any }[]>([])
 
 function updateDevComps() {
@@ -237,24 +235,24 @@ updateDevComps()
     }
 
     &::-webkit-scrollbar {
-        width: 0px;
-        height: 0px;
+        width: 0;
+        height: 0;
     }
 
     &::-webkit-scrollbar-track {
-        background-color: none;
+        background-color: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: none;
+        background-color: transparent;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-        background-color: none;
+        background-color: transparent;
     }
 
     &::-webkit-scrollbar-thumb:active {
-        background-color: none;
+        background-color: transparent;
     }
 }
 </style>

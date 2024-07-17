@@ -163,6 +163,11 @@ export function useCutout(context: Context) {
     __add_status_for_create(context);
 }
 
+export function useMask(context: Context) {
+    console.log('__创建蒙版__');
+
+}
+
 /**
  * @description 使用连接线工具
  */
