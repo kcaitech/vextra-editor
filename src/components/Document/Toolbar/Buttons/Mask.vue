@@ -5,6 +5,7 @@ import { Context } from '@/context';
 import { debounce } from "lodash";
 import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from "@/context/selection";
+import { useMask } from "@/components/Document/Creator/execute";
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -14,8 +15,7 @@ const props = defineProps<{
 const disabled = ref<boolean>(!props.context.selection.selectedShapes.length);
 
 function mask() {
-    // mask
-    console.log('__MASK__');
+    useMask(props.context);
 }
 
 const statusUpdater = debounce((t: any) => {

@@ -1,48 +1,41 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { Matrix, ShapeType, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
-import { computed } from 'vue';
 
 interface Props {
-    view: number
-    shape: ShapeView
-    theme: string
-    icon: number
+    view: number;
+    shape: ShapeView;
+    theme: string;
 }
 
 const props = defineProps<Props>();
 const path = ref<string>('');
 const is_image = ref(false);
-const flex_abbr = computed<boolean>(() => {
-    return props.shape.isPathIcon;
-});
-const icon_class = computed<string>(() => {
-    return `layer-${props.shape.type}`;
-});
+const flex_abbr = ref<boolean>(true);
+const icon_class = ref<string>('');
 
-const update_icon = () => {
-    is_image.value = props.shape.isImageFill || false;
-    if(!is_image.value) {
-        getPath();
-    }
-};
+function updateIconClass() {
+    const s = props.shape;
+    if (s.isImageFill) return icon_class.value = "layer-image";
+    else if (s.mask) return icon_class.value = "layer-mask";
+    else return icon_class.value = `layer-${props.shape.type}`;
+}
+
 
 function getPath() {
-    if (!flex_abbr.value) {
-        return;
-    }
-    if (is_image.value) return;
     const shape = props.shape.data;
+    is_image.value = shape.getImageFill();
+    flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
+
+    if (!flex_abbr.value) return updateIconClass();
 
     const f = shape.frame;
     const m = new Matrix();
     m.trans(-f.width / 2, -f.height / 2);
     if (!props.shape.isNoTransform()) {
         if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
-        // if (shape.isFlippedHorizontal) m.flipHoriz();
-        // if (shape.isFlippedVertical) m.flipVert();
     }
     const box = XYsBounding(
         [
@@ -71,25 +64,18 @@ function getPath() {
     path.value = _path.toString();
 }
 
-const e = watch(() => props.view, getPath);
-const update = watch(() => props.icon, update_icon);
-onMounted(() => {
-    update_icon();
-    getPath();
-});
-onUnmounted(() => {
-    e();
-    update();
-});
+const stop = watch(() => props.view, getPath);
+onMounted(getPath);
+onUnmounted(stop);
 </script>
 <template>
-    <div class="abbr-container">
-        <svg v-if="flex_abbr && !is_image" viewBox="-12 -12 124 124">
-            <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
-        </svg>
-        <svg-icon v-else-if="is_image" icon-class="layer-image" :fill="theme" :stroke="theme"></svg-icon>
-        <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
-    </div>
+<div class="abbr-container">
+    <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
+        <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"/>
+    </svg>
+    <svg-icon v-else-if="is_image" icon-class="layer-image" :fill="theme" :stroke="theme"></svg-icon>
+    <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
+</div>
 </template>
 <style scoped lang="scss">
 .abbr-container {
@@ -98,7 +84,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
 
-    >svg {
+    > svg {
         width: 13px;
         height: 13px;
     }

@@ -164,8 +164,11 @@ export function useCutout(context: Context) {
 }
 
 export function useMask(context: Context) {
-    console.log('__创建蒙版__');
+    const page = context.selection.selectedPage!
+    const shapes = context.selection.selectedShapes;
 
+    const editor = context.editor4Page(page);
+    editor.makeMask(shapes);
 }
 
 /**
