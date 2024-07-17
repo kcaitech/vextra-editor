@@ -746,7 +746,7 @@ const createAction = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
-    const Action = new BasicArray<PrototypeActions>(new PrototypeActions(v4(), PrototypeConnectionType.NONE))
+    const Action = new BasicArray<PrototypeActions>(new PrototypeActions(new BasicArray() ,v4(), PrototypeConnectionType.NONE))
     Action[0].transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction([] as unknown as BasicArray<number>, id, Event, Action));
@@ -857,7 +857,7 @@ function update_by_shapes(...args: any[]) {
     reflush.value++;
 }
 
-function selection_watcher(t: number) {
+function selection_watcher(t: number | string) {
     if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
