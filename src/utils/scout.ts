@@ -13,6 +13,7 @@ import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
 import { IScout as Scout } from "@/openapi";
+
 export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
@@ -39,6 +40,37 @@ export function scout(context: Context): Scout {
         path.setAttributeNS(null, 'd', d);
 
         const scale = matrix?.m00 || context.workspace.curScale;
+
+        let stroke = 14 / scale;
+
+        let isClosed = true;
+
+        if ((shape as PathShapeView)?.segments?.length) {
+            const segments = (shape as PathShapeView).segments;
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].isClosed) {
+                    isClosed = false;
+                    break;
+                }
+            }
+        }
+
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+
+        if (isClosed) {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        } else {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        }
+    }
+
+    function isPointInShapeForPreview(shape: ShapeView, point: XY, d: string, matrix: Matrix): boolean {
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
+
+        path.setAttributeNS(null, 'd', d);
+
+        const scale = matrix.m00;
 
         let stroke = 14 / scale;
 
