@@ -127,6 +127,7 @@ const selectionWatcher = (t: number | string) => {
             return;
         }
         page_watcher();
+        watch_shapes();
     }
 }
 
@@ -346,12 +347,35 @@ function startLoop() {
     }
 }
 
+const shapeChange = (...args: any[]) => {
+    page_watcher();
+}
+
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(shapeChange);
+        watchedShapes.delete(k);
+    })
+
+    const selectedShapes = props.context.selection.selectedShapes;
+    selectedShapes.forEach((v) => {
+        v.watch(shapeChange);
+        watchedShapes.set(v.id, v)
+    });
+}
+
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
-
+    watch_shapes();
     // 等cur_shape触发pageCard的挂载
     page_watcher();
+    nextTick(() => {
+        // 然后初始化视图渲染管理器
+        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
+    })
+
     if (preview.value) {
         observer.observe(preview.value);
     }
@@ -366,6 +390,9 @@ onUnmounted(() => {
 
     viewUpdater.atTarget();
     viewUpdater.atPage();
+    watchedShapes.forEach(v => {
+        v.unwatch(shapeChange);
+    });
 
     const dom = props.context.getPageDom(props.page);
     if (dom) {
@@ -377,23 +404,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-              :context="context" :shapes="[cur_shape]" @start-loop="startLoop"/>
-    <div class="toggle" v-if="listLength">
-        <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
+            :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+        <div class="toggle" v-if="listLength">
+            <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow"></svg-icon>
+            </div>
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"></svg-icon>
-        </div>
+        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+        <ControlsView :context="context" :matrix="viewUpdater.v_matrix"></ControlsView>
+        <div class="overlay" v-if="is_overlay"></div>
     </div>
-    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-    <ControlsView :context="context" :matrix="viewUpdater.v_matrix"></ControlsView>
-    <div class="overlay" v-if="is_overlay"></div>
-</div>
 </template>
 
 <style scoped lang="scss">
