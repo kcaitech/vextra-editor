@@ -16,7 +16,6 @@ const props = defineProps<{
     showTop: boolean
 }>();
 type PCard = InstanceType<typeof PageCard>
-const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
 const cur_shape = ref<ShapeView>();
 const listLength = ref(0);
@@ -340,17 +339,19 @@ const viewUpdater = new ViewUpdater(props.context);
 
 const is_overlay = ref(true);
 
+function startLoop() {
+    const dom = props.context.getPageDom(props.page);
+    if (dom && pageCard.value?.pageSvg) {
+        dom.ctx.loop(window.requestAnimationFrame);
+    }
+}
+
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
 
     // 等cur_shape触发pageCard的挂载
     page_watcher();
-    nextTick(() => {
-        // 然后初始化视图渲染管理器
-        viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
-    })
-
     if (preview.value) {
         observer.observe(preview.value);
     }
@@ -365,27 +366,34 @@ onUnmounted(() => {
 
     viewUpdater.atTarget();
     viewUpdater.atPage();
+
+    const dom = props.context.getPageDom(props.page);
+    if (dom) {
+        dom.ctx.stopLoop();
+        dom.ctx.updateFocusShape(undefined);
+        dom.dom.unbind();
+    }
 })
 </script>
 
 <template>
-    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-        <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-            :context="context" :shapes="[cur_shape]" />
-        <div class="toggle" v-if="listLength">
-            <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
-                <svg-icon icon-class="left-arrow"></svg-icon>
-            </div>
-            <div class="page">{{ curPage }} / {{ listLength }}</div>
-            <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
-                <svg-icon icon-class="right-arrow"></svg-icon>
-            </div>
+<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+    <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
+              :context="context" :shapes="[cur_shape]" @start-loop="startLoop"/>
+    <div class="toggle" v-if="listLength">
+        <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
+            <svg-icon icon-class="left-arrow"></svg-icon>
         </div>
-        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-        <ControlsView :context="context" :matrix="viewUpdater.v_matrix"></ControlsView>
-        <div class="overlay" v-if="is_overlay"></div>
+        <div class="page">{{ curPage }} / {{ listLength }}</div>
+        <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
+            <svg-icon icon-class="right-arrow"></svg-icon>
+        </div>
     </div>
+    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+    <ControlsView :context="context" :matrix="viewUpdater.v_matrix"></ControlsView>
+    <div class="overlay" v-if="is_overlay"></div>
+</div>
 </template>
 
 <style scoped lang="scss">

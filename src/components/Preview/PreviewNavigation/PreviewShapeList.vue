@@ -255,18 +255,6 @@ const listUpdate = (...args: any[]) => {
     }
     update();
 }
-// let stopPassiveUpdate: any = null;
-//
-// function passiveUpdate() {
-//     let timer: any = setInterval(() => {
-//         update();
-//     }, 30000);
-//
-//     return () => {
-//         clearInterval(timer);
-//         timer = null;
-//     }
-// }
 
 const stopWatch = watch(() => props.page, (value, old) => {
     old?.unwatch(listUpdate);
@@ -275,7 +263,6 @@ const stopWatch = watch(() => props.page, (value, old) => {
 
 onMounted(() => {
     update();
-    // stopPassiveUpdate = passiveUpdate();
     props.page.watch(listUpdate);
     props.context.selection.watch(previewWatcher);
     props.context.navi.watch(navi_watcher);
@@ -286,7 +273,6 @@ onUnmounted(() => {
     props.context.selection.watch(previewWatcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
-    // stopPassiveUpdate();
 });
 
 </script>
