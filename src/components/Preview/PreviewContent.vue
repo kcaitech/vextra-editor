@@ -10,6 +10,9 @@ import { ViewUpdater } from "@/components/Preview/viewUpdater";
 import { Selection } from '@/context/selection';
 import ControlsView from './PreviewControls/ControlsView.vue';
 
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
     page: PageView
@@ -118,10 +121,15 @@ const previewWatcher = (t: number | string, s?: boolean) => {
     }
 }
 
-const selectionWatcher = (t: number | string) => {
-    if (t === Selection.CHANGE_PAGE) {
+const selectionWatcher = (v: number | string) => {
+    if (v === Selection.CHANGE_PAGE) {
         changePage();
-    } else if (t === Selection.CHANGE_SHAPE) {
+    } else if (v === Selection.CHANGE_SHAPE) {
+        if (!props.context.selection.selectedShapes.length) {
+            ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
+            props.context.selection.selectShape(undefined);
+        }
+        watch_shapes();
         if (!viewUpdater.pageCard?.pageSvg || !viewUpdater.currentPage) {
             changePage();
             return;
@@ -347,8 +355,11 @@ function startLoop() {
     }
 }
 
+
 const shapeChange = (...args: any[]) => {
-    page_watcher();
+    if (args.includes('layout')) {
+        page_watcher();
+    }
 }
 
 const watchedShapes = new Map<string, ShapeView>(); // 图层监听
@@ -372,6 +383,7 @@ onMounted(() => {
     // 等cur_shape触发pageCard的挂载
     page_watcher();
     nextTick(() => {
+        watch_shapes();
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
     })

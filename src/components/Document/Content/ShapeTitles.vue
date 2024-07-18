@@ -39,6 +39,8 @@ function selectionWatcher(t: number | string) {
 
 const rename = (value: string, shape: ShapeView) => {
     props.context.editor4Shape((shape)).setName(value)
+    props.context.selection.unHoverShape();
+    props.context.selection.hoverShape(shape);
 }
 
 function hover(shape: ShapeView) {
