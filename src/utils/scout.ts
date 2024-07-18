@@ -4,6 +4,7 @@ import {
     GroupShapeView,
     Matrix,
     PathShapeView,
+    Shape,
     ShapeType,
     ShapeView,
     SymbolRefView
@@ -21,6 +22,14 @@ export interface Scout {
     isPointInStrokeByWidth: (d: string, point: PageXY, width: number) => boolean
     isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
+export interface Scout2 {
+    path: SVGPathElement
+    remove: () => void
+    isPointInShape: (shape: ShapeView | Shape, point: PageXY, matrix: Matrix) => boolean
+    isPointInPath: (d: string, point: PageXY) => boolean
+    isPointInStroke: (d: string, point: PageXY) => boolean
+    isPointInShape2: (shape: ShapeView, point: PageXY, matrix: Matrix) => boolean
+}
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -37,7 +46,7 @@ export function scout(context: Context): Scout {
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(shape: ShapeView, point: PageXY): boolean {
+    function isPointInShape(shape: ShapeView, point: PageXY, scale?: number): boolean {
         const d = getPathOnPageString(shape);
 
         SVGPoint.x = point.x;
@@ -45,9 +54,9 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        const scale = context.workspace.matrix.m00;
+        const s = scale || context.workspace.matrix.m00;
 
-        let stroke = 14 / scale;
+        let stroke = 14 / s;
 
         let isClosed = true;
 
@@ -89,8 +98,8 @@ export function scout(context: Context): Scout {
         return is_point_in_stroke;
     }
 
-    function isPointInShape2(shape: ShapeView, point: PageXY): boolean {
-        const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
+    function isPointInShape2(shape: ShapeView, point: PageXY, scale?: number): boolean {
+        const d = getPathOnPageStringCustomOffset(shape, 1 / (scale || context.workspace.matrix.m00));
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
@@ -126,6 +135,84 @@ export function scout(context: Context): Scout {
     return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth }
 }
 
+export function scout2(): Scout2 {
+    let temp = uuid().split('-');
+    const scoutId = temp[temp.length - 1] || 'scout';
+    temp = uuid().split('-');
+    const pathId = temp[temp.length - 1] || 'path';
+    const ele: SVGElement = createSVGGeometryElement(scoutId);
+    const path = createPath('M 0 0 l 2 0 l 2 2 l -2 0 z', pathId); // 任意初始化一条path
+    ele.appendChild(path);
+    document.body.appendChild(ele);
+
+    // 任意初始化一个point
+    const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
+
+    function isPointInShape(shape: ShapeView | Shape, point: PageXY, matrix: Matrix): boolean {
+        const _path = shape.getPath().clone();
+        const m2page = shape.matrix2Root();
+        m2page.multiAtLeft(matrix);
+        console.log(m2page, 'm2page');
+        
+        _path.transform(m2page);
+        const d = _path.toString();
+
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
+
+        path.setAttributeNS(null, 'd', d);
+
+        let stroke = 14 / matrix.m00;
+
+        let isClosed = true;
+
+        if ((shape as PathShapeView)?.segments?.length) {
+            const segments = (shape as PathShapeView).segments;
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].isClosed) {
+                    isClosed = false;
+                    break;
+                }
+            }
+        }
+
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        // if (isClosed) {
+        //     return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        // } else {
+        //     return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        // }
+    }
+    function isPointInShape2(shape: ShapeView, point: PageXY, matrix: Matrix): boolean {
+        const d = getPathOnPageStringCustomOffset(shape, 1 / matrix.m00);
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+    }
+
+    function isPointInPath(d: string, point: XY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        path.setAttributeNS(null, 'd', d);
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+    }
+
+    function isPointInStroke(d: string, point: XY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        path.setAttributeNS(null, 'stroke-width', '14');
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+    }
+
+    function remove() { // 把用于比对的svg元素从Dom树中去除
+        const s = document.querySelector(`[id="${scoutId}"]`);
+        if (s) document.body.removeChild(s);
+    }
+
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
+}
+
 function createSVGGeometryElement(id: string): SVGElement {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); // 任意初始一个svg图形
     svg.setAttribute('width', '10');
@@ -140,7 +227,7 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-export function getPathOnPageString(shape: ShapeView): string { // path坐标系：页面
+export function getPathOnPageString(shape: ShapeView | Shape): string { // path坐标系：页面
     const path = shape.getPath().clone();
     const m2page = shape.matrix2Root();
     path.transform(m2page);

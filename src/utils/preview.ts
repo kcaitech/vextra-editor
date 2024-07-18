@@ -1,8 +1,10 @@
 import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { PageView, ShapeType } from "@kcdesign/data";
+import { Matrix, PageView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
+import { PageXY } from "@/context/selection";
+import { Scout2 } from "./scout";
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
     if (!page) return;
@@ -147,4 +149,44 @@ export const selectedShape = (ctx: Context, page: PageView, t: Function) => {
     }
     ctx.preview.selectShape(list[0]);
     ctx.preview.updateUrl();
+}
+
+
+export function finderShape(matrix: Matrix, scout: Scout2, scope: (Shape | ShapeView)[], hot: PageXY, container: HTMLDivElement): Shape | ShapeView | undefined {
+    let result: Shape | ShapeView | undefined = undefined;
+    for (let i = scope.length - 1; i > -1; i--) {
+        const item = scope[i];
+        
+        if (!item.isVisible) {
+            continue;
+        }
+   
+        if (!scout.isPointInShape(item, hot, matrix)) {
+            continue;
+        }
+
+        if (item.type === ShapeType.Table) {
+            return item;
+        }
+
+        const children = item.type === ShapeType.SymbolRef ? (item.naviChilds || []) : ((item as any)?.childs || []);
+        if (!children.length) {
+            return item;
+        } else {
+            result = finderShape(matrix, scout, children, hot, container);
+            const background =
+                item.type === ShapeType.Artboard
+                || item.type == ShapeType.Symbol
+                || item.type === ShapeType.SymbolUnion
+                || item.type === ShapeType.SymbolRef;
+
+            if (!result && background) {
+                return item;
+            }
+        }
+
+        if (result) {
+            return result;
+        }
+    }
 }
