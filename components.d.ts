@@ -202,6 +202,7 @@ declare module '@vue/runtime-core' {
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']
     NetworkError: typeof import('./src/components/NetworkError.vue')['default']
     Opacity: typeof import('./src/components/Document/Attribute/Opacity/Opacity.vue')['default']
+    Origin: typeof import('./src/components/Document/Attribute/Prototype/Origin.vue')['default']
     Overview: typeof import('./src/components/Document/Content/Overview.vue')['default']
     PageBackgorund: typeof import('./src/components/Document/Attribute/PageBackgorund.vue')['default']
     PageCard: typeof import('./src/components/common/PageCard.vue')['default']

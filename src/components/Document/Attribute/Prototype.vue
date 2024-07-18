@@ -1,8 +1,8 @@
 <template>
     <div class="container">
         <el-scrollbar height="100%">
-            <div v-if="isProtoType?.length">
-                <div v-if="isProtoType.length < 2" class="origin">
+            <div v-if="isProtoType.size">
+                <div v-if="isProtoType.size === 1" class="origin">
                     <div class="title" @click.stop=createOrigin>
                         <div class="text" :class="{ active: prototypestart }">流程起点</div>
                         <div v-if="!prototypestart" class="add">
@@ -31,14 +31,19 @@
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
 
-                        <div class="actions-item" v-for="action in prototypeinteraction" :key="action.id">
+                        <div class="actions-item" v-for="action in  prototypeinteraction " :key="action.id">
                             <div class="item">
                                 <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }"
                                     @click.stop="showhandel(action.id)">
                                     <svg-icon icon-class="arrows-dr"></svg-icon>
                                 </div>
-                                <div class="item-content">{{ trigger.find(item => item.data.value ===
-                action.event.interactionType)?.data.content }}</div>
+                                <div class="item-content">
+                                    <span>{{ event.get(action.event.interactionType) }}</span>
+                                    <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
+                                        <svg-icon :icon-class="actions.find(item => item.data.value === action.actions.connectionType &&
+                item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
+                                    </div>
+                                </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
                                     <svg-icon icon-class="delete"></svg-icon>
                                 </div>
@@ -57,11 +62,11 @@
                                 </div>
                                 <div class="action">
                                     <span>动作</span>
-                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions[0].connectionType &&
-                item.data.type === action.actions[0].navigationType)?.data"
+                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
+                item.data.type === action.actions.navigationType)?.data"
                                         @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SWAPSTATE"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SWAPSTATE"
                                     class="component-status">
                                     <div class="state" v-for="i in variables" :key="i.variable.id">
                                         <span>{{ i.variable.name }}：</span>
@@ -70,12 +75,12 @@
             }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
                                     </div>
                                 </div>
-                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.INTERNALNODE"
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE"
                                     class="target">
                                     <span>目标</span>
                                     <div class="targetname" @click.stop="test(action.id)">
-                                        <span :style="{ color: action.actions[0].targetNodeID ? '#000' : '#c8c8c8' }">{{
-                getTargetNodeName(action.actions[0].targetNodeID) ?? '请选择容器' }}</span>
+                                        <span :style="{ color: action.actions.targetNodeID ? '#000' : '#c8c8c8' }">{{
+                getTargetNodeName(action.actions.targetNodeID) ?? '请选择容器' }}</span>
                                         <div class="svg-wrap">
                                             <svg-icon icon-class="down"></svg-icon>
                                         </div>
@@ -90,7 +95,7 @@
                                             <div class="item" v-for="shape in DomList" :key="shape.id"
                                                 @click.stop="selectTargetNode(action.id, shape.id)">
                                                 <svg-icon
-                                                    :style="{ visibility: action.actions[0].targetNodeID === shape.id ? 'visible' : 'hidden' }"
+                                                    :style="{ visibility: action.actions.targetNodeID === shape.id ? 'visible' : 'hidden' }"
                                                     :icon-class="'be70ff3e-5c87-4ddc-90b9-13ae648a20f31' === shape.id ? 'white-select' : 'page-select'"></svg-icon>
                                                 <span>{{ shape.name }}</span>
 
@@ -98,44 +103,58 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SCROLLTO"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
                                     class="retract">
                                     <span>缩进</span>
-                                    <div class="retract-y"></div>
-                                    <div class="retract-x"></div>
+                                    <div class="retract-y">
+                                        <svg-icon icon-class="indent_Y"></svg-icon>
+                                        <input class="indent" type="text"
+                                            :value="action.actions.extraScrollOffset?.y ?? 0"
+                                            @change="setExtraScrollOffsetY(action.id)">
+                                    </div>
+                                    <div class="retract-x">
+                                        <svg-icon icon-class="indent_X"></svg-icon>
+                                        <input class="indent" type="text"
+                                            :value="action.actions.extraScrollOffset?.x ?? 0"
+                                            @change="setExtraScrollOffsetX(action.id)">
+                                    </div>
                                 </div>
-                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.URL"
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.URL"
                                     class="link">
                                     <span>链接</span>
                                     <input v-select ref="connectionURL" type="text" placeholder="输入链接地址"
-                                        :value="action.actions[0].connectionURL"
+                                        :value="action.actions.connectionURL"
                                         @change="setPrototypeActionURL(action.id)">
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.OVERLAY"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
                                     class="set-float">
                                     <span>浮层设置</span>
                                     <div class="content">
                                         <div class="position">
-                                            <div v-for="i in 9" :key="i"></div>
+                                            <div v-for="i in  OverlayPositions " :key="i"
+                                                :class="{ 'ptactive': getPosition(action.id, action.actions.targetNodeID!) === i }"
+                                                @click.stop="setOverlayPositionType(action.actions.targetNodeID!, i)">
+                                            </div>
                                         </div>
                                         <div class="margin">
-                                            <div v-for="i in 4" :key="i"></div>
+                                            <div v-for=" i  in  4 " :key="i"></div>
                                         </div>
                                     </div>
                                     <div class="checkbox">
-                                        <input type="checkbox" id="closetab">
+                                        <input type="checkbox" id="closetab" v-model="overlayclose"
+                                            @change="setOverlayBackgroundInteraction(action.actions.targetNodeID!)">
                                         <label for="closetab">点击浮层外关闭浮层</label>
                                     </div>
                                     <div class="checkbox">
                                         <input type="checkbox" id="color" v-model="addmask"
-                                            @change="checkTarget($event)">
+                                            @change="setOverlayBackgroundAppearance(action.actions.targetNodeID!)">
                                         <label for="color">在浮层后添加遮罩</label>
                                     </div>
-                                    <div v-if="addmask" class="setting">
+                                    <div v-if="addmask || getBackgroundType(action.actions.targetNodeID!)"
+                                        class="setting">
                                         <ColorPicker class="color" :color="(background_color as Color)"
                                             :context="props.context" :auto_to_right_line="true"
-                                            @change="c => colorChangeFromPicker(c)">
-                                        </ColorPicker>
+                                            @change="c => colorChangeFromPicker(c)"></ColorPicker>
                                         <input v-select type="text" @change.stop="(e: Event) => change_c(e)"
                                             :value="clr_v" id="clr" ref="clr_ele" @click="clr_click" :spellcheck="false"
                                             @blur="is_color_select = false">
@@ -145,39 +164,48 @@
                                     </div>
 
                                 </div>
-                                <div v-if="action.actions[0].connectionType === 'INTERNAL_NODE'" class="set-animation">
+                                <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
                                     <span>动画设置</span>
                                     <div class="wrapper">
-                                        <div class="container">
-                                            <div class="containerA">A</div>
-                                            <div class="containerB">B</div>
+                                        <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
+                                        </div>
+                                        <div class="container"
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!)">
+                                            <div ref="ela" class="containerA" :style="tara ?? qsa">
+                                                A</div>
+                                            <div ref="elb" class="containerB" :style="tarb ?? qsb">
+                                                B</div>
                                             <div class="containerC"></div>
                                         </div>
                                     </div>
                                     <div class="animation">
                                         <span>动画</span>
                                         <Select class="select" id="select" :visibility="true" :source="animation"
-                                            :selected="animation.find(item => action.actions[0].transitionType?.includes(item.data.value as string))?.data"
-                                            @select="setPrototypeActionTransition(action.id)"></Select>
+                                            :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
+                                            @select="setPrototypeActionTransition($event, action.id)"></Select>
                                     </div>
-                                    <div v-if="action.actions[0].transitionType?.split('_').findLast(d=>['left','right','top','bottom'].includes(d.toLowerCase()))" class="direction">
+                                    <div v-if="action.actions.transitionType?.split('_').findLast(d => ['left', 'right', 'top', 'bottom'].includes(d.toLowerCase()))"
+                                        class="direction">
                                         <div class="content">
-                                            <div class="icon" :class="{ 'select-item': action.actions[0].transitionType?.split('_')[3] === i }"
-                                                v-for=" i of Object.values(Direction)" :key="i"
-                                                @click.stop="selectitem = i">
+                                            <div class="icon"
+                                                :class="{ 'select-item': action.actions.transitionType?.split('_')[action.actions.transitionType?.split('_').length - 1].toLowerCase() === i }"
+                                                v-for="  i  of  Object.values(Direction) " :key="i"
+                                                @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i)">
                                                 <svg-icon :style="{ rotate: (`${setrotate.get(i)}` + 'deg') }"
                                                     icon-class="right-arrows"></svg-icon>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="action.actions[0].transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
+                                    <div v-if="action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
                                         class="effect">
                                         <span>效果</span>
                                         <Select class="select" id="select" :minwidth="100" :visibility="true"
                                             :source="effect"
-                                            :selected="effect.find(item => item.id === 0)?.data"></Select>
+                                            :selected="effect.find(item => item.data.value === action.actions.easingType)?.data || effect.find(item => item.id === 0)?.data"
+                                            @select="setProtoTypeEasingType($event, action.id)"></Select>
                                         <input v-select ref="animationtimevalue" type="text" placeholder="时间"
-                                            @change="changeinputvalue" :value="'300ms'">
+                                            @change="setTransitionDuration(action.id)"
+                                            :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
                                     </div>
                                 </div>
                             </div>
@@ -192,9 +220,10 @@
                         :selected="overflowRoll.find(i => i.id === 0)?.data"></Select>
                 </div>
             </div>
-            <div v-else>
-                <span class="tips">交互</span>
+            <div v-else class="tips">
+                <span>交互</span>
             </div>
+            <Origin :context=props.context :prototypestart=prototypestart @createorigin=createOrigin></Origin>
         </el-scrollbar>
     </div>
 </template>
@@ -208,7 +237,7 @@ import { debounce, throttle } from 'lodash';
 import { flattenShapes } from '@/utils/cutout';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, HtmlHTMLAttributes, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, StyleHTMLAttributes, StyleValue, toRef, watch } from 'vue';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -222,9 +251,22 @@ import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { debounce as d } from "@/utils/timing_util";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
-import { PrototypeStartingPoint, ArtboradView, PrototypeInterAction, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType } from '@kcdesign/data';
+import Origin from "./Prototype/Origin.vue"
+import {
+    PrototypeStartingPoint,
+    ArtboradView,
+    PrototypeInterAction,
+    PrototypeActions,
+    PrototypeConnectionType,
+    PrototypeNavigationType,
+    PrototypeEasingType,
+    // PrototypeEasingfunction,
+    OverlayPositions,
+    OverlayBackgroundInteraction,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundType
+} from '@kcdesign/data';
 import { v4 } from 'uuid';
-
 
 const background_color = ref(new Color(1, 239, 239, 239));
 const alpha_v = ref<number>(100);
@@ -236,31 +278,12 @@ const is_alpha_select = ref(false);
 const addmask = ref<boolean>(false)
 
 
-//检测浮层设置是否已有目标
-const checkTarget = (e: Event) => {
-    if (selectshape.value === '') {
-        addmask.value = false
-        return
-    }
-}
-
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
 }
 
-const _colorChangeFromPicker = d((c: Color) => {
-    // const page = props.context.selection.selectedPage;
-    // if (!page) return;
-    // const editor = props.context.editor4Page(page);
-    // editor.setBackground(c);
-    background_color.value = c
-    clr_v.value = toHex(c.red, c.green, c.blue)
-}, 100)
-const colorChangeFromPicker = (c: Color) => {
-    _colorChangeFromPicker(c).catch((e) => {
-    });
-};
+
 
 function setColor(clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
@@ -285,9 +308,9 @@ function change_c(e: Event) {
     } else {
         message('danger', t('system.illegal_input'));
     }
-    nextTick(() => {
-        clr_ele.value?.blur()
-    })
+    // nextTick(() => {
+    //     clr_ele.value?.blur()
+    // })
 }
 
 function change_a(e: Event) {
@@ -339,32 +362,6 @@ enum overflowRollType {
     HorAndVer = 'horandver'
 }
 
-enum Actions {
-    JumpPage = 'jump-page',
-    ReturnPage = 'return-page',
-    PageScroll = 'page-scroll',
-    OpenLink = 'open-link',
-    ComponentState = 'component-state',
-    OpenFloatLayer = 'open-float-layer',
-    CloseFloatLayer = 'close-float-layer',
-    ChangeFloatLayer = 'change-float-layer'
-
-}
-
-
-enum Trigger {
-    Click = 'click',
-    DBLClick = 'dbl-click',
-    RightClick = 'right-click',
-    Drag = 'drag',
-    Hover = 'hover',
-    MouseEnter = 'mouse-enter',
-    MouseLeave = 'mouse-leave',
-    MouseDown = 'mouse-down',
-    MouseUp = 'mouse-up',
-    Delay = 'delay'
-}
-
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',
     DISSOLVE = 'DISSOLVE',
@@ -375,19 +372,9 @@ enum Animation {
     PUSH = 'PUSH'
 }
 
-enum Effect {
-    LinearGradient = 'linear-gradient',
-    SlowIn = 'slow-in',
-    SlowOut = 'slow-out',
-    SlowInOut = 'slow-in-out',
-    SpringbackStart = 'springback-start',
-    SpringbackEnd = 'springback-end',
-    SpringbackStartEnd = 'springback-start-end'
-}
-
 enum Direction {
-    Right = 'right',
     Left = 'left',
+    Right = 'right',
     TOP = 'top',
     Bottom = 'bottom'
 }
@@ -428,37 +415,21 @@ const prototypeinteraction = ref<PrototypeInterAction[]>()
 const aftertimeout = ref<HTMLInputElement[]>()
 const connectionURL = ref<HTMLInputElement[]>()
 const DomList = ref<ShapeView[]>([])
-const regex = /^(\d+)/
-const changeinputvalue = () => {
+const direction = ref<string>('')
+const overlayclose = ref<boolean>(false)
 
-    const value = animationtimevalue.value![0].value
 
-    const maxvalue = (v: number) => {
-        return v <= 20000 ? v : 20000
-    }
 
-    if (Number(value)) {
-        animationtimevalue.value![0].value = maxvalue(Number(value)) + 'ms'
-    } else {
-        if (value.match(regex) !== null) {
-            const str = value.match(regex)
-            animationtimevalue.value![0].value = maxvalue(Number(str![1])) + 'ms'
-        } else {
-            animationtimevalue.value![0].value = '1ms'
-        }
-    }
 
-    animationtimevalue.value![0].blur()
-}
 
 const setrotate = new Map()
 
 for (let i of Object.values(Direction)) {
     switch (i) {
-        case 'right':
+        case 'left':
             setrotate.set(i, 180)
             break;
-        case 'left':
+        case 'right':
             setrotate.set(i, 0)
             break;
         case 'top':
@@ -492,6 +463,20 @@ const trigger: SelectSource[] = genOptions([
     [PrototypeEvents.AFTERTIMEOUT, '延迟'],
 ])
 
+const event = new Map([
+    [PrototypeEvents.ONCLICK, '单击'],
+    [PrototypeEvents.DBCLICK, '双击'],
+    [PrototypeEvents.RIGHTCLICK, '右键'],
+    [PrototypeEvents.DRAG, '拖拽'],
+    [PrototypeEvents.HOVER, '悬停'],
+    [PrototypeEvents.MOUSEENTER, '光标移入'],
+    [PrototypeEvents.MOUSELEAVE, '光标移出'],
+    [PrototypeEvents.MOUSEDOWN, '按下鼠标'],
+    [PrototypeEvents.MOUSEUP, '松开鼠标'],
+    [PrototypeEvents.AFTERTIMEOUT, '延迟'],
+])
+
+
 const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.NONE, '无'],
     [PrototypeConnectionType.INTERNALNODE, '跳转页面', 'jump-page', PrototypeNavigationType.NAVIGATE],
@@ -502,6 +487,15 @@ const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.INTERNALNODE, '打开浮层', 'open-float-layer', PrototypeNavigationType.OVERLAY],
     [PrototypeConnectionType.CLOSE, '关闭浮层', 'close-float-layer'],
     [PrototypeConnectionType.INTERNALNODE, '替换浮层', 'change-float-layer', PrototypeNavigationType.SWAP],
+])
+
+const icon = new Map([
+    [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
+    [PrototypeConnectionType.BACK, 'retrun-page'],
+    [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
+    [PrototypeConnectionType.URL, 'open-link'],
+    [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
+    [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
 ])
 
 const animation: SelectSource[] = genOptions([
@@ -515,13 +509,49 @@ const animation: SelectSource[] = genOptions([
 ])
 
 const effect: SelectSource[] = genOptions([
-    [Effect.LinearGradient, '线性渐变'],
-    [Effect.SlowIn, '缓入'],
-    [Effect.SlowOut, '缓出'],
-    [Effect.SlowInOut, '缓入缓出'],
-    [Effect.SpringbackStart, '后撤缓入'],
-    [Effect.SpringbackEnd, '停滞缓入'],
-    [Effect.SpringbackStartEnd, '弹性渐变']
+    [PrototypeEasingType.LINEAR, '线性渐变'],
+    [PrototypeEasingType.INCUBIC, '缓入'],
+    [PrototypeEasingType.OUTCUBIC, '缓出'],
+    [PrototypeEasingType.INOUTCUBIC, '缓入缓出'],
+    [PrototypeEasingType.INBACKCUBIC, '后撤缓入'],
+    [PrototypeEasingType.OUTBACKCUBIC, '停滞缓入'],
+    [PrototypeEasingType.INOUTBACKCUBIC, '弹性渐变']
+])
+
+const easingFn = new Map([
+    [PrototypeEasingType.LINEAR, [0, 0, 1, 1]],
+    [PrototypeEasingType.INCUBIC, [0.42, 0, 1, 1]],
+    [PrototypeEasingType.OUTCUBIC, [0, 0, 0.58, 1]],
+    [PrototypeEasingType.INOUTCUBIC, [0.42, 0, 0.58, 1]],
+    [PrototypeEasingType.INBACKCUBIC, [0.3, -0.05, 0.7, -0.5]],
+    [PrototypeEasingType.OUTBACKCUBIC, [0.45, 1.45, 0.8, 1]],
+    [PrototypeEasingType.INOUTBACKCUBIC, [0.7, -0.4, 0.4, 1.4]],
+])
+
+
+const animations = new Map([
+    [PrototypeTransitionType.INSTANTTRANSITION, '即时'],
+    [PrototypeTransitionType.DISSOLVE, '淡入淡出'],
+    [PrototypeTransitionType.MOVEFROMLEFT, '移入'],
+    [PrototypeTransitionType.MOVEFROMRIGHT, '移入'],
+    [PrototypeTransitionType.MOVEFROMTOP, '移入'],
+    [PrototypeTransitionType.MOVEFROMBOTTOM, '移入'],
+    [PrototypeTransitionType.MOVEOUTTOLEFT, '移出'],
+    [PrototypeTransitionType.MOVEOUTTORIGHT, '移出'],
+    [PrototypeTransitionType.MOVEOUTTOTOP, '移出'],
+    [PrototypeTransitionType.MOVEOUTTOBOTTOM, '移出'],
+    [PrototypeTransitionType.SLIDEFROMLEFT, '滑入'],
+    [PrototypeTransitionType.SLIDEFROMRIGHT, '滑入'],
+    [PrototypeTransitionType.SLIDEFROMTOP, '滑入'],
+    [PrototypeTransitionType.SLIDEFROMBOTTOM, '滑入'],
+    [PrototypeTransitionType.SLIDEOUTTOLEFT, '滑出'],
+    [PrototypeTransitionType.SLIDEOUTTORIGHT, '滑出'],
+    [PrototypeTransitionType.SLIDEOUTTOTOP, '滑出'],
+    [PrototypeTransitionType.SLIDEOUTTOBOTTOM, '滑出'],
+    [PrototypeTransitionType.PUSHFROMLEFT, '推入'],
+    [PrototypeTransitionType.PUSHFROMRIGHT, '推入'],
+    [PrototypeTransitionType.PUSHFROMTOP, '推入'],
+    [PrototypeTransitionType.PUSHFROMBOTTOM, '推入'],
 ])
 
 
@@ -534,7 +564,799 @@ function checktargetlist(e: MouseEvent) {
         showtargerlist.value = false
     }
 }
+const qsa = ref<StyleValue | null>()
+const qsb = ref<StyleValue | null>()
 
+const mba = ref<StyleValue | null>()
+const mbb = ref<StyleValue | null>()
+
+const tara = ref<StyleValue | null>()
+const tarb = ref<StyleValue | null>()
+
+const ela = ref<HTMLDivElement[]>()
+const elb = ref<HTMLDivElement[]>()
+
+let timer: any;
+
+
+let timer3: any
+const addstyle = () => {
+    if (timer3) clearTimeout(timer3)
+    timer3 = setTimeout(() => {
+        console.log('添加');
+        (ela.value![0] as HTMLDivElement).addEventListener("transitionend", change);
+        (elb.value![0] as HTMLDivElement).addEventListener("transitionend", change)
+        tarb.value = { ...qsb.value as object, ...mbb.value as object };
+        tara.value = { ...qsa.value as object, ...mba.value as object };
+        clearTimeout(timer3);
+        timer3 = null
+    }, 200);
+
+}
+
+const change = () => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+        (ela.value![0] as HTMLDivElement).removeEventListener("transitionend", change);
+        (elb.value![0] as HTMLDivElement).removeEventListener("transitionend", change)
+        delstyle()
+        clearTimeout(timer);
+    }, 1000);
+    console.log('jinting');
+}
+
+const delstyle = () => {
+    if (timer3) return
+    console.log('移除');
+
+    (ela.value![0] as HTMLDivElement).removeEventListener("transitionend", change);
+    (elb.value![0] as HTMLDivElement).removeEventListener("transitionend", change)
+    tarb.value = null
+    tara.value = null
+}
+
+const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
+    qsa.value = null
+    qsb.value = null
+    mba.value = null
+    mbb.value = null
+    const FN = easingFn.get(easingType ?? "LINEAR")!
+    const T = time ?? 0.3
+    const Bezier = `all ${T}s cubic-bezier(${FN.join()}) 0s`
+    const W = 54
+    const H = 64
+    if (animations.get(type as PrototypeTransitionType) === '即时') {
+        return
+    }
+    if (animations.get(type as PrototypeTransitionType) === '淡入淡出') {
+        qsb.value = {
+            transition: '',
+            zIndex: 2,
+            opacity: 0,
+        }
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '移入') {
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+            left: 0,
+            top: 0,
+        }
+        if (type.includes('LEFT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: W + 'px',
+            }
+        }
+        if (type.includes('RIGHT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: -W + 'px',
+            }
+        }
+        if (type.includes('TOP')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: -H + 'px',
+            }
+        }
+        if (type.includes('BOTTOM')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: H + 'px',
+            }
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '移出') {
+        qsb.value = {
+            transition: '',
+            zIndex: 2,
+            border: "unset",
+            top: 0,
+            left: 0,
+        }
+        if (type.includes('LEFT')) {
+            mbb.value = {
+                transition: Bezier,
+                left: -W + 'px',
+            }
+        }
+        if (type.includes('RIGHT')) {
+            mbb.value = {
+                transition: Bezier,
+                left: W + 'px',
+            }
+        }
+        if (type.includes('TOP')) {
+            mbb.value = {
+                transition: Bezier,
+                top: H + 'px',
+            }
+        }
+        if (type.includes('BOTTOM')) {
+            mbb.value = {
+                transition: Bezier,
+                top: -H + 'px',
+            }
+        }
+
+    }
+    if (animations.get(type as PrototypeTransitionType) === '滑入') {
+        qsa.value = {
+            transition: '',
+            zIndex: 2,
+            opacity: 1,
+            left: 0,
+        };
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+            left: 0,
+            top: 0,
+        }
+        if (type.includes('LEFT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: W + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                left: -12 + 'px',
+                opacity: 0.4,
+            }
+        }
+        if (type.includes('RIGHT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: -W + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                left: 12 + 'px',
+                opacity: 0.4,
+            }
+        }
+        if (type.includes('TOP')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: -H + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                top: 12 + 'px',
+                opacity: 0.4,
+            }
+        }
+        if (type.includes('BOTTOM')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: H + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                top: -12 + 'px',
+                opacity: 0.4,
+            }
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '滑出') {
+        qsa.value = {
+            transition: '',
+            zIndex: 2,
+            left: 0,
+            top: 0,
+            backgroundColor: 'silver',
+            border: "unset",
+        }
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+            left: 0,
+            top: 0,
+        }
+        if (type.includes('LEFT')) {
+            qsb.value = {
+                transition: '',
+                left: 12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 1,
+                left: -W + 'px',
+                top: 0,
+            }
+        }
+        if (type.includes('RIGHT')) {
+            qsb.value = {
+                transition: '',
+                left: -12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 1,
+                left: W + 'px',
+                top: 0,
+            }
+        }
+        if (type.includes('TOP')) {
+            qsb.value = {
+                transition: '',
+                top: -12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 1,
+                left: 0,
+                top: H + 'px',
+            }
+        }
+        if (type.includes('BOTTOM')) {
+            qsb.value = {
+                transition: '',
+                top: 12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 1,
+                left: 0,
+                top: -H + 'px',
+            }
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '推入') {
+        qsa.value = {
+            transition: '',
+            zIndex: 2,
+            left: 0,
+            top: 0,
+            opacity: 1,
+        }
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+            left: 0,
+            top: 0,
+        }
+        if (type.includes('LEFT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                left: W + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 0.4,
+                left: -W + 'px',
+                top: 0,
+            }
+        }
+        if (type.includes('RIGHT')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                left: -W + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 0.4,
+                left: W + 'px',
+                top: 0,
+            }
+        }
+        if (type.includes('TOP')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                top: -H + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 0.4,
+                left: 0,
+                top: H + 'px',
+            }
+        }
+        if (type.includes('BOTTOM')) {
+            qsb.value = {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                top: H + 'px',
+            }
+            mba.value = {
+                transition: Bezier,
+                opacity: 0.4,
+                left: 0,
+                top: -H + 'px',
+            }
+        }
+    }
+
+}
+
+const changeStyle = (type: string, easingType: PrototypeEasingType, time: number) => {
+    const el = document.querySelector('.containerB') as HTMLElement
+    const elA = document.querySelector('.containerA') as HTMLElement
+    const fn = easingFn.get(easingType ?? "LINEAR")!
+    const t = time || 0.3
+
+    if (type === PrototypeTransitionType.INSTANTTRANSITION) return
+    el.style.transition = `all ${t}s cubic-bezier(${fn.join()}) 0s`;
+    el.style.opacity = "1";
+    el.style.left = "0px";
+    el.style.top = "0px";
+    if (type.includes('OUT') && type.includes('LEFT')) {
+        if (type.includes('SLIDE')) {
+            el.style.left = "0px";
+            el.style.opacity = "1";
+        } else {
+            el.style.left = "-54px";
+            el.style.top = "0px";
+        }
+    }
+    if (type.includes('OUT') && type.includes('RIGHT')) {
+
+        if (type.includes('SLIDE')) {
+            el.style.left = "0px";
+            el.style.opacity = "1";
+        } else {
+            el.style.left = "54px";
+            el.style.top = "0px";
+        }
+    }
+    if (type.includes('OUT') && type.includes('TOP')) {
+
+        if (type.includes('SLIDE')) {
+            el.style.top = "0px";
+            el.style.opacity = "1";
+        } else {
+            el.style.left = "0px";
+            el.style.top = "64px";
+        }
+    }
+    if (type.includes('OUT') && type.includes('BOTTOM')) {
+
+        if (type.includes('SLIDE')) {
+            el.style.top = "0px";
+            el.style.opacity = "1";
+        } else {
+            el.style.left = "0px";
+            el.style.top = "-64px";
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '滑入') {
+        if (type.includes('LEFT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '-12px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('RIGHT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '12px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('TOP')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '12px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('BOTTOM')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '-12px';
+            elA.style.opacity = '0.4';
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '滑出') {
+        if (type.includes('LEFT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '-54px';
+            // elA.style.opacity = '0.4';
+        }
+        if (type.includes('RIGHT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '54px';
+            // elA.style.opacity = '0.4';
+        }
+        if (type.includes('TOP')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '64px';
+            // elA.style.opacity = '0.4';
+        }
+        if (type.includes('BOTTOM')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '-64px';
+            // elA.style.opacity = '0.4';
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '推入') {
+        if (type.includes('LEFT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '-54px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('RIGHT')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.left = '54px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('TOP')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '64px';
+            elA.style.opacity = '0.4';
+        }
+        if (type.includes('BOTTOM')) {
+            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
+            elA.style.top = '-64px';
+            elA.style.opacity = '0.4';
+        }
+    }
+}
+
+const setStyleA = (type: PrototypeTransitionType, easingType: PrototypeEasingType, time: number): StyleValue => {
+    console.log('========a', type);
+    const width = 54
+    const height = 64
+    const el = document.querySelector('.containerA') as HTMLElement;
+    let sty: any;
+    let timer: any
+    let timer2: any
+    if (el) {
+        const change = () => {
+            if (timer2) clearTimeout(timer2)
+            timer2 = setTimeout(() => {
+                if (typeof sty === 'object') {
+                    Object.keys(sty).forEach((key: any) => {
+                        el.style[key] = sty[key]
+                    });
+                }
+                console.log('==============1111111');
+                clearTimeout(timer2)
+            }, 500);
+            el.removeEventListener("transitionend", change)
+        }
+        el.addEventListener("transitionend", change)
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            changeStyle(type, easingType, time)
+            clearTimeout(timer)
+        }, 200);
+    }
+    switch (type) {
+        case PrototypeTransitionType.SLIDEFROMLEFT:
+
+            return sty = {
+                transition: '',
+                zIndex: 2,
+                opacity: 1,
+                left: 0,
+            }
+        case PrototypeTransitionType.SLIDEFROMRIGHT:
+            return sty = {
+                transition: '',
+                zIndex: 2,
+                opacity: 1,
+                left: 0,
+            }
+        case PrototypeTransitionType.SLIDEFROMTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                opacity: 1,
+                top: 0,
+            }
+        case PrototypeTransitionType.SLIDEFROMBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                opacity: 1,
+                top: 0,
+            }
+        case PrototypeTransitionType.SLIDEOUTTOLEFT:
+            return {
+                transition: '',
+                zIndex: 2,
+                left: 0,
+                backgroundColor: 'silver',
+                border: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTORIGHT:
+            return {
+                transition: '',
+                zIndex: 2,
+                left: 0,
+                backgroundColor: 'silver',
+                border: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTOTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0,
+                backgroundColor: 'silver',
+                border: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTOBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0,
+                backgroundColor: 'silver',
+                border: "unset",
+            }
+        case PrototypeTransitionType.PUSHFROMLEFT:
+            return {
+                transition: '',
+                zIndex: 2,
+                left: 0,
+                opacity: 1,
+            }
+        case PrototypeTransitionType.PUSHFROMRIGHT:
+            return {
+                transition: '',
+                zIndex: 2,
+                left: 0,
+                opacity: 1,
+            }
+        case PrototypeTransitionType.PUSHFROMTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0,
+                opacity: 1,
+            }
+        case PrototypeTransitionType.PUSHFROMBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0,
+                opacity: 1,
+            }
+        default:
+            return
+    }
+}
+const setStyle = (type: string, easingType: PrototypeEasingType, time: number): StyleValue => {
+    console.log('========', type);
+    const width = 54
+    const height = 64
+    const el = document.querySelector('.containerB') as HTMLElement;
+    let sty: any;
+    let timer: any
+    let timer2: any
+    if (el) {
+        const change = () => {
+            if (timer2) clearTimeout(timer2)
+            timer2 = setTimeout(() => {
+                if (typeof sty === 'object') {
+                    Object.keys(sty).forEach((key: any) => {
+                        el.style[key] = sty[key]
+                    });
+                }
+                console.log('==============2222222');
+
+                clearTimeout(timer2)
+            }, 500);
+            el.removeEventListener("transitionend", change)
+        }
+        el.addEventListener("transitionend", change)
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            changeStyle(type, easingType, time)
+            clearTimeout(timer)
+        }, 200);
+    }
+    switch (type) {
+        case PrototypeTransitionType.DISSOLVE:
+            return {
+                transition: '',
+                zIndex: 2,
+                opacity: 0,
+            }
+        case PrototypeTransitionType.MOVEFROMLEFT:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: width + 'px',
+            }
+
+        case PrototypeTransitionType.MOVEFROMRIGHT:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: -width + 'px',
+            }
+
+        case PrototypeTransitionType.MOVEFROMTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: -height + 'px',
+            }
+        case PrototypeTransitionType.MOVEFROMBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: height + 'px',
+            }
+        case PrototypeTransitionType.MOVEOUTTOLEFT:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0 + 'px',
+                left: 0 + 'px',
+                border: "unset",
+            }
+        case PrototypeTransitionType.MOVEOUTTORIGHT:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0 + 'px',
+                left: 0 + 'px',
+                border: "unset",
+            }
+        case PrototypeTransitionType.MOVEOUTTOTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0 + 'px',
+                left: 0 + 'px',
+                border: "unset",
+            }
+        case PrototypeTransitionType.MOVEOUTTOBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                top: 0 + 'px',
+                left: 0 + 'px',
+                border: "unset",
+            }
+        case PrototypeTransitionType.SLIDEFROMLEFT:
+            return sty = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: width + 'px',
+            }
+        case PrototypeTransitionType.SLIDEFROMRIGHT:
+            return sty = {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                left: -width + 'px',
+            }
+        case PrototypeTransitionType.SLIDEFROMTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: -height + 'px',
+            }
+        case PrototypeTransitionType.SLIDEFROMBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: "unset",
+                top: height + 'px',
+            }
+        case PrototypeTransitionType.SLIDEOUTTOLEFT:
+            return {
+                transition: '',
+                top: 0 + 'px',
+                left: 12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTORIGHT:
+            return {
+                transition: '',
+                top: 0 + 'px',
+                left: -12 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTOTOP:
+            return {
+                transition: '',
+                top: -12 + 'px',
+                left: 0 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+        case PrototypeTransitionType.SLIDEOUTTOBOTTOM:
+            return {
+                transition: '',
+                top: 12 + 'px',
+                left: 0 + 'px',
+                opacity: 0.4,
+                backgroundColor: "unset",
+            }
+        case PrototypeTransitionType.PUSHFROMLEFT:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                left: width + 'px',
+            }
+        case PrototypeTransitionType.PUSHFROMRIGHT:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                left: -width + 'px',
+            }
+        case PrototypeTransitionType.PUSHFROMTOP:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                top: -height + 'px',
+            }
+        case PrototypeTransitionType.PUSHFROMBOTTOM:
+            return {
+                transition: '',
+                zIndex: 2,
+                border: 'unset',
+                top: height + 'px',
+            }
+        default:
+            return {}
+    }
+}
 function onblur() {
     console.log('失焦');
     showtargerlist.value = false
@@ -551,6 +1373,129 @@ watch(showtargerlist, () => {
     }
 
 })
+
+
+const setExtraScrollOffsetX = (id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeExtraScrollOffsetX(shape as ArtboradView, id, 10)
+    updateData()
+}
+
+const setExtraScrollOffsetY = (id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeExtraScrollOffsetY(shape as ArtboradView, id, 20)
+    updateData()
+}
+
+//获取目标浮层
+const getPosition = (id: string, targetID: string) => {
+    if (!targetID) return;
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return;
+    const position = (shape as ArtboradView).overlayPositionType
+    const event = (shape as ArtboradView).overlayBackgroundInteraction
+    const Appearance = (shape as ArtboradView).overlayBackgroundAppearance
+    overlayclose.value = event ? event === 'NONE' ? false : true : false
+    return position ? position : 'CENTER'
+}
+
+//获取浮层背景颜色
+const getBackgroundColor = (id: string, targetID: string) => {
+    if (!targetID) return;
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return;
+    const color = (shape as ArtboradView).overlayBackgroundAppearance?.backgroundColor
+    if (color) return color as Color
+}
+
+const getBackgroundType = (targetID: string) => {
+    if (!targetID) return;
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return;
+    const type = (shape as ArtboradView).overlayBackgroundAppearance?.backgroundType
+
+    addmask.value = type === OverlayBackgroundType.NONE ? false : true;
+    return type === OverlayBackgroundType.NONE ? false : true
+}
+
+const _colorChangeFromPicker = d((c: Color) => {
+    console.log(c);
+
+    // const page = props.context.selection.selectedPage;
+    // if (!page) return;
+    // const editor = props.context.editor4Page(page);
+    // editor.setBackground(c);
+    background_color.value = c;
+    console.log(background_color.value);
+    clr_v.value = toHex(c.red, c.green, c.blue)
+}, 100)
+const colorChangeFromPicker = (c: Color) => {
+    _colorChangeFromPicker(c).catch((e) => {
+    });
+};
+
+//设置浮层后遮罩
+const setOverlayBackgroundAppearance = (targetID: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return
+    if (addmask.value) {
+        if (!(shape as ArtboradView).overlayBackgroundAppearance) {
+            e.setOverlayBackgroundAppearance(shape as ArtboradView)
+        } else {
+            const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
+            e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+        }
+    } else {
+        const value = new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
+        e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+    }
+    // updateData()
+}
+
+
+//设置浮层外点击事件
+const setOverlayBackgroundInteraction = (targetID: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return
+    if (overlayclose.value) {
+        e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.NONE)
+    } else {
+        e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE)
+    }
+    updateData()
+}
+
+//设置浮层位置
+const setOverlayPositionType = (targetID: string, value: OverlayPositions) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === targetID)
+    if (!shape) return
+    e.setOverlayPositionType(shape as ArtboradView, value)
+    updateData()
+}
 
 const test = (id: string) => {
     const shapes = props.context.selection.selectedPage?.childs
@@ -577,7 +1522,7 @@ const test = (id: string) => {
 
 
 //创建原型起始节点
-const createOrigin = () => {
+const createOrigin = (data: PrototypeStartingPoint) => {
     if (prototypestart.value) return;
     showIpnut.value = true
     originName.value = '流程 ' + ++originNameNumber.value
@@ -587,7 +1532,7 @@ const createOrigin = () => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setPrototypeStart(shape, new PrototypeStartingPoint(originName.value, originDescribed.value));
+    e.setPrototypeStart(shape, data);
     updateData()
 }
 
@@ -689,49 +1634,136 @@ const getTargetNodeName = (target: string | undefined) => {
 }
 
 //设置动画类型
-const setPrototypeActionTransition = (id: string) => {
+const setPrototypeActionTransition = (data: SelectItem, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setPrototypeActionTransitionType(shape as ShapeView, id, PrototypeTransitionType.MOVEOUTTOBOTTOM)
+    console.log(data.value);
+    let type = data.value
+    if (type === 'MOVE' || type === 'SLIDE' || type === 'PUSH') {
+        type = type + '_FROM_LEFT'
+    }
+    else if (type === 'MOVE_OUT' || type === 'SLIDE_OUT') {
+        type = type + '_TO_LEFT'
+    }
+
+    e.setPrototypeActionTransitionType(shape as ShapeView, id, type as PrototypeTransitionType)
     updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
 }
+
+//设置动画方向
+const setPrototypeActionTransitionDirection = (type: PrototypeTransitionType, id: string, i: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    const arr = type.split('_')
+    arr[arr.length - 1] = i.toUpperCase()
+    const newtype = arr.join('_')
+    console.log(newtype);
+    e.setPrototypeActionTransitionType(shape as ShapeView, id, newtype as PrototypeTransitionType)
+    updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
+}
+
+//换算动画时长
+const getDuration = (value: string, oldval?: number) => {
+    const regex = /^(\d+)/
+    const maxvalue = (v: number) => {
+        return v <= 20000 ? v : 20000
+    }
+    if (Number(value)) {
+        return maxvalue(Number(value))
+    } else {
+        if (value.match(regex) !== null) {
+            const str = value.match(regex)
+            return maxvalue(Number(str![1]))
+        } else {
+            return oldval ? oldval : 300
+        }
+    }
+}
+
+//设置动画时长
+const setTransitionDuration = (id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    const oldval = (shape as ArtboradView).prototypeInterAction?.find(item => item.id === id)?.actions.transitionDuration;
+    const value = getDuration(animationtimevalue.value![0].value, oldval);
+    e.setPrototypeActionTransitionDuration(shape as ShapeView, id, value / 1000)
+    animationtimevalue.value![0].value = value + 'ms';
+    animationtimevalue.value![0].blur()
+    updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
+}
+
+//设置动画效果
+const setProtoTypeEasingType = (data: SelectItem, id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    const value = data.value as PrototypeEasingType;
+    const esfn = easingFn.get(value) as BasicArray<number>;
+    e.setPrototypeActionEasingType(shape as ShapeView, id, value, esfn)
+    updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
+}
+
 
 //更新原型数据
 function updateData() {
     const selecteds = props.context.selection.selectedShapes;
-    console.log(isProtoType.value);
-    if (!isProtoType.value?.length) return;
-    if (isProtoType.value.length === 1) {
+    if (!isProtoType.value.size) return;
+    if (isProtoType.value.size === 1) {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
-            prototypeinteraction.value = (shape as ArtboradView).prototypeInterAction;
+            // prototypeinteraction.value = (shape as ArtboradView).prototypeInterAction;
             if (prototypestart.value) {
                 originName.value = prototypestart.value.name
                 originDescribed.value = prototypestart.value.desc
             }
-            if (prototypeinteraction.value) {
-                for (let index = 0; index < prototypeinteraction.value.length; index++) {
-                    const element = prototypeinteraction.value[index];
-                    getTargetNodeName(element.actions[0].targetNodeID)
-                }
-            }
+            // if (prototypeinteraction.value) {
+            //     for (let index = 0; index < prototypeinteraction.value.length; index++) {
+            //         const element = prototypeinteraction.value[index];
+            //         getTargetNodeName(element.actions[0].targetNodeID)
+            //     }
+            // }
         }
 
     }
 
-    let test: any[] = []
-    for (let index = 0; index < isProtoType.value.length; index++) {
-        const shape = isProtoType.value[index];
-        const i = (shape as ArtboradView).prototypeInterAction;
-        console.log(i);
+    let items: any[] = []
 
-        if (i) test = test.concat(...i)
-    }
-    prototypeinteraction.value = [...new Set(test)].reverse()
+    isProtoType.value.forEach((item) => {
+        const interaction = (item as ArtboradView).prototypeInterAction
+        if (interaction) items = items.concat(...interaction)
+    })
 
+    // for (let index = 0; index < isProtoType.value.size; index++) {
+    //     const shape = isProtoType.value
+    //     const i = (shape as ArtboradView).prototypeInterAction;
+    //     if (i) items = items.concat(...i)
+    // }
+    prototypeinteraction.value = [...new Set(items)].reverse()
+    showtargerlist.value = false
 }
 
 
@@ -743,18 +1775,16 @@ const createAction = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
-    const Action = new BasicArray<PrototypeActions>(new PrototypeActions(new BasicArray() ,v4(), PrototypeConnectionType.NONE))
-    Action[0].transitionType = PrototypeTransitionType.INSTANTTRANSITION
+    const Action = new PrototypeActions(new BasicArray<number>(), v4(), PrototypeConnectionType.NONE)
+    Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
-    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction([] as unknown as BasicArray<number>, id, Event, Action));
+    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
     acitonindex.value = id
     updateData()
 }
 
 //删除原型动画
 const deleteAction = (id: string) => {
-    console.log(id);
-
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
@@ -775,48 +1805,46 @@ const showhandel = (id: string) => {
     }
 }
 
-
-
-const isProtoType = ref<ShapeView[]>()
+const isProtoType = ref(new Set())
 
 // 图层选区变化
 function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     const selectedShapes = props.context.selection.selectedShapes;
-    console.log(selectedShapes);
 
-    isProtoType.value = []
+    isProtoType.value.clear()
     // if (selectedShapes.length === 1) {
     //     const shape = selectedShapes[0];
     //     if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
     //         isProtoType.value.push(shape)
     //     }
-    //     // //暂时获取组件状态
-    //     // const symref = props.context.selection.symbolrefview;
-    //     // if (!symref) {
-    //     //     return;
-    //     // }
-    //     // const result = get_var_for_ref(symref, t);
-    //     // variables.value = [];
-    //     // if (!result) {
-    //     //     return;
-    //     // }
-    //     // variables.value = result.variables;
-
+    //     //暂时获取组件状态
+    //     const symref = props.context.selection.symbolrefview;
+    //     variables.value = [];
+    //     if (symref) {
+    //         const result = get_var_for_ref(symref, t);
+    //         if (result) {
+    //             variables.value = result.variables;
+    //         }
+    //     }
     // }
 
-    shapes.value = [];
+    // shapes.value = [];
 
     for (let i = 0, l = selectedShapes.length; i < l; i++) {
         const shape = selectedShapes[i];
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            isProtoType.value.push(shape)
+            isProtoType.value.add(shape)
         }
-        shapes.value.push(shape);
+        // shapes.value.push(shape);
     }
     reflush_by_selection.value++;
     reflush.value++;
+
+    console.log(isProtoType.value);
+
+    updateData()
 
 }
 
@@ -830,37 +1858,36 @@ function workspace_watcher(t: number) {
     }
 }
 
-const watchedShapes = new Map<string, ShapeView>(); // 图层监听
-function watch_shapes() {
+// const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+// function watch_shapes() {
 
-    watchedShapes.forEach((v, k) => {
-        v.unwatch(update_by_shapes);
-        watchedShapes.delete(k);
-    })
+//     watchedShapes.forEach((v, k) => {
+//         v.unwatch(update_by_shapes);
+//         watchedShapes.delete(k);
+//     })
 
-    const selectedShapes = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selectedShapes);
-    shapes.forEach((v) => {
-        v.watch(update_by_shapes);
-        watchedShapes.set(v.id, v)
-    });
-}
+//     const selectedShapes = props.context.selection.selectedShapes;
+//     const shapes = flattenShapes(selectedShapes);
+//     shapes.forEach((v) => {
+//         v.watch(update_by_shapes);
+//         watchedShapes.set(v.id, v)
+//     });
+// }
 
-// 选区图层变化
-function update_by_shapes(...args: any[]) {
-    // isCheckPrototype()
-    reflush_trigger.value = [...(args?.length ? args : [])];
-    reflush_by_shapes.value++;
-    reflush.value++;
-}
+// // 选区图层变化
+// function update_by_shapes(...args: any[]) {
+//     // isCheckPrototype()
+//     reflush_trigger.value = [...(args?.length ? args : [])];
+//     reflush_by_shapes.value++;
+//     reflush.value++;
+// }
 
 function selection_watcher(t: number | string) {
     if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
     selection_change();
-    watch_shapes();
-    updateData()
+    // watch_shapes();
 }
 
 
@@ -868,23 +1895,26 @@ function selection_watcher(t: number | string) {
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     props.context.selection.watch(selection_watcher);
-    watch_shapes()
-    update_by_shapes()
+    // watch_shapes()
+    // update_by_shapes()
     selection_change();
-    updateData()
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
     props.context.selection.unwatch(selection_watcher);
-    watchedShapes.forEach(v => {
-        v.unwatch(update_by_shapes);
-    });
+    // watchedShapes.forEach(v => {
+    //     v.unwatch(update_by_shapes);
+    // });
 })
 
 </script>
 
 <style lang="scss" scoped>
+.ptactive {
+    background-color: #1878F5 !important;
+}
+
 .active {
     color: #000 !important;
 }
@@ -914,9 +1944,17 @@ onUnmounted(() => {
     height: 100%;
     box-sizing: border-box;
 
-    div .tips {
-        color: #c8c8c8;
-        font-size: 12px;
+    .tips {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        padding: 12px 8px;
+
+        span {
+            color: #c8c8c8;
+            font-size: 12px;
+        }
+
     }
 
     .origin,
@@ -1049,6 +2087,9 @@ onUnmounted(() => {
             }
 
             .item-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 172px;
                 height: 32px;
                 font-size: 12px;
@@ -1056,6 +2097,23 @@ onUnmounted(() => {
                 border-radius: 6px;
                 text-align: center;
                 line-height: 32px;
+
+                .icon-img {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background-color: #1878F5;
+                    margin-right: 8px;
+                    overflow: hidden;
+                    display: flex;
+
+                    svg {
+                        margin: auto;
+                        width: 12px;
+                        height: 12px;
+                        color: white;
+                    }
+                }
 
             }
 
@@ -1210,11 +2268,33 @@ onUnmounted(() => {
 
                 .retract-y,
                 .retract-x {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 9px 8px;
                     width: 65px;
                     height: 32px;
                     background-color: #F5F5F5;
                     border-radius: 6px;
+                    border: 1px solid transparent;
                     box-sizing: border-box;
+                    overflow: hidden;
+
+
+                    svg {
+                        max-width: 14px;
+                        height: 14px;
+                    }
+
+                    .indent {
+                        padding: 0;
+                        outline: none;
+                        border: none;
+                    }
+
+                    &:has(.indent:focus) {
+                        border: 1px solid #1878F5;
+                    }
                 }
 
                 input {
@@ -1244,12 +2324,22 @@ onUnmounted(() => {
                 }
 
                 .wrapper {
+                    position: relative;
                     display: flex;
                     width: 172px;
                     height: 100px;
                     border-radius: 6px;
                     background-color: #F5F5F5;
                     box-sizing: border-box;
+                    overflow: hidden;
+
+                    .mask {
+                        position: absolute;
+                        z-index: 4;
+                        width: 100%;
+                        height: 100%;
+                        opacity: 1%;
+                    }
 
                     .container {
                         position: relative;
@@ -1265,19 +2355,26 @@ onUnmounted(() => {
                             @include flex(center, center);
                             width: 100%;
                             height: 100%;
+                            left: 0;
+                            top: 0;
+                            z-index: 1;
                             border-radius: 4px;
                             border: 1px solid #000;
+                            background-color: #f5f5f5;
                             box-sizing: border-box;
                         }
 
                         .containerB {
                             position: absolute;
                             @include flex(center, center);
-                            transform: translateX(100%);
+                            left: 0;
+                            top: 0;
                             width: 100%;
                             height: 100%;
                             border-radius: 4px;
+                            border: 1px solid #000;
                             background-color: silver;
+                            box-sizing: border-box
                         }
 
                         .containerC {
@@ -1288,6 +2385,8 @@ onUnmounted(() => {
                             border: 1px solid #000;
                             border-radius: 4px;
                             box-sizing: border-box;
+                            background-color: transparent;
+                            z-index: 3;
                         }
                     }
                 }
