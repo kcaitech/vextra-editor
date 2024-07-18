@@ -577,26 +577,6 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
-function set_scale_mode(idx: number, mode: ImageScaleMode) {
-    const _idx = borders.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
-    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
-        const e = props.context.editor4Table(s as TableView);
-        const range = get_table_range(table);
-        e.setFillImageScaleMode4Cell(_idx, mode, range)
-    } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_image_scale_mode(shapes, _idx, mode);
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFillImageScaleMode(actions);
-        }
-    }
-}
-
 function layout() {
     show_apex.value = false;
     const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);

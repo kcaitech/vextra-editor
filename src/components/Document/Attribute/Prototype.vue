@@ -39,9 +39,9 @@
                                 </div>
                                 <div class="item-content">
                                     <span>{{ event.get(action.event.interactionType) }}</span>
-                                    <div v-if="action.actions[0].connectionType !== 'NONE'" class="icon-img">
-                                        <svg-icon :icon-class="actions.find(item => item.data.value === action.actions[0].connectionType &&
-                item.data.type === action.actions[0].navigationType)?.data.icon"></svg-icon>
+                                    <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
+                                        <svg-icon :icon-class="actions.find(item => item.data.value === action.actions.connectionType &&
+                item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
                                     </div>
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
@@ -62,11 +62,11 @@
                                 </div>
                                 <div class="action">
                                     <span>动作</span>
-                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions[0].connectionType &&
-                item.data.type === action.actions[0].navigationType)?.data"
+                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
+                item.data.type === action.actions.navigationType)?.data"
                                         @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SWAPSTATE"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SWAPSTATE"
                                     class="component-status">
                                     <div class="state" v-for="i in variables" :key="i.variable.id">
                                         <span>{{ i.variable.name }}：</span>
@@ -75,12 +75,12 @@
             }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
                                     </div>
                                 </div>
-                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.INTERNALNODE"
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE"
                                     class="target">
                                     <span>目标</span>
                                     <div class="targetname" @click.stop="test(action.id)">
-                                        <span :style="{ color: action.actions[0].targetNodeID ? '#000' : '#c8c8c8' }">{{
-                getTargetNodeName(action.actions[0].targetNodeID) ?? '请选择容器' }}</span>
+                                        <span :style="{ color: action.actions.targetNodeID ? '#000' : '#c8c8c8' }">{{
+                getTargetNodeName(action.actions.targetNodeID) ?? '请选择容器' }}</span>
                                         <div class="svg-wrap">
                                             <svg-icon icon-class="down"></svg-icon>
                                         </div>
@@ -95,7 +95,7 @@
                                             <div class="item" v-for="shape in DomList" :key="shape.id"
                                                 @click.stop="selectTargetNode(action.id, shape.id)">
                                                 <svg-icon
-                                                    :style="{ visibility: action.actions[0].targetNodeID === shape.id ? 'visible' : 'hidden' }"
+                                                    :style="{ visibility: action.actions.targetNodeID === shape.id ? 'visible' : 'hidden' }"
                                                     :icon-class="'be70ff3e-5c87-4ddc-90b9-13ae648a20f31' === shape.id ? 'white-select' : 'page-select'"></svg-icon>
                                                 <span>{{ shape.name }}</span>
 
@@ -103,37 +103,37 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.SCROLLTO"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
                                     class="retract">
                                     <span>缩进</span>
                                     <div class="retract-y">
                                         <svg-icon icon-class="indent_Y"></svg-icon>
                                         <input class="indent" type="text"
-                                            :value="action.actions[0].extraScrollOffset?.y ?? 0"
+                                            :value="action.actions.extraScrollOffset?.y ?? 0"
                                             @change="setExtraScrollOffsetY(action.id)">
                                     </div>
                                     <div class="retract-x">
                                         <svg-icon icon-class="indent_X"></svg-icon>
                                         <input class="indent" type="text"
-                                            :value="action.actions[0].extraScrollOffset?.x ?? 0"
+                                            :value="action.actions.extraScrollOffset?.x ?? 0"
                                             @change="setExtraScrollOffsetX(action.id)">
                                     </div>
                                 </div>
-                                <div v-if="action.actions[0].connectionType === PrototypeConnectionType.URL"
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.URL"
                                     class="link">
                                     <span>链接</span>
                                     <input v-select ref="connectionURL" type="text" placeholder="输入链接地址"
-                                        :value="action.actions[0].connectionURL"
+                                        :value="action.actions.connectionURL"
                                         @change="setPrototypeActionURL(action.id)">
                                 </div>
-                                <div v-if="action.actions[0].navigationType === PrototypeNavigationType.OVERLAY && action.actions[0].targetNodeID"
+                                <div v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
                                     class="set-float">
                                     <span>浮层设置</span>
                                     <div class="content">
                                         <div class="position">
                                             <div v-for="i in  OverlayPositions " :key="i"
-                                                :class="{ 'ptactive': getPosition(action.id, action.actions[0].targetNodeID!) === i }"
-                                                @click.stop="setOverlayPositionType(action.actions[0].targetNodeID!, i)">
+                                                :class="{ 'ptactive': getPosition(action.id, action.actions.targetNodeID!) === i }"
+                                                @click.stop="setOverlayPositionType(action.actions.targetNodeID!, i)">
                                             </div>
                                         </div>
                                         <div class="margin">
@@ -142,15 +142,15 @@
                                     </div>
                                     <div class="checkbox">
                                         <input type="checkbox" id="closetab" v-model="overlayclose"
-                                            @change="setOverlayBackgroundInteraction(action.actions[0].targetNodeID!)">
+                                            @change="setOverlayBackgroundInteraction(action.actions.targetNodeID!)">
                                         <label for="closetab">点击浮层外关闭浮层</label>
                                     </div>
                                     <div class="checkbox">
                                         <input type="checkbox" id="color" v-model="addmask"
-                                            @change="setOverlayBackgroundAppearance(action.actions[0].targetNodeID!)">
+                                            @change="setOverlayBackgroundAppearance(action.actions.targetNodeID!)">
                                         <label for="color">在浮层后添加遮罩</label>
                                     </div>
-                                    <div v-if="addmask || getBackgroundType(action.actions[0].targetNodeID!)"
+                                    <div v-if="addmask || getBackgroundType(action.actions.targetNodeID!)"
                                         class="setting">
                                         <ColorPicker class="color" :color="(background_color as Color)"
                                             :context="props.context" :auto_to_right_line="true"
@@ -164,13 +164,13 @@
                                     </div>
 
                                 </div>
-                                <div v-if="action.actions[0].connectionType === 'INTERNAL_NODE'" class="set-animation">
+                                <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
                                     <span>动画设置</span>
                                     <div class="wrapper">
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
                                         <div class="container"
-                                            :value="test2(action.actions[0].transitionType!, action.actions[0].easingType!, action.actions[0].transitionDuration!)">
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!)">
                                             <div ref="ela" class="containerA" :style="tara ?? qsa">
                                                 A</div>
                                             <div ref="elb" class="containerB" :style="tarb ?? qsb">
@@ -181,31 +181,31 @@
                                     <div class="animation">
                                         <span>动画</span>
                                         <Select class="select" id="select" :visibility="true" :source="animation"
-                                            :selected="animation.find(item => animations.get(action.actions[0].transitionType!) === item.data.content)?.data"
+                                            :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
                                             @select="setPrototypeActionTransition($event, action.id)"></Select>
                                     </div>
-                                    <div v-if="action.actions[0].transitionType?.split('_').findLast(d => ['left', 'right', 'top', 'bottom'].includes(d.toLowerCase()))"
+                                    <div v-if="action.actions.transitionType?.split('_').findLast(d => ['left', 'right', 'top', 'bottom'].includes(d.toLowerCase()))"
                                         class="direction">
                                         <div class="content">
                                             <div class="icon"
-                                                :class="{ 'select-item': action.actions[0].transitionType?.split('_')[action.actions[0].transitionType?.split('_').length - 1].toLowerCase() === i }"
+                                                :class="{ 'select-item': action.actions.transitionType?.split('_')[action.actions.transitionType?.split('_').length - 1].toLowerCase() === i }"
                                                 v-for="  i  of  Object.values(Direction) " :key="i"
-                                                @click.stop="setPrototypeActionTransitionDirection(action.actions[0].transitionType, action.id, i)">
+                                                @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i)">
                                                 <svg-icon :style="{ rotate: (`${setrotate.get(i)}` + 'deg') }"
                                                     icon-class="right-arrows"></svg-icon>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="action.actions[0].transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
+                                    <div v-if="action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
                                         class="effect">
                                         <span>效果</span>
                                         <Select class="select" id="select" :minwidth="100" :visibility="true"
                                             :source="effect"
-                                            :selected="effect.find(item => item.data.value === action.actions[0].easingType)?.data || effect.find(item => item.id === 0)?.data"
+                                            :selected="effect.find(item => item.data.value === action.actions.easingType)?.data || effect.find(item => item.id === 0)?.data"
                                             @select="setProtoTypeEasingType($event, action.id)"></Select>
                                         <input v-select ref="animationtimevalue" type="text" placeholder="时间"
                                             @change="setTransitionDuration(action.id)"
-                                            :value="action.actions[0].transitionDuration ? action.actions[0].transitionDuration * 1000 + 'ms' : '300ms'">
+                                            :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
                                     </div>
                                 </div>
                             </div>
@@ -1698,7 +1698,7 @@ const setTransitionDuration = (id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    const oldval = (shape as ArtboradView).prototypeInterAction?.find(item => item.id === id)?.actions[0].transitionDuration;
+    const oldval = (shape as ArtboradView).prototypeInterAction?.find(item => item.id === id)?.actions.transitionDuration;
     const value = getDuration(animationtimevalue.value![0].value, oldval);
     e.setPrototypeActionTransitionDuration(shape as ShapeView, id, value / 1000)
     animationtimevalue.value![0].value = value + 'ms';
@@ -1775,8 +1775,8 @@ const createAction = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
-    const Action = new BasicArray<PrototypeActions>(new PrototypeActions(new BasicArray<number>(), v4(), PrototypeConnectionType.NONE))
-    Action[0].transitionType = PrototypeTransitionType.INSTANTTRANSITION
+    const Action = new PrototypeActions(new BasicArray<number>(), v4(), PrototypeConnectionType.NONE)
+    Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
     acitonindex.value = id

@@ -55,6 +55,8 @@ const createOrigin = () => {
     console.log('111');
     
     originNumber.value++
+    console.log(originNumber.value);
+    
     const start = new PrototypeStartingPoint(originName.value, originDescribed.value)
     emits('createorigin', start)
     // if (prototypestart.value) return;
