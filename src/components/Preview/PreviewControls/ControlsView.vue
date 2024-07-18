@@ -42,6 +42,14 @@ function pathMousedown(e: MouseEvent) {
     // todo
 }
 
+const onMouseenter = (e: MouseEvent) => {
+
+}
+
+const onMouseleave = (e: MouseEvent) => {
+    
+}
+
 function createShapeTracing() {
     const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
@@ -92,10 +100,10 @@ onUnmounted(() => {
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         style="position: absolute; top: 0; left: 0">
         <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+            @mousedown="(e: MouseEvent) => pathMousedown(e)" @mouseenter="onMouseenter" @mouseleave="onMouseleave">
         </path>
         <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="red"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)" @mouseenter="onMouseenter" @mouseleave="onMouseleave">
         </path>
     </svg>
 </template>
