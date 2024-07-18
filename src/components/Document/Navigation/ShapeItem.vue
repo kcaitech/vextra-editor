@@ -13,6 +13,7 @@ import Abbr from "@/components/common/Abbr.vue";
 import { debounce } from "lodash";
 import { shutdown_menu } from "@/utils/mouse";
 import { Navi } from "@/context/navigate";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 export interface ItemData {
     id: string
@@ -57,9 +58,6 @@ const is_tool_visible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const esc = ref<boolean>(false)
-// const isread = ref(false)
-// const canComment = ref(false)
-// const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 18);
 let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
@@ -69,6 +67,7 @@ const symbol_c = computed<boolean>(() => {
     return is_component_class(props.data.shapeview());
 })
 const abbr_view = ref<number>(0);
+const maskView = ref<boolean>(props.data.shapeview().masked);
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
@@ -244,11 +243,13 @@ function _updateAbbrView() {
 
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
-
 function updater(...args: any[]) {
+    if (args.includes('mask-env-changed')) {
+        return maskView.value = props.data.shapeview().masked;
+
+    }
     if (args.includes('mask') || args.includes('fills')) {
-        _updateAbbrView();
-        return;
+        return _updateAbbrView();
     }
     if (args.includes('frame') || args.includes('points')) {
         return update_abbr_view();
@@ -329,11 +330,7 @@ const selectedWatcher = (t?: any) => {
 const getHovered = () => {
     const shape = props.data.shape();
     const hoverShape = props.data.context.selection.hoveredShape;
-    if (hoverShape && shape.id === hoverShape.id) {
-        hovered.value = true;
-    } else {
-        hovered.value = false;
-    }
+    hovered.value = Boolean(hoverShape && shape.id === hoverShape.id);
 }
 const navi_watcher = (t: number) => {
     if (t === Navi.LIST_FOLD) {
@@ -354,7 +351,6 @@ onUpdated(() => {
     getHovered();
 })
 onMounted(() => {
-    // handlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
     props.data.context.selection.watch(selectedWatcher);
@@ -371,18 +367,41 @@ onUnmounted(() => {
 
 <template>
 <div ref="shapeItem"
-     :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: symbol_c, hovered: hovered && !props.data.selected, firstAngle: topAngle, lastAngle: bottomAngle }"
-     @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
+     :class="{
+        container: true,
+        selected: props.data.selected,
+        selectedChild: selectedChild(),
+        component: symbol_c,
+        hovered: hovered && !props.data.selected,
+        firstAngle: topAngle, lastAngle: bottomAngle
+     }"
+     @mousemove="hoverShape"
+     @mouseleave="unHoverShape"
+     @mousedown="mousedown"
+     @mouseup="mouseup"
+>
     <!-- 缩进 -->
-    <div class="ph" :style="{ width: `${ph_width}px` }"></div>
+    <div class="ph" :style="{ width: `${ph_width}px` }"/>
     <!-- 开合 -->
     <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
-        <svg-icon v-if="showTriangle" icon-class="triangle-down" :id="props.data.expand ? 'down' : 'right'"
-                  :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
+        <svg-icon
+            v-if="showTriangle"
+            icon-class="triangle-down"
+            :id="props.data.expand ? 'down' : 'right'"
+            :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"
+        />
     </div>
     <!-- icon -->
-    <div class="container-svg zero-symbol" @dblclick="fitToggleContainer"
-         :style="{ opacity: !visible_status ? 1 : .3 }">
+    <svg-icon
+        v-if="maskView"
+        class="zero-symbol"
+        icon-class="masked-by"
+        style="width: 12px; height: 12px; margin:0 4px;"
+    />
+    <div class="container-svg zero-symbol"
+         @dblclick="fitToggleContainer"
+         :style="{ opacity: visible_status ? 0.3 : 1 }"
+    >
         <Abbr :view="abbr_view" :shape="data.shapeview()" :theme="symbol_c ? '#7f58f9' : '#595959'"/>
     </div>
     <!-- 内容描述 -->
@@ -395,13 +414,13 @@ onUnmounted(() => {
             </div>
             <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
                  v-if="!data.context.readonly && !isLable">
-                <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
-                <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
+                <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"/>
+                <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"/>
             </div>
             <div class="tool_eye tool" :class="{ 'visible': visible_status }"
                  @click="(e: MouseEvent) => setVisible(e)" v-if="!data.context.readonly && !isLable">
-                <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
-                <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
+                <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"/>
+                <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"/>
             </div>
         </div>
     </div>
