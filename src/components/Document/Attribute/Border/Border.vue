@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -22,7 +22,8 @@ import {
     get_aciton_gradient_stop,
     get_actions_filltype,
     get_actions_border,
-    get_borders_side
+    get_borders_side,
+    get_actions_image_scale_mode
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -512,14 +513,14 @@ function gradient_add_stop(idx: number, position: number, color: Color, id: stri
  * @description 切换渐变类型
  * @param idx
  */
-function togger_gradient_type(idx: number, type: GradientType | 'solid') {
+function togger_gradient_type(idx: number, type: GradientType, fillType: FillType) {
     const _idx = borders.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    if (type === 'solid') {
-        toggle_fill_type(idx, FillType.SolidColor);
+    if (fillType !== FillType.Gradient) {
+        toggle_fill_type(idx, fillType);
     } else {
         const actions = get_aciton_gradient_stop(shapes, _idx, type, 'borders');
         editor.toggerShapeGradientType(actions);
@@ -565,13 +566,33 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
-        e.setFillType4Cell(_idx, fillType, range)
+        e.setFillType4Cell(_idx, fillType, range);
     } else {
         const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_filltype(shapes, _idx, fillType);
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderType(actions);
+        }
+    }
+}
+
+function set_scale_mode(idx: number, mode: ImageScaleMode) {
+    const _idx = borders.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const s = selected[0];
+    const page = props.context.selection.selectedPage;
+    const table = props.context.tableSelection;
+    if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
+        const e = props.context.editor4Table(s as TableView);
+        const range = get_table_range(table);
+        e.setFillImageScaleMode4Cell(_idx, mode, range)
+    } else {
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_image_scale_mode(shapes, _idx, mode);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillImageScaleMode(actions);
         }
     }
 }
@@ -908,7 +929,7 @@ const strokeClick = (e: Event) => {
                             :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
                             @gradient-rotate="() => gradient_rotate(idx)"
                             @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                            @gradient-type="(type) => togger_gradient_type(idx, type)"
+                            @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
                             @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                             @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
                         <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
@@ -948,8 +969,8 @@ const strokeClick = (e: Event) => {
                             :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
                             @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
                         <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
-                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur" @click="strokeClick"
-                            @focus="selectBorderThicknes($event, idx)">
+                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
+                            @click="strokeClick" @focus="selectBorderThicknes($event, idx)">
                     </div>
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
                         :index="borders.length - idx - 1" :reflush_side="reflush_side">

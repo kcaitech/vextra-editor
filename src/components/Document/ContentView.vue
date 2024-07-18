@@ -16,7 +16,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Color, ShapeType, ShapeView, PageView, Page } from '@kcdesign/data';
+import { Matrix, Color, ShapeType, ShapeView, PageView, Page, ImageScaleMode } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -57,7 +57,8 @@ import { permIsEdit } from '@/utils/permission';
 import Grid from "@/components/Document/Grid.vue";
 import TempBoard from "@/components/common/TempBoard.vue";
 import BatchExport from "./Cutout/BatchExport.vue";
-import Rule from "./Rule";
+import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
+import Rule from "./Rule/index.vue";
 
 interface Props {
     context: Context
@@ -107,6 +108,7 @@ const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 const color_edit_mode = ref<boolean>(false);
+const image_tile_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 const overview = ref<boolean>(false);
 let firstTime = false;
@@ -632,6 +634,11 @@ function color_watcher(t: number) {
         const gradient = props.context.color.gradient;
         const selected = props.context.selection.selectedShapes;
         color_edit_mode.value = mode && !!gradient && selected.length === 1;
+    } else if (t === ColorCtx.CHANGE_IMAGE_MODE) {
+        image_tile_mode.value = false;
+        const selected = props.context.selection.selectedShapes;
+        const mode = props.context.color.imageScaleMode;
+        image_tile_mode.value = (mode === ImageScaleMode.Tile || mode === ImageScaleMode.Crop) && selected.length === 1;
     }
 }
 
@@ -752,6 +759,7 @@ onUnmounted(() => {
         <Grid :context="props.context"></Grid>
         <TempBoard :context="props.context"></TempBoard>
         <BatchExport v-if="isvisible" :context="props.context"></BatchExport>
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
         <Rule :context="props.context" :page="(props.page as PageView)"></Rule>
     </div>
 </template>

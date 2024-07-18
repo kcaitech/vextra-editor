@@ -252,7 +252,7 @@ export class Assist extends WatchableObject {
         if (guideTarget.type !== ShapeType.Page) {
             const matrix = guideTarget.matrix2Root();
             for (let i = 0; i < guides.length; i++) {
-                const {axis, offset} = guides[i];
+                const { axis, offset } = guides[i];
                 const assistGui: AssistGuide = {
                     env: guideTarget,
                     offsetFix: offset,
@@ -269,7 +269,7 @@ export class Assist extends WatchableObject {
             }
         } else {
             for (let i = 0; i < guides.length; i++) {
-                const {axis, offset} = guides[i];
+                const { axis, offset } = guides[i];
                 const assistGui: AssistGuide = {
                     env: guideTarget,
                     offsetFix: offset,
@@ -327,9 +327,9 @@ export class Assist extends WatchableObject {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -342,7 +342,7 @@ export class Assist extends WatchableObject {
             target.x = pre_target1.x;
             target.sticked_by_x = true;
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
-                p: {x: target.x, y: pre_target1.sy},
+                p: { x: target.x, y: pre_target1.sy },
                 id: 'ex'
             }]);
         }
@@ -350,7 +350,7 @@ export class Assist extends WatchableObject {
             target.y = pre_target2.y;
             target.sticked_by_y = true;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
-                p: {x: pre_target2.sx, y: target.y},
+                p: { x: pre_target2.sx, y: target.y },
                 id: 'ex'
             }]);
         }
@@ -360,7 +360,7 @@ export class Assist extends WatchableObject {
         return target;
     }
 
-    alignX(point: XY, self: XY[]) {
+    alignX(point: XY, self: XY[], toGuide = true) {
         // if (!this.m_except.size) {
         //     return;
         // }
@@ -369,8 +369,8 @@ export class Assist extends WatchableObject {
         hgx.length = 0;
 
         this.m_nodes_x = [];
-        const target = {x: 0, sticked_by_x: false};
-        const pre_target: PT4P1 = {x: 0, sy: 0, delta: undefined};
+        const target = { x: 0, sticked_by_x: false };
+        const pre_target: PT4P1 = { x: 0, sy: 0, delta: undefined };
 
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const shape = this.m_shape_inner[i];
@@ -386,11 +386,14 @@ export class Assist extends WatchableObject {
             modify_pt_x4p(pre_target, point, c_pg.apexX, this.m_stickness);
         }
 
+
         // 参考线
         let sparkX = false;
-        if (this.m_guides_x.length) {
-            const gx = this.m_guides_x.map(g => g.offsetRoot);
-            sparkX = modify_pt_x4p(pre_target, point, gx, this.m_stickness);
+        if (toGuide) {
+            if (this.m_guides_x.length) {
+                const gx = this.m_guides_x.map(g => g.offsetRoot);
+                sparkX = modify_pt_x4p(pre_target, point, gx, this.m_stickness);
+            }
         }
 
         if (pre_target.delta !== undefined) {
@@ -400,12 +403,13 @@ export class Assist extends WatchableObject {
             const _self = [];
 
             for (let i = 0; i < self.length; i++) {
-                _self.push({id: 'self', p: {x: target.x, y: self[i].y}});
+                _self.push({ id: 'self', p: { x: target.x, y: self[i].y } });
             }
 
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat(_self);
 
             const fixed = this.fixedTarget;
+
             if (sparkX && fixed) {
                 if (fixed.type === ShapeType.Page) {
                     const matrix = this.m_context.workspace.matrix;
@@ -449,7 +453,7 @@ export class Assist extends WatchableObject {
         return target;
     }
 
-    alignY(point: XY, self: XY[]) {
+    alignY(point: XY, self: XY[], toGuide = true) {
         // if (!this.m_except.size) {
         //     return;
         // }
@@ -458,8 +462,8 @@ export class Assist extends WatchableObject {
         hgy.length = 0;
 
         this.m_nodes_y = [];
-        const target = {y: 0, sticked_by_y: false};
-        const pre_target: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const target = { y: 0, sticked_by_y: false };
+        const pre_target: PT4P2 = { y: 0, sx: 0, delta: undefined };
 
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const shape = this.m_shape_inner[i];
@@ -477,9 +481,11 @@ export class Assist extends WatchableObject {
 
         // 参考线
         let sparkY = false;
-        if (this.m_guides_y.length) {
-            const gy = this.m_guides_y.map(g => g.offsetRoot);
-            sparkY = modify_pt_y4p(pre_target, point, gy, this.m_stickness);
+        if (toGuide) {
+            if (this.m_guides_y.length) {
+                const gy = this.m_guides_y.map(g => g.offsetRoot);
+                sparkY = modify_pt_y4p(pre_target, point, gy, this.m_stickness);
+            }
         }
 
         if (pre_target.delta !== undefined) {
@@ -489,7 +495,7 @@ export class Assist extends WatchableObject {
             const _self = [];
 
             for (let i = 0; i < self.length; i++) {
-                _self.push({id: 'self', p: {x: self[i].x, y: target.y}})
+                _self.push({ id: 'self', p: { x: self[i].x, y: target.y } })
             }
 
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat(_self);
@@ -551,10 +557,10 @@ export class Assist extends WatchableObject {
         hgx.length = 0;
         hgy.length = 0;
 
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
 
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
 
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const shape = this.m_shape_inner[i];
@@ -583,7 +589,7 @@ export class Assist extends WatchableObject {
             sparkY = modify_pt_y4p(pre_target2, point, gy, this.m_stickness);
         }
 
-        const _self = {id: 'self', p: {x: point.x, y: point.y}};
+        const _self = { id: 'self', p: { x: point.x, y: point.y } };
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x;
             target.sticked_by_x = true;
@@ -686,10 +692,10 @@ export class Assist extends WatchableObject {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
 
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
 
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
 
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const shape = this.m_shape_inner[i];
@@ -706,7 +712,7 @@ export class Assist extends WatchableObject {
             modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
         }
 
-        const _self = {id: 'self', p: {x: point.x, y: point.y}};
+        const _self = { id: 'self', p: { x: point.x, y: point.y } };
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x;
             target.sticked_by_x = true;

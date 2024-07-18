@@ -130,6 +130,18 @@ var configureWebpack = (config) => {
         }),
         new CopyWebpackPlugin({
             patterns: [{
+                from: "src/assets/uniwebview.js",
+                to: "static/uniwebview.js",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: "src/assets/fonts/zihun.ttf",
+                to: "static/fonts/zihun.ttf",
+            }]
+        }),
+        new CopyWebpackPlugin({
+            patterns: [{
                 from: "node_modules/pathkit-wasm/bin/pathkit.wasm",
                 to: "static/pathkit.wasm",
             }]

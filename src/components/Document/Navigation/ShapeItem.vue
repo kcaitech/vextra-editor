@@ -260,10 +260,14 @@ function _updateAbbrView() {
 
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
+const update_icon = ref(0);
 function updater(...args: any[]) {
     if (args.includes('frame') || args.includes('points')) {
         update_abbr_view();
         return;
+    }
+    if(args.includes('fills')) {
+        update_icon.value++;
     }
 
     const shape = props.data.shapeview();
@@ -394,7 +398,7 @@ onUnmounted(() => {
         <!-- icon -->
         <div class="container-svg zero-symbol" @dblclick="fitToggleContainer"
             :style="{ opacity: !visible_status ? 1 : .3 }">
-            <Abbr :view="abbr_view" :shape="data.shapeview()" :theme="symbol_c ? '#7f58f9' : '#595959'"></Abbr>
+            <Abbr :view="abbr_view" :shape="data.shapeview()" :icon="update_icon" :theme="symbol_c ? '#7f58f9' : '#595959'"></Abbr>
         </div>
         <!-- 内容描述 -->
         <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">

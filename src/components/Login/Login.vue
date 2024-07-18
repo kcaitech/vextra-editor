@@ -33,7 +33,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
                 isLoading.value = false
-                const perRoute = sessionStorage.getItem('perRoute') || ''
+                const perRoute = decodeURIComponent(sessionStorage.getItem('perRoute') || '')
                 if (perRoute) {
                     if (perRoute.includes('?')) {
                         const params = new URLSearchParams(perRoute.split('?')[1]);
@@ -61,7 +61,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     } else {
                         router.push({ path: perRoute })
                     }
-                    localStorage.removeItem('perRoute')
+                    sessionStorage.removeItem('perRoute')
                 }
                 else {
                     if (isMobileDevice()) {
@@ -403,10 +403,11 @@ onMounted(() => {
 }
 
 @media (max-width:480px) {
-    .bgiamge{
+    .bgiamge {
         min-width: 100%;
         overflow: hidden;
     }
+
     .bgiamge .content {
         width: calc(100% - 20px);
         height: 60%;

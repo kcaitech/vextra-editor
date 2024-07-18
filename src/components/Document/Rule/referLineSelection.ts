@@ -466,10 +466,11 @@ export class ReferLineSelection {
         hovered.valid = false;
     }
 
-    modifyHoveredIndex(env: ShapeView, index: number) {
+    modifyHoveredIndex(env: ShapeView, index: number, axis: GuideAxis) {
         this.m_hovered_guide.valid = true;
         this.m_hovered_guide.env = env;
         this.m_hovered_guide.index = index;
+        this.m_hovered_guide.axis = axis;
     }
 
     get hovered() {
