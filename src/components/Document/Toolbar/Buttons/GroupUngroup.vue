@@ -12,15 +12,12 @@ import {
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
-import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
-import { string_by_sys } from '@/utils/common';
-import Tooltip from '@/components/common/Tooltip.vue';
 import BooleanObject from "./BooleanObject.vue"
 import { Tool } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';

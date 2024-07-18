@@ -230,11 +230,7 @@ const listUpdate = (...args: any[]) => {
         const page = props.context.selection.selectedPage;
         if (!page) return;
         const shapes = getFrameList(page);
-        if (!shapes.length) {
-            ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
-            props.context.selection.selectShape(undefined);
-            return;
-        }
+        
         if (!shape) {
             nextTick(() => {
                 props.context.selection.selectShape(shapes[0]);
@@ -255,18 +251,6 @@ const listUpdate = (...args: any[]) => {
     }
     update();
 }
-// let stopPassiveUpdate: any = null;
-//
-// function passiveUpdate() {
-//     let timer: any = setInterval(() => {
-//         update();
-//     }, 30000);
-//
-//     return () => {
-//         clearInterval(timer);
-//         timer = null;
-//     }
-// }
 
 const stopWatch = watch(() => props.page, (value, old) => {
     old?.unwatch(listUpdate);
@@ -275,7 +259,6 @@ const stopWatch = watch(() => props.page, (value, old) => {
 
 onMounted(() => {
     update();
-    // stopPassiveUpdate = passiveUpdate();
     props.page.watch(listUpdate);
     props.context.selection.watch(previewWatcher);
     props.context.navi.watch(navi_watcher);
@@ -286,7 +269,6 @@ onUnmounted(() => {
     props.context.selection.watch(previewWatcher);
     props.context.navi.unwatch(navi_watcher);
     stopWatch();
-    // stopPassiveUpdate();
 });
 
 </script>
