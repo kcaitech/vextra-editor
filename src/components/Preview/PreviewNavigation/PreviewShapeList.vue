@@ -94,6 +94,7 @@ const selectedShape = (shape: Shape) => {
     if (!page) return;
     const s = page.childs.find(item => item.id === shape.id);
     props.context.selection.selectShape(s);
+    props.context.preview.setFromShapeAction(undefined);
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -234,6 +235,7 @@ const listUpdate = (...args: any[]) => {
         if (!shape) {
             nextTick(() => {
                 props.context.selection.selectShape(shapes[0]);
+                props.context.preview.setFromShapeAction(undefined);
             })
             return;
         }
@@ -246,6 +248,7 @@ const listUpdate = (...args: any[]) => {
             } else {
                 props.context.selection.selectShape(shapes[shape_index]);
             }
+            props.context.preview.setFromShapeAction(undefined);
         }
 
     }

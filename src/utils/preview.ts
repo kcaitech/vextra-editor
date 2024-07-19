@@ -1,10 +1,11 @@
 // import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { Matrix, PageView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeEvents, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
+import { EventIndex } from '@/components/Preview/PreviewControls/ControlsView.vue';
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
     if (!page) return;
@@ -212,4 +213,40 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
     } else {
         selection.unHoverShape();
     }
+}
+
+export function eventPriority(shape: ShapeView): EventIndex {
+    const protoActions = shape.prototypeInterAction;
+    let eventTypeIndex: EventIndex = {
+        click: -1,
+        dblclick: -1,
+        mousedown: -1,
+        mouseup: -1,
+        mouseenter: -1,
+        hover: -1
+    }
+    if (!protoActions) return eventTypeIndex;
+    for (let i = 0; i < protoActions.length; i++) {
+        const protoAction = protoActions[i];
+        const type = protoAction.event.interactionType;
+        if (type === PrototypeEvents.ONCLICK) {
+            eventTypeIndex.click = i;
+        }
+        if (type === PrototypeEvents.DBCLICK) {
+            eventTypeIndex.dblclick = i;
+        }
+        if (type === PrototypeEvents.MOUSEDOWN) {
+            eventTypeIndex.mousedown = i;
+        }
+        if (type === PrototypeEvents.MOUSEUP) {
+            eventTypeIndex.mouseup = i;
+        }
+        if (type === PrototypeEvents.MOUSEENTER) {
+            eventTypeIndex.mouseenter = i;
+        }
+        if (type === PrototypeEvents.HOVER) {
+            eventTypeIndex.hover = i;
+        }
+    }
+    return eventTypeIndex;
 }

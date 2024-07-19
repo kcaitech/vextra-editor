@@ -1,4 +1,4 @@
-import { Matrix, PageView, Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
@@ -6,7 +6,7 @@ import { getFrameList } from "@/utils/preview";
 export enum ScaleType {
     Actual = 'Actual',
     FitScreen = 'fit_screen',
-    FitWidth  = 'fit_width',
+    FitWidth = 'fit_width',
     FillScreen = 'fill_screen'
 }
 
@@ -29,6 +29,8 @@ export class Preview extends WatchableObject {
     private m_menu_options: ScaleType | undefined = ScaleType.Actual;
     private m_visible_ui: boolean = true;
     private m_menu_visible: boolean = false;
+    private m_proto_action: { id: string, action: PrototypeActions } | undefined
+
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -104,5 +106,13 @@ export class Preview extends WatchableObject {
     }
     get menuVisible() {
         return this.m_menu_visible;
+    }
+
+    setFromShapeAction(info?: { id: string, action: PrototypeActions }) {
+        this.m_proto_action = info;
+    }
+
+    get protoAction() {
+        return this.m_proto_action;
     }
 }

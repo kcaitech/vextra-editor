@@ -1775,7 +1775,7 @@ const createAction = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
-    const Action = new PrototypeActions(new BasicArray<number>(), v4(), PrototypeConnectionType.NONE)
+    const Action = new PrototypeActions(v4(), PrototypeConnectionType.NONE)
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));

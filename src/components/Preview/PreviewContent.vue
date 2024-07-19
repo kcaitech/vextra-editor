@@ -86,6 +86,7 @@ const togglePage = (p: number) => {
     index += p;
     if (index < 0 || index > (frameList.length - 1)) return;
     props.context.selection.selectShape(frameList[index]);
+    props.context.preview.setFromShapeAction(undefined);
 }
 
 const previewWatcher = (t: number | string, s?: boolean) => {
@@ -124,6 +125,7 @@ const previewWatcher = (t: number | string, s?: boolean) => {
 const selectionWatcher = (v: number | string) => {
     if (v === Selection.CHANGE_PAGE) {
         changePage();
+        props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
         if (!props.context.selection.selectedShapes.length) {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
@@ -328,7 +330,17 @@ function search(e: MouseEvent) {
     matrix.multiAtLeft(shapes.matrix2Root());
     const xy = { x: e.clientX - x, y: e.clientY - y };
     const shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
-    selectShapes(props.context, shape);
+    if (shape && !shape.prototypeInterAction) {
+        let p = shape.parent;
+        if (p && p.type === ShapeType.Page) {
+            return selectShapes(props.context, undefined);
+        }
+        while (p) {
+
+        }
+    } else {
+        selectShapes(props.context, shape);
+    }
 }
 
 const closeMenu = () => {
