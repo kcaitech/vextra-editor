@@ -2,7 +2,7 @@
     <div class="container">
         <el-scrollbar height="100%">
             <div v-if="isProtoType.size">
-                <div v-if="isProtoType.size === 1" class="origin">
+                <!-- <div v-if="isProtoType.size === 1" class="origin">
                     <div class="title" @click.stop=createOrigin>
                         <div class="text" :class="{ active: prototypestart }">流程起点</div>
                         <div v-if="!prototypestart" class="add">
@@ -21,7 +21,9 @@
                         <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
                             v-model="originDescribed" @change="setPrototypeStartPoint"></textarea>
                     </div>
-                </div>
+                </div> -->
+                <Origin :context=props.context :prototypestart=prototypestart @createorigin=createOrigin
+                    @setorigin=setPrototypeStartPoint @deleteorigin=deleteOrigin></Origin>
                 <div class="interaction">
                     <div class="title" @click.stop="createAction">
                         <div class="text" :class="{ active: prototypeinteraction?.length }">交互</div>
@@ -75,7 +77,7 @@
             }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
                                     </div>
                                 </div>
-                                <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE"
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE && action.actions.navigationType !== PrototypeNavigationType.SWAPSTATE"
                                     class="target">
                                     <span>目标</span>
                                     <div class="targetname" @click.stop="test(action.id)">
@@ -119,8 +121,7 @@
                                             @change="setExtraScrollOffsetX(action.id)">
                                     </div>
                                 </div>
-                                <div v-if="action.actions.connectionType === PrototypeConnectionType.URL"
-                                    class="link">
+                                <div v-if="action.actions.connectionType === PrototypeConnectionType.URL" class="link">
                                     <span>链接</span>
                                     <input v-select ref="connectionURL" type="text" placeholder="输入链接地址"
                                         :value="action.actions.connectionURL"
@@ -223,7 +224,7 @@
             <div v-else class="tips">
                 <span>交互</span>
             </div>
-            <Origin :context=props.context :prototypestart=prototypestart @createorigin=createOrigin></Origin>
+
         </el-scrollbar>
     </div>
 </template>
@@ -395,9 +396,6 @@ const reflush = ref<number>(0);
 const reflush_by_selection = ref<number>(0);
 const reflush_by_shapes = ref<number>(0);
 const isPrototype = ref<ShapeView[]>([])
-const originName = ref<string>('')
-const originDescribed = ref<string>('')
-const originNameNumber = ref<number>(0)
 const originedit = ref<boolean>(false)
 const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
@@ -925,438 +923,6 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
 
 }
 
-const changeStyle = (type: string, easingType: PrototypeEasingType, time: number) => {
-    const el = document.querySelector('.containerB') as HTMLElement
-    const elA = document.querySelector('.containerA') as HTMLElement
-    const fn = easingFn.get(easingType ?? "LINEAR")!
-    const t = time || 0.3
-
-    if (type === PrototypeTransitionType.INSTANTTRANSITION) return
-    el.style.transition = `all ${t}s cubic-bezier(${fn.join()}) 0s`;
-    el.style.opacity = "1";
-    el.style.left = "0px";
-    el.style.top = "0px";
-    if (type.includes('OUT') && type.includes('LEFT')) {
-        if (type.includes('SLIDE')) {
-            el.style.left = "0px";
-            el.style.opacity = "1";
-        } else {
-            el.style.left = "-54px";
-            el.style.top = "0px";
-        }
-    }
-    if (type.includes('OUT') && type.includes('RIGHT')) {
-
-        if (type.includes('SLIDE')) {
-            el.style.left = "0px";
-            el.style.opacity = "1";
-        } else {
-            el.style.left = "54px";
-            el.style.top = "0px";
-        }
-    }
-    if (type.includes('OUT') && type.includes('TOP')) {
-
-        if (type.includes('SLIDE')) {
-            el.style.top = "0px";
-            el.style.opacity = "1";
-        } else {
-            el.style.left = "0px";
-            el.style.top = "64px";
-        }
-    }
-    if (type.includes('OUT') && type.includes('BOTTOM')) {
-
-        if (type.includes('SLIDE')) {
-            el.style.top = "0px";
-            el.style.opacity = "1";
-        } else {
-            el.style.left = "0px";
-            el.style.top = "-64px";
-        }
-    }
-    if (animations.get(type as PrototypeTransitionType) === '滑入') {
-        if (type.includes('LEFT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '-12px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('RIGHT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '12px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('TOP')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '12px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('BOTTOM')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '-12px';
-            elA.style.opacity = '0.4';
-        }
-    }
-    if (animations.get(type as PrototypeTransitionType) === '滑出') {
-        if (type.includes('LEFT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '-54px';
-            // elA.style.opacity = '0.4';
-        }
-        if (type.includes('RIGHT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '54px';
-            // elA.style.opacity = '0.4';
-        }
-        if (type.includes('TOP')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '64px';
-            // elA.style.opacity = '0.4';
-        }
-        if (type.includes('BOTTOM')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '-64px';
-            // elA.style.opacity = '0.4';
-        }
-    }
-    if (animations.get(type as PrototypeTransitionType) === '推入') {
-        if (type.includes('LEFT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '-54px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('RIGHT')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.left = '54px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('TOP')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '64px';
-            elA.style.opacity = '0.4';
-        }
-        if (type.includes('BOTTOM')) {
-            elA.style.transition = `all ${t}s cubic-bezier(${fn[0]},${fn[1]},${fn[2]},${fn[3]}) 0s`;
-            elA.style.top = '-64px';
-            elA.style.opacity = '0.4';
-        }
-    }
-}
-
-const setStyleA = (type: PrototypeTransitionType, easingType: PrototypeEasingType, time: number): StyleValue => {
-    console.log('========a', type);
-    const width = 54
-    const height = 64
-    const el = document.querySelector('.containerA') as HTMLElement;
-    let sty: any;
-    let timer: any
-    let timer2: any
-    if (el) {
-        const change = () => {
-            if (timer2) clearTimeout(timer2)
-            timer2 = setTimeout(() => {
-                if (typeof sty === 'object') {
-                    Object.keys(sty).forEach((key: any) => {
-                        el.style[key] = sty[key]
-                    });
-                }
-                console.log('==============1111111');
-                clearTimeout(timer2)
-            }, 500);
-            el.removeEventListener("transitionend", change)
-        }
-        el.addEventListener("transitionend", change)
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => {
-            changeStyle(type, easingType, time)
-            clearTimeout(timer)
-        }, 200);
-    }
-    switch (type) {
-        case PrototypeTransitionType.SLIDEFROMLEFT:
-
-            return sty = {
-                transition: '',
-                zIndex: 2,
-                opacity: 1,
-                left: 0,
-            }
-        case PrototypeTransitionType.SLIDEFROMRIGHT:
-            return sty = {
-                transition: '',
-                zIndex: 2,
-                opacity: 1,
-                left: 0,
-            }
-        case PrototypeTransitionType.SLIDEFROMTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                opacity: 1,
-                top: 0,
-            }
-        case PrototypeTransitionType.SLIDEFROMBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                opacity: 1,
-                top: 0,
-            }
-        case PrototypeTransitionType.SLIDEOUTTOLEFT:
-            return {
-                transition: '',
-                zIndex: 2,
-                left: 0,
-                backgroundColor: 'silver',
-                border: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTORIGHT:
-            return {
-                transition: '',
-                zIndex: 2,
-                left: 0,
-                backgroundColor: 'silver',
-                border: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTOTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0,
-                backgroundColor: 'silver',
-                border: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTOBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0,
-                backgroundColor: 'silver',
-                border: "unset",
-            }
-        case PrototypeTransitionType.PUSHFROMLEFT:
-            return {
-                transition: '',
-                zIndex: 2,
-                left: 0,
-                opacity: 1,
-            }
-        case PrototypeTransitionType.PUSHFROMRIGHT:
-            return {
-                transition: '',
-                zIndex: 2,
-                left: 0,
-                opacity: 1,
-            }
-        case PrototypeTransitionType.PUSHFROMTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0,
-                opacity: 1,
-            }
-        case PrototypeTransitionType.PUSHFROMBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0,
-                opacity: 1,
-            }
-        default:
-            return
-    }
-}
-const setStyle = (type: string, easingType: PrototypeEasingType, time: number): StyleValue => {
-    console.log('========', type);
-    const width = 54
-    const height = 64
-    const el = document.querySelector('.containerB') as HTMLElement;
-    let sty: any;
-    let timer: any
-    let timer2: any
-    if (el) {
-        const change = () => {
-            if (timer2) clearTimeout(timer2)
-            timer2 = setTimeout(() => {
-                if (typeof sty === 'object') {
-                    Object.keys(sty).forEach((key: any) => {
-                        el.style[key] = sty[key]
-                    });
-                }
-                console.log('==============2222222');
-
-                clearTimeout(timer2)
-            }, 500);
-            el.removeEventListener("transitionend", change)
-        }
-        el.addEventListener("transitionend", change)
-        if (timer) clearTimeout(timer)
-        timer = setTimeout(() => {
-            changeStyle(type, easingType, time)
-            clearTimeout(timer)
-        }, 200);
-    }
-    switch (type) {
-        case PrototypeTransitionType.DISSOLVE:
-            return {
-                transition: '',
-                zIndex: 2,
-                opacity: 0,
-            }
-        case PrototypeTransitionType.MOVEFROMLEFT:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                left: width + 'px',
-            }
-
-        case PrototypeTransitionType.MOVEFROMRIGHT:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                left: -width + 'px',
-            }
-
-        case PrototypeTransitionType.MOVEFROMTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                top: -height + 'px',
-            }
-        case PrototypeTransitionType.MOVEFROMBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                top: height + 'px',
-            }
-        case PrototypeTransitionType.MOVEOUTTOLEFT:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0 + 'px',
-                left: 0 + 'px',
-                border: "unset",
-            }
-        case PrototypeTransitionType.MOVEOUTTORIGHT:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0 + 'px',
-                left: 0 + 'px',
-                border: "unset",
-            }
-        case PrototypeTransitionType.MOVEOUTTOTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0 + 'px',
-                left: 0 + 'px',
-                border: "unset",
-            }
-        case PrototypeTransitionType.MOVEOUTTOBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                top: 0 + 'px',
-                left: 0 + 'px',
-                border: "unset",
-            }
-        case PrototypeTransitionType.SLIDEFROMLEFT:
-            return sty = {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                left: width + 'px',
-            }
-        case PrototypeTransitionType.SLIDEFROMRIGHT:
-            return sty = {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                left: -width + 'px',
-            }
-        case PrototypeTransitionType.SLIDEFROMTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                top: -height + 'px',
-            }
-        case PrototypeTransitionType.SLIDEFROMBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: "unset",
-                top: height + 'px',
-            }
-        case PrototypeTransitionType.SLIDEOUTTOLEFT:
-            return {
-                transition: '',
-                top: 0 + 'px',
-                left: 12 + 'px',
-                opacity: 0.4,
-                backgroundColor: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTORIGHT:
-            return {
-                transition: '',
-                top: 0 + 'px',
-                left: -12 + 'px',
-                opacity: 0.4,
-                backgroundColor: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTOTOP:
-            return {
-                transition: '',
-                top: -12 + 'px',
-                left: 0 + 'px',
-                opacity: 0.4,
-                backgroundColor: "unset",
-            }
-        case PrototypeTransitionType.SLIDEOUTTOBOTTOM:
-            return {
-                transition: '',
-                top: 12 + 'px',
-                left: 0 + 'px',
-                opacity: 0.4,
-                backgroundColor: "unset",
-            }
-        case PrototypeTransitionType.PUSHFROMLEFT:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: 'unset',
-                left: width + 'px',
-            }
-        case PrototypeTransitionType.PUSHFROMRIGHT:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: 'unset',
-                left: -width + 'px',
-            }
-        case PrototypeTransitionType.PUSHFROMTOP:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: 'unset',
-                top: -height + 'px',
-            }
-        case PrototypeTransitionType.PUSHFROMBOTTOM:
-            return {
-                transition: '',
-                zIndex: 2,
-                border: 'unset',
-                top: height + 'px',
-            }
-        default:
-            return {}
-    }
-}
 function onblur() {
     console.log('失焦');
     showtargerlist.value = false
@@ -1524,10 +1090,6 @@ const test = (id: string) => {
 //创建原型起始节点
 const createOrigin = (data: PrototypeStartingPoint) => {
     if (prototypestart.value) return;
-    showIpnut.value = true
-    originName.value = '流程 ' + ++originNameNumber.value
-    originDescribed.value = ''
-    originedit.value = true;
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
@@ -1545,20 +1107,17 @@ const deleteOrigin = () => {
     if (!shape) return;
     e.delPrototypeStart(shape as ShapeView);
     updateData()
-
 }
 
 
 //设置原型起始节点
-const setPrototypeStartPoint = () => {
-    console.log('change');
+const setPrototypeStartPoint = (data: PrototypeStartingPoint) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    e.setPrototypeStart(shape as ShapeView, new PrototypeStartingPoint(originName.value, originDescribed.value));
-
-    console.log('change-end');
+    e.setPrototypeStart(shape as ShapeView, data);
+    updateData()
 }
 
 //设置原型动作-其他
@@ -1735,17 +1294,8 @@ function updateData() {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
-            // prototypeinteraction.value = (shape as ArtboradView).prototypeInterAction;
-            if (prototypestart.value) {
-                originName.value = prototypestart.value.name
-                originDescribed.value = prototypestart.value.desc
-            }
-            // if (prototypeinteraction.value) {
-            //     for (let index = 0; index < prototypeinteraction.value.length; index++) {
-            //         const element = prototypeinteraction.value[index];
-            //         getTargetNodeName(element.actions[0].targetNodeID)
-            //     }
-            // }
+            console.log(prototypestart.value);
+
         }
 
     }
@@ -1814,21 +1364,18 @@ function _selection_change() {
     const selectedShapes = props.context.selection.selectedShapes;
 
     isProtoType.value.clear()
-    // if (selectedShapes.length === 1) {
-    //     const shape = selectedShapes[0];
-    //     if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-    //         isProtoType.value.push(shape)
-    //     }
-    //     //暂时获取组件状态
-    //     const symref = props.context.selection.symbolrefview;
-    //     variables.value = [];
-    //     if (symref) {
-    //         const result = get_var_for_ref(symref, t);
-    //         if (result) {
-    //             variables.value = result.variables;
-    //         }
-    //     }
-    // }
+    if (selectedShapes.length === 1) {
+        const shape = selectedShapes[0];
+        const symref = shape as SymbolRefView;
+        variables.value = [];
+        if (symref) {
+            const result = get_var_for_ref(symref, t);
+            if (result) {
+                variables.value = result.variables;
+                console.log(variables.value);
+            }
+        }
+    }
 
     // shapes.value = [];
 
@@ -2203,7 +1750,7 @@ onUnmounted(() => {
                     background-color: white;
                     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
                     box-sizing: border-box;
-                    z-index: 1;
+                    z-index: 999;
 
                     .header-search {
                         display: flex;

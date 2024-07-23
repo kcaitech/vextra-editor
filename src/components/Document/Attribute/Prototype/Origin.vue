@@ -13,9 +13,9 @@
         <div v-else class="originname">
             <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName }}</label>
             <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName" @blur="showIpnut = false"
-                @change="setPrototypeStartPoint" autocomplete="off">
+                @change="setOrigin" autocomplete="off">
             <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
-                v-model="originDescribed" @change="setPrototypeStartPoint"></textarea>
+                v-model="originDescribed" @change="setOrigin"></textarea>
         </div>
     </div>
 </template>
@@ -24,7 +24,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { ShapeView, PrototypeStartingPoint } from "@kcdesign/data"
-import { ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 type Prototypestart = {
     name: string,
@@ -38,61 +38,52 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: "createorigin", data: PrototypeStartingPoint): any
     (e: "deleteorigin"): void
+    (e: "setorigin", data: PrototypeStartingPoint): void
 }>()
-
-watch(() => props.prototypestart, () => {
-    console.log(props.prototypestart);
-
-})
 
 const showIpnut = ref<boolean>(false)
 const originNumber = ref<number>(1)
-const originName = ref<string>('流程' + originNumber.value)
+const originName = ref<string>('')
 const originDescribed = ref<string>('')
+
+const start = computed<PrototypeStartingPoint>(() => {
+    return new PrototypeStartingPoint(originName.value, originDescribed.value)
+})
 
 //创建原型起始节点
 const createOrigin = () => {
-    console.log('111');
-    
+    if (props.prototypestart) return
+    showIpnut.value = true
     originNumber.value++
-    console.log(originNumber.value);
-    
-    const start = new PrototypeStartingPoint(originName.value, originDescribed.value)
-    emits('createorigin', start)
-    // if (prototypestart.value) return;
-    // showIpnut.value = true
-    // originName.value = '流程 ' + ++originNameNumber.value
-    // originDescribed.value = ''
-    // originedit.value = true;
-    // const page = props.context.selection.selectedPage!;
-    // const e = props.context.editor4Page(page);
-    // const shape = props.context.selection.selectedShapes[0];
-    // if (!shape) return;
-    // e.setPrototypeStart(shape, new PrototypeStartingPoint(originName.value, originDescribed.value));
-    // updateData()
+    const data = new PrototypeStartingPoint('流程 ' + originNumber.value, '')
+    emits('createorigin', data)
 }
+
+watch(()=>props.prototypestart,()=>{
+    if(!props.prototypestart)return
+    originName.value=props.prototypestart.name
+    originDescribed.value=props.prototypestart.desc
+})
 
 //删除原型起始节点
 const deleteOrigin = () => {
-    const page = props.context.selection.selectedPage!;
-    const e = props.context.editor4Page(page);
-    const shape = props.context.selection.selectedShapes[0]
-    if (!shape) return;
-    e.delPrototypeStart(shape as ShapeView);
-
+    emits('deleteorigin')
 }
 
 //设置原型起始节点
-const setPrototypeStartPoint = () => {
-    console.log('change');
-    const page = props.context.selection.selectedPage!;
-    const e = props.context.editor4Page(page);
-    const shape = props.context.selection.selectedShapes[0];
-    if (!shape) return;
-    e.setPrototypeStart(shape as ShapeView, new PrototypeStartingPoint(originName.value, originDescribed.value));
+const setOrigin = () => {
+    console.log('1111');
 
-    console.log('change-end');
+    showIpnut.value = false
+    emits('setorigin', start.value)
 }
+
+onMounted(() => {
+    if (props.prototypestart?.name) {
+        originName.value = props.prototypestart?.name
+        originDescribed.value = props.prototypestart?.desc
+    }
+})
 
 </script>
 

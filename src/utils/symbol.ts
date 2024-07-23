@@ -14,7 +14,7 @@ import {
     SymbolView,
     Variable,
     VariableType,
-    adapt2Shape
+    adapt2Shape,
 } from "@kcdesign/data";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
@@ -764,12 +764,25 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
     let result2: RefAttriListItem[] = [];
 
     const sym = symref.symData;
+    // const sym = symref.data
     if (!sym) {
         return false;
     }
 
+    // let parent:any
+    // if (sym.type === ShapeType.SymbolRef) {
+    //     parent = (sym as SymbolRefShape).getSymbolMgr()?.get((sym as SymbolRefShape).refId)?.parent;
+    //     console.log('====================2',parent);
+        
 
-    const parent = sym.parent;
+    // }
+
+    // if (sym.type === ShapeType.Symbol) {
+    //     parent = sym.parent
+    //     console.log('====================2',parent);
+        
+    // }
+
 
     if (parent instanceof SymbolUnionShape) { // 存在可变组件
         const state = sym; // 先确定当前实例用的是哪个可变组件
