@@ -5,7 +5,7 @@ import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
 import { eventPriority, getPreviewMatrix } from '@/utils/preview';
 import { Matrix, PathShapeView, PrototypeEvents, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { ProtoAction } from './actions';
 
 
@@ -37,7 +37,7 @@ const tracing = ref<boolean>(false);
 let downXY: XY = { x: 0, y: 0 };
 let isDragging = false;
 const saveShape = ref<ShapeView>();
-const protoActionFn = new ProtoAction(props.context);
+let protoActionFn: ProtoAction | undefined = undefined;
 let eventTypeIndex: EventIndex = {
     click: -1,
     dblclick: -1,
@@ -49,6 +49,9 @@ let eventTypeIndex: EventIndex = {
 
 function pathMousedown(e: MouseEvent) {
     const selection = props.context.selection;
+    if (props.context.workspace.isPageDragging) {
+        return;
+    }
     e.stopPropagation();
 
     if (props.context.preview.menuVisible) {
@@ -58,6 +61,9 @@ function pathMousedown(e: MouseEvent) {
     const hoveredShape = selection.hoveredShape;
     if (!hoveredShape) {
         return;
+    }
+    if (!protoActionFn) {
+        protoActionFn = new ProtoAction(props.context);
     }
     downXY = { x: e.x, y: e.y };
     if (e.button === 0) {
@@ -70,7 +76,7 @@ function pathMousedown(e: MouseEvent) {
                     const type = protoAction.event.interactionType;
                     if (type === PrototypeEvents.DBCLICK) {
                         console.log('双击事件');
-                        protoActionFn.executeActionx(protoAction.actions);
+                        protoActionFn.executeActionx(protoAction.actions, props.matrix);
                         break;
                     }
                 }
@@ -83,7 +89,7 @@ function pathMousedown(e: MouseEvent) {
                 const type = protoAction.event.interactionType;
                 if (type === PrototypeEvents.MOUSEDOWN) {
                     console.log('按下鼠标');
-                    protoActionFn.executeActionx(protoAction.actions);
+                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
                     break;
                 }
             }
@@ -101,12 +107,15 @@ const onMouseMove = (e: MouseEvent) => {
         if (!hoveredShape) return;
         const protoActions = hoveredShape.prototypeInterAction;
         if (!protoActions) return;
+        if (!protoActionFn) {
+            protoActionFn = new ProtoAction(props.context);
+        }
         for (let i = 0; i < protoActions.length; i++) {
             const protoAction = protoActions[i];
             const type = protoAction.event.interactionType;
             if (type === PrototypeEvents.DRAG) {
                 console.log('拖拽事件');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 break;
             }
         }
@@ -120,25 +129,28 @@ const onMouseUp = (e: MouseEvent) => {
     if (!hoveredShape) return;
     const protoActions = hoveredShape.prototypeInterAction;
     if (!protoActions) return;
+    if (!protoActionFn) {
+        protoActionFn = new ProtoAction(props.context);
+    }
     for (let i = 0; i < protoActions.length; i++) {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
         if (type === PrototypeEvents.ONCLICK && eventTypeIndex.click > eventTypeIndex.mouseup && eventTypeIndex.click > eventTypeIndex.mousedown && eventTypeIndex.click > eventTypeIndex.dblclick) {
             if (!isDragging && e.button === 0) {
                 console.log('单击事件');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
         if (type === PrototypeEvents.MOUSEUP && eventTypeIndex.mouseup > eventTypeIndex.click && eventTypeIndex.mouseup > eventTypeIndex.dblclick) {
             if (!isDragging && e.button === 0) {
                 console.log('松开鼠标');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
         if (type === PrototypeEvents.RIGHTCLICK) {
             if (!isDragging && e.button === 2) {
                 console.log('右击事件');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
     }
@@ -150,7 +162,11 @@ const onMouseUp = (e: MouseEvent) => {
 }
 
 const onMouseenter = () => {
+    if (props.context.workspace.isPageDragging) {
+        return;
+    }
     const hoveredShape = props.context.selection.hoveredShape;
+    protoActionFn = new ProtoAction(props.context);
     if (hoveredShape) {
         const protoActions = hoveredShape.prototypeInterAction;
         if (!protoActions) return;
@@ -161,19 +177,19 @@ const onMouseenter = () => {
             if (type === PrototypeEvents.HOVER || type === PrototypeEvents.MOUSEENTER) {
                 if (type === PrototypeEvents.HOVER && eventTypeIndex.hover > eventTypeIndex.mouseenter) {
                     console.log('鼠标悬停');
-                    protoActionFn.executeActionx(protoAction.actions);
+                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 } else if (type === PrototypeEvents.MOUSEENTER && eventTypeIndex.mouseenter > eventTypeIndex.hover) {
                     console.log('hoveredShape: 移入');
-                    protoActionFn.executeActionx(protoAction.actions);
+                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 }
             }
             if (type === PrototypeEvents.AFTERTIMEOUT) {
                 console.log('鼠标延迟');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
             if (type === PrototypeEvents.MOUSELEAVE) {
                 console.log('saveShape.value: 移出');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
         saveShape.value = hoveredShape;
@@ -186,7 +202,7 @@ const onMouseenter = () => {
             const type = protoAction.event.interactionType;
             if (type === PrototypeEvents.MOUSELEAVE) {
                 console.log('saveShape.value: 移出');
-                protoActionFn.executeActionx(protoAction.actions);
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 break;
             }
         }
@@ -228,15 +244,24 @@ const selected_watcher = (t: number | string) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
         onMouseenter()
         createShapeTracing();
+    } else if (t === Selection.CHANGE_SHAPE) {
+        props.context.preview.setInteractionAction(undefined);
+    }
+}
+
+const preview_watcher = (t: number) => {
+    if (t === Preview.MATRIX_CHANGE) {
+        createShapeTracing();
     }
 }
 
 onMounted(() => {
-    new ProtoAction(props.context);
     props.context.selection.watch(selected_watcher);
+    props.context.preview.watch(preview_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
+    props.context.preview.unwatch(preview_watcher);
 })
 </script>
 

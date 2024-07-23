@@ -1,17 +1,18 @@
 import { Context } from "@/context";
-import { getFrameList } from "@/utils/preview";
-import { PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView } from "@kcdesign/data";
+import { XYsBounding } from "@/utils/common";
+import { getFrameList, getPreviewMatrix } from "@/utils/preview";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
-    private m_shapes: ShapeView[] | []
+    private m_shapes: ShapeView[] = [];
     constructor(context: Context) {
         this.m_context = context;
-        const page = this.m_context.selection.selectedPage;
-        this.m_shapes = getFrameList(page!);
     }
 
-    executeActionx(action: PrototypeActions) {
+    executeActionx(action: PrototypeActions, matrix: Matrix) {
+        const page = this.m_context.selection.selectedPage;
+        this.m_shapes = getFrameList(page!);
         if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.NAVIGATE) {
             this.actionSkipPage(action);
         } else if (action.connectionType === PrototypeConnectionType.URL) {
@@ -20,6 +21,10 @@ export class ProtoAction {
             }
         } else if (action.connectionType === PrototypeConnectionType.BACK) {
             this.actionBackPage();
+        } else if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.SCROLLTO) {
+            this.artboardInScroll(action, matrix);
+        } else if (action.navigationType === PrototypeNavigationType.OVERLAY) {
+            this.openDialog(action);
         }
     }
     // 跳转页面
@@ -48,8 +53,28 @@ export class ProtoAction {
     }
 
     // 容器内滚动
-    artboardInScroll(action: PrototypeActions) {
+    artboardInScroll(action: PrototypeActions, matrix: Matrix) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape.childs.length) return;
+        if (!action.extraScrollOffset) return;
+        // const scrol_shape = select_shape.childs.find(item => item.id === action.targetNodeID);
+        const scrol_shape = select_shape.childs[3];
+        if (scrol_shape) {
+            const m = getPreviewMatrix(scrol_shape);
+            m.multiAtLeft(matrix);
+            const frame = scrol_shape.frame;
+            const points = [
+                m.computeCoord2(0, 0),
+                m.computeCoord2(frame.width, 0),
+                m.computeCoord2(frame.width, frame.height),
+                m.computeCoord2(0, frame.height)
+            ];
+            const box = XYsBounding(points);
+            const offsetx = box.left - action.extraScrollOffset.x;
+            const offsety = box.top - action.extraScrollOffset.y;
 
+            this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety });
+        }
     }
 
     // 打开链接
@@ -72,8 +97,8 @@ export class ProtoAction {
 
     }
     // 打开浮层
-    openDialog() {
-
+    openDialog(action: PrototypeActions) {
+        this.m_context.preview.setInteractionAction(action);
     }
     // 关闭浮层
     closeDialog() {

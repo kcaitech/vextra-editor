@@ -20,6 +20,9 @@ export class Preview extends WatchableObject {
     static BEFORE_PAGE = 9;
     static NAVI_CHANGE = 10;
     static SCALE_CHANGE = 11;
+    static ARTBOARD_SCROLL = 12;
+    static MATRIX_CHANGE = 13;
+    static INTERACTION_CHANGE = 14;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;
@@ -29,7 +32,9 @@ export class Preview extends WatchableObject {
     private m_menu_options: ScaleType | undefined = ScaleType.Actual;
     private m_visible_ui: boolean = true;
     private m_menu_visible: boolean = false;
-    private m_proto_action: { id: string, action: PrototypeActions } | undefined
+    private m_proto_action: { id: string, action: PrototypeActions } | undefined;
+    private m_atrboard_scroll_offset: { x: number, y: number } = { x: 0, y: 0 };
+    private m_interaction_action: Set<PrototypeActions> = new Set();
 
     constructor(context: Context) {
         super();
@@ -114,5 +119,27 @@ export class Preview extends WatchableObject {
 
     get protoAction() {
         return this.m_proto_action;
+    }
+
+    setArtboardScroll(offset: { x: number, y: number }) {
+        this.m_atrboard_scroll_offset = offset;
+        this.notify(Preview.ARTBOARD_SCROLL);
+    }
+
+    get artboardScrollOffset() {
+        return this.m_atrboard_scroll_offset;
+    }
+
+    setInteractionAction(action?: PrototypeActions) {
+        if(action) {
+            this.m_interaction_action.add(action);
+        } else {
+            this.m_interaction_action.clear();
+        }
+        this.notify(Preview.INTERACTION_CHANGE);
+    }
+
+    get interactionAction() {
+        return this.m_interaction_action;
     }
 }

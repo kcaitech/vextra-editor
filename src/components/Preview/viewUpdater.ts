@@ -4,6 +4,7 @@ import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
+import { Preview } from "@/context/preview";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -98,10 +99,10 @@ export class ViewUpdater {
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
         svgEl.style['transform'] = m.toString();
-
         this.m_context.preview.setScale(this.getScale(m));
 
         this.matrix.reset(m);
+        this.m_context.preview.notify(Preview.MATRIX_CHANGE);
     }
 
     private getCenterMatrix() {
@@ -136,7 +137,7 @@ export class ViewUpdater {
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
         transformMatrix.trans(rootCX - cx, rootCY - cy);
-        
+
         return transformMatrix;
     }
 
@@ -380,13 +381,13 @@ export class ViewUpdater {
     modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
-        
+
         if (!shape || !container || !this.m_page_card) {
             return;
         }
 
         const matrix = this.getCenterMatrix();
-        
+
         this.setAttri(matrix);
     }
 
@@ -514,7 +515,7 @@ export class ViewUpdater {
             ColVector3D.FromXY(0, height)
         ]);
         const box = XYsBounding([lt, rt, rb, lb]);
-        
+
         return box;
     }
 
@@ -534,6 +535,47 @@ export class ViewUpdater {
             stepx = stepy;
             stepy = 0;
         }
+
+        const bound = this.getBoundingOnView()!;
+
+        const left = bound.left;
+        const top = bound.top;
+        const right = bound.right;
+        const bottom = bound.bottom;
+
+        if (left < 0) {
+            if (left > stepx) stepx = left;
+        }
+        if (left >= 0 && stepx < 0) stepx = 0;
+        if (top < 0) {
+            if (top > stepy) stepy = top;
+        }
+        if (top >= 0 && stepy < 0) stepy = 0;
+
+        if (right > root.width) {
+            if ((right - root.width) < stepx) stepx = right - root.width;
+        }
+        if (right <= root.width && stepx > 0) stepx = 0;
+        if (bottom > root.height) {
+            if ((bottom - root.height) < stepy) stepy = bottom - root.height;
+        }
+        if (bottom <= root.height && stepy > 0) stepy = 0;
+
+        this.matrix.trans(-stepx, -stepy);
+
+        this.setAttri(this.matrix);
+    }
+
+    artboardInTrans() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+
+        const root = container.getBoundingClientRect();
+        let stepx = this.m_context.preview.artboardScrollOffset.x;
+        let stepy = this.m_context.preview.artboardScrollOffset.y;
 
         const bound = this.getBoundingOnView()!;
 
