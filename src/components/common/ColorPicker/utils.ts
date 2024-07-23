@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
+import { Border, Color, Fill, ShapeType, ShapeView, TextShapeView, Gradient, Stop, GradientType, FillType, GroupShapeView, TableView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, TextBehaviour, TextShape, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';

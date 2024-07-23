@@ -31,12 +31,12 @@ export function locateShape(context: Context, shape: ShapeView, __root?: LocateR
     const clientTransform = makeShapeTransform2By1(client);
     m.addTransform(clientTransform); // root 到 client
 
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
     const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
     ]);
 
     const box = XYsBounding([lt, rt, rb, lb]);

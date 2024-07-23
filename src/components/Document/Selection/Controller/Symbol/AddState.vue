@@ -30,15 +30,15 @@ function update() {
 
 function gen_add_button_transform() {
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const fromRoot = shape.transform2FromRoot;
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
 
     const transform = new Transform()
         .setTranslate(props.symbolType === SymbolType.Union
-            ? ColVector3D.FromXY(width / 2, height)
-            : ColVector3D.FromXY(width, height / 2))
+            ? ColVector3D.FromXY(x + width / 2, y + height)
+            : ColVector3D.FromXY(x + width, y + height / 2))
         .addTransform(fromRoot)
         .addTransform(clientMatrix)
         .clearSkew()

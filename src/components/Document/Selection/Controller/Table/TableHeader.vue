@@ -72,7 +72,7 @@ function update_position() {
         ys = [];
 
         const table = props.shape;
-        const { width, height } = table.size;
+        const { x, y, width, height } = table.frame;
 
         layout = table.getLayout();
 
@@ -81,9 +81,9 @@ function update_position() {
         m.addTransform(mClient);
 
         const { col0: lt, col1: rt, col2: lb } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(0, height)
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x, y + height)
         ]);
 
         const X = rt.clone().subtract(lt);
@@ -192,9 +192,10 @@ function x_dot_mouseenter(index: number) {
             .translateInLocal(ColVector3D.FromXY(-10, -14))
     ).toString();
 
+    const frame = props.shape.frame;
     const { col0, col1 } = m.transform([
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, props.shape.size.height)
+        ColVector3D.FromXY(frame.x + width, frame.y),
+        ColVector3D.FromXY(frame.x + width, frame.y + frame.height)
     ]);
 
     addP1 = col0;
@@ -226,9 +227,10 @@ function y_dot_mouseenter(index: number) {
             .translateInLocal(ColVector3D.FromXY(-14, -10))
     ).toString();
 
+    const frame = props.shape.frame;
     const { col0, col1 } = m.transform([
-        ColVector3D.FromXY(0, height),
-        ColVector3D.FromXY(props.shape.size.width, height)
+        ColVector3D.FromXY(frame.x, frame.y + height),
+        ColVector3D.FromXY(frame.x + frame.width, frame.y + height)
     ]);
 
     addP1 = col0;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
+import { PageView, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getFrameList } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";

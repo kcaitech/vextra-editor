@@ -1548,12 +1548,12 @@ function sourceBounding(source: Shape[]) {
     for (let i = 0; i < source.length; i++) {
         const shape = source[i];
         const __transform = makeShapeTransform2By1(shape.transform);
-        const { width, height } = shape.size;
+        const { x, y, width, height } = shape.frame;
         const { col0, col1, col2, col3 } = __transform.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(0, height),
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, y + height),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x, y + height),
         ]);
         const box = XYsBounding([col0, col1, col2, col3]);
 
@@ -1689,7 +1689,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
         }
     } else { // 将粘贴在指定的容器下
         console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
-        const { width: envWidth, height: envHeight } = env.size;
+        const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
         const env2root = env.transform2FromRoot;
         const {
@@ -1698,10 +1698,10 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             col2: envRB,
             col3: envLB
         } = env2root.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(envWidth, 0),
-            ColVector3D.FromXY(envWidth, envHeight),
-            ColVector3D.FromXY(0, envHeight),
+            ColVector3D.FromXY(envX, envY),
+            ColVector3D.FromXY(envX + envWidth, envY),
+            ColVector3D.FromXY(envX + envWidth, envY + envHeight),
+            ColVector3D.FromXY(envX, envY + envHeight),
         ]);
 
         const envBound = XYsBounding([envLT, envRT, envRB, envLB]);

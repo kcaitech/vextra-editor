@@ -235,7 +235,7 @@ export class ScaleHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        this.shapeSizeList = shapes.map(shape => ({ width: shape.size.width, height: shape.size.height }));
+        this.shapeSizeList = shapes.map(shape => ({ width: shape.frame.width, height: shape.frame.height }));
 
         const alpha = shapes[0];
         const multi = shapes.length > 1;
@@ -260,8 +260,8 @@ export class ScaleHandler extends TransformHandler {
                 height: this.originSelectionBox.height
             }
             : {
-                width: alpha.size.width,
-                height: alpha.size.height
+                width: alpha.frame.width,
+                height: alpha.frame.height
             };
     }
 

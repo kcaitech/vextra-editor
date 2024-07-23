@@ -39,13 +39,13 @@ export function flip(context: Context, axis: 'X' | 'Y') {
         }
 
         t.addTransform(parent2root);
-        const { width, height } = shape.size;
+        const { x, y, width, height } = shape.frame;
 
         const { col0, col1, col2, col3 } = t.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(0, height),
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, height),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x, height),
         ]);
 
         const box = XYsBounding([col0, col1, col2, col3]);

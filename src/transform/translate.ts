@@ -118,7 +118,7 @@ export class TranslateHandler extends TransformHandler {
             const shape = this.shapes[i];
             const parent = shape.parent!;
             if (!parent) continue;
-            const { width, height } = shape.size;
+            const { x, y, width, height } = shape.frame;
             if (!matrixParent2rootCache.has(parent.id)) {
                 matrixParent2rootCache.set(parent.id, parent.transform2FromRoot)
             }
@@ -129,10 +129,10 @@ export class TranslateHandler extends TransformHandler {
             m.addTransform(matrixParent2rootCache.get(parent.id)!);
 
             const { col0: LT, col1: RT, col2: RB, col3: LB } = m.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(width, 0),
-                ColVector3D.FromXY(width, height),
-                ColVector3D.FromXY(0, height),
+                ColVector3D.FromXY(x, y),
+                ColVector3D.FromXY(x + width, y),
+                ColVector3D.FromXY(x + width, y + height),
+                ColVector3D.FromXY(x, y + height),
             ])
 
             this.baseFrames4trans.set(shape.id, {

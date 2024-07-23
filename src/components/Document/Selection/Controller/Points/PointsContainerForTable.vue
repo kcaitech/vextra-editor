@@ -55,13 +55,13 @@ function update_transform() {
 
     ltTransform.value = makeMatrixByTransform2(transform.translateInLocal(ColVector3D.FromXY(-20, -20))).toString();
 
-    const {width, height} = shape.size;
+    const {x, y, width, height} = shape.frame;
 
     const {col0: lt, col1: rt, col2: rb, col3: lb} = m.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height)
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height)
     ]);
 
     RB.value = rb;
@@ -221,7 +221,7 @@ function setCursor() {
     const fromRoot = shape.transform2FromRoot;
 
     const fromClient = fromRoot.addTransform(clientMatrix);
-    const {width, height} = shape.size;
+    const {x, y, width, height} = shape.frame;
 
     const {col0: vecRB} = fromClient.clone()
         .clearTranslate()
@@ -235,7 +235,7 @@ function setCursor() {
     const theta3 = cursorAngle(xVector, vecRB);
 
     const cols = fromClient.transform([
-        ColVector3D.FromXY(width, height)
+        ColVector3D.FromXY(x + width, y + height)
     ]);
 
     const {col0} = cols;

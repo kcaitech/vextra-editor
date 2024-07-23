@@ -105,7 +105,7 @@ export const getPngImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         } else {
           const matrix = el.style.transform;
           const m = shape.transform2FromRoot;
-          const size = shape.size;
+          const size = shape.frame;
           m.translateX(-m.m03);
           m.translateY(-m.m13);
           const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
@@ -204,7 +204,7 @@ export const getSvgImageData = async (svg: SVGSVGElement, trim: boolean, id: str
         } else {
           const matrix = el.style.transform;
           const m = shape.transform2FromRoot;
-          const size = shape.size;
+          const size = shape.frame;
           m.translateX(-m.m03);
           m.translateY(-m.m13);
           const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([

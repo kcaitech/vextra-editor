@@ -79,7 +79,7 @@ function modifySize() {
         height.value++;
     }
 
-    viewbox.value = `0 0 ${width.value} ${height.value}`;
+    viewbox.value = `${props.params.data.frame.x} ${props.params.data.frame.y} ${width.value} ${height.value}`;
 }
 
 const stopWatchPage = watch(() => props.params.data, (value, old) => {

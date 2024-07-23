@@ -44,7 +44,7 @@ interface PathView {
 
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
-const matrix = new Matrix();
+// const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
@@ -93,7 +93,7 @@ function shapesWatcher(...args: any) {
             update_by_shapes();
             updateTrigger.value++;
         } else if (args.includes('destroy')) {
-            matrix.reset(props.params.matrix);
+            // matrix.reset(props.params.matrix);
             createShapeTracing();
             createController2()
         }
@@ -101,20 +101,20 @@ function shapesWatcher(...args: any) {
 }
 
 function update_by_shapes() {
-    matrix.reset(props.params.matrix);
+    // matrix.reset(props.params.matrix);
     createShapeTracing();
     createController();
 }
 
 function update_by_matrix() {
-    matrix.reset(props.params.matrix);
+    // matrix.reset(props.params.matrix);
     createShapeTracing();
     createController();
 }
 
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
-        matrix.reset(props.params.matrix);
+        // matrix.reset(props.params.matrix);
         createShapeTracing();
         createController();
     }
@@ -129,11 +129,11 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
         tracing.value = false;
         controller.value = false;
     } else if (t === Selection.CHANGE_SHAPE) {
-        matrix.reset(props.params.matrix);
+        // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
-        matrix.reset(props.params.matrix);
+        // matrix.reset(props.params.matrix);
         createShapeTracing();
         watchShapes();
     }
@@ -144,7 +144,7 @@ function selectionWatcher(t: string | number) { // selection的部分动作可�
 
 function tool_watcher(t: number) {
     if (t === Tool.LABLE_CHANGE) {
-        matrix.reset(props.params.matrix);
+        // matrix.reset(props.params.matrix);
         createController();
         watchShapes();
         lableLineStatus();
@@ -186,7 +186,7 @@ function createShapeTracing() {
         tracing.value = false;
     } else {
         const m = hoveredShape.matrix2Root();
-        m.multiAtLeft(matrix);
+        m.multiAtLeft(props.params.matrix);
         const path = hoveredShape.getPath().clone();
         path.transform(m);
         const { x, y, right, bottom } = props.context.workspace.root;
@@ -251,9 +251,9 @@ function createController2() {
 
 function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
-        const s = shapes[0], m = s.matrix2Root(), f = s.size;
-        const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-        m.multiAtLeft(matrix);
+        const s = shapes[0], m = s.matrix2Root(), f = s.frame;
+        const points = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
+        m.multiAtLeft(props.params.matrix);
         for (let i = 0; i < 4; i++) {
             const p = points[i];
             points[i] = m.computeCoord3(p);
@@ -266,12 +266,9 @@ function modify_controller_frame(shapes: ShapeView[]) {
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
         if (s.type === ShapeType.Contact) continue;
-        const m = s.matrix2Root(), f = s.size;
-        m.multiAtLeft(matrix);
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
-            x: 0,
-            y: f.height
-        }];
+        const m = s.matrix2Root(), f = s.frame;
+        m.multiAtLeft(props.params.matrix);
+        const ps: { x: number, y: number }[] = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
         points.push(...ps);
     }

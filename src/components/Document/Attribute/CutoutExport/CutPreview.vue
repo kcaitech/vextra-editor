@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch, toRaw } from 'vue';
 import {
-    ExportFileFormat,
     ExportFormat,
-    GroupShapeView,
     Shape,
     ShapeType,
     ShapeView,

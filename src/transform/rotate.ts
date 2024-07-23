@@ -38,13 +38,13 @@ export function rotate(shapes: ShapeView[], deg: number) {
 
     for (const shape of shapes) {
         const t = makeShapeTransform2By1(shape.transform);
-        const { width, height } = shape.size;
+        const { x, y, width, height } = shape.frame;
 
         const angle = deg % 360 * Math.PI / 180;
         const os = t.decomposeEuler().z;
 
         t.rotateAt({
-            axis: Line.FromParallelZ(ColVector3D.FromXYZ(width / 2, height / 2, 0)),
+            axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
             angle: angle - os,
             mode: TransformMode.Local,
         });
@@ -170,7 +170,8 @@ export class RotateHandler extends TransformHandler {
 
             m1.multiAtLeft(m2);
 
-            const baseXYtoRoot = m1.computeCoord2(0, 0);
+            const frame = shape.frame;
+            const baseXYtoRoot = m1.computeCoord2(frame.x, frame.y);
 
             if (baseXYtoRoot.x < left) {
                 left = baseXYtoRoot.x;
@@ -188,11 +189,10 @@ export class RotateHandler extends TransformHandler {
                 bottom = baseXYtoRoot.y;
             }
 
-            const frame = shape.frame;
             const points = [
-                { x: frame.width, y: 0 },
-                { x: frame.width, y: frame.height },
-                { x: 0, y: frame.height }
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height }
             ];
 
             for (let i = 0; i < 3; i++) {
@@ -257,8 +257,8 @@ export class RotateHandler extends TransformHandler {
             width: this.originSelectionBox.width,
             height: this.originSelectionBox.height
         } : {
-            width: this.shapes[0].size.width,
-            height: this.shapes[0].size.height
+            width: this.shapes[0].frame.width,
+            height: this.shapes[0].frame.height
         };
         this.selectionCenter = this.selectionTransform.transform(ColVector3D.FromXY(
             this.selectionSize.width / 2,

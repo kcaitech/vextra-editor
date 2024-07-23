@@ -909,15 +909,15 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     const points: ClientXY[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const item = shapes[i];
-        const { width, height } = item.size;
+        const { x, y, width, height } = item.frame;
         const m = item.transform2FromRoot; // 图层到Root；
         const clientTransform = makeShapeTransform2By1(matrix);
         m.addTransform(clientTransform); // root 到 client
         const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(0, height),
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x + width, y + height),
+            ColVector3D.FromXY(x, y + height),
         ]);
         points.push(lt, rt, rb, lb);
     }

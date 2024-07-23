@@ -73,7 +73,7 @@ function finder_points() {
 
     if (!reusableMatrix) {
         reusableMatrix = path_shape.matrix2Root();
-        reusableMatrix.preScale(path_shape.size.width, path_shape.size.height);
+        reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
 
     const segments = (path_shape as PathShapeView).segments;
@@ -107,7 +107,7 @@ function remove_points() {
 
     if (!reusableMatrix) {
         reusableMatrix = path_shape.matrix2Root();
-        reusableMatrix.preScale(path_shape.size.width, path_shape.size.height);
+        reusableMatrix.preScale(path_shape.frame.width, path_shape.frame.height);
     }
 
     const segments = (path_shape as PathShapeView).segments;

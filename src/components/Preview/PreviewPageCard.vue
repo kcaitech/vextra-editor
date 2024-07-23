@@ -49,7 +49,6 @@ function assemble() {
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
-    const size = new ShapeSize(100, 100);
     const trans = new TransformRaw();
     const page = new Page(
         new BasicArray<number>(),
@@ -57,7 +56,6 @@ function assemble() {
         'assemble-page',
         ShapeType.Page,
         trans,
-        size,
         style,
         new BasicArray<Shape>(...shapes)
     );

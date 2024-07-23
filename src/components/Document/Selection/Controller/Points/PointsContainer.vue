@@ -91,7 +91,7 @@ const rotateCtx: {
 function updateDotLayout() {
     dots.length = 0;
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
@@ -100,23 +100,24 @@ function updateDotLayout() {
 
     const ltTransform = new Transform()
         .rotateZ({ angle: Math.PI })
+        .setTranslate(ColVector3D.FromXY(x, y))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const rtTransform = new Transform()
         .rotateZ({ angle: -0.5 * Math.PI })
-        .setTranslate(ColVector3D.FromXY(width, 0))
+        .setTranslate(ColVector3D.FromXY(x + width, y))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const rbTransform = new Transform()
-        .setTranslate(ColVector3D.FromXY(width, height))
+        .setTranslate(ColVector3D.FromXY(x + width, y + height))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const lbTransform = new Transform()
         .rotateZ({ angle: 0.5 * Math.PI })
-        .setTranslate(ColVector3D.FromXY(0, height))
+        .setTranslate(ColVector3D.FromXY(x, y + height))
         .addTransform(fromClient)
         .clearScaleSize();
 
@@ -158,11 +159,11 @@ function updateDotLayout() {
     const theta4 = cursorAngle(xVector, vecLB);
 
     const cols = fromClient.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
-        ColVector3D.FromXY(width / 2, height / 2),
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
+        ColVector3D.FromXY(x + width / 2, y + height / 2),
     ]);
 
     const { col0, col1, col2, col3 } = cols;
