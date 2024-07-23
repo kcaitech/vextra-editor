@@ -6,6 +6,7 @@ import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
 import { EventIndex } from '@/components/Preview/PreviewControls/ControlsView.vue';
+import { XYsBounding } from './common';
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
     if (!page) return;
@@ -249,4 +250,19 @@ export function eventPriority(shape: ShapeView): EventIndex {
         }
     }
     return eventTypeIndex;
+}
+
+export const viewBox = (context: Context, m: Matrix) => {
+    const cur_shape = context.selection.selectedShapes[0];
+    const cur_frame = cur_shape.frame;
+    const matrix = getPreviewMatrix(cur_shape);
+    matrix.multiAtLeft(m.clone());
+    const points = [
+        matrix.computeCoord2(0, 0),
+        matrix.computeCoord2(cur_frame.width, 0),
+        matrix.computeCoord2(cur_frame.width, cur_frame.height),
+        matrix.computeCoord2(0, cur_frame.height)
+    ];
+    const box = XYsBounding(points);
+    return box;
 }
