@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, PageView, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { finderShape, getFrameList, selectShapes } from '@/utils/preview';
+import { Matrix, OverlayBackgroundType, OverlayPositions, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { finderShape, getFrameList, getPreviewMatrix, selectShapes } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 import { Selection } from '@/context/selection';
 import ControlsView from './PreviewControls/ControlsView.vue';
 
-import { ElMessage } from 'element-plus';
+import { ElMessage, translate } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const props = defineProps<{
@@ -24,7 +24,9 @@ const cur_shape = ref<ShapeView>();
 const listLength = ref(0);
 const curPage = ref(0);
 const pageCard = ref<PCard>();
+const viewBoxDialog = ref<HTMLDivElement[]>();
 const spacePressed = ref<boolean>(false);
+const target_shapes = ref<ShapeView[]>([]);
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
@@ -119,6 +121,12 @@ const previewWatcher = (t: number | string, s?: boolean) => {
         } else {
             viewUpdater.keyScale(0.1);
         }
+    } else if (t === Preview.ARTBOARD_SCROLL) {
+        viewUpdater.artboardInTrans();
+    } else if (t === Preview.MATRIX_CHANGE) {
+        updateViewBox();
+    } else if (t === Preview.INTERACTION_CHANGE) {
+        getTargetShapes();
     }
 }
 
@@ -137,7 +145,6 @@ const selectionWatcher = (v: number | string) => {
             return;
         }
         page_watcher();
-        watch_shapes();
     }
 }
 
@@ -192,6 +199,7 @@ const onMouseDown = (e: MouseEvent) => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     e.stopPropagation();
+
     isMenu.value = false;
     if (e.button === 2) {
         props.context.preview.notify(Preview.MENU_VISIBLE);
@@ -301,6 +309,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === 'Space') {
         if (spacePressed.value || !isSpacePressed()) return;
         spacePressed.value = true;
+        props.context.workspace.pageDragging(true);
         preview.value.style.cursor = 'grab'
     }
 }
@@ -309,12 +318,14 @@ function onKeyUp(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement || !preview.value) return;
     if (spacePressed.value && e.code === 'Space') {
         spacePressed.value = false;
+        props.context.workspace.pageDragging(false);
         preview.value.style.cursor = 'default'
     }
 }
 
+
 const onMouseMove_CV = (e: MouseEvent) => {
-    if (e.buttons === 0) {
+    if (e.buttons === 0 && !spacePressed.value) {
         search(e); // 图形检索(hover)
     }
 }
@@ -322,12 +333,12 @@ const onMouseMove_CV = (e: MouseEvent) => {
 function search(e: MouseEvent) {
     const shapes = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
-
     if (!preview.value || !shapes || !page) return;
     const scout = props.context.selection.scout;
     const matrix = new Matrix(viewUpdater.v_matrix);
     const { x, y } = preview.value.getBoundingClientRect();
     matrix.multiAtLeft(shapes.matrix2Root());
+
     const xy = { x: e.clientX - x, y: e.clientY - y };
     const shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     if (shape && !shape.prototypeInterAction) {
@@ -335,8 +346,13 @@ function search(e: MouseEvent) {
         if (p && p.type === ShapeType.Page) {
             return selectShapes(props.context, undefined);
         }
-        while (p) {
-
+        while (p && p.type !== ShapeType.Page) {
+            if (p.prototypeInterAction) {
+                selectShapes(props.context, p);
+                break;
+            } else {
+                p = p.parent;
+            }
         }
     } else {
         selectShapes(props.context, shape);
@@ -345,6 +361,115 @@ function search(e: MouseEvent) {
 
 const closeMenu = () => {
     isMenu.value = false;
+}
+
+const viewBox = () => {
+    const cur_shape = props.context.selection.selectedShapes[0];
+    const cur_frame = cur_shape.frame;
+    const matrix = getPreviewMatrix(cur_shape);
+    matrix.multiAtLeft(viewUpdater.v_matrix.clone());
+    const points = [
+        matrix.computeCoord2(0, 0),
+        matrix.computeCoord2(cur_frame.width, 0),
+        matrix.computeCoord2(cur_frame.width, cur_frame.height),
+        matrix.computeCoord2(0, cur_frame.height)
+    ];
+    const box = XYsBounding(points);
+    return box;
+}
+
+const updateViewBox = () => {
+    const cur_shape = props.context.selection.selectedShapes[0];
+    const els = document.querySelectorAll('.dailogCard');
+    const protoActions = Array.from(props.context.preview.interactionAction.values());
+    if (!cur_shape || !els.length) return;
+    const cur_frame = cur_shape.frame;
+    const box = viewBox();
+    for (let i = 0; i < els.length; i++) {
+        const shape = target_shapes.value[i];
+        const action = protoActions[i];
+        const el = els[i] as SVGSVGElement;
+        const m = new Matrix()
+        m.reset(viewUpdater.v_matrix);
+        if (shape) {
+            if (action.navigationType === PrototypeNavigationType.OVERLAY) {
+                const frame = shape.frame;
+                const scale = viewUpdater.v_matrix.m00;
+                m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
+                if (shape.overlayPositionType === OverlayPositions.CENTER) {
+                    const c_x = (frame.width * scale) / 2;
+                    const c_y = (frame.height * scale) / 2;
+                    const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
+                    m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
+                } else if (shape.overlayPositionType === OverlayPositions.TOPCENTER) {
+                    const c_x = (frame.width * scale) / 2;
+                    const v_centerx = (box.left + box.right) / 2
+                    m.trans(v_centerx - (box.left + c_x), 0);
+                } else if (shape.overlayPositionType === OverlayPositions.TOPRIGHT) {
+                    const right = (frame.width * scale) + box.left;
+                    m.trans(box.right - right, 0);
+                } else if (shape.overlayPositionType === OverlayPositions.CENTERLEFT) {
+                    const c_y = (frame.height * scale) / 2;
+                    const v_centery = (box.top + box.bottom) / 2
+                    m.trans(0, v_centery - (box.top + c_y));
+                } else if (shape.overlayPositionType === OverlayPositions.CENTERRIGHT) {
+                    const c_y = (frame.height * scale) / 2;
+                    const v_centery = (box.top + box.bottom) / 2
+                    const right = (frame.width * scale) + box.left;
+                    m.trans(box.right - right, v_centery - (box.top + c_y));
+                } else if (shape.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
+                    const c_x = (frame.width * scale) / 2;
+                    const v_centerx = (box.left + box.right) / 2
+                    const bottom = (frame.height * scale) + box.top;
+                    m.trans(v_centerx - (box.left + c_x), box.bottom - bottom);
+                } else if (shape.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
+                    const bottom = (frame.height * scale) + box.top;
+                    m.trans(0, box.bottom - bottom);
+                } else if (shape.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
+                    const right = (frame.width * scale) + box.left;
+                    const bottom = (frame.height * scale) + box.top;
+                    m.trans(box.right - right, box.bottom - bottom);
+                }
+                el.style['transform'] = m.toString();
+            }
+        }
+    }
+}
+
+const getTargetShapes = () => {
+    target_shapes.value = [];
+    const page = props.context.selection.selectedPage;
+    const shapes = getFrameList(page!);
+    const actions = props.context.preview.interactionAction;
+    const cur_shape = props.context.selection.selectedShapes[0];
+    const cur_frame = cur_shape.frame;
+    if (!actions) return;
+    actions.forEach(action => {
+        const shape = shapes.find(item => item.id === action.targetNodeID);
+        if (shape) {
+            target_shapes.value.push(shape);
+        }
+    })
+    nextTick(() => {
+        const protoActions = Array.from(actions.values());
+        for (let i = 0; i < protoActions.length; i++) {
+            const action = protoActions[i];
+            const shape = shapes.find(item => item.id === action.targetNodeID);
+            if (shape) {
+                if (action.navigationType === PrototypeNavigationType.OVERLAY && viewBoxDialog.value) {
+                    if (shape.overlayBackgroundAppearance) {
+                        if (shape.overlayBackgroundAppearance.backgroundType === OverlayBackgroundType.SOLIDCOLOR) {
+                            const color = shape.overlayBackgroundAppearance.backgroundColor;
+                            if (viewBoxDialog.value[i]) {
+                                viewBoxDialog.value[i].style.backgroundColor = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        updateViewBox();
+    })
 }
 
 const onMouseEnter = () => {
@@ -357,7 +482,6 @@ const onMouseLeave = () => {
 }
 
 const viewUpdater = new ViewUpdater(props.context);
-
 const is_overlay = ref(true);
 
 function startLoop() {
@@ -432,6 +556,10 @@ onUnmounted(() => {
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
             :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+        <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
+            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
+                :data="(props.page as PageView)" :context="context" :shapes="[item]" />
+        </div>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
@@ -453,6 +581,16 @@ onUnmounted(() => {
     height: 100%;
     width: 100%;
     background-color: black;
+
+    #proto_overflow {
+        overflow: hidden;
+        transform-origin: top left;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+    }
 
     .toggle {
         position: absolute;
