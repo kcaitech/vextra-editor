@@ -74,7 +74,9 @@
                                         <span>{{ i.variable.name }}：</span>
                                         <Select class="select" id="select" :visibility="true" :source="genOptions(i.values.map((v, idx) => {
                 return [idx, v];
-            }))" :selected="trigger.find(item => item.id === 0)?.data"></Select>
+            }))" :selected="genOptions(i.values.map((v, idx) => {
+                return [idx, v];
+            })).find(t=>t.data.content===i.current_state)?.data"></Select>
                                     </div>
                                 </div>
                                 <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE && action.actions.navigationType !== PrototypeNavigationType.SWAPSTATE"
@@ -181,7 +183,7 @@
                                     </div>
                                     <div class="animation">
                                         <span>动画</span>
-                                        <Select class="select" id="select" :visibility="true" :source="animation"
+                                        <Select class="select" id="select" :source="animation" :animation="true"  :action=action.actions.navigationType
                                             :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
                                             @select="setPrototypeActionTransition($event, action.id)"></Select>
                                     </div>
@@ -370,7 +372,8 @@ enum Animation {
     SLIDEOUT = 'SLIDE_OUT',
     MOVE = 'MOVE',
     MOVEOUT = 'MOVE_OUT',
-    PUSH = 'PUSH'
+    PUSH = 'PUSH',
+    SCROLL='SCROLL_ANIMATE'
 }
 
 enum Direction {
@@ -503,7 +506,8 @@ const animation: SelectSource[] = genOptions([
     [Animation.SLIDEOUT, '滑出'],
     [Animation.MOVE, '移入'],
     [Animation.MOVEOUT, '移出'],
-    [Animation.PUSH, '推入']
+    [Animation.PUSH, '推入'],
+    [Animation.SCROLL,'位移']
 ])
 
 const effect: SelectSource[] = genOptions([
@@ -550,6 +554,7 @@ const animations = new Map([
     [PrototypeTransitionType.PUSHFROMRIGHT, '推入'],
     [PrototypeTransitionType.PUSHFROMTOP, '推入'],
     [PrototypeTransitionType.PUSHFROMBOTTOM, '推入'],
+    [PrototypeTransitionType.SCROLLANIMATE,'位移']
 ])
 
 
@@ -1294,8 +1299,6 @@ function updateData() {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
-            console.log(prototypestart.value);
-
         }
 
     }
@@ -1372,7 +1375,7 @@ function _selection_change() {
             const result = get_var_for_ref(symref, t);
             if (result) {
                 variables.value = result.variables;
-                console.log(variables.value);
+                console.log(result);
             }
         }
     }

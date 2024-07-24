@@ -751,6 +751,7 @@ export function get_x_type_option(symbol: SymbolView, group: ShapeView, type: Va
 
 export interface RefAttriListItem {
     variable: Variable
+    current_state: string
     values: any[]
 }
 
@@ -773,14 +774,14 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
     // if (sym.type === ShapeType.SymbolRef) {
     //     parent = (sym as SymbolRefShape).getSymbolMgr()?.get((sym as SymbolRefShape).refId)?.parent;
     //     console.log('====================2',parent);
-        
+
 
     // }
-
+    const parent = sym.parent;
     // if (sym.type === ShapeType.Symbol) {
     //     parent = sym.parent
     //     console.log('====================2',parent);
-        
+
     // }
 
 
@@ -797,7 +798,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         }
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            const i = state.symtags?.get(v.id) || '默认'
+            item.current_state = i
             if (v.type === VariableType.Status) {
                 item.values = tag_values_sort(usym as SymbolShape, v, t);
                 result.push(item);
@@ -808,7 +811,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let instance_index: number = result.length;
         let text_index: number = instance_index;
         sub_variables.forEach((v: Variable) => { // 整理顺序
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            const i = state.symtags?.get(v.id) || '默认'
+            item.current_state = i
             if (v.type === VariableType.Visible) {
                 result2.push(item);
             } else if (v.type === VariableType.SymbolRef) {
@@ -828,7 +833,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let text_index: number = 0;
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v,current_state: '', values: [] };
+            const i = sym.symtags?.get(v.id) || '默认'
+            item.current_state = i
             if (v.type === VariableType.Visible) {
                 const overrides = symref.findOverride(v.id, OverrideType.Visible);
                 if (overrides) item.variable = overrides[overrides.length - 1];

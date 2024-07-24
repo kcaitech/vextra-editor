@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
-import { ShapeType, ShapeView } from '@kcdesign/data';
+import { PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
@@ -30,6 +30,8 @@ interface Props {
     shapes?: ShapeView[];
     visibility?: boolean;
     minwidth?: number;
+    action?: PrototypeNavigationType;
+    animation?: boolean
 }
 
 interface Emits {
@@ -138,11 +140,33 @@ function select(data: SelectItem) {
 }
 
 function render() {
+    console.log('1111');
+    
     curHoverValueIndex.value = -1
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
     if (props.selected && source.value.length) {
+        console.log(source.value);
+        if (props.action) {
+            if (props.action === PrototypeNavigationType.OVERLAY || props.action === PrototypeNavigationType.SWAP) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出', '移入']
+                return
+            }
+            if (props.action === PrototypeNavigationType.SCROLLTO) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出']
+                return
+            }
+            if (props.action === PrototypeNavigationType.SWAPSTATE) {
+                source.value = source.value.filter(i => ['即时', '位移'].includes(i.data.content));
+                arr.value = ['即时', '位移']
+                return
+            }
+            source.value = source.value.filter(i => i.data.content !== '位移');
+            arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
+        }
         const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);
         if (index > -1 || props.mixed) {
             curValueIndex.value = index;
@@ -152,11 +176,30 @@ function render() {
 }
 
 const showOP = ref<boolean>(false)
-
+const arr = ref<string[]>([])
 watchEffect(() => {
     if (props.shapes) {
         showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type)
     }
+    if (props.action) {
+            if (props.action === PrototypeNavigationType.OVERLAY || props.action === PrototypeNavigationType.SWAP) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出', '移入']
+                return
+            }
+            if (props.action === PrototypeNavigationType.SCROLLTO) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出']
+                return
+            }
+            if (props.action === PrototypeNavigationType.SWAPSTATE) {
+                source.value = source.value.filter(i => ['即时', '位移'].includes(i.data.content));
+                arr.value = ['即时', '位移']
+                return
+            }
+            source.value = source.value.filter(i => i.data.content !== '位移');
+            arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
+        }
 })
 
 watch(() => props.selected, render);
@@ -200,6 +243,20 @@ onMounted(render)
                         :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
                     <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
                     <div class="content-wrap"> {{ c.data.content }}</div>
+
+                </div>
+            </div>
+            <div v-else-if="animation">
+                <div v-for="(c, idx) in source" class="item-default" :style="{
+            pointerEvents: (arr.includes(c.data.content)) ? 'auto' : 'none',
+            opacity: (arr.includes(c.data.content)) ? 1 : 0.4
+        }" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
+                    @mouseleave="curHoverValueIndex = -1">
+                    <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"
+                        :icon-class="curHoverValueIndex === idx ? 'white-select' : 'page-select'"></svg-icon>
+                    <svg-icon v-if="c.data.icon" class="icon" :icon-class="c.data.icon!"></svg-icon>
+                    <div class="content-wrap"> {{ c.data.content }}</div>
+
                 </div>
             </div>
             <div v-else>
