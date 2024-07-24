@@ -67,7 +67,7 @@ const symbol_c = computed<boolean>(() => {
     return is_component_class(props.data.shapeview());
 })
 const abbr_view = ref<number>(0);
-const maskView = ref<boolean>(props.data.shapeview().masked);
+const maskView = ref<boolean>(!!props.data.shapeview().masked);
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
@@ -244,16 +244,9 @@ function _updateAbbrView() {
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
 function updater(...args: any[]) {
-    if (args.includes('mask-env-changed')) {
-        return maskView.value = props.data.shapeview().masked;
-
-    }
-    if (args.includes('mask') || args.includes('fills')) {
-        return _updateAbbrView();
-    }
-    if (args.includes('frame') || args.includes('points')) {
-        return update_abbr_view();
-    }
+    if (args.includes('mask-env-changed')) return maskView.value = !!props.data.shapeview().masked;
+    if (args.includes('mask') || args.includes('fills')) return _updateAbbrView();
+    if (args.includes('frame') || args.includes('points')) return update_abbr_view();
 
     const shape = props.data.shapeview();
 
