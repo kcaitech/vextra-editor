@@ -9,6 +9,7 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
+import { Preview } from "@/context/preview";
 
 interface Props {
     shapes: ShapeView[] | Shape[];
@@ -99,6 +100,11 @@ watch(() => props.shapes, () => {
     props.shapes.length && assemble();
 })
 
+const preview_watch = (t: number) => {
+    if(t === Preview.SWAP_REF_STAT) {
+        assemble();
+    }
+}
 
 function repaint() {
     assemble();
@@ -106,9 +112,13 @@ function repaint() {
 
 defineExpose({ pageSvg, repaint });
 
-onMounted(assemble);
+onMounted(() => {
+    assemble();
+    props.context.preview.watch(preview_watch);
+});
 onUnmounted(() => {
     disassemble();
+    props.context.preview.unwatch(preview_watch);
 });
 </script>
 

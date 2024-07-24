@@ -23,6 +23,7 @@ export class Preview extends WatchableObject {
     static ARTBOARD_SCROLL = 12;
     static MATRIX_CHANGE = 13;
     static INTERACTION_CHANGE = 14;
+    static SWAP_REF_STAT = 15;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;

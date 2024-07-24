@@ -620,7 +620,7 @@ onUnmounted(() => {
             :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
         <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
-                :data="(props.page as PageView)" :context="context" :shapes="[item]" />
+                :data="(props.page as PageView)" :context="context" :shapes="[item]"/>
         </div>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">

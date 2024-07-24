@@ -247,6 +247,7 @@ const selected_watcher = (t: number | string) => {
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
+        localStorage.setItem('refId', '');
     }
 }
 
@@ -263,6 +264,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
     props.context.preview.unwatch(preview_watcher);
+    localStorage.setItem('refId', '');
 })
 </script>
 

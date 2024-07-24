@@ -32,8 +32,9 @@ function select(val: SelectItem) {
     if (!symref) {
         return console.log("wrong role");
     }
-    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);    
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+    
     switch_symref_state(props.context, _var, _v, t);
 }
 
