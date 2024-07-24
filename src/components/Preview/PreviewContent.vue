@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, OverlayBackgroundType, OverlayPositions, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositions, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
@@ -29,6 +29,7 @@ const spacePressed = ref<boolean>(false);
 const target_shapes = ref<ShapeView[]>([]);
 const isSuperposed = ref(false);
 const end_matrix = ref(new Matrix());
+const is_swap_shape = ref(false);
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
@@ -295,6 +296,12 @@ const pageViewDragging = (e: MouseEvent) => {
     viewUpdater.setAttri(matrix);
 }
 
+const getCurLayerShape = (id?: string) => {
+    const page = props.context.selection.selectedPage;
+    const shapes = getFrameList(page!);
+    return shapes.find(item => item.id === id);
+}
+
 function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) {
         return;
@@ -303,6 +310,23 @@ function onMouseUp(e: MouseEvent) {
         isDragging = false;
         if (preview.value) {
             preview.value.style.cursor = 'grab';
+        }
+    } else if (isSuperposed.value) {
+        const h_shape = search(e);
+        if (!h_shape) {
+            const shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
+            const end_action = props.context.preview.endAction;
+            const swap_end_action = props.context.preview.swapEndAction;
+            if (end_action.navigationType === PrototypeNavigationType.SWAP) {
+                const s = getCurLayerShape(swap_end_action.targetNodeID);
+                if (s && s.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            } else {
+                if (shape.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            }
         }
     }
     document.removeEventListener('mousemove', onMouseMove);
@@ -360,36 +384,31 @@ function search(e: MouseEvent) {
     if (isSuperposed.value) {
         if (target_shapes.value.length) {
             const shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
-            const protoActions = Array.from(props.context.preview.interactionAction.values());
-            const action = protoActions[protoActions.length - 1];
-            const box = viewBox(props.context, viewUpdater.v_matrix);
-            const m = updateViewBox(shape, action.navigationType, box);
+            const m = end_matrix.value as Matrix;
             if (m) {
                 hover_shape = finderShape(m, scout, [shape], xy);
-                console.log(hover_shape, 'hover_shape');
-
             }
         }
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
-    selectShapes(props.context, hover_shape);
-
-    // if (hover_shape && !hover_shape.prototypeInterAction) {
-    //     let p = hover_shape.parent;
-    //     if (p && p.type === ShapeType.Page) {
-    //         return selectShapes(props.context, undefined);
-    //     }
-    //     while (p && p.type !== ShapeType.Page) {
-    //         if (p.prototypeInterAction) {
-    //             selectShapes(props.context, p);
-    //             break;
-    //         } else {
-    //             p = p.parent;
-    //         }
-    //     }
-    // } else {
-    // }
+    if (hover_shape && !hover_shape.prototypeInterAction) {
+        let p = hover_shape.parent;
+        if (p && p.type === ShapeType.Page) {
+            return selectShapes(props.context, undefined);
+        }
+        while (p && p.type !== ShapeType.Page) {
+            if (p.prototypeInterAction) {
+                selectShapes(props.context, p);
+                break;
+            } else {
+                p = p.parent;
+            }
+        }
+    } else {
+        selectShapes(props.context, hover_shape);
+    }
+    return hover_shape;
 }
 
 const closeMenu = () => {
@@ -402,40 +421,47 @@ const updateViewBox = (shape: ShapeView, type: PrototypeNavigationType | undefin
     const cur_frame = cur_shape.frame;
     const m = new Matrix()
     m.reset(viewUpdater.v_matrix);
-    if (type === PrototypeNavigationType.OVERLAY) {
+    if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP) {
+        let s: ShapeView | undefined = shape;
         const frame = shape.frame;
+        if (type === PrototypeNavigationType.SWAP) {
+            const before_action = props.context.preview.swapEndAction;
+            if (!before_action) return;
+            s = getCurLayerShape(before_action.targetNodeID);
+        }
+        if (!s) return;
         const scale = viewUpdater.v_matrix.m00;
         m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-        if (shape.overlayPositionType === OverlayPositions.CENTER) {
+        if (s.overlayPositionType === OverlayPositions.CENTER) {
             const c_x = (frame.width * scale) / 2;
             const c_y = (frame.height * scale) / 2;
             const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
             m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
-        } else if (shape.overlayPositionType === OverlayPositions.TOPCENTER) {
+        } else if (s.overlayPositionType === OverlayPositions.TOPCENTER) {
             const c_x = (frame.width * scale) / 2;
             const v_centerx = (box.left + box.right) / 2
             m.trans(v_centerx - (box.left + c_x), 0);
-        } else if (shape.overlayPositionType === OverlayPositions.TOPRIGHT) {
+        } else if (s.overlayPositionType === OverlayPositions.TOPRIGHT) {
             const right = (frame.width * scale) + box.left;
             m.trans(box.right - right, 0);
-        } else if (shape.overlayPositionType === OverlayPositions.CENTERLEFT) {
+        } else if (s.overlayPositionType === OverlayPositions.CENTERLEFT) {
             const c_y = (frame.height * scale) / 2;
             const v_centery = (box.top + box.bottom) / 2
             m.trans(0, v_centery - (box.top + c_y));
-        } else if (shape.overlayPositionType === OverlayPositions.CENTERRIGHT) {
+        } else if (s.overlayPositionType === OverlayPositions.CENTERRIGHT) {
             const c_y = (frame.height * scale) / 2;
             const v_centery = (box.top + box.bottom) / 2
             const right = (frame.width * scale) + box.left;
             m.trans(box.right - right, v_centery - (box.top + c_y));
-        } else if (shape.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
+        } else if (s.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
             const c_x = (frame.width * scale) / 2;
             const v_centerx = (box.left + box.right) / 2
             const bottom = (frame.height * scale) + box.top;
             m.trans(v_centerx - (box.left + c_x), box.bottom - bottom);
-        } else if (shape.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
+        } else if (s.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
             const bottom = (frame.height * scale) + box.top;
             m.trans(0, box.bottom - bottom);
-        } else if (shape.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
+        } else if (s.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
             const right = (frame.width * scale) + box.left;
             const bottom = (frame.height * scale) + box.top;
             m.trans(box.right - right, box.bottom - bottom);
@@ -450,7 +476,9 @@ const getTargetShapes = () => {
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
     isSuperposed.value = false;
-    if (!actions) return;
+    is_swap_shape.value = false;
+    props.context.preview.setSupernatantIsOpen(false);
+    if (actions.size === 0) return;
     actions.forEach(action => {
         const shape = shapes.find(item => item.id === action.targetNodeID);
         if (shape) {
@@ -467,9 +495,26 @@ const getTargetShapes = () => {
             if (shape) {
                 if (action.navigationType === PrototypeNavigationType.OVERLAY && viewBoxDialog.value) {
                     isSuperposed.value = true;
+                    props.context.preview.setSupernatantIsOpen(true);
                     if (shape.overlayBackgroundAppearance) {
                         if (shape.overlayBackgroundAppearance.backgroundType === OverlayBackgroundType.SOLIDCOLOR) {
                             const color = shape.overlayBackgroundAppearance.backgroundColor;
+                            if (viewBoxDialog.value[i]) {
+                                viewBoxDialog.value[i].style.backgroundColor = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`
+                            }
+                        }
+                    }
+                } else if (action.navigationType === PrototypeNavigationType.SWAP && viewBoxDialog.value) {
+                    isSuperposed.value = true;
+                    is_swap_shape.value = true;
+                    props.context.preview.setSupernatantIsOpen(true);
+                    const before_action = props.context.preview.swapEndAction;
+                    if (!before_action) continue;
+                    const s = shapes.find(item => item.id === before_action.targetNodeID);
+                    if (!s) continue;
+                    if (s.overlayBackgroundAppearance) {
+                        if (s.overlayBackgroundAppearance.backgroundType === OverlayBackgroundType.SOLIDCOLOR) {
+                            const color = s.overlayBackgroundAppearance.backgroundColor;
                             if (viewBoxDialog.value[i]) {
                                 viewBoxDialog.value[i].style.backgroundColor = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`
                             }

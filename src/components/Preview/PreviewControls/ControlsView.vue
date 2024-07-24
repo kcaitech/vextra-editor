@@ -246,6 +246,7 @@ const selected_watcher = (t: number | string) => {
         createShapeTracing();
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.setInteractionAction(undefined);
+        props.context.preview.setSwapAction(undefined);
     }
 }
 

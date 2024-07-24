@@ -35,6 +35,8 @@ export class Preview extends WatchableObject {
     private m_proto_action: { id: string, action: PrototypeActions } | undefined;
     private m_atrboard_scroll_offset: { x: number, y: number } = { x: 0, y: 0 };
     private m_interaction_action: Set<PrototypeActions> = new Set();
+    private m_supernatant_open: boolean = false;
+    private m_swap_action: Set<PrototypeActions> = new Set();
 
     constructor(context: Context) {
         super();
@@ -131,7 +133,7 @@ export class Preview extends WatchableObject {
     }
 
     setInteractionAction(action?: PrototypeActions) {
-        if(action) {
+        if (action) {
             this.m_interaction_action.add(action);
         } else {
             this.m_interaction_action.clear();
@@ -141,5 +143,43 @@ export class Preview extends WatchableObject {
 
     get interactionAction() {
         return this.m_interaction_action;
+    }
+
+    deleteEndAction() {
+        const actions = Array.from(this.m_interaction_action);
+        actions.pop();
+        this.m_interaction_action = new Set(actions);
+        this.notify(Preview.INTERACTION_CHANGE);
+    }
+
+    get endAction() {
+        const actions = Array.from(this.m_interaction_action);
+        return actions[actions.length - 1];
+    }
+
+    setSupernatantIsOpen(v: boolean) {
+        this.m_supernatant_open = v;
+    }
+
+    get supernatantIsOpen() {
+        return this.m_supernatant_open;
+    }
+
+    setSwapAction(action?: PrototypeActions) {
+        if (action) {
+            this.m_swap_action.add(action);
+        } else {
+            this.m_swap_action.clear();
+        }
+    }
+
+    deleteSwapEndAction() {
+        const actions = Array.from(this.m_swap_action);
+        actions.pop();
+        this.m_swap_action = new Set(actions);
+    }
+    get swapEndAction() {
+        const actions = Array.from(this.m_swap_action);
+        return actions[actions.length - 1];
     }
 }

@@ -25,6 +25,10 @@ export class ProtoAction {
             this.artboardInScroll(action, matrix);
         } else if (action.navigationType === PrototypeNavigationType.OVERLAY) {
             this.openDialog(action);
+        } else if (action.connectionType === PrototypeConnectionType.CLOSE) {
+            this.closeDialog(action);
+        } else if (action.navigationType === PrototypeNavigationType.SWAP) {
+            this.replaceDialog(action);
         }
     }
     // 跳转页面
@@ -54,11 +58,19 @@ export class ProtoAction {
 
     // 容器内滚动
     artboardInScroll(action: PrototypeActions, matrix: Matrix) {
-        const select_shape = this.m_context.selection.selectedShapes[0];
-        if (!select_shape.childs.length) return;
-        if (!action.extraScrollOffset) return;
+        let artboard_shape: ShapeView | undefined;
+        if (this.m_context.preview.supernatantIsOpen) {
+            const page = this.m_context.selection.selectedPage;
+            const shapes = getFrameList(page!);
+            const end_action = this.m_context.preview.endAction;
+            const shape = shapes.find(item => item.id === end_action.targetNodeID);
+            artboard_shape = shape;
+        } else {
+            artboard_shape = this.m_context.selection.selectedShapes[0];
+        }
+        if (!artboard_shape || !artboard_shape.childs.length) return;
         // const scrol_shape = select_shape.childs.find(item => item.id === action.targetNodeID);
-        const scrol_shape = select_shape.childs[3];
+        const scrol_shape = artboard_shape.childs[0];
         if (scrol_shape) {
             const m = getPreviewMatrix(scrol_shape);
             m.multiAtLeft(matrix);
@@ -70,8 +82,9 @@ export class ProtoAction {
                 m.computeCoord2(0, frame.height)
             ];
             const box = XYsBounding(points);
-            const offsetx = box.left - action.extraScrollOffset.x;
-            const offsety = box.top - action.extraScrollOffset.y;
+
+            const offsetx = box.left - (action.extraScrollOffset?.x || 0);
+            const offsety = box.top - (action.extraScrollOffset?.y || 0);
 
             this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety });
         }
@@ -101,13 +114,20 @@ export class ProtoAction {
         this.m_context.preview.setInteractionAction(action);
     }
     // 关闭浮层
-    closeDialog() {
-
+    closeDialog(action: PrototypeActions) {
+        const endAction = this.m_context.preview.endAction;
+        if (endAction.navigationType === PrototypeNavigationType.SWAP) {
+            this.m_context.preview.deleteSwapEndAction();
+        }
+        this.m_context.preview.deleteEndAction();
     }
 
     // 替换浮层
-    replaceDialog() {
-
+    replaceDialog(action: PrototypeActions) {
+        const end_action = this.m_context.preview.endAction;
+        this.m_context.preview.setSwapAction(end_action);
+        this.closeDialog(action);
+        this.openDialog(action);
     }
     // 动画操作
     animation() {
