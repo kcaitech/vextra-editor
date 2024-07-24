@@ -166,9 +166,8 @@ export function useCutout(context: Context) {
 export function useMask(context: Context) {
     const page = context.selection.selectedPage!
     const shapes = context.selection.selectedShapes;
-
     const editor = context.editor4Page(page);
-    editor.makeMask(shapes);
+    editor.makeMask(shapes, context.workspace.t('system.mask_group'));
 }
 
 /**
