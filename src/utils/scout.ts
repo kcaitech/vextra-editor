@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import {
     GroupShapeView,
-    Matrix,
+    Matrix, PageView,
     PathShapeView,
     ShapeType,
     ShapeView,
@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
 import { IScout as Scout } from "@/openapi";
+
 export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
@@ -159,6 +160,12 @@ function getBoxPath(transformMatrix: Matrix) {
 
 // 判定点是否在图形内
 export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
+    // 临时实验性方案
+    const masked = shape.masked;
+    if (masked) {
+        const view = (shape.getPage() as PageView).getView(masked.id);
+        if (!view || !scout.isPointInShape(view, p)) return false;
+    }
     return scout.isPointInShape(shape, p);
 }
 

@@ -1,5 +1,6 @@
 import { EL, ShapeView } from "@kcdesign/data";
 import _ from "lodash";
+
 const xmlns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
@@ -29,7 +30,9 @@ export function setAttribute(el: HTMLElement | SVGElement, key: string, value: s
     }
 }
 
-export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: string]: string | { [key: string]: string } }, oldattrs: { [key: string]: string | { [key: string]: string } } = {}) {
+export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: {
+    [key: string]: string | { [key: string]: string }
+}, oldattrs: { [key: string]: string | { [key: string]: string } } = {}) {
     const tkeys = Object.keys(attrs);
     const okeys = Object.keys(oldattrs);
     for (let i = 0; i < tkeys.length; i++) {
@@ -52,6 +55,7 @@ const _escapeChars: { [key: string]: string } = {};
 _escapeChars['<'] = '&lt;';
 _escapeChars['>'] = '&gt;';
 _escapeChars['&'] = '&amp;';
+
 function escapeWebChar(text: string) {
     const ret: string[] = [];
     let i = 0, j = 0, len = text.length;
@@ -84,14 +88,12 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     if (!_tar.el) {
         if (_old && _old.el && _old.eltag === _tar.eltag) { // 也是要判断下的
             _tar.el = _old.el;
-        }
-        else {
+        } else {
             _tar.el = createElement(_tar.eltag);
             if (!_tar.el) throw new Error("can not create element: " + _tar.eltag);
             _old = undefined;
         }
-    }
-    else if (_tar.el.tagName !== _tar.eltag) {
+    } else if (_tar.el.tagName !== _tar.eltag) {
         const el = createElement(_tar.eltag);
         if (!el) throw new Error("can not create element: " + _tar.eltag);
         // if (_tar.el.parentNode) {
@@ -140,11 +142,9 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         const childNodes = _tar.el.childNodes;
         if (childNodes[idx] === tchild.el) {
             //
-        }
-        else if (childNodes[idx]) {
+        } else if (childNodes[idx]) {
             _tar.el.insertBefore(tchild.el, childNodes[idx]);
-        }
-        else {
+        } else {
             _tar.el.appendChild(tchild.el);
         }
         ++idx;
@@ -172,11 +172,9 @@ export function elpatch(tar: EL, old: EL | undefined) {
         const p = oldel?.parentNode!;
         if (newel === oldel) {
             // nothing
-        }
-        else if (newel) {
+        } else if (newel) {
             p.replaceChild(newel, oldel);
-        }
-        else {
+        } else {
             p.removeChild(oldel);
         }
     }

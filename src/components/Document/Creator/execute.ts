@@ -163,6 +163,13 @@ export function useCutout(context: Context) {
     __add_status_for_create(context);
 }
 
+export function useMask(context: Context) {
+    const page = context.selection.selectedPage!
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.makeMask(shapes, context.workspace.t('system.mask_group'));
+}
+
 /**
  * @description 使用连接线工具
  */
