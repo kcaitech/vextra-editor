@@ -243,8 +243,22 @@ function _updateAbbrView() {
 
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
+function parentWatcher(...args: any[]) {
+    if (args.includes('mask-env-change')) updater(...args)
+}
+
+let parent = props.data.shape().parent;
+parent && parent.watch(parentWatcher);
+
 function updater(...args: any[]) {
-    if (args.includes('mask-env-changed')) return maskView.value = !!props.data.shapeview().masked;
+    if (args.includes('mask-env-change')) {
+        if (props.data.shape().parent?.id !== parent?.id) {
+            parent?.unwatch(parentWatcher);
+            parent = props.data.shape().parent;
+            parent?.watch(parentWatcher)
+        }
+        return maskView.value = !!props.data.shapeview().masked;
+    }
     if (args.includes('mask') || args.includes('fills')) return _updateAbbrView();
     if (args.includes('frame') || args.includes('points')) return update_abbr_view();
 
@@ -355,6 +369,7 @@ onUnmounted(() => {
     props.data.context.selection.unwatch(selectedWatcher);
     props.data.context.navi.unwatch(navi_watcher);
     stop();
+    parent?.unwatch(parentWatcher);
 })
 </script>
 
