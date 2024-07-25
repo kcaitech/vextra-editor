@@ -329,9 +329,20 @@ const current_node_radius = () => {
     }
 }
 const hovered = ref(false);
+let page = props.data.context.selection.selectedPage!;
+page.watch(pageWatcher);
+
+function pageWatcher(...args: any[]) {
+    if (args.includes('mask-env-change')) updater(...args);
+}
+
 const selectedWatcher = (t?: any) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
         getHovered();
+    } else if (t === Selection.CHANGE_PAGE) {
+        page.unwatch(pageWatcher);
+        page = props.data.context.selection.selectedPage!;
+        page.watch(pageWatcher);
     }
 }
 const getHovered = () => {
@@ -370,6 +381,7 @@ onUnmounted(() => {
     props.data.context.navi.unwatch(navi_watcher);
     stop();
     parent?.unwatch(parentWatcher);
+    page.unwatch(pageWatcher);
 })
 </script>
 
