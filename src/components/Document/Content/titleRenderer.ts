@@ -43,7 +43,7 @@ export class TitleRenderer {
         if (isShapeOut(this.m_context, shape)) {
             return;
         }
-
+        if (!shape.isVisible) return;
         const titleCtx: TitleAttri = {
             id: shape.id,
             name: shape.name,

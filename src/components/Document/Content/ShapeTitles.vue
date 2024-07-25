@@ -19,6 +19,7 @@ const titleRenderer = new TitleRenderer(props.context, titlesList as TitleAttri[
 function pageWatcher(...args: any[]) {
     if (args.length === 1 && args[0] === 'childs') {
         titleRenderer.updateUnderRootContainerMap();
+        watch_shapes();
     }
 }
 
@@ -34,6 +35,7 @@ function workspaceWatcher(t: number | string) {
 function selectionWatcher(t: number | string) {
     if (t === Selection.CHANGE_PAGE) {
         titleRenderer.updateUnderRootContainerMap();
+        watch_shapes();
     }
 }
 
@@ -61,10 +63,30 @@ function leave() {
     props.context.selection.unHoverShape();
 }
 
+const update_by_shapes = (...args: any[]) => {
+    if (args.length === 1 && args[0] === 'isVisible') {
+        titleRenderer.fullUpdate();
+    }
+    
+}
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(update_by_shapes);
+        watchedShapes.delete(k);
+    })
+
+    const artboardList = props.data.childs;
+    artboardList.forEach((v) => {
+        v.watch(update_by_shapes);
+        watchedShapes.set(v.id, v)
+    });
+}
+
 onMounted(() => {
     props.context.workspace.watch(workspaceWatcher)
     props.context.selection.watch(selectionWatcher);
-
+    watch_shapes();
     props.data.watch(pageWatcher);
 
     titleRenderer.updateUnderRootContainerMap();
@@ -83,19 +105,10 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container">
-        <div
-            v-for="(title, index) in titlesList"
-            class="title-container"
-            :key="index"
-            :style="{ transform: title.transform }"
-        >
-            <ArtboardName
-                :context="props.context"
-                :data="title as TitleAttri"
-                @rename="rename"
-                @hover="hover"
-                @leave="leave"
-            />
+        <div v-for="(title, index) in titlesList" class="title-container" :key="index"
+            :style="{ transform: title.transform }">
+            <ArtboardName :context="props.context" :data="title as TitleAttri" @rename="rename" @hover="hover"
+                @leave="leave" />
         </div>
     </div>
 </template>
