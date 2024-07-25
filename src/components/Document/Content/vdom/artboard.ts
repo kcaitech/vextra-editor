@@ -1,4 +1,4 @@
-import { ArtboradView, DViewCtx, EL, PropsType, stringh } from "@kcdesign/data";
+import { ArtboradView, EL } from "@kcdesign/data";
 import { batchSetAttribute, createElement, elpatch, setAttribute } from "./patch";
 
 export class ArtboradDom extends (ArtboradView) {
@@ -8,6 +8,7 @@ export class ArtboradDom extends (ArtboradView) {
     // 2. 
 
     protected onChildChange(...args: any[]) {
+        super.onChildChange(...args);
         this.m_childs_changed = true;
     }
 
