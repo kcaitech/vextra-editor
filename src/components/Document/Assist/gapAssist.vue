@@ -234,7 +234,6 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     if (move_index === -1) return [];
     let top_space = 0;
     let bottom_space = 0;
-    console.log(boxs, 'boxs');
 
     for (let i = 0; i < boxs.length; i++) {
         const b = boxs[i];
