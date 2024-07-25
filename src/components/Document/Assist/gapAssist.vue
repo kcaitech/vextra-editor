@@ -199,14 +199,7 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     if (Math.abs(right_space - left_space) < 3 && (after_spacings && before_spacings)) { //移动shape左右间距相等时
         after_bounds.push(after_spacings!, before_spacings!);
     }
-    if (Math.abs(right_space - left_space) > 3) {
-        if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
-        if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
-    } else {
-        if (right_space > 0 && before_spacings) {
-            spaceing_hor_line.value.push(before_spacings);
-        }
-    }
+
     ss.value = adsorbXs
     const matrix = props.context.workspace.matrix;
     const m = new Matrix(matrix.inverse);
@@ -216,6 +209,16 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     })
     props.context.assist.setSpaceAdsorbX(adsorbXs);
     const result = [...after_bounds, ...before_bounds];
+    if (result.length > 1) {
+        if (Math.abs(right_space - left_space) > 3) {
+            if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
+            if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
+        } else {
+            if (right_space > 0 && before_spacings) {
+                spaceing_hor_line.value.push(before_spacings);
+            }
+        }
+    }
     return result.length > 1 ? result : [];
 }
 
@@ -342,14 +345,6 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     if (Math.abs(top_space - bottom_space) < 3 && (after_spacings && before_spacings)) {
         after_bounds.push(after_spacings!, before_spacings!);
     }
-    if (Math.abs(top_space - bottom_space) > 3) {
-        if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
-        if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
-    } else {
-        if (top_space > 0 && before_spacings) {
-            spaceing_ver_line.value.push(before_spacings);
-        }
-    }
 
     const matrix = props.context.workspace.matrix;
     const m = new Matrix(matrix.inverse);
@@ -359,6 +354,18 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     })
     props.context.assist.setSpaceAdsorbY(adsorbYs);
     const result = [...after_bounds, ...before_bounds];
+    if (result.length > 1) {
+        console.log(result, 'result');
+        
+        if (Math.abs(top_space - bottom_space) > 3) {
+            if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
+            if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
+        } else {
+            if (top_space > 0 && before_spacings) {
+                spaceing_ver_line.value.push(before_spacings);
+            }
+        }
+    }
     return result.length > 1 ? result : [];
 }
 
