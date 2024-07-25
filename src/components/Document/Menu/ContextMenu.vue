@@ -32,6 +32,7 @@ import { make_symbol } from "@/utils/symbol";
 import { Navi } from "@/context/navigate";
 import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
+import { useMask } from "@/components/Document/Creator/execute";
 
 interface Props {
     context: Context;
@@ -420,6 +421,11 @@ function copyAsPNG() {
     emits('close');
 }
 
+function mask() {
+    useMask(props.context);
+    emits('close');
+}
+
 const plugins = props.context.pluginsMgr.search2("content.menu");
 const comps: { component: any, params?: any }[] = [];
 comps.push({
@@ -598,6 +604,10 @@ onUnmounted(() => {
         <span>{{ t('system.create_container') }}</span>
         <Key code="Alt Ctrl G"></Key>
     </div>
+    <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
+        <span>{{ t('system.set_mask') }}</span>
+        <Key code="Ctrl Alt M"></Key>
+    </div>
     <div v-if="items.has(MenuItemType.UnGroup)" @click="unGroup" class="menu-item">
         <span>{{ t('system.un_group') }}</span>
         <Key code="Shift Ctrl G"></Key>
@@ -605,6 +615,10 @@ onUnmounted(() => {
     <div v-if="items.has(MenuItemType.Dissolution)" @click="dissolution_container" class="menu-item">
         <span>{{ t('system.dissolution') }}</span>
         <Key code="Shift Ctrl G"></Key>
+    </div>
+    <div v-if="items.has(MenuItemType.UnMask)" @click="mask" class="menu-item">
+        <span>{{ t('system.remove_mask') }}</span>
+        <Key code="Ctrl Alt M"></Key>
     </div>
     <div v-if="items.has(MenuItemType.Component)"
          style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
