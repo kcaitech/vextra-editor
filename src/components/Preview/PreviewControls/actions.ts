@@ -72,8 +72,8 @@ export class ProtoAction {
             artboard_shape = this.m_context.selection.selectedShapes[0];
         }
         if (!artboard_shape || !artboard_shape.childs.length) return;
-        // const scrol_shape = select_shape.childs.find(item => item.id === action.targetNodeID);
-        const scrol_shape = artboard_shape.childs[0];
+        const scrol_shape = artboard_shape.childs.find(item => item.id === action.targetNodeID);
+        // const scrol_shape = artboard_shape.childs[0];
         if (scrol_shape) {
             const m = getPreviewMatrix(scrol_shape);
             m.multiAtLeft(matrix);
@@ -117,8 +117,8 @@ export class ProtoAction {
         if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
         const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
         localStorage.setItem('refId', symbols[1].id);
-        (down_shape as SymbolRefView).modifyRefState(symbols[1].id);
         this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+        localStorage.setItem('refId', '');
     }
     // 打开浮层
     openDialog(action: PrototypeActions) {
