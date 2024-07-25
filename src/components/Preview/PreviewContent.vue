@@ -1,4 +1,4 @@
-    <script setup lang="ts">
+<script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { PageView, Shape, ShapeView, XYsBounding } from '@kcdesign/data';
@@ -8,14 +8,15 @@ import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 import { Selection } from '@/context/selection';
-
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
     page: PageView
     showTop: boolean
 }>();
 type PCard = InstanceType<typeof PageCard>
-const container = ref<HTMLElement | SVGElement>();
 const preview = ref<HTMLDivElement>();
 const cur_shape = ref<ShapeView>();
 const listLength = ref(0);
@@ -118,10 +119,15 @@ const previewWatcher = (t: number | string, s?: boolean) => {
     }
 }
 
-const selectionWatcher = (t: number | string) => {
-    if (t === Selection.CHANGE_PAGE) {
+const selectionWatcher = (v: number | string) => {
+    if (v === Selection.CHANGE_PAGE) {
         changePage();
-    } else if (t === Selection.CHANGE_SHAPE) {
+    } else if (v === Selection.CHANGE_SHAPE) {
+        if (!props.context.selection.selectedShapes.length) {
+            ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
+            props.context.selection.selectShape(undefined);
+        }
+        watch_shapes();
         if (!viewUpdater.pageCard?.pageSvg || !viewUpdater.currentPage) {
             changePage();
             return;
@@ -158,11 +164,6 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     } else {
         viewUpdater.trans(e);
     }
-}
-
-function page_scale(scale: number) {
-    props.context.preview.setScale(scale);
-    initMatrix();
 }
 
 const observer = new ResizeObserver(initMatrix);
@@ -324,6 +325,34 @@ const viewUpdater = new ViewUpdater(props.context);
 
 const is_overlay = ref(true);
 
+function startLoop() {
+    const dom = props.context.getPageDom(props.page);
+    if (dom && pageCard.value?.pageSvg) {
+        dom.ctx.loop(window.requestAnimationFrame);
+    }
+}
+
+
+const shapeChange = (...args: any[]) => {
+    if (args.includes('layout')) {
+        page_watcher();
+    }
+}
+
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(shapeChange);
+        watchedShapes.delete(k);
+    })
+
+    const selectedShapes = props.context.selection.selectedShapes;
+    selectedShapes.forEach((v) => {
+        v.watch(shapeChange);
+        watchedShapes.set(v.id, v)
+    });
+}
+
 onMounted(() => {
     props.context.preview.watch(previewWatcher);
     props.context.selection.watch(selectionWatcher);
@@ -331,6 +360,7 @@ onMounted(() => {
     // 等cur_shape触发pageCard的挂载
     page_watcher();
     nextTick(() => {
+        watch_shapes();
         // 然后初始化视图渲染管理器
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
     })
@@ -348,6 +378,17 @@ onUnmounted(() => {
 
     viewUpdater.atTarget();
     viewUpdater.atPage();
+
+    watchedShapes.forEach(v => {
+        v.unwatch(shapeChange);
+    });
+
+    const dom = props.context.getPageDom(props.page);
+    if (dom) {
+        dom.ctx.stopLoop();
+        dom.ctx.updateFocusShape(undefined);
+        dom.dom.unbind();
+    }
 })
 </script>
 
@@ -355,7 +396,7 @@ onUnmounted(() => {
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
         <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-            :context="context" :shapes="[cur_shape]" />
+            :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>

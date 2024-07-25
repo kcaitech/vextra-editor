@@ -19,18 +19,24 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const emits = defineEmits<{
+    (e: 'start-loop'): void;
+}>();
+
 const pageSvg = ref<SVGSVGElement>();
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
-
 function assemble() {
+    const length = props.context.selection.selectedShapes.length;
     if (pageDom) {
         pageDom?.dom.unbind();
-        pageDom?.dom.destory();
+        if (!pageDom.dom.isDistroyed) {
+            pageDom.dom.destory();
+        }
         pageDom = undefined;
     }
 
-    let shapes: Shape[] = props.shapes as Shape[];
+    let shapes: any[] = props.shapes;
 
     if (!shapes.length) {
         return;
@@ -68,13 +74,25 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
-        pageSvg.value.childNodes;
+        pageDom.ctx.loop(window.requestAnimationFrame);
+        const els = pageSvg.value.childNodes;
+        if (!length && els.length > 0) {
+            for (let index = 0; index < els.length; index++) {
+                const el = els[index];
+                pageSvg.value.removeChild(el);
+            }
+        }
+        emits('start-loop');
     }
 }
 
 function disassemble() {
-    pageDom?.dom.unbind();
-    pageDom?.dom.destory();
+    if (pageDom) {
+        pageDom.dom.unbind();
+        if (!pageDom.dom.isDistroyed) {
+            pageDom?.dom.destory();
+        }
+    }
 }
 
 watch(() => props.shapes, () => {

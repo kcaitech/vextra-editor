@@ -12,7 +12,7 @@ import {
     ShapeType,
     ShapeView
 } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
@@ -197,18 +197,13 @@ const flattenShape = () => {
         if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
             if (shapes[0].type === ShapeType.Group) {
                 const editor = props.context.editor4Page(page);
-                const bool = editor.boolgroup2(adapt2Shape(shapes[0]) as GroupShape, shapes[0].name, BoolOp.Union);
-                nextTick(() => {
-                    if (bool) {
-                        const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
-                        if (flatten) {
-                            props.context.nextTick(page, () => {
-                                const s = page.getShape(flatten.id);
-                                props.context.selection.selectShape(s)
-                            })
-                        }
-                    }
-                })
+                const pathshape = editor.flattenGroup(adapt2Shape(shapes[0]) as GroupShape, shapes[0].name);
+                if (pathshape) {
+                    props.context.nextTick(page, () => {
+                        const s = page.getShape(pathshape.id);
+                        props.context.selection.selectShape(s);
+                    });
+                }
             } else {
                 const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
                 if (flatten) {
@@ -235,8 +230,8 @@ const flattenShape = () => {
 
 <template>
 
-    <BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup"
-        @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
+<BooleanObject :context="context" :selection="props.context.selection" @changeBool="changeBoolgroup"
+               @flatten-shape="flattenShape" :disabled="!isBoolGroup"></BooleanObject>
 
 </template>
 
@@ -254,7 +249,7 @@ const flattenShape = () => {
         height: 100%;
         width: 34.5px;
 
-        >div {
+        > div {
             height: 32px;
             width: 32px;
             display: flex;
@@ -265,13 +260,13 @@ const flattenShape = () => {
             margin: 0;
             padding: 0;
 
-            >svg {
+            > svg {
                 height: 18px;
                 width: 18px;
             }
         }
 
-        >.active {
+        > .active {
             color: #ffffff;
         }
     }
