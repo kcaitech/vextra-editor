@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import {
     computed,
-    getCurrentInstance,
-    h,
-    nextTick,
-    onBeforeMount,
-    onMounted,
-    onUnmounted,
-    reactive,
-    ref,
+    getCurrentInstance, h, nextTick,
+    onBeforeMount, onMounted, onUnmounted,
+    reactive, ref,
     watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
@@ -232,7 +227,7 @@ function contextMenuMount(e: MouseEvent) {
         }
     }
     if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
-    if (shapes[0].mask) {
+    if (_shapes.length === 1 && _shapes[0].mask) {
         contextMenuItems.value.delete(MenuItemType.Mask);
         contextMenuItems.value.add(MenuItemType.UnMask);
     }
