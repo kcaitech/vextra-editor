@@ -197,7 +197,7 @@ const flattenShape = () => {
         if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
             if (shapes[0].type === ShapeType.Group) {
                 const editor = props.context.editor4Page(page);
-                const pathshape = editor.flattenGroup(adapt2Shape(shapes[0]) as GroupShape, shapes[0].name);
+                const pathshape = editor.flattenGroup((shapes[0]), shapes[0].name);
                 if (pathshape) {
                     props.context.nextTick(page, () => {
                         const s = page.getShape(pathshape.id);
