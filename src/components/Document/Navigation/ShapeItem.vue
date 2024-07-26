@@ -243,20 +243,20 @@ function parentWatcher(...args: any[]) {
     if (args.includes('mask-env-change')) updater(...args)
 }
 
-let parent = props.data.shape().parent;
+let parent = props.data.shapeview().parent;
 parent && parent.watch(parentWatcher);
 
 function updater(...args: any[]) {
     if (args.includes('mask-env-change')) {
-        if (props.data.shape().parent?.id !== parent?.id) {
-            parent?.unwatch(parentWatcher);
-            parent = props.data.shape().parent;
-            parent?.watch(parentWatcher)
-        }
         props.data.context.nextTick(props.data.context.selection.selectedPage!, () => {
             maskView.value = !!props.data.shapeview().masked;
+            if (props.data.shapeview().parent?.id !== parent?.id) {
+                parent?.unwatch(parentWatcher);
+                parent = props.data.shapeview().parent;
+                parent?.watch(parentWatcher);
+            }
         })
-        return
+        return;
     }
     if (args.includes('mask') || args.includes('fills')) return _updateAbbrView();
     if (args.includes('frame') || args.includes('points')) return update_abbr_view();
