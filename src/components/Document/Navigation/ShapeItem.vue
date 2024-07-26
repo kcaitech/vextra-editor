@@ -89,18 +89,14 @@ const fitToggleContainer = (e: MouseEvent) => {
 }
 
 function hoverShape(e: MouseEvent) {
-    if (e.buttons !== 0) {
-        return;
-    }
+    if (e.buttons !== 0) return;
     emits("hovershape", props.data.shapeview());
     is_tool_visible.value = true;
 }
 
 function unHoverShape(e: MouseEvent) {
     is_tool_visible.value = false;
-    if (e.buttons !== 0) {
-        return;
-    }
+    if (e.buttons !== 0) return;
     e.stopPropagation();
     emits("unhovershape");
 }
@@ -247,17 +243,20 @@ function parentWatcher(...args: any[]) {
     if (args.includes('mask-env-change')) updater(...args)
 }
 
-let parent = props.data.shape().parent;
+let parent = props.data.shapeview().parent;
 parent && parent.watch(parentWatcher);
 
 function updater(...args: any[]) {
     if (args.includes('mask-env-change')) {
-        if (props.data.shape().parent?.id !== parent?.id) {
-            parent?.unwatch(parentWatcher);
-            parent = props.data.shape().parent;
-            parent?.watch(parentWatcher)
-        }
-        return maskView.value = !!props.data.shapeview().masked;
+        props.data.context.nextTick(props.data.context.selection.selectedPage!, () => {
+            maskView.value = !!props.data.shapeview().masked;
+            if (props.data.shapeview().parent?.id !== parent?.id) {
+                parent?.unwatch(parentWatcher);
+                parent = props.data.shapeview().parent;
+                parent?.watch(parentWatcher);
+            }
+        })
+        return;
     }
     if (args.includes('mask') || args.includes('fills')) return _updateAbbrView();
     if (args.includes('frame') || args.includes('points')) return update_abbr_view();

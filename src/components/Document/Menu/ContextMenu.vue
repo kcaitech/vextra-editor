@@ -497,7 +497,7 @@ onUnmounted(() => {
     </div>
     <div v-if="items.has(MenuItemType.OnlyText)" class="menu-item" @click="paste_text">
         <span>{{ t('system.only_text') }}</span>
-        <Key code="Alt Ctrl V"/>
+        <Key code="Ctrl Alt V"/>
     </div>
     <div v-if="items.has(MenuItemType.PasteHere)" class="menu-item"
          @click="pasteHere"
@@ -602,7 +602,7 @@ onUnmounted(() => {
     </div>
     <div v-if="items.has(MenuItemType.Container)" @click="container" class="menu-item">
         <span>{{ t('system.create_container') }}</span>
-        <Key code="Alt Ctrl G"></Key>
+        <Key code="Ctrl Alt G"></Key>
     </div>
     <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
         <span>{{ t('system.set_mask') }}</span>
@@ -624,11 +624,11 @@ onUnmounted(() => {
          style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
     <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
         <span>{{ t('system.create_component') }}</span>
-        <Key code="Alt Ctrl K"></Key>
+        <Key code="Ctrl Alt K"></Key>
     </div>
     <div v-if="items.has(MenuItemType.Instance)" @click="instance" class="menu-item">
         <span>{{ t('system.unbind_instance') }}</span>
-        <Key code="Alt Ctrl B"></Key>
+        <Key code="Ctrl Alt B"></Key>
     </div>
     <div v-if="items.has(MenuItemType.EditComps)" @click="editComps" class="menu-item">
         <span>{{ t('system.edit_component') }}</span>

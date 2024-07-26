@@ -18,15 +18,15 @@ const icon_class = ref<string>('');
 
 function updateIconClass() {
     const s = props.shape;
+    if (s.data.mask) return icon_class.value = "layer-mask";
     if (s.isImageFill) return icon_class.value = "layer-image";
-    else if (s.mask) return icon_class.value = "layer-mask";
     else return icon_class.value = `layer-${props.shape.type}`;
 }
 
 
 function getPath() {
     const shape = props.shape.data;
-    is_image.value = shape.getImageFill();
+    is_image.value = shape.getImageFill() && !shape.mask;
     flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
 
     if (!flex_abbr.value) return updateIconClass();
