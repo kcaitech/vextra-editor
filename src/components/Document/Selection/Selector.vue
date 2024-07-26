@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { find4select, Matrix, ShapeFrame, ShapeView } from '@kcdesign/data';
@@ -27,22 +27,16 @@ const selectedShapes: Map<string, ShapeView> = new Map();
 function select() {
     const { top, left, width, height } = props.params.frame;
 
-    if (width === height && height === 0) {
-        return
-    }
+    if (width === height && height === 0) return;
+
     const selection = props.context.selection;
-    const page = selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const page = selection.selectedPage!;
     const m = new Matrix(props.context.workspace.matrix);
     m.multiAtLeft(page.matrix2Root());
-    const pageMatirx = new Matrix(m.inverse);
+    const pageMatrix = new Matrix(m.inverse);
 
-    const p1: XY = pageMatirx.computeCoord2(left, top); // lt
-    // const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
-    const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
-    // const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
+    const p1: XY = pageMatrix.computeCoord2(left, top); // lt
+    const p3: XY = pageMatrix.computeCoord2(left + width, top + height); // rb
     const rect = new ShapeFrame(p1.x, p1.y, p3.x - p1.x, p3.y - p1.y);
 
     let changed = false;
@@ -59,16 +53,15 @@ function select() {
             }
         })
         if (changed) {
-            const cur = new Set(...selected.map(s => s.id))
-            const keys = Array.from(selectedShapes.keys())
+            const cur = new Set(selected.map(s => s.id));
+            const keys = Array.from(selectedShapes.keys());
             keys.forEach(k => {
-                if (!cur.has(k)) selectedShapes.delete(k)
+                if (!cur.has(k)) selectedShapes.delete(k);
             })
         }
     }
-    if (changed) {
-        selection.rangeSelectShape(Array.from(selectedShapes.values()));
-    }
+
+    if (changed) selection.rangeSelectShape(Array.from(selectedShapes.values()));
 }
 
 function reset(t?: number) {
@@ -86,9 +79,11 @@ onUnmounted(() => {
 watchEffect(select);
 </script>
 <template>
-    <div class="selector" v-if="props.params.visible"
-        :style="{ top: `${props.params.frame.top}px`, left: `${props.params.frame.left}px`, width: `${props.params.frame.width}px`, height: `${props.params.frame.height}px` }">
-    </div>
+<div
+    v-if="props.params.visible"
+    class="selector"
+    :style="{ top: `${props.params.frame.top}px`, left: `${props.params.frame.left}px`, width: `${props.params.frame.width}px`, height: `${props.params.frame.height}px`}"
+/>
 </template>
 <style scoped lang="scss">
 .selector {
