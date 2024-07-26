@@ -205,7 +205,7 @@ const flattenShape = () => {
                     });
                 }
             } else {
-                const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as BoolShape)
+                const flatten = editor.flattenBoolShape((shapes[0]) as BoolShapeView)
                 if (flatten) {
                     props.context.nextTick(page, () => {
                         const s = page.getShape(flatten.id);
@@ -215,7 +215,7 @@ const flattenShape = () => {
             }
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(shapes);
-            const flatten = editor.flattenShapes(shapessorted.map(s => adapt2Shape(s)))
+            const flatten = editor.flattenShapes(shapessorted)
             if (flatten) {
                 props.context.nextTick(page, () => {
                     const s = page.getShape(flatten.id);

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { find4select, Matrix, ShapeView } from '@kcdesign/data';
+import { find4select, Matrix, ShapeFrame, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watchEffect } from 'vue';
 import { XY } from '@/context/selection';
 
@@ -40,12 +40,13 @@ function select() {
     const pageMatirx = new Matrix(m.inverse);
 
     const p1: XY = pageMatirx.computeCoord2(left, top); // lt
-    const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
+    // const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
     const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
-    const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
+    // const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
+    const rect = new ShapeFrame(p1.x, p1.y, p3.x - p1.x, p3.y - p1.y);
 
     let changed = false;
-    const selected = find4select(page, [p1, p2, p3, p4], props.params.frame.includes);
+    const selected = find4select(page, rect, props.params.frame.includes);
     if (selected.length !== selectedShapes.size) {
         changed = true;
         selectedShapes.clear();
