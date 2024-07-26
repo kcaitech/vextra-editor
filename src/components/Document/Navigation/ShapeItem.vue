@@ -257,7 +257,10 @@ function updater(...args: any[]) {
             parent = props.data.shape().parent;
             parent?.watch(parentWatcher)
         }
-        return maskView.value = !!props.data.shapeview().masked;
+        props.data.context.nextTick(props.data.context.selection.selectedPage!, () => {
+            maskView.value = !!props.data.shapeview().masked;
+        })
+        return
     }
     if (args.includes('mask') || args.includes('fills')) return _updateAbbrView();
     if (args.includes('frame') || args.includes('points')) return update_abbr_view();
