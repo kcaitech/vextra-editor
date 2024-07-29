@@ -385,6 +385,14 @@ function onKeyUp(e: KeyboardEvent) {
 const onMouseMove_CV = (e: MouseEvent) => {
     if (e.buttons === 0 && !spacePressed.value) {
         search(e); // 图形检索(hover)
+        const h_shape = props.context.selection.hoveredShape;
+        if (preview.value && !spacePressed.value) {
+            if (h_shape && h_shape.prototypeInterAction?.length) {
+                preview.value.style.cursor = 'pointer'
+            } else {
+                preview.value.style.cursor = 'default'
+            }
+        }
     }
 }
 
