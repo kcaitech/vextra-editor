@@ -254,6 +254,13 @@ const onMouseDown = (e: MouseEvent) => {
 function onMouseMove(e: MouseEvent) {
     if (e.buttons == 1 && spacePressed.value) {
         pageViewDragging(e); // 拖拽页面
+        if (preview.value) {
+            preview.value.style.cursor = 'grabbing';
+        }
+    } else if (e.buttons == 1) {
+        const h_shape = props.context.selection.hoveredShape;
+        if (h_shape && h_shape.prototypeInterAction?.length) return;
+        pageViewDragging(e); // 拖拽页面
     }
 }
 
@@ -299,9 +306,6 @@ const pageViewDragging = (e: MouseEvent) => {
             downXY.x = e.clientX;
             downXY.y = e.clientY;
         }
-    }
-    if (preview.value) {
-        preview.value.style.cursor = 'grabbing';
     }
 
     viewUpdater.setAttri(matrix);
