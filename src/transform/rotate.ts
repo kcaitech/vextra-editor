@@ -246,7 +246,7 @@ export class RotateHandler extends TransformHandler {
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot);
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot); // todo 考虑让 transform2FromRoot 为问题因素
 
         this.selectionTransformInverse = this.selectionTransform.getInverse();
         this.selectionSize = multi ? {
