@@ -299,19 +299,17 @@ export function get_points_for_straight(shape: PathShapeView) {
 }
 
 export function get_points_from_shape(shape: ShapeView) {
-    if (is_straight(shape)) {
-        return get_points_for_straight(shape as PathShapeView);
-    }
+    if (is_straight(shape)) return get_points_for_straight(shape as PathShapeView);
 
     const m = shape.matrix2Root();
-    const { width, height } = shape.frame;
+    const { width, height, x, y } = shape.frame;
 
     if (shape instanceof ContactLineView) {
         m.preScale(width, height);
         return shape.getPoints().map(i => m.computeCoord2(i.x, i.y));
     }
 
-    const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
+    const ps: XY[] = [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, { x, y: y + height }, { x, y }];
     for (let i = 0; i < 5; i++) {
         const p = ps[i];
         ps[i] = m.computeCoord3(p);
@@ -325,29 +323,20 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     return l >= left && r <= right && t >= top && b <= bottom;
 }
 
-/**
- * @param includes 需要全包含
- */
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
 
-    if (isIncluded2(selectorPoints, points)) { // 选择器是否完全覆盖目标
-        return true;
-    }
-    if (includes) { // 需要完全覆盖而未完全覆盖，判为false
-        return false;
-    }
-    if (isIncluded2(points, selectorPoints)) { // 目标是否覆盖了选择器
-        return true;
-    }
+    if (isIncluded2(selectorPoints, points)) return true; // 选择器是否完全覆盖目标
+
+    if (includes) return false; // 需要完全覆盖而未完全覆盖，判为false
+
+    if (isIncluded2(points, selectorPoints)) return true;  // 目标是否覆盖了选择器
 
     // 检测是否相交
     const selectorPointsSides = get_side_by_points(selectorPoints);
     const shapeSides = get_side_by_points(points);
 
-    if (!shapeSides.length) {
-        return false;
-    }
+    if (!shapeSides.length) return false;
 
     for (let i = 0, l = selectorPointsSides.length; i < l; i++) {
         const side = selectorPointsSides[i];
@@ -361,9 +350,7 @@ export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView
             const p2 = _side.start
             const q2 = _side.end;
 
-            if (isIntersect(p1, q1, p2, q2)) {
-                return true;
-            }
+            if (isIntersect(p1, q1, p2, q2)) return true;
         }
     }
     return false;
@@ -487,6 +474,7 @@ export function format_value(val: number | string, fix = 2) {
 
     return fixedZero(val);
 }
+
 export const fixedZero = (value: number) => {
     value = Math.round(value * 100) / 100;
     if (Number.isInteger(value)) {
