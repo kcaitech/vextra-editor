@@ -146,11 +146,15 @@ export class ScaleRenderer {
                     }
                     points.push(m.computeCoord3(start), m.computeCoord3(end));
                 } else {
+                    const x = frame.x;
+                    const y = frame.y;
+                    const r = x + frame.width;
+                    const b = y + frame.height;
                     points.push(
-                        m.computeCoord2(0, 0),
-                        m.computeCoord2(frame.width, 0),
-                        m.computeCoord2(frame.width, frame.height),
-                        m.computeCoord2(0, frame.height)
+                        m.computeCoord2(x, y),
+                        m.computeCoord2(r, y),
+                        m.computeCoord2(r, b),
+                        m.computeCoord2(x, b)
                     );
                 }
 
