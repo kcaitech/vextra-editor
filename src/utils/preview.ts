@@ -1,7 +1,7 @@
 // import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { Matrix, PageView, PrototypeEvents, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeEvents, PrototypeNavigationType, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
@@ -265,4 +265,91 @@ export const viewBox = (context: Context, m: Matrix) => {
     ];
     const box = XYsBounding(points);
     return box;
+}
+
+export const getFlowPathShapes = (context: Context, flows: Map<string, string[]>) => {
+    const page = context.selection.selectedPage;
+    flows.clear();
+    if (!page) return flows;
+    const list = getFrameList(page);
+    getFlows(page, list, flows);
+    return flows;
+}
+
+const getFlows = (page: PageView, shapes: ShapeView[], flows: Map<string, string[]>) => {
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape.prototypeStartPoint) {
+            const target_ids: Set<string> = new Set([shape.id]);
+            flowShapes(page, shape, target_ids);
+            flows.set(shape.id, Array.from(target_ids.values()));
+        }
+    }
+}
+
+const flowShapes = (page: PageView, startShape: ShapeView, target_ids: Set<string>) => {
+    if (startShape.prototypeInterAction) {
+        const target_id: Set<string> = new Set();
+        for (let index = 0; index < startShape.prototypeInterAction.length; index++) {
+            const action = startShape.prototypeInterAction[index].actions;
+            const t = action.navigationType === PrototypeNavigationType.NAVIGATE || action.navigationType === PrototypeNavigationType.OVERLAY;
+            if (action.targetNodeID && t && !target_ids.has(action.targetNodeID)) {
+                target_ids.add(action.targetNodeID);
+                target_id.add(action.targetNodeID);
+            }
+        }
+        target_id.forEach(item => {
+            const target_s = page.getShape(item);
+            if (target_s) {
+                flowShapes(page, target_s, target_ids);
+            }
+        })
+    }
+    if (startShape.type === ShapeType.Table) {
+        return;
+    }
+
+    const children = startShape.childs || [];
+    if (!children.length) {
+        return;
+    } else {
+        for (let i = 0; i < children.length; i++) {
+            const item = children[i];
+            flowShapes(page, item, target_ids);
+        }
+    }
+}
+
+export const getFlowInfo = (context: Context, flows: Map<string, string[]>) => {
+    const page = context.selection.selectedPage!;
+    let options: string[] = ['all'];
+    let descs: string[] = [];
+    const keys = Array.from(flows.keys());
+    for (let i = 0; i < keys.length; i++) {
+        const id = keys[i];
+        const shape = page.getShape(id);
+        if (shape && shape.prototypeStartPoint) {
+            options.push(shape.prototypeStartPoint.name);
+            descs.push(shape.prototypeStartPoint.desc);
+        }
+    }
+    return {
+        options,
+        descs
+    }
+}
+
+export const getFlowShapes = (context: Context, id: string, flows: Map<string, string[]>) => {
+    const page = context.selection.selectedPage!;
+    const ids = flows.get(id);
+    let flowShape: ShapeView[] = [];
+    if (ids) {
+        ids.forEach(item => {
+            const shape = page.getShape(item);
+            if (shape) {
+                flowShape.push(shape);
+            }
+        })
+    }
+    return flowShape;
 }

@@ -113,12 +113,12 @@ export class ProtoAction {
         const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
         const sym1 = down_shape.symData;
         const sym = sym1?.parent;
-
         if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
         const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
-        localStorage.setItem('refId', symbols[1].id);
+        const maprefIdArray = this.getMapRefIdLS('refId');
+        maprefIdArray.set(down_shape.id, symbols[1]?.id)
+        this.saveMapRefIdLS(maprefIdArray, 'refId');
         this.m_context.preview.notify(Preview.SWAP_REF_STAT);
-        localStorage.setItem('refId', '');
     }
     // 打开浮层
     openDialog(action: PrototypeActions) {
@@ -173,6 +173,19 @@ export class ProtoAction {
     // 动画推入
     animationPushIn() {
 
+    }
+    getMapRefIdLS(key: string): Map<string, string> {
+        let jsonString = sessionStorage.getItem(key);
+        if (jsonString) {
+            let refIdArray = JSON.parse(jsonString);
+            return new Map(refIdArray);
+        }
+        return new Map();
+    }
+    saveMapRefIdLS(map: Map<string, string>, key: string) {
+        let refIdArray = Array.from(map.entries());
+        let jsonString = JSON.stringify(refIdArray);
+        sessionStorage.setItem(key, jsonString);
     }
 }
 

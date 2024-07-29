@@ -41,7 +41,8 @@ function page_watcher() {
     viewUpdater.atPage(page.data);
     viewUpdater.atTarget(shape);
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     listLength.value = frameList.length;
 
     const index = frameList.findIndex(item => item.id === shape.id);
@@ -54,7 +55,8 @@ function changePage() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
 
     const shape = props.context.selection.selectedShapes[0] || frameList[0];
     if (!shape) {
@@ -85,7 +87,8 @@ const togglePage = (p: number) => {
 
     cur_shape.value = shape;
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return;
     index += p;
@@ -147,6 +150,14 @@ const previewWatcher = (t: number | string, s?: boolean) => {
         }
     } else if (t === Preview.INTERACTION_CHANGE) {
         getTargetShapes();
+    } else if (t === Preview.FLOW_CHANGE) {
+        const shape = props.context.selection.selectedShapes[0];
+        const page = props.context.selection.selectedPage!;
+        const naviList = props.context.preview.naviShapeList;
+        const frameList = naviList.length > 0 ? naviList : getFrameList(page);
+        listLength.value = frameList.length;
+        const index = frameList.findIndex(item => item.id === shape.id);
+        curPage.value = index + 1;
     }
 }
 
@@ -432,7 +443,7 @@ const updateViewBox = (shape: ShapeView, type: PrototypeNavigationType | undefin
         if (!s) return;
         const scale = viewUpdater.v_matrix.m00;
         m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-        if (s.overlayPositionType === OverlayPositions.CENTER) {
+        if (s.overlayPositionType === OverlayPositions.CENTER || !s.overlayPositionType) {
             const c_x = (frame.width * scale) / 2;
             const c_y = (frame.height * scale) / 2;
             const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
@@ -620,7 +631,7 @@ onUnmounted(() => {
             :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
         <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
-                :data="(props.page as PageView)" :context="context" :shapes="[item]"/>
+                :data="(props.page as PageView)" :context="context" :shapes="[item]" />
         </div>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
@@ -653,6 +664,10 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
+
+        .dailogCard {
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s;
+        }
     }
 
     .toggle {
