@@ -128,9 +128,7 @@ export class ScaleRenderer {
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
 
-                if (shape.type === ShapeType.Contact) {
-                    continue;
-                }
+                if (shape.type === ShapeType.Contact) continue;
 
                 const m = shape.matrix2Root();
                 m.trans(-offsetX, -offsetY);
@@ -141,9 +139,7 @@ export class ScaleRenderer {
                 if (shape.isStraight) {
                     m.preScale(frame.width, frame.height);
                     const [start, end] = (shape as PathShapeView)?.segments[0]?.points;
-                    if (!start || !end) {
-                        continue;
-                    }
+                    if (!start || !end) continue;
                     points.push(m.computeCoord3(start), m.computeCoord3(end));
                 } else {
                     const x = frame.x;
@@ -197,16 +193,12 @@ export class ScaleRenderer {
             for (let i = 1; i < bh.length; i++) {
                 const b = bh[i];
                 const last = bh[i - 1];
-                if (Math.abs(b.offsetStart - last.offsetEnd) < ScaleRenderer.SCALE_SPACE) {
-                    b.hidden = true;
-                }
+                if (Math.abs(b.offsetStart - last.offsetEnd) < ScaleRenderer.SCALE_SPACE) b.hidden = true;
             }
             for (let i = 1; i < bv.length; i++) {
                 const b = bv[i];
                 const last = bv[i - 1];
-                if (Math.abs(b.offsetStart - last.offsetEnd) < ScaleRenderer.SCALE_SPACE) {
-                    b.hidden = true;
-                }
+                if (Math.abs(b.offsetStart - last.offsetEnd) < ScaleRenderer.SCALE_SPACE) b.hidden = true;
             }
         }
     }
@@ -222,12 +214,8 @@ export class ScaleRenderer {
         const bv = this.m_blocks_ver;
 
         // 重置所有刻度的透明度
-        for (let s = 0; s < sh.length; s++) {
-            sh[s].opacity = 1;
-        }
-        for (let s = 0; s < sv.length; s++) {
-            sv[s].opacity = 1;
-        }
+        for (let s = 0; s < sh.length; s++) sh[s].opacity = 1;
+        for (let s = 0; s < sv.length; s++) sv[s].opacity = 1;
 
         // 修改靠近Block的刻度的透明度
         for (let s = 0; s < sh.length; s++) {
@@ -237,9 +225,7 @@ export class ScaleRenderer {
             for (let i = 0; i < bh.length; i++) {
                 const b = bh[i];
                 const distance = Math.min(Math.abs(offset - b.offsetStart), Math.abs(offset - b.offsetEnd));
-                if (distance < ScaleRenderer.SCALE_SPACE) {
-                    scale.opacity = Math.max((distance - 40) / 40, 0);
-                }
+                if (distance < ScaleRenderer.SCALE_SPACE) scale.opacity = Math.max((distance - 40) / 40, 0);
             }
         }
         for (let s = 0; s < sv.length; s++) {
@@ -249,9 +235,7 @@ export class ScaleRenderer {
             for (let i = 0; i < bv.length; i++) {
                 const b = bv[i];
                 const distance = Math.min(Math.abs(offset - b.offsetStart), Math.abs(offset - b.offsetEnd));
-                if (distance < ScaleRenderer.SCALE_SPACE) {
-                    scale.opacity = Math.max((distance - 40) / 40, 0);
-                }
+                if (distance < ScaleRenderer.SCALE_SPACE) scale.opacity = Math.max((distance - 40) / 40, 0);
             }
         }
     }
@@ -267,9 +251,7 @@ export class ScaleRenderer {
         this.coordinateEnv = page;
         const getC = this.getContainer;
 
-        if (!shapes.length) {
-            return;
-        } else if (shapes.length === 1) {
+        if (!shapes.length) return; else if (shapes.length === 1) {
             const shape = shapes[0];
             const container = this.getContainer(shape) || page;
             if (shape.isContainer && (container.id === page.id)) {
@@ -292,9 +274,7 @@ export class ScaleRenderer {
     }
 
     private getOpacity(distance: number) {
-        if (distance > 10) {
-            return 1;
-        } else {
+        if (distance > 10) return 1; else {
             return Number(((distance + 30) / 40).toFixed(1));
         }
     }
@@ -336,9 +316,7 @@ export class ScaleRenderer {
     render(sim = false) {
         const ctx = this.m_context;
 
-        if (!ctx.user.isRuleVisible) {
-            return;
-        }
+        if (!ctx.user.isRuleVisible) return;
         // 1. 绘制刻度。需要线确定坐标系，并不是每次更新都需要重新确定坐标系和绘制刻度
         if (!sim) {
             this.getCoordinate(); // 确定坐标环境
