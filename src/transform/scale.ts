@@ -122,16 +122,22 @@ export class ScaleHandler extends TransformHandler {
         const frame = shape.frame;
         const baseWidth = frame.width;
         const baseHeight = frame.height;
+        const _right = frame.x + baseWidth;
+        const _bottom = frame.y + baseHeight;
 
         const points = [
-            { x: 0, y: 0 },
-            { x: frame.width, y: 0 },
-            { x: frame.width, y: frame.height },
-            { x: 0, y: frame.height }
+            { x: frame.x, y: frame.y },
+            { x: _right, y: frame.y },
+            { x: _right, y: _bottom },
+            { x: frame.x, y: _bottom }
         ];
 
-        let m = shape.matrix2Parent();
+        let left = Infinity;
+        let right = -Infinity;
+        let top = Infinity;
+        let bottom = -Infinity;
 
+        let m = shape.matrix2Parent();
         let _m = parent2rootMatrixCache.get(parent.id)!;
         if (!_m) {
             _m = parent.matrix2Root();
@@ -140,14 +146,7 @@ export class ScaleHandler extends TransformHandler {
 
         m.multiAtLeft(_m);
 
-        const origin = m.computeCoord2(0, 0);
-
-        let left = origin.x;
-        let right = origin.x;
-        let top = origin.y;
-        let bottom = origin.y;
-
-        for (let i = 1; i < 4; i++) {
+        for (let i = 0; i < 4; i++) {
             const p = m.computeCoord3(points[i]);
 
             if (p.x < left) {
@@ -199,23 +198,13 @@ export class ScaleHandler extends TransformHandler {
 
             const f = boundingBox2Root(shape, matrixParent2rootCache);
 
-            if (f.boxX < left) {
-                left = f.boxX;
-            }
-
-            if (f.boxY < top) {
-                top = f.boxY;
-            }
+            if (f.boxX < left) left = f.boxX;
+            if (f.boxY < top) top = f.boxY;
 
             const _right = f.boxX + f.boxWidth
-            if (_right > right) {
-                right = _right;
-            }
-
+            if (_right > right) right = _right;
             const _bottom = f.boxY + f.boxHeight;
-            if (_bottom > bottom) {
-                bottom = _bottom;
-            }
+            if (_bottom > bottom) bottom = _bottom;
 
             bases.set(shape.id, f);
 
@@ -238,21 +227,20 @@ export class ScaleHandler extends TransformHandler {
         this.shapeSizeList = shapes.map(shape => ({ width: shape.frame.width, height: shape.frame.height }));
 
         const alpha = shapes[0];
+        const alphaFrame = alpha.frame;
         const multi = shapes.length > 1;
 
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
         this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : alpha.transform2FromRoot.clone();
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot);
 
         const selectionInverse = this.selectionTransform.getInverse();
         this.selectionTransformInverse = selectionInverse;
 
-        this.shapeTransformListInSelection = multi
-            ? shapes.map((shape, i) => shape.transform2.clone()  // 在Parent坐标系下
-                .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
-                .addTransform(selectionInverse))  // 在选区坐标系下
-            : [new Transform()];
+        this.shapeTransformListInSelection = shapes.map((shape, i) => shape.transform2.clone()  // 在Parent坐标系下
+            .addTransform(cache.get(shape.parent!)!)  // 在Root坐标系下
+            .addTransform(selectionInverse))  // 在选区坐标系下
 
         this.selectionSize = multi
             ? {
@@ -333,9 +321,7 @@ export class ScaleHandler extends TransformHandler {
     private fixToAlignWhileModifySingleRightOrLeft() {
         const shape = this.shapes[0];
         const base = this.baseFrames.get(shape.id);
-        if (!base) {
-            return;
-        }
+        if (!base) return;
 
         if (base.baseWidth === base.boxWidth) {
             this.fixToAlignWhileModifyRightOrLeft();
@@ -347,9 +333,7 @@ export class ScaleHandler extends TransformHandler {
     private fixToAlignWhileModifySingleTopOrBottom() {
         const shape = this.shapes[0];
         const base = this.baseFrames.get(shape.id);
-        if (!base) {
-            return;
-        }
+        if (!base) return;
 
         if (base.baseHeight === base.boxHeight) {
             this.fixToAlignWhileModifyTopOrBottom();
@@ -370,9 +354,7 @@ export class ScaleHandler extends TransformHandler {
         }
 
         const target = this.context.assist.alignX(assist, [{ x, y: y1 }, { x, y: y2 }]);
-        if (!target) {
-            return;
-        }
+        if (!target) return;
 
         this.updateHorFixedStatus(assist.x, target);
     }
@@ -389,9 +371,7 @@ export class ScaleHandler extends TransformHandler {
         }
 
         const assistResult = this.context.assist.alignY(assist, [{ x: x1, y }, { x: x2, y }]);
-        if (!assistResult) {
-            return;
-        }
+        if (!assistResult) return;
 
         this.updateVerFixedStatus(assist.y, assistResult);
     }
@@ -403,9 +383,7 @@ export class ScaleHandler extends TransformHandler {
             assist.y = Math.round(assist.y);
         }
         const assistResult = this.context.assist.alignXY(assist);
-        if (!assistResult) {
-            return;
-        }
+        if (!assistResult) return;
 
         this.updateHorFixedStatus(assist.x, assistResult);
         this.updateVerFixedStatus(assist.y, assistResult);
@@ -458,9 +436,8 @@ export class ScaleHandler extends TransformHandler {
             const delta = cursorPointFromSelection.y - ltPointForSelection.y;
             ltPointForSelection.y = cursorPointFromSelection.y;
 
-            if (ALT) {
-                rbPointForSelection.y -= delta;
-            }
+            if (ALT) rbPointForSelection.y -= delta;
+
             if (SHIFT) {
                 const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
                 const dx = (selectionWidth - afterWidth) / 2;
@@ -478,9 +455,8 @@ export class ScaleHandler extends TransformHandler {
             const delta = cursorPointFromSelection.x - rbPointForSelection.x;
             rbPointForSelection.x = cursorPointFromSelection.x;
 
-            if (ALT) {
-                ltPointForSelection.x -= delta;
-            }
+            if (ALT) ltPointForSelection.x -= delta;
+
             if (SHIFT) {
                 if (CET === CtrlElementType.RectRight) {
                     const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
