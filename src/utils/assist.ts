@@ -19,16 +19,22 @@ export function is_equal(a: number, b: number) {
 export function collect_point_group(host: ShapeView, align: boolean): PointGroup1 {
     const m = host.matrix2Root();
     const f = host.frame;
-    const lt = m.computeCoord2(0, 0);
-    const rb = m.computeCoord2(f.width, f.height);
-    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
-    if (host.type === ShapeType.Line) { // todo 修改直线的收集方式
+    const x = f.x;
+    const y = f.y;
+    const r = x + f.width;
+    const b = y + f.height;
+    const cx = x + f.width / 2;
+    const cy = y + f.height / 2;
+    const lt = m.computeCoord2(x, y);
+    const rb = m.computeCoord2(r, b);
+    const pivot = m.computeCoord2(cx, cy);
+    if (host.type === ShapeType.Line) {
         const apexX = [lt.x, rb.x, pivot.x];
         const apexY = [lt.y, rb.y, pivot.y];
         return { lt, rb, pivot, apexX, apexY };
     }
-    const rt = m.computeCoord2(f.width, 0);
-    const lb = m.computeCoord2(0, f.height);
+    const rt = m.computeCoord2(r, y);
+    const lb = m.computeCoord2(x, b);
 
     if (align) {
         lt.x = Math.round(lt.x);
@@ -47,10 +53,10 @@ export function collect_point_group(host: ShapeView, align: boolean): PointGroup
     const apexY = Array.from(new Set([lt.y, rt.y, rb.y, lb.y, pivot.y]).values());
     const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard || host.type === ShapeType.Symbol) {
-        const th = m.computeCoord2(f.width / 2, 0);
-        const rh = m.computeCoord2(f.width, f.height / 2);
-        const bh = m.computeCoord2(f.width / 2, f.height);
-        const lh = m.computeCoord2(0, f.height / 2);
+        const th = m.computeCoord2(cx, y);
+        const rh = m.computeCoord2(r, cy);
+        const bh = m.computeCoord2(cx, b);
+        const lh = m.computeCoord2(x, cy);
         apexX.push(th.x, rh.x, bh.x, lh.x);
         apexY.push(th.y, rh.y, bh.y, lh.y);
         pg.th = th;
@@ -66,10 +72,10 @@ export function isShapeOut(context: Context, shape: Shape | ShapeView) {
     m.multiAtLeft(context.workspace.matrix);
 
     const f = shape.frame;
-    const r = f.x + f.width;
-    const b = f.y + f.height;
     const x = f.x;
     const y = f.y;
+    const r = x + f.width;
+    const b = y + f.height;
 
     const point: { x: number, y: number }[] = [
         m.computeCoord2(x, y),
@@ -126,8 +132,6 @@ export function finder(context: Context, scope: ShapeView, all_pg: Map<string, P
 }
 
 export function _collect(context: Context, new_matrix: Matrix) {
-    // 调整到每次执行transform任务前
-    // context.assist.collect();
     context.assist.set_stickness(5 / new_matrix.m00);
 }
 
@@ -228,6 +232,7 @@ export function alignYFromSpacePoint(dy: number, ys: number[], livingYs: number[
     }
     return { dy: livingD, targetY, spark };
 }
+
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     let working = false;
     for (let i = 0, len = apexX.length; i < len; i++) {
@@ -261,16 +266,10 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
 export function get_tree(shape: ShapeView, init: Map<string, ShapeView>) {
     init.set(shape.id, shape);
 
-    if (shape.type === ShapeType.Table) {
-        return;
-    }
+    if (shape.type === ShapeType.Table) return;
 
     const cs = shape.childs;
-    if (!cs?.length) {
-        return;
-    }
+    if (!cs?.length) return;
 
-    for (let i = 0, len = cs.length; i < len; i++) {
-        get_tree(cs[i], init);
-    }
+    for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
 }
