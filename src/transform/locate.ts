@@ -1,11 +1,8 @@
 import { Context } from "@/context";
 import {
     ColVector3D,
-    makeMatrixByTransform2,
-    makeShapeTransform1By2,
     makeShapeTransform2By1,
     Matrix,
-    Shape,
     ShapeView
 } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";

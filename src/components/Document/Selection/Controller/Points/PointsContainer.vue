@@ -8,9 +8,9 @@ import {
     ShapeView,
     Transform
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { ClientXY, SelectionTheme, XY } from '@/context/selection';
-import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { SelectionTheme, XY } from '@/context/selection';
+import { forbidden_to_modify_frame } from '@/utils/common';
 import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
@@ -213,9 +213,7 @@ function updateDotLayout() {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0 || scaler || rotator) {
-        return;
-    }
+    if (event.button !== 0 || scaler || rotator) return;
 
     event.stopPropagation();
 
@@ -224,9 +222,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return startEdit(props.context);
     }
 
-    if (forbidden_to_modify_frame(props.shape)) {
-        return;
-    }
+    if (forbidden_to_modify_frame(props.shape)) return;
 
     cur_ctrl_type = ele;
 
@@ -243,8 +239,6 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-
     if (isDragging) {
         if (cur_ctrl_type.endsWith('rotate')) {
             setCursor(cur_ctrl_type, true);
@@ -255,20 +249,12 @@ function point_mousemove(event: MouseEvent) {
 
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
-
-        if (cur_ctrl_type.endsWith('rotate')) {
-            rotator?.createApiCaller();
-        } else {
-            scaler?.createApiCaller();
-        }
+        cur_ctrl_type.endsWith('rotate') ? rotator?.createApiCaller() : scaler?.createApiCaller();
     }
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
-
+    if (event.button !== 0) return;
     clear_status();
 }
 
@@ -315,9 +301,7 @@ function clear_status() {
     rotator?.fulfil();
     rotator = undefined;
 
-    if (need_reset_cursor_after_transform) {
-        props.context.cursor.reset();
-    }
+    if (need_reset_cursor_after_transform) props.context.cursor.reset();
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
@@ -328,9 +312,7 @@ function window_blur() {
 }
 
 function workspaceWatcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
 }
 
 watch(() => props.shape, (value, old) => {
