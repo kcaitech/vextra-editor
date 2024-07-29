@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { throttle } from "lodash";
 import { IScout as Scout } from "@/openapi";
+
 export { IScout as Scout } from "@/openapi";
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
@@ -604,41 +605,26 @@ function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY
     for (let i = scope.length - 1; i > -1; i--) {
         const item = scope[i];
 
-        if (!canBeTarget(item)) {
-            continue;
-        }
+        if (!canBeTarget(item)) continue;
 
-        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue;
-        }
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) continue;
 
-        if (!isTarget(scout, item, hot)) {
-            continue;
-        }
+        if (!isTarget(scout, item, hot)) continue;
 
-        if (item.type === ShapeType.Table) {
-            return item;
-        }
+        if (item.type === ShapeType.Table) return item;
 
         const children = item.type === ShapeType.SymbolRef ? (item.naviChilds || []) : (item.childs || []);
-        if (!children.length) {
-            return item;
-        } else {
+        if (!children.length) return item; else {
             result = for_pen(context, scout, children, hot);
-            const background =
-                item.type === ShapeType.Artboard
+            const background = item.type === ShapeType.Artboard
                 || item.type == ShapeType.Symbol
                 || item.type === ShapeType.SymbolUnion
                 || item.type === ShapeType.SymbolRef;
 
-            if (!result && background) {
-                return item;
-            }
+            if (!result && background) return item;
         }
 
-        if (result) {
-            return result;
-        }
+        if (result) return result;
     }
 }
 

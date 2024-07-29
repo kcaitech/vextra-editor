@@ -65,14 +65,17 @@ export function isShapeOut(context: Context, shape: Shape | ShapeView) {
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
 
-    const w = shape.frame.width;
-    const h = shape.frame.height;
+    const f = shape.frame;
+    const r = f.x + f.width;
+    const b = f.y + f.height;
+    const x = f.x;
+    const y = f.y;
 
     const point: { x: number, y: number }[] = [
-        m.computeCoord2(0, 0),
-        m.computeCoord2(w, 0),
-        m.computeCoord2(w, h),
-        m.computeCoord2(0, h)
+        m.computeCoord2(x, y),
+        m.computeCoord2(r, y),
+        m.computeCoord2(r, b),
+        m.computeCoord2(x, b)
     ];
 
     const { width, height } = context.workspace.root;

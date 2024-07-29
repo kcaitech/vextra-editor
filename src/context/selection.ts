@@ -325,12 +325,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: ShapeView[]): ShapeView | undefined {
         // const s = Date.now();
         let shape: ShapeView | undefined;
-        if (this.scout) {
-            const page = this.m_selectPage!;
-            const childs: ShapeView[] = scope || page.childs;
-            // shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
-            shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
-        }
+        const page = this.m_selectPage!;
+        const childs: ShapeView[] = scope || page.childs;
+        // shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
+        shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
         // this.m_count++;
         // this.m_total += Date.now() - s;
         // if (this.m_count > 100) {
@@ -833,6 +831,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     get getUserSelection() {
         return this.userSelectionList;
     }
+
     userSelectionData(data: DocSelectionData[]) {
         this.userSelectionList = data;
         this.notify(Selection.CHANGE_USER_STATE);
