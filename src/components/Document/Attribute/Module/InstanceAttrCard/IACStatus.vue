@@ -26,6 +26,8 @@ const optionsSource: SelectSource[] = genOptions(props.data.values.map((v, idx) 
 }));
 
 function select(val: SelectItem) {
+    console.log(val,props.data);
+    
     const _v = props.data.values[val.value as number];
 
     const symref = props.context.selection.symbolrefshape;
