@@ -415,7 +415,7 @@ onUnmounted(() => {
         v-if="maskView"
         class="zero-symbol"
         icon-class="masked-by"
-        style="width: 12px; height: 12px; margin:0 4px;"
+        style="width: 12px; height: 12px;margin-right: 3px"
     />
     <div class="container-svg zero-symbol"
          @dblclick="fitToggleContainer"

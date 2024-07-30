@@ -9,7 +9,7 @@ export const fontNameListZh = [
     'Apple LiGothic', 'Apple LiSung', 'BiauKai', 'Hiragino Sans CNS', 'LiHei Pro', 'LiSong Pro',
     '兰亭黑-繁', '凌慧体-繁', '圆体-繁', '娃娃体-繁', '宋体-繁', '手札体-繁', '报隶-繁',
     '楷体-繁', '翩翩体-繁', '苹方-港', '苹方-繁', '行楷-繁', '隶变-繁', '雅痞-繁', '魏碑-繁', '黑体-繁',
-    "思源等宽", "思源黑体 CN"
+    "思源等宽", "思源黑体 CN", "香蕉大将军灵感体", "小豆岛山中月简-闪 常规", "汉仪凌波体简"
 ]
 
 export const fontNameListEn = [
