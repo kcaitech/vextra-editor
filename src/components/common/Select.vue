@@ -141,31 +141,30 @@ function select(data: SelectItem) {
 
 function render() {
     console.log('1111');
-    
+
     curHoverValueIndex.value = -1
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
     if (props.selected && source.value.length) {
-        console.log(source.value);
+        source.value = cloneDeep(props.source);
         if (props.action) {
             if (props.action === PrototypeNavigationType.OVERLAY || props.action === PrototypeNavigationType.SWAP) {
                 source.value = source.value.filter(i => i.data.content !== '位移');
                 arr.value = ['即时', '淡入淡出', '移入']
-                return
-            }
-            if (props.action === PrototypeNavigationType.SCROLLTO) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出']
-                return
             }
             if (props.action === PrototypeNavigationType.SWAPSTATE) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出']
+            }
+            if (props.action === PrototypeNavigationType.SCROLLTO) {
                 source.value = source.value.filter(i => ['即时', '位移'].includes(i.data.content));
                 arr.value = ['即时', '位移']
-                return
             }
-            source.value = source.value.filter(i => i.data.content !== '位移');
-            arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
+            if (props.action === PrototypeNavigationType.NAVIGATE) {
+                source.value = source.value.filter(i => i.data.content !== '位移');
+                arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
+            }
         }
         const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);
         if (index > -1 || props.mixed) {
@@ -181,28 +180,10 @@ watchEffect(() => {
     if (props.shapes) {
         showOP.value = [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type)
     }
-    if (props.action) {
-            if (props.action === PrototypeNavigationType.OVERLAY || props.action === PrototypeNavigationType.SWAP) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出', '移入']
-                return
-            }
-            if (props.action === PrototypeNavigationType.SCROLLTO) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出']
-                return
-            }
-            if (props.action === PrototypeNavigationType.SWAPSTATE) {
-                source.value = source.value.filter(i => ['即时', '位移'].includes(i.data.content));
-                arr.value = ['即时', '位移']
-                return
-            }
-            source.value = source.value.filter(i => i.data.content !== '位移');
-            arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
-        }
 })
 
 watch(() => props.selected, render);
+watch(() => props.action, render);
 onMounted(render)
 </script>
 

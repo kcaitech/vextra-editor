@@ -26,6 +26,8 @@ const optionsSource: SelectSource[] = genOptions(props.data.values.map((v, idx) 
 }));
 
 function select(val: SelectItem) {
+    console.log(val,props.data);
+    
     const _v = props.data.values[val.value as number];
 
     const symref = props.context.selection.symbolrefshape;
@@ -33,6 +35,8 @@ function select(val: SelectItem) {
         return console.log("wrong role");
     }
     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    console.log('================',overrides);
+    
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
     switch_symref_state(props.context, _var, _v, t);
 }
