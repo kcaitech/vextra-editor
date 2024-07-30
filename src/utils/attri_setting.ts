@@ -100,13 +100,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, x: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-
-        const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
-
+        const parent = shape.parent!;
         let x = value;
         let dx = 0;
         const box = get_box(shape);
@@ -118,7 +112,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
             dx = value - box.x;
         }
 
-        x = shape.frame.x + dx;
+        x = shape.transform.translateX + dx;
 
         actions.push({ target: adapt2Shape(shape), x });
     }
@@ -130,12 +124,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
-
+        const parent = shape.parent!;
         let y = value;
         let dy = 0;
         const box = get_box(shape);
@@ -147,7 +136,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
             dy = value - box.y;
         }
 
-        y = shape.frame.y + dy;
+        y = shape.transform.translateY + dy;
 
         actions.push({ target: adapt2Shape(shape), y });
     }
@@ -286,84 +275,8 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     return result;
 }
 
-export function is_rect(shape: ShapeView) {
-    return shape.isClosed
-        && (shape as any)?.points?.length === 4
-        && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
-}
-
 export function get_box(shape: ShapeView) {
-    // const parent = shape.parent!;
-    // if (!parent) {
-    //     console.log('!parent');
-    //     return shape.frame;
-    // }
-    //
-    //
-    // let __parent_t: ShapeView | undefined = shape.parent;
-    // while (__parent_t) {
-    //     if (__parent_t.isContainer) {
-    //         break;
-    //     }
-    //     __parent_t = __parent_t.parent;
-    // }
-    // __parent_t = __parent_t as ShapeView;
-    //
-    // if (__parent_t.id === parent.id) {
-    //     if (shape.isNoTransform()) {
-    //         return shape.frame;
-    //     }
-    // }
-    //
-    // let m2p = new Matrix();
-    // if (__parent_t.type === ShapeType.Page) {
-    //     m2p = shape.matrix2Root();
-    // } else {
-    //     let __p = parent;
-    //     m2p = shape.matrix2Parent();
-    //     while (__p && __p.id !== __parent_t.id) {
-    //         m2p.multiAtLeft(__p.matrix2Parent());
-    //         __p = __p.parent as any;
-    //     }
-    // }
-    //
-    // const sf = shape.frame;
-    // const points = [
-    //     { x: 0, y: 0 },
-    //     { x: sf.width, y: 0 },
-    //     { x: sf.width, y: sf.height },
-    //     { x: 0, y: sf.height }
-    // ].map(p => m2p.computeCoord3(p));
-    //
-    // const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-    // const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-    // const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-    // const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
-    //
-    // return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    const parent = shape.parent!;
-    if (shape.isNoTransform()) {
-        return shape.frame;
-    }
-
-    if (!parent) {
-        console.log('!parent');
-        return shape.frame;
-    }
-
-    const sf = shape.frame;
-
-    const m2p = shape.matrix2Parent();
-
-    const points = [{ x: 0, y: 0 }, { x: sf.width, y: 0 }, { x: sf.width, y: sf.height }, { x: 0, y: sf.height }]
-        .map(p => m2p.computeCoord3(p));
-
-    const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-    const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-    const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-    const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
-
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    return shape._p_frame
 }
 
 export function get_xy(shapes: ShapeView[], mixed: string) {
@@ -374,16 +287,14 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
 
     const fp = first_shape.parent;
 
-    if (!fp) {
-        return { x: fx, y: fy };
-    }
+    if (!fp) return { x: fx, y: fy };
 
     if (fp.type === ShapeType.Page) {
         const m = fp.matrix2Root();
 
         const fbox = get_box(first_shape);
 
-        const xy = m.computeCoord2(fbox.x, fbox.y);
+        const xy = m.computeCoord3(fbox);
         fx = xy.x;
         fy = xy.y;
     } else {
@@ -398,16 +309,11 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
         let y = 0;
 
         const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
+        if (!parent) continue;
 
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
-
             const box = get_box(shape);
-
             const xy = m.computeCoord2(box.x, box.y);
             x = xy.x;
             y = xy.y;
@@ -417,16 +323,10 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
             y = xy.y;
         }
 
-        if (typeof fx === 'number' && !is_equal(x, fx)) {
-            fx = mixed;
-        }
-        if (typeof fy === 'number' && !is_equal(y, fy)) {
-            fy = mixed;
-        }
+        if (typeof fx === 'number' && !is_equal(x, fx)) fx = mixed;
+        if (typeof fy === 'number' && !is_equal(y, fy)) fy = mixed;
 
-        if (fy === mixed && fx === mixed) {
-            break;
-        }
+        if (fy === mixed && fx === mixed) break;
     }
     return { x: fx, y: fy };
 }
@@ -436,9 +336,7 @@ export function get_width(shapes: ShapeView[], mixed: string) {
 
     let first_width: number | string = shapes[0].frame.width;
 
-    if (is_straight(first_shape)) {
-        first_width = get_straight_line_length(first_shape);
-    }
+    if (is_straight(first_shape)) first_width = get_straight_line_length(first_shape);
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
@@ -448,7 +346,6 @@ export function get_width(shapes: ShapeView[], mixed: string) {
                 first_width = mixed;
                 break;
             }
-
             continue;
         }
         if (shape.frame.width !== first_width) {
@@ -464,9 +361,7 @@ export function get_height(shapes: ShapeView[], mixed: string) {
 
     let first_height: number | string = first_shape.frame.height;
 
-    if (is_straight(first_shape)) {
-        first_height = 0;
-    }
+    if (is_straight(first_shape)) first_height = 0;
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         if (is_straight(shape)) {

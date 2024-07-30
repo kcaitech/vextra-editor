@@ -89,9 +89,7 @@ let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_op
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
-    if (!selected.length) {
-        return;
-    }
+    if (!selected.length) return;
     const xy = get_xy(selected, mixed);
     x.value = xy.x;
     y.value = xy.y;
@@ -155,11 +153,10 @@ function changeX(value: string) {
         .toFixed(fix);
 
     const _x: number = Number.parseFloat(value);
-    if (isNaN(_x)) {
-        return;
-    }
+    if (isNaN(_x)) return;
 
     const shapes = props.context.selection.selectedShapes;
+
 
     const actions = get_actions_frame_x(shapes, _x);
 
@@ -179,17 +176,12 @@ function changeY(value: string) {
         .toFixed(fix);
 
     const _y: number = Number.parseFloat(value);
-    if (isNaN(_y)) {
-        return;
-    }
+    if (isNaN(_y)) return;
 
     const shapes = props.context.selection.selectedShapes;
 
     const actions = get_actions_frame_y(shapes, _y);
-    const page = props.context.selection.selectedPage;
-    if (!page) {
-        return;
-    }
+    const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
     editor.modifyShapesY(actions);
