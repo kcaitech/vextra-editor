@@ -607,13 +607,13 @@ export class ViewUpdater {
         this.matrix.trans(-stepx, -stepy);
 
         this.setAttri(this.matrix);
-        if(stepx === stepy && stepx === 0) {
+        if (stepx === stepy && stepx === 0) {
             return true;
         }
     }
 
-    overlayBox() {
-        const shape = this.m_current_view;
+    overlayBox(s?: ShapeView) {
+        const shape = s || this.m_current_view;
         if (!shape) {
             return;
         }
@@ -703,14 +703,12 @@ export class ViewUpdater {
     }
 
     scrollAnimate(el: SVGSVGElement) {
-        console.log(el, 'el');
-        
         el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
     }
-    dissolveAnimate(action: PrototypeActions, els: HTMLDivElement[] | undefined, value: number) {
+    dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
         els[els.length - 1].style.opacity = `${value}`;
-        els[els.length - 1].style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+        els[els.length - 1].style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
     }
     removeAnimate(el: SVGSVGElement) {
         if (el) {

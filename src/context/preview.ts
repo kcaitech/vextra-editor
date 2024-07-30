@@ -25,6 +25,7 @@ export class Preview extends WatchableObject {
     static INTERACTION_CHANGE = 14;
     static SWAP_REF_STAT = 15;
     static FLOW_CHANGE = 16;
+    static SUPERNATANT_CLOSR = 17;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;
@@ -150,9 +151,9 @@ export class Preview extends WatchableObject {
 
     deleteEndAction() {
         const actions = Array.from(this.m_interaction_action);
-        actions.pop();
+        const lastItem = actions.pop();
         this.m_interaction_action = new Set(actions);
-        this.notify(Preview.INTERACTION_CHANGE);
+        this.notify(Preview.SUPERNATANT_CLOSR, lastItem);
     }
 
     get endAction() {

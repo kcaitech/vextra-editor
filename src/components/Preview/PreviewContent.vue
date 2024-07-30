@@ -49,7 +49,7 @@ function page_watcher() {
     curPage.value = index + 1;
 
     initMatrix();
-    viewUpdater.overlayBox();
+    viewUpdater.overlayBox(shape);
 }
 
 function changePage() {
@@ -142,24 +142,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         }
         viewUpdater.removeAnimate(el);
     } else if (t === Preview.MATRIX_CHANGE) {
-        const page = props.context.selection.selectedPage;
-        const els = document.querySelectorAll('.dailogCard');
-        const box = viewBox(props.context, viewUpdater.v_matrix);
-        const shapes = getFrameList(page!);
-        const protoActions = Array.from(props.context.preview.interactionAction.values());
-        for (let i = 0; i < els.length; i++) {
-            const action = protoActions[i];
-            const shape = shapes.find(item => item.id === action.targetNodeID);
-            if (!shape) continue;
-            const el = els[i] as SVGSVGElement;
-            const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
-            if (m) {
-                el.style['transform'] = m.toString();
-                if (i === els.length - 1) {
-                    end_matrix.value = m;
-                }
-            }
-        }
+        updateDialogMatrix();
     } else if (t === Preview.INTERACTION_CHANGE) {
         getTargetShapes();
     } else if (t === Preview.FLOW_CHANGE) {
@@ -170,6 +153,12 @@ const previewWatcher = (t: number | string, s?: any) => {
         listLength.value = frameList.length;
         const index = frameList.findIndex(item => item.id === shape.id);
         curPage.value = index + 1;
+    } else if (t === Preview.SUPERNATANT_CLOSR) {
+        const els = document.querySelectorAll('.dailogCard');
+        viewUpdater.dissolveAnimate(s, els as any, 0);
+        setTimeout(() => {
+            getTargetShapes();
+        }, 1000)
     }
 }
 
@@ -178,7 +167,8 @@ const selectionWatcher = (v: number | string) => {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
-        if (!props.context.selection.selectedShapes.length) {
+        const shapes = props.context.selection.selectedShapes;
+        if (!shapes.length) {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
             props.context.selection.selectShape(undefined);
         }
@@ -187,6 +177,9 @@ const selectionWatcher = (v: number | string) => {
             changePage();
             return;
         }
+        nextTick(() => {
+            viewUpdater.overlayBox(shapes[0]);
+        })
         page_watcher();
     }
 }
@@ -465,6 +458,7 @@ const getTargetShapes = () => {
         }
     })
     const box = viewBox(props.context, viewUpdater.v_matrix);
+    watch_shapes();
     nextTick(() => {
         const protoActions = Array.from(actions.values());
         const els = document.querySelectorAll('.dailogCard');
@@ -506,9 +500,9 @@ const getTargetShapes = () => {
                     el.style['transform'] = m.toString();
                     if (i === els.length - 1) {
                         end_matrix.value = m;
-                        viewBoxDialog.value![i].style.opacity = '0';
-                        nextTick(() => {
-                            viewBoxDialog.value![target_shapes.value.length - 1].style.opacity = '1';
+                        viewUpdater.dissolveAnimate(action, els as any, 0);
+                        setTimeout(() => {
+                            viewUpdater.dissolveAnimate(action, els as any, 1);
                         })
                     }
                 }
@@ -536,6 +530,26 @@ function startLoop() {
     }
 }
 
+const updateDialogMatrix = () => {
+    const page = props.context.selection.selectedPage;
+    const els = document.querySelectorAll('.dailogCard');
+    const box = viewBox(props.context, viewUpdater.v_matrix);
+    const shapes = getFrameList(page!);
+    const protoActions = Array.from(props.context.preview.interactionAction.values());
+    for (let i = 0; i < els.length; i++) {
+        const action = protoActions[i];
+        const shape = shapes.find(item => item.id === action.targetNodeID);
+        if (!shape) continue;
+        const el = els[i] as SVGSVGElement;
+        const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
+        if (m) {
+            el.style['transform'] = m.toString();
+            if (i === els.length - 1) {
+                end_matrix.value = m;
+            }
+        }
+    }
+}
 
 const shapeChange = (...args: any[]) => {
     if (args.includes('layout')) {
@@ -550,7 +564,7 @@ function watch_shapes() {
         watchedShapes.delete(k);
     })
 
-    const selectedShapes = props.context.selection.selectedShapes;
+    const selectedShapes = [...props.context.selection.selectedShapes, ...(target_shapes.value as ShapeView[])];
     selectedShapes.forEach((v) => {
         v.watch(shapeChange);
         watchedShapes.set(v.id, v)
@@ -637,7 +651,6 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
-        z-index: 1;
     }
 
     .toggle {

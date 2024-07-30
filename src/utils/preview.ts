@@ -292,6 +292,7 @@ const flowShapes = (page: PageView, startShape: ShapeView, target_ids: Set<strin
         const target_id: Set<string> = new Set();
         for (let index = 0; index < startShape.prototypeInterAction.length; index++) {
             const action = startShape.prototypeInterAction[index].actions;
+            if (!action) continue;
             const t = action.navigationType === PrototypeNavigationType.NAVIGATE || action.navigationType === PrototypeNavigationType.OVERLAY;
             if (action.targetNodeID && t && !target_ids.has(action.targetNodeID)) {
                 target_ids.add(action.targetNodeID);
