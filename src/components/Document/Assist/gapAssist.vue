@@ -49,8 +49,9 @@ const getIntersectShapes = () => {
         points.push(...ps);
     }
     const b = XYsBounding(points); // 选中图形在视图上的位置
-    const h_shapes = props.context.assist.horIntersect(b.top, b.bottom); // 水平相交的图形
-    const v_shapes = props.context.assist.verIntersect(b.left, b.right); // 垂直相交的图形
+    const parent_id = shapes[0].parent?.id || '';
+    const h_shapes = props.context.assist.horIntersect(b.top, b.bottom, parent_id); // 水平相交的图形
+    const v_shapes = props.context.assist.verIntersect(b.left, b.right, parent_id); // 垂直相交的图形
     const hor = getHorGaps(b, h_shapes);
     const ver = getVerGaps(b, v_shapes);
     spaceing_boxs.value = [...hor, ...ver];
@@ -207,14 +208,7 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     if (Math.abs(right_space - left_space) < 3 && (after_spacings && before_spacings)) { //移动shape左右间距相等时
         after_bounds.push(after_spacings!, before_spacings!);
     }
-    if (Math.abs(right_space - left_space) > 3) {
-        if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
-        if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
-    } else {
-        if (right_space > 0 && before_spacings) {
-            spaceing_hor_line.value.push(before_spacings);
-        }
-    }
+
     ss.value = adsorbXs
     const matrix = props.context.workspace.matrix;
     const m = new Matrix(matrix.inverse);
@@ -224,6 +218,16 @@ const getHorGaps = (box: Box, shapes: ShapeView[]) => {
     })
     props.context.assist.setSpaceAdsorbX(adsorbXs);
     const result = [...after_bounds, ...before_bounds];
+    if (result.length > 1) {
+        if (Math.abs(right_space - left_space) > 3) {
+            if (after && after_spacings) spaceing_hor_line.value.push(after_spacings);
+            if (before && before_spacings) spaceing_hor_line.value.push(before_spacings);
+        } else {
+            if (right_space > 0 && before_spacings) {
+                spaceing_hor_line.value.push(before_spacings);
+            }
+        }
+    }
     return result.length > 1 ? result : [];
 }
 
@@ -238,6 +242,7 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     if (move_index === -1) return [];
     let top_space = 0;
     let bottom_space = 0;
+
     for (let i = 0; i < boxs.length; i++) {
         const b = boxs[i];
         if (move_index === i) continue;
@@ -292,27 +297,25 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
             const gap = boxs[move_index].b.top - boxs[index].b.bottom;
             if (gap > 0) {
                 top_space = Number(gap.toFixed(4));
-                if (top_space > 0) {
-                    const box = {
-                        top: boxs[index].b.bottom,
-                        bottom: boxs[move_index].b.top,
-                        left: boxs[move_index].b.left,
-                        right: boxs[move_index].b.right
-                    }
-                    const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, false); // 吸附位置
-                    adsorbYs.push(...adsorby);
-                    for (const [key, value] of ver_spacings) {
-                        if (Math.abs(key - top_space) < 3) {
-                            const before_bound = value.filter(item => item.bottom < box.top);
-                            if (before_bound.length) {
-                                before_bounds.push(...before_bound, box);
-                                before = true;
-                            }
+                const box = {
+                    top: boxs[index].b.bottom,
+                    bottom: boxs[move_index].b.top,
+                    left: boxs[move_index].b.left,
+                    right: boxs[move_index].b.right
+                }
+                const adsorby = getAdsorbY(box, (boxs[move_index].b.bottom - boxs[move_index].b.top) / 2, false); // 吸附位置
+                adsorbYs.push(...adsorby);
+                for (const [key, value] of ver_spacings) {
+                    if (Math.abs(key - top_space) < 3) {
+                        const before_bound = value.filter(item => item.bottom < box.top);
+                        if (before_bound.length) {
+                            before_bounds.push(...before_bound, box);
+                            before = true;
                         }
                     }
-                    before_spacings = box;
-                    break;
                 }
+                before_spacings = box;
+                break;
             }
         }
     }
@@ -350,14 +353,6 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     if (Math.abs(top_space - bottom_space) < 3 && (after_spacings && before_spacings)) {
         after_bounds.push(after_spacings!, before_spacings!);
     }
-    if (Math.abs(top_space - bottom_space) > 3) {
-        if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
-        if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
-    } else {
-        if (top_space > 0 && before_spacings) {
-            spaceing_ver_line.value.push(before_spacings);
-        }
-    }
 
     const matrix = props.context.workspace.matrix;
     const m = new Matrix(matrix.inverse);
@@ -367,6 +362,16 @@ const getVerGaps = (box: Box, shapes: ShapeView[]) => {
     })
     props.context.assist.setSpaceAdsorbY(adsorbYs);
     const result = [...after_bounds, ...before_bounds];
+    if (result.length > 1) {
+        if (Math.abs(top_space - bottom_space) > 3) {
+            if (after && after_spacings) spaceing_ver_line.value.push(after_spacings);
+            if (before && before_spacings) spaceing_ver_line.value.push(before_spacings);
+        } else {
+            if (top_space > 0 && before_spacings) {
+                spaceing_ver_line.value.push(before_spacings);
+            }
+        }
+    }
     return result.length > 1 ? result : [];
 }
 

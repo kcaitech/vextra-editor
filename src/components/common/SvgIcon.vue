@@ -18,5 +18,3 @@ const svgClass = computed(() => {
     }
 })
 </script>
-
-<style scoped></style>

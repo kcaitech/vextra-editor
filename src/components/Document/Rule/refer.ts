@@ -218,7 +218,7 @@ export class ReferLineHandler extends TransformHandler {
         }
 
         const index = this.m_index;
-        const currentEnv = this.m_current_env as ArtboradView;
+        const currentEnv = this.m_current_env as unknown as ArtboradView;
 
 
         const gui = currentEnv?.guides?.[index];
@@ -234,7 +234,7 @@ export class ReferLineHandler extends TransformHandler {
     private migrate() {
         const env = this.envSearch();
 
-        const _o_env = this.m_current_env as ArtboradView;
+        const _o_env = this.m_current_env as unknown as ArtboradView;
 
         if (env.id === _o_env.id) return;
 
