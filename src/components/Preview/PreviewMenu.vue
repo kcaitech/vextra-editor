@@ -78,7 +78,8 @@ const togglePage = (p: number) => {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
     if (!shape || !page) return;
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return;
     index += p;
@@ -90,7 +91,8 @@ const firstPage = () => {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
     if (!shape || !page) return emit('close');
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return emit('close');
     props.context.selection.selectShape(frameList[0]);

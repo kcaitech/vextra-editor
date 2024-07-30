@@ -41,7 +41,8 @@ function page_watcher() {
     viewUpdater.atPage(page.data);
     viewUpdater.atTarget(shape);
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     listLength.value = frameList.length;
 
     const index = frameList.findIndex(item => item.id === shape.id);
@@ -54,7 +55,8 @@ function changePage() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
 
     const shape = props.context.selection.selectedShapes[0] || frameList[0];
     if (!shape) {
@@ -85,7 +87,8 @@ const togglePage = (p: number) => {
 
     cur_shape.value = shape;
 
-    const frameList = getFrameList(page);
+    const naviList = props.context.preview.naviShapeList;
+    const frameList = naviList.length > 0 ? naviList : getFrameList(page);
     let index = frameList.findIndex(item => item.id === shape.id);
     if (index === -1) return;
     index += p;
@@ -147,6 +150,14 @@ const previewWatcher = (t: number | string, s?: boolean) => {
         }
     } else if (t === Preview.INTERACTION_CHANGE) {
         getTargetShapes();
+    } else if (t === Preview.FLOW_CHANGE) {
+        const shape = props.context.selection.selectedShapes[0];
+        const page = props.context.selection.selectedPage!;
+        const naviList = props.context.preview.naviShapeList;
+        const frameList = naviList.length > 0 ? naviList : getFrameList(page);
+        listLength.value = frameList.length;
+        const index = frameList.findIndex(item => item.id === shape.id);
+        curPage.value = index + 1;
     }
 }
 
@@ -243,6 +254,13 @@ const onMouseDown = (e: MouseEvent) => {
 function onMouseMove(e: MouseEvent) {
     if (e.buttons == 1 && spacePressed.value) {
         pageViewDragging(e); // 拖拽页面
+        if (preview.value) {
+            preview.value.style.cursor = 'grabbing';
+        }
+    } else if (e.buttons == 1) {
+        const h_shape = props.context.selection.hoveredShape;
+        if (h_shape && h_shape.prototypeInterAction?.length) return;
+        pageViewDragging(e); // 拖拽页面
     }
 }
 
@@ -288,9 +306,6 @@ const pageViewDragging = (e: MouseEvent) => {
             downXY.x = e.clientX;
             downXY.y = e.clientY;
         }
-    }
-    if (preview.value) {
-        preview.value.style.cursor = 'grabbing';
     }
 
     viewUpdater.setAttri(matrix);
@@ -370,6 +385,14 @@ function onKeyUp(e: KeyboardEvent) {
 const onMouseMove_CV = (e: MouseEvent) => {
     if (e.buttons === 0 && !spacePressed.value) {
         search(e); // 图形检索(hover)
+        const h_shape = props.context.selection.hoveredShape;
+        if (preview.value && !spacePressed.value) {
+            if (h_shape && h_shape.prototypeInterAction?.length) {
+                preview.value.style.cursor = 'pointer'
+            } else {
+                preview.value.style.cursor = 'default'
+            }
+        }
     }
 }
 
@@ -432,7 +455,7 @@ const updateViewBox = (shape: ShapeView, type: PrototypeNavigationType | undefin
         if (!s) return;
         const scale = viewUpdater.v_matrix.m00;
         m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-        if (s.overlayPositionType === OverlayPositions.CENTER) {
+        if (s.overlayPositionType === OverlayPositions.CENTER || !s.overlayPositionType) {
             const c_x = (frame.width * scale) / 2;
             const c_y = (frame.height * scale) / 2;
             const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
@@ -653,6 +676,10 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
+
+        .dailogCard {
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s;
+        }
     }
 
     .toggle {

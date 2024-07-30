@@ -23,6 +23,8 @@ export class Preview extends WatchableObject {
     static ARTBOARD_SCROLL = 12;
     static MATRIX_CHANGE = 13;
     static INTERACTION_CHANGE = 14;
+    static SWAP_REF_STAT = 15;
+    static FLOW_CHANGE = 16;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;
@@ -37,6 +39,7 @@ export class Preview extends WatchableObject {
     private m_interaction_action: Set<PrototypeActions> = new Set();
     private m_supernatant_open: boolean = false;
     private m_swap_action: Set<PrototypeActions> = new Set();
+    private m_navi_shape_list: ShapeView[] = [];
 
     constructor(context: Context) {
         super();
@@ -181,5 +184,14 @@ export class Preview extends WatchableObject {
     get swapEndAction() {
         const actions = Array.from(this.m_swap_action);
         return actions[actions.length - 1];
+    }
+
+    setNaviShapeList(list: ShapeView[]) {
+        this.m_navi_shape_list = list;
+        this.notify(Preview.FLOW_CHANGE);
+    }
+
+    get naviShapeList() {
+        return this.m_navi_shape_list;
     }
 }

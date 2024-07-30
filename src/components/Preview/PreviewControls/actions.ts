@@ -1,7 +1,8 @@
 import { Context } from "@/context";
+import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 import { getFrameList, getPreviewMatrix } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView } from "@kcdesign/data";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -29,6 +30,8 @@ export class ProtoAction {
             this.closeDialog(action);
         } else if (action.navigationType === PrototypeNavigationType.SWAP) {
             this.replaceDialog(action);
+        } else if (action.navigationType === PrototypeNavigationType.SWAPSTATE) {
+            this.symbolStateSwitch(action);
         }
     }
     // 跳转页面
@@ -69,8 +72,8 @@ export class ProtoAction {
             artboard_shape = this.m_context.selection.selectedShapes[0];
         }
         if (!artboard_shape || !artboard_shape.childs.length) return;
-        // const scrol_shape = select_shape.childs.find(item => item.id === action.targetNodeID);
-        const scrol_shape = artboard_shape.childs[0];
+        const scrol_shape = artboard_shape.childs.find(item => item.id === action.targetNodeID);
+        // const scrol_shape = artboard_shape.childs[0];
         if (scrol_shape) {
             const m = getPreviewMatrix(scrol_shape);
             m.multiAtLeft(matrix);
@@ -106,8 +109,16 @@ export class ProtoAction {
         document.body.removeChild(a);
     }
     // 组件状态替换
-    symbolStateSwitch() {
-
+    symbolStateSwitch(action: PrototypeActions) {
+        const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
+        const sym1 = down_shape.symData;
+        const sym = sym1?.parent;
+        if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
+        const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
+        const maprefIdArray = this.getMapRefIdLS('refId');
+        maprefIdArray.set(down_shape.id, symbols[1]?.id)
+        this.saveMapRefIdLS(maprefIdArray, 'refId');
+        this.m_context.preview.notify(Preview.SWAP_REF_STAT);
     }
     // 打开浮层
     openDialog(action: PrototypeActions) {
@@ -162,6 +173,19 @@ export class ProtoAction {
     // 动画推入
     animationPushIn() {
 
+    }
+    getMapRefIdLS(key: string): Map<string, string> {
+        let jsonString = sessionStorage.getItem(key);
+        if (jsonString) {
+            let refIdArray = JSON.parse(jsonString);
+            return new Map(refIdArray);
+        }
+        return new Map();
+    }
+    saveMapRefIdLS(map: Map<string, string>, key: string) {
+        let refIdArray = Array.from(map.entries());
+        let jsonString = JSON.stringify(refIdArray);
+        sessionStorage.setItem(key, jsonString);
     }
 }
 
