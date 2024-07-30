@@ -40,28 +40,22 @@ export function flip(context: Context, axis: 'X' | 'Y') {
 
         t.addTransform(parent2root);
         const { x, y, width, height } = shape.frame;
+        const r = x + width;
+        const b = y + height;
 
         const { col0, col1, col2, col3 } = t.transform([
             ColVector3D.FromXY(x, y),
-            ColVector3D.FromXY(x + width, height),
-            ColVector3D.FromXY(x + width, y),
-            ColVector3D.FromXY(x, height),
+            ColVector3D.FromXY(r, y),
+            ColVector3D.FromXY(r, b),
+            ColVector3D.FromXY(x, b),
         ]);
 
         const box = XYsBounding([col0, col1, col2, col3]);
 
-        if (box.left < left) {
-            left = box.left;
-        }
-        if (box.top < top) {
-            top = box.top;
-        }
-        if (box.right > right) {
-            right = box.right;
-        }
-        if (box.bottom > bottom) {
-            bottom = box.bottom;
-        }
+        if (box.left < left) left = box.left;
+        if (box.top < top) top = box.top;
+        if (box.right > right) right = box.right;
+        if (box.bottom > bottom) bottom = box.bottom;
     }
 
     const shape1th = shapes[0];
