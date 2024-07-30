@@ -129,14 +129,18 @@ const previewWatcher = (t: number | string, s?: any) => {
         }
     } else if (t === Preview.ARTBOARD_SCROLL) {
         let el: SVGSVGElement | undefined;
-        if(target_shapes.value.length > 0) {
+        if (target_shapes.value.length > 0) {
             const els = document.querySelectorAll('.dailogCard');
             el = els[els.length - 1] as SVGSVGElement;
         } else {
             el = pageCard.value!.pageSvg as SVGSVGElement
         }
-        if(el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
-        viewUpdater.artboardInTrans();
+        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
+        const isTrans = viewUpdater.artboardInTrans();
+        if (isTrans) {
+            el.style['transition'] = '';
+        }
+        viewUpdater.removeAnimate(el);
     } else if (t === Preview.MATRIX_CHANGE) {
         const page = props.context.selection.selectedPage;
         const els = document.querySelectorAll('.dailogCard');
@@ -634,8 +638,6 @@ onUnmounted(() => {
         left: 0;
         top: 0;
         z-index: 1;
-        transition: all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s;
-
     }
 
     .toggle {
@@ -651,6 +653,7 @@ onUnmounted(() => {
         border-radius: 4px;
         background-color: rgba(0, 0, 0, 0.9);
         color: hsla(0, 0%, 100%, 0.9);
+        z-index: 100;
 
         .last {
             display: flex;

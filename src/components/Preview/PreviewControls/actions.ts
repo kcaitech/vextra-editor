@@ -85,7 +85,6 @@ export class ProtoAction {
                 m.computeCoord2(0, frame.height)
             ];
             const box = XYsBounding(points);
-
             const offsetx = box.left - (action.extraScrollOffset?.x || 0);
             const offsety = box.top - (action.extraScrollOffset?.y || 0);
 

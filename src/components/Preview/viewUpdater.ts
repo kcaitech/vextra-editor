@@ -1,4 +1,4 @@
-import { ColVector3D, Matrix, OverlayPositions, Page, PrototypeNavigationType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, OverlayPositions, Page, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -6,6 +6,7 @@ import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix } from "@/utils/preview";
+import { nextTick } from "vue";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -571,7 +572,7 @@ export class ViewUpdater {
         const shape = this.m_current_view;
         const container = this.m_container;
         if (!shape || !container || !this.m_page_card) {
-            return;
+            return true;
         }
 
         const root = container.getBoundingClientRect();
@@ -606,6 +607,9 @@ export class ViewUpdater {
         this.matrix.trans(-stepx, -stepy);
 
         this.setAttri(this.matrix);
+        if(stepx === stepy && stepx === 0) {
+            return true;
+        }
     }
 
     overlayBox() {
@@ -692,14 +696,28 @@ export class ViewUpdater {
         }
         return m;
     }
-    getCurLayerShape (context: Context, id?: string) {
+    getCurLayerShape(context: Context, id?: string) {
         const page = context.selection.selectedPage;
         const shapes = getFrameList(page!);
         return shapes.find(item => item.id === id);
     }
 
     scrollAnimate(el: SVGSVGElement) {
+        console.log(el, 'el');
+        
         el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+    }
+    dissolveAnimate(action: PrototypeActions, els: HTMLDivElement[] | undefined, value: number) {
+        if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
+        els[els.length - 1].style.opacity = `${value}`;
+        els[els.length - 1].style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+    }
+    removeAnimate(el: SVGSVGElement) {
+        if (el) {
+            el.addEventListener('transitionend', function () {
+                this.style['transition'] = ''
+            });
+        }
     }
 }
 class DirtyCleaner {
