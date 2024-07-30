@@ -128,6 +128,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 svg {
+    position: absolute;
     transform-origin: top left;
 }
 </style>

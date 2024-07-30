@@ -1,10 +1,11 @@
-import { ColVector3D, Matrix, Page, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, OverlayPositions, Page, PrototypeNavigationType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
+import { getFrameList, getPreviewMatrix } from "@/utils/preview";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -100,7 +101,7 @@ export class ViewUpdater {
         svgEl.setAttribute('height', `${frame.height}`);
         svgEl.style['transform'] = m.toString();
         this.m_context.preview.setScale(this.getScale(m));
-
+        this.overlayBox();
         this.matrix.reset(m);
         this.m_context.preview.notify(Preview.MATRIX_CHANGE);
     }
@@ -605,6 +606,96 @@ export class ViewUpdater {
         this.matrix.trans(-stepx, -stepy);
 
         this.setAttri(this.matrix);
+    }
+
+    overlayBox() {
+        const shape = this.m_current_view;
+        if (!shape) {
+            return;
+        }
+
+        const over_el = document.querySelector('.preview_overlay') as HTMLDivElement;
+        if (over_el) {
+            const frame = shape.frame;
+            const _m = getPreviewMatrix(shape);
+            const matrix = new Matrix(this.v_matrix.clone());
+            _m.multiAtLeft(matrix);
+            const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => _m.computeCoord(p[0], p[1]));
+            const box = XYsBounding(points);
+            over_el.style.clipPath = `polygon(
+                0 0, 
+                100% 0, 
+                100% 100%, 
+                0 100%, 
+                0 ${box.top}px, 
+                ${box.left}px ${box.top}px, 
+                ${box.left}px ${box.bottom}px, 
+                ${box.right}px ${box.bottom}px, 
+                ${box.right}px ${box.top}px, 
+                100% ${box.top}px, 
+                0 ${box.top}px
+            )`
+        }
+    }
+
+    updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: { top: number, bottom: number, left: number, right: number }) {
+        const cur_shape = context.selection.selectedShapes[0];
+        if (!cur_shape) return;
+        const cur_frame = cur_shape.frame;
+        const m = new Matrix()
+        m.reset(this.v_matrix);
+        if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP) {
+            let s: ShapeView | undefined = shape;
+            const frame = shape.frame;
+            if (type === PrototypeNavigationType.SWAP) {
+                const before_action = context.preview.swapEndAction;
+                if (!before_action) return;
+                s = this.getCurLayerShape(context, before_action.targetNodeID);
+            }
+            if (!s) return;
+            const scale = this.v_matrix.m00;
+            m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
+            if (s.overlayPositionType === OverlayPositions.CENTER || !s.overlayPositionType) {
+                const c_x = (frame.width * scale) / 2;
+                const c_y = (frame.height * scale) / 2;
+                const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
+                m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
+            } else if (s.overlayPositionType === OverlayPositions.TOPCENTER) {
+                const c_x = (frame.width * scale) / 2;
+                const v_centerx = (box.left + box.right) / 2
+                m.trans(v_centerx - (box.left + c_x), 0);
+            } else if (s.overlayPositionType === OverlayPositions.TOPRIGHT) {
+                const right = (frame.width * scale) + box.left;
+                m.trans(box.right - right, 0);
+            } else if (s.overlayPositionType === OverlayPositions.CENTERLEFT) {
+                const c_y = (frame.height * scale) / 2;
+                const v_centery = (box.top + box.bottom) / 2
+                m.trans(0, v_centery - (box.top + c_y));
+            } else if (s.overlayPositionType === OverlayPositions.CENTERRIGHT) {
+                const c_y = (frame.height * scale) / 2;
+                const v_centery = (box.top + box.bottom) / 2
+                const right = (frame.width * scale) + box.left;
+                m.trans(box.right - right, v_centery - (box.top + c_y));
+            } else if (s.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
+                const c_x = (frame.width * scale) / 2;
+                const v_centerx = (box.left + box.right) / 2
+                const bottom = (frame.height * scale) + box.top;
+                m.trans(v_centerx - (box.left + c_x), box.bottom - bottom);
+            } else if (s.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
+                const bottom = (frame.height * scale) + box.top;
+                m.trans(0, box.bottom - bottom);
+            } else if (s.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
+                const right = (frame.width * scale) + box.left;
+                const bottom = (frame.height * scale) + box.top;
+                m.trans(box.right - right, box.bottom - bottom);
+            }
+        }
+        return m;
+    }
+    getCurLayerShape (context: Context, id?: string) {
+        const page = context.selection.selectedPage;
+        const shapes = getFrameList(page!);
+        return shapes.find(item => item.id === id);
     }
 }
 class DirtyCleaner {

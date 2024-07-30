@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositions, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
+import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { finderShape, getFrameList, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
 import { Selection } from '@/context/selection';
 import ControlsView from './PreviewControls/ControlsView.vue';
 
-import { ElMessage, translate } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const props = defineProps<{
@@ -49,6 +49,7 @@ function page_watcher() {
     curPage.value = index + 1;
 
     initMatrix();
+    viewUpdater.overlayBox();
 }
 
 function changePage() {
@@ -72,7 +73,6 @@ function changePage() {
 
     const index = frameList.findIndex(item => item.id === shape.id);
     curPage.value = index + 1;
-
     nextTick(() => {
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         initMatrix();
@@ -140,7 +140,7 @@ const previewWatcher = (t: number | string, s?: boolean) => {
             const shape = shapes.find(item => item.id === action.targetNodeID);
             if (!shape) continue;
             const el = els[i] as SVGSVGElement;
-            const m = updateViewBox(shape, action.navigationType, box);
+            const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
             if (m) {
                 el.style['transform'] = m.toString();
                 if (i === els.length - 1) {
@@ -437,62 +437,6 @@ function search(e: MouseEvent) {
 const closeMenu = () => {
     isMenu.value = false;
 }
-
-const updateViewBox = (shape: ShapeView, type: PrototypeNavigationType | undefined, box: { top: number, bottom: number, left: number, right: number }) => {
-    const cur_shape = props.context.selection.selectedShapes[0];
-    if (!cur_shape) return;
-    const cur_frame = cur_shape.frame;
-    const m = new Matrix()
-    m.reset(viewUpdater.v_matrix);
-    if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP) {
-        let s: ShapeView | undefined = shape;
-        const frame = shape.frame;
-        if (type === PrototypeNavigationType.SWAP) {
-            const before_action = props.context.preview.swapEndAction;
-            if (!before_action) return;
-            s = getCurLayerShape(before_action.targetNodeID);
-        }
-        if (!s) return;
-        const scale = viewUpdater.v_matrix.m00;
-        m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-        if (s.overlayPositionType === OverlayPositions.CENTER || !s.overlayPositionType) {
-            const c_x = (frame.width * scale) / 2;
-            const c_y = (frame.height * scale) / 2;
-            const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
-            m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
-        } else if (s.overlayPositionType === OverlayPositions.TOPCENTER) {
-            const c_x = (frame.width * scale) / 2;
-            const v_centerx = (box.left + box.right) / 2
-            m.trans(v_centerx - (box.left + c_x), 0);
-        } else if (s.overlayPositionType === OverlayPositions.TOPRIGHT) {
-            const right = (frame.width * scale) + box.left;
-            m.trans(box.right - right, 0);
-        } else if (s.overlayPositionType === OverlayPositions.CENTERLEFT) {
-            const c_y = (frame.height * scale) / 2;
-            const v_centery = (box.top + box.bottom) / 2
-            m.trans(0, v_centery - (box.top + c_y));
-        } else if (s.overlayPositionType === OverlayPositions.CENTERRIGHT) {
-            const c_y = (frame.height * scale) / 2;
-            const v_centery = (box.top + box.bottom) / 2
-            const right = (frame.width * scale) + box.left;
-            m.trans(box.right - right, v_centery - (box.top + c_y));
-        } else if (s.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
-            const c_x = (frame.width * scale) / 2;
-            const v_centerx = (box.left + box.right) / 2
-            const bottom = (frame.height * scale) + box.top;
-            m.trans(v_centerx - (box.left + c_x), box.bottom - bottom);
-        } else if (s.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
-            const bottom = (frame.height * scale) + box.top;
-            m.trans(0, box.bottom - bottom);
-        } else if (s.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
-            const right = (frame.width * scale) + box.left;
-            const bottom = (frame.height * scale) + box.top;
-            m.trans(box.right - right, box.bottom - bottom);
-        }
-    }
-    return m;
-}
-
 const getTargetShapes = () => {
     target_shapes.value = [];
     const page = props.context.selection.selectedPage;
@@ -544,12 +488,16 @@ const getTargetShapes = () => {
                         }
                     }
                 }
-                const m = updateViewBox(shape, action.navigationType, box);
+                const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
                 const el = els[i] as SVGSVGElement;
                 if (m) {
                     el.style['transform'] = m.toString();
                     if (i === els.length - 1) {
                         end_matrix.value = m;
+                        viewBoxDialog.value![i].style.opacity = '0';
+                        nextTick(() => {
+                            viewBoxDialog.value![target_shapes.value.length - 1].style.opacity = '1';
+                        })
                     }
                 }
             }
@@ -639,8 +587,8 @@ onUnmounted(() => {
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-        <PageCard v-if="cur_shape" ref="pageCard" background-color="transparent" :data="(props.page as PageView)"
-            :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+        <PageCard v-if="cur_shape" class="pageCard" ref="pageCard" background-color="transparent"
+            :data="(props.page as PageView)" :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
         <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
                 :data="(props.page as PageView)" :context="context" :shapes="[item]" />
@@ -658,6 +606,7 @@ onUnmounted(() => {
         <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix">
         </ControlsView>
         <div class="overlay" v-if="is_overlay"></div>
+        <div v-if="cur_shape" class="preview_overlay"></div>
     </div>
 </template>
 
@@ -676,10 +625,9 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
+        z-index: 1;
+        transition: all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s;
 
-        .dailogCard {
-            transition: all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s;
-        }
     }
 
     .toggle {
@@ -739,5 +687,16 @@ onUnmounted(() => {
     position: absolute;
     right: 0;
     bottom: 0;
+}
+
+.preview_overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background-color: black;
+    pointer-events: none;
+    z-index: 99;
 }
 </style>
