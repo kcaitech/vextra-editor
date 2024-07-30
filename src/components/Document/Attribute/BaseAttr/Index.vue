@@ -207,7 +207,7 @@ function changeW(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
+    editor.modifyShapesWidth(shapes, _w);
     props.context.attr.notify(Attribute.FRAME_CHANGE);
 
     props.context.nextTick(props.context.selection.selectedPage!, () => {
@@ -231,7 +231,7 @@ function changeH(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
+    editor.modifyShapesHeight(shapes, _h);
     props.context.attr.notify(Attribute.FRAME_CHANGE);
 
     props.context.nextTick(props.context.selection.selectedPage!, () => {
