@@ -126,9 +126,9 @@ export class Preview extends WatchableObject {
         return this.m_proto_action;
     }
 
-    setArtboardScroll(offset: { x: number, y: number }) {
+    setArtboardScroll(offset: { x: number, y: number }, action: PrototypeActions) {
         this.m_atrboard_scroll_offset = offset;
-        this.notify(Preview.ARTBOARD_SCROLL);
+        this.notify(Preview.ARTBOARD_SCROLL, action);
     }
 
     get artboardScrollOffset() {

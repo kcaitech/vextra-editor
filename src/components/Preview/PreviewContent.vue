@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeNavigationType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { finderShape, getFrameList, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
@@ -97,7 +97,7 @@ const togglePage = (p: number) => {
     props.context.preview.setFromShapeAction(undefined);
 }
 
-const previewWatcher = (t: number | string, s?: boolean) => {
+const previewWatcher = (t: number | string, s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
@@ -128,6 +128,14 @@ const previewWatcher = (t: number | string, s?: boolean) => {
             viewUpdater.keyScale(0.1);
         }
     } else if (t === Preview.ARTBOARD_SCROLL) {
+        let el: SVGSVGElement | undefined;
+        if(target_shapes.value.length > 0) {
+            const els = document.querySelectorAll('.dailogCard');
+            el = els[els.length - 1] as SVGSVGElement;
+        } else {
+            el = pageCard.value!.pageSvg as SVGSVGElement
+        }
+        if(el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
         viewUpdater.artboardInTrans();
     } else if (t === Preview.MATRIX_CHANGE) {
         const page = props.context.selection.selectedPage;

@@ -89,7 +89,7 @@ export class ProtoAction {
             const offsetx = box.left - (action.extraScrollOffset?.x || 0);
             const offsety = box.top - (action.extraScrollOffset?.y || 0);
 
-            this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety });
+            this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
         }
     }
 

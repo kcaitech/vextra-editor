@@ -697,6 +697,10 @@ export class ViewUpdater {
         const shapes = getFrameList(page!);
         return shapes.find(item => item.id === id);
     }
+
+    scrollAnimate(el: SVGSVGElement) {
+        el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+    }
 }
 class DirtyCleaner {
     private m_image_map: Map<string, string>; // todo 缓存，使列表流畅
