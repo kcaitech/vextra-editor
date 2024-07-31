@@ -987,23 +987,12 @@ export function shape_track(context: Context, shape: Shape | ShapeView) {
             selection.selectShape(target);
         }
     } else {
-        const ctx: Context = context;
-        const pagesMgr = ctx.data.pagesMgr;
-        pagesMgr.get(page.id).then((page: Page | undefined) => {
-            if (page) {
-                // ctx.comment.toggleCommentPage()
-                // ctx.comment.commentMount(false)
-                const pagedom = ctx.getPageDom(page).dom;
-                ctx.selection.selectPage(pagedom);
-                let timer = setTimeout(() => {
-                    const selectedPage = selection.selectedPage!
-                    const target = selectedPage.getShape(shape.id);
-                    if (target) {
-                        fit_no_transform(context, target);
-                        selection.selectShape(target);
-                    }
-                    clearTimeout(timer);
-                }, 10)
+        context.selection.selectPage(page.id).then(p => {
+            if (!p) return;
+            const target = p.getShape(shape.id);
+            if (target) {
+                fit_no_transform(context, target);
+                selection.selectShape(target);
             }
         })
     }

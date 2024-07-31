@@ -92,7 +92,6 @@ class ToolBox implements IToolBox {
 
     _scout: Scout | undefined;
     _event = new EventEmitter()
-    _storage: Map<string, any> = new Map();
     _context: Context;
 
     constructor(context: Context) {
@@ -102,10 +101,6 @@ class ToolBox implements IToolBox {
     get scout(): IScout {
         if (!this._scout) this._scout = scout(this._context);
         return this._scout;
-    }
-
-    get storage(): Map<string, any> {
-        return this._storage;
     }
 
     get event(): IEventEmitter {
@@ -181,6 +176,15 @@ export class Context extends WatchableObject implements IContext {
         this.m_attr = new Attribute();
         this.m_preview = new Preview(this);
         startLoadTask(data, this.m_taskMgr);
+    }
+
+    private _storage: Map<string, string> = new Map();
+    get storage(): Map<string, string> {
+        return this._storage;
+    }
+    private _sessionStorage: Map<string, string> = new Map();
+    get sessionStorage(): Map<string, string> {
+        return this._sessionStorage;
     }
 
     private m_toolbox = new ToolBox(this);

@@ -4,7 +4,6 @@ import _PreviewVue from "./components/Preview/index.vue"
 import {
     CoopRepository,
     createDocument,
-    DataLoader,
     DocEditor,
     Document,
     importFigma,
@@ -24,6 +23,9 @@ export * from "./openapi";
 
 const t = (i18n as any).global.t;
 
+/**
+ * @deprecated 不能这么导出
+ */
 export { useComment } from '@/components/Document/Creator/execute'
 
 async function _open(props: DocumentProps) {
