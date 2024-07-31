@@ -140,8 +140,6 @@ function select(data: SelectItem) {
 }
 
 function render() {
-    console.log('1111');
-
     curHoverValueIndex.value = -1
     if (props.source.length) {
         source.value = cloneDeep(props.source);
