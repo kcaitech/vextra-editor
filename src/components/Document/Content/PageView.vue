@@ -59,17 +59,12 @@ const collect = debounce(_collect, 240);
 
 function page_watcher() {
     matrixWithFrame.reset(props.params.matrix);
-    matrixWithFrame.preTrans(props.params.data.frame.x, props.params.data.frame.y);
+    const frame = props.params.data._p_frame;
+    matrixWithFrame.preTrans(frame.x, frame.y);
 
-    width.value = props.params.data.frame.width;
-    height.value = props.params.data.frame.height;
+    width.value = frame.width;
+    height.value = frame.height;
 
-    modifySize();
-
-    reflush.value++;
-}
-
-function modifySize() {
     width.value = Math.ceil(Math.max(100, width.value));
     if (width.value % 2) {
         width.value++;
@@ -79,7 +74,11 @@ function modifySize() {
         height.value++;
     }
 
-    viewbox.value = `${props.params.data.frame.x} ${props.params.data.frame.y} ${width.value} ${height.value}`;
+    const innerFrame = props.params.data.frame;
+
+    viewbox.value = `${innerFrame.x} ${innerFrame.y} ${width.value} ${height.value}`;
+
+    reflush.value++;
 }
 
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
@@ -166,9 +165,9 @@ onUnmounted(() => {
 
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
-         :width="width" :height="height" :viewBox="viewbox"></svg>
+        :width="width" :height="height" :viewBox="viewbox"></svg>
     <ShapeCutout v-if="show_c" :context="props.context" :data="params.data" :matrix="props.params.matrix"
-                 :transform="matrixWithFrame.toArray()" />
+        :transform="matrixWithFrame.toArray()" />
     <ShapeTitles v-if="show_t" :context="props.context" :data="params.data" />
 
 </template>
