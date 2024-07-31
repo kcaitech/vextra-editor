@@ -5,6 +5,7 @@ import { get_actions_blur_modify } from '@/utils/shape_style';
 import { Blur, BlurType, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -38,7 +39,7 @@ const close = () => {
 }
 
 const toggleType = (type: BlurType) => {
-    if (type === BlurType.Background) return;
+    // if (type === BlurType.Background) return;
     const actions = get_actions_blur_modify(props.shapes, type);
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -66,23 +67,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="blur-position">
-        <div class="context" @click.stop="showMenu">{{ t(`blur.${blur.type}`) }}</div>
-        <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
-            <svg-icon icon-class="down" />
-        </div>
-        <div class="select_menu" ref="menu" v-if="isMenu">
-            <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
-                :style="{ opacity: item === BlurType.Background ? '0.3' : '1' }" @mouseenter="activeItem = BlurType.Gaussian"
-                :class="{ 'active-item': activeItem === item && activeItem !== BlurType.Background }">
-                <div class="text">{{ t(`blur.${item}`) }}</div>
-                <div class="icon">
-                    <svg-icon v-if="blur.type === item"
-                        :icon-class="activeItem === item ? 'white-select' : 'page-select'"></svg-icon>
-                </div>
+<div class="blur-position">
+    <div class="context" @click.stop="showMenu">{{ t(`blur.${blur.type}`) }}</div>
+    <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
+        <svg-icon icon-class="down"/>
+    </div>
+    <div class="select_menu" ref="menu" v-if="isMenu">
+        <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
+             :class="{ 'active-item': activeItem === item }">
+            <div class="text">{{ t(`blur.${item}`) }}</div>
+            <div class="icon">
+                <svg-icon v-if="blur.type === item"
+                          :icon-class="activeItem === item ? 'white-select' : 'page-select'" />
             </div>
         </div>
     </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -120,7 +120,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 12px;
             height: 12px;
         }
@@ -152,7 +152,7 @@ onUnmounted(() => {
                 align-items: center;
                 justify-content: center;
 
-                >svg {
+                > svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -169,8 +169,8 @@ onUnmounted(() => {
 .active-item {
     background-color: var(--active-color);
 
-    >.icon {
-        >.choose {
+    > .icon {
+        > .choose {
             border-color: #fff;
         }
     }
