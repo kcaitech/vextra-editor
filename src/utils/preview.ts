@@ -252,10 +252,9 @@ export function eventPriority(shape: ShapeView): EventIndex {
     return eventTypeIndex;
 }
 
-export const viewBox = (context: Context, m: Matrix) => {
-    const cur_shape = context.selection.selectedShapes[0];
-    const cur_frame = cur_shape.frame;
-    const matrix = getPreviewMatrix(cur_shape);
+export const viewBox = (m: Matrix, shape: ShapeView) => {
+    const cur_frame = shape.frame;
+    const matrix = getPreviewMatrix(shape);
     matrix.multiAtLeft(m.clone());
     const points = [
         matrix.computeCoord2(0, 0),

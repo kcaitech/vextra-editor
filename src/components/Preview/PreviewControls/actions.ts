@@ -27,7 +27,7 @@ export class ProtoAction {
         } else if (action.navigationType === PrototypeNavigationType.OVERLAY) {
             this.openDialog(action);
         } else if (action.connectionType === PrototypeConnectionType.CLOSE) {
-            this.closeDialog(action);
+            this.closeDialog();
         } else if (action.navigationType === PrototypeNavigationType.SWAP) {
             this.replaceDialog(action);
         } else if (action.navigationType === PrototypeNavigationType.SWAPSTATE) {
@@ -43,8 +43,25 @@ export class ProtoAction {
         if (!shape) return;
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
         // 即时
+        if (!action.transitionType) return;
+        const type = action.transitionType.split('_');
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.selection.selectShape(shape);
+        } else if (type.includes('MOVE') && type.includes('FROM')) {
+            this.m_context.preview.setInteractionAction(action);
+            setTimeout(() => {
+                this.m_context.selection.selectShape(shape);
+            }, 1000);
+        } else if (type.includes('MOVE') && type.includes('OUT')) {
+            this.m_context.preview.resetInteractionAction(action);
+            setTimeout(() => {
+                this.m_context.selection.selectShape(shape);
+            }, 1000);
+        } else if (type.includes('SLIDE')) {
+            this.m_context.preview.setInteractionAction(action);
+            setTimeout(() => {
+                this.m_context.selection.selectShape(shape);
+            }, 1000);
         }
     }
 
@@ -124,7 +141,7 @@ export class ProtoAction {
         this.m_context.preview.setInteractionAction(action);
     }
     // 关闭浮层
-    closeDialog(action: PrototypeActions) {
+    closeDialog() {
         const endAction = this.m_context.preview.endAction;
         if (endAction.navigationType === PrototypeNavigationType.SWAP) {
             this.m_context.preview.deleteSwapEndAction();
@@ -136,7 +153,7 @@ export class ProtoAction {
     replaceDialog(action: PrototypeActions) {
         const end_action = this.m_context.preview.endAction;
         this.m_context.preview.setSwapAction(end_action);
-        this.closeDialog(action);
+        this.closeDialog();
         this.openDialog(action);
     }
     // 动画操作

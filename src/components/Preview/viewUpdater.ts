@@ -5,7 +5,7 @@ import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
-import { getFrameList, getPreviewMatrix } from "@/utils/preview";
+import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
 import { nextTick } from "vue";
 
 type PCard = InstanceType<typeof PageCard>;
@@ -100,7 +100,9 @@ export class ViewUpdater {
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
+        svgEl.style['transition'] = ''
         svgEl.style['transform'] = m.toString();
+        svgEl.style.zIndex = '0';
         this.m_context.preview.setScale(this.getScale(m));
         this.overlayBox();
         this.matrix.reset(m);
@@ -648,9 +650,10 @@ export class ViewUpdater {
         const cur_frame = cur_shape.frame;
         const m = new Matrix()
         m.reset(this.v_matrix);
-        if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP) {
+        if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP || type === PrototypeNavigationType.NAVIGATE) {
             let s: ShapeView | undefined = shape;
             const frame = shape.frame;
+            const cur_box = viewBox(this.v_matrix, shape);
             if (type === PrototypeNavigationType.SWAP) {
                 const before_action = context.preview.swapEndAction;
                 if (!before_action) return;
@@ -696,26 +699,154 @@ export class ViewUpdater {
         }
         return m;
     }
+    readyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
+        const m = new Matrix(matrix.clone());
+        if (!type) return m;
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const cur_box = viewBox(matrix, shape);
+        const animate_type = type.split('_');
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('FROM')) {
+            if (direction === 'RIGHT') {
+                const trans = box.right - cur_box.left;
+                m.trans(-trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = cur_box.right - box.left;
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = cur_box.bottom - box.top;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = box.bottom - cur_box.top;
+                m.trans(0, -trans);
+            }
+        } else if (animate_type.includes('SLIDE') && animate_type.includes('OUT')) {
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                const trans = (box.right - cur_box.right) - w;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = (cur_box.left - box.left) + w;
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = (cur_box.top - box.top) + h;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = (box.bottom - cur_box.bottom) - h;
+                m.trans(0, trans);
+            }
+        }
+        return m;
+    }
     getCurLayerShape(context: Context, id?: string) {
         const page = context.selection.selectedPage;
         const shapes = getFrameList(page!);
         return shapes.find(item => item.id === id);
     }
-
+    // 容器内滚动
     scrollAnimate(el: SVGSVGElement) {
         el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
     }
+
+    // 淡入淡出动画
     dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
         els[els.length - 1].style.opacity = `${value}`;
         els[els.length - 1].style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
     }
-    removeAnimate(el: SVGSVGElement) {
+
+    // 移入动画
+    shiftInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        if (action.transitionType === PrototypeTransitionType.MOVEFROMLEFT ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMRIGHT ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMTOP ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMBOTTOM) {
+            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+        }
+    }
+    slideAndshiftOutAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('OUT')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            pageSvg.style.zIndex = '9';
+            this.outAction(action);
+        }
+    }
+    // 滑入动画
+    slideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('SLIDE')) {
+            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+        }
+    }
+    pageSvgSlideAnimate(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const m = new Matrix(this.v_matrix.clone());
+        if (action.transitionType === PrototypeTransitionType.SLIDEFROMBOTTOM ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMLEFT ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMRIGHT ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMTOP) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const animate_type = action.transitionType.split('_');
+            const direction = animate_type.at(-1);
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                m.trans(w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(-w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
+            }
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+    removeAnimate(el: SVGSVGElement, isTrans?: boolean) {
         if (el) {
             el.addEventListener('transitionend', function () {
                 this.style['transition'] = ''
             });
         }
+        if (isTrans) {
+            el.style['transition'] = '';
+        }
+    }
+    outAction(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const animate_type = action.transitionType?.split('_');
+        if (!animate_type) return;
+        const m = new Matrix(this.v_matrix.clone());
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('OUT')) {
+            if (direction === 'RIGHT') {
+                const trans = box.right - box.left;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = box.right - box.left;
+                m.trans(-trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = box.bottom - box.top;
+                m.trans(0, -trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = box.bottom - box.top;
+                m.trans(0, trans);
+            }
+        }
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        svgEl.style['transform'] = m.toString();
     }
 }
 class DirtyCleaner {

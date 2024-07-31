@@ -145,6 +145,12 @@ export class Preview extends WatchableObject {
         this.notify(Preview.INTERACTION_CHANGE);
     }
 
+    resetInteractionAction(action: PrototypeActions) {
+        this.m_interaction_action.clear();
+        this.m_interaction_action.add(action);
+        this.notify(Preview.INTERACTION_CHANGE);
+    }
+
     get interactionAction() {
         return this.m_interaction_action;
     }

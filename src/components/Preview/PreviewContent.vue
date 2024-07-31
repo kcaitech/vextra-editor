@@ -128,6 +128,7 @@ const previewWatcher = (t: number | string, s?: any) => {
             viewUpdater.keyScale(0.1);
         }
     } else if (t === Preview.ARTBOARD_SCROLL) {
+        // 容器内滚动
         let el: SVGSVGElement | undefined;
         if (target_shapes.value.length > 0) {
             const els = document.querySelectorAll('.dailogCard');
@@ -135,17 +136,19 @@ const previewWatcher = (t: number | string, s?: any) => {
         } else {
             el = pageCard.value!.pageSvg as SVGSVGElement
         }
+        // 滚动动画
         if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
         const isTrans = viewUpdater.artboardInTrans();
-        if (isTrans) {
-            el.style['transition'] = '';
-        }
-        viewUpdater.removeAnimate(el);
+        // 移除动画
+        viewUpdater.removeAnimate(el, isTrans);
     } else if (t === Preview.MATRIX_CHANGE) {
+        // 更新浮层位置
         updateDialogMatrix();
     } else if (t === Preview.INTERACTION_CHANGE) {
+        // 执行交互动作
         getTargetShapes();
     } else if (t === Preview.FLOW_CHANGE) {
+        // 流程切换
         const shape = props.context.selection.selectedShapes[0];
         const page = props.context.selection.selectedPage!;
         const naviList = props.context.preview.naviShapeList;
@@ -154,8 +157,13 @@ const previewWatcher = (t: number | string, s?: any) => {
         const index = frameList.findIndex(item => item.id === shape.id);
         curPage.value = index + 1;
     } else if (t === Preview.SUPERNATANT_CLOSR) {
+        // 关闭浮层动作
         const els = document.querySelectorAll('.dailogCard');
         viewUpdater.dissolveAnimate(s, els as any, 0);
+        const end_shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
+        const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, (s as PrototypeActions).transitionType);
+        const el = els[els.length - 1] as SVGSVGElement;
+        el.style['transform'] = m.toString();
         setTimeout(() => {
             getTargetShapes();
         }, 1000)
@@ -177,10 +185,10 @@ const selectionWatcher = (v: number | string) => {
             changePage();
             return;
         }
+        page_watcher();
         nextTick(() => {
             viewUpdater.overlayBox(shapes[0]);
         })
-        page_watcher();
     }
 }
 
@@ -214,7 +222,10 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     }
 }
 
-const observer = new ResizeObserver(initMatrix);
+const observer = new ResizeObserver(() => {
+    initMatrix();
+    updateDialogMatrix();
+});
 
 watch(() => props.showTop, (v) => {
     if (v) {
@@ -447,6 +458,7 @@ const getTargetShapes = () => {
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
+    const selectShape = props.context.selection.selectedShapes[0];
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
@@ -457,7 +469,7 @@ const getTargetShapes = () => {
             target_shapes.value.push(shape);
         }
     })
-    const box = viewBox(props.context, viewUpdater.v_matrix);
+    const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
     nextTick(() => {
         const protoActions = Array.from(actions.values());
@@ -466,6 +478,8 @@ const getTargetShapes = () => {
             const action = protoActions[i];
             const shape = shapes.find(item => item.id === action.targetNodeID);
             if (shape) {
+                // 移出动画
+                viewUpdater.slideAndshiftOutAnimate(action);
                 if (action.navigationType === PrototypeNavigationType.OVERLAY && viewBoxDialog.value) {
                     isSuperposed.value = true;
                     props.context.preview.setSupernatantIsOpen(true);
@@ -497,13 +511,20 @@ const getTargetShapes = () => {
                 const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
                 const el = els[i] as SVGSVGElement;
                 if (m) {
-                    el.style['transform'] = m.toString();
                     if (i === els.length - 1) {
-                        end_matrix.value = m;
                         viewUpdater.dissolveAnimate(action, els as any, 0);
+                        viewUpdater.shiftInAnimate(action, els as any);
+                        viewUpdater.slideInAnimate(action, els as any);
+                        const ready_m = viewUpdater.readyPosition(m, shape, action.transitionType);
+                        el.style['transform'] = ready_m.toString();
+                        end_matrix.value = m;
                         setTimeout(() => {
+                            el.style['transform'] = m.toString();
+                            viewUpdater.pageSvgSlideAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
                         })
+                    } else {
+                        el.style['transform'] = m.toString();
                     }
                 }
             }
@@ -532,12 +553,14 @@ function startLoop() {
 
 const updateDialogMatrix = () => {
     const page = props.context.selection.selectedPage;
+    const selectShape = props.context.selection.selectedShapes[0];
     const els = document.querySelectorAll('.dailogCard');
-    const box = viewBox(props.context, viewUpdater.v_matrix);
+    const box = viewBox(viewUpdater.v_matrix, selectShape);
     const shapes = getFrameList(page!);
     const protoActions = Array.from(props.context.preview.interactionAction.values());
     for (let i = 0; i < els.length; i++) {
         const action = protoActions[i];
+        if (!action) continue;
         const shape = shapes.find(item => item.id === action.targetNodeID);
         if (!shape) continue;
         const el = els[i] as SVGSVGElement;
