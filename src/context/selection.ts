@@ -35,6 +35,7 @@ import { v4 } from "uuid";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
 import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
+import { initpal } from "@/components/common/initpal";
 
 interface Saved {
     page: Page | undefined,
@@ -237,16 +238,12 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             const id = p;
             const ctx = this.m_context;
             const pagesMgr = ctx.data.pagesMgr;
-            const cur_page = ctx.selection.selectedPage;
+            const cur_page = this.m_selectPage;
             if (cur_page && cur_page.id === id) return cur_page;
-
             const page = await pagesMgr.get(id);
-            if (page) {
-                const pagedom = ctx.getPageDom(page).dom;
-                ctx.selection.selectPage(pagedom);
-                return pagedom;
-            }
-            return;
+            if (!page) return;
+            await initpal();
+            p = ctx.getPageDom(page).dom;
         }
 
         if (this.m_selectPage === p) {
@@ -256,12 +253,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
         this.notify(Selection.CHANGE_PAGE);
-        if (p) {
-            // router.replace({
-            //     path: isMobileDevice() ? '/pageviews' : '/document',
-            //     query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
-            // });
-        }
+
         return p;
     }
 

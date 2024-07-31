@@ -237,7 +237,7 @@ onMounted(() => {
     initpal().then(() => {
         inited.value = true;
     }).catch((e) => {
-        console.log(e)
+        console.error(e)
     });
 })
 

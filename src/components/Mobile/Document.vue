@@ -291,9 +291,9 @@ function end(e: TouchEvent) {
     }
 }
 
-const backlink = computed(() => {
-    return window.history.state.back ? true : false
-})
+// const backlink = computed(() => {
+//     return window.history.state.back ? true : false
+// })
 
 const iconPosition = ref({
     left: window.innerWidth - 68,

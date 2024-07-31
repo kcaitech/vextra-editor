@@ -6,10 +6,7 @@ import { Context } from '@/context';
 import { ref, onMounted, onUnmounted } from 'vue';
 // import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
-import SvgIcon from "@/components/common/SvgIcon.vue";
-// import kcdesk from "@/kcdesk";
 
-// const route = useRoute();
 
 interface Props {
     context: Context
@@ -18,55 +15,7 @@ interface Props {
 const props = defineProps<Props>();
 const name = ref<string>('');
 const { t } = useI18n();
-function home() {
-    window.document.title = t('product.name');
-    // (window as any).sketchDocument = undefined;
-    // (window as any).skrepo = undefined;
-    // const index = sessionStorage.getItem('index');
-    // if (index) {
-    //     back(index);
-    // } else {
-    //     router.push({ name: 'recently' });
-    //     sessionStorage.setItem('index', '1')
-    // }
-}
 
-const back = (index: string) => {
-    // const project = props.context.comment.isDocumentInfo?.project;
-    // switch (index) {
-    //     case '1':
-    //         router.push({ name: 'recently' });
-    //         break;
-    //     case '2':
-    //         router.push({ name: 'starfile' });
-    //         break;
-    //     case '3':
-    //         router.push({ name: 'meshare' });
-    //         break;
-    //     case '4':
-    //         router.push({ name: 'shareme' });
-    //         break;
-    //     case '6':
-    //         if (project) {
-    //             router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo?.project.id });
-    //         } else {
-    //             router.push({ name: 'recently' });
-    //         }
-    //         break;
-    //     case '7':
-    //         if (project) {
-    //             router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo?.project.id });
-    //         } else {
-    //             router.push({ name: 'recently' });
-    //         }
-    //         break;
-    //     case '9':
-    //         router.push({ name: 'ProjectShare'});
-    //         break;
-    //     default:
-    //         router.push({ name: 'recently' });
-    // }
-}
 
 async function init_name() {
     // const result = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });

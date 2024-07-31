@@ -5,6 +5,6 @@ export * from "./scout"
 
 export interface IToolBox {
     get scout(): IScout;
-    get storage(): Map<string, any>;
+    // get storage(): Map<string, any>;
     get event(): IEventEmitter;
 }

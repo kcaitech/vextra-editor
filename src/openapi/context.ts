@@ -23,6 +23,7 @@ export namespace ContextEvents {
 }
 
 export interface IContext extends IWatchable {
+    get storage(): Map<string, string>;
 
     get data(): Document;
     get pluginsMgr(): IPluginsMgr;

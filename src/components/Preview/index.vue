@@ -119,21 +119,13 @@ const inited = ref(false);
 
 function switchPage(id?: string) {
     if (!id) return
-    if (context) {
-        const ctx: Context = context;
-        const pagesMgr = ctx.data.pagesMgr;
-        const cur_page = context.selection.selectedPage;
-        if (cur_page && cur_page.id === id) return;
-        pagesMgr.get(id).then((page: Page | undefined) => {
-            if (page) {
-                curPage.value = undefined;
-                const pagedom = ctx.getPageDom(page).dom;
-                ctx.selection.selectPage(pagedom);
-                selectedShape(ctx, pagedom, t);
-                curPage.value = pagedom;
-            }
-        })
-    }
+    const cur_page = context.selection.selectedPage;
+    if (cur_page && cur_page.id === id) return;
+    context.selection.selectPage(id).then(p => {
+        if (!p) return;
+        selectedShape(context, p, t);
+        curPage.value = p;
+    })
 }
 
 function previewWatcher(t: number | string) {
