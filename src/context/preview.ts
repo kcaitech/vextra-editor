@@ -25,6 +25,7 @@ export class Preview extends WatchableObject {
     static INTERACTION_CHANGE = 14;
     static SWAP_REF_STAT = 15;
     static FLOW_CHANGE = 16;
+    static SUPERNATANT_CLOSR = 17;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;
@@ -126,9 +127,9 @@ export class Preview extends WatchableObject {
         return this.m_proto_action;
     }
 
-    setArtboardScroll(offset: { x: number, y: number }) {
+    setArtboardScroll(offset: { x: number, y: number }, action: PrototypeActions) {
         this.m_atrboard_scroll_offset = offset;
-        this.notify(Preview.ARTBOARD_SCROLL);
+        this.notify(Preview.ARTBOARD_SCROLL, action);
     }
 
     get artboardScrollOffset() {
@@ -144,15 +145,21 @@ export class Preview extends WatchableObject {
         this.notify(Preview.INTERACTION_CHANGE);
     }
 
+    resetInteractionAction(action: PrototypeActions) {
+        this.m_interaction_action.clear();
+        this.m_interaction_action.add(action);
+        this.notify(Preview.INTERACTION_CHANGE);
+    }
+
     get interactionAction() {
         return this.m_interaction_action;
     }
 
     deleteEndAction() {
         const actions = Array.from(this.m_interaction_action);
-        actions.pop();
+        const lastItem = actions.pop();
         this.m_interaction_action = new Set(actions);
-        this.notify(Preview.INTERACTION_CHANGE);
+        this.notify(Preview.SUPERNATANT_CLOSR, lastItem);
     }
 
     get endAction() {

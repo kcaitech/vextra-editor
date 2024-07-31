@@ -135,6 +135,7 @@ const onMouseUp = (e: MouseEvent) => {
     for (let i = 0; i < protoActions.length; i++) {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
+        
         if (type === PrototypeEvents.ONCLICK && eventTypeIndex.click > eventTypeIndex.mouseup && eventTypeIndex.click > eventTypeIndex.mousedown && eventTypeIndex.click > eventTypeIndex.dblclick) {
             if (!isDragging && e.button === 0) {
                 console.log('单击事件');
