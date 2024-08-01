@@ -49,9 +49,7 @@ export class ScaleRenderer {
     private getContainer(shape: ShapeView) {
         let p = shape.parent;
         while (p) {
-            if (p.isContainer) {
-                break;
-            }
+            if (p.isContainer) break;
             p = p.parent;
         }
         return p;

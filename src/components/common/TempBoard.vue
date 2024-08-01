@@ -34,9 +34,7 @@ function write() {
     const selected = props.context.selection.selectedShapes
         .map(s => toRaw(s));
 
-    if (!selected.length) {
-        return;
-    }
+    if (!selected.length) return;
 
     renderItems = selected;
 
@@ -48,23 +46,20 @@ function write() {
         const { left, top, right, bottom } = getShadowMax(shape);
         const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
 
-        const x = -left - l_max;
-        const y = -top - t_max;
+        const x = frame.x - left - l_max;
+        const y = frame.y - top - t_max;
         const _right = frame.width + (right + l_max + r_max);
         const _bottom = frame.height + (bottom + t_max + b_max);
-        points.push(
-            ...[
-                { x, y },
-                { x: _right, y },
-                { x: _right, y: _bottom },
-                { x, y: _bottom }
-            ].map(p => shape.matrix2Root().computeCoord3(p))
-        )
+        points.push(...[
+            { x, y },
+            { x: _right, y },
+            { x: _right, y: _bottom },
+            { x, y: _bottom }
+        ].map(p => shape.matrix2Root().computeCoord3(p)));
     }
 
     const box = XYsBounding(points);
-    const page = props.context.selection.selectedPage!;
-    xy.value = { x: box.left - page.frame.x, y: box.top - page.frame.y };
+    xy.value = { x: box.left, y: box.top };
     width.value = box.right - box.left;
     height.value = box.bottom - box.top;
 
@@ -178,7 +173,7 @@ function getBlob(): Promise<Blob | null> {
             }, 'image/png');
         }
         console.log(img.src);
-        
+
         img.onerror = () => {
             resolve(null)
         }
@@ -238,11 +233,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div v-if="pedal" class="pedal">
-        <PageCard ref="pageCard" :background-color="background_color"
-                  :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-                  :shapes="renderItems" :width="width" :height="height"></PageCard>
-    </div>
+<div v-if="pedal" class="pedal">
+    <PageCard ref="pageCard" :background-color="background_color"
+              :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
+              :shapes="renderItems" :width="width" :height="height"></PageCard>
+</div>
 </template>
 
 <style scoped lang="scss">
