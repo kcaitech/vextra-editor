@@ -159,14 +159,16 @@ const previewWatcher = (t: number | string, s?: any) => {
     } else if (t === Preview.SUPERNATANT_CLOSR) {
         // 关闭浮层动作
         const els = document.querySelectorAll('.dailogCard');
-        viewUpdater.dissolveAnimate(s, els as any, 0);
+        const action = s as PrototypeActions;
+        viewUpdater.dissolveAnimate(action, els as any, 0);
         const end_shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
-        const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, (s as PrototypeActions).transitionType);
+        const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
+        const time = action.transitionDuration || 0.3;
         setTimeout(() => {
             getTargetShapes();
-        }, 1000)
+        }, time * 1000);
     }
 }
 

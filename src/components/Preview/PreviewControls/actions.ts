@@ -44,6 +44,7 @@ export class ProtoAction {
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
         if (!action.transitionType) return;
         const type = action.transitionType.split('_');
+        const time = action.transitionDuration || 0.3;
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             // 即时
             this.m_context.selection.selectShape(shape);
@@ -52,13 +53,13 @@ export class ProtoAction {
             this.m_context.preview.setInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
-            }, 1000);
+            }, time * 1000);
         } else if (type.includes('SLIDE') || type.includes('PUSH') || type.includes('OUT')) {
             // 移出、滑入、滑出、推入
             this.m_context.preview.resetInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
-            }, 1000);
+            }, time * 1000);
         }
     }
 
@@ -69,18 +70,19 @@ export class ProtoAction {
             const shape = this.m_shapes.find(item => item.id === action.id);
             if (!action.action.transitionType) return;
             const type = action.action.transitionType.split('_');
+            const time = action.action.transitionDuration || 0.3;
             if (action.action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
                 this.m_context.selection.selectShape(shape);
-            } else if (type.includes('DISSOLVE')){
+            } else if (type.includes('DISSOLVE')) {
                 this.m_context.preview.setInteractionAction(action.action, shape?.id);
                 setTimeout(() => {
                     this.m_context.selection.selectShape(shape);
-                }, 1000);
+                }, time * 1000);
             } else {
                 this.m_context.preview.resetInteractionAction(action.action, shape?.id);
                 setTimeout(() => {
                     this.m_context.selection.selectShape(shape);
-                }, 1000);
+                }, time * 1000);
             }
         }
     }

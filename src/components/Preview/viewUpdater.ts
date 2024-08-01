@@ -797,7 +797,9 @@ export class ViewUpdater {
     // 淡入淡出动画
     dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
-        els[els.length - 1].style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        els[els.length - 1].style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         els[els.length - 1].style.opacity = `${value}`;
     }
 
@@ -808,7 +810,9 @@ export class ViewUpdater {
             action.transitionType === PrototypeTransitionType.MOVEFROMRIGHT ||
             action.transitionType === PrototypeTransitionType.MOVEFROMTOP ||
             action.transitionType === PrototypeTransitionType.MOVEFROMBOTTOM) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
 
@@ -818,7 +822,9 @@ export class ViewUpdater {
         if (animateType && animateType.includes('OUT')) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             pageSvg.style.zIndex = '9';
             this.outAction(action);
         }
@@ -828,7 +834,9 @@ export class ViewUpdater {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
         if (animateType && (animateType.includes('SLIDE') || animateType.includes('PUSH'))) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         }
     }
     // 滑入动画
@@ -842,7 +850,9 @@ export class ViewUpdater {
             action.transitionType === PrototypeTransitionType.SLIDEFROMTOP) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const animate_type = action.transitionType.split('_');
             const direction = animate_type.at(-1);
             const w = (box.right - box.left) * 0.3;
@@ -868,7 +878,9 @@ export class ViewUpdater {
         if (animateType && animateType.includes('PUSH')) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const direction = animateType.at(-1);
             const w = (box.right - box.left);
             const h = (box.bottom - box.top);
@@ -943,9 +955,11 @@ export class ViewUpdater {
             } else if (direction === 'BOTTOM') {
                 m.trans(0, -h);
             }
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
-            svgEl.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+            svgEl.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
             svgEl.style.zIndex = '9';
             svgEl.style['transform'] = m.toString();
         }
@@ -957,8 +971,10 @@ export class ViewUpdater {
             const box = viewBox(this.v_matrix, select_shape);
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
             const m = new Matrix(this.v_matrix.clone());
             const direction = animateType.at(-1);
             const w = (box.right - box.left) * 0.3;
@@ -979,13 +995,15 @@ export class ViewUpdater {
     backDissolveAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE) return;
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
-        svgEl.style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        svgEl.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         svgEl.style.zIndex = '9';
         svgEl.style.opacity = '0';
         if (els.length > 1) {
             for (let i = 0; i < els.length - 1; i++) {
                 const el = els[i];
-                el.style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+                el.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
                 el.style.zIndex = '9';
                 el.style.opacity = `0`;
             }
@@ -1018,7 +1036,9 @@ export class ViewUpdater {
         if (animateType && (animateType.includes('MOVE') && animateType.includes('FROM'))) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             pageSvg.style.zIndex = '9';
             this.backOutAction(action);
         }
@@ -1028,14 +1048,18 @@ export class ViewUpdater {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('MOVE') && animateType.includes('OUT')) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
     backPushInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('PUSH')) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
     backPushAnimate(action: PrototypeActions) {
@@ -1043,7 +1067,9 @@ export class ViewUpdater {
         if (animateType && animateType.includes('PUSH')) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             this.backOutAction(action);
         }
     }
