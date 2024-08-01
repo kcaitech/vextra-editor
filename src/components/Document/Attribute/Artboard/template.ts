@@ -111,8 +111,8 @@ export const templates: Template[] = [
             },
             {
                 name: 'MacBook Air 13”',
-                width: 744,
-                height: 1133
+                width: 1280,
+                height: 832
             },
             {
                 name: 'MacBook Pro 14”',

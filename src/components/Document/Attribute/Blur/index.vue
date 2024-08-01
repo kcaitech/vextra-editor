@@ -168,16 +168,16 @@ onUnmounted(() => {
     <div class="blur-container" v-else-if="!mixed && blurInfo">
         <div class="blur">
             <div :class="blurInfo.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible()">
-                <svg-icon v-if="blurInfo.isEnabled" icon-class="select"></svg-icon>
+                <svg-icon v-if="blurInfo.isEnabled" icon-class="select" />
             </div>
             <div class="blur_posi">
-                <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes"></BlurTypeSelect>
+                <BlurTypeSelect :context="context" :blur="blurInfo" :shapes="shapes" />
             </div>
             <div class="detail">
-                <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes"></BlurDetail>
+                <BlurDetail :context="context" :blur="blurInfo" :shapes="shapes" />
             </div>
             <div class="delete" @click="deleteBlur">
-                <svg-icon icon-class="delete"></svg-icon>
+                <svg-icon icon-class="delete" />
             </div>
         </div>
     </div>
