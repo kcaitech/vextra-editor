@@ -172,9 +172,8 @@ function getBlob(): Promise<Blob | null> {
                 resolve(blob);
             }, 'image/png');
         }
-        console.log(img.src);
-
-        img.onerror = () => {
+        img.onerror = (err) => {
+            console.error(err);
             resolve(null)
         }
     })
