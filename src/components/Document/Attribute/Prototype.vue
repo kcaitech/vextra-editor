@@ -37,7 +37,7 @@
                                         :source="trigger"
                                         :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
                                         @select="setPrototypeActionEvent($event, action.id)"></Select>
-                                    <input ref="aftertimeout"
+                                    <input v-select ref="aftertimeout"
                                         v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT" type="text"
                                         :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
                                         @change="setPrototypeActionEventTime(action.id)">
@@ -53,7 +53,8 @@
                                     @changestatus="changetarget($event, action.id)"></Status>
                                 <Target
                                     v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE && action.actions.navigationType !== PrototypeNavigationType.SWAPSTATE"
-                                    :context="props.context" :actionid="action.id"  :type="action.actions.navigationType" :targetid="action.actions.targetNodeID"
+                                    :context="props.context" :actionid="action.id" :type="action.actions.navigationType"
+                                    :targetid="action.actions.targetNodeID"
                                     @settargetnode="selectTargetNode($event, action.id)"></Target>
                                 <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
                                     class="retract">
@@ -140,8 +141,8 @@
                 </div>
                 <div class="overflow-roll">
                     <div class="text">溢出滚动</div>
-                    <Select class="select" :source="overflowRoll"
-                        :selected="overflowRoll.find(i => i.id === 0)?.data"></Select>
+                    <Select class="select" :source="overflowRoll" :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
+                        @select=scrollDirection></Select>
                 </div>
             </div>
             <div v-else class="tips">
@@ -156,7 +157,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data"
+import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView } from "@kcdesign/data"
 import { debounce } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
@@ -178,16 +179,12 @@ import {
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
+    ScrollDirection
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
+import { states_tag_values_sort } from '@/utils/symbol';
 
-enum overflowRollType {
-    NotRoll = 'notroll',
-    Horizontal = 'horizontal',
-    Vertical = 'vertical',
-    HorAndVer = 'horandver'
-}
 
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',
@@ -221,10 +218,8 @@ const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
 const prototypeinteraction = ref<PrototypeInterAction[]>()
 const aftertimeout = ref<HTMLInputElement[]>()
 const connectionURL = ref<HTMLInputElement[]>()
+const scroll = ref<string>('')
 
-const searchvlue = ref<string>('')
-const DomList = ref<ShapeView[]>([])
-const curHoverValueIndex = ref<string>('');
 const showtargerlist = ref<boolean>(false)
 
 const Direction = new Map([
@@ -235,10 +230,10 @@ const Direction = new Map([
 ])
 
 const overflowRoll: SelectSource[] = genOptions([
-    [overflowRollType.NotRoll, '不滚动'],
-    [overflowRollType.Horizontal, '水平'],
-    [overflowRollType.Vertical, '垂直'],
-    [overflowRollType.HorAndVer, '水平并垂直']
+    [ScrollDirection.NONE, '不滚动'],
+    [ScrollDirection.HORIZONTAL, '水平'],
+    [ScrollDirection.VERTICAL, '垂直'],
+    [ScrollDirection.BOTH, '水平并垂直']
 ])
 
 const trigger: SelectSource[] = genOptions([
@@ -347,16 +342,6 @@ const animations = new Map([
     [PrototypeTransitionType.SCROLLANIMATE, '位移']
 ])
 
-
-
-
-function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.search-container')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        showtargerlist.value = false
-    }
-}
 const qsa = ref<StyleValue | null>()
 const qsb = ref<StyleValue | null>()
 
@@ -732,9 +717,23 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
 
 }
 
+const search = (shape: ShapeView, id: string | undefined) => {
+    if (shape.id === id) {
+        return [shape];
+    } else {
+        if (shape.childs && shape.childs.length > 0) {
+            return shape.childs.reduce((acc, child) => {
+                const result = search(child, id) as ShapeView[];
+                return result.length > 0 ? acc.concat(result) : acc;
+            }, [] as ShapeView[]);
+        }
+    }
+    return [];
+};
+
 const getText = (actions: PrototypeActions) => {
     if (actions.connectionType === PrototypeConnectionType.BACK) {
-        return '返回上一页'
+        return '返回上一页面'
     } else if (actions.connectionType === PrototypeConnectionType.CLOSE) {
         return '关闭浮层'
     } else if (actions.connectionType === PrototypeConnectionType.URL) {
@@ -746,8 +745,14 @@ const getText = (actions: PrototypeActions) => {
     } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
         const page = props.context.selection.selectedPage
         if (!page) return
-        if (!actions.targetNodeID) return ''
-
+        const a = search(page, actions.targetNodeID)
+        const result = states_tag_values_sort(a as SymbolView[], t)
+        const arr = result.reduce((acc, i) => {
+            return acc.concat(i.current_state)
+        }, [] as string[])
+        return arr.toString()
+    } else if (actions.connectionType === PrototypeConnectionType.NONE) {
+        return ''
     } else {
         const page = props.context.selection.selectedPage
         if (!page) return
@@ -837,8 +842,6 @@ const setOverlayBackgroundInteraction = (state: boolean, id: string) => {
 
 //设置浮层位置
 const setOverlayPositionType = (data: OverlayPositions, id: string) => {
-    console.log(data, id);
-
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedPage?.childs
@@ -904,6 +907,7 @@ const setPrototypeActionEventTime = (id: string) => {
         const time = Number(aftertimeout.value[0].value.split('ms')[0])
         const T = time < 1 ? 1 : time > 20000 ? 20000 : time
         e.setPrototypeActionEventTime(shape as ShapeView, id, T / 1000)
+        aftertimeout.value[0].blur()
     }
     updateData()
 }
@@ -957,7 +961,6 @@ const setPrototypeActionTransition = (data: SelectItem, id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    console.log(data.value);
     let type = data.value
     if (type === 'MOVE' || type === 'SLIDE' || type === 'PUSH') {
         type = type + '_FROM_LEFT'
@@ -983,7 +986,6 @@ const setPrototypeActionTransitionDirection = (type: PrototypeTransitionType, id
     const arr = type.split('_')
     arr[arr.length - 1] = i.toUpperCase()
     const newtype = arr.join('_')
-    console.log(newtype);
     e.setPrototypeActionTransitionType(shape as ShapeView, id, newtype as PrototypeTransitionType)
     updateData()
     delstyle()
@@ -1044,6 +1046,15 @@ const setProtoTypeEasingType = (data: SelectItem, id: string) => {
     })
 }
 
+const scrollDirection = (data: SelectItem) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setscrollDirection(shape as ShapeView, data.value as ScrollDirection);
+    updateData()
+}
+
 
 //更新原型数据
 function updateData() {
@@ -1053,10 +1064,9 @@ function updateData() {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
+            scroll.value = shape.scrollDirection ? shape.scrollDirection : 'NONE'
         }
-
     }
-
     let items: any[] = []
 
     isProtoType.value.forEach((item) => {
@@ -1426,7 +1436,8 @@ onUnmounted(() => {
             .item-content {
                 display: flex;
                 align-items: center;
-                justify-content: center;
+                justify-content: flex-start;
+                gap: 4px;
                 width: 172px;
                 height: 32px;
                 font-size: 12px;
@@ -1434,13 +1445,14 @@ onUnmounted(() => {
                 border-radius: 6px;
                 text-align: center;
                 line-height: 32px;
+                padding-left: 9px;
+                box-sizing: border-box;
 
                 .icon-img {
                     width: 18px;
                     height: 18px;
                     border-radius: 50%;
                     background-color: #1878F5;
-                    margin-right: 8px;
                     overflow: hidden;
                     display: flex;
 

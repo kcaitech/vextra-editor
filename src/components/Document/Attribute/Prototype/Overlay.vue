@@ -8,7 +8,11 @@
                 </div>
             </div>
             <div class="margin">
-                <div v-for=" i  in  4 " :key="i"></div>
+                <div class="margin-item" v-for=" i  in  margin " :key="i[0]"
+                    :style="{ pointerEvents: position?.includes(i[0]) ? 'auto' : 'none', opacity: position?.includes(i[0]) ? 1 : 0.4 }">
+                    <svg-icon icon-class="margin" :style="{ rotate: i[1] + 'deg' }"></svg-icon>
+                    <input type="text" :value="position?.includes(i[0]) ? 0 : '-'">
+                </div>
             </div>
         </div>
         <div class="checkbox">
@@ -42,7 +46,7 @@ import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import { debounce as d } from "@/utils/timing_util";
 
-export interface Type{
+export interface Type {
     state: boolean
     color?: Color
 }
@@ -71,6 +75,13 @@ const position = ref<OverlayPositions>()
 const event = ref<OverlayBackgroundInteraction>()
 const Appearance = ref<OverlayBackgroundAppearance>()
 const overlayclose = ref<boolean>(false)
+
+const margin = new Map([
+    ['TOP', 90],
+    ['BOTTOM', -90],
+    ['LEFT', 0],
+    ['RIGHT', 180]
+])
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -244,11 +255,32 @@ onMounted(() => {
             grid-template-rows: 1fr 1fr;
             gap: 4px;
 
-            div {
+            .margin-item {
+                display: flex;
+                align-items: center;
+                padding: 9px 4px;
+                box-sizing: border-box;
+                gap: 4px;
                 width: 47px;
-                height: 100%;
+                height: 32px;
                 border-radius: 6px;
                 background-color: #F5F5F5;
+
+                svg {
+                    width: 14px;
+                    min-width: 14px;
+                    height: 14px;
+                }
+
+                input {
+                    outline: none;
+                    border: none;
+                    padding: 0;
+                    width: 100%;
+                    height: 100%;
+                    font-size: 12px;
+                    background-color: transparent;
+                }
             }
         }
     }

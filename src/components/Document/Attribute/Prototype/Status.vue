@@ -84,8 +84,6 @@ watch(() => props.targetNodeId, (n, o) => {
 })
 
 onMounted(() => {
-    console.log(props.targetNodeId);
-    
     getState(props.targetNodeId)
 })
 
