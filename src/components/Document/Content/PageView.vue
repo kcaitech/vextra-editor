@@ -8,6 +8,7 @@ import ShapeTitles from './ShapeTitles.vue';
 import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
+import { PageDom } from './vdom/page';
 
 interface Props {
     context: Context
@@ -15,12 +16,14 @@ interface Props {
         data: PageView
         matrix: Matrix
         noCutout?: boolean,
-        closeLoading?: () => void
+        closeLoading?: () => void,
+        visibleRect?: { x: number, y: number, width: number, height: number }
     }
 }
 
 const props = defineProps<Props>();
 const matrixWithFrame = new Matrix();
+const matrixWithFrame_inverse = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
@@ -48,19 +51,12 @@ function pageViewRegister(mount: boolean) {
     props.context.workspace.setPageViewId(rootId.value);
 }
 
-function _collect(t?: any) {
-    // 调整到每次执行transform之前进行收集
-    // if (typeof t === 'string' && t === 'collect') {
-    //     props.context.assist.collect();
-    // }
-}
-
-const collect = debounce(_collect, 240);
 
 function page_watcher() {
     matrixWithFrame.reset(props.params.matrix);
     const frame = props.params.data._p_frame;
     matrixWithFrame.preTrans(frame.x, frame.y);
+    matrixWithFrame_inverse.reset(matrixWithFrame.inverse)
 
     width.value = frame.width;
     height.value = frame.height;
@@ -79,13 +75,22 @@ function page_watcher() {
     viewbox.value = `${innerFrame.x} ${innerFrame.y} ${width.value} ${height.value}`;
 
     reflush.value++;
+    updateVisibleRect();
+}
+
+function updateVisibleRect() {
+    const rect = props.params.visibleRect; // rootview
+    if (!rect) return;
+    const lt = matrixWithFrame_inverse.computeCoord(rect);
+    const rb = matrixWithFrame_inverse.computeCoord(rect.x + rect.width, rect.y + rect.height); // root坐标系
+    const page = props.params.data as PageDom;
+    const innerFrame = page.frame;
+    page.optimizeClientVisibleNodes({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y })
 }
 
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
     old.unwatch(page_watcher);
-    old.data.__collect.unwatch(collect);
     value.watch(page_watcher);
-    value.data.__collect.watch(collect);
     pageViewRegister(true);
     page_watcher();
 
@@ -101,8 +106,11 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
         dom.dom.render();
         dom.ctx.loop(window.requestAnimationFrame);
     }
+
+    updateVisibleRect();
 })
 const stop_watch_matrix = watch(() => props.params.matrix, page_watcher, { deep: true });
+const stop_watch_visibleRect = watch(() => props.params.visibleRect, updateVisibleRect);
 
 function tool_watcher(t?: number) {
     if (t === Tool.TITLE_VISIBLE) {
@@ -114,7 +122,6 @@ function tool_watcher(t?: number) {
 
 onMounted(() => {
     props.params.data.watch(page_watcher);
-    props.params.data.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
@@ -122,11 +129,11 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.params.data.unwatch(page_watcher);
-    props.params.data.data.__collect.unwatch(collect);
     props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
     stop_watch_matrix();
+    stop_watch_visibleRect();
     props.context.selection.unwatch(selection_watcher);
 })
 

@@ -19,7 +19,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    _updateRoot,
+
     adapt_page,
     color2string,
     drop,
@@ -93,6 +93,22 @@ const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
+const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 })
+
+function _updateRoot(context: Context, element: HTMLElement) {
+    const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
+    const root = {
+        init: true, x, y, right, bottom, element,
+        width: right - x,
+        height: bottom - y,
+        center: { x: (right - x) / 2, y: (bottom - y) / 2 }
+    }
+    context.workspace.updateRoot(root);
+    visibleRect.x = 0;
+    visibleRect.y = 0;
+    visibleRect.width = width;
+    visibleRect.height = height;
+}
 
 function page_watcher(...args: any) {
     if (args.includes('backgroundColor')) {
@@ -624,6 +640,9 @@ comps.push(
             get matrix() {
                 return matrix
             },
+            get visibleRect() {
+                return visibleRect;
+            },
             closeLoading
         }
     },
@@ -750,16 +769,16 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
-    <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <!-- 页面调整，确保在ContentView顶层 -->
-    <Space :context="props.context" :visible="spacePressed"/>
-    <!-- Doge -->
-    <!-- <Doge/>-->
-</div>
+    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <!-- 页面调整，确保在ContentView顶层 -->
+        <Space :context="props.context" :visible="spacePressed" />
+        <!-- Doge -->
+        <!-- <Doge/>-->
+    </div>
 </template>
