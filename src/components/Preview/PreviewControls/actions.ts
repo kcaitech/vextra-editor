@@ -42,23 +42,20 @@ export class ProtoAction {
         const select_shape = this.m_context.selection.selectedShapes[0];
         if (!shape) return;
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
-        // 即时
         if (!action.transitionType) return;
         const type = action.transitionType.split('_');
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+            // 即时
             this.m_context.selection.selectShape(shape);
-        } else if (type.includes('MOVE') && type.includes('FROM')) {
+        } else if (type.includes('DISSOLVE') || (type.includes('MOVE') && type.includes('FROM'))) {
+            // 溶解、移入
             this.m_context.preview.setInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
             }, 1000);
-        } else if (type.includes('MOVE') && type.includes('OUT')) {
+        } else if (type.includes('SLIDE') || type.includes('PUSH') || type.includes('OUT')) {
+            // 移出、滑入、滑出、推入
             this.m_context.preview.resetInteractionAction(action);
-            setTimeout(() => {
-                this.m_context.selection.selectShape(shape);
-            }, 1000);
-        } else if (type.includes('SLIDE')) {
-            this.m_context.preview.setInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
             }, 1000);
@@ -70,8 +67,20 @@ export class ProtoAction {
         const action = this.m_context.preview.protoAction;
         if (action) {
             const shape = this.m_shapes.find(item => item.id === action.id);
+            if (!action.action.transitionType) return;
+            const type = action.action.transitionType.split('_');
             if (action.action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
                 this.m_context.selection.selectShape(shape);
+            } else if (type.includes('DISSOLVE')){
+                this.m_context.preview.setInteractionAction(action.action, shape?.id);
+                setTimeout(() => {
+                    this.m_context.selection.selectShape(shape);
+                }, 1000);
+            } else {
+                this.m_context.preview.resetInteractionAction(action.action, shape?.id);
+                setTimeout(() => {
+                    this.m_context.selection.selectShape(shape);
+                }, 1000);
             }
         }
     }
@@ -155,40 +164,6 @@ export class ProtoAction {
         this.m_context.preview.setSwapAction(end_action);
         this.closeDialog();
         this.openDialog(action);
-    }
-    // 动画操作
-    animation() {
-
-    }
-    // 动画即时
-    animationAtOnce() {
-
-    }
-    // 动画淡入淡出
-    animationFadeOutFadeIn() {
-
-    }
-    // 动画滑入
-    animationSlipInto() {
-
-    }
-    // 动画滑出
-    animationSlipOut() {
-
-    }
-
-    // 动画移入
-    animationShiftInto() {
-
-    }
-    // 动画移出
-    animationShiftOut() {
-
-    }
-
-    // 动画推入
-    animationPushIn() {
-
     }
     getMapRefIdLS(key: string): Map<string, string> {
         let jsonString = sessionStorage.getItem(key);

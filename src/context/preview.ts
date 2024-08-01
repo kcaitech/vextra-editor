@@ -136,19 +136,19 @@ export class Preview extends WatchableObject {
         return this.m_atrboard_scroll_offset;
     }
 
-    setInteractionAction(action?: PrototypeActions) {
+    setInteractionAction(action?: PrototypeActions, back_id?: string) {
         if (action) {
             this.m_interaction_action.add(action);
         } else {
             this.m_interaction_action.clear();
         }
-        this.notify(Preview.INTERACTION_CHANGE);
+        this.notify(Preview.INTERACTION_CHANGE, back_id);
     }
 
-    resetInteractionAction(action: PrototypeActions) {
+    resetInteractionAction(action: PrototypeActions, back_id?: string) {
         this.m_interaction_action.clear();
         this.m_interaction_action.add(action);
-        this.notify(Preview.INTERACTION_CHANGE);
+        this.notify(Preview.INTERACTION_CHANGE, back_id);
     }
 
     get interactionAction() {

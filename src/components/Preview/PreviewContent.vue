@@ -146,7 +146,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         updateDialogMatrix();
     } else if (t === Preview.INTERACTION_CHANGE) {
         // 执行交互动作
-        getTargetShapes();
+        s ? backTargetShape(s) : getTargetShapes();
     } else if (t === Preview.FLOW_CHANGE) {
         // 流程切换
         const shape = props.context.selection.selectedShapes[0];
@@ -224,6 +224,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 
 const observer = new ResizeObserver(() => {
     initMatrix();
+    viewUpdater.overlayBox();
     updateDialogMatrix();
 });
 
@@ -514,14 +515,70 @@ const getTargetShapes = () => {
                     if (i === els.length - 1) {
                         viewUpdater.dissolveAnimate(action, els as any, 0);
                         viewUpdater.shiftInAnimate(action, els as any);
-                        viewUpdater.slideInAnimate(action, els as any);
+                        viewUpdater.pushAndslideInAnimate(action, els as any);
                         const ready_m = viewUpdater.readyPosition(m, shape, action.transitionType);
                         el.style['transform'] = ready_m.toString();
                         end_matrix.value = m;
                         setTimeout(() => {
                             el.style['transform'] = m.toString();
                             viewUpdater.pageSvgSlideAnimate(action);
+                            viewUpdater.pageSvgPushAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
+                        })
+                    } else {
+                        el.style['transform'] = m.toString();
+                    }
+                }
+            }
+        }
+    })
+}
+
+const backTargetShape = (s?: string) => {
+    target_shapes.value = [];
+    const page = props.context.selection.selectedPage;
+    const shapes = getFrameList(page!);
+    const actions = props.context.preview.interactionAction;
+    const selectShape = props.context.selection.selectedShapes[0];
+    isSuperposed.value = false;
+    is_swap_shape.value = false;
+    props.context.preview.setSupernatantIsOpen(false);
+    const protoActions = Array.from(actions.values());
+    if (actions.size === 0) return;
+    protoActions.forEach((action, index) => {
+        let shape = shapes.find(item => item.id === action.targetNodeID);
+        if ((protoActions.length - 1) === index) {
+            shape = shapes.find(item => item.id === s);
+        }
+        if (shape) {
+            target_shapes.value.push(shape);
+        }
+    })
+    const box = viewBox(viewUpdater.v_matrix, selectShape);
+    watch_shapes();
+    nextTick(() => {
+        const els = document.querySelectorAll('.dailogCard');
+        for (let i = 0; i < protoActions.length; i++) {
+            const action = protoActions[i];
+            const shape = target_shapes.value[i] as ShapeView;
+            if (shape) {
+                // 移出动画
+                const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
+                const el = els[i] as SVGSVGElement;
+                if (m) {
+                    if (i === els.length - 1) {
+                        viewUpdater.backShiftOutAnimate(action, els as any);
+                        viewUpdater.backSlideInAnimate(action, els as any);
+                        viewUpdater.backSlideOutAnimate(action, els as any);
+                        const ready_m = viewUpdater.backReadyPosition(m, shape, action.transitionType);
+                        el.style['transform'] = ready_m.toString();
+                        end_matrix.value = m;
+                        viewUpdater.backShiftInAnimate(action);
+                        viewUpdater.backDissolveAnimate(action, els as any);
+                        viewUpdater.backPushInAnimate(action, els as any);
+                        setTimeout(() => {
+                            el.style['transform'] = m.toString();
+                            viewUpdater.backPushAnimate(action);
                         })
                     } else {
                         el.style['transform'] = m.toString();
@@ -744,6 +801,6 @@ onUnmounted(() => {
     bottom: 0;
     background-color: black;
     pointer-events: none;
-    z-index: 99;
+    z-index: 20;
 }
 </style>
