@@ -218,7 +218,7 @@ export class ReferLineSelection {
         // 顺手关一下
         this.m_hovered_guide.valid = false;
 
-        const env = selected.env as ArtboradView;
+        const env = selected.env as unknown as ArtboradView;
 
         if (env.id !== envId) {
             return;
@@ -325,7 +325,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = hovered.env as ArtboradView;
+        const env = hovered.env as unknown as ArtboradView;
 
         if (env.id !== envId) {
             return;
@@ -439,7 +439,7 @@ export class ReferLineSelection {
             return;
         }
 
-        const env = selected.env as ArtboradView;
+        const env = selected.env as unknown as ArtboradView;
 
         if (env.id !== envId) {
             return;

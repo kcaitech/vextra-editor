@@ -32,7 +32,7 @@ import {
     useEllipse,
     useFrame,
     useImage,
-    useLine, usePen,
+    useLine, useMask, usePen,
     useRect,
     useText
 } from "@/components/Document/Creator/execute";
@@ -274,7 +274,8 @@ keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyM'] = function (event: KeyboardEvent, context: Context) {
-
+    const isCtrl = event.ctrlKey || event.metaKey;
+    if (isCtrl && event.altKey) return useMask(context);
 }
 
 keydownHandler['KeyN'] = function (event: KeyboardEvent, context: Context) {

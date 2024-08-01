@@ -1,21 +1,16 @@
 <script setup lang="ts">
 import {
     computed,
-    getCurrentInstance,
-    h,
-    nextTick,
-    onBeforeMount,
-    onMounted,
-    onUnmounted,
-    reactive,
-    ref,
+    getCurrentInstance, h, nextTick,
+    onBeforeMount, onMounted, onUnmounted,
+    reactive, ref,
     watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Color, Matrix, Page, PageView, ShapeType, ShapeView, ImageScaleMode } from '@kcdesign/data';
+import { Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -54,7 +49,6 @@ import { getArea, getMenuItems, MenuItemType, MountedAreaType } from "@/componen
 import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
-import Doge from "@/watchdog/HonestDoge.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 
 interface Props {
@@ -231,6 +225,11 @@ function contextMenuMount(e: MouseEvent) {
             contextMenuItems.value.add(MenuItemType.SplitCell);
             contextMenuItems.value.delete(MenuItemType.MergeCell);
         }
+    }
+    if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
+    if (_shapes.length === 1 && _shapes[0].mask) {
+        contextMenuItems.value.delete(MenuItemType.Mask);
+        contextMenuItems.value.add(MenuItemType.UnMask);
     }
 
     contextMenu.value = true; // 数据准备就绪之后打开菜单
