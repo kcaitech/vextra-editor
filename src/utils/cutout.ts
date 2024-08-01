@@ -179,12 +179,6 @@ export const getGroupChildBounds = (shape: ShapeView) => {
         width,
         height
     }
-    // return {
-    //     x: min_p.x,
-    //     y: min_p.y,
-    //     width: max_p.x - min_p.x,
-    //     height: max_p.y - min_p.y
-    // }
 }
 
 const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
