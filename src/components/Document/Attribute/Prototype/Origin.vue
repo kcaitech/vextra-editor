@@ -26,6 +26,7 @@ import { Selection } from '@/context/selection';
 import { ShapeView, PrototypeStartingPoint } from "@kcdesign/data"
 import { computed, onMounted, ref, watch } from 'vue';
 
+
 type Prototypestart = {
     name: string,
     desc: string
@@ -72,8 +73,6 @@ const deleteOrigin = () => {
 
 //设置原型起始节点
 const setOrigin = () => {
-    console.log('1111');
-
     showIpnut.value = false
     emits('setorigin', start.value)
 }

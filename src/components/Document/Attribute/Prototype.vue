@@ -2,26 +2,6 @@
     <div class="container">
         <el-scrollbar height="100%">
             <div v-if="isProtoType.size">
-                <!-- <div v-if="isProtoType.size === 1" class="origin">
-                    <div class="title" @click.stop=createOrigin>
-                        <div class="text" :class="{ active: prototypestart }">流程起点</div>
-                        <div v-if="!prototypestart" class="add">
-                            <svg-icon icon-class="add"></svg-icon>
-                        </div>
-                        <div v-else class="delete" @click.stop=deleteOrigin>
-                            <svg-icon icon-class="delete"></svg-icon>
-                        </div>
-                    </div>
-                    <div v-if="!prototypestart" class="default">设置选中容器为新流程起点</div>
-                    <div v-else class="originname">
-                        <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName
-                            }}</label>
-                        <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName"
-                            @blur="showIpnut = false" @change="setPrototypeStartPoint" autocomplete="off">
-                        <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
-                            v-model="originDescribed" @change="setPrototypeStartPoint"></textarea>
-                    </div>
-                </div> -->
                 <Origin :context=props.context :prototypestart=prototypestart @createorigin=createOrigin
                     @setorigin=setPrototypeStartPoint @deleteorigin=deleteOrigin></Origin>
                 <div class="interaction">
@@ -32,7 +12,6 @@
                         </div>
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
-
                         <div class="actions-item" v-for="action in  prototypeinteraction " :key="action.id">
                             <div class="item">
                                 <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }"
@@ -58,7 +37,7 @@
                                         :source="trigger"
                                         :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
                                         @select="setPrototypeActionEvent($event, action.id)"></Select>
-                                    <input ref="aftertimeout"
+                                    <input v-select ref="aftertimeout"
                                         v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT" type="text"
                                         :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
                                         @change="setPrototypeActionEventTime(action.id)">
@@ -69,50 +48,14 @@
                 item.data.type === action.actions.navigationType)?.data"
                                         @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                 </div>
-                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SWAPSTATE"
-                                    class="component-status">
-                                    <div class="state" v-for="i in variables"
-                                        :key="i.variable.id">
-                                        <span>{{ i.variable.name }}：</span>
-                                        <Select class="select" id="select" :visibility="true"
-                                            :source="genOptions(i.values.map((v, idx) => { return [idx, v]; }))"
-                                            :selected="genOptions(i.values.map((v, idx) => { return [idx, v]; })).find(t => t.data.content === i.current_state)?.data"
-                                            @select="changetarget($event, i.variable.id, action.id)"></Select>
-                                    </div>
-                                </div>
-                                <div v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE && action.actions.navigationType !== PrototypeNavigationType.SWAPSTATE"
-                                    class="target">
-                                    <span>目标</span>
-                                    <div class="targetname"
-                                        @click.stop="test(action.id, action.actions.navigationType)">
-                                        <span :style="{ color: action.actions.targetNodeID ? '#000' : '#c8c8c8' }">{{
-                getTargetNodeName(action.actions.targetNodeID,
-                    action.actions.navigationType)
-                ?? '请选择容器' }}</span>
-                                        <div class="svg-wrap">
-                                            <svg-icon icon-class="down"></svg-icon>
-                                        </div>
-                                    </div>
-
-                                    <div class="search-container" v-if="showtargerlist">
-                                        <div class="header-search">
-                                            <svg-icon icon-class="search"></svg-icon>
-                                            <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
-                                        </div>
-                                        <div class="item-list">
-                                            <div class="item" v-for="shape in DomList" :key="shape.id"
-                                                @click.stop="selectTargetNode(action.id, shape.id)"
-                                                @mouseover="curHoverValueIndex = shape.id"
-                                                @mouseleave="curHoverValueIndex = ''">
-                                                <svg-icon
-                                                    :style="{ visibility: action.actions.targetNodeID === shape.id ? 'visible' : 'hidden' }"
-                                                    :icon-class="curHoverValueIndex === shape.id ? 'white-select' : 'page-select'"></svg-icon>
-                                                <span>{{ shape.name }}</span>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <Status v-if="action.actions.navigationType === PrototypeNavigationType.SWAPSTATE"
+                                    :context="props.context" :targetNodeId="action.actions.targetNodeID"
+                                    @changestatus="changetarget($event, action.id)"></Status>
+                                <Target
+                                    v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE && action.actions.navigationType !== PrototypeNavigationType.SWAPSTATE"
+                                    :context="props.context" :actionid="action.id" :type="action.actions.navigationType"
+                                    :targetid="action.actions.targetNodeID"
+                                    @settargetnode="selectTargetNode($event, action.id)"></Target>
                                 <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
                                     class="retract">
                                     <span>缩进</span>
@@ -139,44 +82,12 @@
                                         :value="action.actions.connectionURL"
                                         @change="setPrototypeActionURL(action.id)">
                                 </div>
-                                <div v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
-                                    class="set-float">
-                                    <span>浮层设置</span>
-                                    <div class="content">
-                                        <div class="position">
-                                            <div v-for="i in  OverlayPositions " :key="i"
-                                                :class="{ 'ptactive': getPosition(action.id, action.actions.targetNodeID!) === i }"
-                                                @click.stop="setOverlayPositionType(action.actions.targetNodeID!, i)">
-                                            </div>
-                                        </div>
-                                        <div class="margin">
-                                            <div v-for=" i  in  4 " :key="i"></div>
-                                        </div>
-                                    </div>
-                                    <div class="checkbox">
-                                        <input ref="overlayclose" type="checkbox" id="closetab" v-model="overlayclose"
-                                            @change="setOverlayBackgroundInteraction(action.actions.targetNodeID!)">
-                                        <label for="closetab">点击浮层外关闭浮层</label>
-                                    </div>
-                                    <div class="checkbox">
-                                        <input ref="overlaycolor" type="checkbox" id="color" v-model="addmask"
-                                            @change="setOverlayBackgroundAppearance(action.actions.targetNodeID!)">
-                                        <label for="color">在浮层后添加遮罩</label>
-                                    </div>
-                                    <div v-if="addmask || getBackgroundType(action.actions.targetNodeID!)"
-                                        class="setting">
-                                        <ColorPicker class="color" :color="(background_color as Color)"
-                                            :context="props.context" :auto_to_right_line="true"
-                                            @change="c => colorChangeFromPicker(c)"></ColorPicker>
-                                        <input v-select type="text" @change.stop="(e: Event) => change_c(e)"
-                                            :value="clr_v" id="clr" ref="clr_ele" @click="clr_click" :spellcheck="false"
-                                            @blur="is_color_select = false">
-                                        <input v-select @change="(e: Event) => change_a(e)" :value="`${alpha_v}%`"
-                                            id="alpha" @blur="is_alpha_select = false" @click="alpha_click"
-                                            ref="alpha_ele">
-                                    </div>
-
-                                </div>
+                                <Overlay
+                                    v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
+                                    :context="props.context" :targetNodeId="action.actions.targetNodeID"
+                                    @appearance="setOverlayBackgroundAppearance($event, action.actions.targetNodeID)"
+                                    @interaction="setOverlayBackgroundInteraction($event, action.actions.targetNodeID)"
+                                    @position="setOverlayPositionType($event, action.actions.targetNodeID)"></Overlay>
                                 <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
                                     <span>动画设置</span>
                                     <div class="wrapper">
@@ -198,14 +109,14 @@
                                             :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
                                             @select="setPrototypeActionTransition($event, action.id)"></Select>
                                     </div>
-                                    <div v-if="action.actions.transitionType?.split('_').findLast(d => ['left', 'right', 'top', 'bottom'].includes(d.toLowerCase()))"
+                                    <div v-if="action.actions.transitionType?.split('_').findLast(d => Array.from(Direction.keys()).includes(d))"
                                         class="direction">
                                         <div class="content">
                                             <div class="icon"
-                                                :class="{ 'select-item': action.actions.transitionType?.split('_')[action.actions.transitionType?.split('_').length - 1].toLowerCase() === i }"
-                                                v-for="  i  of  Object.values(Direction) " :key="i"
-                                                @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i)">
-                                                <svg-icon :style="{ rotate: (`${setrotate.get(i)}` + 'deg') }"
+                                                :class="{ 'select-item': action.actions.transitionType?.split('_').findLast(i => i) === i[0] }"
+                                                v-for="  i  of  Direction " :key="i[0]"
+                                                @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
+                                                <svg-icon :style="{ rotate: (`${i[1]}` + 'deg') }"
                                                     icon-class="right-arrows"></svg-icon>
                                             </div>
                                         </div>
@@ -230,8 +141,8 @@
                 </div>
                 <div class="overflow-roll">
                     <div class="text">溢出滚动</div>
-                    <Select class="select" :source="overflowRoll"
-                        :selected="overflowRoll.find(i => i.id === 0)?.data"></Select>
+                    <Select class="select" :source="overflowRoll" :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
+                        @select=scrollDirection></Select>
                 </div>
             </div>
             <div v-else class="tips">
@@ -246,28 +157,16 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, Shape, Color, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, PageView, PrototypeExtrascrolloffset } from "@kcdesign/data"
-import { debounce, throttle } from 'lodash';
-import { flattenShapes } from '@/utils/cutout';
+import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView } from "@kcdesign/data"
+import { debounce } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { computed, HtmlHTMLAttributes, nextTick, onMounted, onUnmounted, reactive, ref, shallowRef, StyleHTMLAttributes, StyleValue, toRef, watch } from 'vue';
-import {
-    get_var_for_ref,
-    is_able_to_unbind,
-    is_symbolref_disa,
-    RefAttriListItem,
-    reset_all_attr_for_ref,
-    is_part_of_symbol,
-    states_tag_values_sort,
-    StatusValueItem
-} from "@/utils/symbol";
+import { nextTick, onMounted, onUnmounted, ref, StyleValue, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import ColorPicker from "@/components/common/ColorPicker/index.vue";
-import { debounce as d } from "@/utils/timing_util";
-import { Reg_HEX } from "@/utils/color";
-import { message } from "@/utils/message";
-import Origin from "./Prototype/Origin.vue"
+import Origin from "./Prototype/Origin.vue";
+import Overlay, { Type as T } from "./Prototype/Overlay.vue";
+import Status, { Data as D } from "./Prototype/Status.vue";
+import Target from "./Prototype/Target.vue";
 import {
     PrototypeStartingPoint,
     ArtboradView,
@@ -276,109 +175,16 @@ import {
     PrototypeConnectionType,
     PrototypeNavigationType,
     PrototypeEasingType,
-    // PrototypeEasingfunction,
     OverlayPositions,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
-    SymbolView
+    ScrollDirection
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
+import { states_tag_values_sort } from '@/utils/symbol';
 
-const background_color = ref(new Color(1, 239, 239, 239));
-const alpha_v = ref<number>(100);
-const clr_v = ref<string>('EFEFEF');
-const is_color_select = ref(false);
-const alpha_ele = ref<HTMLInputElement>();
-const clr_ele = ref<HTMLInputElement>();
-const is_alpha_select = ref(false);
-const addmask = ref<boolean>(false)
-const curHoverValueIndex = ref<string>('');
-
-function toHex(r: number, g: number, b: number) {
-    const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return hex(r) + hex(g) + hex(b);
-}
-
-
-
-function setColor(clr: string, alpha: number) {
-    const res = clr.match(Reg_HEX);
-    if (!res) return message('danger', t('system.illegal_input'));
-    const r = Number.parseInt(res[1], 16);
-    const g = Number.parseInt(res[2], 16);
-    const b = Number.parseInt(res[3], 16);
-    const nc = new Color(alpha, r, g, b);
-    //修改目标遮罩层颜色
-    background_color.value = nc
-    clr_v.value = toHex(nc.red, nc.green, nc.blue)
-
-}
-
-function change_c(e: Event) {
-    let value = (e.target as HTMLInputElement)?.value;
-    if (value.slice(0, 1) !== '#') value = "#" + value;
-    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
-    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
-    if (Reg_HEX.test(value)) {
-        setColor(value, alpha_v.value / 100);
-    } else {
-        message('danger', t('system.illegal_input'));
-    }
-    // nextTick(() => {
-    //     clr_ele.value?.blur()
-    // })
-}
-
-function change_a(e: Event) {
-    let value = (e.currentTarget as any)['value'];
-    value = Number(value) / 100;
-    if (isNaN(value)) {
-        return;
-    }
-    if (1 >= value && value >= 0) {
-        setColor("#" + clr_v.value, value);
-        alpha_v.value = value * 100;
-    } else if (value > 1) {
-        if (alpha_ele.value) {
-            alpha_ele.value.value = String(100);
-            setColor("#" + clr_v.value, 1);
-        }
-    } else if (value < 0) {
-        if (alpha_ele.value) {
-            alpha_ele.value.value = String(0);
-            setColor("#" + clr_v.value, 0);
-        }
-    }
-    alpha_ele.value?.blur()
-}
-
-function clr_click(e: Event) {
-    const el = e.target as HTMLInputElement;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
-    if (is_color_select.value) return;
-    is_color_select.value = true;
-}
-
-function alpha_click(e: Event) {
-    const el = e.target as HTMLInputElement;
-    if (el.selectionStart !== el.selectionEnd) {
-        return;
-    }
-    if (is_alpha_select.value) return;
-    is_alpha_select.value = true;
-}
-
-
-enum overflowRollType {
-    NotRoll = 'notroll',
-    Horizontal = 'horizontal',
-    Vertical = 'vertical',
-    HorAndVer = 'horandver'
-}
 
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',
@@ -391,13 +197,6 @@ enum Animation {
     SCROLL = 'SCROLL_ANIMATE'
 }
 
-enum Direction {
-    Left = 'left',
-    Right = 'right',
-    TOP = 'top',
-    Bottom = 'bottom'
-}
-
 type Prototypestart = {
     name: string,
     desc: string
@@ -406,71 +205,35 @@ type Prototypestart = {
 const props = defineProps<{ context: Context }>();
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
-const symbol_attribute = ref<boolean>(true);
-const shapes = shallowRef<ShapeView[]>([]);
-const shapeType = ref();
-const reflush_trigger = ref<any[]>([]);
 const reflush = ref<number>(0);
 const reflush_by_selection = ref<number>(0);
-const reflush_by_shapes = ref<number>(0);
-const isPrototype = ref<ShapeView[]>([])
-const originedit = ref<boolean>(false)
-const showIpnut = ref<boolean>(false)
 const showaction = ref<boolean>(false)
 const acitonindex = ref<string>('')
-const selectshape = ref<string>('')
-
 const indentx = ref<HTMLInputElement[]>()
 const indenty = ref<HTMLInputElement[]>()
-
-
-const variables = ref<RefAttriListItem[] | StatusValueItem[]>([]);
 const { t } = useI18n()
-const searchvlue = ref<string>('')
+
 const animationtimevalue = ref<HTMLInputElement[]>()
-const selectitem = ref<string>('right')
 const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
 const prototypeinteraction = ref<PrototypeInterAction[]>()
-
 const aftertimeout = ref<HTMLInputElement[]>()
 const connectionURL = ref<HTMLInputElement[]>()
-const DomList = ref<ShapeView[]>([])
-const direction = ref<string>('')
-const overlayclose = ref<boolean>(false)
+const scroll = ref<string>('')
 
-// const overlayclose = ref<HTMLInputElement[]>()
-const overlaycolor = ref<HTMLInputElement[]>()
+const showtargerlist = ref<boolean>(false)
 
-
-const test3 = ref<InstanceType<typeof PrototypeInterAction> | undefined>(undefined)
-
-
-const setrotate = new Map()
-
-for (let i of Object.values(Direction)) {
-    switch (i) {
-        case 'left':
-            setrotate.set(i, 180)
-            break;
-        case 'right':
-            setrotate.set(i, 0)
-            break;
-        case 'top':
-            setrotate.set(i, 90)
-            break;
-        case 'bottom':
-            setrotate.set(i, -90)
-            break;
-        default:
-            break;
-    }
-}
+const Direction = new Map([
+    ['LEFT', 180],
+    ['RIGHT', 0],
+    ['TOP', 90],
+    ['BOTTOM', -90]
+])
 
 const overflowRoll: SelectSource[] = genOptions([
-    [overflowRollType.NotRoll, '不滚动'],
-    [overflowRollType.Horizontal, '水平'],
-    [overflowRollType.Vertical, '垂直'],
-    [overflowRollType.HorAndVer, '水平并垂直']
+    [ScrollDirection.NONE, '不滚动'],
+    [ScrollDirection.HORIZONTAL, '水平'],
+    [ScrollDirection.VERTICAL, '垂直'],
+    [ScrollDirection.BOTH, '水平并垂直']
 ])
 
 const trigger: SelectSource[] = genOptions([
@@ -579,16 +342,6 @@ const animations = new Map([
     [PrototypeTransitionType.SCROLLANIMATE, '位移']
 ])
 
-
-const showtargerlist = ref<boolean>(false)
-
-function checktargetlist(e: MouseEvent) {
-    const muen = document.querySelector('.search-container')
-    if (!muen) return;
-    if (!muen.contains(e.target as HTMLElement)) {
-        showtargerlist.value = false
-    }
-}
 const qsa = ref<StyleValue | null>()
 const qsb = ref<StyleValue | null>()
 
@@ -662,6 +415,20 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
         mbb.value = {
             transition: Bezier,
             opacity: 1,
+        }
+    }
+    if (animations.get(type as PrototypeTransitionType) === '位移') {
+        mbb.value = {
+            transition: Bezier,
+            opacity: 1,
+            left: 0,
+            top: 0,
+        }
+        qsb.value = {
+            transition: '',
+            zIndex: 2,
+            border: "unset",
+            left: W + 'px',
         }
     }
     if (animations.get(type as PrototypeTransitionType) === '移入') {
@@ -950,26 +717,23 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
 
 }
 
-function onblur() {
-    console.log('失焦');
-    showtargerlist.value = false
-}
-
-watch(showtargerlist, () => {
-    if (showtargerlist.value) {
-        document.addEventListener('click', checktargetlist);
-        nextTick(() => {
-            const muen = document.querySelector('.search-container');
-            (muen as HTMLDivElement).addEventListener('blur', onblur);
-            (muen as HTMLDivElement).focus()
-        })
+const search = (shape: ShapeView, id: string | undefined) => {
+    if (shape.id === id) {
+        return [shape];
+    } else {
+        if (shape.childs && shape.childs.length > 0) {
+            return shape.childs.reduce((acc, child) => {
+                const result = search(child, id) as ShapeView[];
+                return result.length > 0 ? acc.concat(result) : acc;
+            }, [] as ShapeView[]);
+        }
     }
-
-})
+    return [];
+};
 
 const getText = (actions: PrototypeActions) => {
     if (actions.connectionType === PrototypeConnectionType.BACK) {
-        return '返回上一级'
+        return '返回上一页面'
     } else if (actions.connectionType === PrototypeConnectionType.CLOSE) {
         return '关闭浮层'
     } else if (actions.connectionType === PrototypeConnectionType.URL) {
@@ -981,10 +745,14 @@ const getText = (actions: PrototypeActions) => {
     } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
         const page = props.context.selection.selectedPage
         if (!page) return
-        if (!actions.targetNodeID) return
-        const val = search(page, actions.targetNodeID)
-        console.log('----*********************************', val);
-
+        const a = search(page, actions.targetNodeID)
+        const result = states_tag_values_sort(a as SymbolView[], t)
+        const arr = result.reduce((acc, i) => {
+            return acc.concat(i.current_state)
+        }, [] as string[])
+        return arr.toString()
+    } else if (actions.connectionType === PrototypeConnectionType.NONE) {
+        return ''
     } else {
         const page = props.context.selection.selectedPage
         if (!page) return
@@ -993,25 +761,6 @@ const getText = (actions: PrototypeActions) => {
     }
 }
 
-const getcheckstate = (id: string) => {
-    console.log('zouzgelile', overlayclose.value);
-    if (!id) return
-    const page = props.context.selection.selectedPage
-    if (!page) return
-    const shape = page.childs.filter(shape => shape.id === id)
-    if (!shape) return
-    const interaction = shape[0].overlayBackgroundInteraction
-    // if (interaction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
-    //     nextTick(()=>{
-    //         overlayclose.value![0].checked=true
-    //     })
-    // } else {
-    //     nextTick(()=>{
-    //         overlayclose.value![0].checked=false
-    //     })
-    // }
-
-}
 
 const setExtraScrollOffsetX = (id: string, old: number) => {
     const page = props.context.selection.selectedPage!;
@@ -1044,73 +793,26 @@ const setExtraScrollOffsetY = (id: string, old: number) => {
 
 }
 
-//获取目标浮层
-const getPosition = (id: string, targetID: string) => {
-    if (!targetID) return;
-    const shapes = props.context.selection.selectedPage?.childs
-    if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
-    if (!shape) return;
-    const position = (shape as ArtboradView).overlayPositionType
-    const event = (shape as ArtboradView).overlayBackgroundInteraction
-    const Appearance = (shape as ArtboradView).overlayBackgroundAppearance
-    // overlayclose.value = event ? event === 'NONE' ? false : true : false
-    return position ? position : 'CENTER'
-}
-
-//获取浮层背景颜色
-const getBackgroundColor = (id: string, targetID: string) => {
-    if (!targetID) return;
-    const shapes = props.context.selection.selectedPage?.childs
-    if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
-    if (!shape) return;
-    const color = (shape as ArtboradView).overlayBackgroundAppearance?.backgroundColor
-    if (color) return color as Color
-}
-
-const getBackgroundType = (targetID: string) => {
-    if (!targetID) return;
-    const shapes = props.context.selection.selectedPage?.childs
-    if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
-    if (!shape) return;
-    const type = (shape as ArtboradView).overlayBackgroundAppearance?.backgroundType
-
-    addmask.value = type === OverlayBackgroundType.NONE ? false : true;
-    return type === OverlayBackgroundType.NONE ? false : true
-}
-
-const _colorChangeFromPicker = d((c: Color) => {
-    console.log(c);
-
-    // const page = props.context.selection.selectedPage;
-    // if (!page) return;
-    // const editor = props.context.editor4Page(page);
-    // editor.setBackground(c);
-    background_color.value = c;
-    console.log(background_color.value);
-    clr_v.value = toHex(c.red, c.green, c.blue)
-}, 100)
-const colorChangeFromPicker = (c: Color) => {
-    _colorChangeFromPicker(c).catch((e) => {
-    });
-};
 
 //设置浮层后遮罩
-const setOverlayBackgroundAppearance = (targetID: string) => {
+const setOverlayBackgroundAppearance = (data: T, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedPage?.childs
     if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
+    const shape = shapes.find(i => i.id === id)
     if (!shape) return
-    if (addmask.value) {
+    if (data.state) {
         if (!(shape as ArtboradView).overlayBackgroundAppearance) {
             e.setOverlayBackgroundAppearance(shape as ArtboradView)
         } else {
-            const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
-            e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+            if (data.color) {
+                const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, data.color)
+                e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+            } else {
+                const value = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
+                e.setOverlayBackgroundAppearance(shape as ArtboradView, value)
+            }
         }
     } else {
         const value = new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, (shape as ArtboradView).overlayBackgroundAppearance!.backgroundColor)
@@ -1121,14 +823,14 @@ const setOverlayBackgroundAppearance = (targetID: string) => {
 
 
 //设置浮层外点击事件
-const setOverlayBackgroundInteraction = (targetID: string) => {
+const setOverlayBackgroundInteraction = (state: boolean, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedPage?.childs
     if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
+    const shape = shapes.find(i => i.id === id)
     if (!shape) return
-    if (overlayclose.value) {
+    if (!state) {
         e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.NONE)
     } else {
         e.setOverlayBackgroundInteraction(shape as ArtboradView, OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE)
@@ -1139,53 +841,15 @@ const setOverlayBackgroundInteraction = (targetID: string) => {
 }
 
 //设置浮层位置
-const setOverlayPositionType = (targetID: string, value: OverlayPositions) => {
+const setOverlayPositionType = (data: OverlayPositions, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedPage?.childs
     if (!shapes) return;
-    const shape = shapes.find(i => i.id === targetID)
+    const shape = shapes.find(i => i.id === id)
     if (!shape) return
-    e.setOverlayPositionType(shape as ArtboradView, value)
+    e.setOverlayPositionType(shape as ArtboradView, data)
     updateData()
-}
-
-const test = (id: string, nav: PrototypeNavigationType | undefined) => {
-    DomList.value = []
-    if (nav === PrototypeNavigationType.SCROLLTO) {
-        console.log('1');
-        const shapes = props.context.selection.selectedShapes
-        console.log(shapes);
-
-        if (!(shapes[0] instanceof ArtboradView)) return
-        for (let index = 0; index < shapes[0].childs.length; index++) {
-            const s = shapes[0].childs[index];
-            DomList.value.push(s)
-        }
-    } else {
-        const shapes = props.context.selection.selectedPage?.childs
-        const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-        if (!shapes) return;
-        console.log('2');
-        for (let index = 0; index < shapes.length; index++) {
-            const shape = shapes[index];
-            if (types.includes(shape.type)) {
-                const actions = (shape as ArtboradView).prototypeInterAction
-                if (actions?.length) {
-                    for (let index = 0; index < actions.length; index++) {
-                        const e = actions[index];
-                        if (e.id === id) break
-                        DomList.value?.push(shape)
-                    }
-                } else {
-                    DomList.value?.push(shape)
-                }
-            }
-        }
-    }
-    console.log(DomList.value);
-    showtargerlist.value = !showtargerlist.value
-    curHoverValueIndex.value = id
 }
 
 
@@ -1243,6 +907,7 @@ const setPrototypeActionEventTime = (id: string) => {
         const time = Number(aftertimeout.value[0].value.split('ms')[0])
         const T = time < 1 ? 1 : time > 20000 ? 20000 : time
         e.setPrototypeActionEventTime(shape as ShapeView, id, T / 1000)
+        aftertimeout.value[0].blur()
     }
     updateData()
 }
@@ -1279,7 +944,7 @@ const setPrototypeActionURL = (id: string) => {
 }
 
 //设置目标
-const selectTargetNode = (id: string, targetid: string) => {
+const selectTargetNode = (targetid: string, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
@@ -1289,18 +954,6 @@ const selectTargetNode = (id: string, targetid: string) => {
     updateData()
 }
 
-const getTargetNodeName = (target: string | undefined, nav: PrototypeNavigationType | undefined) => {
-    if (!target) return;
-    let shape: ShapeView[];
-    if (nav === PrototypeNavigationType.SCROLLTO) {
-        shape = props.context.selection.selectedShapes[0].childs.filter(i => i.id === target)
-    } else {
-        const shapes = props.context.selection.selectedPage?.childs
-        if (!shapes?.length) return
-        shape = shapes.filter(i => i.id === target)
-    }
-    if (shape?.length !== 0) return shape[0].name
-}
 
 //设置动画类型
 const setPrototypeActionTransition = (data: SelectItem, id: string) => {
@@ -1308,7 +961,6 @@ const setPrototypeActionTransition = (data: SelectItem, id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    console.log(data.value);
     let type = data.value
     if (type === 'MOVE' || type === 'SLIDE' || type === 'PUSH') {
         type = type + '_FROM_LEFT'
@@ -1334,7 +986,6 @@ const setPrototypeActionTransitionDirection = (type: PrototypeTransitionType, id
     const arr = type.split('_')
     arr[arr.length - 1] = i.toUpperCase()
     const newtype = arr.join('_')
-    console.log(newtype);
     e.setPrototypeActionTransitionType(shape as ShapeView, id, newtype as PrototypeTransitionType)
     updateData()
     delstyle()
@@ -1395,6 +1046,15 @@ const setProtoTypeEasingType = (data: SelectItem, id: string) => {
     })
 }
 
+const scrollDirection = (data: SelectItem) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setscrollDirection(shape as ShapeView, data.value as ScrollDirection);
+    updateData()
+}
+
 
 //更新原型数据
 function updateData() {
@@ -1404,10 +1064,9 @@ function updateData() {
         const shape = selecteds[0]
         if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
             prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
+            scroll.value = shape.scrollDirection ? shape.scrollDirection : 'NONE'
         }
-
     }
-
     let items: any[] = []
 
     isProtoType.value.forEach((item) => {
@@ -1451,7 +1110,7 @@ const deleteAction = (id: string) => {
     updateData()
 }
 
-const changetarget = (data: SelectItem, id: string, actionid: string) => {
+const changetarget = (data: D, actionid: string) => {
     const shapes = props.context.selection.selectedShapes
     if (!shapes) return
     const shape = shapes[0]
@@ -1468,11 +1127,11 @@ const changetarget = (data: SelectItem, id: string, actionid: string) => {
     if (!sym) return
 
     const symbols: SymbolShape[] = sym.value!.childs as any as SymbolShape[];
-    const state = data.content === t('compos.dlt') ? SymbolShape.Default_State : data.content
+    const state = data.data.content === t('compos.dlt') ? SymbolShape.Default_State : data.data.content
     const curState = new Map<string, string>();
     sym.value!.variables?.forEach(v => {
         if (v.type === VariableType.Status) {
-            const cur = v.id === id ? state : sym1.value?.symtags?.get(v.id);
+            const cur = v.id === data.id ? state : sym1.value?.symtags?.get(v.id);
             curState.set(v.id, cur ?? v.value);
         }
 
@@ -1487,7 +1146,7 @@ const changetarget = (data: SelectItem, id: string, actionid: string) => {
         curState.forEach((v, k) => {
             const tag = symtags?.get(k) ?? SymbolShape.Default_State;
             if (match) match = v === tag;
-            if (k === id && v === tag) candidateshape.push(s);
+            if (k === data.id && v === tag) candidateshape.push(s);
         });
         if (match) {
             matchshapes.push(s);
@@ -1499,58 +1158,9 @@ const changetarget = (data: SelectItem, id: string, actionid: string) => {
     if (!page) return
     const e = props.context.editor4Page(page);
     e.setPrototypeActionTargetNodeID(shape as ShapeView, actionid, matchsym.id)
-    getState(matchsym.id);
     updateData()
 }
 
-function search(o: ShapeView, id: string) {
-    if (o.id === id) {
-        const result = states_tag_values_sort(new Array(o as SymbolView), t);
-        console.log('==============', result);
-        variables.value = result;
-        if (result) return variables.value;
-    }
-    if (o.childs.length !== 0) {
-        o.childs.filter(i => search(i, id))
-    }
-}
-
-const getState = (id: string | undefined) => {
-    const shapes = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    console.log('11111111111111111111111', id);
-
-    if (!id) {
-        console.log('1111');
-        if (shapes.length === 1) {
-            const shape = shapes[0];
-            variables.value = [];
-            if (shape instanceof SymbolRefView) {
-                const result = get_var_for_ref(shape, t);
-                if (result) {
-                    variables.value = result.variables;
-                    console.log('==============', variables.value);
-                    return result.variables
-                }
-            }
-            if (shape instanceof SymbolView) {
-                const result = states_tag_values_sort(shapes as SymbolView[], t);
-                if (result) {
-                    variables.value = result;
-                    console.log('==============', variables.value);
-                    return result
-                }
-            }
-        }
-    } else {
-        console.log('2222');
-        variables.value = []
-        if (!page) return
-        search(page, id)!
-        return variables.value
-    }
-
-}
 
 const showhandel = (id: string) => {
     if (acitonindex.value !== id) {
@@ -1581,9 +1191,6 @@ function _selection_change() {
     }
     reflush_by_selection.value++;
     reflush.value++;
-
-    console.log(isProtoType.value);
-
     updateData()
 
 }
@@ -1829,7 +1436,8 @@ onUnmounted(() => {
             .item-content {
                 display: flex;
                 align-items: center;
-                justify-content: center;
+                justify-content: flex-start;
+                gap: 4px;
                 width: 172px;
                 height: 32px;
                 font-size: 12px;
@@ -1837,13 +1445,14 @@ onUnmounted(() => {
                 border-radius: 6px;
                 text-align: center;
                 line-height: 32px;
+                padding-left: 9px;
+                box-sizing: border-box;
 
                 .icon-img {
                     width: 18px;
                     height: 18px;
                     border-radius: 50%;
                     background-color: #1878F5;
-                    margin-right: 8px;
                     overflow: hidden;
                     display: flex;
 
@@ -1983,6 +1592,13 @@ onUnmounted(() => {
                         &::-webkit-scrollbar {
                             width: 0;
                             height: 0;
+                        }
+
+                        .no-data {
+                            height: var(--default-input-height);
+                            color: var(--theme-color);
+                            line-height: var(--default-input-height);
+                            padding-left: 8px;
                         }
 
                         .item {
