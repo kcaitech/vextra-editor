@@ -2,8 +2,9 @@
     <div class="container">
         <el-scrollbar height="100%">
             <div v-if="isProtoType.size">
-                <Origin :context=props.context :prototypestart=prototypestart @createorigin=createOrigin
-                    @setorigin=setPrototypeStartPoint @deleteorigin=deleteOrigin></Origin>
+                <Origin v-if="isProtoType.get('shape').isContainer" :context=props.context
+                    :prototypestart=prototypestart @createorigin=createOrigin @setorigin=setPrototypeStartPoint
+                    @deleteorigin=deleteOrigin></Origin>
                 <div class="interaction">
                     <div class="title" @click.stop="createAction">
                         <div class="text" :class="{ active: prototypeinteraction?.length }">交互</div>
@@ -44,7 +45,8 @@
                                 </div>
                                 <div class="action">
                                     <span>动作</span>
-                                    <Select class="select" id="select" :visibility="true" :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
+                                    <Select class="select" id="select" :visibility="true" :status="hasStatus"
+                                        :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
                 item.data.type === action.actions.navigationType)?.data"
                                         @select="setPrototypeActionConnNav($event, action.id)"></Select>
                                 </div>
@@ -139,9 +141,10 @@
                     </div>
                     <div v-else class="default">设置窗口或其中控件的交互行为</div>
                 </div>
-                <div class="overflow-roll">
+                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
                     <div class="text">溢出滚动</div>
-                    <Select class="select" :source="overflowRoll" :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
+                    <Select class="select" :source="overflowRoll"
+                        :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
             </div>
@@ -158,7 +161,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView } from "@kcdesign/data"
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
 import { nextTick, onMounted, onUnmounted, ref, StyleValue, watch } from 'vue';
@@ -183,7 +186,8 @@ import {
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { states_tag_values_sort } from '@/utils/symbol';
+import { get_var_for_ref, states_tag_values_sort } from '@/utils/symbol';
+import { flattenShapes } from '@/utils/cutout';
 
 
 enum Animation {
@@ -203,23 +207,22 @@ type Prototypestart = {
 }
 
 const props = defineProps<{ context: Context }>();
-const baseAttr = ref(true);
-const editAttr = ref<boolean>(false);
 const reflush = ref<number>(0);
-const reflush_by_selection = ref<number>(0);
 const showaction = ref<boolean>(false)
 const acitonindex = ref<string>('')
 const indentx = ref<HTMLInputElement[]>()
 const indenty = ref<HTMLInputElement[]>()
 const { t } = useI18n()
-
+const reflush_trigger = ref<any[]>([]);
+const reflush_by_shapes = ref<number>(0);
+const constraintShow = ref<boolean>(true);
 const animationtimevalue = ref<HTMLInputElement[]>()
 const prototypestart = ref<Prototypestart | undefined>({ name: "", desc: "" })
 const prototypeinteraction = ref<PrototypeInterAction[]>()
 const aftertimeout = ref<HTMLInputElement[]>()
 const connectionURL = ref<HTMLInputElement[]>()
 const scroll = ref<string>('')
-
+const hasStatus = ref<boolean>(false)
 const showtargerlist = ref<boolean>(false)
 
 const Direction = new Map([
@@ -1056,34 +1059,6 @@ const scrollDirection = (data: SelectItem) => {
 }
 
 
-//更新原型数据
-function updateData() {
-    const selecteds = props.context.selection.selectedShapes;
-    if (!isProtoType.value.size) return;
-    if (isProtoType.value.size === 1) {
-        const shape = selecteds[0]
-        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            prototypestart.value = (shape as ArtboradView).prototypeStartPoint;
-            scroll.value = shape.scrollDirection ? shape.scrollDirection : 'NONE'
-        }
-    }
-    let items: any[] = []
-
-    isProtoType.value.forEach((item) => {
-        const interaction = (item as ArtboradView).prototypeInterAction
-        if (interaction) items = items.concat(...interaction)
-    })
-
-    // for (let index = 0; index < isProtoType.value.size; index++) {
-    //     const shape = isProtoType.value
-    //     const i = (shape as ArtboradView).prototypeInterAction;
-    //     if (i) items = items.concat(...i)
-    // }
-    prototypeinteraction.value = [...new Set(items)].reverse()
-    showtargerlist.value = false
-}
-
-
 //创建原型动画
 const createAction = () => {
     showaction.value = true
@@ -1174,85 +1149,88 @@ const showhandel = (id: string) => {
     }
 }
 
-const isProtoType = ref(new Set())
+const isProtoType = ref(new Map())
+//更新原型数据
+function updateData() {
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length !== 1) return
+    const shape = shapes[0]
+    const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
+    let isContainer = false
+    if (types.includes(shape.type)) {
+        isContainer = true
+        isProtoType.value.set('shape', { shape, isContainer })
+    } else if ((shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
+        isProtoType.value.set('shape', { shape, isContainer })
+    } else {
+        isProtoType.value.clear()
+    }
+
+    if (isProtoType.value.size) {
+        isProtoType.value.forEach((v, k) => {
+            if (k) prototypestart.value = v.shape.prototypeStartPoint;
+            prototypeinteraction.value = v.shape.prototypeInterAction;
+            scroll.value = v.shape.scrollDirection ? v.shape.scrollDirection : 'NONE';
+        })
+    }
+
+    showtargerlist.value = false
+}
+
+
 
 // 图层选区变化
 function _selection_change() {
-    baseAttr.value = true;
-    editAttr.value = false;
-    const shapes = props.context.selection.selectedShapes;
-    isProtoType.value.clear()
-
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-        if (shape.type === ShapeType.Artboard || shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolRef) {
-            isProtoType.value.add(shape)
-        }
-    }
-    reflush_by_selection.value++;
-    reflush.value++;
     updateData()
-
 }
 
 const selection_change = debounce(_selection_change, 160, { leading: true });
 
-function workspace_watcher(t: number) {
-    if (t === WorkSpace.PATH_EDIT_MODE) {
-        const _is_pdm = props.context.workspace.is_path_edit_mode;
-        baseAttr.value = !_is_pdm;
-        editAttr.value = _is_pdm;
-    }
+
+const watchedShapes = new Map<string, ShapeView>(); // 图层监听
+
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(update_by_shapes);
+        watchedShapes.delete(k);
+    })
+
+    const selectedShapes = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selectedShapes);
+    shapes.forEach((v) => {
+        v.watch(update_by_shapes);
+        watchedShapes.set(v.id, v)
+    });
 }
 
-// const watchedShapes = new Map<string, ShapeView>(); // 图层监听
-// function watch_shapes() {
-
-//     watchedShapes.forEach((v, k) => {
-//         v.unwatch(update_by_shapes);
-//         watchedShapes.delete(k);
-//     })
-
-//     const selectedShapes = props.context.selection.selectedShapes;
-//     const shapes = flattenShapes(selectedShapes);
-//     shapes.forEach((v) => {
-//         v.watch(update_by_shapes);
-//         watchedShapes.set(v.id, v)
-//     });
-// }
-
-// // 选区图层变化
-// function update_by_shapes(...args: any[]) {
-//     // isCheckPrototype()
-//     reflush_trigger.value = [...(args?.length ? args : [])];
-//     reflush_by_shapes.value++;
-//     reflush.value++;
-// }
 
 function selection_watcher(t: number | string) {
     if (t !== Selection.CHANGE_SHAPE && t !== Selection.CHANGE_PAGE) {
         return;
     }
     selection_change();
-    // watch_shapes();
+    watch_shapes();
 }
 
-
+// 选区图层变化
+function update_by_shapes(...args: any[]) {
+    updateData()
+    reflush_trigger.value = [...(args?.length ? args : [])];
+    reflush_by_shapes.value++;
+    reflush.value++;
+}
 
 onMounted(() => {
-    props.context.workspace.watch(workspace_watcher);
     props.context.selection.watch(selection_watcher);
-    // watch_shapes()
-    // update_by_shapes()
     selection_change();
+    watch_shapes();
 })
 
 onUnmounted(() => {
-    props.context.workspace.unwatch(workspace_watcher);
     props.context.selection.unwatch(selection_watcher);
-    // watchedShapes.forEach(v => {
-    //     v.unwatch(update_by_shapes);
-    // });
+    watchedShapes.forEach(v => {
+        v.unwatch(update_by_shapes);
+    });
 })
 
 </script>
@@ -1298,6 +1276,7 @@ onUnmounted(() => {
         padding: 12px 8px;
 
         span {
+            line-height: 30px;
             color: #c8c8c8;
             font-size: 12px;
         }
@@ -1308,14 +1287,15 @@ onUnmounted(() => {
     .interaction {
         display: flex;
         flex-direction: column;
-        padding: 14px 12px;
+        padding: 12px 8px;
         border-bottom: 1px solid #F0F0F0;
         box-sizing: border-box;
         gap: 8px;
 
         .title {
             @extend .flex;
-            line-height: 30px;
+            align-items: center;
+            height: 30px;
 
             .text {
                 font-size: 12px;
