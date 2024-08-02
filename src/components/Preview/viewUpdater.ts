@@ -7,8 +7,17 @@ import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
 import { nextTick } from "vue";
+import { toStyle } from "@/utils/message";
+import { opacity } from "@/assets/lang/zh";
 
 type PCard = InstanceType<typeof PageCard>;
+
+type Box = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number
+}
 
 /**
  * @description 播放视图渲染管理器
@@ -103,6 +112,7 @@ export class ViewUpdater {
         svgEl.style['transition'] = ''
         svgEl.style['transform'] = m.toString();
         svgEl.style.zIndex = '0';
+        svgEl.style.opacity = '1';
         this.m_context.preview.setScale(this.getScale(m));
         this.overlayBox();
         this.matrix.reset(m);
@@ -740,21 +750,68 @@ export class ViewUpdater {
         }
         return m;
     }
+    backReadyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
+        const m = new Matrix(matrix.clone());
+        if (!type) return m;
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const cur_box = viewBox(matrix, shape);
+        const animate_type = type.split('_');
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('SLIDE') && animate_type.includes('FROM')) {
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                const trans = (box.left - cur_box.left) + w;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = (box.right - cur_box.right) - w;
+                console.log(trans, 'trans');
+
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = (cur_box.bottom - box.bottom) - h;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = (box.top - cur_box.top) + h;
+                m.trans(0, trans);
+            }
+        } else if (animate_type.includes('OUT') || animate_type.includes('PUSH')) {
+            if (direction === 'RIGHT') {
+                const trans = cur_box.right - box.left;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = box.right - cur_box.left;
+                m.trans(-trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = box.bottom - cur_box.top;
+                m.trans(0, -trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = cur_box.bottom - box.top;
+                m.trans(0, trans);
+            }
+        }
+        return m;
+    }
     getCurLayerShape(context: Context, id?: string) {
         const page = context.selection.selectedPage;
         const shapes = getFrameList(page!);
         return shapes.find(item => item.id === id);
     }
     // 容器内滚动
-    scrollAnimate(el: SVGSVGElement) {
-        el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+    scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
     }
 
     // 淡入淡出动画
     dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        els[els.length - 1].style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         els[els.length - 1].style.opacity = `${value}`;
-        els[els.length - 1].style['transition'] = `opacity 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
     }
 
     // 移入动画
@@ -764,27 +821,36 @@ export class ViewUpdater {
             action.transitionType === PrototypeTransitionType.MOVEFROMRIGHT ||
             action.transitionType === PrototypeTransitionType.MOVEFROMTOP ||
             action.transitionType === PrototypeTransitionType.MOVEFROMBOTTOM) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
+
+    // pageSvg移出动作
     slideAndshiftOutAnimate(action: PrototypeActions) {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('OUT')) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             pageSvg.style.zIndex = '9';
             this.outAction(action);
         }
     }
-    // 滑入动画
-    slideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+    // 滑入 推入动画
+    pushAndslideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
-        if (animateType && animateType.includes('SLIDE')) {
-            els[els.length - 1].style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`;
+        if (animateType && (animateType.includes('SLIDE') || animateType.includes('PUSH'))) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         }
     }
+    // 滑入动画
     pageSvgSlideAnimate(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
         const box = viewBox(this.v_matrix, select_shape);
@@ -795,7 +861,9 @@ export class ViewUpdater {
             action.transitionType === PrototypeTransitionType.SLIDEFROMTOP) {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
-            pageSvg.style['transition'] = `transform 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const animate_type = action.transitionType.split('_');
             const direction = animate_type.at(-1);
             const w = (box.right - box.left) * 0.3;
@@ -809,10 +877,39 @@ export class ViewUpdater {
             } else if (direction === 'BOTTOM') {
                 m.trans(0, h);
             }
+            pageSvg.style['transform'] = m.toString();
+        }
+    }
+    // pageSvg推出动画
+    pageSvgPushAnimate(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const m = new Matrix(this.v_matrix.clone());
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            const direction = animateType.at(-1);
+            const w = (box.right - box.left);
+            const h = (box.bottom - box.top);
+            if (direction === 'RIGHT') {
+                m.trans(w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(-w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
+            }
             const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
             svgEl.style['transform'] = m.toString();
         }
     }
+
+    // 移除动画效果
     removeAnimate(el: SVGSVGElement, isTrans?: boolean) {
         if (el) {
             el.addEventListener('transitionend', function () {
@@ -823,6 +920,8 @@ export class ViewUpdater {
             el.style['transition'] = '';
         }
     }
+
+    // 移出动作
     outAction(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
         const box = viewBox(this.v_matrix, select_shape);
@@ -847,6 +946,188 @@ export class ViewUpdater {
         }
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
         svgEl.style['transform'] = m.toString();
+    }
+
+    backSlideInAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        const animateType = action.transitionType?.split('_');
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (animateType && animateType.includes('SLIDE') && animateType.includes('FROM')) {
+            const box = viewBox(this.v_matrix, select_shape);
+            const m = new Matrix(this.v_matrix.clone());
+            const direction = animateType.at(-1);
+            const w = box.right - box.left;
+            const h = box.bottom - box.top;
+            if (direction === 'RIGHT') {
+                m.trans(-w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
+            }
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            svgEl.style.zIndex = '9';
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+    backSlideOutAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('OUT') && animateType.includes('SLIDE')) {
+            const select_shape = this.m_context.selection.selectedShapes[0];
+            const box = viewBox(this.v_matrix, select_shape);
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            const m = new Matrix(this.v_matrix.clone());
+            const direction = animateType.at(-1);
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                m.trans(-w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
+            }
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+    backDissolveAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        if (action.transitionType !== PrototypeTransitionType.DISSOLVE) return;
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        svgEl.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+        svgEl.style.zIndex = '9';
+        svgEl.style.opacity = '0';
+        if (els.length > 1) {
+            for (let i = 0; i < els.length - 1; i++) {
+                const el = els[i];
+                el.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+                el.style.zIndex = '9';
+                el.style.opacity = `0`;
+            }
+        }
+    }
+    backOutAction(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const box = viewBox(this.v_matrix, select_shape);
+        const animate_type = action.transitionType?.split('_');
+        if (!animate_type) return;
+        const m = new Matrix(this.v_matrix.clone());
+        const direction = animate_type.at(-1);
+        const w = box.right - box.left;
+        const h = box.bottom - box.top;
+        if (direction === 'RIGHT') {
+            m.trans(-w, 0);
+        } else if (direction === 'LEFT') {
+            m.trans(w, 0);
+        } else if (direction === 'TOP') {
+            m.trans(0, h);
+        } else if (direction === 'BOTTOM') {
+            m.trans(0, -h);
+        }
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        svgEl.style['transform'] = m.toString();
+    }
+
+    backShiftInAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && (animateType.includes('MOVE') && animateType.includes('FROM'))) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            pageSvg.style.zIndex = '9';
+            this.backOutAction(action);
+        }
+    }
+
+    backShiftOutAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('MOVE') && animateType.includes('OUT')) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        }
+    }
+    backPushInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        }
+    }
+    backPushAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration || 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            this.backOutAction(action);
+        }
+    }
+
+    getHotZone(matrix: Matrix, shape: ShapeView) {
+        const view = this.m_container;
+        const boxs: Set<Box> = new Set();
+        if (!view) return;
+        this.hotZoneBox(matrix, shape, boxs);
+        const hotBoxs = Array.from(boxs);
+        for (let i = 0; i < hotBoxs.length; i++) {
+            const box = hotBoxs[i];
+            const style = toStyle({
+                position: 'absolute',
+                top: box.top + 'px',
+                left: box.left + 'px',
+                width: box.right - box.left + 'px',
+                height: box.bottom - box.top + 'px',
+                'background-color': 'rgba(255, 0, 0, 0.3)',
+                'z-index': '999',
+                opacity: '1',
+                transition: 'opacity 0.3s cubic-bezier(0, 0, 1, 1) 0s'
+            });
+            const el = document.createElement('div');
+            el.setAttribute('style', style);
+            view.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 0);
+            setTimeout(() => {
+                view.removeChild(el);
+            }, 300);
+        }
+    }
+    hotZoneBox(matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
+        if (shape.prototypeInterAction && shape.prototypeInterAction.length) {
+            const box = viewBox(matrix, shape);
+            boxs.add(box);
+        } else {
+            const children = shape.childs;
+            if (children.length) {
+                for (let i = 0; i < children.length; i++) {
+                    const c = children[i];
+                    this.hotZoneBox(matrix, c, boxs);
+                }
+            }
+        }
     }
 }
 class DirtyCleaner {

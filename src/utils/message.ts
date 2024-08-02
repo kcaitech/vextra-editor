@@ -1,4 +1,4 @@
-const toStyle = (obj: any) => {
+export const toStyle = (obj: any) => {
     const keys = Object.keys(obj);
     return keys.reduce((pre, cur) => {
         return pre += `${cur}:${obj[cur]};`

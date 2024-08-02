@@ -108,7 +108,7 @@ onUnmounted(() => {
         right: -16px;
         top: 40px;
         transform: translateY(-50%);
-        z-index: 9;
+        z-index: 99;
         cursor: pointer;
         display: flex;
         align-items: center;

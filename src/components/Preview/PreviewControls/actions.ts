@@ -1,8 +1,11 @@
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
+import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
-import { getFrameList, getPreviewMatrix } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
+import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -42,26 +45,24 @@ export class ProtoAction {
         const select_shape = this.m_context.selection.selectedShapes[0];
         if (!shape) return;
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
-        // 即时
         if (!action.transitionType) return;
         const type = action.transitionType.split('_');
+        const time = action.transitionDuration || 0.3;
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+            // 即时
             this.m_context.selection.selectShape(shape);
-        } else if (type.includes('MOVE') && type.includes('FROM')) {
+        } else if (type.includes('DISSOLVE') || (type.includes('MOVE') && type.includes('FROM'))) {
+            // 溶解、移入
             this.m_context.preview.setInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
-            }, 1000);
-        } else if (type.includes('MOVE') && type.includes('OUT')) {
+            }, time * 1000);
+        } else if (type.includes('SLIDE') || type.includes('PUSH') || type.includes('OUT')) {
+            // 移出、滑入、滑出、推入
             this.m_context.preview.resetInteractionAction(action);
             setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
-            }, 1000);
-        } else if (type.includes('SLIDE')) {
-            this.m_context.preview.setInteractionAction(action);
-            setTimeout(() => {
-                this.m_context.selection.selectShape(shape);
-            }, 1000);
+            }, time * 1000);
         }
     }
 
@@ -70,8 +71,21 @@ export class ProtoAction {
         const action = this.m_context.preview.protoAction;
         if (action) {
             const shape = this.m_shapes.find(item => item.id === action.id);
+            if (!action.action.transitionType) return;
+            const type = action.action.transitionType.split('_');
+            const time = action.action.transitionDuration || 0.3;
             if (action.action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
                 this.m_context.selection.selectShape(shape);
+            } else if (type.includes('DISSOLVE')) {
+                this.m_context.preview.setInteractionAction(action.action, shape?.id);
+                setTimeout(() => {
+                    this.m_context.selection.selectShape(shape);
+                }, time * 1000);
+            } else {
+                this.m_context.preview.resetInteractionAction(action.action, shape?.id);
+                setTimeout(() => {
+                    this.m_context.selection.selectShape(shape);
+                }, time * 1000);
             }
         }
     }
@@ -92,19 +106,9 @@ export class ProtoAction {
         const scrol_shape = artboard_shape.childs.find(item => item.id === action.targetNodeID);
         // const scrol_shape = artboard_shape.childs[0];
         if (scrol_shape) {
-            const m = getPreviewMatrix(scrol_shape);
-            m.multiAtLeft(matrix);
-            const frame = scrol_shape.frame;
-            const points = [
-                m.computeCoord2(0, 0),
-                m.computeCoord2(frame.width, 0),
-                m.computeCoord2(frame.width, frame.height),
-                m.computeCoord2(0, frame.height)
-            ];
-            const box = XYsBounding(points);
+            const box = viewBox(matrix, scrol_shape);
             const offsetx = box.left - (action.extraScrollOffset?.x || 0);
             const offsety = box.top - (action.extraScrollOffset?.y || 0);
-
             this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
         }
     }
@@ -127,14 +131,20 @@ export class ProtoAction {
     // 组件状态替换
     symbolStateSwitch(action: PrototypeActions) {
         const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
-        const sym1 = down_shape.symData;
-        const sym = sym1?.parent;
-        if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
-        const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
-        const maprefIdArray = this.getMapRefIdLS('refId');
-        maprefIdArray.set(down_shape.id, symbols[1]?.id)
-        this.saveMapRefIdLS(maprefIdArray, 'refId');
-        this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+        if (!action.targetNodeID) return;
+        const time = action.transitionDuration || 0.3;
+        const maprefIdArray = this.getMapRefIdLS('symrefSwitchId');
+        maprefIdArray.set(down_shape.id, action.targetNodeID);
+        this.saveMapRefIdLS(maprefIdArray, 'symrefSwitchId');
+        if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+            this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+        } else {
+            this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action);
+            setTimeout(() => {
+                this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+                this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
+            }, time * 1000);
+        }
     }
     // 打开浮层
     openDialog(action: PrototypeActions) {
@@ -155,40 +165,6 @@ export class ProtoAction {
         this.m_context.preview.setSwapAction(end_action);
         this.closeDialog();
         this.openDialog(action);
-    }
-    // 动画操作
-    animation() {
-
-    }
-    // 动画即时
-    animationAtOnce() {
-
-    }
-    // 动画淡入淡出
-    animationFadeOutFadeIn() {
-
-    }
-    // 动画滑入
-    animationSlipInto() {
-
-    }
-    // 动画滑出
-    animationSlipOut() {
-
-    }
-
-    // 动画移入
-    animationShiftInto() {
-
-    }
-    // 动画移出
-    animationShiftOut() {
-
-    }
-
-    // 动画推入
-    animationPushIn() {
-
     }
     getMapRefIdLS(key: string): Map<string, string> {
         let jsonString = sessionStorage.getItem(key);

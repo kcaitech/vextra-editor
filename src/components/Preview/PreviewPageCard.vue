@@ -101,7 +101,7 @@ watch(() => props.shapes, () => {
 })
 
 const preview_watch = (t: number) => {
-    if(t === Preview.SWAP_REF_STAT) {
+    if (t === Preview.SWAP_REF_STAT) {
         assemble();
     }
 }
@@ -123,7 +123,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-<svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
+    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
 </template>
 
 <style scoped lang="scss">

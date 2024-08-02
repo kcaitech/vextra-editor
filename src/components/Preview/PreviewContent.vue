@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { finderShape, getFrameList, selectShapes, viewBox } from '@/utils/preview';
+import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -12,6 +12,9 @@ import ControlsView from './PreviewControls/ControlsView.vue';
 
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { DomCtx } from '../Document/Content/vdom/domctx';
+import { initComsMap } from '../Document/Content/vdom/comsmap';
+import { SymbolDom } from '../Document/Content/vdom/symbol';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -30,6 +33,7 @@ const target_shapes = ref<ShapeView[]>([]);
 const isSuperposed = ref(false);
 const end_matrix = ref(new Matrix());
 const is_swap_shape = ref(false);
+const symrefAnimate = ref<SVGSVGElement>();
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
@@ -97,6 +101,16 @@ const togglePage = (p: number) => {
     props.context.preview.setFromShapeAction(undefined);
 }
 
+const getEndElement = () => {
+    let el: SVGSVGElement | undefined;
+    if (target_shapes.value.length > 0) {
+        const els = document.querySelectorAll('.dailogCard');
+        el = els[els.length - 1] as SVGSVGElement;
+    } else {
+        el = pageCard.value!.pageSvg as SVGSVGElement
+    }
+    return el;
+}
 const previewWatcher = (t: number | string, s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
@@ -129,15 +143,9 @@ const previewWatcher = (t: number | string, s?: any) => {
         }
     } else if (t === Preview.ARTBOARD_SCROLL) {
         // 容器内滚动
-        let el: SVGSVGElement | undefined;
-        if (target_shapes.value.length > 0) {
-            const els = document.querySelectorAll('.dailogCard');
-            el = els[els.length - 1] as SVGSVGElement;
-        } else {
-            el = pageCard.value!.pageSvg as SVGSVGElement
-        }
+        const el = getEndElement();
         // 滚动动画
-        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
+        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el, s as PrototypeActions);
         const isTrans = viewUpdater.artboardInTrans();
         // 移除动画
         viewUpdater.removeAnimate(el, isTrans);
@@ -146,7 +154,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         updateDialogMatrix();
     } else if (t === Preview.INTERACTION_CHANGE) {
         // 执行交互动作
-        getTargetShapes();
+        s ? backTargetShape(s) : getTargetShapes();
     } else if (t === Preview.FLOW_CHANGE) {
         // 流程切换
         const shape = props.context.selection.selectedShapes[0];
@@ -159,14 +167,56 @@ const previewWatcher = (t: number | string, s?: any) => {
     } else if (t === Preview.SUPERNATANT_CLOSR) {
         // 关闭浮层动作
         const els = document.querySelectorAll('.dailogCard');
-        viewUpdater.dissolveAnimate(s, els as any, 0);
+        const action = s as PrototypeActions;
+        viewUpdater.dissolveAnimate(action, els as any, 0);
         const end_shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
-        const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, (s as PrototypeActions).transitionType);
+        const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
+        const time = action.transitionDuration || 0.3;
         setTimeout(() => {
             getTargetShapes();
-        }, 1000)
+        }, time * 1000);
+    } else if (t === Preview.SYMBOL_REF_SWITCH) {
+        const m = new Matrix();
+        if (!s && symrefAnimate.value) {
+            symrefAnimate.value.style['transition'] = '';
+            symrefAnimate.value.style['transform'] = m.toString();
+            symrefAnimate.value.style.opacity = '0';
+            return;
+        }
+        const action = s as PrototypeActions;
+        const hover_shape = props.context.selection.hoveredShape;
+        if (!action.targetNodeID || !hover_shape || !symrefAnimate.value) return;
+        const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+        const box = viewBox(matrix, hover_shape);
+        m.scale(viewUpdater.v_matrix.m00);
+        const domCtx = new DomCtx();
+        initComsMap(domCtx.comsMap);
+        const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
+        if (!sym) return;
+        const cur_frame = sym.frame;
+        const _m = sym.matrix2Parent();
+        _m.multiAtLeft(m.clone());
+        const points = [
+            _m.computeCoord2(0, 0),
+            _m.computeCoord2(cur_frame.width, 0),
+            _m.computeCoord2(cur_frame.width, cur_frame.height),
+            _m.computeCoord2(0, cur_frame.height)
+        ];
+        const sym_box = XYsBounding(points);
+        m.trans(box.left - sym_box.left, box.top - sym_box.top);
+        const view = new SymbolDom(domCtx, { data: sym });
+        view.layout();
+        view.render();
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        symrefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        symrefAnimate.value.style['transform'] = m.toString();
+        if (view.el) {
+            symrefAnimate.value.appendChild(view.el);
+            symrefAnimate.value.style.opacity = '1';
+        }
     }
 }
 
@@ -224,6 +274,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 
 const observer = new ResizeObserver(() => {
     initMatrix();
+    viewUpdater.overlayBox();
     updateDialogMatrix();
 });
 
@@ -276,11 +327,13 @@ function onMouseMove(e: MouseEvent) {
     } else if (e.buttons == 1) {
         const h_shape = props.context.selection.hoveredShape;
         if (h_shape && h_shape.prototypeInterAction?.length) return;
-        pageViewDragging(e); // 拖拽页面
+        const shape = props.context.selection.selectedShapes[0];
+        if (!shape.scrollDirection || shape.scrollDirection === ScrollDirection.NONE) return;
+        pageViewDragging(e, shape.scrollDirection); // 拖拽页面
     }
 }
 
-const pageViewDragging = (e: MouseEvent) => {
+const pageViewDragging = (e: MouseEvent, scroll_dir?: ScrollDirection) => {
     if (!preview.value) return;
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
@@ -308,6 +361,11 @@ const pageViewDragging = (e: MouseEvent) => {
         if ((root.height - bottom) > dy) dy = root.height - bottom;
     }
     if (bottom <= root.height && dy < 0) dy = 0;
+
+    if (scroll_dir) {
+        if (scroll_dir === ScrollDirection.VERTICAL) dx = 0;
+        if (scroll_dir === ScrollDirection.HORIZONTAL) dy = 0;
+    }
     const matrix = viewUpdater.v_matrix;
 
     if (isDragging) {
@@ -336,6 +394,18 @@ const getCurLayerShape = (id?: string) => {
 function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) {
         return;
+    }
+    if (e.button === 0 && !isDragging) {
+        const dx = e.clientX - downXY.x;
+        const dy = e.clientY - downXY.y;
+        const diff = Math.hypot(dx, dy);
+        const isHot = localStorage.getItem('proto_hot_zone') ?? 'true';
+        if (diff < 4 && isHot === 'true') {
+            const select_shape = props.context.selection.selectedShapes[0];
+            const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+            const shape = isSuperposed.value ? target_shapes.value.at(-1) : select_shape;
+            viewUpdater.getHotZone(matrix, shape as ShapeView);
+        }
     }
     if (spacePressed.value) {
         isDragging = false;
@@ -396,7 +466,6 @@ function onKeyUp(e: KeyboardEvent) {
         preview.value.style.cursor = 'default'
     }
 }
-
 
 const onMouseMove_CV = (e: MouseEvent) => {
     if (e.buttons === 0 && !spacePressed.value) {
@@ -514,14 +583,70 @@ const getTargetShapes = () => {
                     if (i === els.length - 1) {
                         viewUpdater.dissolveAnimate(action, els as any, 0);
                         viewUpdater.shiftInAnimate(action, els as any);
-                        viewUpdater.slideInAnimate(action, els as any);
+                        viewUpdater.pushAndslideInAnimate(action, els as any);
                         const ready_m = viewUpdater.readyPosition(m, shape, action.transitionType);
                         el.style['transform'] = ready_m.toString();
                         end_matrix.value = m;
                         setTimeout(() => {
                             el.style['transform'] = m.toString();
                             viewUpdater.pageSvgSlideAnimate(action);
+                            viewUpdater.pageSvgPushAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
+                        })
+                    } else {
+                        el.style['transform'] = m.toString();
+                    }
+                }
+            }
+        }
+    })
+}
+
+const backTargetShape = (s?: string) => {
+    target_shapes.value = [];
+    const page = props.context.selection.selectedPage;
+    const shapes = getFrameList(page!);
+    const actions = props.context.preview.interactionAction;
+    const selectShape = props.context.selection.selectedShapes[0];
+    isSuperposed.value = false;
+    is_swap_shape.value = false;
+    props.context.preview.setSupernatantIsOpen(false);
+    const protoActions = Array.from(actions.values());
+    if (actions.size === 0) return;
+    protoActions.forEach((action, index) => {
+        let shape = shapes.find(item => item.id === action.targetNodeID);
+        if ((protoActions.length - 1) === index) {
+            shape = shapes.find(item => item.id === s);
+        }
+        if (shape) {
+            target_shapes.value.push(shape);
+        }
+    })
+    const box = viewBox(viewUpdater.v_matrix, selectShape);
+    watch_shapes();
+    nextTick(() => {
+        const els = document.querySelectorAll('.dailogCard');
+        for (let i = 0; i < protoActions.length; i++) {
+            const action = protoActions[i];
+            const shape = target_shapes.value[i] as ShapeView;
+            if (shape) {
+                // 移出动画
+                const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
+                const el = els[i] as SVGSVGElement;
+                if (m) {
+                    if (i === els.length - 1) {
+                        viewUpdater.backShiftOutAnimate(action, els as any);
+                        viewUpdater.backSlideInAnimate(action, els as any);
+                        viewUpdater.backSlideOutAnimate(action, els as any);
+                        const ready_m = viewUpdater.backReadyPosition(m, shape, action.transitionType);
+                        el.style['transform'] = ready_m.toString();
+                        end_matrix.value = m;
+                        viewUpdater.backShiftInAnimate(action);
+                        viewUpdater.backDissolveAnimate(action, els as any);
+                        viewUpdater.backPushInAnimate(action, els as any);
+                        setTimeout(() => {
+                            el.style['transform'] = m.toString();
+                            viewUpdater.backPushAnimate(action);
                         })
                     } else {
                         el.style['transform'] = m.toString();
@@ -638,10 +763,16 @@ onUnmounted(() => {
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" class="pageCard" ref="pageCard" background-color="transparent"
             :data="(props.page as PageView)" :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+        <!-- 浮层和动画卡片 -->
         <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
                 :data="(props.page as PageView)" :context="context" :shapes="[item]" />
         </div>
+        <!-- 实例切换动画 -->
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symrefAnimate"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
+            viewBox="0 0 100 100" width="100" height="100">
+        </svg>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
@@ -674,6 +805,17 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
+    }
+
+    .symref_animate {
+        transform-origin: top left;
+        position: absolute;
+        overflow: visible;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 19;
     }
 
     .toggle {
@@ -744,6 +886,6 @@ onUnmounted(() => {
     bottom: 0;
     background-color: black;
     pointer-events: none;
-    z-index: 99;
+    z-index: 20;
 }
 </style>
