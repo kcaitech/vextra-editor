@@ -19,6 +19,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@kcdesign/canvaskit-wasm": "^0.1.1",
     "@kcdesign/data": "file:../kcdesign-data",
     "element-plus": "2.3.0",
     "jszip": "^3.10.1",

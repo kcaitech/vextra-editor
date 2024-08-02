@@ -9,6 +9,8 @@ import { XYsBounding } from "@/utils/common";
 import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
 import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
+// import CanvasKitInit from 'canvaskit-wasm';
+import CanvasKitInit from "@kcdesign/canvaskit-wasm";
 
 interface Props {
     context: Context;
@@ -26,6 +28,32 @@ const background_color = ref<string>('transparent');
 const pedal = ref<boolean>(false);
 const pageCard = ref<PCard>();
 const t = useI18n().t;
+
+async function drawImage(img: CanvasImageSource) {
+    const CanvasKit = await CanvasKitInit({
+        locateFile: (file: string) => {
+            console.log('__file__', file);
+            return `/${file}`;
+        }
+    });
+    const canvas = CanvasKit.MakeCanvas(375, 600);
+
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    return dataURLToBlob(canvas.toDataURL('image/png', 0.5));
+}
+
+function dataURLToBlob(dataURL: string) {
+    let arr = dataURL.split(',');
+    let mine = (arr[0].match(/:(.*?);/) as any)[1];
+    let __atob = atob(arr[1]);
+    let n = __atob.length;
+    let u8Array = new Uint8Array(n);
+    while (n--) {
+        u8Array[n] = __atob.charCodeAt(n);
+    }
+    return new Blob([u8Array], mine);
+}
 
 function write() {
     renderItems.length = 0;
@@ -73,6 +101,7 @@ function write() {
         }
         const writeResult = props.context.workspace.clipboard.writeBlob(blob);
         if (writeResult) {
+            console.log('你这个都打印了')
             message('info', t('clipboard.copyAsPNGSuccess'));
         } else {
             message('info', t('clipboard.copyAsPNGFailed'));
@@ -143,16 +172,10 @@ const emits = defineEmits<{
 function getBlob(): Promise<Blob | null> {
     const svg = pageCard.value?.pageSvg as SVGElement;
     return new Promise((resolve) => {
-        if (!svg) {
-            resolve(null);
-            return;
-        }
+        if (!svg) return resolve(null);
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        if (!context) {
-            resolve(null);
-            return;
-        }
+        if (!context) return resolve(null);
 
         const _svg = svg.cloneNode(true) as SVGSVGElement;
 
@@ -166,11 +189,12 @@ function getBlob(): Promise<Blob | null> {
         document.body.removeChild(_svg);
         const img = new Image();
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-        img.onload = () => {
+        img.onload = async () => {
             context.drawImage(img, 0, 0);
             canvas.toBlob((blob) => {
                 resolve(blob);
             }, 'image/png');
+            // resolve(await drawImage(img));
         }
         img.onerror = (err) => {
             console.error(err);
@@ -209,7 +233,8 @@ function getBase64(): Promise<string | null> {
             context.drawImage(img, 0, 0);
             resolve(canvas.toDataURL('image/jpeg', 0.5))
         }
-        img.onerror = () => {
+        img.onerror = (err) => {
+            console.error(err);
             resolve(null)
         }
     })
