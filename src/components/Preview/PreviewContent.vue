@@ -763,10 +763,12 @@ onUnmounted(() => {
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" class="pageCard" ref="pageCard" background-color="transparent"
             :data="(props.page as PageView)" :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+        <!-- 浮层和动画卡片 -->
         <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
                 :data="(props.page as PageView)" :context="context" :shapes="[item]" />
         </div>
+        <!-- 实例切换动画 -->
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symrefAnimate"
             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
             viewBox="0 0 100 100" width="100" height="100">
