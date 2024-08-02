@@ -38,7 +38,6 @@ let timerForLeft: any;
 let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
-const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
@@ -98,7 +97,7 @@ function selectionWatcher(t: number | string) {
 
 const isLable = ref<boolean>(false);
 const showHiddenRight = () => {
-    if (showRight.value || (!isEdit.value && !isLable.value)) {
+    if (showRight.value || ((props.context as Context).readonly && !isLable.value)) {
         rightWidth.value = 0
         showRight.value = false
     } else {
@@ -163,11 +162,12 @@ const tool_watcher = (t: number) => {
     }
 }
 const not_perm_hidden_right = () => {
-    if (!isEdit.value && !isLable.value) {
+    const readonly = (props.context as Context).readonly;
+    if (readonly && !isLable.value) {
         rightWidth.value = 0
-    } else if (isLable.value && !isEdit.value) {
+    } else if (isLable.value && readonly) {
         rightWidth.value = 250
-    } else if (!isLable.value && isEdit.value && !showRight.value) {
+    } else if (!isLable.value && !readonly && !showRight.value) {
         rightWidth.value = 250
     }
 }

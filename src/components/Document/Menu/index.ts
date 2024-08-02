@@ -46,7 +46,10 @@ export enum MenuItemType {
     Layers,
     EditComps,
     Rule,
-    Pixel
+    Pixel,
+
+    Mask,
+    UnMask
 }
 
 export enum MountedAreaType { // 不同区域生成不同的菜单项
@@ -59,7 +62,8 @@ export enum MountedAreaType { // 不同区域生成不同的菜单项
     Table,
     TableCell,
     Instance,
-    Root
+    Root,
+    Mask
 }
 
 export function get_selected_types(context: Context): number {

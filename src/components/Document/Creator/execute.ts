@@ -27,6 +27,7 @@ import { get_contact_environment } from "@/utils/contact";
 import { debounce } from "lodash";
 import { ContextEvents } from "@/openapi";
 import { CursorType } from "@/utils/cursor2";
+import { compare_layer_3, filter_for_group1 } from "@/utils/group_ungroup";
 
 export function __add_status_for_create(context: Context) {
     context.menu.menuMount();
@@ -161,6 +162,13 @@ export function useCutout(context: Context) {
     tool.notify(Tool.CHANGE_ACTION);
 
     __add_status_for_create(context);
+}
+
+export function useMask(context: Context) {
+    const page = context.selection.selectedPage!
+    const shapes = compare_layer_3(filter_for_group1(context.selection.selectedShapes));
+    const editor = context.editor4Page(page);
+    editor.makeMask(shapes, context.workspace.t('system.mask_group'));
 }
 
 /**

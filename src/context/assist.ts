@@ -846,13 +846,14 @@ export class Assist extends WatchableObject {
         this.notify(Assist.CLEAR);
     }
     // 水平相交的图形
-    horIntersect(top: number, bottom: number) {
+    horIntersect(top: number, bottom: number, p_id: string) {
         let result: ShapeView[] = [];
         const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
         const matrix = this.m_context.workspace.matrix;
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
-            if (shapes.includes(inner_shape.id)) continue;
+            const cur_p_id = inner_shape.parent?.id || '';
+            if (shapes.includes(inner_shape.id) || cur_p_id !== p_id) continue;
             const points: { x: number, y: number }[] = [];
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);
@@ -867,13 +868,14 @@ export class Assist extends WatchableObject {
         return result;
     }
     // 垂直相交的图形
-    verIntersect(left: number, right: number) {
+    verIntersect(left: number, right: number, p_id: string) {
         let result: ShapeView[] = [];
         const shapes = this.m_context.selection.selectedShapes.map(s => s.id);
         const matrix = this.m_context.workspace.matrix;
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const inner_shape = this.m_shape_inner[i];
-            if (shapes.includes(inner_shape.id)) continue;
+            const cur_p_id = inner_shape.parent?.id || '';
+            if (shapes.includes(inner_shape.id) || cur_p_id !== p_id) continue;
             const points: { x: number, y: number }[] = [];
             const m = inner_shape.matrix2Root();
             m.multiAtLeft(matrix);

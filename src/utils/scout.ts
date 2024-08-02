@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import {
     GroupShapeView,
-    Matrix,
+    Matrix, PageView,
     PathShapeView,
     Shape,
     ShapeType,
@@ -192,6 +192,12 @@ function getBoxPath(transformMatrix: Matrix) {
 
 // 判定点是否在图形内
 export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
+    // 临时实验性方案
+    const masked = shape.masked;
+    if (masked) {
+        const view = (shape.getPage() as PageView).getView(masked.id);
+        if (!view || !scout.isPointInShape(view, p)) return false;
+    }
     return scout.isPointInShape(shape, p);
 }
 
