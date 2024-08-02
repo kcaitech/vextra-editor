@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { finderShape, getFrameList, selectShapes, viewBox } from '@/utils/preview';
+import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -12,6 +12,9 @@ import ControlsView from './PreviewControls/ControlsView.vue';
 
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { DomCtx } from '../Document/Content/vdom/domctx';
+import { initComsMap } from '../Document/Content/vdom/comsmap';
+import { SymbolDom } from '../Document/Content/vdom/symbol';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -30,6 +33,7 @@ const target_shapes = ref<ShapeView[]>([]);
 const isSuperposed = ref(false);
 const end_matrix = ref(new Matrix());
 const is_swap_shape = ref(false);
+const symrefAnimate = ref<SVGSVGElement>();
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
@@ -97,6 +101,16 @@ const togglePage = (p: number) => {
     props.context.preview.setFromShapeAction(undefined);
 }
 
+const getEndElement = () => {
+    let el: SVGSVGElement | undefined;
+    if (target_shapes.value.length > 0) {
+        const els = document.querySelectorAll('.dailogCard');
+        el = els[els.length - 1] as SVGSVGElement;
+    } else {
+        el = pageCard.value!.pageSvg as SVGSVGElement
+    }
+    return el;
+}
 const previewWatcher = (t: number | string, s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
@@ -129,15 +143,9 @@ const previewWatcher = (t: number | string, s?: any) => {
         }
     } else if (t === Preview.ARTBOARD_SCROLL) {
         // 容器内滚动
-        let el: SVGSVGElement | undefined;
-        if (target_shapes.value.length > 0) {
-            const els = document.querySelectorAll('.dailogCard');
-            el = els[els.length - 1] as SVGSVGElement;
-        } else {
-            el = pageCard.value!.pageSvg as SVGSVGElement
-        }
+        const el = getEndElement();
         // 滚动动画
-        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el);
+        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el, s as PrototypeActions);
         const isTrans = viewUpdater.artboardInTrans();
         // 移除动画
         viewUpdater.removeAnimate(el, isTrans);
@@ -169,6 +177,46 @@ const previewWatcher = (t: number | string, s?: any) => {
         setTimeout(() => {
             getTargetShapes();
         }, time * 1000);
+    } else if (t === Preview.SYMBOL_REF_SWITCH) {
+        const m = new Matrix();
+        if (!s && symrefAnimate.value) {
+            symrefAnimate.value.style['transition'] = '';
+            symrefAnimate.value.style['transform'] = m.toString();
+            symrefAnimate.value.style.opacity = '0';
+            return;
+        }
+        const action = s as PrototypeActions;
+        const hover_shape = props.context.selection.hoveredShape;
+        if (!action.targetNodeID || !hover_shape || !symrefAnimate.value) return;
+        const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+        const box = viewBox(matrix, hover_shape);
+        m.scale(viewUpdater.v_matrix.m00);
+        const domCtx = new DomCtx();
+        initComsMap(domCtx.comsMap);
+        const sym = props.context.data.symbolsMgr.get(action.targetNodeID);
+        if (!sym) return;
+        const cur_frame = sym.frame;
+        const _m = sym.matrix2Parent();
+        _m.multiAtLeft(m.clone());
+        const points = [
+            _m.computeCoord2(0, 0),
+            _m.computeCoord2(cur_frame.width, 0),
+            _m.computeCoord2(cur_frame.width, cur_frame.height),
+            _m.computeCoord2(0, cur_frame.height)
+        ];
+        const sym_box = XYsBounding(points);
+        m.trans(box.left - sym_box.left, box.top - sym_box.top);
+        const view = new SymbolDom(domCtx, { data: sym });
+        view.layout();
+        view.render();
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        symrefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        symrefAnimate.value.style['transform'] = m.toString();
+        if (view.el) {
+            symrefAnimate.value.appendChild(view.el);
+            symrefAnimate.value.style.opacity = '1';
+        }
     }
 }
 
@@ -279,11 +327,13 @@ function onMouseMove(e: MouseEvent) {
     } else if (e.buttons == 1) {
         const h_shape = props.context.selection.hoveredShape;
         if (h_shape && h_shape.prototypeInterAction?.length) return;
-        pageViewDragging(e); // 拖拽页面
+        const shape = props.context.selection.selectedShapes[0];
+        if (!shape.scrollDirection || shape.scrollDirection === ScrollDirection.NONE) return;
+        pageViewDragging(e, shape.scrollDirection); // 拖拽页面
     }
 }
 
-const pageViewDragging = (e: MouseEvent) => {
+const pageViewDragging = (e: MouseEvent, scroll_dir?: ScrollDirection) => {
     if (!preview.value) return;
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
@@ -311,6 +361,11 @@ const pageViewDragging = (e: MouseEvent) => {
         if ((root.height - bottom) > dy) dy = root.height - bottom;
     }
     if (bottom <= root.height && dy < 0) dy = 0;
+
+    if (scroll_dir) {
+        if (scroll_dir === ScrollDirection.VERTICAL) dx = 0;
+        if (scroll_dir === ScrollDirection.HORIZONTAL) dy = 0;
+    }
     const matrix = viewUpdater.v_matrix;
 
     if (isDragging) {
@@ -701,6 +756,10 @@ onUnmounted(() => {
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
                 :data="(props.page as PageView)" :context="context" :shapes="[item]" />
         </div>
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symrefAnimate"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
+            viewBox="0 0 100 100" width="100" height="100">
+        </svg>
         <div class="toggle" v-if="listLength">
             <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
@@ -733,6 +792,17 @@ onUnmounted(() => {
         height: 100%;
         left: 0;
         top: 0;
+    }
+
+    .symref_animate {
+        transform-origin: top left;
+        position: absolute;
+        overflow: visible;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 19;
     }
 
     .toggle {

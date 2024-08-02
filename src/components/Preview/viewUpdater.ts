@@ -790,8 +790,10 @@ export class ViewUpdater {
         return shapes.find(item => item.id === id);
     }
     // 容器内滚动
-    scrollAnimate(el: SVGSVGElement) {
-        el.style['transition'] = `all 1s cubic-bezier(0.68, -0.55, 0.26, 1.55) 0s`
+    scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration || 0.3;
+        el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
     }
 
     // 淡入淡出动画

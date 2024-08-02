@@ -1,8 +1,11 @@
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
+import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 import { getFrameList, getPreviewMatrix } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -138,14 +141,20 @@ export class ProtoAction {
     // 组件状态替换
     symbolStateSwitch(action: PrototypeActions) {
         const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
-        const sym1 = down_shape.symData;
-        const sym = sym1?.parent;
-        if (!sym1 || !sym || !(sym instanceof SymbolUnionShape)) return;
-        const symbols: SymbolShape[] = sym.childs as any as SymbolShape[];
+        if (!action.targetNodeID) return;
+        const time = action.transitionDuration || 0.3;
         const maprefIdArray = this.getMapRefIdLS('refId');
-        maprefIdArray.set(down_shape.id, symbols[1]?.id)
+        maprefIdArray.set(down_shape.id, action.targetNodeID);
         this.saveMapRefIdLS(maprefIdArray, 'refId');
-        this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+        if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+            this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+        } else {
+            this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action);
+            setTimeout(() => {
+                this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+                this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
+            }, time * 1000);
+        }
     }
     // 打开浮层
     openDialog(action: PrototypeActions) {

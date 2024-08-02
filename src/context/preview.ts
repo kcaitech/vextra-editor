@@ -26,6 +26,7 @@ export class Preview extends WatchableObject {
     static SWAP_REF_STAT = 15;
     static FLOW_CHANGE = 16;
     static SUPERNATANT_CLOSR = 17;
+    static SYMBOL_REF_SWITCH = 18;
 
     private m_context: Context;
     private m_preview_window: Window | undefined;
