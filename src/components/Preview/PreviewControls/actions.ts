@@ -4,7 +4,7 @@ import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
-import { getFrameList, getPreviewMatrix } from "@/utils/preview";
+import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
 import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
@@ -106,19 +106,9 @@ export class ProtoAction {
         const scrol_shape = artboard_shape.childs.find(item => item.id === action.targetNodeID);
         // const scrol_shape = artboard_shape.childs[0];
         if (scrol_shape) {
-            const m = getPreviewMatrix(scrol_shape);
-            m.multiAtLeft(matrix);
-            const frame = scrol_shape.frame;
-            const points = [
-                m.computeCoord2(0, 0),
-                m.computeCoord2(frame.width, 0),
-                m.computeCoord2(frame.width, frame.height),
-                m.computeCoord2(0, frame.height)
-            ];
-            const box = XYsBounding(points);
+            const box = viewBox(matrix, scrol_shape);
             const offsetx = box.left - (action.extraScrollOffset?.x || 0);
             const offsety = box.top - (action.extraScrollOffset?.y || 0);
-
             this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
         }
     }

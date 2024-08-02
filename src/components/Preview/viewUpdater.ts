@@ -7,8 +7,17 @@ import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
 import { nextTick } from "vue";
+import { toStyle } from "@/utils/message";
+import { opacity } from "@/assets/lang/zh";
 
 type PCard = InstanceType<typeof PageCard>;
+
+type Box = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number
+}
 
 /**
  * @description 播放视图渲染管理器
@@ -1073,6 +1082,51 @@ export class ViewUpdater {
             const time = action.transitionDuration || 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             this.backOutAction(action);
+        }
+    }
+
+    getHotZone(matrix: Matrix, shape: ShapeView) {
+        const view = this.m_container;
+        const boxs: Set<Box> = new Set();
+        if (!view) return;
+        this.hotZoneBox(matrix, shape, boxs);
+        const hotBoxs = Array.from(boxs);
+        for (let i = 0; i < hotBoxs.length; i++) {
+            const box = hotBoxs[i];
+            const style = toStyle({
+                position: 'absolute',
+                top: box.top + 'px',
+                left: box.left + 'px',
+                width: box.right - box.left + 'px',
+                height: box.bottom - box.top + 'px',
+                'background-color': 'rgba(255, 0, 0, 0.3)',
+                'z-index': '999',
+                opacity: '1',
+                transition: 'opacity 0.3s cubic-bezier(0, 0, 1, 1) 0s'
+            });
+            const el = document.createElement('div');
+            el.setAttribute('style', style);
+            view.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 0);
+            setTimeout(() => {
+                view.removeChild(el);
+            }, 300);
+        }
+    }
+    hotZoneBox(matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
+        if (shape.prototypeInterAction && shape.prototypeInterAction.length) {
+            const box = viewBox(matrix, shape);
+            boxs.add(box);
+        } else {
+            const children = shape.childs;
+            if (children.length) {
+                for (let i = 0; i < children.length; i++) {
+                    const c = children[i];
+                    this.hotZoneBox(matrix, c, boxs);
+                }
+            }
         }
     }
 }

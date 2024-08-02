@@ -395,6 +395,18 @@ function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) {
         return;
     }
+    if (e.button === 0 && !isDragging) {
+        const dx = e.clientX - downXY.x;
+        const dy = e.clientY - downXY.y;
+        const diff = Math.hypot(dx, dy);
+        const isHot = localStorage.getItem('proto_hot_zone') ?? 'true';
+        if (diff < 4 && isHot === 'true') {
+            const select_shape = props.context.selection.selectedShapes[0];
+            const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
+            const shape = isSuperposed.value ? target_shapes.value.at(-1) : select_shape;
+            viewUpdater.getHotZone(matrix, shape as ShapeView);
+        }
+    }
     if (spacePressed.value) {
         isDragging = false;
         if (preview.value) {
@@ -454,7 +466,6 @@ function onKeyUp(e: KeyboardEvent) {
         preview.value.style.cursor = 'default'
     }
 }
-
 
 const onMouseMove_CV = (e: MouseEvent) => {
     if (e.buttons === 0 && !spacePressed.value) {

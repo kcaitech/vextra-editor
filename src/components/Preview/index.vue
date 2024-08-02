@@ -323,7 +323,7 @@ onUnmounted(() => {
         padding: 10px 8px;
         box-sizing: border-box;
         position: relative;
-        z-index: 19;
+        z-index: 21;
     }
 
     #center {
