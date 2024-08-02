@@ -143,9 +143,9 @@ export class ProtoAction {
         const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
         if (!action.targetNodeID) return;
         const time = action.transitionDuration || 0.3;
-        const maprefIdArray = this.getMapRefIdLS('refId');
+        const maprefIdArray = this.getMapRefIdLS('symrefSwitchId');
         maprefIdArray.set(down_shape.id, action.targetNodeID);
-        this.saveMapRefIdLS(maprefIdArray, 'refId');
+        this.saveMapRefIdLS(maprefIdArray, 'symrefSwitchId');
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
         } else {
