@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 const props = defineProps<{
     horizontalPositionSelected: string;
@@ -158,11 +158,6 @@ const bottom = computed<boolean>(() => {
     box-sizing: border-box;
     border-radius: 2px;
     border: 1px solid rgba(0, 0, 0, 0.8);
-}
-
-
-.disabled {
-    opacity: 0.4;
 }
 
 .fixed-size {
