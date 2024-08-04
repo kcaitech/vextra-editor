@@ -10,8 +10,12 @@ const props = defineProps<{
     disableToFixedHeight: boolean;
 }>()
 
-const frame = ref<HTMLDivElement>();
-const rect = ref<HTMLDivElement>();
+const emits = defineEmits<{
+    (e: 'change-hor-position', params: { value: string }, shift?: boolean): void;
+    (e: 'change-hor-size'): void;
+    (e: 'change-ver-position', params: { value: string }, shift?: boolean): void;
+    (e: 'change-ver-size'): void;
+}>()
 
 const centerHor = computed<boolean>(() => {
     return props.horizontalPositionSelected === 'hcenter';
@@ -25,10 +29,6 @@ const right = computed<boolean>(() => {
     return (v === 'right' || v === 'lrfixed');
 });
 
-const hfollow = computed<boolean>(() => {
-    return props.horizontalPositionSelected === 'hfollow';
-});
-
 const centerVer = computed<boolean>(() => {
     return props.verticalPositionSelected === 'vcenter';
 });
@@ -40,92 +40,104 @@ const bottom = computed<boolean>(() => {
     const v = props.verticalPositionSelected
     return (v === 'bottom' || v === 'tbfixed');
 });
-
-const vfollow = computed<boolean>(() => {
-    return props.verticalPositionSelected === 'vfollow';
-});
-
-function enter() {
-    const frameEl = frame.value;
-    const rectEl = rect.value;
-    if (!frameEl || !rectEl) return;
-    frameEl.style.width = '80px';
-    rectEl.style.width = '40px';
-    rectEl.style.left = '24px';
-}
-
-function leave() {
-    const frameEl = frame.value;
-    const rectEl = rect.value;
-    if (!frameEl || !rectEl) return;
-    frameEl.style.width = '50px';
-    rectEl.style.width = '25px';
-    rectEl.style.left = '10px';
-}
 </script>
 <template>
-<div style="display: flex;align-items: center;gap: 8px;">
-    <div class="constraint-box"
-         style="position: relative;border-radius: var(--default-radius); border: 1px solid var(--grey-dark); width: 86px; height: 86px;">
+<div style="display: flex;align-items: center;gap: 10px; padding: 8px 0">
+    <div class="constraint-box">
+        <div class="innerBox"/>
         <div
-            :class="{innerBox: true, fixWidth: true, flexWidth: hfollow || (left && right), disabled: disableToFixedWidth}"/>
-        <div
-            :class="{innerBox: true, fixHeight: true, flexHeight: vfollow || (top && bottom),disabled: disableToFixedHeight} ">
-            <div style="width: 6px; height: 30px; left: -3px;top: 50%; transform: translateY(-50%);"/>
-            <div style="width: 6px; height: 30px; right: -3px;top: 50%; transform: translateY(-50%);"/>
-            <div style="height: 6px; width: 30px; top: -3px;left: 50%; transform: translateX(-50%);"/>
-            <div style="height: 6px; width: 30px; bottom: -3px;left: 50%; transform: translateX(-50%);"/>
+            style="position: absolute;width: 20px; height: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
+            @click="() => {emits('change-hor-position', {value: 'hcenter'})}"
+        >
+            <div style="width: 12px; height: 1.5px;" :class="`center ${centerHor ? 'active' : ''}`"/>
         </div>
         <div
-            style="position: absolute;width: 20px; height: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)">
-            <div style="width: 20px; height: 2px;" :class="`center ${centerHor ? 'active' : ''}`"/>
+            style="position: absolute;height: 20px; width: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
+            @click="() => {emits('change-ver-position', {value: 'vcenter'})}"
+        >
+            <div style="height: 12px; width: 1.5px; cursor: pointer;" :class="`center ${centerVer ? 'active' : ''}`"/>
         </div>
         <div
-            style="position: absolute;height: 20px; width: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)">
-            <div style="height: 20px; width: 2px; cursor: pointer;" :class="`center ${centerVer ? 'active' : ''}`"/>
-        </div>
-        <div
-            style="position: absolute;width: 2px; height: 2px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
+            style="position: absolute; width: 1.5px; height: 1.5px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
             :class="{active: centerHor || centerVer}"/>
         <div id="top"
-             style="position:absolute; width: 8px; height: 14px; top: 0; left:50%; transform: translateX(-50%); cursor: pointer;">
+             style="position:absolute; width: 10px; height: 20px; top: 0; left:50%; transform: translateX(-50%); cursor: pointer;"
+             @click="(e: MouseEvent) => {emits('change-ver-position', {value: 'top'}, e.shiftKey)}"
+        >
             <div :class="{direct: true, active: top}"
-                 style="height: 12px; width: 2px;top: 2px; left:50%; transform: translateX(-50%)"/>
+                 style="height: 10px; width: 1.5px;top: 7px; left:50%; transform: translateX(-50%)"/>
         </div>
         <div id="bottom"
-             style="position:absolute; width: 8px; height: 14px; bottom: 0; left:50%; transform: translateX(-50%); cursor: pointer;">
+             style="position:absolute; width: 10px; height: 20px; bottom: 0; left:50%; transform: translateX(-50%); cursor: pointer;"
+             @click="(e: MouseEvent) => {emits('change-ver-position', {value: 'bottom'}, e.shiftKey)}"
+        >
             <div :class="{direct: true, active: bottom}"
-                 style="height: 12px; width: 2px;bottom: 2px; left:50%; transform: translateX(-50%)"/>
+                 style="height: 10px; width: 1.5px;bottom: 7px; left:50%; transform: translateX(-50%)"/>
         </div>
         <div id="left"
-             style="position:absolute; height: 8px; width: 14px; left: 0; top:50%; transform: translateY(-50%); cursor: pointer;">
+             style="position:absolute; height: 10px; width: 20px; left: 0; top:50%; transform: translateY(-50%); cursor: pointer;"
+             @click="(e: MouseEvent) => {emits('change-hor-position', {value: 'left'}, e.shiftKey)}"
+        >
             <div :class="{direct: true, active:left}"
-                 style="width: 12px; height: 2px;left: 2px; top:50%; transform: translateY(-50%)"/>
+                 style="width: 10px; height: 1.5px;left: 7px; top:50%; transform: translateY(-50%)"/>
         </div>
         <div id="right"
-             style="position:absolute; height: 8px; width: 14px; right: 0; top:50%; transform: translateY(-50%); cursor: pointer;">
+             style="position:absolute; height: 10px; width: 20px; right: 0; top:50%; transform: translateY(-50%); cursor: pointer;"
+             @click="(e: MouseEvent) => {emits('change-hor-position', {value: 'right'}, e.shiftKey)}"
+        >
             <div :class="{direct: true, active:right}"
-                 style="width: 12px; height: 2px; right: 2px; top:50%; transform: translateY(-50%)"/>
+                 style="width: 10px; height: 1.5px; right: 7px; top:50%; transform: translateY(-50%)"/>
         </div>
     </div>
-    <div @mouseenter="enter" @mouseleave="leave" class="preview"
-         style="border: 1px solid var(--grey-light); border-radius: var(--default-radius); flex: 1; height: 86px;background-color: #f4f5f5">
-        <div ref="frame" class="frame"
-             style="margin-left: 4px; margin-top: 3px;background-color: #FFFFFF; position: relative;">
-            <div ref="rect" class="rect"
-                 style="background-color: #d8d8d8; position: absolute;"/>
+    <div class="constraint-box">
+        <div>
+            <div
+                style="height: 12px; width: 71px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
+                :class="{'fixed-size': true, 'active-fixed': fixedWidth}"
+                @click="() => {emits('change-hor-size')}"
+            >
+                <div style="width: 1.5px; height: 8px; left: 0; top: 2px; position: absolute;"/>
+                <div style="width: 1.5px; height: 8px; right: 0; top: 2px; position: absolute;"/>
+                <div
+                    style="width: 68px; height: 1.5px;  position: absolute;left: 1.5px; top: 50%; transform: translateY(-50%)"/>
+            </div>
+            <div
+                style="width: 12px; height: 71px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
+                :class="{'fixed-size': true, 'active-fixed': fixedHeight}"
+                @click="() => {emits('change-ver-size')}"
+            >
+                <div style="width: 8px; height: 1.5px; top: 0; left: 2px;position: absolute;"/>
+                <div style="width: 8px; height: 1.5px; bottom: 0;left: 2px; position: absolute;"/>
+                <div
+                    style="width: 1.5px; height: 68px;  position: absolute;top: 1.5px; left: 50%; transform: translateX(-50%)"/>
+            </div>
         </div>
     </div>
 </div>
 </template>
 <style scoped>
+.constraint-box {
+    box-sizing: border-box;
+    position: relative;
+    border-radius: var(--default-radius);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    width: 88px;
+    height: 88px;
+}
+
 .active {
     background-color: var(--active-color) !important;
 }
 
+.active-fixed {
+    > div {
+        background-color: var(--active-color) !important;
+    }
+}
+
 .direct {
     position: absolute;
-    background-color: var(--grey-dark);
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .center {
@@ -133,65 +145,33 @@ function leave() {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background-color: var(--grey-dark);
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .innerBox {
     position: absolute;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
     box-sizing: border-box;
-    border-radius: var(--default-radius);
-
-    > div {
-        position: absolute;
-        cursor: pointer;
-    }
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.8);
 }
 
-.fixHeight {
-    border-left: 2px solid var(--grey-dark);
-    border-right: 2px solid var(--grey-dark);
-}
-
-.flexHeight {
-    border-left: 2px dashed var(--grey-dark);
-    border-right: 2px dashed var(--grey-dark);
-}
-
-.fixWidth {
-    border-top: 2px solid var(--grey-dark);
-    border-bottom: 2px solid var(--grey-dark);
-}
-
-.flexWidth {
-    border-top: 2px dashed var(--grey-dark);
-    border-bottom: 2px dashed var(--grey-dark);
-}
 
 .disabled {
     opacity: 0.4;
 }
 
-.preview {
-    transition: 0.8s;
+.fixed-size {
+    position: absolute;
     cursor: pointer;
 
-    .frame {
-        width: 50px;
-        height: 50px;
-        transition: 0.8s;
-    }
-
-    .rect {
-        left: 10px;
-        top: 5px;
-        width: 25px;
-        height: 25px;
-        transition: 0.8s;
+    > div {
+        background-color: rgba(0, 0, 0, 0.8);
     }
 }
+
 </style>

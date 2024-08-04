@@ -47,15 +47,23 @@ function createEditor() {
     return props.context.editor.editor4ResizingConstraint(adapt2Shape(page) as Page);
 }
 
-function handleHorizontalPositionSelect(item: SelectItem) {
+function handleHorizontalPositionSelect(item: SelectItem, shift?: boolean) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'left':
-            e.fixedToLeft(selected);
+            if (horizontalPositionSelected.value.value === 'right' && shift) {
+                e.fixedToLR(selected);
+            } else {
+                e.fixedToLeft(selected);
+            }
             break;
         case 'right':
-            e.fixedToRight(selected);
+            if (horizontalPositionSelected.value.value === 'left' && shift) {
+                e.fixedToLR(selected);
+            } else {
+                e.fixedToRight(selected);
+            }
             break;
         case 'hcenter':
             e.HorizontaljustifyCenter(selected);
@@ -72,13 +80,10 @@ function handleHorizontalPositionSelect(item: SelectItem) {
 }
 
 function handleCheckboxChangeForWidth() {
+    if (disableToFixedWidth.value) return;
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    if (fixedWidth.value === 'mixed') {
-        e.fixedToWidth(selected)
-        return
-
-    }
+    if (fixedWidth.value === 'mixed') return e.fixedToWidth(selected)
     if (fixedWidth.value) {
         e.flexWidth(selected);
     } else {
@@ -86,15 +91,23 @@ function handleCheckboxChangeForWidth() {
     }
 }
 
-function handleVerticalPositionSelect(item: SelectItem) {
+function handleVerticalPositionSelect(item: SelectItem, shift?: boolean) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'top':
-            e.fixedToTop(selected);
+            if (verticalPositionSelected.value.value === 'bottom' && shift) {
+                e.fixedToTB(selected);
+            } else {
+                e.fixedToTop(selected);
+            }
             break;
         case 'bottom':
-            e.fixedToBottom(selected);
+            if (verticalPositionSelected.value.value === 'top' && shift) {
+                e.fixedToTB(selected);
+            } else {
+                e.fixedToBottom(selected);
+            }
             break;
         case 'vcenter':
             e.VerticaljustifyCenter(selected);
@@ -111,12 +124,10 @@ function handleVerticalPositionSelect(item: SelectItem) {
 }
 
 function handleCheckboxChangeForHeight() {
+    if (disableToFixedHeight.value) return;
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    if (fixedHeight.value === 'mixed') {
-        e.fixedToHeight(selected);
-        return;
-    }
+    if (fixedHeight.value === 'mixed') return e.fixedToHeight(selected);
     if (fixedHeight.value) {
         e.flexHeight(selected);
     } else {
@@ -138,9 +149,7 @@ function _update() {
 
 function modifyhorizontalPositionStatus() {
     const shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) {
-        return;
-    }
+    if (!shapes.length) return;
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
     for (let i = 1, l = shapes.length; i < l; i++) {
@@ -201,9 +210,7 @@ function modifyWidthStatus() {
 
 function modifyverticalPositionStatus() {
     const shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) {
-        return;
-    }
+    if (!shapes.length) return;
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
     for (let i = 1, l = shapes.length; i < l; i++) {
@@ -278,17 +285,20 @@ onUnmounted(() => {
     <TypeHeader :title="t('attr.groupings')" class="mt-24" :active="!disabled">
     </TypeHeader>
     <ConstraintBox
-        :horizontal-position-selected="horizontalPositionSelected.value"
-        :vertical-position-selected="verticalPositionSelected.value"
+        :horizontal-position-selected="horizontalPositionSelected.value as string"
+        :vertical-position-selected="verticalPositionSelected.value as string"
         :disable-to-fixed-width="disableToFixedWidth"
         :fixed-width="fixedWidth"
         :disable-to-fixed-height="disableToFixedHeight"
         :fixed-height="fixedHeight"
+        @change-hor-position="(params: any, shift?: boolean) => {handleHorizontalPositionSelect(params as SelectItem, shift)}"
+        @change-ver-position="(params: any, shift?: boolean) => {handleVerticalPositionSelect(params as SelectItem, shift)}"
+        @change-hor-size="handleCheckboxChangeForWidth"
+        @change-ver-size="handleCheckboxChangeForHeight"
     />
     <div class="content" :class="{ 'disabled': disabled }">
         <div class="main">
             <div class="row">
-                <label>{{ t('attr.horizontal') }}</label>
                 <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
                         @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
@@ -305,7 +315,6 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="row">
-                <label>{{ t('attr.vertical') }}</label>
                 <Select :selected="verticalPositionSelected" :source="VerticalPositionOptions"
                         @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
@@ -355,14 +364,9 @@ onUnmounted(() => {
             width: 100%;
 
             .row {
-                width: 100%;
+                width: 186px;
                 display: flex;
                 align-items: center;
-
-                > label {
-                    flex: 0 0 42px;
-                    line-height: 32px;
-                }
 
                 > .select-container {
                     flex: 1 1 84px;
