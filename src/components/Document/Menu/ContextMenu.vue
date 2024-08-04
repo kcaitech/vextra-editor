@@ -365,10 +365,6 @@ function instance() {
         }
     }
 }
-
-function reset() {
-}
-
 function editComps() {
     const refShape = props.context.selection.selectedShapes[0];
     const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
@@ -418,6 +414,16 @@ function hereOut() {
 
 function copyAsPNG() {
     props.context.menu.notify(Menu.WRITE_MEDIA);
+    emits('close');
+}
+
+function copyProperties() {
+    props.context.workspace.clipboard.write_properties();
+    emits('close');
+}
+
+function pasteProperties() {
+    props.context.workspace.clipboard.paste_properties();
     emits('close');
 }
 
@@ -484,6 +490,14 @@ onUnmounted(() => {
             <div class="sub-item" @click="copyAsPNG">
                 <span>{{ t('clipboard.copyAsPNG') }}</span>
                 <Key code="Shift Ctrl C"/>
+            </div>
+            <div class="sub-item" @click="copyProperties">
+                <span>{{ t('clipboard.copyStyle') }}</span>
+                <Key code="Ctrl Alt C"/>
+            </div>
+            <div class="sub-item" @click="pasteProperties">
+                <span>{{ t('clipboard.pasteStyle') }}</span>
+                <Key code="Ctrl Alt V"/>
             </div>
         </div>
     </div>

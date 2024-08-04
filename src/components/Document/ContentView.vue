@@ -486,23 +486,17 @@ function matrix_watcher(nm: Matrix) {
 }
 
 function copy_watcher(event: ClipboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     props.context.workspace.clipboard.write(event);
 }
 
 function cut_watcher(event: ClipboardEvent) {
-    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
-    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     return props.context.workspace.clipboard.paste(t, event);
 }
 
@@ -576,9 +570,7 @@ onMounted(() => {
     window.addEventListener('focus', windowFocus);
 
     nextTick(() => {
-        if (!root.value) {
-            return;
-        }
+        if (!root.value) return;
         resizeObserver.observe(root.value);
         _updateRoot(props.context, root.value);
         initMatrix(props.page);
