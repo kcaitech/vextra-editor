@@ -8,7 +8,7 @@ import { useI18n } from "vue-i18n";
 import {
     adapt_page,
     get_shape_within_document,
-    lower_layer,
+    lower_layer, outlineSelection,
     select_all,
     shape_track,
     upper_layer
@@ -365,6 +365,7 @@ function instance() {
         }
     }
 }
+
 function editComps() {
     const refShape = props.context.selection.selectedShapes[0];
     const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
@@ -429,6 +430,11 @@ function pasteProperties() {
 
 function mask() {
     useMask(props.context);
+    emits('close');
+}
+
+function outline() {
+    outlineSelection(props.context);
     emits('close');
 }
 
@@ -617,6 +623,10 @@ onUnmounted(() => {
     <div v-if="items.has(MenuItemType.Container)" @click="container" class="menu-item">
         <span>{{ t('system.create_container') }}</span>
         <Key code="Ctrl Alt G"></Key>
+    </div>
+    <div v-if="items.has(MenuItemType.Mask)" @click="outline" class="menu-item">
+        <span>{{ t('system.outline') }}</span>
+        <Key code="Ctrl Alt O"></Key>
     </div>
     <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
         <span>{{ t('system.set_mask') }}</span>

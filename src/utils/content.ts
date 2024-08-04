@@ -1466,3 +1466,11 @@ export const getTransformCol = (context: Context, shape: ShapeView, x: number, y
     const { col0 } = m.transform([ColVector3D.FromXY(x, y)]);
     return { x: col0.x, y: col0.y };
 }
+
+
+export function outlineSelection(context: Context) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.outlineShapes(shapes);
+}

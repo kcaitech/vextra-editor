@@ -4,7 +4,7 @@ import {
     component,
     lessen,
     lower_layer,
-    magnify,
+    magnify, outlineSelection,
     redo,
     scale_0,
     select_all,
@@ -289,6 +289,9 @@ keydownHandler['KeyN'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.altKey && permIsEdit(context)) {
+        return outlineSelection(context);
+    }
     if (!permIsEdit(context) || is_ctrl || event.shiftKey || event.altKey) return;
     useEllipse(context) // 椭圆工具
 }
@@ -299,12 +302,6 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
     }
 
     usePen(context); // 钢笔工具
-
-    // if (context.workspace.is_path_edit_mode) {
-    //     context.tool.setAction(Action.Pen2);
-    // } else {
-    //     context.tool.setAction(Action.Pen); // 钢笔工具
-    // }
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
