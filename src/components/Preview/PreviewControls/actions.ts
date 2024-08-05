@@ -137,14 +137,14 @@ export class ProtoAction {
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
         maprefIdArray.set(down_shape.id, action.targetNodeID);
         this.saveMapRefIdLS(maprefIdArray, sessionRefIdKey);
-        console.log(v4());
-        
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
         } else {
+            // 执行动画
             this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action);
             setTimeout(() => {
                 this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+                // 清除操作
                 this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
             }, time * 1000);
         }

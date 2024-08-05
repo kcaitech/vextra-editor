@@ -212,7 +212,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .preview_menu {
     position: fixed;
-    z-index: 99;
+    z-index: 999;
     color: #262626;
     border-radius: 8px;
     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);

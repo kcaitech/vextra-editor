@@ -132,46 +132,25 @@ const onShowSizeBlur = (e: Event) => {
 const length = computed(() => {
     return props.textShapes.length === 1;
 })
-// 设置加粗
-const onBold = (weight: number) => {
+// 设置字重
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextWeight(weight, 0, Infinity)
+            editor.setTextWeight(weight, italic, 0, Infinity)
         } else {
-            editor.setTextWeight(weight, textIndex, selectLength)
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextWeightMulti(props.textShapes, weight);
+        editor.setTextWeightMulti(props.textShapes, weight, italic);
     }
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.weight = weight;
-    props.context.textSelection.setTextAttr(textAttr);
-}
-// 设置文本倾斜
-const onTilt = (italic: boolean) => {
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextItalic(italic, 0, Infinity)
-        } else {
-            editor.setTextItalic(italic, textIndex, selectLength)
-            textFormat()
-        }
-    } else {
-        editor.setTextItalicMulti(props.textShapes, italic);
-    }
-    const textAttr = props.context.textSelection.getTextAttr;
     textAttr.italic = italic;
     props.context.textSelection.setTextAttr(textAttr);
-}
-const setFontWeight = (weight: number, italic: boolean) => {
-    fontWeight.value = fontWeightConvert(weight, italic);
-    onBold(weight);
-    onTilt(italic);
 }
 
 // 设置水平对齐
