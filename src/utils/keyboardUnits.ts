@@ -125,6 +125,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (isCtrl && event.altKey) {
+        event.preventDefault();
         context.workspace.clipboard.write_properties();
         return;
     }
@@ -357,6 +358,7 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.altKey && permIsEdit(context)) {
+        event.preventDefault();
         context.workspace.clipboard.paste_properties(); // 粘贴图层属性
         return;
     }

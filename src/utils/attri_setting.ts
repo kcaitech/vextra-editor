@@ -423,14 +423,14 @@ export function getContextSetting(shapes: ShapeView[]) {
 }
 
 export function getMarkType(shapes: ShapeView[]) {
-    let first: { stark: MarkerType | undefined, end: MarkerType | undefined } | undefined;
+    let first: { start: MarkerType | undefined, end: MarkerType | undefined } | undefined;
 
     for (const shape of shapes) {
         const startMark = shape.startMarkerType;
         const endMark = shape.endMarkerType;
 
         if (!startMark && !endMark) continue;
-        first = { stark: startMark, end: endMark };
+        first = { start: startMark, end: endMark };
         break;
     }
 
@@ -442,7 +442,7 @@ export function getMarkType(shapes: ShapeView[]) {
 
         if (!startMark && !endMark) continue;
 
-        if (startMark !== first.stark || endMark !== first.end) return;
+        if (startMark !== first.start || endMark !== first.end) return;
     }
 
     return first;
