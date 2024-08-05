@@ -47,13 +47,13 @@ const bottom = computed<boolean>(() => {
         <div class="innerBox"/>
         <div
             style="position: absolute;width: 20px; height: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
-            @click="() => {emits('change-hor-position', {value: 'hcenter'})}"
+            @click="(e: MouseEvent) => {emits('change-hor-position', {value: 'hcenter'}, e.shiftKey)}"
         >
             <div style="width: 12px; height: 2px;" :class="`center ${centerHor ? 'active' : ''}`"/>
         </div>
         <div
             style="position: absolute;height: 20px; width: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
-            @click="() => {emits('change-ver-position', {value: 'vcenter'})}"
+            @click="(e: MouseEvent) => {emits('change-ver-position', {value: 'vcenter'}, e.shiftKey)}"
         >
             <div style="height: 12px; width: 2px; cursor: pointer;" :class="`center ${centerVer ? 'active' : ''}`"/>
         </div>
@@ -93,7 +93,7 @@ const bottom = computed<boolean>(() => {
         <div>
             <div
                 style="height: 12px; width: 72px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
-                :class="{'fixed-size': true, 'active-fixed': fixedWidth}"
+                :class="{'fixed-size': true, 'active-fixed': fixedWidth, disabled: disableToFixedWidth}"
                 @click="() => {emits('change-hor-size')}"
             >
                 <div style="width: 2px; height: 8px; left: 0; top: 2px; position: absolute;"/>
@@ -103,7 +103,7 @@ const bottom = computed<boolean>(() => {
             </div>
             <div
                 style="width: 12px; height: 72px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
-                :class="{'fixed-size': true, 'active-fixed': fixedHeight}"
+                :class="{'fixed-size': true, 'active-fixed': fixedHeight, disabled: disableToFixedHeight}"
                 @click="() => {emits('change-ver-size')}"
             >
                 <div style="width: 8px; height: 2px; top: 0; left: 2px;position: absolute;"/>
@@ -124,7 +124,10 @@ const bottom = computed<boolean>(() => {
     width: 88px;
     height: 88px;
 }
-
+.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
 .active {
     background-color: var(--active-color) !important;
 }
