@@ -36,8 +36,6 @@ const showMenu = (e: MouseEvent) => {
 
 const closeMenu = () => {
     isMenu.value = false;
-    console.log(1111);
-    
 }
 
 const updateScaleType = () => {

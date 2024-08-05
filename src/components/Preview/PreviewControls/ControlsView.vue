@@ -135,7 +135,7 @@ const onMouseUp = (e: MouseEvent) => {
     for (let i = 0; i < protoActions.length; i++) {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
-        
+
         if (type === PrototypeEvents.ONCLICK && eventTypeIndex.click > eventTypeIndex.mouseup && eventTypeIndex.click > eventTypeIndex.mousedown && eventTypeIndex.click > eventTypeIndex.dblclick) {
             if (!isDragging && e.button === 0) {
                 console.log('单击事件');
@@ -277,7 +277,7 @@ onUnmounted(() => {
         <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="red"
+        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="transparent"
             stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>

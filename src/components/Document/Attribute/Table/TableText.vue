@@ -103,58 +103,31 @@ const onShowSizeBlur = (e: Event) => {
 const cellSelect = (table: TableSelection) => {
     return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
 }
-// 设置加粗
-const onBold = (weight: number) => {
+// 设置字重
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
     isBold.value = weight
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextWeight(isBold.value, 0, Infinity)
-        } else {
-            editor.setTextWeight(isBold.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextWeight(isBold.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextWeight(isBold.value, cell_selection);
-        }
-    }
-    textFormat();
-}
-// 设置文本倾斜
-const onTilt = (italic: boolean) => {
     isTilt.value = italic
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
         if (isSelectText()) {
-            editor.setTextItalic(isTilt.value, 0, Infinity)
+            editor.setTextWeight(weight, italic, 0, Infinity)
         } else {
-            editor.setTextItalic(isTilt.value, textIndex, selectLength)
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
         }
     } else {
         const table = props.shape;
         const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextItalic(isTilt.value);
+            editor.setTextWeight(weight, italic);
         } else {
             const cell_selection = cellSelect(table_Selection)
-            editor.setTextItalic(isTilt.value, cell_selection);
+            editor.setTextWeight(weight, italic, cell_selection);
         }
     }
     textFormat();
-}
-const setFontWeight = (weight: number, italic: boolean) => {
-    fontWeight.value = fontWeightConvert(weight, italic);
-    onBold(weight);
-    onTilt(italic);
 }
 
 // 设置水平对齐

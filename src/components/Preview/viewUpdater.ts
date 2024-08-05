@@ -705,6 +705,8 @@ export class ViewUpdater {
                 const right = (frame.width * scale) + box.left;
                 const bottom = (frame.height * scale) + box.top;
                 m.trans(box.right - right, box.bottom - bottom);
+            } else {
+                
             }
         }
         return m;
