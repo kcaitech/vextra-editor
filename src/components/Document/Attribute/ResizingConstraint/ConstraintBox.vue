@@ -49,67 +49,67 @@ const bottom = computed<boolean>(() => {
             style="position: absolute;width: 20px; height: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
             @click="() => {emits('change-hor-position', {value: 'hcenter'})}"
         >
-            <div style="width: 12px; height: 1.5px;" :class="`center ${centerHor ? 'active' : ''}`"/>
+            <div style="width: 12px; height: 2px;" :class="`center ${centerHor ? 'active' : ''}`"/>
         </div>
         <div
             style="position: absolute;height: 20px; width: 6px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
             @click="() => {emits('change-ver-position', {value: 'vcenter'})}"
         >
-            <div style="height: 12px; width: 1.5px; cursor: pointer;" :class="`center ${centerVer ? 'active' : ''}`"/>
+            <div style="height: 12px; width: 2px; cursor: pointer;" :class="`center ${centerVer ? 'active' : ''}`"/>
         </div>
         <div
-            style="position: absolute; width: 1.5px; height: 1.5px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
+            style="position: absolute; width: 2px; height: 2px;cursor: pointer;left: 50%;top: 50%;transform: translate(-50%, -50%)"
             :class="{active: centerHor || centerVer}"/>
         <div id="top"
              style="position:absolute; width: 10px; height: 20px; top: 0; left:50%; transform: translateX(-50%); cursor: pointer;"
              @click="(e: MouseEvent) => {emits('change-ver-position', {value: 'top'}, e.shiftKey)}"
         >
             <div :class="{direct: true, active: top}"
-                 style="height: 10px; width: 1.5px;top: 7px; left:50%; transform: translateX(-50%)"/>
+                 style="height: 10px; width: 2px;top: 7px; left:50%; transform: translateX(-50%)"/>
         </div>
         <div id="bottom"
              style="position:absolute; width: 10px; height: 20px; bottom: 0; left:50%; transform: translateX(-50%); cursor: pointer;"
              @click="(e: MouseEvent) => {emits('change-ver-position', {value: 'bottom'}, e.shiftKey)}"
         >
             <div :class="{direct: true, active: bottom}"
-                 style="height: 10px; width: 1.5px;bottom: 7px; left:50%; transform: translateX(-50%)"/>
+                 style="height: 10px; width: 2px;bottom: 7px; left:50%; transform: translateX(-50%)"/>
         </div>
         <div id="left"
              style="position:absolute; height: 10px; width: 20px; left: 0; top:50%; transform: translateY(-50%); cursor: pointer;"
              @click="(e: MouseEvent) => {emits('change-hor-position', {value: 'left'}, e.shiftKey)}"
         >
             <div :class="{direct: true, active:left}"
-                 style="width: 10px; height: 1.5px;left: 7px; top:50%; transform: translateY(-50%)"/>
+                 style="width: 10px; height: 2px;left: 7px; top:50%; transform: translateY(-50%)"/>
         </div>
         <div id="right"
              style="position:absolute; height: 10px; width: 20px; right: 0; top:50%; transform: translateY(-50%); cursor: pointer;"
              @click="(e: MouseEvent) => {emits('change-hor-position', {value: 'right'}, e.shiftKey)}"
         >
             <div :class="{direct: true, active:right}"
-                 style="width: 10px; height: 1.5px; right: 7px; top:50%; transform: translateY(-50%)"/>
+                 style="width: 10px; height: 2px; right: 7px; top:50%; transform: translateY(-50%)"/>
         </div>
     </div>
     <div class="constraint-box">
         <div>
             <div
-                style="height: 12px; width: 71px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
+                style="height: 12px; width: 72px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
                 :class="{'fixed-size': true, 'active-fixed': fixedWidth}"
                 @click="() => {emits('change-hor-size')}"
             >
-                <div style="width: 1.5px; height: 8px; left: 0; top: 2px; position: absolute;"/>
-                <div style="width: 1.5px; height: 8px; right: 0; top: 2px; position: absolute;"/>
+                <div style="width: 2px; height: 8px; left: 0; top: 2px; position: absolute;"/>
+                <div style="width: 2px; height: 8px; right: 0; top: 2px; position: absolute;"/>
                 <div
-                    style="width: 68px; height: 1.5px;  position: absolute;left: 1.5px; top: 50%; transform: translateY(-50%)"/>
+                    style="width: 68px; height: 2px;  position: absolute;left: 2px; top: 50%; transform: translateY(-50%)"/>
             </div>
             <div
-                style="width: 12px; height: 71px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
+                style="width: 12px; height: 72px; transform: translate(-50%, -50%); left: 50%; top: 50%;"
                 :class="{'fixed-size': true, 'active-fixed': fixedHeight}"
                 @click="() => {emits('change-ver-size')}"
             >
-                <div style="width: 8px; height: 1.5px; top: 0; left: 2px;position: absolute;"/>
-                <div style="width: 8px; height: 1.5px; bottom: 0;left: 2px; position: absolute;"/>
+                <div style="width: 8px; height: 2px; top: 0; left: 2px;position: absolute;"/>
+                <div style="width: 8px; height: 2px; bottom: 0;left: 2px; position: absolute;"/>
                 <div
-                    style="width: 1.5px; height: 68px;  position: absolute;top: 1.5px; left: 50%; transform: translateX(-50%)"/>
+                    style="width: 2px; height: 68px;  position: absolute;top: 2px; left: 50%; transform: translateX(-50%)"/>
             </div>
         </div>
     </div>
