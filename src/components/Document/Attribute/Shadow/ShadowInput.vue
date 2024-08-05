@@ -166,11 +166,6 @@ function click() {
     border-radius: var(--default-radius);
     margin-left: 8px;
 
-    .cursor {
-        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
-    }
-
-
     .icon {
         flex-shrink: 0;
         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
@@ -246,5 +241,9 @@ function click() {
 
 .actived {
     border: 1px solid #1878F5;
+}
+
+.cursor {
+    cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
 }
 </style>
