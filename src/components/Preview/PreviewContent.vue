@@ -783,11 +783,11 @@ onUnmounted(() => {
             viewBox="0 0 100 100" width="100" height="100">
         </svg>
         <div class="toggle" v-if="listLength">
-            <div class="last" @click="togglePage(-1)" :class="{ disable: curPage === 1 }">
+            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
                 <svg-icon icon-class="left-arrow"></svg-icon>
             </div>
             <div class="page">{{ curPage }} / {{ listLength }}</div>
-            <div class="next" @click="togglePage(1)" :class="{ disable: listLength === curPage }">
+            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
                 <svg-icon icon-class="right-arrow"></svg-icon>
             </div>
         </div>
