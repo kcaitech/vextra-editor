@@ -81,7 +81,7 @@ export class ArtboradDom extends (ArtboradView) {
         }
 
         // 仅替换内部svg，以保留阴影
-        const svgnode = this.elchilds[this.elchilds.length - 1] as EL & { el?: HTMLElement | SVGElement };
+        const svgnode = this._svgnode as EL & { el?: HTMLElement | SVGElement };
         if (!svgnode || !svgnode.el || svgnode.eltag !== 'svg') {
             return false;
         }
@@ -117,7 +117,7 @@ export class ArtboradDom extends (ArtboradView) {
 
     switchOutImage(force: boolean) {
         if (this.imageel && this.imageel.parentNode && (this.m_childs_changed || force)) {
-            const svgnode = this.elchilds[this.elchilds.length - 1] as EL & { el?: HTMLElement | SVGElement };
+            const svgnode = this._svgnode as EL & { el?: HTMLElement | SVGElement };
             if (!svgnode || !svgnode.el || svgnode.eltag !== 'svg') {
                 return;
             }

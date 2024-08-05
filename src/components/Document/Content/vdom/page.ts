@@ -2,6 +2,7 @@ import { EL, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
 import { ArtboradDom } from "./artboard";
+import { GroupShapeDom } from "./groupshape";
 
 const MAX_NODE_SUPPORT = 5000;
 function intersect_range(lx0: number, lx1: number, rx0: number, rx1: number): boolean {
@@ -68,8 +69,8 @@ export class PageDom extends (PageView) {
     // 可见区域+20%绘制
     // 可见区域+50%以外drop
     optimizeClientVisibleNodes(visibleRect: { x: number, y: number, width: number, height: number }) {
-        const extend = Math.round(Math.max(100, Math.max(visibleRect.width, visibleRect.height) * 0.2));
-        const dropextend = Math.round(Math.max(500, Math.max(visibleRect.width, visibleRect.height) * 0.5));
+        const extend = Math.round(Math.max(100, Math.max(visibleRect.width, visibleRect.height) * 0.4));
+        const dropextend = Math.round(Math.max(500, Math.max(visibleRect.width, visibleRect.height) * 1.0));
         if (!this.m_client_visible_rect || !this.m_client_drop_rect) {
             this.m_client_visible_rect = { x: 0, y: 0, width: 0, height: 0 }
             this.m_client_drop_rect = { x: 0, y: 0, width: 0, height: 0 }
@@ -90,7 +91,7 @@ export class PageDom extends (PageView) {
 
         for (let i = 0, len = this.m_children.length; i < len; i++) {
             const c = this.m_children[i];
-            if (c instanceof ArtboradDom) {
+            if (c instanceof ArtboradDom || c instanceof GroupShapeDom) {
                 if (!(intersect_rect(c._p_visibleFrame, this.m_client_drop_rect))) c.dropNode();
                 else if (intersect_rect(c._p_visibleFrame, this.m_client_visible_rect)) c.appendNode();
             }
