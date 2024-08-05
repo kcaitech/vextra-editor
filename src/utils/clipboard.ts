@@ -42,6 +42,8 @@ import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
 import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
+import { flattenShapes } from "@/utils/cutout";
+import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -253,27 +255,30 @@ export class Clipboard {
         return true;
     }
 
-    write_properties(event?: ClipboardEvent) {
+    write_properties() {
         try {
-            const shapes = this.context.selection.selectedShapes;
-            const fills = get_fills(shapes);
-            const borders = get_borders(shapes);
-            const shadows = get_shadows(shapes);
-            const blur = get_blur(shapes);
+            const selected = this.context.selection.selectedShapes;
+            const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+            const fills = get_fills(flatten);
+            const borders = get_borders(flatten);
+            const shadows = get_shadows(selected);
+            const blur = get_blur(selected);
+
+            const radius = getRadiusForCopy(selected);
+            const contextSetting = getContextSetting(selected);
+            const mark = getMarkType(selected);
+            const text = getText(selected);
 
             const data: any = {};
-            if (fills !== "mixed") {
-                data['fills'] = fills.map(i => exportFill(i.fill));
-            }
-            if (borders !== "mixed") {
-                data['borders'] = borders.map(i => exportBorder(i.border));
-            }
-            if (shadows !== "mixed") {
-                data['shadows'] = shadows.map(i => exportShadow(i.shadow));
-            }
-            if (blur instanceof Blur) {
-                data['blur'] = exportBlur(blur);
-            }
+            if (fills !== "mixed") data['fills'] = fills.map(i => exportFill(i.fill));
+            if (borders !== "mixed") data['borders'] = borders.map(i => exportBorder(i.border));
+            if (shadows !== "mixed") data['shadows'] = shadows.map(i => exportShadow(i.shadow));
+            if (blur instanceof Blur) data['blur'] = exportBlur(blur);
+            if (radius) data['radius'] = radius;
+            if (contextSetting) data['contextSetting'] = contextSetting;
+            if (mark) data['mark'] = mark;
+            if (text) data['text'] = text;
+
             const code = encode_html(properties, data);
 
             // @ts-ignore
