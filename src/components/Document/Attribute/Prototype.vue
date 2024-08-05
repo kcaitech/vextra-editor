@@ -89,7 +89,8 @@
                                     :context="props.context" :targetNodeId="action.actions.targetNodeID"
                                     @appearance="setOverlayBackgroundAppearance($event, action.actions.targetNodeID)"
                                     @interaction="setOverlayBackgroundInteraction($event, action.actions.targetNodeID)"
-                                    @position="setOverlayPositionType($event, action.actions.targetNodeID)"></Overlay>
+                                    @position="setOverlayPositionType($event, action.actions.targetNodeID)"
+                                    @margin="setOverlayPositionMargin($event, action.actions.targetNodeID)"></Overlay>
                                 <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
                                     <span>动画设置</span>
                                     <div class="wrapper">
@@ -167,7 +168,7 @@ import { genOptions } from '@/utils/common';
 import { nextTick, onMounted, onUnmounted, ref, StyleValue, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Origin from "./Prototype/Origin.vue";
-import Overlay, { Type as T } from "./Prototype/Overlay.vue";
+import Overlay, { Type as T, Margin as M } from "./Prototype/Overlay.vue";
 import Status, { Data as D } from "./Prototype/Status.vue";
 import Target from "./Prototype/Target.vue";
 import {
@@ -182,7 +183,9 @@ import {
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
-    ScrollDirection
+    ScrollDirection,
+    OverlayPosition,
+    OverlayMargin
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -855,6 +858,21 @@ const setOverlayPositionType = (data: OverlayPositions, id: string) => {
     updateData()
 }
 
+//设置浮层间距
+const setOverlayPositionMargin = (data: M, id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedPage?.childs
+    if (!shapes) return;
+    const shape = shapes.find(i => i.id === id)
+    if (!shape) return
+    if (data.type === 'TOP') e.setOverlayPositionTypeMarginTop(shape as ArtboradView, data.val)
+    if (data.type === 'BOTTOM') e.setOverlayPositionTypeMarginBottom(shape as ArtboradView, data.val)
+    if (data.type === 'LEFT') e.setOverlayPositionTypeMarginLeft(shape as ArtboradView, data.val)
+    if (data.type === 'RIGHT') e.setOverlayPositionTypeMarginRight(shape as ArtboradView, data.val)
+    updateData()
+}
+
 
 //创建原型起始节点
 const createOrigin = (data: PrototypeStartingPoint) => {
@@ -1153,6 +1171,8 @@ const isProtoType = ref(new Map())
 //更新原型数据
 function updateData() {
     const shapes = props.context.selection.selectedShapes;
+    isProtoType.value.clear()
+    hasStatus.value = false
     if (shapes.length !== 1) return
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
@@ -1164,6 +1184,21 @@ function updateData() {
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
         isProtoType.value.clear()
+    }
+
+    if (shape instanceof SymbolRefView) {
+        const variable = get_var_for_ref(shape, t)
+        if (variable) {
+            const variables = variable.variables
+            if (variables.length !== 0) hasStatus.value = true
+        }
+    }
+
+    if (shape instanceof SymbolView) {
+        const variables = states_tag_values_sort([shape], t)
+        if (variables.length !== 0) {
+            hasStatus.value = true
+        }
     }
 
     if (isProtoType.value.size) {
