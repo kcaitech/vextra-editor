@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
 import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
@@ -23,22 +23,23 @@ const props = defineProps<{
 }>();
 type PCard = InstanceType<typeof PageCard>
 const preview = ref<HTMLDivElement>();
-const cur_shape = ref<ShapeView>();
+let cur_shape: ShapeView[] = reactive([]);
 const listLength = ref(0);
 const curPage = ref(0);
 const pageCard = ref<PCard>();
 const viewBoxDialog = ref<HTMLDivElement[]>();
 const spacePressed = ref<boolean>(false);
-const target_shapes = ref<ShapeView[]>([]);
+let target_shapes: ShapeView[] = reactive([]);
 const isSuperposed = ref(false);
 const end_matrix = ref(new Matrix());
 const is_swap_shape = ref(false);
 const symrefAnimate = ref<SVGSVGElement>();
+const renderCard = ref(false);
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
-    cur_shape.value = shape;
+    cur_shape = toRaw([shape]);
 
     if (!shape || !page) return;
 
@@ -68,7 +69,7 @@ function changePage() {
         return;
     }
 
-    cur_shape.value = shape;
+    cur_shape = toRaw([shape]);
 
     viewUpdater.atPage(page.data);
     viewUpdater.atTarget(shape);
@@ -89,7 +90,7 @@ const togglePage = (p: number) => {
 
     if (!shape || !page) return;
 
-    cur_shape.value = shape;
+    cur_shape = toRaw([shape]);
 
     const naviList = props.context.preview.naviShapeList;
     const frameList = naviList.length > 0 ? naviList : getFrameList(page);
@@ -103,7 +104,7 @@ const togglePage = (p: number) => {
 
 const getEndElement = () => {
     let el: SVGSVGElement | undefined;
-    if (target_shapes.value.length > 0) {
+    if (target_shapes.length > 0) {
         const els = document.querySelectorAll('.dailogCard');
         el = els[els.length - 1] as SVGSVGElement;
     } else {
@@ -169,7 +170,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         const els = document.querySelectorAll('.dailogCard');
         const action = s as PrototypeActions;
         viewUpdater.dissolveAnimate(action, els as any, 0);
-        const end_shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
+        const end_shape = target_shapes[target_shapes.length - 1] as ShapeView;
         const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
@@ -403,7 +404,7 @@ function onMouseUp(e: MouseEvent) {
         if (diff < 4 && isHot === 'true') {
             const select_shape = props.context.selection.selectedShapes[0];
             const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
-            const shape = isSuperposed.value ? target_shapes.value.at(-1) : select_shape;
+            const shape = isSuperposed.value ? target_shapes.at(-1) : select_shape;
             viewUpdater.getHotZone(matrix, shape as ShapeView);
         }
     }
@@ -415,7 +416,7 @@ function onMouseUp(e: MouseEvent) {
     } else if (isSuperposed.value) {
         const h_shape = search(e);
         if (!h_shape) {
-            const shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
+            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
             const end_action = props.context.preview.endAction;
             const swap_end_action = props.context.preview.swapEndAction;
             if (end_action.navigationType === PrototypeNavigationType.SWAP) {
@@ -490,8 +491,8 @@ function search(e: MouseEvent) {
     const xy = { x: e.clientX - x, y: e.clientY - y };
     let hover_shape: ShapeView | undefined;
     if (isSuperposed.value) {
-        if (target_shapes.value.length) {
-            const shape = target_shapes.value[target_shapes.value.length - 1] as ShapeView;
+        if (target_shapes.length) {
+            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
             const m = end_matrix.value as Matrix;
             if (m) {
                 hover_shape = finderShape(m, scout, [shape], xy);
@@ -523,7 +524,8 @@ const closeMenu = () => {
     isMenu.value = false;
 }
 const getTargetShapes = () => {
-    target_shapes.value = [];
+    target_shapes = [];
+    renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
@@ -532,12 +534,15 @@ const getTargetShapes = () => {
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
     if (actions.size === 0) return;
+    const render_shapes: ShapeView[] = [];
     actions.forEach(action => {
         const shape = shapes.find(item => item.id === action.targetNodeID);
         if (shape) {
-            target_shapes.value.push(shape);
+            render_shapes.push(shape);
         }
     })
+    target_shapes = toRaw(render_shapes);
+    renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
     nextTick(() => {
@@ -603,7 +608,8 @@ const getTargetShapes = () => {
 }
 
 const backTargetShape = (s?: string) => {
-    target_shapes.value = [];
+    target_shapes = [];
+    renderCard.value = false;
     const page = props.context.selection.selectedPage;
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
@@ -613,22 +619,25 @@ const backTargetShape = (s?: string) => {
     props.context.preview.setSupernatantIsOpen(false);
     const protoActions = Array.from(actions.values());
     if (actions.size === 0) return;
+    const render_shapes: ShapeView[] = [];
     protoActions.forEach((action, index) => {
         let shape = shapes.find(item => item.id === action.targetNodeID);
         if ((protoActions.length - 1) === index) {
             shape = shapes.find(item => item.id === s);
         }
         if (shape) {
-            target_shapes.value.push(shape);
+            render_shapes.push(shape);
         }
     })
+    target_shapes = toRaw(render_shapes);
+    renderCard.value = true;
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
     nextTick(() => {
         const els = document.querySelectorAll('.dailogCard');
         for (let i = 0; i < protoActions.length; i++) {
             const action = protoActions[i];
-            const shape = target_shapes.value[i] as ShapeView;
+            const shape = target_shapes[i] as ShapeView;
             if (shape) {
                 // 移出动画
                 const m = viewUpdater.updateViewBox(props.context, shape, action.navigationType, box);
@@ -712,7 +721,7 @@ function watch_shapes() {
         watchedShapes.delete(k);
     })
 
-    const selectedShapes = [...props.context.selection.selectedShapes, ...(target_shapes.value as ShapeView[])];
+    const selectedShapes = [...props.context.selection.selectedShapes, ...(target_shapes as ShapeView[])];
     selectedShapes.forEach((v) => {
         v.watch(shapeChange);
         watchedShapes.set(v.id, v)
@@ -762,9 +771,9 @@ onUnmounted(() => {
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
         <PageCard v-if="cur_shape" class="pageCard" ref="pageCard" background-color="transparent"
-            :data="(props.page as PageView)" :context="context" :shapes="[cur_shape]" @start-loop="startLoop" />
+            :data="(props.page as PageView)" :context="context" :shapes="cur_shape" @start-loop="startLoop" />
         <!-- 浮层和动画卡片 -->
-        <div ref="viewBoxDialog" id="proto_overflow" v-for="item in (target_shapes as ShapeView[])">
+        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
             <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
                 :data="(props.page as PageView)" :context="context" :shapes="[item]" />
         </div>
