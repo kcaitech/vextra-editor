@@ -371,9 +371,9 @@ onUnmounted(() => {
                 :context="props.context" orientation="vertical" @selectShape="selectedShape">
             </ListView>
         </div>
-        <div class="flow-describe">
-            <div class="name">流程描述</div>
-            <div>{{ flow_descs[flow_index] }}</div>
+        <div class="flow-describe" v-if="flow_index !== 0">
+            <div class="name">{{ t('preview.flow_describe') }}</div>
+            <div>{{ flow_descs[flow_index - 1] }}</div>
         </div>
     </div>
 </template>

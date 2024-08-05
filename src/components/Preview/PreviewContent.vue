@@ -124,6 +124,8 @@ const previewWatcher = (t: number | string, s?: any) => {
         } else if (type === ScaleType.FitWidth) {
             viewUpdater.modifyTransformToFillByWidth();
         }
+        const shape = props.context.selection.selectedShapes[0];
+        viewUpdater.overlayBox(shape);
     } else if (t === Preview.NAVI_VISIBLE) {
         if (props.context.preview.naviState) {
             viewUpdater.v_matrix.trans(-250, 0);
@@ -237,9 +239,6 @@ const selectionWatcher = (v: number | string) => {
             return;
         }
         page_watcher();
-        nextTick(() => {
-            viewUpdater.overlayBox(shapes[0]);
-        })
     }
 }
 

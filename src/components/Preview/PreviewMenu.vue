@@ -176,13 +176,13 @@ onUnmounted(() => {
         <div class="item" @click.stop="togglePage(-1)">
             <div class="choose"></div>
             <div class="text">{{ t('preview.previous_page') }}</div>
-            <div class="key" style="font-size: 20px; transform: rotate(180deg);"><svg-icon
+            <div class="key" style="font-size: 20px;"><svg-icon
                     icon-class="arrow-right"></svg-icon></div>
         </div>
         <div class="item" @click.stop="togglePage(1)">
             <div class="choose"></div>
             <div class="text">{{ t('preview.next_page') }}</div>
-            <div class="key" style="font-size: 20px;"><svg-icon icon-class="arrow-right"></svg-icon></div>
+            <div class="key" style="font-size: 20px; transform: rotate(180deg);"><svg-icon icon-class="arrow-right"></svg-icon></div>
         </div>
         <div class="item" @click.stop="firstPage">
             <div class="choose"></div>
