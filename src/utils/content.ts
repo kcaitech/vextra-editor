@@ -1,4 +1,3 @@
-import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
@@ -10,10 +9,8 @@ import {
     getFormatFromBase64,
     GroupShape,
     GroupShapeView,
-    ImageShape,
     makeShapeTransform2By1,
     Matrix,
-    Page,
     PathShapeView,
     PathType,
     Shape,
@@ -55,18 +52,6 @@ interface SystemClipboardItem {
     content: Media | string
 }
 
-export interface Root {
-    init: boolean
-    x: number
-    y: number
-    bottom: number
-    right: number
-    width: number
-    height: number
-    element: any
-    center: ClientXY
-}
-
 export type Area =
     'text-selection'
     | 'controller'
@@ -78,20 +63,6 @@ export type Area =
     | 'table_cell'
     | 'component'
     | 'instance';
-const updateRootTime = 300;
-
-export function _updateRoot(context: Context, element: HTMLElement) {
-    const { x, y, right, bottom } = element.getBoundingClientRect();
-    const root: Root = {
-        init: true, x, y, right, bottom, element,
-        width: right - x,
-        height: bottom - y,
-        center: { x: (right - x) / 2, y: (bottom - y) / 2 }
-    }
-    context.workspace.updateRoot(root);
-}
-
-export const updateRoot = debounce(_updateRoot, updateRootTime);
 
 // 根据类型给图形命名
 export function getName(type: ShapeType, brothers: (ShapeView | Shape)[], t: Function): string {
