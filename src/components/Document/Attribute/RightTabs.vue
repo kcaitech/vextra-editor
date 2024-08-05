@@ -52,7 +52,7 @@ function toggle(id: Tab) {
 }
 function init() {
     if (currentTab.value === 'Design') {
-        const selected = props.context.selection.selectedShapes;
+        const selected = [...props.context.selection.selectedShapes];
         if (selected.length) {
             props.context.selection.rangeSelectShape(selected);
         }
@@ -129,7 +129,7 @@ onUnmounted(() => {
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
-                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                    :id="`tabs-id-${i.id}`" @click.stop="toggle(i.id)"
                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
                     {{ i.title }}
                 </div>
