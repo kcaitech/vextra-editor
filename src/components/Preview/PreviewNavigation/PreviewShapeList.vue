@@ -131,7 +131,7 @@ const update = () => {
     if (page) {
         getFlowPathShapes(props.context, flows);
         const { options, descs } = getFlowInfo(props.context, flows);
-        
+
         flow_options.value = options;
         flow_descs.value = descs;
         if (flow_index.value === 0) {
@@ -286,7 +286,7 @@ const toggleFlow = (index: number) => {
         update();
         const keys = Array.from(flows.keys());
         const page = props.context.selection.selectedPage!;
-        if(flow_index.value !== 0) {
+        if (flow_index.value !== 0) {
             const shape = page.getShape(keys[flow_index.value - 1]);
             props.context.selection.selectShape(shape);
         }
@@ -334,8 +334,9 @@ onUnmounted(() => {
                 <span class="options" v-else>{{ flow_options[flow_index] }}</span>
                 <svg-icon icon-class="down"></svg-icon>
                 <div class="flow-menu" v-if="isMenu" :style="{ top: -4 - (flow_index * 32) + 'px' }">
-                    <div class="items" v-for="(item, index) in flow_options" :key="index" @click.stop="toggleFlow(index)"
-                        @mouseenter="activeItem = index" :class="{ 'active-item': activeItem === index }">
+                    <div class="items" v-for="(item, index) in flow_options" :key="index"
+                        @click.stop="toggleFlow(index)" @mouseenter="activeItem = index"
+                        :class="{ 'active-item': activeItem === index }">
                         <div class="icon">
                             <svg-icon v-if="flow_index === index"
                                 :icon-class="activeItem === index ? 'white-select' : 'page-select'"></svg-icon>
@@ -370,6 +371,10 @@ onUnmounted(() => {
                 :context="props.context" orientation="vertical" @selectShape="selectedShape">
             </ListView>
         </div>
+        <div class="flow-describe">
+            <div class="name">流程描述</div>
+            <div>{{ flow_descs[flow_index] }}</div>
+        </div>
     </div>
 </template>
 
@@ -382,10 +387,10 @@ onUnmounted(() => {
     background-color: #fafafa;
     //padding-bottom: 8px;
     box-sizing: border-box;
+    font-size: var(--font-default-fontsize);
 
     .flow-select {
         width: 100%;
-        font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
         padding: 8px 6px 0 12px;
@@ -454,7 +459,6 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
         padding: 8px 0;
@@ -492,7 +496,6 @@ onUnmounted(() => {
                 padding-left: 5px;
                 padding-right: 5px;
                 background-color: transparent;
-                font-size: var(--font-default-fontsize);
                 caret-color: var(--active-color);
                 color: var(--active-color);
                 transition: 0.3s;
@@ -550,6 +553,34 @@ onUnmounted(() => {
         }
     }
 
+    .flow-describe {
+        .name {
+            font-weight: bolder;
+            line-height: 32px;
+            color: rgba(0, 0, 0, 0.9);
+
+        }
+
+        border-top: 1px solid #F0F0F0;
+        padding: 8px 8px 8px 16px;
+        width: 100%;
+        max-height: 150px;
+        height: 150px;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        line-height: 18px;
+        word-wrap: break-word;
+
+        &::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            border-radius: 3.5px;
+            background: #efefef;
+        }
+    }
+
     .popover {
         position: absolute;
         top: 42px;
@@ -557,7 +588,6 @@ onUnmounted(() => {
         color: #ffffff;
         z-index: 999;
         width: 106px;
-        font-size: var(--font-default-fontsize);
         background-color: #fff;
         border: 1px solid #EBEBEB;
         border-radius: 6px;
