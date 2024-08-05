@@ -4,7 +4,7 @@ import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
 import { eventPriority, getPreviewMatrix } from '@/utils/preview';
-import { Matrix, PathShapeView, PrototypeEvents, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, PrototypeEvents, sessionRefIdKey, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { ProtoAction } from './actions';
 
@@ -248,7 +248,7 @@ const selected_watcher = (t: number | string) => {
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
-        sessionStorage.removeItem('symrefSwitchId');
+        sessionStorage.removeItem(sessionRefIdKey);
     }
 }
 
@@ -265,7 +265,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
     props.context.preview.unwatch(preview_watcher);
-    sessionStorage.removeItem('symrefSwitchId');
+    sessionStorage.removeItem(sessionRefIdKey);
 })
 </script>
 

@@ -5,7 +5,8 @@ import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { v4 } from "uuid";
 
 export class ProtoAction {
     private m_context: Context
@@ -133,9 +134,11 @@ export class ProtoAction {
         const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
         if (!action.targetNodeID) return;
         const time = action.transitionDuration || 0.3;
-        const maprefIdArray = this.getMapRefIdLS('symrefSwitchId');
+        const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
         maprefIdArray.set(down_shape.id, action.targetNodeID);
-        this.saveMapRefIdLS(maprefIdArray, 'symrefSwitchId');
+        this.saveMapRefIdLS(maprefIdArray, sessionRefIdKey);
+        console.log(v4());
+        
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
         } else {
