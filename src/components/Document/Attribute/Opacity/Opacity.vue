@@ -264,9 +264,7 @@ function _update() {
 
 const getMixMode = () => {
     const shapes = props.context.selection.selectedShapes
-    if (!shapes.length) {
-        return;
-    }
+    if (!shapes.length) return;
     const contextSettings = shapes[0].contextSettings as ContextSettings;
     let fristMode
     if (contextSettings) {

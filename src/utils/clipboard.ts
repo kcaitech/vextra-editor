@@ -1,7 +1,7 @@
 import {
     adapt2Shape,
     AsyncCreator,
-    AsyncTransfer,
+    AsyncTransfer, Blur,
     ColVector3D,
     ContactShape,
     CurvePoint,
@@ -40,6 +40,8 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
+import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -55,6 +57,8 @@ class ExfContext {
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'design.moss';
 export const paras = 'design.moss/paras'; // 文字段落
+export const properties = 'design.moss/properties'; // 文字段落
+
 export class Clipboard {
     context: Context;
     private cache: { type: CacheType, data: any } | undefined;
@@ -161,13 +165,9 @@ export class Clipboard {
             is_async_plan_enable = true;
         }
 
-        if (!event) {
-            return is_async_plan_enable;
-        }
+        if (!event) return is_async_plan_enable;
 
-        if (!event.clipboardData) {
-            return false;
-        }
+        if (!event.clipboardData) return false;
 
         event.clipboardData.setData('text/plain', plain_text);
         event.clipboardData.setData('text/html', h);
@@ -251,6 +251,66 @@ export class Clipboard {
         this.modify_cache('inner-html', h);
 
         return true;
+    }
+
+    write_properties(event?: ClipboardEvent) {
+        try {
+            const shapes = this.context.selection.selectedShapes;
+            const fills = get_fills(shapes);
+            const borders = get_borders(shapes);
+            const shadows = get_shadows(shapes);
+            const blur = get_blur(shapes);
+
+            const data: any = {};
+            if (fills !== "mixed") {
+                data['fills'] = fills.map(i => exportFill(i.fill));
+            }
+            if (borders !== "mixed") {
+                data['borders'] = borders.map(i => exportBorder(i.border));
+            }
+            if (shadows !== "mixed") {
+                data['shadows'] = shadows.map(i => exportShadow(i.shadow));
+            }
+            if (blur instanceof Blur) {
+                data['blur'] = exportBlur(blur);
+            }
+            const code = encode_html(properties, data);
+
+            // @ts-ignore
+            if (!navigator.clipboard?.read) return false;
+            const html = new Blob([code || ''], { type: 'text/html' });
+            const content = [new ClipboardItem({ 'text/html': html })];
+            navigator.clipboard.write(content);
+            return true;
+        } catch (e) {
+            console.log('write_properties error:', e);
+            return false;
+        }
+    }
+
+    async paste_properties(event?: ClipboardEvent) {
+        try {
+            // @ts-ignore
+            if (navigator.clipboard.read || !event) {
+                const data = await navigator.clipboard.read();
+                if (!data) throw new Error('No valid data on clipboard.');
+                const d = data[0];
+                if (d.types.length !== 1 || d.types[0] !== 'text/html') throw new Error('No valid data on clipboard.');
+                const val = await d.getType('text/html');
+                if (!val) throw new Error('invalid value');
+                let text_html = await val.text();
+                text_html = decode_html(text_html);
+                if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
+                const is_properties = text_html.slice(0, 70).indexOf(properties) > -1; // 图层属性
+                if (!is_properties) throw new Error('invalid value');
+                const source = JSON.parse(text_html.split(properties)[1]);
+                const selection = this.context.selection;
+                const editor = this.context.editor4Page(selection.selectedPage!);
+                editor.pasteProperties(selection.selectedShapes, source);
+            }
+        } catch (error) {
+            console.log('paste error:', error);
+        }
     }
 
     writeBlob(blob: Blob) {

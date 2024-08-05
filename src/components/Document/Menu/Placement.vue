@@ -32,9 +32,9 @@ onUnmounted(() => {
 </script>
 <template>
 <div v-if="pulse" class="container" :style="{ left:params.site.x + 'px',top:params.site.y + 'px' }">
-    <div class="dot"></div>
-    <div class="pulse"></div>
-    <div class="pulse1"></div>
+    <div class="dot"/>
+    <div class="pulse"/>
+    <div class="pulse1"/>
 </div>
 </template>
 <style lang="scss" scoped>
@@ -109,6 +109,11 @@ onUnmounted(() => {
     background-color: transparent;
     transition: 0.32s;
     z-index: 199;
+    pointer-events: none;
+
+    > div {
+        pointer-events: none;
+    }
 
     .dot {
         position: absolute;
