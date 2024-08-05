@@ -2,12 +2,13 @@
 import { Page, ResizingConstraints2, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import Select, { SelectItem, SelectSource } from '@/components/common/Select2.vue';
+import Select, { SelectItem, SelectSource } from './ConstraintSelect.vue';
 import { genOptions } from '@/utils/common';
 import { useI18n } from 'vue-i18n';
 import TypeHeader from '../TypeHeader.vue';
 import { throttle } from 'lodash';
 import ConstraintBox from "@/components/Document/Attribute/ResizingConstraint/ConstraintBox.vue";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 interface Props {
     context: Context;
@@ -352,7 +353,11 @@ onUnmounted(() => {
         <div class="main">
             <div class="row">
                 <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
-                        @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
+                        @select="handleHorizontalPositionSelect" :disabled="disabled">
+                    <template #prefix>
+                        <svg-icon style="width: 12px; height: 12px;" icon-class="horizontal-constraint"/>
+                    </template>
+                </Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
                      @click="handleCheckboxChangeForWidth">
                     <div class="checkbox" :style="{ border: fixedWidth ? 'none' : '' }">
@@ -360,7 +365,7 @@ onUnmounted(() => {
                             <div class="mixed"></div>
                         </div>
                         <div v-else-if="fixedWidth" class="active">
-                            <svg-icon icon-class="select"></svg-icon>
+                            <svg-icon icon-class="select"/>
                         </div>
                     </div>
                     <span>{{ t('attr.fixedWidth') }}</span>
@@ -368,7 +373,11 @@ onUnmounted(() => {
             </div>
             <div class="row">
                 <Select :selected="verticalPositionSelected" :source="VerticalPositionOptions"
-                        @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
+                        @select="handleVerticalPositionSelect" :disabled="disabled">
+                    <template #prefix>
+                        <svg-icon style="width: 12px; height: 12px;" icon-class="vertical-constraint"/>
+                    </template>
+                </Select>
                 <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
                      @click="handleCheckboxChangeForHeight">
                     <div class="checkbox" :style="{ border: fixedHeight ? 'none' : '' }">
@@ -376,7 +385,7 @@ onUnmounted(() => {
                             <div class="mixed"></div>
                         </div>
                         <div v-else-if="fixedHeight" class="active">
-                            <svg-icon icon-class="select"></svg-icon>
+                            <svg-icon icon-class="select"/>
                         </div>
                     </div>
                     <span>{{ t('attr.fixedHeight') }}</span>
