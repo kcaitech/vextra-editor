@@ -624,7 +624,7 @@ onUnmounted(() => {
         <span>{{ t('system.create_container') }}</span>
         <Key code="Ctrl Alt G"></Key>
     </div>
-    <div v-if="items.has(MenuItemType.Mask)" @click="outline" class="menu-item">
+    <div v-if="items.has(MenuItemType.Outline)" @click="outline" class="menu-item">
         <span>{{ t('system.outline') }}</span>
         <Key code="Ctrl Alt O"></Key>
     </div>

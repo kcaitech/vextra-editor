@@ -276,6 +276,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             const index = contextMenuItems.value.has(MenuItemType.Component);
             if (index) contextMenuItems.value.delete(MenuItemType.Component);
         }
+        if (selected.some(i => i.type === ShapeType.Text)) contextMenuItems.value.add(MenuItemType.Outline);
         if (props.context.readonly || props.context.tool.isLable) {
             contextMenuItems.value.clear();
             contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Copy]);
@@ -295,9 +296,7 @@ const chartMenuMount = (e: MouseEvent) => {
 }
 
 function menu_watcher(t: number) {
-    if (t === Menu.SHUTDOWN_MENU) {
-        close();
-    }
+    if (t === Menu.SHUTDOWN_MENU) close();
 }
 
 function close() {

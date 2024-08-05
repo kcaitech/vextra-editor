@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import {
     computed,
-    getCurrentInstance, h, nextTick,
-    onBeforeMount, onMounted, onUnmounted,
-    reactive, ref,
+    getCurrentInstance,
+    h,
+    nextTick,
+    onBeforeMount,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
     watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
@@ -230,22 +235,26 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems.value.add(MenuItemType.Layers);
     }
 
-    const _shapes = selection.selectedShapes
-    if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.value.add(MenuItemType.EditComps);
-    }
-
-    if (area === MountedAreaType.TableCell) {
-        const table = props.context.tableSelection;
-        if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-            contextMenuItems.value.add(MenuItemType.SplitCell);
-            contextMenuItems.value.delete(MenuItemType.MergeCell);
+    if (permIsEdit(props.context)) {
+        const _shapes = selection.selectedShapes
+        if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
+            contextMenuItems.value.add(MenuItemType.EditComps);
         }
-    }
-    if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
-    if (_shapes.length === 1 && _shapes[0].mask) {
-        contextMenuItems.value.delete(MenuItemType.Mask);
-        contextMenuItems.value.add(MenuItemType.UnMask);
+        if (_shapes.some(i => i.type === ShapeType.Text)) {
+            contextMenuItems.value.add(MenuItemType.Outline);
+        }
+        if (area === MountedAreaType.TableCell) {
+            const table = props.context.tableSelection;
+            if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+                contextMenuItems.value.add(MenuItemType.SplitCell);
+                contextMenuItems.value.delete(MenuItemType.MergeCell);
+            }
+        }
+        if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
+        if (_shapes.length === 1 && _shapes[0].mask) {
+            contextMenuItems.value.delete(MenuItemType.Mask);
+            contextMenuItems.value.add(MenuItemType.UnMask);
+        }
     }
 
     contextMenu.value = true; // 数据准备就绪之后打开菜单

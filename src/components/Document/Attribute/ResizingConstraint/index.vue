@@ -52,21 +52,47 @@ function handleHorizontalPositionSelect(item: SelectItem, shift?: boolean) {
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'left':
-            if (horizontalPositionSelected.value.value === 'right' && shift) {
-                e.fixedToLR(selected);
+            if (shift) {
+                const ov = horizontalPositionSelected.value.value;
+                if (ov === 'right') {
+                    e.fixedToLR(selected);
+                } else if (ov === 'lrfixed') {
+                    e.fixedToRight(selected);
+                } else if (ov === 'left') {
+                    e.scaleByWidth(selected);
+                } else {
+                    e.fixedToLeft(selected);
+                }
             } else {
                 e.fixedToLeft(selected);
             }
             break;
         case 'right':
-            if (horizontalPositionSelected.value.value === 'left' && shift) {
-                e.fixedToLR(selected);
+            if (shift) {
+                const ov = horizontalPositionSelected.value.value;
+                if (ov === 'left') {
+                    e.fixedToLR(selected);
+                } else if (ov === 'lrfixed') {
+                    e.fixedToLeft(selected);
+                } else if (ov === 'right') {
+                    e.scaleByWidth(selected);
+                } else {
+                    e.fixedToRight(selected);
+                }
             } else {
                 e.fixedToRight(selected);
             }
             break;
         case 'hcenter':
-            e.HorizontaljustifyCenter(selected);
+            if (shift) {
+                if (horizontalPositionSelected.value.value === 'hcenter') {
+                    e.scaleByWidth(selected);
+                } else {
+                    e.HorizontaljustifyCenter(selected);
+                }
+            } else {
+                e.HorizontaljustifyCenter(selected);
+            }
             break;
         case 'lrfixed':
             e.fixedToLR(selected);
@@ -96,21 +122,47 @@ function handleVerticalPositionSelect(item: SelectItem, shift?: boolean) {
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'top':
-            if (verticalPositionSelected.value.value === 'bottom' && shift) {
-                e.fixedToTB(selected);
+            if (shift) {
+                const ov = verticalPositionSelected.value.value;
+                if (ov === 'bottom') {
+                    e.fixedToTB(selected);
+                } else if (ov === 'tbfixed') {
+                    e.fixedToBottom(selected);
+                } else if (ov === 'top') {
+                    e.scaleByHeight(selected);
+                } else {
+                    e.fixedToTop(selected);
+                }
             } else {
                 e.fixedToTop(selected);
             }
             break;
         case 'bottom':
-            if (verticalPositionSelected.value.value === 'top' && shift) {
-                e.fixedToTB(selected);
+            if (shift) {
+                const ov = verticalPositionSelected.value.value;
+                if (ov === 'top') {
+                    e.fixedToTB(selected);
+                } else if (ov === 'tbfixed') {
+                    e.fixedToTop(selected);
+                } else if (ov === 'bottom') {
+                    e.scaleByHeight(selected);
+                } else {
+                    e.fixedToBottom(selected);
+                }
             } else {
                 e.fixedToBottom(selected);
             }
             break;
         case 'vcenter':
-            e.VerticaljustifyCenter(selected);
+            if (shift) {
+                if (verticalPositionSelected.value.value === 'vcenter') {
+                    e.scaleByHeight(selected);
+                } else {
+                    e.VerticaljustifyCenter(selected);
+                }
+            } else {
+                e.VerticaljustifyCenter(selected);
+            }
             break;
         case 'tbfixed':
             e.fixedToTB(selected);
