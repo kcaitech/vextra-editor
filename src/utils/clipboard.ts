@@ -31,7 +31,7 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { getName, Media, SVGReader, upload_image } from '@/utils/content';
+import { getName, hidden_selection, Media, SVGReader, upload_image } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding } from './common';
@@ -312,6 +312,7 @@ export class Clipboard {
                 const selection = this.context.selection;
                 const editor = this.context.editor4Page(selection.selectedPage!);
                 editor.pasteProperties(selection.selectedShapes, source);
+                hidden_selection(this.context);
             }
         } catch (error) {
             console.log('paste error:', error);
