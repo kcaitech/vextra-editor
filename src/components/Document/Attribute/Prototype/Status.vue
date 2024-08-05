@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { Context } from '@/context';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, watchEffect } from 'vue';
 import {
     get_var_for_ref,
     states_tag_values_sort,
@@ -75,8 +75,6 @@ const getState = (id: string | undefined) => {
         if (page) search(page, id);
     }
 }
-
-
 
 
 watch(() => props.targetNodeId, (n, o) => {
