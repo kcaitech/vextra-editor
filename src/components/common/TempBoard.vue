@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { message } from "@/utils/message";
 import { getShadowMax, getShapeBorderMax } from "@/utils/cutout";
 // import CanvasKitInit from 'canvaskit-wasm';
-import CanvasKitInit from "@kcdesign/canvaskit-wasm";
+// import CanvasKitInit from "@kcdesign/canvaskit-wasm";
 
 interface Props {
     context: Context;
@@ -29,19 +29,19 @@ const pedal = ref<boolean>(false);
 const pageCard = ref<PCard>();
 const t = useI18n().t;
 
-async function drawImage(img: CanvasImageSource) {
-    const CanvasKit = await CanvasKitInit({
-        locateFile: (file: string) => {
-            console.log('__file__', file);
-            return `/${file}`;
-        }
-    });
-    const canvas = CanvasKit.MakeCanvas(375, 600);
-
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(img, 0, 0);
-    return dataURLToBlob(canvas.toDataURL('image/png', 0.5));
-}
+// async function drawImage(img: CanvasImageSource) {
+//     const CanvasKit = await CanvasKitInit({
+//         locateFile: (file: string) => {
+//             console.log('__file__', file);
+//             return `/${file}`;
+//         }
+//     });
+//     const canvas = CanvasKit.MakeCanvas(375, 600);
+//
+//     const ctx = canvas.getContext('2d')!;
+//     ctx.drawImage(img, 0, 0);
+//     return dataURLToBlob(canvas.toDataURL('image/png', 0.5));
+// }
 
 function dataURLToBlob(dataURL: string) {
     let arr = dataURL.split(',');

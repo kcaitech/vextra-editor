@@ -1,7 +1,7 @@
 {
   "name": "@kcdesign/editor",
   "description": "kcdesign editor",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "private": false,
   "type": "module",
   "author": "kcaitech.com",
@@ -19,8 +19,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@kcdesign/canvaskit-wasm": "^0.1.1",
-    "@kcdesign/data": "file:../kcdesign-data",
+    "@kcdesign/data": "1.0.55",
     "element-plus": "2.3.0",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
