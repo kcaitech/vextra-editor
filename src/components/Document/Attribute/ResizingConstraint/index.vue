@@ -7,12 +7,14 @@ import { genOptions } from '@/utils/common';
 import { useI18n } from 'vue-i18n';
 import TypeHeader from '../TypeHeader.vue';
 import { throttle } from 'lodash';
+import ConstraintBox from "@/components/Document/Attribute/ResizingConstraint/ConstraintBox.vue";
 
 interface Props {
     context: Context;
     trigger: any[];
     selectionChange: number;
 }
+
 const { t } = useI18n();
 const props = defineProps<Props>();
 const mixed = t('attr.mixed');
@@ -26,7 +28,7 @@ const horizontalPositionOptions: SelectSource[] = genOptions([
     ['hfollow', t('attr.follow_container')]
 ]);
 
-const VerticalPositionSelected = ref<SelectItem>({ value: 'top', content: t('attr.fixed_top') });
+const verticalPositionSelected = ref<SelectItem>({ value: 'top', content: t('attr.fixed_top') });
 const VerticalPositionOptions: SelectSource[] = genOptions([
     ['top', t('attr.fixed_top')],
     ['bottom', t('attr.fixed_bottom')],
@@ -45,15 +47,23 @@ function createEditor() {
     return props.context.editor.editor4ResizingConstraint(adapt2Shape(page) as Page);
 }
 
-function handleHorizontalPositionSelect(item: SelectItem) {
+function handleHorizontalPositionSelect(item: SelectItem, shift?: boolean) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'left':
-            e.fixedToLeft(selected);
+            if (horizontalPositionSelected.value.value === 'right' && shift) {
+                e.fixedToLR(selected);
+            } else {
+                e.fixedToLeft(selected);
+            }
             break;
         case 'right':
-            e.fixedToRight(selected);
+            if (horizontalPositionSelected.value.value === 'left' && shift) {
+                e.fixedToLR(selected);
+            } else {
+                e.fixedToRight(selected);
+            }
             break;
         case 'hcenter':
             e.HorizontaljustifyCenter(selected);
@@ -70,13 +80,10 @@ function handleHorizontalPositionSelect(item: SelectItem) {
 }
 
 function handleCheckboxChangeForWidth() {
+    if (disableToFixedWidth.value) return;
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    if (fixedWidth.value === 'mixed') {
-        e.fixedToWidth(selected)
-        return
-
-    }
+    if (fixedWidth.value === 'mixed') return e.fixedToWidth(selected)
     if (fixedWidth.value) {
         e.flexWidth(selected);
     } else {
@@ -84,15 +91,23 @@ function handleCheckboxChangeForWidth() {
     }
 }
 
-function handleVerticalPositionSelect(item: SelectItem) {
+function handleVerticalPositionSelect(item: SelectItem, shift?: boolean) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
     switch (item.value) {
         case 'top':
-            e.fixedToTop(selected);
+            if (verticalPositionSelected.value.value === 'bottom' && shift) {
+                e.fixedToTB(selected);
+            } else {
+                e.fixedToTop(selected);
+            }
             break;
         case 'bottom':
-            e.fixedToBottom(selected);
+            if (verticalPositionSelected.value.value === 'top' && shift) {
+                e.fixedToTB(selected);
+            } else {
+                e.fixedToBottom(selected);
+            }
             break;
         case 'vcenter':
             e.VerticaljustifyCenter(selected);
@@ -107,13 +122,12 @@ function handleVerticalPositionSelect(item: SelectItem) {
             break;
     }
 }
+
 function handleCheckboxChangeForHeight() {
+    if (disableToFixedHeight.value) return;
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    if (fixedHeight.value === 'mixed') {
-        e.fixedToHeight(selected);
-        return;
-    }
+    if (fixedHeight.value === 'mixed') return e.fixedToHeight(selected);
     if (fixedHeight.value) {
         e.flexHeight(selected);
     } else {
@@ -123,6 +137,7 @@ function handleCheckboxChangeForHeight() {
 
 const disabled = ref(false)
 const selected = ref()
+
 function _update() {
     modifyhorizontalPositionStatus();
     modifyverticalPositionStatus();
@@ -134,9 +149,7 @@ function _update() {
 
 function modifyhorizontalPositionStatus() {
     const shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) {
-        return;
-    }
+    if (!shapes.length) return;
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
     for (let i = 1, l = shapes.length; i < l; i++) {
@@ -197,15 +210,13 @@ function modifyWidthStatus() {
 
 function modifyverticalPositionStatus() {
     const shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) {
-        return;
-    }
+    if (!shapes.length) return;
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
     for (let i = 1, l = shapes.length; i < l; i++) {
         let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
         if (__rc !== commonRC) {
-            VerticalPositionSelected.value = { value: 'mixed', content: mixed };
+            verticalPositionSelected.value = { value: 'mixed', content: mixed };
             return;
         }
     }
@@ -213,15 +224,15 @@ function modifyverticalPositionStatus() {
     let rc = shapes[0].resizingConstraint || 0;
 
     if (ResizingConstraints2.isFixedTopAndBottom(rc)) {
-        VerticalPositionSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') };
+        verticalPositionSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') };
     } else if (ResizingConstraints2.isFixedToTop(rc)) {
-        VerticalPositionSelected.value = { value: 'top', content: t('attr.fixed_top') };
+        verticalPositionSelected.value = { value: 'top', content: t('attr.fixed_top') };
     } else if (ResizingConstraints2.isFixedToBottom(rc)) {
-        VerticalPositionSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') };
+        verticalPositionSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') };
     } else if (ResizingConstraints2.isVerticalJustifyCenter(rc)) {
-        VerticalPositionSelected.value = { value: 'vcenter', content: t('attr.center') };
+        verticalPositionSelected.value = { value: 'vcenter', content: t('attr.center') };
     } else if (ResizingConstraints2.isFlexHeight(rc)) {
-        VerticalPositionSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
+        verticalPositionSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
     }
 
     function getGroupVal(val: number) {
@@ -257,10 +268,9 @@ function modifyHeightStatus() {
         return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Height);
     }
 }
-clearTimeout
+
 const update = throttle(_update, 160, { leading: true });
 
-// 这里在下代协作算法出来后可以优化
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
 
@@ -271,48 +281,58 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="wrap">
-        <TypeHeader :title="t('attr.groupings')" class="mt-24" :active="!disabled">
-        </TypeHeader>
-        <div class="content" :class="{ 'disabled': disabled }">
-            <div class="main">
-                <div class="row">
-                    <label>{{ t('attr.horizontal') }}</label>
-                    <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
+<div class="wrap">
+    <TypeHeader :title="t('attr.groupings')" class="mt-24" :active="!disabled">
+    </TypeHeader>
+    <ConstraintBox
+        :horizontal-position-selected="horizontalPositionSelected.value as string"
+        :vertical-position-selected="verticalPositionSelected.value as string"
+        :disable-to-fixed-width="disableToFixedWidth"
+        :fixed-width="fixedWidth"
+        :disable-to-fixed-height="disableToFixedHeight"
+        :fixed-height="fixedHeight"
+        @change-hor-position="(params: any, shift?: boolean) => {handleHorizontalPositionSelect(params as SelectItem, shift)}"
+        @change-ver-position="(params: any, shift?: boolean) => {handleVerticalPositionSelect(params as SelectItem, shift)}"
+        @change-hor-size="handleCheckboxChangeForWidth"
+        @change-ver-size="handleCheckboxChangeForHeight"
+    />
+    <div class="content" :class="{ 'disabled': disabled }">
+        <div class="main">
+            <div class="row">
+                <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
                         @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
-                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
-                        @click="handleCheckboxChangeForWidth">
-                        <div class="checkbox" :style="{ border: fixedWidth ? 'none' : '' }">
-                            <div v-if="fixedWidth === 'mixed'" class="mixed-status">
-                                <div class="mixed"></div>
-                            </div>
-                            <div v-else-if="fixedWidth" class="active">
-                                <svg-icon icon-class="select"></svg-icon>
-                            </div>
+                <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
+                     @click="handleCheckboxChangeForWidth">
+                    <div class="checkbox" :style="{ border: fixedWidth ? 'none' : '' }">
+                        <div v-if="fixedWidth === 'mixed'" class="mixed-status">
+                            <div class="mixed"></div>
                         </div>
-                        <span>{{ t('attr.fixedWidth') }}</span>
+                        <div v-else-if="fixedWidth" class="active">
+                            <svg-icon icon-class="select"></svg-icon>
+                        </div>
                     </div>
+                    <span>{{ t('attr.fixedWidth') }}</span>
                 </div>
-                <div class="row">
-                    <label>{{ t('attr.vertical') }}</label>
-                    <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
+            </div>
+            <div class="row">
+                <Select :selected="verticalPositionSelected" :source="VerticalPositionOptions"
                         @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
-                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
-                        @click="handleCheckboxChangeForHeight">
-                        <div class="checkbox" :style="{ border: fixedHeight ? 'none' : '' }">
-                            <div v-if="fixedHeight === 'mixed'" class="mixed-status">
-                                <div class="mixed"></div>
-                            </div>
-                            <div v-else-if="fixedHeight" class="active">
-                                <svg-icon icon-class="select"></svg-icon>
-                            </div>
+                <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
+                     @click="handleCheckboxChangeForHeight">
+                    <div class="checkbox" :style="{ border: fixedHeight ? 'none' : '' }">
+                        <div v-if="fixedHeight === 'mixed'" class="mixed-status">
+                            <div class="mixed"></div>
                         </div>
-                        <span>{{ t('attr.fixedHeight') }}</span>
+                        <div v-else-if="fixedHeight" class="active">
+                            <svg-icon icon-class="select"></svg-icon>
+                        </div>
                     </div>
+                    <span>{{ t('attr.fixedHeight') }}</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -344,16 +364,11 @@ onUnmounted(() => {
             width: 100%;
 
             .row {
-                width: 100%;
+                width: 186px;
                 display: flex;
                 align-items: center;
 
-                >label {
-                    flex: 0 0 42px;
-                    line-height: 32px;
-                }
-
-                >.select-container {
+                > .select-container {
                     flex: 1 1 84px;
                     height: 32px;
                 }
@@ -366,7 +381,7 @@ onUnmounted(() => {
                     align-items: center;
                     cursor: pointer;
 
-                    >.checkbox {
+                    > .checkbox {
                         box-sizing: border-box;
                         border-radius: 3px;
                         background-color: transparent;
@@ -378,7 +393,7 @@ onUnmounted(() => {
                         flex: 0 0 14px;
                         height: 14px;
 
-                        >.mixed-status {
+                        > .mixed-status {
                             width: 14px;
                             height: 14px;
                             background-color: var(--active-color);
@@ -386,7 +401,7 @@ onUnmounted(() => {
                             align-items: center;
                             justify-content: center;
 
-                            >div {
+                            > div {
                                 background-color: #ffffff;
                                 width: 7px;
                                 height: 1px;
@@ -401,19 +416,19 @@ onUnmounted(() => {
                             align-items: center;
                             justify-content: center;
 
-                            >svg {
+                            > svg {
                                 width: 60%;
                                 height: 60%;
                             }
                         }
                     }
 
-                    >span {
+                    > span {
                         margin-left: 4px;
                     }
                 }
 
-                >.disabledBox {
+                > .disabledBox {
                     pointer-events: none;
                     opacity: 0.3;
                 }

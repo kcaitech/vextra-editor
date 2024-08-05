@@ -4,7 +4,7 @@ import {
     component,
     lessen,
     lower_layer,
-    magnify,
+    magnify, outlineSelection,
     redo,
     scale_0,
     select_all,
@@ -122,6 +122,10 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
     if (isCtrl && shiftKey) {
         event.preventDefault();
         context.menu.notify(Menu.WRITE_MEDIA);
+        return;
+    }
+    if (isCtrl && event.altKey) {
+        context.workspace.clipboard.write_properties();
         return;
     }
 }
@@ -285,6 +289,9 @@ keydownHandler['KeyN'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.altKey && permIsEdit(context)) {
+        return outlineSelection(context);
+    }
     if (!permIsEdit(context) || is_ctrl || event.shiftKey || event.altKey) return;
     useEllipse(context) // 椭圆工具
 }
@@ -295,12 +302,6 @@ keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) {
     }
 
     usePen(context); // 钢笔工具
-
-    // if (context.workspace.is_path_edit_mode) {
-    //     context.tool.setAction(Action.Pen2);
-    // } else {
-    //     context.tool.setAction(Action.Pen); // 钢笔工具
-    // }
 }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
@@ -355,26 +356,24 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
-    if (is_ctrl) {
+    if (is_ctrl && event.altKey && permIsEdit(context)) {
+        context.workspace.clipboard.paste_properties(); // 粘贴图层属性
         return;
     }
-
-    event.preventDefault();
     if (event.altKey && event.shiftKey && permIsEdit(context)) {
         context.arrange.notify(Arrange.SPACE_AROUND_VER); // 图层垂直方向等距分布
         return;
     }
     if (event.altKey && permIsEdit(context)) {
+        if (event.repeat) return;
         context.arrange.notify(Arrange.ITEMS_ALIGN_VER); // 图层中线对齐
+        return;
     }
     if (event.shiftKey && permIsEdit(context)) {
-        if (event.repeat) {
-            return;
-        }
+        if (event.repeat) return;
         context.attr.notify(Attribute.VER_HILP);
         return;
     }
-    if (event.shiftKey || event.altKey) return;
     context.tool.setAction(Action.AutoV); // 自由光标
 }
 

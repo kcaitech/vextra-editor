@@ -49,7 +49,9 @@ export enum MenuItemType {
     Pixel,
 
     Mask,
-    UnMask
+    UnMask,
+
+    Outline
 }
 
 export enum MountedAreaType { // 不同区域生成不同的菜单项
