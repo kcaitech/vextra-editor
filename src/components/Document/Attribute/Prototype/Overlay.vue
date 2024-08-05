@@ -3,15 +3,26 @@
         <span>浮层设置</span>
         <div class="content">
             <div class="position">
-                <div v-for="i in  OverlayPositions " :key="i" :class="{ 'ptactive': position === i }"
+                <div v-for="i in  OverlayPositions " :key="i" :class="{ 'ptactive': position?.position === i }"
                     @click.stop="setPosition(i)">
                 </div>
             </div>
             <div class="margin">
                 <div class="margin-item" v-for=" i  in  margin " :key="i[0]"
-                    :style="{ pointerEvents: position?.includes(i[0]) ? 'auto' : 'none', opacity: position?.includes(i[0]) ? 1 : 0.4 }">
+                    :style="{ pointerEvents: position?.position?.includes(i[0]) ? 'auto' : 'none', opacity: position?.position?.includes(i[0]) ? 1 : 0.4 }">
                     <svg-icon icon-class="margin" :style="{ rotate: i[1] + 'deg' }"></svg-icon>
-                    <input type="text" :value="position?.includes(i[0]) ? 0 : '-'">
+                    <input v-if="i[0] === 'TOP'" ref="marginInput" :id="i[0]" type="text"
+                        :value="position?.position?.includes(i[0]) ? position.margin.top : '-'"
+                        @change="setMargin($event, i[0], position?.margin.top!)">
+                    <input v-if="i[0] === 'BOTTOM'" ref="marginInput" :id="i[0]" type="text"
+                        :value="position?.position?.includes(i[0]) ? position.margin.bottom : '-'"
+                        @change="setMargin($event, i[0], position?.margin.bottom!)">
+                    <input v-if="i[0] === 'LEFT'" ref="marginInput" :id="i[0]" type="text"
+                        :value="position?.position?.includes(i[0]) ? position.margin.left : '-'"
+                        @change="setMargin($event, i[0], position?.margin.left!)">
+                    <input v-if="i[0] === 'RIGHT'" ref="marginInput" :id="i[0]" type="text"
+                        :value="position?.position?.includes(i[0]) ? position.margin.right : '-'"
+                        @change="setMargin($event, i[0], position?.margin.right!)">
                 </div>
             </div>
         </div>
@@ -39,7 +50,7 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { Reg_HEX } from "@/utils/color";
-import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositions } from "@kcdesign/data";
+import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositions, OverlayPosition, OverlayMargin } from "@kcdesign/data";
 import { message } from "@/utils/message";
 import { onMounted, ref, watch } from "vue";
 import { Context } from "@/context";
@@ -51,6 +62,11 @@ export interface Type {
     color?: Color
 }
 
+export interface Margin {
+    val: number,
+    type: string
+}
+
 const props = defineProps<{
     context: Context,
     targetNodeId: string | undefined
@@ -60,6 +76,7 @@ const emits = defineEmits<{
     (e: "interaction", state: boolean): void;
     (e: "appearance", data: Type): void;
     (e: "position", data: OverlayPositions): void;
+    (e: "margin", data: Margin): void;
 }>()
 
 const { t } = useI18n()
@@ -71,10 +88,11 @@ const alpha_ele = ref<HTMLInputElement>();
 const clr_ele = ref<HTMLInputElement>();
 const is_alpha_select = ref(false);
 const addmask = ref<boolean>(false)
-const position = ref<OverlayPositions>()
+const position = ref<OverlayPosition>()
 const event = ref<OverlayBackgroundInteraction>()
 const Appearance = ref<OverlayBackgroundAppearance>()
 const overlayclose = ref<boolean>(false)
+const marginInput = ref<HTMLInputElement[]>();
 
 const margin = new Map([
     ['TOP', 90],
@@ -90,7 +108,7 @@ function toHex(r: number, g: number, b: number) {
 
 const setPosition = (val: OverlayPositions) => {
     emits('position', val)
-    position.value = val
+    getPosition(props.targetNodeId)
 }
 
 const setInteraction = () => {
@@ -99,6 +117,22 @@ const setInteraction = () => {
 
 const setAppearance = () => {
     emits('appearance', { state: addmask.value })
+}
+
+const setMargin = (e: Event, i: string, old: number) => {
+    const val = (e.target as HTMLInputElement).value;
+    const input = marginInput.value?.find(p => p.id === i);
+    if (!input) return
+    let value: number;
+    if (isNaN(Number(val))) {
+        const el = marginInput.value?.find(p => p.id === i)
+        if (el) el.value = old.toString()
+    } else {
+        value = Number(val)
+        emits('margin', { val: value, type: i })
+    }
+    input.blur()
+    getPosition(props.targetNodeId)
 }
 
 function setColor(clr: string, alpha: number) {
@@ -189,8 +223,7 @@ const getPosition = (targetID: string | undefined) => {
     const shape = shapes.find(i => i.id === targetID)
     if (!shape) return;
     const { overlayBackgroundAppearance, overlayBackgroundInteraction, overlayPositionType } = shape
-
-    position.value = overlayPositionType ?? OverlayPositions.CENTER
+    position.value = overlayPositionType ?? new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
     event.value = overlayBackgroundInteraction ?? OverlayBackgroundInteraction.NONE
     Appearance.value = overlayBackgroundAppearance ?? new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, new Color(0.25, 0, 0, 0))
     background_color.value = Appearance.value.backgroundColor as Color
@@ -202,7 +235,7 @@ const getPosition = (targetID: string | undefined) => {
 
 watch(() => props.targetNodeId, () => {
     getPosition(props.targetNodeId)
-})
+}, { deep: true })
 
 onMounted(() => {
     getPosition(props.targetNodeId)

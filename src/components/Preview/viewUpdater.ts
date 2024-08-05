@@ -672,36 +672,36 @@ export class ViewUpdater {
             if (!s) return;
             const scale = this.v_matrix.m00;
             m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-            if (s.overlayPositionType === OverlayPositions.CENTER || !s.overlayPositionType) {
+            if (s.overlayPositionType?.position === OverlayPositions.CENTER || !s.overlayPositionType) {
                 const c_x = (frame.width * scale) / 2;
                 const c_y = (frame.height * scale) / 2;
                 const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
                 m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
-            } else if (s.overlayPositionType === OverlayPositions.TOPCENTER) {
+            } else if (s.overlayPositionType.position === OverlayPositions.TOPCENTER) {
                 const c_x = (frame.width * scale) / 2;
                 const v_centerx = (box.left + box.right) / 2
                 m.trans(v_centerx - (box.left + c_x), 0);
-            } else if (s.overlayPositionType === OverlayPositions.TOPRIGHT) {
+            } else if (s.overlayPositionType.position === OverlayPositions.TOPRIGHT) {
                 const right = (frame.width * scale) + box.left;
                 m.trans(box.right - right, 0);
-            } else if (s.overlayPositionType === OverlayPositions.CENTERLEFT) {
+            } else if (s.overlayPositionType.position === OverlayPositions.CENTERLEFT) {
                 const c_y = (frame.height * scale) / 2;
                 const v_centery = (box.top + box.bottom) / 2
                 m.trans(0, v_centery - (box.top + c_y));
-            } else if (s.overlayPositionType === OverlayPositions.CENTERRIGHT) {
+            } else if (s.overlayPositionType.position === OverlayPositions.CENTERRIGHT) {
                 const c_y = (frame.height * scale) / 2;
                 const v_centery = (box.top + box.bottom) / 2
                 const right = (frame.width * scale) + box.left;
                 m.trans(box.right - right, v_centery - (box.top + c_y));
-            } else if (s.overlayPositionType === OverlayPositions.BOTTOMCENTER) {
+            } else if (s.overlayPositionType.position === OverlayPositions.BOTTOMCENTER) {
                 const c_x = (frame.width * scale) / 2;
                 const v_centerx = (box.left + box.right) / 2
                 const bottom = (frame.height * scale) + box.top;
                 m.trans(v_centerx - (box.left + c_x), box.bottom - bottom);
-            } else if (s.overlayPositionType === OverlayPositions.BOTTOMLEFT) {
+            } else if (s.overlayPositionType.position === OverlayPositions.BOTTOMLEFT) {
                 const bottom = (frame.height * scale) + box.top;
                 m.trans(0, box.bottom - bottom);
-            } else if (s.overlayPositionType === OverlayPositions.BOTTOMRIGHT) {
+            } else if (s.overlayPositionType.position === OverlayPositions.BOTTOMRIGHT) {
                 const right = (frame.width * scale) + box.left;
                 const bottom = (frame.height * scale) + box.top;
                 m.trans(box.right - right, box.bottom - bottom);
