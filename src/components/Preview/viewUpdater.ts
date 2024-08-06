@@ -655,12 +655,12 @@ export class ViewUpdater {
     updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: { top: number, bottom: number, left: number, right: number }) {
         const cur_shape = context.selection.selectedShapes[0];
         if (!cur_shape) return;
-        const cur_frame = cur_shape.frame;
+        const cur_frame = cur_shape._p_frame;
         const m = new Matrix()
         m.reset(this.v_matrix);
         if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP || type === PrototypeNavigationType.NAVIGATE) {
             let s: ShapeView | undefined = shape;
-            const frame = shape.frame;
+            const frame = shape._p_frame;
             const cur_box = viewBox(this.v_matrix, shape);
             if (type === PrototypeNavigationType.SWAP) {
                 const before_action = context.preview.swapEndAction;
