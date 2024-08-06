@@ -222,8 +222,14 @@ const getPosition = (targetID: string | undefined) => {
     if (!shapes) return;
     const shape = shapes.find(i => i.id === targetID)
     if (!shape) return;
+    console.log('11111');
+    
     const { overlayBackgroundAppearance, overlayBackgroundInteraction, overlayPositionType } = shape
+    console.log(overlayPositionType);
+    
     position.value = overlayPositionType ?? new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
+    console.log('变化',position.value);
+    
     event.value = overlayBackgroundInteraction ?? OverlayBackgroundInteraction.NONE
     Appearance.value = overlayBackgroundAppearance ?? new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, new Color(0.25, 0, 0, 0))
     background_color.value = Appearance.value.backgroundColor as Color
