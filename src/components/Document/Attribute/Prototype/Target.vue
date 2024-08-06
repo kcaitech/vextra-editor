@@ -54,9 +54,9 @@ const setTargetNode = (id: string) => {
 }
 
 const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
-    DomList.value = []
+    DomList.value.length = 0
     targetname.value = ''
-    curHoverValueIndex.value ='';
+    curHoverValueIndex.value = '';
     if (nav === PrototypeNavigationType.SCROLLTO) {
         const shapes = props.context.selection.selectedShapes
         if (!(shapes[0] instanceof ArtboradView)) return
@@ -69,24 +69,15 @@ const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
         }
     } else {
         const shapes = props.context.selection.selectedPage?.childs
+        const shape = props.context.selection.selectedShapes
         const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
         if (!shapes) return;
         for (let index = 0; index < shapes.length; index++) {
-            const shape = shapes[index];
-            if (types.includes(shape.type)) {
-                const actions = (shape as ArtboradView).prototypeInterAction
-                if (actions?.length) {
-                    for (let index = 0; index < actions.length; index++) {
-                        const e = actions[index];
-                        if (e.id === id) break
-                        DomList.value?.push(shape)
-                    }
-                } else {
-                    DomList.value?.push(shape)
-                }
+            if (types.includes(shapes[index].type)) {
+                if (shapes[index].id !== shape[0].id) DomList.value.push(shapes[index])
             }
-            if (shape.id === props.targetid) {
-                targetname.value = shape.name
+            if (shapes[index].id === props.targetid) {
+                targetname.value = shapes[index].name
             }
         }
     }
@@ -109,6 +100,7 @@ function onblur() {
 watch(showtargerlist, () => {
     if (showtargerlist.value) {
         document.addEventListener('click', checktargetlist);
+        getDomList(props.actionid, props.type)
         nextTick(() => {
             const muen = document.querySelector('.search-container');
             (muen as HTMLDivElement).addEventListener('blur', onblur);
