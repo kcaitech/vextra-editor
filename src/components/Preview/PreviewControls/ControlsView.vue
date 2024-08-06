@@ -3,10 +3,10 @@ import { Context } from '@/context';
 import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
-import { eventPriority, getPreviewMatrix } from '@/utils/preview';
+import { eventPriority, getFrameList, getPreviewMatrix } from '@/utils/preview';
 import { Matrix, PathShapeView, PrototypeEvents, sessionRefIdKey, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
-import { ProtoAction } from './actions';
+import { delayAction, ProtoAction } from './actions';
 
 
 interface Props {
@@ -184,30 +184,29 @@ const onMouseenter = () => {
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 }
             }
-            if (type === PrototypeEvents.AFTERTIMEOUT) {
-                console.log('鼠标延迟');
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-            }
-            if (type === PrototypeEvents.MOUSELEAVE) {
-                console.log('saveShape.value: 移出');
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-            }
+        }
+        if (saveShape.value) {
+            moveOutAction(saveShape.value);
         }
         saveShape.value = hoveredShape;
     } else {
         if (!saveShape.value) return;
-        const protoActions = saveShape.value!.prototypeInterAction;
-        if (!protoActions) return;
-        for (let i = 0; i < protoActions.length; i++) {
-            const protoAction = protoActions[i];
-            const type = protoAction.event.interactionType;
-            if (type === PrototypeEvents.MOUSELEAVE) {
-                console.log('saveShape.value: 移出');
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                break;
-            }
-        }
+        moveOutAction(saveShape.value);
         saveShape.value = undefined;
+    }
+}
+
+const moveOutAction = (shape: ShapeView) => {
+    const protoActions = shape!.prototypeInterAction;
+    if (!protoActions) return;
+    for (let i = 0; i < protoActions.length; i++) {
+        const protoAction = protoActions[i];
+        const type = protoAction.event.interactionType;
+        if (type === PrototypeEvents.MOUSELEAVE && protoActionFn) {
+            console.log('saveShape.value: 移出');
+            protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            break;
+        }
     }
 }
 
@@ -249,6 +248,7 @@ const selected_watcher = (t: number | string) => {
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
         sessionStorage.removeItem(sessionRefIdKey);
+        delayAction(props.context, props.matrix);
     }
 }
 

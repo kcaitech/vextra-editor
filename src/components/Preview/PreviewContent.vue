@@ -15,6 +15,7 @@ import { useI18n } from 'vue-i18n';
 import { DomCtx } from '../Document/Content/vdom/domctx';
 import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { SymbolDom } from '../Document/Content/vdom/symbol';
+import { delayAction } from './PreviewControls/actions';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -603,6 +604,7 @@ const getTargetShapes = () => {
                             viewUpdater.pageSvgPushAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
                         })
+                        delayAction(props.context, m);
                     } else {
                         el.style['transform'] = m.toString();
                     }

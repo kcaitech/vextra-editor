@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 import { v4 } from "uuid";
 
 export class ProtoAction {
@@ -201,4 +201,31 @@ function getFullURL(str: string) {
     }
 
     return str;
+}
+
+export const delayAction = (context: Context, matrix: Matrix) => {
+    let shape = context.selection.selectedShapes[0];
+    const page = context.selection.selectedPage;
+    const shapes = getFrameList(page!);
+    const action = context.preview.endAction;
+    if (action) {
+        const s = shapes.find(item => item.id === action.targetNodeID);
+        if (s) {
+            shape = s;
+        }
+    }
+    const protoActions = shape.prototypeInterAction;
+    if (!protoActions) return;
+    for (let i = 0; i < protoActions.length; i++) {
+        const protoAction = protoActions[i];
+        const type = protoAction.event.interactionType;
+        if (type === PrototypeEvents.AFTERTIMEOUT) {
+            const time = protoAction.event.transitionTimeout || 0.8;
+            setTimeout(() => {
+                const protoActionFn = new ProtoAction(context);
+                protoActionFn.executeActionx(protoAction.actions, matrix);
+            }, time * 1000);
+            break;
+        }
+    }
 }
