@@ -148,10 +148,16 @@ const previewWatcher = (t: number | string, s?: any) => {
         // 容器内滚动
         const el = getEndElement();
         // 滚动动画
-        if (el && (s as PrototypeActions).transitionType === PrototypeTransitionType.SCROLLANIMATE) viewUpdater.scrollAnimate(el, s as PrototypeActions);
-        const isTrans = viewUpdater.artboardInTrans();
+        const action = s as PrototypeActions;
+        if (el && action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
+            viewUpdater.scrollAnimate(el, action);
+        }
+        const isTrans = viewUpdater.artboardInTrans(el);
         // 移除动画
-        viewUpdater.removeAnimate(el, isTrans);
+        const time = action.transitionDuration || 0.3;
+        setTimeout(() => {
+            viewUpdater.removeAnimate(el, isTrans);
+        }, time * 1000);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
         updateDialogMatrix();
