@@ -147,12 +147,14 @@ export function collect(context: Context): ShapeView[] {
     if (page && artboard && artboard.type === ShapeType.Artboard) {
         const m2r = artboard.matrix2Root();
         const frame = artboard.frame;
+        const r = frame.x + frame.width;
+        const b = frame.y + frame.height;
         const ps = [
-            { x: 0, y: 0 },
-            { x: frame.width, y: 0 },
-            { x: frame.width, y: frame.height },
-            { x: 0, y: frame.height },
-            { x: 0, y: 0 }
+            { x: frame.x, y: frame.y },
+            { x: r, y: frame.y },
+            { x: r, y: b },
+            { x: frame.x, y: b },
+            { x: frame.x, y: frame.y }
         ].map(p => m2r.computeCoord(p.x, p.y));
 
         const scope = (((artboard.parent || page) as ShapeView).childs || [])

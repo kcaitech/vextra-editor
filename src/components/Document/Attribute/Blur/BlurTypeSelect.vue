@@ -5,6 +5,7 @@ import { get_actions_blur_modify } from '@/utils/shape_style';
 import { Blur, BlurType, ShapeView } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -38,7 +39,7 @@ const close = () => {
 }
 
 const toggleType = (type: BlurType) => {
-    if (type === BlurType.Background) return;
+    // if (type === BlurType.Background) return;
     const actions = get_actions_blur_modify(props.shapes, type);
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -66,23 +67,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="blur-position">
-        <div class="context" @click.stop="showMenu">{{ t(`blur.${blur.type}`) }}</div>
-        <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
-            <svg-icon icon-class="down" />
-        </div>
-        <div class="select_menu" ref="menu" v-if="isMenu">
-            <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
-                :style="{ opacity: item === BlurType.Background ? '0.3' : '1' }" @mouseenter="activeItem = BlurType.Gaussian"
-                :class="{ 'active-item': activeItem === item && activeItem !== BlurType.Background }">
-                <div class="text">{{ t(`blur.${item}`) }}</div>
-                <div class="icon">
-                    <svg-icon v-if="blur.type === item"
-                        :icon-class="activeItem === item ? 'white-select' : 'page-select'"></svg-icon>
-                </div>
-            </div>
+<div class="blur-position">
+    <div class="context" @click.stop="showMenu">{{ t(`blur.${blur.type}`) }}</div>
+    <div class="down" @click.stop="showMenu" :class="{ 'active-down': isMenu }">
+        <svg-icon icon-class="down"/>
+    </div>
+    <div class="select_menu" ref="menu" v-if="isMenu">
+        <div ref="items" v-for="(item, index) in blurOptions" :key="index" class="item" @click="toggleType(item)"
+             :class="{ 'active-item': activeItem === item }">
+            <div class="text">{{ t(`blur.${item}`) }}</div>
+            <svg v-if="activeItem === item" class="check" xmlns="http://www.w3.org/2000/svg" width="8.8" height="6.3"
+                 viewBox="0 0 15 10.833333969116211">
+                <path
+                    d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
+                    fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
+            </svg>
         </div>
     </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -120,7 +122,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 12px;
             height: 12px;
         }
@@ -128,7 +130,7 @@ onUnmounted(() => {
 
     .select_menu {
         position: absolute;
-        left: 0px;
+        left: 0;
         width: 100%;
         border-radius: 4px;
         background-color: #fff;
@@ -143,19 +145,18 @@ onUnmounted(() => {
             justify-content: space-between;
             width: 100%;
             height: 32px;
-            padding-left: 10px;
+            padding: 0 8px;
+        }
 
-            .icon {
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+        .item:hover {
+            background-color: var(--active-color);
 
-                >svg {
-                    width: 12px;
-                    height: 12px;
-                }
+            svg {
+                fill: #fff;
+            }
+
+            .text {
+                color: #fff;
             }
         }
 
@@ -164,19 +165,5 @@ onUnmounted(() => {
 
 .active-down {
     background-color: rgba(0, 0, 0, 0.09);
-}
-
-.active-item {
-    background-color: var(--active-color);
-
-    >.icon {
-        >.choose {
-            border-color: #fff;
-        }
-    }
-
-    .text {
-        color: #fff;
-    }
 }
 </style>

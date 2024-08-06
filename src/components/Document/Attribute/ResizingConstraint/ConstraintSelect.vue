@@ -2,12 +2,13 @@
 import { ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
-import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
+
 export interface SelectItem {
     value: string | number,
     content: string
 }
+
 export interface SelectSource {
     id: number,
     data: SelectItem
@@ -121,9 +122,7 @@ function onBlur() {
 }
 
 function select(data: SelectItem) {
-    const index = source.value.findIndex((item: SelectSource) => item.data === data);
-
-    curValueIndex.value = index;
+    curValueIndex.value = source.value.findIndex((item: SelectSource) => item.data === data);
     curValue.value = data;
 
     emits('select', curValue.value);
@@ -154,30 +153,31 @@ watch(() => props.selected, render);
 onMounted(render)
 </script>
 <template>
-    <div class="select-container" ref="selectContainer">
-        <div class="trigger" @click="toggle">
-            <div class="value-wrap">{{ curValue?.value === 'mixed' ? t('attr.mixed') : curValue?.content }}</div>
-            <div class="svg-wrap">
-                <svg-icon icon-class="down"></svg-icon>
-            </div>
+<div class="select-container" ref="selectContainer">
+    <div class="trigger" @click="toggle">
+        <slot name="prefix"/>
+        <div class="value-wrap">{{ curValue?.value === 'mixed' ? t('attr.mixed') : curValue?.content }}</div>
+        <div class="svg-wrap">
+            <svg-icon icon-class="down"/>
         </div>
+    </div>
 
-        <div ref="optionsContainer" v-if="optionsContainerVisible" @click.stop class="options-container" tabindex="-1">
-            <div v-if="!source.length" class="no-data">
-                {{ t('system.empty') }}
+    <div ref="optionsContainer" v-if="optionsContainerVisible" @click.stop class="options-container" tabindex="-1">
+        <div v-if="!source.length" class="no-data">
+            {{ t('system.empty') }}
+        </div>
+        <div v-else>
+            <div v-if="curValue?.value === 'mixed'" class="disabled">
+                <div class="content-wrap"> {{ t('attr.mixed') }}</div>
+                <svg-icon :icon-class="'page-select'"></svg-icon>
             </div>
-            <div v-else>
-                <div v-if="curValue?.value === 'mixed'" class="disabled">
-                    <div class="content-wrap"> {{ t('attr.mixed') }}</div>
-                    <svg-icon :icon-class="'page-select'"></svg-icon>
-                </div>
-                <div v-for="c in source" class="item-default" :key="c.id" @click="() => select(c.data)">
-                    <div class="content-wrap"> {{ c.data.content }}</div>
-                    <svg-icon v-if="curValue?.value === c.data.value" :icon-class="'page-select'"></svg-icon>
-                </div>
+            <div v-for="c in source" class="item-default" :key="c.id" @click="() => select(c.data)">
+                <div class="content-wrap"> {{ c.data.content }}</div>
+                <svg-icon v-if="curValue?.value === c.data.value" :icon-class="'page-select'"></svg-icon>
             </div>
         </div>
     </div>
+</div>
 </template>
 <style scoped lang="scss">
 .select-container {
@@ -196,6 +196,7 @@ onMounted(render)
         border-radius: var(--default-radius);
         padding: 0 9px;
         box-sizing: border-box;
+        gap: 6px;
 
         .value-wrap {
             flex: 1;
@@ -204,13 +205,13 @@ onMounted(render)
             white-space: nowrap;
         }
 
-        >.svg-wrap {
+        > .svg-wrap {
             flex: 0 0 12px;
             height: 100%;
             display: flex;
             align-items: center;
 
-            >svg {
+            > svg {
                 width: 100%;
                 height: 12px;
                 transition: 0.3s;
@@ -218,8 +219,8 @@ onMounted(render)
             }
         }
 
-        >.svg-wrap:hover {
-            >svg {
+        > .svg-wrap:hover {
+            > svg {
                 transform: translateY(2px);
             }
         }
@@ -234,7 +235,7 @@ onMounted(render)
         position: absolute;
         outline: none;
         background-color: #FFFFFF;
-        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         overflow: hidden;
         z-index: 1;
@@ -267,7 +268,7 @@ onMounted(render)
                 white-space: nowrap;
             }
 
-            >svg {
+            > svg {
                 flex: 0 0 12px;
                 height: 12px;
             }
@@ -277,7 +278,7 @@ onMounted(render)
             background-color: var(--active-color);
             color: #FFFFFF;
 
-            >svg {
+            > svg {
                 fill: #FFFFFF;
             }
         }
@@ -303,7 +304,7 @@ onMounted(render)
                 pointer-events: none;
             }
 
-            >svg {
+            > svg {
                 flex: 0 0 12px;
                 height: 12px;
                 fill: #787878;

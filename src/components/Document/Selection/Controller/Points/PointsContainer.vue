@@ -8,9 +8,9 @@ import {
     ShapeView,
     Transform
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { ClientXY, SelectionTheme, XY } from '@/context/selection';
-import { forbidden_to_modify_frame, getHorizontalAngle } from '@/utils/common';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
+import { SelectionTheme, XY } from '@/context/selection';
+import { forbidden_to_modify_frame } from '@/utils/common';
 import { Point } from "../../SelectionView.vue";
 import { ScaleHandler } from "@/transform/scale";
 import { WorkSpace } from "@/context/workspace";
@@ -91,7 +91,7 @@ const rotateCtx: {
 function updateDotLayout() {
     dots.length = 0;
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
@@ -100,23 +100,24 @@ function updateDotLayout() {
 
     const ltTransform = new Transform()
         .rotateZ({ angle: Math.PI })
+        .setTranslate(ColVector3D.FromXY(x, y))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const rtTransform = new Transform()
         .rotateZ({ angle: -0.5 * Math.PI })
-        .setTranslate(ColVector3D.FromXY(width, 0))
+        .setTranslate(ColVector3D.FromXY(x + width, y))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const rbTransform = new Transform()
-        .setTranslate(ColVector3D.FromXY(width, height))
+        .setTranslate(ColVector3D.FromXY(x + width, y + height))
         .addTransform(fromClient)
         .clearScaleSize();
 
     const lbTransform = new Transform()
         .rotateZ({ angle: 0.5 * Math.PI })
-        .setTranslate(ColVector3D.FromXY(0, height))
+        .setTranslate(ColVector3D.FromXY(x, y + height))
         .addTransform(fromClient)
         .clearScaleSize();
 
@@ -158,11 +159,11 @@ function updateDotLayout() {
     const theta4 = cursorAngle(xVector, vecLB);
 
     const cols = fromClient.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
-        ColVector3D.FromXY(width / 2, height / 2),
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
+        ColVector3D.FromXY(x + width / 2, y + height / 2),
     ]);
 
     const { col0, col1, col2, col3 } = cols;
@@ -212,9 +213,7 @@ function updateDotLayout() {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0 || scaler || rotator) {
-        return;
-    }
+    if (event.button !== 0 || scaler || rotator) return;
 
     event.stopPropagation();
 
@@ -223,9 +222,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return startEdit(props.context);
     }
 
-    if (forbidden_to_modify_frame(props.shape)) {
-        return;
-    }
+    if (forbidden_to_modify_frame(props.shape)) return;
 
     cur_ctrl_type = ele;
 
@@ -242,8 +239,6 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace;
-
     if (isDragging) {
         if (cur_ctrl_type.endsWith('rotate')) {
             setCursor(cur_ctrl_type, true);
@@ -254,20 +249,12 @@ function point_mousemove(event: MouseEvent) {
 
     } else if (Math.hypot(event.x - downXY.x, event.y - downXY.y) > dragActiveDis) {
         isDragging = true;
-
-        if (cur_ctrl_type.endsWith('rotate')) {
-            rotator?.createApiCaller();
-        } else {
-            scaler?.createApiCaller();
-        }
+        cur_ctrl_type.endsWith('rotate') ? rotator?.createApiCaller() : scaler?.createApiCaller();
     }
 }
 
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) {
-        return;
-    }
-
+    if (event.button !== 0) return;
     clear_status();
 }
 
@@ -314,9 +301,7 @@ function clear_status() {
     rotator?.fulfil();
     rotator = undefined;
 
-    if (need_reset_cursor_after_transform) {
-        props.context.cursor.reset();
-    }
+    if (need_reset_cursor_after_transform) props.context.cursor.reset();
 
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
@@ -327,9 +312,7 @@ function window_blur() {
 }
 
 function workspaceWatcher(t: number | string) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
-    }
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
 }
 
 watch(() => props.shape, (value, old) => {

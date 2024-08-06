@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch, toRaw } from 'vue';
 import {
-    ExportFileFormat,
     ExportFormat,
-    GroupShapeView,
     Shape,
     ShapeType,
     ShapeView,
-    adapt2Shape,
+    adapt2Shape, ColVector3D,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import {
     getCutoutShape,
-    getGroupChildBounds,
     getPageBounds,
     getShadowMax,
     getShapeBorderMax,
@@ -21,7 +18,7 @@ import {
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
-import { getPngImageData, getSvgImageData } from '@/utils/image';
+import { getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
 import PageCard from "@/components/common/PageCard.vue";
 import { nextTick } from 'vue';
@@ -146,42 +143,37 @@ const getSvgUrl = async () => {
 const getCanvasShape = debounce(_getCanvasShape, 250);
 
 const getPosition = (shape: ShapeView) => {
-    const p = shape.boundingBox()
     const p_artboard = parentIsArtboard(shape);
-    if (p_artboard && shape.type === ShapeType.Cutout) {
-        const page = props.context.selection.selectedPage!;
-        let frame = shape.frame2Root();
-        xy.value.x = frame.x - page.frame.x;
-        xy.value.y = frame.y - page.frame.y;
-        if (p_artboard.parent && p_artboard.parent.type !== ShapeType.Page) {
-            frame = p_artboard.frame2Parent();
-            xy.value.x = frame.x + shape.frame.x;
-            xy.value.y = frame.y + shape.frame.y;
-        }
-        width.value = shape.frame.width;
-        height.value = shape.frame.height;
-    } else if (shape.type === ShapeType.Cutout) {
-        width.value = p.width;
-        height.value = p.height;
-        xy.value.x = p.x;
-        xy.value.y = p.y;
-    }
-    if (shape.type !== ShapeType.Cutout) {
-        if (shape.type === ShapeType.Group) {
-            const { left, top, right, bottom } = getShadowMax(shape);
-            const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
-            xy.value.x = x - left;
-            xy.value.y = y - top;
-            width.value = _w + left + right;
-            height.value = _h + top + bottom;
+    if (shape.type === ShapeType.Cutout) {
+        if (p_artboard) {
+            const __frame = shape._p_frame;
+            const _f = shape.parent!.transform2.transform(ColVector3D.FromXY(__frame.x, __frame.y)).col0;
+
+            xy.value.x = _f.x;
+            xy.value.y = _f.y;
+            width.value = shape.frame.width;
+            height.value = shape.frame.height;
         } else {
-            const { left, top, right, bottom } = getShadowMax(shape);
-            const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-            xy.value.x = (shape.frame.x - left - l_max);
-            xy.value.y = (shape.frame.y - top - t_max);
-            width.value = (shape.frame.width + (left + l_max) + (right + r_max));
-            height.value = (shape.frame.height + (top + t_max) + (bottom + b_max));
+            const p = shape.boundingBox()
+            width.value = p.width;
+            height.value = p.height;
+            xy.value.x = p.x;
+            xy.value.y = p.y;
         }
+    } else if (shape.type === ShapeType.Group) {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const { x, y, width: _w, height: _h } = shape._p_frame;
+        xy.value.x = x - left;
+        xy.value.y = y - top;
+        width.value = _w + left + right;
+        height.value = _h + top + bottom;
+    } else {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
+        xy.value.x = shape.transform.translateX - left - l_max;
+        xy.value.y = shape.transform.translateY - top - t_max;
+        width.value = shape.frame.width + (left + l_max) + (right + r_max);
+        height.value = shape.frame.height + (top + t_max) + (bottom + b_max);
     }
 }
 
@@ -322,25 +314,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="preview_box" v-if="props.context.selection.selectedShapes.length <= 1">
-        <div class="title" @click="toggleExpand">
-            <div class="triangle">
-                <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
-                </div>
-            </div>
-            <span>{{ t('cutoutExport.preview') }}</span>
-        </div>
-        <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
-            :shapes="renderItems" :width="width" :height="height"></PageCard>
-        <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
-            <div class="preview-image" v-if="pngImage">
-                <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
+<div class="preview_box" v-if="props.context.selection.selectedShapes.length <= 1">
+    <div class="title" @click="toggleExpand">
+        <div class="triangle">
+            <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
             </div>
         </div>
-        <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage" :reflush="reflush">
+        <span>{{ t('cutoutExport.preview') }}</span>
+    </div>
+    <PageCard ref="pageCard" :background-color="background_color" :view-box="`${xy.x} ${xy.y} ${width} ${height}`"
+              :shapes="renderItems" :width="width" :height="height"/>
+    <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush">
+        <div class="preview-image" v-if="pngImage">
             <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
         </div>
     </div>
+    <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage" :reflush="reflush">
+        <img :src="pngImage" ref="img" alt="" :draggable="true" @mousedown="startDrag">
+    </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -354,7 +346,7 @@ onUnmounted(() => {
         width: 100%;
         align-items: center;
 
-        >.triangle {
+        > .triangle {
             width: 12px;
             min-width: 12px;
             height: 100%;
@@ -362,7 +354,7 @@ onUnmounted(() => {
             justify-content: center;
             margin-right: 5px;
 
-            >.triangle-right {
+            > .triangle-right {
                 width: 0;
                 height: 0;
                 border-left: 5px solid #434343;
@@ -373,7 +365,7 @@ onUnmounted(() => {
                 top: 13px;
             }
 
-            >.triangle-down {
+            > .triangle-down {
                 width: 0;
                 height: 0;
                 border-top: 5px solid #434343;
@@ -413,7 +405,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >img {
+            > img {
                 max-width: 100%;
                 max-height: 100%;
                 margin: auto;
@@ -431,7 +423,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
 
-        >img {
+        > img {
             max-width: 100%;
             max-height: 240px;
             margin: auto;

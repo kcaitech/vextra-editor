@@ -51,7 +51,6 @@ function assemble() {
         'assemble-page',
         ShapeType.Page,
         new TransformRaw(),
-        new ShapeSize(),
         style,
         new BasicArray<Shape>(...shapes)
     );

@@ -561,8 +561,9 @@ export class BaseCreator extends BaseTreeNode {
 
         let {translate, rotate, skew, scale} = this.transform.decompose()
         // 最终的宽高
-        const w1 = shape.frame.width * scale.x
-        const h1 = shape.frame.height * scale.y
+        const size = shape.size;
+        const w1 = size.width * scale.x
+        const h1 = size.height * scale.y
 
         // dev code
         // if (this.htmlElement?.tagName === "rect") {

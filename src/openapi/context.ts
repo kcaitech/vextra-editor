@@ -1,11 +1,10 @@
-import { Document, IWatchable, Page, PageView } from "@kcdesign/data";
+import { Document, IWatchable } from "@kcdesign/data";
 import { INet } from "./net";
 import { IPluginsMgr } from "./plugins";
 import { ISelection } from "./selection";
 import { IWorkspace } from "./workspace";
 import { IToolBox } from "./toolbox";
-import { PageDom } from "@/components/Document/Content/vdom/page";
-import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+
 // import { Selection } from "@/context/selection";
 
 // export interface Rect {
@@ -24,6 +23,7 @@ export namespace ContextEvents {
 }
 
 export interface IContext extends IWatchable {
+    get storage(): Map<string, string>;
 
     get data(): Document;
     get pluginsMgr(): IPluginsMgr;

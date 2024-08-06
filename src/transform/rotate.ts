@@ -13,8 +13,6 @@ import {
 import { FrameLike, TransformHandler } from "./handler";
 import { XY } from "@/context/selection";
 import { Context } from "@/context";
-import { getHorizontalAngle } from "@/utils/common";
-import { Tool } from "@/context/tool";
 
 type Base4Rotation = {
     XYtoRoot: XY;
@@ -38,13 +36,13 @@ export function rotate(shapes: ShapeView[], deg: number) {
 
     for (const shape of shapes) {
         const t = makeShapeTransform2By1(shape.transform);
-        const { width, height } = shape.size;
+        const { x, y, width, height } = shape.frame;
 
         const angle = deg % 360 * Math.PI / 180;
         const os = t.decomposeEuler().z;
 
         t.rotateAt({
-            axis: Line.FromParallelZ(ColVector3D.FromXYZ(width / 2, height / 2, 0)),
+            axis: Line.FromParallelZ(ColVector3D.FromXYZ(x + width / 2, y + height / 2, 0)),
             angle: angle - os,
             mode: TransformMode.Local,
         });
@@ -64,8 +62,6 @@ export class RotateHandler extends TransformHandler {
     readonly centerXY: XY;
 
     private livingPoint: XY;
-
-    private initDeg: number = 0;
 
     originSelectionBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
     baseData: BaseData4Rotate = new Map();
@@ -90,10 +86,6 @@ export class RotateHandler extends TransformHandler {
         this.centerXY = {
             x: (this.originSelectionBox.x + this.originSelectionBox.right) / 2,
             y: (this.originSelectionBox.y + this.originSelectionBox.bottom) / 2
-        }
-
-        if (this.shapes.length === 1) {
-            this.initDeg = getHorizontalAngle(this.centerXY, this.livingPoint);
         }
     }
 
@@ -156,8 +148,10 @@ export class RotateHandler extends TransformHandler {
         let right = -Infinity;
         let bottom = -Infinity;
 
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
+        const shapes = this.shapes;
+
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
 
             const parent = shape.parent!;
             const m1 = shape.matrix2Parent();
@@ -170,7 +164,8 @@ export class RotateHandler extends TransformHandler {
 
             m1.multiAtLeft(m2);
 
-            const baseXYtoRoot = m1.computeCoord2(0, 0);
+            const frame = shape.frame;
+            const baseXYtoRoot = m1.computeCoord2(frame.x, frame.y);
 
             if (baseXYtoRoot.x < left) {
                 left = baseXYtoRoot.x;
@@ -188,11 +183,10 @@ export class RotateHandler extends TransformHandler {
                 bottom = baseXYtoRoot.y;
             }
 
-            const frame = shape.frame;
             const points = [
-                { x: frame.width, y: 0 },
-                { x: frame.width, y: frame.height },
-                { x: 0, y: frame.height }
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height }
             ];
 
             for (let i = 0; i < 3; i++) {
@@ -229,9 +223,6 @@ export class RotateHandler extends TransformHandler {
                 XYtoRoot: baseXYtoRoot,
 
                 rotate: shape.rotation || 0,
-                // todo flip
-                // flipH: !!shape.isFlippedHorizontal,
-                // flipV: !!shape.isFlippedVertical,
                 flipH: false,
                 flipV: false,
 
@@ -248,32 +239,38 @@ export class RotateHandler extends TransformHandler {
             height: bottom - top,
         };
 
+        const alpha = shapes[0];
+        const alphaFrame = alpha.frame;
+        const multi = shapes.length > 1;
+
         // 只选一个元素时，选区的Transform为元素自身的transform2FromRoot，选区大小为元素的size
-        this.selectionTransform = this.shapes.length > 1
+        this.selectionTransform = multi
             ? new Transform().setTranslate(ColVector3D.FromXY(this.originSelectionBox.x, this.originSelectionBox.y))
-            : this.shapes[0].transform2FromRoot.clone();
+            : new Transform().setTranslate(ColVector3D.FromXY(alphaFrame.x, alphaFrame.y)).addTransform(alpha.transform2FromRoot); // todo 考虑让 transform2FromRoot 为问题因素
+
         this.selectionTransformInverse = this.selectionTransform.getInverse();
-        this.selectionSize = this.shapes.length > 1 ? {
+        this.selectionSize = multi ? {
             width: this.originSelectionBox.width,
             height: this.originSelectionBox.height
         } : {
-            width: this.shapes[0].size.width,
-            height: this.shapes[0].size.height
+            width: alphaFrame.width,
+            height: alphaFrame.height
         };
-        this.selectionCenter = this.selectionTransform.transform(ColVector3D.FromXY(
-            this.selectionSize.width / 2,
-            this.selectionSize.height / 2
-        )).col0;
+        this.selectionCenter = this.selectionTransform.transform(ColVector3D.FromXY(this.selectionSize.width / 2, this.selectionSize.height / 2)).col0;
 
-        for (const shape of this.shapes) {
+        for (const shape of shapes) {
             if (!this.transformCache.has(shape.parent!)) {
                 this.transformCache.set(shape.parent!, shape.parent!.transform2FromRoot.clone());
             }
         }
-        this.shapeTransformListInSelection = this.shapes.length > 1 ? this.shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
-            .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
-            .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
-        ) : [new Transform()];
+        // this.shapeTransformListInSelection = multi ? shapes.map((shape, i) => shape.transform2.clone() // 在Parent坐标系下
+        //     .addTransform(this.transformCache.get(shape.parent!)!)  // 在Root坐标系下
+        //     .addTransform(this.selectionTransform.getInverse())     // 在选区坐标系下
+        // ) : [new Transform()];
+        this.shapeTransformListInSelection = shapes.map((shape, i) => shape.transform2.clone()
+            .addTransform(this.transformCache.get(shape.parent!)!)
+            .addTransform(this.selectionTransform.getInverse())
+        );
 
         this.cursorBeginAngle = this.cursorAngle; // 光标向量的初始角度
     }
@@ -288,9 +285,7 @@ export class RotateHandler extends TransformHandler {
     }
 
     private __execute() {
-        if (!this.shapes.length) {
-            return;
-        }
+        if (!this.shapes.length) return;
 
         const cursorAngle = this.cursorAngle; // 光标向量的角度
         let deltaAngle = cursorAngle - this.cursorBeginAngle; // 角度变化量
@@ -320,12 +315,10 @@ export class RotateHandler extends TransformHandler {
         );
 
         // 更新shape
-        (this.asyncApiCaller as Rotator).execute(transformList.map((transform, i) => {
-            return {
-                shape: this.shapes[i],
-                transform2: transform,
-            }
-        }));
+        (this.asyncApiCaller as Rotator).execute(transformList.map((transform, i) => ({
+            shape: this.shapes[i],
+            transform2: transform
+        })));
 
         this.updateCtrlView(1);
     }

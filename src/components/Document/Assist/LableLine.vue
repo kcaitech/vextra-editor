@@ -67,7 +67,11 @@ const fixedContour = (shapes: ShapeView[]) => {
         const m = s.matrix2Root();
         m.multiAtLeft(matrix);
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        const x = f.x;
+        const y = f.y;
+        const r = x + f.width;
+        const b = y + f.height;
+        const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
     }
     const b = XYsBounding(points);
@@ -88,7 +92,11 @@ const livingContour = (shapes: ShapeView[]) => {
         const m = s.matrix2Root();
         m.multiAtLeft(matrix);
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        const x = f.x;
+        const y = f.y;
+        const r = x + f.width;
+        const b = y + f.height;
+        const ps: { x: number, y: number }[] = [{ x, y }, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
     }
     const b = XYsBounding(points);
@@ -175,22 +183,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-         :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
-        <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200"></path>
-        <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"
-              style="stroke:#ff2200;">
-        </line>
-        <line v-for="(p, i) in dotted_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" stroke-dasharray="3 2"
-              style="stroke:#ff2200;"></line>
-    </svg>
-    <template v-for="(item, index) in size_posi" :key="index">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
+     :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
+    <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200"></path>
+    <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2"
+          style="stroke:#ff2200;">
+    </line>
+    <line v-for="(p, i) in dotted_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" stroke-dasharray="3 2"
+          style="stroke:#ff2200;"></line>
+</svg>
+<template v-for="(item, index) in size_posi" :key="index">
         <span class="size" v-if="+item.length.toFixed(0) !== 0"
               :style="{ top: item.y + 'px', left: item.x + 'px', transform: `translate(-${item.tran.x}%,-${item.tran.y}%)` }">{{
                 filterAlpha(item.length)
             }}</span>
-    </template>
+</template>
 </template>
 
 <style scoped lang="scss">

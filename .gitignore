@@ -14,3 +14,4 @@ yarn.lock
 .env.*
 .env
 *.task.txt
+/vite.config.ts.*.mjs

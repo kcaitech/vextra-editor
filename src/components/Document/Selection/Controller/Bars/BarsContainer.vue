@@ -74,7 +74,7 @@ function update_dot_path() {
 function getVectors() {
     const shape = props.shape;
 
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
@@ -87,11 +87,11 @@ function getVectors() {
         col2: vecRB,
         col3: vecLB
     } = fromClient.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
-        ColVector3D.FromXY(width / 2, height / 2),
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
+        ColVector3D.FromXY(x + width / 2, y + height / 2),
     ]);
 
     return [vecLT, vecRT, vecRB, vecLB];

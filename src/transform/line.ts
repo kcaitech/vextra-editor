@@ -4,7 +4,6 @@ import { XY } from "@/context/selection";
 import { Context } from "@/context";
 import { Assist } from "@/context/assist";
 import { getHorizontalAngle } from "@/utils/common";
-import { Tool } from "@/context/tool";
 
 export function round2half(f: number) {
     if (f === 0) return 0;

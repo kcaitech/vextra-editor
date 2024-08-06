@@ -1,91 +1,18 @@
 import {
-    adapt2Shape,
-    BatchAction2,
-    FrameAdjust,
+    adapt2Shape, ArtboradView,
+    BatchAction2, ContextSettings, export_text, MarkerType,
     Matrix,
-    PathShape,
     PathShapeView,
     PolygonShape,
     PolygonShapeView,
-    RectShape,
     Shape,
-    ShapeFrame,
     ShapeType,
     ShapeView,
     StarShape,
-    StarShapeView
+    StarShapeView, SymbolRefView, SymbolView, Text, TextShapeView
 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
-
-// export function is_mixed(shapes: ShapeView[]) {
-//     const frame0 = shapes[0].frame2Root();
-//     const frame = shapes[0].frame;
-//     const result: {
-//         x: number | string,
-//         y: number | string,
-//         w: number | string,
-//         h: number | string,
-//         rotate: number | string,
-//         constrainerProportions: boolean | string,
-//         type: boolean | string,
-//     } = {
-//         x: frame0.x,
-//         y: frame0.y,
-//         w: frame.width,
-//         h: frame.height,
-//         rotate: shapes[0].rotation || 0,
-//         constrainerProportions: Boolean(shapes[0].constrainerProportions),
-//         type: shapes[0].type === ShapeType.Line,
-//     }
-//     for (let i = 1; i < shapes.length; i++) {
-//         const shape = shapes[i];
-//         const frame_i = shape.frame2Root();
-//         const frame = shape.frame;
-//         const type_line = shape.type === ShapeType.Line;
-//         if (frame_i.x !== result.x) result.x = 'mixed';
-//         if (frame_i.y !== result.y) result.y = 'mixed';
-//         if (frame.width !== result.w) result.w = 'mixed';
-//         if (frame.height !== result.h) result.h = 'mixed';
-//         if ((shape.rotation || 0) !== result.rotate) result.rotate = 'mixed';
-//         if (shape.constrainerProportions !== result.constrainerProportions) result.constrainerProportions = 'mixed';
-//         if (type_line !== result.type) result.type = 'mixed';
-//         if (Object.values(result).every(v => v === 'mixed')) return result;
-//     }
-//     if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
-//     return result;
-// }
-
-export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
-    shapes = shapes.filter(i => i instanceof RectShape);
-    if (shapes.length === 1) {
-        const s = shapes[0];
-        // const rs = Object.values((s as RectShape).getRadius());
-        const rs = s.radius;
-        if (cor) {
-            if (rs.every(v => v === rs[0])) return rs;
-            else return 'mixed'
-        } else {
-            return rs;
-        }
-    } else if (shapes.length > 1) {
-        // const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
-        const res: any[] = shapes[0].radius;
-        for (let i = 1; i < shapes.length; i++) {
-            const s = shapes[i];
-            // const rs = Object.values((s as RectShape).getRadius());
-            const rs = s.radius;
-            if (cor) {
-                if (!rs.every(v => v === rs[0])) return 'mixed';
-            } else {
-                for (let i = 0; i < rs.length; i++) {
-                    if (rs[i] !== res[i]) res[i] = 'mixed';
-                }
-                return res;
-            }
-        }
-    }
-}
 
 export function get_actions_constrainer_proportions(shapes: ShapeView[], value: boolean): BatchAction2[] {
     const actions: BatchAction2[] = [];
@@ -100,13 +27,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, x: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-
-        const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
-
+        const parent = shape.parent!;
         let x = value;
         let dx = 0;
         const box = get_box(shape);
@@ -118,7 +39,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
             dx = value - box.x;
         }
 
-        x = shape.frame.x + dx;
+        x = shape.transform.translateX + dx;
 
         actions.push({ target: adapt2Shape(shape), x });
     }
@@ -130,12 +51,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
     const actions: { target: Shape, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
-
+        const parent = shape.parent!;
         let y = value;
         let dy = 0;
         const box = get_box(shape);
@@ -147,70 +63,11 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
             dy = value - box.y;
         }
 
-        y = shape.frame.y + dy;
+        y = shape.transform.translateY + dy;
 
         actions.push({ target: adapt2Shape(shape), y });
     }
 
-    return actions;
-}
-
-export function get_actions_frame_w(shapes: Shape[], value: number, isLock: boolean) {
-    const actions: FrameAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        let effect_value = 0;
-        if (isLock) {
-            const ratio = frame.width / frame.height;
-            effect_value = (value / ratio) - frame.height;
-        }
-        actions.push({ target: shape, widthExtend: value - frame.width, heightExtend: effect_value });
-    }
-    return actions;
-}
-
-export function get_actions_frame_h(shapes: Shape[], value: number, isLock: boolean) {
-    const actions: FrameAdjust[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const frame = shape.frame;
-        let effect_value = 0;
-        if (isLock) {
-            const ratio = frame.width / frame.height;
-            effect_value = (value * ratio) - frame.width;
-        }
-        actions.push({ target: shape, widthExtend: effect_value, heightExtend: value - frame.height });
-    }
-    return actions;
-}
-
-export function get_actions_rotate(shapes: ShapeView[], value: number) {
-    const actions: BatchAction2[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        actions.push({ target: shape, value: value });
-    }
-    return actions;
-}
-
-export function get_actions_flip_v(shapes: ShapeView[]) {
-    const actions: BatchAction2[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: shape, value: 'vertical' });
-    }
-    return actions;
-}
-
-export function get_actions_flip_h(shapes: ShapeView[]) {
-    const actions: BatchAction2[] = [];
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (shape.type === ShapeType.Cutout) continue;
-        actions.push({ target: shape, value: 'horizontal' });
-    }
     return actions;
 }
 
@@ -286,84 +143,8 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
     return result;
 }
 
-export function is_rect(shape: ShapeView) {
-    return shape.isClosed
-        && (shape as any)?.points?.length === 4
-        && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
-}
-
 export function get_box(shape: ShapeView) {
-    // const parent = shape.parent!;
-    // if (!parent) {
-    //     console.log('!parent');
-    //     return shape.frame;
-    // }
-    //
-    //
-    // let __parent_t: ShapeView | undefined = shape.parent;
-    // while (__parent_t) {
-    //     if (__parent_t.isContainer) {
-    //         break;
-    //     }
-    //     __parent_t = __parent_t.parent;
-    // }
-    // __parent_t = __parent_t as ShapeView;
-    //
-    // if (__parent_t.id === parent.id) {
-    //     if (shape.isNoTransform()) {
-    //         return shape.frame;
-    //     }
-    // }
-    //
-    // let m2p = new Matrix();
-    // if (__parent_t.type === ShapeType.Page) {
-    //     m2p = shape.matrix2Root();
-    // } else {
-    //     let __p = parent;
-    //     m2p = shape.matrix2Parent();
-    //     while (__p && __p.id !== __parent_t.id) {
-    //         m2p.multiAtLeft(__p.matrix2Parent());
-    //         __p = __p.parent as any;
-    //     }
-    // }
-    //
-    // const sf = shape.frame;
-    // const points = [
-    //     { x: 0, y: 0 },
-    //     { x: sf.width, y: 0 },
-    //     { x: sf.width, y: sf.height },
-    //     { x: 0, y: sf.height }
-    // ].map(p => m2p.computeCoord3(p));
-    //
-    // const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-    // const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-    // const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-    // const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
-    //
-    // return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    const parent = shape.parent!;
-    if (shape.isNoTransform()) {
-        return shape.frame;
-    }
-
-    if (!parent) {
-        console.log('!parent');
-        return shape.frame;
-    }
-
-    const sf = shape.frame;
-
-    const m2p = shape.matrix2Parent();
-
-    const points = [{ x: 0, y: 0 }, { x: sf.width, y: 0 }, { x: sf.width, y: sf.height }, { x: 0, y: sf.height }]
-        .map(p => m2p.computeCoord3(p));
-
-    const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
-    const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
-    const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
-    const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
-
-    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+    return shape._p_frame
 }
 
 export function get_xy(shapes: ShapeView[], mixed: string) {
@@ -374,16 +155,14 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
 
     const fp = first_shape.parent;
 
-    if (!fp) {
-        return { x: fx, y: fy };
-    }
+    if (!fp) return { x: fx, y: fy };
 
     if (fp.type === ShapeType.Page) {
         const m = fp.matrix2Root();
 
         const fbox = get_box(first_shape);
 
-        const xy = m.computeCoord2(fbox.x, fbox.y);
+        const xy = m.computeCoord3(fbox);
         fx = xy.x;
         fy = xy.y;
     } else {
@@ -398,16 +177,11 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
         let y = 0;
 
         const parent = shape.parent;
-
-        if (!parent) {
-            continue;
-        }
+        if (!parent) continue;
 
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
-
             const box = get_box(shape);
-
             const xy = m.computeCoord2(box.x, box.y);
             x = xy.x;
             y = xy.y;
@@ -417,16 +191,10 @@ export function get_xy(shapes: ShapeView[], mixed: string) {
             y = xy.y;
         }
 
-        if (typeof fx === 'number' && !is_equal(x, fx)) {
-            fx = mixed;
-        }
-        if (typeof fy === 'number' && !is_equal(y, fy)) {
-            fy = mixed;
-        }
+        if (typeof fx === 'number' && !is_equal(x, fx)) fx = mixed;
+        if (typeof fy === 'number' && !is_equal(y, fy)) fy = mixed;
 
-        if (fy === mixed && fx === mixed) {
-            break;
-        }
+        if (fy === mixed && fx === mixed) break;
     }
     return { x: fx, y: fy };
 }
@@ -436,9 +204,7 @@ export function get_width(shapes: ShapeView[], mixed: string) {
 
     let first_width: number | string = shapes[0].frame.width;
 
-    if (is_straight(first_shape)) {
-        first_width = get_straight_line_length(first_shape);
-    }
+    if (is_straight(first_shape)) first_width = get_straight_line_length(first_shape);
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
@@ -448,7 +214,6 @@ export function get_width(shapes: ShapeView[], mixed: string) {
                 first_width = mixed;
                 break;
             }
-
             continue;
         }
         if (shape.frame.width !== first_width) {
@@ -464,9 +229,7 @@ export function get_height(shapes: ShapeView[], mixed: string) {
 
     let first_height: number | string = first_shape.frame.height;
 
-    if (is_straight(first_shape)) {
-        first_height = 0;
-    }
+    if (is_straight(first_shape)) first_height = 0;
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         if (is_straight(shape)) {
@@ -584,4 +347,114 @@ export const showInnerAngle = (shapes: ShapeView[]) => {
         }
     }
     return false;
+}
+
+export function getRadiusForCopy(shapes: ShapeView[]) {
+    let first: [number, number, number, number] | undefined;
+
+    for (const shape of shapes) {
+        const corner = __get(shape);
+        if (corner) {
+            first = corner;
+            break;
+        }
+    }
+
+    if (!first) return;
+
+    for (const shape of shapes) {
+        const corner = __get(shape);
+        if (!corner) continue;
+        if (!__compare(corner, first)) return;
+    }
+
+    return first;
+
+    function __get(shape: ShapeView): [number, number, number, number] | undefined {
+        if (shape instanceof ArtboradView || shape instanceof SymbolView || shape instanceof SymbolRefView) {
+            const corner = shape.cornerRadius;
+            if (!corner) return;
+            return [corner.lt, corner.rt, corner.rb, corner.lb];
+        } else if (shape instanceof PathShapeView) {
+            const points = shape.segments[0].points;
+            if (!points) return
+            let rs: [number, number, number, number] = [0, 0, 0, 0];
+            for (let i = 0; i < 4; i++) {
+                const p = points[i];
+                if (!p) break;
+                rs[i] = p.radius ?? 0;
+            }
+            return rs;
+        } else {
+            const fixed = shape.fixedRadius;
+            if (!fixed) return;
+            return [fixed, fixed, fixed, fixed];
+        }
+    }
+
+    function __compare(a: [number, number, number, number], b: [number, number, number, number]) {
+        for (let i = 0; i < 4; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+}
+
+export function getContextSetting(shapes: ShapeView[]) {
+    let first: ContextSettings | undefined;
+
+    for (const shape of shapes) {
+        const cs = shape.style.contextSettings;
+        if (cs) {
+            first = new ContextSettings(cs.blenMode, cs.opacity);
+            break;
+        }
+    }
+
+    if (!first) return;
+
+    for (const shape of shapes) {
+        const cs = shape.style.contextSettings;
+        if (!cs) continue;
+        if (cs.blenMode !== first.blenMode || cs.opacity !== first.opacity) return;
+    }
+
+    return first;
+}
+
+export function getMarkType(shapes: ShapeView[]) {
+    let first: { start: MarkerType | undefined, end: MarkerType | undefined } | undefined;
+
+    for (const shape of shapes) {
+        const startMark = shape.startMarkerType;
+        const endMark = shape.endMarkerType;
+
+        if (!startMark && !endMark) continue;
+        first = { start: startMark, end: endMark };
+        break;
+    }
+
+    if (!first) return;
+
+    for (const shape of shapes) {
+        const startMark = shape.startMarkerType;
+        const endMark = shape.endMarkerType;
+
+        if (!startMark && !endMark) continue;
+
+        if (startMark !== first.start || endMark !== first.end) return;
+    }
+
+    return first;
+}
+
+export function getText(shapes: ShapeView[]) {
+    let first: Text | undefined;
+    for (const shape of shapes) {
+        if (shape instanceof TextShapeView) {
+            first = export_text(shape.text) as Text;
+            break;
+        }
+    }
+    return first;
 }

@@ -1,4 +1,3 @@
-import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
@@ -10,10 +9,8 @@ import {
     getFormatFromBase64,
     GroupShape,
     GroupShapeView,
-    ImageShape,
     makeShapeTransform2By1,
     Matrix,
-    Page,
     PathShapeView,
     PathType,
     Shape,
@@ -55,18 +52,6 @@ interface SystemClipboardItem {
     content: Media | string
 }
 
-export interface Root {
-    init: boolean
-    x: number
-    y: number
-    bottom: number
-    right: number
-    width: number
-    height: number
-    element: any
-    center: ClientXY
-}
-
 export type Area =
     'text-selection'
     | 'controller'
@@ -78,20 +63,6 @@ export type Area =
     | 'table_cell'
     | 'component'
     | 'instance';
-const updateRootTime = 300;
-
-export function _updateRoot(context: Context, element: HTMLElement) {
-    const { x, y, right, bottom } = element.getBoundingClientRect();
-    const root: Root = {
-        init: true, x, y, right, bottom, element,
-        width: right - x,
-        height: bottom - y,
-        center: { x: (right - x) / 2, y: (bottom - y) / 2 }
-    }
-    context.workspace.updateRoot(root);
-}
-
-export const updateRoot = debounce(_updateRoot, updateRootTime);
 
 // 根据类型给图形命名
 export function getName(type: ShapeType, brothers: (ShapeView | Shape)[], t: Function): string {
@@ -909,15 +880,15 @@ export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     const points: ClientXY[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const item = shapes[i];
-        const { width, height } = item.size;
+        const { x, y, width, height } = item.frame;
         const m = item.transform2FromRoot; // 图层到Root；
         const clientTransform = makeShapeTransform2By1(matrix);
         m.addTransform(clientTransform); // root 到 client
         const { col0: lt, col1: rt, col2: rb, col3: lb } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(0, height),
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x + width, y + height),
+            ColVector3D.FromXY(x, y + height),
         ]);
         points.push(lt, rt, rb, lb);
     }
@@ -987,23 +958,12 @@ export function shape_track(context: Context, shape: Shape | ShapeView) {
             selection.selectShape(target);
         }
     } else {
-        const ctx: Context = context;
-        const pagesMgr = ctx.data.pagesMgr;
-        pagesMgr.get(page.id).then((page: Page | undefined) => {
-            if (page) {
-                // ctx.comment.toggleCommentPage()
-                // ctx.comment.commentMount(false)
-                const pagedom = ctx.getPageDom(page).dom;
-                ctx.selection.selectPage(pagedom);
-                let timer = setTimeout(() => {
-                    const selectedPage = selection.selectedPage!
-                    const target = selectedPage.getShape(shape.id);
-                    if (target) {
-                        fit_no_transform(context, target);
-                        selection.selectShape(target);
-                    }
-                    clearTimeout(timer);
-                }, 10)
+        context.selection.selectPage(page.id).then(p => {
+            if (!p) return;
+            const target = p.getShape(shape.id);
+            if (target) {
+                fit_no_transform(context, target);
+                selection.selectShape(target);
             }
         })
     }
@@ -1465,4 +1425,12 @@ export const getTransformCol = (context: Context, shape: ShapeView, x: number, y
     m.addTransform(clientTransform); //root到视图
     const { col0 } = m.transform([ColVector3D.FromXY(x, y)]);
     return { x: col0.x, y: col0.y };
+}
+
+
+export function outlineSelection(context: Context) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.outlineShapes(shapes);
 }
