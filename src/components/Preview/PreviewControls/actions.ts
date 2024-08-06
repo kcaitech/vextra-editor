@@ -131,7 +131,8 @@ export class ProtoAction {
     }
     // 组件状态替换
     symbolStateSwitch(action: PrototypeActions) {
-        const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        const down_shape = this.m_context.selection.hoveredShape as SymbolRefView || select_shape;
         if (!action.targetNodeID) return;
         const time = action.transitionDuration || 0.3;
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
@@ -215,6 +216,8 @@ export const delayAction = (context: Context, matrix: Matrix) => {
             shape = s;
         }
     }
+    console.log(shape, 'shape');
+    
     const protoActions = shape.prototypeInterAction;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
