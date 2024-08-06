@@ -2,6 +2,9 @@
 import Scale from './PreviewScale.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
+// import kcdesk from '@/kcdesk';
+// import { SCREEN_SIZE } from '@/settings';
+import { useI18n } from 'vue-i18n';
 interface Props {
     context: Context
 }

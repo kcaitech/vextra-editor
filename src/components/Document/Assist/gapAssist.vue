@@ -41,7 +41,11 @@ const getIntersectShapes = () => {
         const m = s.matrix2Root();
         m.multiAtLeft(props.context.workspace.matrix);
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        const x = f.x;
+        const y = f.y;
+        const r = x + f.width;
+        const b = y + f.height;
+        const ps: { x: number, y: number }[] = [{ x, y}, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
     }
     const b = XYsBounding(points); // 选中图形在视图上的位置
@@ -63,14 +67,18 @@ const getBoxs = (box: Box, shapes: ShapeView[]) => {  // 获取shape在视图上
         const points: { x: number, y: number }[] = [];
         m.multiAtLeft(matrix);
         const f = shape.frame;
-        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+        const x = f.x;
+        const y = f.y;
+        const r = x + f.width;
+        const b = y + f.height;
+        const ps: { x: number, y: number }[] = [{ x, y}, { x: r, y }, { x: r, y: b }, { x, y: b }].map(p => m.computeCoord3(p));
         points.push(...ps);
-        const b = XYsBounding(points);
+        const box = XYsBounding(points);
         const _box: Box = {
-            top: b.top,
-            bottom: b.bottom,
-            left: b.left,
-            right: b.right
+            top: box.top,
+            bottom: box.bottom,
+            left: box.left,
+            right: box.right
         }
         boxs.push({ b: _box, shape });
     }

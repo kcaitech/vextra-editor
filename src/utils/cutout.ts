@@ -179,12 +179,6 @@ export const getGroupChildBounds = (shape: ShapeView) => {
         width,
         height
     }
-    // return {
-    //     x: min_p.x,
-    //     y: min_p.y,
-    //     width: max_p.x - min_p.x,
-    //     height: max_p.y - min_p.y
-    // }
 }
 
 const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
@@ -201,9 +195,6 @@ const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
         const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
         const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
         let rotate = shape.rotation || 0;
-        // todo flip
-        // if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        // if (shape.isFlippedVertical) rotate = 360 - rotate;
         rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
         const points = [];
         const p1 = getRotatePoint(frame.x - l, frame.y - t, rotate, cx, cy);

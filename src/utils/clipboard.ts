@@ -1,7 +1,7 @@
 import {
     adapt2Shape,
     AsyncCreator,
-    AsyncTransfer,
+    AsyncTransfer, Blur,
     ColVector3D,
     ContactShape,
     CurvePoint,
@@ -10,7 +10,6 @@ import {
     export_text,
     GroupShape,
     GroupShapeView,
-    ImageShape,
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
@@ -24,14 +23,15 @@ import {
     TableCellType,
     Text,
     TextShape,
-    TextShapeEditor, Transform,
+    TextShapeEditor,
+    Transform,
     transform_data,
     TransformRaw,
     Transporter,
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, XY } from '@/context/selection';
-import { getName, Media, SVGReader, upload_image } from '@/utils/content';
+import { getName, hidden_selection, Media, SVGReader, upload_image } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding } from './common';
@@ -40,6 +40,10 @@ import { v4 } from 'uuid';
 import { ElMessage } from 'element-plus';
 import { parse as SVGParse } from "@/svg_parser";
 import { WorkSpace } from "@/context/workspace";
+import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
+import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
+import { flattenShapes } from "@/utils/cutout";
+import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -55,6 +59,8 @@ class ExfContext {
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'design.moss';
 export const paras = 'design.moss/paras'; // 文字段落
+export const properties = 'design.moss/properties'; // 文字段落
+
 export class Clipboard {
     context: Context;
     private cache: { type: CacheType, data: any } | undefined;
@@ -126,7 +132,6 @@ export class Clipboard {
     }
 
     write(event?: ClipboardEvent): boolean {
-        console.log('__write__')
         try {
             const text = this.text;
             if (text) {
@@ -162,13 +167,9 @@ export class Clipboard {
             is_async_plan_enable = true;
         }
 
-        if (!event) {
-            return is_async_plan_enable;
-        }
+        if (!event) return is_async_plan_enable;
 
-        if (!event.clipboardData) {
-            return false;
-        }
+        if (!event.clipboardData) return false;
 
         event.clipboardData.setData('text/plain', plain_text);
         event.clipboardData.setData('text/html', h);
@@ -209,9 +210,7 @@ export class Clipboard {
 
         // 先导出将要写入的数据
         const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
-        if (!_shapes) {
-            return false;
-        }
+        if (!_shapes) return false;
 
         for (let i = 0, len = _shapes.length; i < len; i++) {
             const shape = _shapes[i];
@@ -256,6 +255,70 @@ export class Clipboard {
         return true;
     }
 
+    write_properties() {
+        try {
+            const selected = this.context.selection.selectedShapes;
+            const flatten = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+            const fills = get_fills(flatten);
+            const borders = get_borders(flatten);
+            const shadows = get_shadows(selected);
+            const blur = get_blur(selected);
+
+            const radius = getRadiusForCopy(selected);
+            const contextSetting = getContextSetting(selected);
+            const mark = getMarkType(selected);
+            const text = getText(selected);
+
+            const data: any = {};
+            if (fills !== "mixed") data['fills'] = fills.map(i => exportFill(i.fill));
+            if (borders !== "mixed") data['borders'] = borders.map(i => exportBorder(i.border));
+            if (shadows !== "mixed") data['shadows'] = shadows.map(i => exportShadow(i.shadow));
+            if (blur instanceof Blur) data['blur'] = exportBlur(blur);
+            if (radius) data['radius'] = radius;
+            if (contextSetting) data['contextSetting'] = contextSetting;
+            if (mark) data['mark'] = mark;
+            if (text) data['text'] = text;
+
+            const code = encode_html(properties, data);
+
+            // @ts-ignore
+            if (!navigator.clipboard?.read) return false;
+            const html = new Blob([code || ''], { type: 'text/html' });
+            const content = [new ClipboardItem({ 'text/html': html })];
+            navigator.clipboard.write(content);
+            return true;
+        } catch (e) {
+            console.log('write_properties error:', e);
+            return false;
+        }
+    }
+
+    async paste_properties(event?: ClipboardEvent) {
+        try {
+            // @ts-ignore
+            if (navigator.clipboard.read || !event) {
+                const data = await navigator.clipboard.read();
+                if (!data) throw new Error('No valid data on clipboard.');
+                const d = data[0];
+                if (d.types.length !== 1 || d.types[0] !== 'text/html') throw new Error('No valid data on clipboard.');
+                const val = await d.getType('text/html');
+                if (!val) throw new Error('invalid value');
+                let text_html = await val.text();
+                text_html = decode_html(text_html);
+                if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
+                const is_properties = text_html.slice(0, 70).indexOf(properties) > -1; // 图层属性
+                if (!is_properties) throw new Error('invalid value');
+                const source = JSON.parse(text_html.split(properties)[1]);
+                const selection = this.context.selection;
+                const editor = this.context.editor4Page(selection.selectedPage!);
+                editor.pasteProperties(selection.selectedShapes, source);
+                hidden_selection(this.context);
+            }
+        } catch (error) {
+            console.log('paste error:', error);
+        }
+    }
+
     writeBlob(blob: Blob) {
         try {
             if (navigator.clipboard && navigator.clipboard.write) {
@@ -297,9 +360,7 @@ export class Clipboard {
     cut(event: ClipboardEvent) {
         try {
             const res = this.write(event);
-            if (!res) {
-                return;
-            }
+            if (!res) return;
 
             const textshape = this.context.selection.textshape;
             const text = this.text;
@@ -308,9 +369,7 @@ export class Clipboard {
                 const selection = this.context.textSelection;
                 const start = selection.cursorStart;
                 const end = selection.cursorEnd;
-                if (start === end) {
-                    return;
-                }
+                if (start === end) return;
 
                 const editor = this.context.editor4TextShape(textshape);
 
@@ -330,9 +389,7 @@ export class Clipboard {
             }
 
             const page = this.context.selection.selectedPage;
-            if (!page) {
-                return;
-            }
+            if (!page) return;
 
             const editor = this.context.editor4Page(page);
             const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
@@ -529,9 +586,7 @@ export class Clipboard {
     }
 
     paste_cache_for_text() {
-        if (!this.cache) {
-            return;
-        }
+        if (!this.cache) return;
 
         const { data, type } = this.cache;
 
@@ -545,9 +600,7 @@ export class Clipboard {
         if (html
             && html.slice(0, 70).indexOf(paras) > -1
             && this.insert_paras(html)
-        ) {
-            return;
-        }
+        ) return;
 
         let plain;
         if (type === 'plain-text') {
@@ -556,9 +609,7 @@ export class Clipboard {
             plain = decode_html(data['text/plain']);
         }
 
-        if (!plain) {
-            return;
-        }
+        if (!plain) return;
 
         this.paste_for_no_format_text(plain);
     }
@@ -708,9 +759,7 @@ export class Clipboard {
             return (await _d.getType('text/plain')).text() || '';
         }
 
-        if (!this.cache) {
-            return '';
-        }
+        if (!this.cache) return '';
 
         const { data, type } = this.cache;
 
@@ -983,9 +1032,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         const data = JSON.parse(text_html.split(identity)[1]);
 
         const source = data.shapes;
-        if (!source) {
-            throw new Error('invalid source');
-        }
+        if (!source) throw new Error('invalid source');
 
         const originTransform: any = data.originTransform; // 原环境下transform信息
 
@@ -1081,9 +1128,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
 async function get_html_from_datatransferitem(data: any) {
     const val = await data.getType('text/html');
-    if (!val) {
-        throw new Error('invalid value');
-    }
+    if (!val) throw new Error('invalid value');
 
     return await val.text();
 }
@@ -1102,9 +1147,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const page = context.selection.selectedPage;
 
-    if (!page) {
-        return;
-    }
+    if (!page) return;
     const source = JSON.parse(text_html.split(identity)[1]);
 
     const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
@@ -1117,9 +1160,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
-    if (!r || !r.length) {
-        return;
-    }
+    if (!r || !r.length) return;
 
     context.nextTick(page, () => {
         if (r) {
@@ -1548,7 +1589,16 @@ function sourceBounding(source: Shape[]) {
     for (let i = 0; i < source.length; i++) {
         const shape = source[i];
         const __transform = makeShapeTransform2By1(shape.transform);
-        const { width, height } = shape.size;
+        let width, height;
+        if (shape.type === ShapeType.Group) {
+            const children = (shape as GroupShape).childs;
+            const __box = sourceBounding(children);
+            width = __box.right - __box.left;
+            height = __box.bottom - __box.top;
+        } else {
+            width = shape.size.width;
+            height = shape.size.height;
+        }
         const { col0, col1, col2, col3 } = __transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
@@ -1557,18 +1607,10 @@ function sourceBounding(source: Shape[]) {
         ]);
         const box = XYsBounding([col0, col1, col2, col3]);
 
-        if (box.top < top) {
-            top = box.top;
-        }
-        if (box.left < left) {
-            left = box.left;
-        }
-        if (box.right > right) {
-            right = box.right;
-        }
-        if (box.bottom > bottom) {
-            bottom = box.bottom;
-        }
+        if (box.top < top) top = box.top;
+        if (box.left < left) left = box.left;
+        if (box.right > right) right = box.right;
+        if (box.bottom > bottom) bottom = box.bottom;
     }
 
     return { left, top, right, bottom };
@@ -1585,7 +1627,16 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
         const _t = originTransform[`${shape.id}`];
         if (!_t) continue;
         const __transform = makeShapeTransform2By1(_t);
-        const { width, height } = shape.size;
+        let width, height;
+        if (shape.type === ShapeType.Group) {
+            const children = (shape as GroupShape).childs;
+            const __box = sourceBounding(children);
+            width = __box.right - __box.left;
+            height = __box.bottom - __box.top;
+        } else {
+            width = shape.size.width;
+            height = shape.size.height;
+        }
         const { col0, col1, col2, col3 } = __transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
@@ -1594,18 +1645,10 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
         ]);
         const box = XYsBounding([col0, col1, col2, col3]);
 
-        if (box.top < top) {
-            top = box.top;
-        }
-        if (box.left < left) {
-            left = box.left;
-        }
-        if (box.right > right) {
-            right = box.right;
-        }
-        if (box.bottom > bottom) {
-            bottom = box.bottom;
-        }
+        if (box.top < top) top = box.top;
+        if (box.left < left) left = box.left;
+        if (box.right > right) right = box.right;
+        if (box.bottom > bottom) bottom = box.bottom;
     }
 
     return { left, top, right, bottom };
@@ -1630,7 +1673,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             && clientRB.y <= root.height;
 
         if (inner) {
-            console.log('将粘贴到ROOT下，并原位粘贴');
+            // console.log('将粘贴到ROOT下，并原位粘贴');
             // 没有逃离屏幕可视区域，原位粘贴
             for (const shape of source) {
                 const t = makeShapeTransform2By1(shape.transform);
@@ -1640,7 +1683,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             }
         } else {
             // 逃离了屏幕可视区域，尝试居中
-            console.log('将粘贴到ROOT下，但选区将溢出屏幕，尝试相对屏幕居中，并调整选区');
+            // console.log('将粘贴到ROOT下，但选区将溢出屏幕，尝试相对屏幕居中，并调整选区');
 
             // 检查是否需要调整视图缩放比例
             const { width, height } = context.workspace.root;
@@ -1658,7 +1701,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
 
             const matrix = context.workspace.matrix;
             if (ratioW > 1 || ratioH > 1) { // 调整视图比例
-                console.log('将以屏幕中点为中心，进行缩放');
+                // console.log('将以屏幕中点为中心，进行缩放');
                 matrix.trans(-width / 2, -height / 2);
                 matrix.scale(1 / Math.max(ratioW, ratioH));
                 matrix.trans(width / 2, height / 2);
@@ -1688,8 +1731,8 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             }
         }
     } else { // 将粘贴在指定的容器下
-        console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
-        const { width: envWidth, height: envHeight } = env.size;
+        // console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
+        const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
 
         const env2root = env.transform2FromRoot;
         const {
@@ -1698,10 +1741,10 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             col2: envRB,
             col3: envLB
         } = env2root.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(envWidth, 0),
-            ColVector3D.FromXY(envWidth, envHeight),
-            ColVector3D.FromXY(0, envHeight),
+            ColVector3D.FromXY(envX, envY),
+            ColVector3D.FromXY(envX + envWidth, envY),
+            ColVector3D.FromXY(envX + envWidth, envY + envHeight),
+            ColVector3D.FromXY(envX, envY + envHeight),
         ]);
 
         const envBound = XYsBounding([envLT, envRT, envRB, envLB]);

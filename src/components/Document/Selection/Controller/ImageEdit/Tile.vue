@@ -146,7 +146,7 @@ function getVectors() {
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
 
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const clientMatrix = makeShapeTransform2By1(props.context.workspace.matrix);
     const fromRoot = shape.transform2FromRoot;
@@ -157,10 +157,10 @@ function getVectors() {
         col2: vecRB,
         col3: vecLB
     } = fromClient.transform([
-        ColVector3D.FromXY(0, 0),
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height),
+        ColVector3D.FromXY(x, y),
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height),
     ]);
     return [vecLT, vecRT, vecRB, vecLB];
 }

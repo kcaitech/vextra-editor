@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import {
     computed,
-    getCurrentInstance, h, nextTick,
-    onBeforeMount, onMounted, onUnmounted,
-    reactive, ref,
+    getCurrentInstance,
+    h,
+    nextTick,
+    onBeforeMount,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
     watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
@@ -19,7 +24,7 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-    _updateRoot,
+
     adapt_page,
     color2string,
     drop,
@@ -93,6 +98,22 @@ const color_edit_mode = ref<boolean>(false);
 const image_tile_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 let firstTime = false;
+const visibleRect = reactive({ x: 0, y: 0, width: 0, height: 0 })
+
+function _updateRoot(context: Context, element: HTMLElement) {
+    const { x, y, right, bottom, width, height } = element.getBoundingClientRect();
+    const root = {
+        init: true, x, y, right, bottom, element,
+        width: right - x,
+        height: bottom - y,
+        center: { x: (right - x) / 2, y: (bottom - y) / 2 }
+    }
+    context.workspace.updateRoot(root);
+    visibleRect.x = 0;
+    visibleRect.y = 0;
+    visibleRect.width = width;
+    visibleRect.height = height;
+}
 
 function page_watcher(...args: any) {
     if (args.includes('backgroundColor')) {
@@ -214,22 +235,26 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems.value.add(MenuItemType.Layers);
     }
 
-    const _shapes = selection.selectedShapes
-    if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.value.add(MenuItemType.EditComps);
-    }
-
-    if (area === MountedAreaType.TableCell) {
-        const table = props.context.tableSelection;
-        if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-            contextMenuItems.value.add(MenuItemType.SplitCell);
-            contextMenuItems.value.delete(MenuItemType.MergeCell);
+    if (permIsEdit(props.context)) {
+        const _shapes = selection.selectedShapes
+        if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
+            contextMenuItems.value.add(MenuItemType.EditComps);
         }
-    }
-    if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
-    if (_shapes.length === 1 && _shapes[0].mask) {
-        contextMenuItems.value.delete(MenuItemType.Mask);
-        contextMenuItems.value.add(MenuItemType.UnMask);
+        if (_shapes.some(i => i.type === ShapeType.Text)) {
+            contextMenuItems.value.add(MenuItemType.Outline);
+        }
+        if (area === MountedAreaType.TableCell) {
+            const table = props.context.tableSelection;
+            if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+                contextMenuItems.value.add(MenuItemType.SplitCell);
+                contextMenuItems.value.delete(MenuItemType.MergeCell);
+            }
+        }
+        if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
+        if (_shapes.length === 1 && _shapes[0].mask) {
+            contextMenuItems.value.delete(MenuItemType.Mask);
+            contextMenuItems.value.add(MenuItemType.UnMask);
+        }
     }
 
     contextMenu.value = true; // 数据准备就绪之后打开菜单
@@ -486,23 +511,17 @@ function matrix_watcher(nm: Matrix) {
 }
 
 function copy_watcher(event: ClipboardEvent) {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     props.context.workspace.clipboard.write(event);
 }
 
 function cut_watcher(event: ClipboardEvent) {
-    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
-    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-    }
+    if (!permIsEdit(props.context) || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     return props.context.workspace.clipboard.paste(t, event);
 }
 
@@ -576,9 +595,7 @@ onMounted(() => {
     window.addEventListener('focus', windowFocus);
 
     nextTick(() => {
-        if (!root.value) {
-            return;
-        }
+        if (!root.value) return;
         resizeObserver.observe(root.value);
         _updateRoot(props.context, root.value);
         initMatrix(props.page);
@@ -623,6 +640,9 @@ comps.push(
             },
             get matrix() {
                 return matrix
+            },
+            get visibleRect() {
+                return visibleRect;
             },
             closeLoading
         }
@@ -750,16 +770,16 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
-    <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <!-- 页面调整，确保在ContentView顶层 -->
-    <Space :context="props.context" :visible="spacePressed"/>
-    <!-- Doge -->
-    <!-- <Doge/>-->
-</div>
+    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <!-- 页面调整，确保在ContentView顶层 -->
+        <Space :context="props.context" :visible="spacePressed" />
+        <!-- Doge -->
+        <!-- <Doge/>-->
+    </div>
 </template>

@@ -46,14 +46,14 @@ function update() {
 function update_dot_path() {
     paths.length = 0;
     const shape = props.shape;
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
     const m = shape.transform2FromRoot;
     m.addTransform(makeShapeTransform2By1(props.context.workspace.matrix));
 
     const { col0: rt, col1: rb, col2: lb } = m.transform([
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(width, height),
-        ColVector3D.FromXY(0, height)
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x + width, y + height),
+        ColVector3D.FromXY(x, y + height)
     ])
 
     paths.push(
@@ -111,7 +111,7 @@ function setCursor(t: CtrlElementType) {
     const fromRoot = shape.transform2FromRoot;
 
     const fromClient = fromRoot.addTransform(clientMatrix);
-    const { width, height } = shape.size;
+    const { x, y, width, height } = shape.frame;
 
     const { col0: vecR, col1: vecB } = fromClient.clone()
         .clearTranslate()
@@ -127,8 +127,8 @@ function setCursor(t: CtrlElementType) {
     const thetaB = cursorAngle(xVector, vecB);
 
     const cols = fromClient.transform([
-        ColVector3D.FromXY(width, 0),
-        ColVector3D.FromXY(0, height)
+        ColVector3D.FromXY(x + width, y),
+        ColVector3D.FromXY(x, y + height)
     ]);
 
     const { col0, col1 } = cols;

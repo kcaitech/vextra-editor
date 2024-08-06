@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, GroupShapeView, Shape, ShapeType, ShapeView, Stop, TableCell, TableCellView, TableShape, TableView, adapt2Shape, CornerType, BorderSideSetting, SideType, ImageScaleMode, PathShape, PathShapeView } from '@kcdesign/data';
+import { BasicArray, AsyncBorderThickness, GradientType, ShapeType, ShapeView, Stop, TableCellView, CornerType, BorderSideSetting, SideType, PathShapeView, TableView } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -22,8 +22,6 @@ import {
     get_aciton_gradient_stop,
     get_actions_filltype,
     get_actions_border,
-    get_borders_side,
-    get_actions_image_scale_mode
 } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
@@ -37,7 +35,6 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import {
     get_actions_border_thickness,
     get_actions_border_position,
-    get_actions_border_style
 } from '@/utils/shape_style'
 import { getSideThickness } from "./index"
 
@@ -61,12 +58,12 @@ const alphaBorder = ref<HTMLInputElement[]>();
 const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
+// const editor = computed(() => props.context.editor4Shape((props.shapes[0])));
 const watchedShapes = new Map();
 const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>();
 const apex_view = ref<number>(0);
-let table: TableShape;
+// let table: TableView;
 let borderthickness_editor: AsyncBorderThickness | undefined = undefined;
 let bordercellthickness_editor: AsyncBorderThickness | undefined = undefined;
 const reflush_side = ref(0);
@@ -585,7 +582,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
 function layout() {
     show_apex.value = false;
     const shapes = flattenShapes(props.shapes).filter(s => s.type !== ShapeType.Group);
-    
+
     show_apex.value = line_end_point(shapes);
 }
 
@@ -606,10 +603,10 @@ function shapes_watcher(v: ShapeView[]) {
     watchCells.forEach((v) => v.unwatch(updateData));
     watchCells.clear();
     if (v.length === 1 && v[0].type === ShapeType.Table) {
-        table?.unwatch(table_watcher);
+        // table?.unwatch(table_watcher);
         v[0].watch(table_watcher);
     } else {
-        table?.unwatch(table_watcher);
+        // table?.unwatch(table_watcher);
     }
 }
 
@@ -617,19 +614,21 @@ function table_watcher() {
     cells_watcher();
 }
 
-let watchCells: Map<string, TableCell> = new Map();
+let watchCells: Map<string, TableCellView> = new Map();
 
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     const is_edting = table_selection.editingCell;
     if (table_selection.tableRowStart > -1 || is_edting) {
-        let cells: any[] = [];
+        let cells: {
+            cell: TableCellView | undefined;
+        }[] = [];
         if (is_edting) {
-            cells.push(is_edting);
+            cells.push({ cell: is_edting });
         } else {
             cells = table_selection.getSelectedCells(true);
         }
-        const needWatch: Map<string, TableCell> = new Map();
+        const needWatch: Map<string, TableCellView> = new Map();
         for (let i = 0, len = cells.length; i < len; i++) {
             let c = cells[i];
             if (c.cell) {
@@ -926,8 +925,8 @@ const strokeClick = (e: Event) => {
                             @input="colorInput($event)" />
                         <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
                             v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-            t(`color.${b.border.gradient.gradientType}`)
-        }}</span>
+                                t(`color.${b.border.gradient.gradientType}`)
+                            }}</span>
                         <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
                             style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
                             @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"

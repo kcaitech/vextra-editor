@@ -43,6 +43,8 @@ const { t } = useI18n()
 const variables = ref<RefAttriListItem[] | StatusValueItem[]>([])
 
 const changetarget = (data: SelectItem, id: string) => {
+    console.log(id);
+    
     emits('changestatus', { data, id })
 }
 

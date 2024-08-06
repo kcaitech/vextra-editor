@@ -1,6 +1,5 @@
 import { Matrix, WatchableObject } from "@kcdesign/data";
 import { Context } from "./index";
-import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
@@ -11,6 +10,18 @@ import { IWorkspace, WorkspaceEvents } from "@/openapi/workspace";
 //     isComment = 2, // 可评论
 //     isEdit = 3 // 可编辑
 // }
+
+export interface Root {
+    init: boolean
+    x: number
+    y: number
+    bottom: number
+    right: number
+    width: number
+    height: number
+    element: any
+    center: { x: number, y: number }
+}
 
 export class WorkSpace extends WatchableObject implements IWorkspace {
     readonly m_clipboard: Clipboard;
