@@ -561,15 +561,18 @@ onUnmounted(() => {
 
         }
 
-        border-top: 1px solid #F0F0F0;
-        padding: 8px 8px 8px 16px;
-        width: 100%;
-        max-height: 150px;
-        height: 150px;
-        box-sizing: border-box;
-        overflow-x: hidden;
-        line-height: 18px;
-        word-wrap: break-word;
+        & {
+            border-top: 1px solid #F0F0F0;
+            padding: 8px 8px 8px 16px;
+            width: 100%;
+            max-height: 150px;
+            height: 150px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            line-height: 18px;
+            word-wrap: break-word;
+
+        }
 
         &::-webkit-scrollbar {
             width: 7px;
