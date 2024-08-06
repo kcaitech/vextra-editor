@@ -1,4 +1,4 @@
-import { ColVector3D, Matrix, OverlayPositions, Page, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, Page,OverlayPositions, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -6,9 +6,7 @@ import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
-import { nextTick } from "vue";
 import { toStyle } from "@/utils/message";
-import { opacity } from "@/assets/lang/zh";
 
 type PCard = InstanceType<typeof PageCard>;
 
@@ -580,7 +578,7 @@ export class ViewUpdater {
         this.setAttri(this.matrix);
     }
 
-    artboardInTrans() {
+    artboardInTrans(el: SVGSVGElement) {
         const shape = this.m_current_view;
         const container = this.m_container;
         if (!shape || !container || !this.m_page_card) {
@@ -618,7 +616,7 @@ export class ViewUpdater {
 
         this.matrix.trans(-stepx, -stepy);
 
-        this.setAttri(this.matrix);
+        el.style['transform'] = this.matrix.toString();
         if (stepx === stepy && stepx === 0) {
             return true;
         }
@@ -657,12 +655,12 @@ export class ViewUpdater {
     updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: { top: number, bottom: number, left: number, right: number }) {
         const cur_shape = context.selection.selectedShapes[0];
         if (!cur_shape) return;
-        const cur_frame = cur_shape.frame;
+        const cur_frame = cur_shape._p_frame;
         const m = new Matrix()
         m.reset(this.v_matrix);
         if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP || type === PrototypeNavigationType.NAVIGATE) {
             let s: ShapeView | undefined = shape;
-            const frame = shape.frame;
+            const frame = shape._p_frame;
             const cur_box = viewBox(this.v_matrix, shape);
             if (type === PrototypeNavigationType.SWAP) {
                 const before_action = context.preview.swapEndAction;
@@ -805,7 +803,8 @@ export class ViewUpdater {
     scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
         const time = action.transitionDuration || 0.3;
-        el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        
+        el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
     }
 
     // 淡入淡出动画
