@@ -14,9 +14,8 @@
                     </div>
                     <div class="actions" v-if="prototypeinteraction?.length">
                         <div class="actions-item" v-for="action in  prototypeinteraction " :key="action.id">
-                            <div class="item">
-                                <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }"
-                                    @click.stop="showhandel(action.id)">
+                            <div class="item" @click.stop="showhandel(action.id)">
+                                <div class="arrow" :class="{ activation: showaction && acitonindex === action.id }">
                                     <svg-icon icon-class="arrows-dr"></svg-icon>
                                 </div>
                                 <div class="item-content">
@@ -1433,6 +1432,13 @@ onUnmounted(() => {
         flex-direction: column;
         gap: 8px;
 
+        .actions-item {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .actions-item .item {
             @include flex(space-between, center);
             gap: 8px;
@@ -1452,8 +1458,8 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: flex-start;
+                flex: 1;
                 gap: 4px;
-                width: 172px;
                 height: 32px;
                 font-size: 12px;
                 background-color: #F5F5F5;
@@ -1497,9 +1503,7 @@ onUnmounted(() => {
         .actions-item .item-setting {
             display: flex;
             flex-direction: column;
-            width: 172px;
-            margin-left: 18px;
-            margin-top: 8px;
+            margin: 0 36px 0 18px;
             font-size: 12px;
             font-weight: 400;
             gap: 8px;
@@ -1698,7 +1702,6 @@ onUnmounted(() => {
                 .wrapper {
                     position: relative;
                     display: flex;
-                    width: 172px;
                     height: 100px;
                     border-radius: 6px;
                     background-color: #F5F5F5;
@@ -1904,7 +1907,6 @@ onUnmounted(() => {
                     align-items: center;
                     justify-content: space-between;
                     padding: 10px 8px;
-                    width: 172px;
                     height: 32px;
                     background-color: #f5f5f5;
                     border-radius: 6px;
