@@ -161,7 +161,7 @@ export class ViewUpdater {
             return;
         }
 
-        const frame = shape.frame;
+        const frame = shape._p_frame;
         const m = new Matrix(shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
 

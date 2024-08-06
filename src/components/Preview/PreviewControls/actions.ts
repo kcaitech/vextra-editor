@@ -156,6 +156,7 @@ export class ProtoAction {
     // 关闭浮层
     closeDialog() {
         const endAction = this.m_context.preview.endAction;
+        if (!endAction) return;
         if (endAction.navigationType === PrototypeNavigationType.SWAP) {
             this.m_context.preview.deleteSwapEndAction();
         }
