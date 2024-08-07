@@ -142,7 +142,7 @@
                     </div>
                     <div v-else class="default">设置窗口或其中控件的交互行为</div>
                 </div>
-                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
+                <div v-if="isProtoType.get('shape').shape.isContainer" class="overflow-roll">
                     <div class="text">溢出滚动</div>
                     <Select class="select" :source="overflowRoll"
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
@@ -1176,21 +1176,16 @@ function updateData() {
     if (shapes.length !== 1) return
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
-    if (types.includes(shape.type)) {
+    if (types.includes(shape.type) && shape.parent?.type === ShapeType.Page) {
         isContainer.value = true
         isProtoType.value.set('shape', { shape, isContainer })
-        // if (shape.parent?.type !== ShapeType.Page && shape.prototypeStartPoint !== undefined) {
-        //     const page = props.context.selection.selectedPage!;
-        //     const e = props.context.editor4Page(page);
-        //     e.delPrototypeStart(shape)
-        // };
     } else if ((shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
         isContainer.value = false
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
         isContainer.value = false
     }
-
+    
     if (shape instanceof SymbolRefView) {
         const variable = get_var_for_ref(shape, t)
         if (variable) {
