@@ -1,4 +1,4 @@
-import { ColVector3D, Matrix, Page,OverlayPositions, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, Page, OverlayPositions, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -726,11 +726,11 @@ export class ViewUpdater {
                 const trans = cur_box.right - box.left;
                 m.trans(trans, 0);
             } else if (direction === 'TOP') {
-                const trans = cur_box.bottom - box.top;
-                m.trans(0, trans);
-            } else if (direction === 'BOTTOM') {
                 const trans = box.bottom - cur_box.top;
                 m.trans(0, -trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = cur_box.bottom - box.top;
+                m.trans(0, trans);
             }
         } else if (animate_type.includes('SLIDE') && animate_type.includes('OUT')) {
             const w = (box.right - box.left) * 0.3;
@@ -742,10 +742,10 @@ export class ViewUpdater {
                 const trans = (cur_box.left - box.left) + w;
                 m.trans(trans, 0);
             } else if (direction === 'TOP') {
-                const trans = (cur_box.top - box.top) + h;
+                const trans = (box.bottom - cur_box.bottom) - h;
                 m.trans(0, trans);
             } else if (direction === 'BOTTOM') {
-                const trans = (box.bottom - cur_box.bottom) - h;
+                const trans = (cur_box.top - box.top) + h;
                 m.trans(0, trans);
             }
         }
@@ -767,14 +767,12 @@ export class ViewUpdater {
                 m.trans(trans, 0);
             } else if (direction === 'LEFT') {
                 const trans = (box.right - cur_box.right) - w;
-                console.log(trans, 'trans');
-
                 m.trans(trans, 0);
             } else if (direction === 'TOP') {
-                const trans = (cur_box.bottom - box.bottom) - h;
+                const trans = (box.top - cur_box.top) + h;
                 m.trans(0, trans);
             } else if (direction === 'BOTTOM') {
-                const trans = (box.top - cur_box.top) + h;
+                const trans = (cur_box.bottom - box.bottom) - h;
                 m.trans(0, trans);
             }
         } else if (animate_type.includes('OUT') || animate_type.includes('PUSH')) {
@@ -785,11 +783,11 @@ export class ViewUpdater {
                 const trans = box.right - cur_box.left;
                 m.trans(-trans, 0);
             } else if (direction === 'TOP') {
-                const trans = box.bottom - cur_box.top;
-                m.trans(0, -trans);
-            } else if (direction === 'BOTTOM') {
                 const trans = cur_box.bottom - box.top;
                 m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = box.bottom - cur_box.top;
+                m.trans(0, -trans);
             }
         }
         return m;
@@ -803,7 +801,7 @@ export class ViewUpdater {
     scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
         const time = action.transitionDuration || 0.3;
-        
+
         el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
     }
 
@@ -875,9 +873,9 @@ export class ViewUpdater {
             } else if (direction === 'LEFT') {
                 m.trans(-w, 0);
             } else if (direction === 'TOP') {
-                m.trans(0, -h);
-            } else if (direction === 'BOTTOM') {
                 m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
             }
             pageSvg.style['transform'] = m.toString();
         }
@@ -902,9 +900,9 @@ export class ViewUpdater {
             } else if (direction === 'LEFT') {
                 m.trans(-w, 0);
             } else if (direction === 'TOP') {
-                m.trans(0, -h);
-            } else if (direction === 'BOTTOM') {
                 m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
             }
             const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
             svgEl.style['transform'] = m.toString();
@@ -940,10 +938,10 @@ export class ViewUpdater {
                 m.trans(-trans, 0);
             } else if (direction === 'TOP') {
                 const trans = box.bottom - box.top;
-                m.trans(0, -trans);
+                m.trans(0, trans);
             } else if (direction === 'BOTTOM') {
                 const trans = box.bottom - box.top;
-                m.trans(0, trans);
+                m.trans(0, -trans);
             }
         }
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
@@ -964,9 +962,9 @@ export class ViewUpdater {
             } else if (direction === 'LEFT') {
                 m.trans(w, 0);
             } else if (direction === 'TOP') {
-                m.trans(0, h);
-            } else if (direction === 'BOTTOM') {
                 m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
             }
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
             const time = action.transitionDuration || 0.3;
@@ -997,9 +995,9 @@ export class ViewUpdater {
             } else if (direction === 'LEFT') {
                 m.trans(w, 0);
             } else if (direction === 'TOP') {
-                m.trans(0, h);
-            } else if (direction === 'BOTTOM') {
                 m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
             }
             const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
             svgEl.style['transform'] = m.toString();
@@ -1036,9 +1034,9 @@ export class ViewUpdater {
         } else if (direction === 'LEFT') {
             m.trans(w, 0);
         } else if (direction === 'TOP') {
-            m.trans(0, h);
-        } else if (direction === 'BOTTOM') {
             m.trans(0, -h);
+        } else if (direction === 'BOTTOM') {
+            m.trans(0, h);
         }
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
         svgEl.style['transform'] = m.toString();
