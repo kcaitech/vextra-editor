@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeSize, ShapeType,
+    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeSize, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from "@kcdesign/data";
@@ -73,6 +73,12 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
+        // pageDom.dom.childs.forEach(item => {
+        //     if (item instanceof ArtboradView) {
+        //         item.innerScrollOffset(0,0);
+        //         item.m_ctx.setDirty(item);
+        //     }
+        // })
         pageDom.ctx.loop(window.requestAnimationFrame);
         const els = pageSvg.value.childNodes;
         if (!length && els.length > 0) {

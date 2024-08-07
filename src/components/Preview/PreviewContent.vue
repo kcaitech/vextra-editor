@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
+import { ArtboradView, makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, TransformRaw, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
 import { finderShape, getFrameList, getPreviewMatrix, getScrollShape, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
@@ -155,9 +155,10 @@ const previewWatcher = (t: number | string, s?: any) => {
         const isTrans = viewUpdater.artboardInTrans(el);
         // 移除动画
         const time = action.transitionDuration || 0.3;
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             viewUpdater.removeAnimate(el, isTrans);
         }, time * 1000);
+        props.context.preview.addSetTimeout(timer);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
         updateDialogMatrix();
@@ -183,9 +184,10 @@ const previewWatcher = (t: number | string, s?: any) => {
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
         const time = action.transitionDuration || 0.3;
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             getTargetShapes();
         }, time * 1000);
+        props.context.preview.addSetTimeout(timer);
     } else if (t === Preview.SYMBOL_REF_SWITCH) {
         const m = new Matrix();
         if (!s && symrefAnimate.value) {
@@ -234,6 +236,7 @@ const selectionWatcher = (v: number | string) => {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
+        props.context.preview.clearSetTimeout();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
@@ -336,9 +339,8 @@ function onMouseMove(e: MouseEvent) {
         if (!hover_shape) {
             pageViewDragging(e); // 拖拽页面
         } else {
-            const el = document.getElementById(`${hover_shape.id}`)
-            console.log(el, 'el');
-            
+            const atrboard = hover_shape as ArtboradView;
+
         }
     }
 }
