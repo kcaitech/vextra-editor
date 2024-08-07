@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { XYsBounding } from "@/utils/common";
 import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 import { v4 } from "uuid";
 
 export class ProtoAction {
@@ -130,8 +130,8 @@ export class ProtoAction {
         document.body.removeChild(a);
     }
     // 组件状态替换
-    symbolStateSwitch(action: PrototypeActions) {
-        const down_shape = this.m_context.selection.hoveredShape as SymbolRefView;
+    symbolStateSwitch(action: PrototypeActions, shape?: ShapeView) {
+        const down_shape = shape || this.m_context.selection.hoveredShape as SymbolRefView;
         if (!action.targetNodeID) return;
         const time = action.transitionDuration || 0.3;
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
@@ -156,6 +156,7 @@ export class ProtoAction {
     // 关闭浮层
     closeDialog() {
         const endAction = this.m_context.preview.endAction;
+        if (!endAction) return;
         if (endAction.navigationType === PrototypeNavigationType.SWAP) {
             this.m_context.preview.deleteSwapEndAction();
         }
@@ -203,29 +204,53 @@ function getFullURL(str: string) {
     return str;
 }
 
+//延迟动作
 export const delayAction = (context: Context, matrix: Matrix) => {
     let shape = context.selection.selectedShapes[0];
     const page = context.selection.selectedPage;
     const shapes = getFrameList(page!);
     const action = context.preview.endAction;
     if (action) {
+        // 有浮层
         const s = shapes.find(item => item.id === action.targetNodeID);
         if (s) {
             shape = s;
         }
     }
-    const protoActions = shape.prototypeInterAction;
-    if (!protoActions) return;
-    for (let i = 0; i < protoActions.length; i++) {
-        const protoAction = protoActions[i];
-        const type = protoAction.event.interactionType;
-        if (type === PrototypeEvents.AFTERTIMEOUT) {
-            const time = protoAction.event.transitionTimeout || 0.8;
-            setTimeout(() => {
-                const protoActionFn = new ProtoAction(context);
-                protoActionFn.executeActionx(protoAction.actions, matrix);
-            }, time * 1000);
-            break;
+    const protoActionFn = new ProtoAction(context);
+    executeDelayActionShape(shape, protoActionFn, matrix);
+}
+
+function executeDelayActionShape(shape: ShapeView, protoActionFn: ProtoAction, matrix: Matrix) {
+    const actions = shape.prototypeInterAction;
+    if (actions?.length) {
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
+            if (action.event.interactionType === PrototypeEvents.AFTERTIMEOUT) {
+                const time = action.event.transitionTimeout || 0.8;
+                setTimeout(() => {
+                    if (action.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
+                        protoActionFn.symbolStateSwitch(action.actions, shape);
+                    } else {
+                        protoActionFn.executeActionx(action.actions, matrix);
+                    }
+                }, time * 1000);
+                break;
+            }
+        }
+    }
+
+    if (shape.type === ShapeType.Table) {
+        return;
+    }
+
+    const children = shape.childs || [];
+    if (!children.length) {
+        return;
+    } else {
+        for (let i = 0; i < children.length; i++) {
+            const item = children[i];
+            executeDelayActionShape(item, protoActionFn, matrix);
         }
     }
 }

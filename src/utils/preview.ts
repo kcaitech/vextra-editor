@@ -1,7 +1,7 @@
 // import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { Matrix, PageView, PrototypeEvents, PrototypeNavigationType, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeEvents, PrototypeNavigationType, ScrollDirection, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
@@ -191,6 +191,24 @@ export function finderShape(matrix: Matrix, scout: Scout, scope: ShapeView[], ho
             return result;
         }
     }
+}
+
+export function getScrollShape(shape: ShapeView | undefined) {
+    let s: ShapeView | undefined;
+    if (!shape) return;
+    if (shape.scrollDirection && shape.scrollDirection !== ScrollDirection.NONE) {
+        s = shape;
+    }
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (p.scrollDirection && p.scrollDirection !== ScrollDirection.NONE) {
+            s = p;
+            break;
+        } else {
+            p = p.parent;
+        }
+    }
+    return s;
 }
 
 /**
