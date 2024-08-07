@@ -222,14 +222,8 @@ const getPosition = (targetID: string | undefined) => {
     if (!shapes) return;
     const shape = shapes.find(i => i.id === targetID)
     if (!shape) return;
-    console.log('11111');
-    
     const { overlayBackgroundAppearance, overlayBackgroundInteraction, overlayPositionType } = shape
-    console.log(overlayPositionType);
-    
     position.value = overlayPositionType ?? new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
-    console.log('变化',position.value);
-    
     event.value = overlayBackgroundInteraction ?? OverlayBackgroundInteraction.NONE
     Appearance.value = overlayBackgroundAppearance ?? new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, new Color(0.25, 0, 0, 0))
     background_color.value = Appearance.value.backgroundColor as Color
@@ -276,7 +270,7 @@ onMounted(() => {
             gap: 2px;
             padding: 2px;
             border-radius: 6px;
-            border: 1px solid #F5F5F5;
+            border: 1px solid var(--input-background);
             box-sizing: border-box;
 
             // background-color: #F5F5F5;
@@ -284,7 +278,7 @@ onMounted(() => {
                 width: 100%;
                 height: 100%;
                 border-radius: 3px;
-                background-color: #F5F5F5;
+                background-color: var(--input-background);
             }
         }
 
@@ -303,7 +297,7 @@ onMounted(() => {
                 width: 47px;
                 height: 32px;
                 border-radius: 6px;
-                background-color: #F5F5F5;
+                background-color: var(--input-background);
 
                 svg {
                     width: 14px;
