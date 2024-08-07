@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { onMounted } from 'vue';
-import { PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
+import { PrototypeConnectionType, PrototypeEvent, PrototypeEvents, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 export interface SelectItem {
     value: string | number,
@@ -32,7 +32,8 @@ interface Props {
     minwidth?: number;
     action?: PrototypeNavigationType;
     animation?: boolean;
-    status?: boolean
+    status?: boolean;
+    iscontainer?: boolean;
 }
 
 interface Emits {
@@ -131,6 +132,12 @@ function onBlur() {
 }
 
 function select(data: SelectItem) {
+    //延迟选项是否可选
+    if (data.value === PrototypeEvents.AFTERTIMEOUT && !props.iscontainer) return
+
+    //组件状态切换是否可选
+    if (data.value === PrototypeConnectionType.INTERNALNODE && data.type === PrototypeNavigationType.SWAPSTATE && !props.status) return
+
     const index = source.value.findIndex((item: SelectSource) => item.data === data);
     curValueIndex.value = index;
     curValue.value = data;
@@ -183,10 +190,11 @@ watchEffect(() => {
 
 watch(() => props.selected, render);
 watch(() => props.action, render);
-onMounted(()=>{
+onMounted(() => {
     render()
     console.log(props.status);
-    
+    console.log('11111', props.iscontainer);
+
 })
 </script>
 
@@ -224,6 +232,9 @@ onMounted(()=>{
                 <div v-for="(c, idx) in source" class="item-default" :style="c.data.type === PrototypeNavigationType.SWAPSTATE ? {
             pointerEvents: props.status ? 'auto' : 'none',
             opacity: props.status ? 1 : 0.4
+        } : c.data.content === '延迟' ? {
+            pointerEvents: props.iscontainer ? 'auto' : 'none',
+            opacity: props.iscontainer ? 1 : 0.4
         } : {}" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx"
                     @mouseleave="curHoverValueIndex = -1">
                     <svg-icon :style="{ visibility: curValueIndex === idx ? 'visible' : 'hidden' }"

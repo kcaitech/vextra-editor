@@ -2,9 +2,10 @@
     <div class="container">
         <el-scrollbar height="100%">
             <div v-if="isProtoType.size">
-                <Origin v-if="isProtoType.get('shape').isContainer" :context=props.context
-                    :prototypestart=prototypestart @createorigin=createOrigin @setorigin=setPrototypeStartPoint
-                    @deleteorigin=deleteOrigin></Origin>
+                <Origin
+                    v-if="isProtoType.get('shape').isContainer && isProtoType.get('shape').shape.parent.type === ShapeType.Page"
+                    :context=props.context :prototypestart=prototypestart @createorigin=createOrigin
+                    @setorigin=setPrototypeStartPoint @deleteorigin=deleteOrigin></Origin>
                 <div class="interaction">
                     <div class="title" @click.stop="createAction">
                         <div class="text" :class="{ active: prototypeinteraction?.length }">交互</div>
@@ -33,8 +34,8 @@
                             <div class="item-setting" v-if="showaction && acitonindex === action.id">
                                 <div class="trigger">
                                     <span>触发</span>
-                                    <Select class="select" id="select" :visibility="true" :minwidth="100"
-                                        :source="trigger"
+                                    <Select class="select" id="select" :visibility="true" :iscontainer="isContainer"
+                                        :minwidth="100" :source="trigger"
                                         :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
                                         @select="setPrototypeActionEvent($event, action.id)"></Select>
                                     <input v-select ref="aftertimeout"
@@ -226,7 +227,7 @@ const connectionURL = ref<HTMLInputElement[]>()
 const scroll = ref<string>('')
 const hasStatus = ref<boolean>(false)
 const showtargerlist = ref<boolean>(false)
-
+const isContainer = ref<boolean>(false)
 const Direction = new Map([
     ['LEFT', 180],
     ['RIGHT', 0],
@@ -1175,14 +1176,19 @@ function updateData() {
     if (shapes.length !== 1) return
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
-    let isContainer = false
     if (types.includes(shape.type)) {
-        isContainer = true
+        isContainer.value = true
         isProtoType.value.set('shape', { shape, isContainer })
+        // if (shape.parent?.type !== ShapeType.Page && shape.prototypeStartPoint !== undefined) {
+        //     const page = props.context.selection.selectedPage!;
+        //     const e = props.context.editor4Page(page);
+        //     e.delPrototypeStart(shape)
+        // };
     } else if ((shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
+        isContainer.value = false
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
-        isProtoType.value.clear()
+        isContainer.value = false
     }
 
     if (shape instanceof SymbolRefView) {
@@ -1488,14 +1494,19 @@ onUnmounted(() => {
             }
 
             .delete {
+                display: flex;
                 width: 28px;
                 height: 28px;
-                display: flex;
+                border-radius: var(--default-radius);
 
                 svg {
                     width: 16px;
                     height: 16px;
                     margin: auto;
+                }
+
+                &:hover {
+                    background-color: #F5F5F5;
                 }
             }
         }
@@ -1796,7 +1807,7 @@ onUnmounted(() => {
                         align-items: center;
                         grid-template-columns: 1fr 1fr 1fr 1fr;
                         grid-template-rows: 1fr;
-                        width: 140px;
+                        width: 148px;
                         height: 32px;
                         padding: 2px;
                         border-radius: 6px;
