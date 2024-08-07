@@ -52,8 +52,6 @@ function pathMousedown(e: MouseEvent) {
     if (props.context.workspace.isPageDragging) {
         return;
     }
-    e.stopPropagation();
-
     if (props.context.preview.menuVisible) {
         props.context.preview.notify(Preview.MENU_VISIBLE);
     }
@@ -76,6 +74,7 @@ function pathMousedown(e: MouseEvent) {
                     const type = protoAction.event.interactionType;
                     if (type === PrototypeEvents.DBCLICK) {
                         console.log('双击事件');
+                        e.stopPropagation();
                         protoActionFn.executeActionx(protoAction.actions, props.matrix);
                         break;
                     }
@@ -89,13 +88,14 @@ function pathMousedown(e: MouseEvent) {
                 const type = protoAction.event.interactionType;
                 if (type === PrototypeEvents.MOUSEDOWN) {
                     console.log('按下鼠标');
+                    e.stopPropagation();
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
                     break;
                 }
             }
         }
     }
-
+    
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
 }
@@ -115,6 +115,7 @@ const onMouseMove = (e: MouseEvent) => {
             const type = protoAction.event.interactionType;
             if (type === PrototypeEvents.DRAG) {
                 console.log('拖拽事件');
+                e.stopPropagation();
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 break;
             }

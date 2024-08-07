@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
-import { finderShape, getFrameList, getPreviewMatrix, selectShapes, viewBox } from '@/utils/preview';
+import { finderShape, getFrameList, getPreviewMatrix, getScrollShape, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -15,7 +15,6 @@ import { useI18n } from 'vue-i18n';
 import { DomCtx } from '../Document/Content/vdom/domctx';
 import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { SymbolDom } from '../Document/Content/vdom/symbol';
-import { delayAction } from './PreviewControls/actions';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -331,16 +330,20 @@ function onMouseMove(e: MouseEvent) {
         if (preview.value) {
             preview.value.style.cursor = 'grabbing';
         }
-    } else if (e.buttons == 1) {
-        const h_shape = props.context.selection.hoveredShape;
-        if (h_shape && h_shape.prototypeInterAction?.length) return;
-        const shape = props.context.selection.selectedShapes[0];
-        if (!shape.scrollDirection || shape.scrollDirection === ScrollDirection.NONE) return;
-        pageViewDragging(e, shape.scrollDirection); // 拖拽页面
+    } else if (e.button === 0) {
+        let hover_shape = search2(e);
+        hover_shape = getScrollShape(hover_shape);
+        if (!hover_shape) {
+            pageViewDragging(e); // 拖拽页面
+        } else {
+            const el = document.getElementById(`${hover_shape.id}`)
+            console.log(el, 'el');
+            
+        }
     }
 }
 
-const pageViewDragging = (e: MouseEvent, scroll_dir?: ScrollDirection) => {
+const pageViewDragging = (e: MouseEvent) => {
     if (!preview.value) return;
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
@@ -369,10 +372,6 @@ const pageViewDragging = (e: MouseEvent, scroll_dir?: ScrollDirection) => {
     }
     if (bottom <= root.height && dy < 0) dy = 0;
 
-    if (scroll_dir) {
-        if (scroll_dir === ScrollDirection.VERTICAL) dx = 0;
-        if (scroll_dir === ScrollDirection.HORIZONTAL) dy = 0;
-    }
     const matrix = viewUpdater.v_matrix;
 
     if (isDragging) {
@@ -525,6 +524,27 @@ function search(e: MouseEvent) {
     }
     return hover_shape;
 }
+function search2(e: MouseEvent) {
+    const shapes = props.context.selection.selectedShapes[0];
+    const page = props.context.selection.selectedPage;
+    if (!preview.value || !shapes || !page) return;
+    const scout = props.context.selection.scout;
+    const { x, y } = preview.value.getBoundingClientRect();
+    const xy = { x: e.clientX - x, y: e.clientY - y };
+    let hover_shape: ShapeView | undefined;
+    if (isSuperposed.value) {
+        if (target_shapes.length) {
+            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
+            const m = end_matrix.value as Matrix;
+            if (m) {
+                hover_shape = finderShape(m, scout, [shape], xy);
+            }
+        }
+    } else {
+        hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
+    }
+    return hover_shape;
+}
 
 const closeMenu = () => {
     isMenu.value = false;
@@ -604,7 +624,6 @@ const getTargetShapes = () => {
                             viewUpdater.pageSvgPushAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
                         })
-                        delayAction(props.context, m);
                     } else {
                         el.style['transform'] = m.toString();
                     }
