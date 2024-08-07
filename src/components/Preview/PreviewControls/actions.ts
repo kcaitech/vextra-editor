@@ -55,15 +55,17 @@ export class ProtoAction {
         } else if (type.includes('DISSOLVE') || (type.includes('MOVE') && type.includes('FROM'))) {
             // 溶解、移入
             this.m_context.preview.setInteractionAction(action);
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
-            }, time * 1000);
+            }, time * 1000)
+            this.m_context.preview.addSetTimeout(timer);
         } else if (type.includes('SLIDE') || type.includes('PUSH') || type.includes('OUT')) {
             // 移出、滑入、滑出、推入
             this.m_context.preview.resetInteractionAction(action);
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 this.m_context.selection.selectShape(shape);
             }, time * 1000);
+            this.m_context.preview.addSetTimeout(timer);
         }
     }
 
@@ -79,14 +81,16 @@ export class ProtoAction {
                 this.m_context.selection.selectShape(shape);
             } else if (type.includes('DISSOLVE')) {
                 this.m_context.preview.setInteractionAction(action.action, shape?.id);
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     this.m_context.selection.selectShape(shape);
                 }, time * 1000);
+                this.m_context.preview.addSetTimeout(timer);
             } else {
                 this.m_context.preview.resetInteractionAction(action.action, shape?.id);
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     this.m_context.selection.selectShape(shape);
                 }, time * 1000);
+                this.m_context.preview.addSetTimeout(timer);
             }
         }
     }
@@ -142,11 +146,12 @@ export class ProtoAction {
         } else {
             // 执行动画
             this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action);
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 this.m_context.preview.notify(Preview.SWAP_REF_STAT);
                 // 清除操作
                 this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
             }, time * 1000);
+            this.m_context.preview.addSetTimeout(timer);
         }
     }
     // 打开浮层
@@ -218,23 +223,24 @@ export const delayAction = (context: Context, matrix: Matrix) => {
         }
     }
     const protoActionFn = new ProtoAction(context);
-    executeDelayActionShape(shape, protoActionFn, matrix);
+    executeDelayActionShape(context, shape, protoActionFn, matrix);
 }
 
-function executeDelayActionShape(shape: ShapeView, protoActionFn: ProtoAction, matrix: Matrix) {
+function executeDelayActionShape(context: Context, shape: ShapeView, protoActionFn: ProtoAction, matrix: Matrix) {
     const actions = shape.prototypeInterAction;
     if (actions?.length) {
         for (let i = 0; i < actions.length; i++) {
             const action = actions[i];
             if (action.event.interactionType === PrototypeEvents.AFTERTIMEOUT) {
                 const time = action.event.transitionTimeout || 0.8;
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     if (action.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
                         protoActionFn.symbolStateSwitch(action.actions, shape);
                     } else {
                         protoActionFn.executeActionx(action.actions, matrix);
                     }
                 }, time * 1000);
+                context.preview.addSetTimeout(timer);
                 break;
             }
         }
@@ -250,7 +256,7 @@ function executeDelayActionShape(shape: ShapeView, protoActionFn: ProtoAction, m
     } else {
         for (let i = 0; i < children.length; i++) {
             const item = children[i];
-            executeDelayActionShape(item, protoActionFn, matrix);
+            executeDelayActionShape(context, item, protoActionFn, matrix);
         }
     }
 }

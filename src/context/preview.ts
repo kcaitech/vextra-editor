@@ -42,6 +42,7 @@ export class Preview extends WatchableObject {
     private m_supernatant_open: boolean = false;
     private m_swap_action: Set<PrototypeActions> = new Set();
     private m_navi_shape_list: ShapeView[] = [];
+    private m_setTimeouts: Set<any> = new Set();
 
     constructor(context: Context) {
         super();
@@ -201,5 +202,17 @@ export class Preview extends WatchableObject {
 
     get naviShapeList() {
         return this.m_navi_shape_list;
+    }
+
+    addSetTimeout(fn: any) {
+        this.m_setTimeouts.add(fn);
+    }
+
+    clearSetTimeout() {
+        this.m_setTimeouts.forEach(item => {
+            clearTimeout(item);
+            item = null;
+        })
+        this.m_setTimeouts.clear();
     }
 }
