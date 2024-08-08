@@ -192,9 +192,6 @@ watch(() => props.selected, render);
 watch(() => props.action, render);
 onMounted(() => {
     render()
-    console.log(props.status);
-    console.log('11111', props.iscontainer);
-
 })
 </script>
 
