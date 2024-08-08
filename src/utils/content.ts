@@ -1434,3 +1434,9 @@ export function outlineSelection(context: Context) {
     const editor = context.editor4Page(page);
     editor.outlineShapes(shapes, context.workspace.t('attr.outlineNameSuffix'));
 }
+export function flattenSelection(context: Context) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.flattenSelection(shapes);
+}

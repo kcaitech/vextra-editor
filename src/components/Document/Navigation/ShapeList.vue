@@ -254,7 +254,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
         contextMenuItems.value.clear();
-        contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Lock, MenuItemType.Copy, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Component, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Mask]);
+        contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Replace, MenuItemType.Visible, MenuItemType.Lock, MenuItemType.Copy, MenuItemType.Groups, MenuItemType.Container, MenuItemType.Component, MenuItemType.Forward, MenuItemType.Back, MenuItemType.Top, MenuItemType.Bottom, MenuItemType.Mask, MenuItemType.Outline]);
         if (selected.length === 1) {
             if (selected[0].type === ShapeType.SymbolRef) {
                 contextMenuItems.value.add(MenuItemType.EditComps);
@@ -276,7 +276,6 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             const index = contextMenuItems.value.has(MenuItemType.Component);
             if (index) contextMenuItems.value.delete(MenuItemType.Component);
         }
-        if (selected.some(i => i.type === ShapeType.Text)) contextMenuItems.value.add(MenuItemType.Outline);
         if (props.context.readonly || props.context.tool.isLable) {
             contextMenuItems.value.clear();
             contextMenuItems.value = new Set([MenuItemType.All, MenuItemType.Copy]);

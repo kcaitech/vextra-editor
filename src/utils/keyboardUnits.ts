@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     adapt_page,
-    component,
+    component, flattenSelection,
     lessen,
     lower_layer,
     magnify, outlineSelection,
@@ -146,6 +146,9 @@ keydownHandler['KeyE'] = function (event: KeyboardEvent, context: Context) {
             context.tool.setAction(Action.Export);
         }
         context.menu.setExportDialog(true);
+    } else if (is_ctrl) {
+        event.preventDefault();
+        flattenSelection(context)
     }
 }
 
