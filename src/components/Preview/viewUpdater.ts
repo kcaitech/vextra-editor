@@ -531,7 +531,7 @@ export class ViewUpdater {
         return box;
     }
 
-    trans(e: WheelEvent) {
+    trans(e: WheelEvent, scroll?: { x: boolean, y: boolean }) {
         const MAX_STEP = 120;
 
         const shape = this.m_current_view;
@@ -572,6 +572,11 @@ export class ViewUpdater {
             if ((bottom - root.height) < stepy) stepy = bottom - root.height;
         }
         if (bottom <= root.height && stepy > 0) stepy = 0;
+
+        if (scroll) {
+            if (scroll.x) stepx = 0;
+            if (scroll.y) stepy = 0;
+        }
 
         this.matrix.trans(-stepx, -stepy);
 
@@ -1085,11 +1090,11 @@ export class ViewUpdater {
         }
     }
 
-    getHotZone(matrix: Matrix, shape: ShapeView) {
+    getHotZone(e: MouseEvent, matrix: Matrix, shape: ShapeView) {
         const view = this.m_container;
         const boxs: Set<Box> = new Set();
         if (!view) return;
-        this.hotZoneBox(matrix, shape, boxs);
+        this.hotZoneBox(e, matrix, shape, boxs);
         const hotBoxs = Array.from(boxs);
         for (let i = 0; i < hotBoxs.length; i++) {
             const box = hotBoxs[i];
@@ -1115,16 +1120,22 @@ export class ViewUpdater {
             }, 300);
         }
     }
-    hotZoneBox(matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
+    hotZoneBox(e: MouseEvent, matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
+        const view = this.m_container!;
+        const viewbox = view.getBoundingClientRect();
+        const downX = e.clientX - viewbox.x;
+        const downY = e.clientY - viewbox.y;
         if (shape.prototypeInterAction && shape.prototypeInterAction.length) {
             const box = viewBox(matrix, shape);
-            boxs.add(box);
+            if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
+                boxs.add(box);
+            }
         } else {
             const children = shape.childs;
             if (children.length) {
                 for (let i = 0; i < children.length; i++) {
                     const c = children[i];
-                    this.hotZoneBox(matrix, c, boxs);
+                    this.hotZoneBox(e, matrix, c, boxs);
                 }
             }
         }

@@ -9,13 +9,13 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
-import { Preview } from "@/context/preview";
 
 interface Props {
-    shapes: ShapeView[] | Shape[];
-    data: PageView;
+    shapes: ShapeView[];
+    data: ShapeView;
     backgroundColor: string;
     context: Context
+    selected?: boolean
 }
 
 const props = defineProps<Props>();
@@ -26,25 +26,17 @@ const emits = defineEmits<{
 
 const pageSvg = ref<SVGSVGElement>();
 
+
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 function assemble() {
-    const length = props.context.selection.selectedShapes.length;
-    if (pageDom) {
-        pageDom?.dom.unbind();
-        if (!pageDom.dom.isDistroyed) {
-            pageDom.dom.destory();
-        }
-        pageDom = undefined;
-    }
+    const selectShapes = props.context.selection.selectedShapes;
+    const length = selectShapes.length;
+    disassemble();
 
-    let shapes: any[] = props.shapes;
+    let shapes: any = props.data;
 
-    if (!shapes.length) {
-        return;
-    }
-
-    if (shapes[0] instanceof ShapeView) {
-        shapes = shapes.map((s) => adapt2Shape(s as any));
+    if (shapes instanceof ShapeView) {
+        shapes = adapt2Shape(shapes as any);
     }
 
     const borders = new BasicArray<Border>();
@@ -58,7 +50,7 @@ function assemble() {
         ShapeType.Page,
         trans,
         style,
-        new BasicArray<Shape>(...shapes)
+        new BasicArray<Shape>(shapes)
     );
 
     page.isVisible = true;
@@ -73,15 +65,15 @@ function assemble() {
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
-        // pageDom.dom.childs.forEach(item => {
-        //     if (item instanceof ArtboradView) {
-        //         item.innerScrollOffset(0,0);
-        //         item.m_ctx.setDirty(item);
-        //     }
-        // })
         pageDom.ctx.loop(window.requestAnimationFrame);
+        if (pageDom.dom.childs && props.selected) {
+            props.context.selection.selectShape(pageDom.dom.childs[0]);
+        }
+        replaceSupernatantShape(pageDom.dom.childs[0]);
+        setInnerTransform(pageDom.dom.childs);
         const els = pageSvg.value.childNodes;
         if (!length && els.length > 0) {
+            // 当前page下没有shape时，应清除原来的子节点
             for (let index = 0; index < els.length; index++) {
                 const el = els[index];
                 pageSvg.value.removeChild(el);
@@ -91,24 +83,55 @@ function assemble() {
     }
 }
 
-function disassemble() {
-    if (pageDom) {
-        pageDom.dom.unbind();
-        if (!pageDom.dom.isDistroyed) {
-            pageDom?.dom.destory();
+const setInnerTransform = (shapes: ShapeView[]) => {
+    if (!shapes.length) return;
+
+    const innerTrans = props.context.preview.innerTransform;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape instanceof ArtboradView) {
+            const transform = innerTrans.get(shape.id) || new TransformRaw();
+            shape.initInnerTransform(transform);
+        }
+        const children = shape.childs || [];
+        if (shape.type === ShapeType.Table) {
+            continue;
+        }
+        setInnerTransform(children);
+    }
+}
+
+// 替换浮层shape
+const replaceSupernatantShape = (replace_s: ShapeView) => {
+    if (props.selected) return;
+    for (let i = 0; i < props.shapes.length; i++) {
+        const shape = props.shapes[i];
+        if (shape.id === props.data.id) {
+            props.shapes[i] = replace_s;
         }
     }
 }
 
-watch(() => props.shapes, () => {
-    props.shapes.length && assemble();
-})
-
-const preview_watch = (t: number) => {
-    if (t === Preview.SWAP_REF_STAT) {
-        assemble();
+function disassemble() {
+    if (pageDom) {
+        pageDom.ctx.stopLoop();
+        pageDom.dom.unbind();
+        if (!pageDom.dom.isDistroyed) {
+            pageDom?.dom.destory();
+        }
+        pageDom = undefined;
     }
 }
+
+watch(() => props.shapes, () => {
+    assemble();
+})
+
+// const preview_watch = (t: number) => {
+//     if (t === Preview.SWAP_REF_STAT) {
+//         assemble();
+//     }
+// }
 
 function repaint() {
     assemble();
@@ -118,11 +141,10 @@ defineExpose({ pageSvg, repaint });
 
 onMounted(() => {
     assemble();
-    props.context.preview.watch(preview_watch);
+    // props.context.preview.watch(preview_watch);
 });
 onUnmounted(() => {
-    disassemble();
-    props.context.preview.unwatch(preview_watch);
+    // props.context.preview.unwatch(preview_watch);
 });
 </script>
 

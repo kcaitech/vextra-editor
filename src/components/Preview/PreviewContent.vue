@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { ArtboradView, makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, TransformRaw, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
-import { finderShape, getFrameList, getPreviewMatrix, getScrollShape, selectShapes, viewBox } from '@/utils/preview';
+import { finderShape, getFrameList, getPreviewMatrix, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -15,6 +15,7 @@ import { useI18n } from 'vue-i18n';
 import { DomCtx } from '../Document/Content/vdom/domctx';
 import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { SymbolDom } from '../Document/Content/vdom/symbol';
+import { is_mac } from '@/utils/common';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -39,9 +40,12 @@ const renderCard = ref(false);
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
-    cur_shape = toRaw([shape]);
 
     if (!shape || !page) return;
+
+    if (cur_shape[0].id !== shape.id) {
+        cur_shape = toRaw([shape]);
+    }
 
     viewUpdater.atPage(page.data);
     viewUpdater.atTarget(shape);
@@ -68,7 +72,6 @@ function changePage() {
     if (!shape) {
         return;
     }
-
     cur_shape = toRaw([shape]);
 
     viewUpdater.atPage(page.data);
@@ -89,7 +92,6 @@ const togglePage = (p: number) => {
     const page = props.context.selection.selectedPage;
 
     if (!shape || !page) return;
-
     cur_shape = toRaw([shape]);
 
     const naviList = props.context.preview.naviShapeList;
@@ -237,6 +239,7 @@ const selectionWatcher = (v: number | string) => {
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
         props.context.preview.clearSetTimeout();
+        props.context.preview.clearInnerTransform();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {
             ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
@@ -268,7 +271,7 @@ const initMatrix = () => {
         is_overlay.value = false;
     }
 }
-
+let atrboard: ArtboradView;
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.selection.selectedShapes[0];
@@ -277,7 +280,23 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (ctrlKey || metaKey) { // 缩放
         viewUpdater.scale(e);
     } else {
-        viewUpdater.trans(e);
+        let hover_shape = search2(e);
+        hover_shape = getScrollShape(hover_shape);
+        if (!hover_shape) {
+            viewUpdater.trans(e);
+        } else {
+            atrboard = hover_shape as ArtboradView;
+            const scale = viewUpdater.v_matrix.m00;
+            console.log(e, e.movementX, e.movementY);
+            let stepx = Math.abs(e.deltaX) > 120 ? (120 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+            let stepy = Math.abs(e.deltaY) > 120 ? (120 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+            if (e.shiftKey && !is_mac() && e.deltaX < 1) {
+                stepx = stepy;
+                stepy = 0;
+            }
+            const scroll = scrollAtrboard(atrboard, { x: -stepx / scale, y: -stepy / scale });
+            viewUpdater.trans(e, scroll);
+        }
     }
 }
 
@@ -339,13 +358,20 @@ function onMouseMove(e: MouseEvent) {
         if (!hover_shape) {
             pageViewDragging(e); // 拖拽页面
         } else {
-            const atrboard = hover_shape as ArtboradView;
-
+            let dx = e.clientX - downXY.x;
+            let dy = e.clientY - downXY.y;
+            const diff = Math.hypot(dx, dy);
+            if (diff > 4) {
+                atrboard = hover_shape as ArtboradView;
+                const scale = viewUpdater.v_matrix.m00;
+                const scroll = scrollAtrboard(atrboard, { x: e.movementX / scale, y: e.movementY / scale });
+                pageViewDragging(e, scroll);
+            }
         }
     }
 }
 
-const pageViewDragging = (e: MouseEvent) => {
+const pageViewDragging = (e: MouseEvent, scroll?: { x: boolean, y: boolean }) => {
     if (!preview.value) return;
     const root = preview.value.getBoundingClientRect();
     let dx = e.clientX - downXY.x;
@@ -373,6 +399,11 @@ const pageViewDragging = (e: MouseEvent) => {
         if ((root.height - bottom) > dy) dy = root.height - bottom;
     }
     if (bottom <= root.height && dy < 0) dy = 0;
+
+    if (scroll) {
+        if (scroll.x) dx = 0;
+        if (scroll.y) dy = 0;
+    }
 
     const matrix = viewUpdater.v_matrix;
 
@@ -412,7 +443,7 @@ function onMouseUp(e: MouseEvent) {
             const select_shape = props.context.selection.selectedShapes[0];
             const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
             const shape = isSuperposed.value ? target_shapes.at(-1) : select_shape;
-            viewUpdater.getHotZone(matrix, shape as ShapeView);
+            viewUpdater.getHotZone(e, matrix, shape as ShapeView);
         }
     }
     if (spacePressed.value) {
@@ -438,6 +469,7 @@ function onMouseUp(e: MouseEvent) {
             }
         }
     }
+
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
@@ -508,6 +540,7 @@ function search(e: MouseEvent) {
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
+
     if (hover_shape && !hover_shape.prototypeInterAction) {
         let p = hover_shape.parent;
         if (p && p.type === ShapeType.Page) {
@@ -798,12 +831,12 @@ onUnmounted(() => {
 <template>
     <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-        <PageCard v-if="cur_shape" class="pageCard" ref="pageCard" background-color="transparent"
-            :data="(props.page as PageView)" :context="context" :shapes="cur_shape" @start-loop="startLoop" />
+        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+            :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
         <!-- 浮层和动画卡片 -->
         <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent"
-                :data="(props.page as PageView)" :context="context" :shapes="[item]" />
+            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
+                :context="context" :shapes="target_shapes" />
         </div>
         <!-- 实例切换动画 -->
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symrefAnimate"

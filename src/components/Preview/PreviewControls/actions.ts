@@ -16,6 +16,8 @@ export class ProtoAction {
     }
 
     executeActionx(action: PrototypeActions, matrix: Matrix) {
+        console.log(action, 'action');
+        
         const page = this.m_context.selection.selectedPage;
         this.m_shapes = getFrameList(page!);
         if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.NAVIGATE) {

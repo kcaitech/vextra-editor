@@ -1,4 +1,4 @@
-import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { Matrix, PageView, PrototypeActions, Shape, ShapeType, ShapeView, TransformRaw, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { router } from "@/router";
 import { getFrameList } from "@/utils/preview";
@@ -43,6 +43,7 @@ export class Preview extends WatchableObject {
     private m_swap_action: Set<PrototypeActions> = new Set();
     private m_navi_shape_list: ShapeView[] = [];
     private m_setTimeouts: Set<any> = new Set();
+    private m_arboard_inner_transform: Map<string, TransformRaw> = new Map();
 
     constructor(context: Context) {
         super();
@@ -214,5 +215,17 @@ export class Preview extends WatchableObject {
             item = null;
         })
         this.m_setTimeouts.clear();
+    }
+
+    setInnerTransform(key: string, value: TransformRaw) {
+        this.m_arboard_inner_transform.set(key, value);
+    }
+
+    get innerTransform() {
+        return this.m_arboard_inner_transform;
+    }
+
+    clearInnerTransform() {
+        this.m_arboard_inner_transform.clear();
     }
 }
