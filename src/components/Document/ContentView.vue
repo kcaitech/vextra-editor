@@ -24,7 +24,6 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-
     adapt_page,
     color2string,
     drop,
@@ -249,6 +248,9 @@ function contextMenuMount(e: MouseEvent) {
         }
         if (shapes.length) {
             contextMenuItems.value.add(MenuItemType.Mask);
+        }
+        const type = _shapes[0].type;
+        if (_shapes.length === 1 && !(type === ShapeType.Table || type === ShapeType.Group || type === ShapeType.Contact)) {
             contextMenuItems.value.add(MenuItemType.Outline);
         }
         if (_shapes.length === 1 && _shapes[0].mask) {

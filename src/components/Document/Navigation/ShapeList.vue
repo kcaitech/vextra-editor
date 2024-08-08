@@ -259,9 +259,13 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
             if (selected[0].type === ShapeType.SymbolRef) {
                 contextMenuItems.value.add(MenuItemType.EditComps);
             }
-            if (selected[0].type === ShapeType.Symbol || selected[0].type === ShapeType.SymbolUnion) {
+            const type = selected[0].type;
+            if (type === ShapeType.Symbol || type === ShapeType.SymbolUnion) {
                 const index = contextMenuItems.value.has(MenuItemType.Component);
                 if (index) contextMenuItems.value.delete(MenuItemType.Component);
+            }
+            if (type === ShapeType.Contact || type === ShapeType.Group || type === ShapeType.Table) {
+                contextMenuItems.value.delete(MenuItemType.Outline);
             }
             if (selected[0].mask) {
                 contextMenuItems.value.add(MenuItemType.UnMask);
