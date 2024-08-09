@@ -30,10 +30,9 @@ function select() {
     if (width === height && height === 0) return;
 
     const selection = props.context.selection;
-    // const page = selection.selectedPage!;
+    const page = selection.selectedPage!;
     const m = new Matrix(props.context.workspace.matrix.inverse);
-    // m.multiAtLeft(page.matrix2Root());
-    // const pageMatrix = new Matrix(m.inverse);
+    m.multiAtLeft(page.matrix2Root().inverse);
 
     const p1: XY = m.computeCoord2(left, top); // lt
     const p3: XY = m.computeCoord2(left + width, top + height); // rb
