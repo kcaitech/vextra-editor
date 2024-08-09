@@ -1,7 +1,7 @@
 // import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { Matrix, PageView, PrototypeEvents, PrototypeNavigationType, ScrollDirection, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { ArtboradView, Matrix, PageView, PrototypeEvents, PrototypeNavigationType, ScrollDirection, Shape, ShapeType, ShapeView, TransformRaw } from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
@@ -197,7 +197,7 @@ export function getScrollShape(shape: ShapeView | undefined) {
     let s: ShapeView | undefined;
     if (!shape) return;
     if (shape.scrollDirection && shape.scrollDirection !== ScrollDirection.NONE) {
-        s = shape;
+        return s = shape;
     }
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
@@ -218,6 +218,8 @@ export function getPreviewMatrix(shape: ShapeView) {
     const m = shape.matrix2Parent();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
+        const offset = (p as ArtboradView).innerTransform;
+        offset && m.multiAtLeft(offset.toMatrix())
         m.multiAtLeft(p.matrix2Parent());
         p = p.parent;
     }
@@ -370,4 +372,76 @@ export const getFlowShapes = (context: Context, id: string, flows: Map<string, s
         })
     }
     return flowShape;
+}
+
+export const getAtrboardInnerOffset = (atrboard: ArtboradView) => {
+    const size = atrboard.size;
+    let offsetT = 0;
+    let offsetL = 0;
+    let offsetR = size.width;
+    let offsetB = size.height;
+    for (let i = 0; i < atrboard.childs.length; i++) {
+        const child = atrboard.childs[i];
+        const frame = child._p_frame;
+        const right = frame.x + frame.width;
+        const bottom = frame.y + frame.height;
+        if (frame.x < offsetL) offsetL = frame.x;
+        if (frame.y < offsetT) offsetT = frame.y;
+        if (right > offsetR) offsetR = right;
+        if (bottom > offsetB) offsetB = bottom;
+    }
+    return { top: -offsetT, right: size.width - offsetR, bottom: size.height - offsetB, left: -offsetL }
+}
+
+export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: number }) => {
+    const offset = getAtrboardInnerOffset(atrboard);
+    const transform = atrboard.innerTransform || new TransformRaw();
+    const tx = transform.translateX;
+    const ty = transform.translateY;
+    let is_scrollx = false;
+    let is_scrolly = false;
+
+    if (atrboard.scrollDirection === ScrollDirection.VERTICAL) {
+        // 垂直滚动
+        if (trans.y > 0 && offset.top > ty) {
+            const transy = trans.y + ty > offset.top ? offset.top - ty : trans.y;
+            atrboard.innerScrollOffset(0, transy);
+            is_scrolly = true;
+        } else if (trans.y < 0 && offset.bottom < ty) {
+            const transy = ty + trans.y < offset.bottom ? offset.bottom - ty : trans.y;
+            atrboard.innerScrollOffset(0, transy);
+            is_scrolly = true;
+        }
+    } else if (atrboard.scrollDirection === ScrollDirection.HORIZONTAL) {
+        // 水平滚动
+        if (trans.x > 0 && offset.left > tx) {
+            const transx = trans.x + tx > offset.left ? offset.left - tx : trans.x;
+            atrboard.innerScrollOffset(transx, 0);
+            is_scrollx = true;
+        } else if (trans.x < 0 && offset.right < tx) {
+            const transx = tx + trans.x < offset.right ? offset.right - tx : trans.x;
+            atrboard.innerScrollOffset(transx, 0);
+            is_scrollx = true;
+        }
+    } else if (atrboard.scrollDirection === ScrollDirection.BOTH) {
+        if (trans.y > 0 && offset.top > ty) {
+            const transy = trans.y + ty > offset.top ? offset.top - ty : trans.y;
+            atrboard.innerScrollOffset(0, transy);
+            is_scrolly = true;
+        } else if (trans.y < 0 && offset.bottom < ty) {
+            const transy = ty + trans.y < offset.bottom ? offset.bottom - ty : trans.y;
+            atrboard.innerScrollOffset(0, transy);
+            is_scrolly = true;
+        }
+        if (trans.x > 0 && offset.left > tx) {
+            const transx = trans.x + tx > offset.left ? offset.left - tx : trans.x;
+            atrboard.innerScrollOffset(transx, 0);
+            is_scrollx = true;
+        } else if (trans.x < 0 && offset.right < tx) {
+            const transx = tx + trans.x < offset.right ? offset.right - tx : trans.x;
+            atrboard.innerScrollOffset(transx, 0);
+            is_scrollx = true;
+        }
+    }
+    return { x: is_scrollx, y: is_scrolly };
 }
