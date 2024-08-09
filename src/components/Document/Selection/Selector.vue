@@ -30,17 +30,17 @@ function select() {
     if (width === height && height === 0) return;
 
     const selection = props.context.selection;
-    const page = selection.selectedPage!;
-    const m = new Matrix(props.context.workspace.matrix);
-    m.multiAtLeft(page.matrix2Root());
-    const pageMatrix = new Matrix(m.inverse);
+    // const page = selection.selectedPage!;
+    const m = new Matrix(props.context.workspace.matrix.inverse);
+    // m.multiAtLeft(page.matrix2Root());
+    // const pageMatrix = new Matrix(m.inverse);
 
-    const p1: XY = pageMatrix.computeCoord2(left, top); // lt
-    const p3: XY = pageMatrix.computeCoord2(left + width, top + height); // rb
+    const p1: XY = m.computeCoord2(left, top); // lt
+    const p3: XY = m.computeCoord2(left + width, top + height); // rb
     const rect = new ShapeFrame(p1.x, p1.y, p3.x - p1.x, p3.y - p1.y);
 
     let changed = false;
-    const selected = find4select(page, rect, props.params.frame.includes);
+    const selected = find4select(selection.selectedPage!, rect, props.params.frame.includes);
     if (selected.length !== selectedShapes.size) {
         changed = true;
         selectedShapes.clear();
@@ -56,8 +56,8 @@ function select() {
             const cur = new Set(selected.map(s => s.id));
             const keys = Array.from(selectedShapes.keys());
             keys.forEach(k => {
-                if (!cur.has(k)) selectedShapes.delete(k);
-            })
+                if (!cur.has(k)) selectedShapes.delete(k)
+            });
         }
     }
 

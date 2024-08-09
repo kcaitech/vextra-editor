@@ -24,7 +24,6 @@ import { Menu } from '@/context/menu';
 import { useI18n } from 'vue-i18n';
 import { v4 } from "uuid";
 import {
-
     adapt_page,
     color2string,
     drop,
@@ -240,9 +239,6 @@ function contextMenuMount(e: MouseEvent) {
         if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
             contextMenuItems.value.add(MenuItemType.EditComps);
         }
-        if (_shapes.some(i => i.type === ShapeType.Text)) {
-            contextMenuItems.value.add(MenuItemType.Outline);
-        }
         if (area === MountedAreaType.TableCell) {
             const table = props.context.tableSelection;
             if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
@@ -250,7 +246,13 @@ function contextMenuMount(e: MouseEvent) {
                 contextMenuItems.value.delete(MenuItemType.MergeCell);
             }
         }
-        if (shapes.length) contextMenuItems.value.add(MenuItemType.Mask);
+        if (shapes.length) {
+            contextMenuItems.value.add(MenuItemType.Mask);
+        }
+        const type = _shapes[0].type;
+        if (_shapes.length === 1 && type !== ShapeType.Table) {
+            contextMenuItems.value.add(MenuItemType.Outline);
+        }
         if (_shapes.length === 1 && _shapes[0].mask) {
             contextMenuItems.value.delete(MenuItemType.Mask);
             contextMenuItems.value.add(MenuItemType.UnMask);
