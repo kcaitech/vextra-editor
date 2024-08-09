@@ -34,8 +34,8 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static CHECKSTATUS = 5;
     static SELECTION_VIEW_UPDATE = 6;
     static PASTE_RIGHT = 7;
-    static FREEZE = 8;
-    static THAW = 9;
+    // static FREEZE = 8;
+    // static THAW = 9;
     static CLAC_ATTRI = 10;
     static HIDDEN_UI = 11;
     static INIT_DOC_NAME = 12;
@@ -232,9 +232,9 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.m_t = t;
     }
 
-    setFreezeStatus(isFreeze: boolean) {
-        this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
-    }
+    // setFreezeStatus(isFreeze: boolean) {
+    //     this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
+    // }
 
     setSelectionViewUpdater(isWork: boolean) {
         this.m_should_selection_view_update = isWork;

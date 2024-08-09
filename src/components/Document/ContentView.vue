@@ -62,6 +62,7 @@ interface Props {
 
 const emit = defineEmits<{
     (e: 'closeLoading'): void;
+    (e: 'contentVisible'): void;
 }>();
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -570,8 +571,11 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     updateBackground(cur);
 })
 
-const closeLoading = () => {
+const onRenderDone = () => {
     emit('closeLoading');
+}
+const onContentVisible = () => {
+    emit('contentVisible');
 }
 watch(() => matrix, matrix_watcher, { deep: true });
 onBeforeMount(() => {
@@ -581,7 +585,7 @@ onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
     props.context.workspace.init(t.bind(getCurrentInstance()));
-    props.context.workspace.setFreezeStatus(true);
+    // props.context.workspace.setFreezeStatus(true);
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
@@ -605,7 +609,7 @@ onMounted(() => {
         _updateRoot(props.context, root.value);
         initMatrix(props.page);
     });
-    props.context.workspace.setFreezeStatus(false)
+    // props.context.workspace.setFreezeStatus(false)
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
@@ -649,7 +653,8 @@ comps.push(
             get visibleRect() {
                 return visibleRect;
             },
-            closeLoading
+            onRenderDone,
+            onContentVisible
         }
     },
     // 筛选结果文本高亮

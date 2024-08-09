@@ -99,7 +99,7 @@ function change(e: Event) {
         }
 
     } else if (files.length > 1) {
-        props.context.workspace.setFreezeStatus(true);
+        // props.context.workspace.setFreezeStatus(true);
         multiple(files);
         const loader = new ImageLoader(props.context);
         loader.packAll(files).then(res => {
@@ -117,7 +117,7 @@ function multiple(files: any) {
         iteration();
     } catch (error) {
         console.log(error);
-        props.context.workspace.setFreezeStatus(false);
+        // props.context.workspace.setFreezeStatus(false);
     }
 
     // 挨个加载，遇到错误资源跳一步
