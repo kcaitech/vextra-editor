@@ -35,7 +35,7 @@ import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/sym
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/svg_parser";
-import { sort_by_layer } from "@/utils/group_ungroup";
+import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 
@@ -1436,7 +1436,6 @@ export function outlineSelection(context: Context) {
 }
 export function flattenSelection(context: Context) {
     const page = context.selection.selectedPage!;
-    const shapes = context.selection.selectedShapes;
     const editor = context.editor4Page(page);
-    editor.flattenSelection(shapes);
+    editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
 }

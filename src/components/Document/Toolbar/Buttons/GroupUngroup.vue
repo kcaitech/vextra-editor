@@ -4,7 +4,6 @@ import {
     adapt2Shape,
     Artboard,
     BoolOp,
-    BoolShape,
     BoolShapeView,
     GroupShape,
     GroupShapeView,
@@ -189,10 +188,10 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
  * @description 路径拼合
  */
 const flattenShape = () => {
-    const page = props.context.selection.selectedPage;
+    const page = props.context.selection.selectedPage!;
     const selection = props.context.selection;
-    const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
-    if (page && shapes.length) {
+    const shapes = compare_layer_3(selection.selectedShapes);
+    if (shapes.length) {
         const editor = props.context.editor4Page(page)
         if (shapes.length === 1 && (shapes[0] instanceof BoolShapeView || shapes[0].type === ShapeType.Group)) {
             if (shapes[0].type === ShapeType.Group) {

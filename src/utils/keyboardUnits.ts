@@ -148,7 +148,7 @@ keydownHandler['KeyE'] = function (event: KeyboardEvent, context: Context) {
         context.menu.setExportDialog(true);
     } else if (is_ctrl) {
         event.preventDefault();
-        flattenSelection(context)
+        flattenSelection(context);
     }
 }
 
