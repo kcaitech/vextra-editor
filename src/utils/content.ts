@@ -398,7 +398,7 @@ export function insert_imgs(context: Context, t: Function, media: Media[], origi
             context.selection.rangeSelectShape(selects);
         })
     }
-    context.workspace.setFreezeStatus(false);
+    // context.workspace.setFreezeStatus(false);
 }
 
 export function modify_imgs(context: Context, media: Media[], upload_container?: any) {
@@ -412,7 +412,7 @@ export function modify_imgs(context: Context, media: Media[], upload_container?:
             upload_container[ref] = media[i];
         }
     }
-    context.workspace.setFreezeStatus(false);
+    // context.workspace.setFreezeStatus(false);
 }
 
 export function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {

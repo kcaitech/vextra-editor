@@ -1,6 +1,7 @@
 import { ArtboradView, EL } from "@kcdesign/data";
 import { batchSetAttribute, createElement, elpatch, setAttribute } from "./patch";
 
+const MAX_NODE_SUPPORT = 50; // 小于这个的不转成image了
 export class ArtboradDom extends (ArtboradView) {
 
     // 检查显示区域
@@ -73,6 +74,9 @@ export class ArtboradDom extends (ArtboradView) {
     m_save_image_props: any;
 
     switchIntoImage(force: boolean): boolean {
+        if (this.nodeCount < MAX_NODE_SUPPORT) {
+            return false;
+        }
         if (!this.el) {
             return false;
         }
