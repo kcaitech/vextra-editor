@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { ShapeView, PrototypeStartingPoint } from "@kcdesign/data"
+import { ShapeView, PrototypeStartingPoint, PageView, SymbolRefView } from "@kcdesign/data"
 import { computed, onMounted, ref, watch } from 'vue';
 
 
@@ -43,7 +43,6 @@ const emits = defineEmits<{
 }>()
 
 const showIpnut = ref<boolean>(false)
-const originNumber = ref<number>(1)
 const originName = ref<string>('')
 const originDescribed = ref<string>('')
 
@@ -51,19 +50,40 @@ const start = computed<PrototypeStartingPoint>(() => {
     return new PrototypeStartingPoint(originName.value, originDescribed.value)
 })
 
+const maxnumber = (page: PageView) => {
+    const shapes = page.childs;
+    let start: PrototypeStartingPoint[] = [];
+    const regex = new RegExp(/流程 \d/)
+    let number = 0
+    for (let index = 0; index < shapes.length; index++) {
+        if (shapes[index].isContainer || shapes[index] instanceof SymbolRefView) {
+            const startPoint = shapes[index].prototypeStartPoint
+            if (startPoint) start.push(startPoint);
+        }
+    }
+
+    start = start.filter((i) => regex.test(i.name))
+
+    for (let index = 0; index < start.length; index++) {
+        const i = start[index]
+        number = Math.max(Number(i.name.split(' ')[1]), number)
+    }
+    return ++number
+}
+
 //创建原型起始节点
 const createOrigin = () => {
     if (props.prototypestart) return
     showIpnut.value = true
-    originNumber.value++
-    const data = new PrototypeStartingPoint('流程 ' + originNumber.value, '')
+    const number = maxnumber(props.context.selection.selectedPage!)
+    const data = new PrototypeStartingPoint('流程 ' + number, '')
     emits('createorigin', data)
 }
 
-watch(()=>props.prototypestart,()=>{
-    if(!props.prototypestart)return
-    originName.value=props.prototypestart.name
-    originDescribed.value=props.prototypestart.desc
+watch(() => props.prototypestart, () => {
+    if (!props.prototypestart) return
+    originName.value = props.prototypestart.name
+    originDescribed.value = props.prototypestart.desc
 })
 
 //删除原型起始节点
@@ -193,6 +213,10 @@ onMounted(() => {
 
             &:focus {
                 border-color: #1878F5;
+            }
+            &::-webkit-scrollbar{
+                width: 0;
+                height: 0;
             }
         }
     }

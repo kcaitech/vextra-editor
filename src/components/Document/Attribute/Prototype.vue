@@ -161,7 +161,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView } from "@kcdesign/data"
+import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, PrototypeEvent, PrototypeTransitionType, SymbolShape, SymbolUnionShape, VariableType, SymbolView, PageView } from "@kcdesign/data"
 import { debounce, throttle } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
@@ -280,6 +280,8 @@ const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.CLOSE, '关闭浮层', 'close-float-layer'],
     [PrototypeConnectionType.INTERNALNODE, '替换浮层', 'change-float-layer', PrototypeNavigationType.SWAP],
 ])
+
+
 
 const icon = new Map([
     [PrototypeConnectionType.INTERNALNODE, 'jump-page'],
@@ -745,9 +747,20 @@ const getText = (actions: PrototypeActions) => {
     } else if (actions.connectionType === PrototypeConnectionType.URL) {
         return actions.connectionURL
     } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SCROLLTO) {
-        const shapes = props.context.selection.selectedShapes
-        const name = shapes[0].childs.find(i => i.id === actions.targetNodeID)?.name
-        return name
+        const shape = props.context.selection.selectedPage
+        const targetnmae = ref<string>()
+        const a = (s: PageView | ShapeView, id: string) => {
+            if (s.id === id) {
+                return s.name
+            } else {
+                s.childs.forEach(i => {
+                    const name = a(i, id)
+                    if (name) return targetnmae.value = name
+                })
+            }
+        }
+        a(shape!, actions.targetNodeID!)
+        return targetnmae.value
     } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
         const page = props.context.selection.selectedPage
         if (!page) return
@@ -873,7 +886,6 @@ const setOverlayPositionMargin = (data: M, id: string) => {
     updateData()
 }
 
-
 //创建原型起始节点
 const createOrigin = (data: PrototypeStartingPoint) => {
     if (prototypestart.value) return;
@@ -885,7 +897,6 @@ const createOrigin = (data: PrototypeStartingPoint) => {
     updateData()
 }
 
-
 //删除原型起始节点
 const deleteOrigin = () => {
     const page = props.context.selection.selectedPage!;
@@ -895,7 +906,6 @@ const deleteOrigin = () => {
     e.delPrototypeStart(shape as ShapeView);
     updateData()
 }
-
 
 //设置原型起始节点
 const setPrototypeStartPoint = (data: PrototypeStartingPoint) => {
@@ -1076,6 +1086,10 @@ const scrollDirection = (data: SelectItem) => {
     updateData()
 }
 
+const test = new Set()
+for (let i of Object.values(PrototypeEvents)) {
+    test.add(i)
+}
 
 //创建原型动画
 const createAction = () => {
@@ -1083,8 +1097,36 @@ const createAction = () => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
+
     if (!shape) return;
-    const Event = new PrototypeEvent(PrototypeEvents.ONCLICK)
+
+    const Events = new Set()
+    for (let i of Object.values(PrototypeEvents)) {
+        Events.add(i)
+    }
+
+    if (!isContainer.value) Events.delete(PrototypeEvents.AFTERTIMEOUT);
+
+    const iterator = Events[Symbol.iterator]()
+    let events: PrototypeEvents[] = []
+    const event = ref<PrototypeEvents>()
+
+    shape.prototypeInterAction?.forEach(i => {
+        events.push(i.event.interactionType)
+    })
+
+    const checktype = () => {
+        let type = iterator.next()
+        if (events.includes(type.value as PrototypeEvents)) {
+            checktype()
+        } else {
+            event.value = type.value
+        }
+    }
+    checktype()
+
+    if (!event.value) return
+    const Event = new PrototypeEvent(event.value)
     const Action = new PrototypeActions(v4(), PrototypeConnectionType.NONE)
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
@@ -1185,7 +1227,7 @@ function updateData() {
     } else {
         isContainer.value = false
     }
-    
+
     if (shape instanceof SymbolRefView) {
         const variable = get_var_for_ref(shape, t)
         if (variable) {
@@ -1205,6 +1247,9 @@ function updateData() {
         isProtoType.value.forEach((v, k) => {
             if (k) prototypestart.value = v.shape.prototypeStartPoint;
             prototypeinteraction.value = v.shape.prototypeInterAction;
+            if (prototypeinteraction.value) {
+                prototypeinteraction.value = [...prototypeinteraction.value].reverse()
+            }
             scroll.value = v.shape.scrollDirection ? v.shape.scrollDirection : 'NONE';
         })
     }
@@ -1470,6 +1515,12 @@ onUnmounted(() => {
                 padding-left: 9px;
                 box-sizing: border-box;
 
+                span {
+                    font-size: 12px;
+                    line-height: 32px;
+                    white-space: nowrap;
+                }
+
                 .icon-img {
                     width: 18px;
                     height: 18px;
@@ -1524,6 +1575,7 @@ onUnmounted(() => {
                 gap: 8px;
 
                 span {
+                    font-size: 12px;
                     line-height: 32px;
                     white-space: nowrap;
                 }
@@ -1653,7 +1705,7 @@ onUnmounted(() => {
                     align-items: center;
                     gap: 4px;
                     padding: 9px 8px;
-                    width: 65px;
+                    flex: 1;
                     height: 32px;
                     background-color: #F5F5F5;
                     border-radius: 6px;
