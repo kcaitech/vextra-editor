@@ -264,7 +264,7 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
                 const index = contextMenuItems.value.has(MenuItemType.Component);
                 if (index) contextMenuItems.value.delete(MenuItemType.Component);
             }
-            if (type === ShapeType.Contact || type === ShapeType.Group || type === ShapeType.Table) {
+            if (type === ShapeType.Table) {
                 contextMenuItems.value.delete(MenuItemType.Outline);
             }
             if (selected[0].mask) {

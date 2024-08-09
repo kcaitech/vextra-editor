@@ -250,7 +250,7 @@ function contextMenuMount(e: MouseEvent) {
             contextMenuItems.value.add(MenuItemType.Mask);
         }
         const type = _shapes[0].type;
-        if (_shapes.length === 1 && !(type === ShapeType.Table || type === ShapeType.Group || type === ShapeType.Contact)) {
+        if (_shapes.length === 1 && type !== ShapeType.Table) {
             contextMenuItems.value.add(MenuItemType.Outline);
         }
         if (_shapes.length === 1 && _shapes[0].mask) {
