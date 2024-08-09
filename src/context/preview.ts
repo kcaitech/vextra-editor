@@ -44,6 +44,7 @@ export class Preview extends WatchableObject {
     private m_navi_shape_list: ShapeView[] = [];
     private m_setTimeouts: Set<any> = new Set();
     private m_arboard_inner_transform: Map<string, TransformRaw> = new Map();
+    private m_inner_scroll: ShapeView | undefined;
 
     constructor(context: Context) {
         super();
@@ -130,13 +131,18 @@ export class Preview extends WatchableObject {
         return this.m_proto_action;
     }
 
-    setArtboardScroll(offset: { x: number, y: number }, action: PrototypeActions) {
+    setArtboardScroll(offset: { x: number, y: number }, action: PrototypeActions, innerScroll?: ShapeView) {
         this.m_atrboard_scroll_offset = offset;
+        this.m_inner_scroll = innerScroll;
         this.notify(Preview.ARTBOARD_SCROLL, action);
     }
 
     get artboardScrollOffset() {
         return this.m_atrboard_scroll_offset;
+    }
+
+    get innerScroll() {
+        return this.m_inner_scroll;
     }
 
     setInteractionAction(action?: PrototypeActions, back_id?: string) {

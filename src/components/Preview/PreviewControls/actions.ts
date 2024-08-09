@@ -1,12 +1,7 @@
-import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
-import { DomCtx } from "@/components/Document/Content/vdom/domctx";
-import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
-import { XYsBounding } from "@/utils/common";
-import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
-import { v4 } from "uuid";
+import { getFrameList, viewBox } from "@/utils/preview";
+import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -17,7 +12,7 @@ export class ProtoAction {
 
     executeActionx(action: PrototypeActions, matrix: Matrix) {
         console.log(action, 'action');
-        
+
         const page = this.m_context.selection.selectedPage;
         this.m_shapes = getFrameList(page!);
         if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.NAVIGATE) {
@@ -99,25 +94,32 @@ export class ProtoAction {
 
     // 容器内滚动
     artboardInScroll(action: PrototypeActions, matrix: Matrix) {
-        let artboard_shape: ShapeView | undefined;
-        if (this.m_context.preview.supernatantIsOpen) {
-            const page = this.m_context.selection.selectedPage;
-            const shapes = getFrameList(page!);
-            const end_action = this.m_context.preview.endAction;
-            const shape = shapes.find(item => item.id === end_action.targetNodeID);
-            artboard_shape = shape;
-        } else {
-            artboard_shape = this.m_context.selection.selectedShapes[0];
+        const page = this.m_context.selection.selectedPage;
+        if (!page || !action.targetNodeID) return;
+        const target_shape = page.getShape(action.targetNodeID);
+        if (!target_shape) return;
+        const scroll_shape = this.scrollParent(target_shape);
+        if (scroll_shape) {
+            if (scroll_shape.parent!.type === ShapeType.Page && scroll_shape.scrollDirection === ScrollDirection.NONE) {
+                const box = viewBox(matrix, scroll_shape);
+                const offsetx = box.left - (action.extraScrollOffset?.x || 0);
+                const offsety = box.top - (action.extraScrollOffset?.y || 0);
+                this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
+            } else {
+                const frame = target_shape._p_frame;
+                const offsetx = -frame.x + (action.extraScrollOffset?.x || 0);
+                const offsety = -frame.y + (action.extraScrollOffset?.y || 0);
+                this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action, scroll_shape);
+            }
         }
-        if (!artboard_shape || !artboard_shape.childs.length) return;
-        const scrol_shape = artboard_shape.childs.find(item => item.id === action.targetNodeID);
-        // const scrol_shape = artboard_shape.childs[0];
-        if (scrol_shape) {
-            const box = viewBox(matrix, scrol_shape);
-            const offsetx = box.left - (action.extraScrollOffset?.x || 0);
-            const offsety = box.top - (action.extraScrollOffset?.y || 0);
-            this.m_context.preview.setArtboardScroll({ x: offsetx, y: offsety }, action);
+    }
+
+    scrollParent(shape: ShapeView) {
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Artboard && p.type !== ShapeType.Page) {
+            p = p.parent;
         }
+        return p;
     }
 
     // 打开链接

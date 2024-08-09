@@ -197,7 +197,7 @@ export function getScrollShape(shape: ShapeView | undefined) {
     let s: ShapeView | undefined;
     if (!shape) return;
     if (shape.scrollDirection && shape.scrollDirection !== ScrollDirection.NONE) {
-        s = shape;
+        return s = shape;
     }
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
@@ -218,6 +218,8 @@ export function getPreviewMatrix(shape: ShapeView) {
     const m = shape.matrix2Parent();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
+        const offset = (p as ArtboradView).innerTransform;
+        offset && m.multiAtLeft(offset.toMatrix())
         m.multiAtLeft(p.matrix2Parent());
         p = p.parent;
     }
@@ -417,7 +419,7 @@ export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: nu
             atrboard.innerScrollOffset(transx, 0);
             is_scrollx = true;
         } else if (trans.x < 0 && offset.right < tx) {
-            const transx = tx + trans.x > offset.right ? offset.right - tx : trans.x;
+            const transx = tx + trans.x < offset.right ? offset.right - tx : trans.x;
             atrboard.innerScrollOffset(transx, 0);
             is_scrollx = true;
         }
@@ -436,7 +438,7 @@ export const scrollAtrboard = (atrboard: ArtboradView, trans: { x: number, y: nu
             atrboard.innerScrollOffset(transx, 0);
             is_scrollx = true;
         } else if (trans.x < 0 && offset.right < tx) {
-            const transx = tx + trans.x > offset.right ? offset.right - tx : trans.x;
+            const transx = tx + trans.x < offset.right ? offset.right - tx : trans.x;
             atrboard.innerScrollOffset(transx, 0);
             is_scrollx = true;
         }

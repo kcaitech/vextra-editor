@@ -1,11 +1,11 @@
-import { ColVector3D, Matrix, Page, OverlayPositions, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import { ColVector3D, Matrix, Page, OverlayPositions, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1, ShapeType, ArtboradView } from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
-import { getFrameList, getPreviewMatrix, viewBox } from "@/utils/preview";
+import { getFrameList, getPreviewMatrix, scrollAtrboard, viewBox } from "@/utils/preview";
 import { toStyle } from "@/utils/message";
 
 type PCard = InstanceType<typeof PageCard>;
@@ -1139,6 +1139,57 @@ export class ViewUpdater {
                 }
             }
         }
+    }
+
+    artboardInnerScroll(action: PrototypeActions, el: SVGSVGElement, shape: ShapeView) {
+        const is_inner = this.m_context.preview.innerScroll;
+        if (!is_inner) {
+            if (el && action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
+                this.scrollAnimate(el, action);
+            }
+            const isTrans = this.artboardInTrans(el);
+            // 移除动画
+            const time = action.transitionDuration || 0.3;
+            const timer = setTimeout(() => {
+                this.removeAnimate(el, isTrans);
+            }, time * 1000);
+            this.m_context.preview.addSetTimeout(timer);
+        } else {
+            const inner_shape = this.getScrollArtboard(shape, is_inner.id) as ArtboradView;
+            if (action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
+                const el = document.getElementById(`${inner_shape.id}`);
+                if (el) {
+                    this.scrollAnimate(el as any, action);
+                    // 移除动画
+                    const time = action.transitionDuration || 0.3;
+                    setTimeout(() => {
+                        el.style['transition'] = '';
+                    }, time * 1000);
+                }
+            }
+            let stepx = this.m_context.preview.artboardScrollOffset.x;
+            let stepy = this.m_context.preview.artboardScrollOffset.y;
+            scrollAtrboard(inner_shape, { x: stepx, y: stepy });
+        }
+    }
+
+    getScrollArtboard(shape: ShapeView, scrollId: string): ShapeView | undefined {
+        if (shape.id === scrollId) {
+            return shape;
+        }
+        const children = shape.childs || [];
+        if (!children.length) {
+            return;
+        } else {
+            for (let i = 0; i < children.length; i++) {
+                const item = children[i];
+                const result = this.getScrollArtboard(item, scrollId);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return;
     }
 }
 class DirtyCleaner {

@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { ArtboradView, makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, TransformRaw, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
-import { finderShape, getFrameList, getPreviewMatrix, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
+import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
 import { ViewUpdater } from "@/components/Preview/viewUpdater";
@@ -151,16 +151,9 @@ const previewWatcher = (t: number | string, s?: any) => {
         const el = getEndElement();
         // 滚动动画
         const action = s as PrototypeActions;
-        if (el && action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
-            viewUpdater.scrollAnimate(el, action);
-        }
-        const isTrans = viewUpdater.artboardInTrans(el);
-        // 移除动画
-        const time = action.transitionDuration || 0.3;
-        const timer = setTimeout(() => {
-            viewUpdater.removeAnimate(el, isTrans);
-        }, time * 1000);
-        props.context.preview.addSetTimeout(timer);
+        const selected_shape = props.context.selection.selectedShapes[0];
+        const shappe = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
+        viewUpdater.artboardInnerScroll(action, el, shappe);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
         updateDialogMatrix();
@@ -287,14 +280,25 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         } else {
             atrboard = hover_shape as ArtboradView;
             const scale = viewUpdater.v_matrix.m00;
-            console.log(e, e.movementX, e.movementY);
-            let stepx = Math.abs(e.deltaX) > 120 ? (120 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
-            let stepy = Math.abs(e.deltaY) > 120 ? (120 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+            let stepx = Math.abs(e.deltaX) > 50 ? (50 * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+            let stepy = Math.abs(e.deltaY) > 50 ? (50 * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
             if (e.shiftKey && !is_mac() && e.deltaX < 1) {
                 stepx = stepy;
                 stepy = 0;
             }
-            const scroll = scrollAtrboard(atrboard, { x: -stepx / scale, y: -stepy / scale });
+            let scroll = scrollAtrboard(atrboard, { x: -stepx / scale, y: -stepy / scale });
+            let p_x = hover_shape.parent;
+            p_x = getScrollShape(p_x);
+            while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
+                scroll.x = scrollAtrboard(p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                p_x = p_x.parent;
+            }
+            let p_y = hover_shape.parent;
+            p_y = getScrollShape(p_y);
+            while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
+                scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                p_y = p_y.parent;
+            }
             viewUpdater.trans(e, scroll);
         }
     }
@@ -364,7 +368,19 @@ function onMouseMove(e: MouseEvent) {
             if (diff > 4) {
                 atrboard = hover_shape as ArtboradView;
                 const scale = viewUpdater.v_matrix.m00;
-                const scroll = scrollAtrboard(atrboard, { x: e.movementX / scale, y: e.movementY / scale });
+                let scroll = scrollAtrboard(atrboard, { x: e.movementX / scale, y: e.movementY / scale });
+                let p_x = hover_shape.parent;
+                p_x = getScrollShape(p_x);
+                while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
+                    scroll.x = scrollAtrboard(p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    p_x = p_x.parent;
+                }
+                let p_y = hover_shape.parent;
+                p_y = getScrollShape(p_y);
+                while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
+                    scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    p_y = p_y.parent;
+                }
                 pageViewDragging(e, scroll);
             }
         }
@@ -540,7 +556,6 @@ function search(e: MouseEvent) {
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
-
     if (hover_shape && !hover_shape.prototypeInterAction) {
         let p = hover_shape.parent;
         if (p && p.type === ShapeType.Page) {
