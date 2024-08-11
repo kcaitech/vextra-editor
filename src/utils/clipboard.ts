@@ -405,9 +405,11 @@ export class Clipboard {
     async paste(t: Function, event?: ClipboardEvent, xy?: PageXY) {
         try {
             // @ts-ignore
-            if (navigator.clipboard.read || !event) {
-                return this.paste_async(t, xy);
+            if (navigator.clipboard.read) {
+                if (await this.paste_async(t, xy)) return;
             }
+
+            if (!event) return;
 
             // paste 监听事件触发，优先读取 '同步剪切板' 内容里面的内容
             const items = event.clipboardData && event.clipboardData.items;
@@ -432,9 +434,10 @@ export class Clipboard {
                 throw new Error('No valid data on clipboard.');
             }
             this.paste_clipboard_items(data, t, xy);
+            return true;
         } catch (error) {
             console.log('paste_async error:', error);
-            this.paste_cache(t, xy);
+            return this.paste_cache(t, xy);
         }
     }
 
@@ -567,9 +570,7 @@ export class Clipboard {
     }
 
     paste_cache(t: Function, xy?: PageXY) {
-        if (!this.cache) {
-            return;
-        }
+        if (!this.cache) return false;
 
         const { type, data } = this.cache;
 
@@ -583,6 +584,7 @@ export class Clipboard {
             const text = data['text/plain'];
             clipboard_text_plain2(this.context, text, xy);
         }
+        return true;
     }
 
     paste_cache_for_text() {
