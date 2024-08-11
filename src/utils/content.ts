@@ -651,6 +651,18 @@ export function flattenShapes(shapes: ShapeView[]) {
     }, []);
 }
 
+export function noGroupShapesFrom(shapes: ShapeView[]) {
+    const result: ShapeView[] = [];
+    for (const shape of shapes) {
+        if (shape.type === ShapeType.Group) {
+            result.push(...noGroupShapesFrom(shape.childs));
+            continue;
+        }
+        result.push(shape);
+    }
+    return result;
+}
+
 export function page_scale(context: Context, scale: number) {
     const workspace = context.workspace;
     const root = workspace.root;
