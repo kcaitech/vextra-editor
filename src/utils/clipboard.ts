@@ -838,16 +838,11 @@ export class Clipboard {
     }
 }
 
-/**
- * @description 只存base64到剪切板
- */
 function sort_media(document: Document, exportCtx: ExfContext) {
     const media: any = {};
     exportCtx.medias.forEach(v => {
         const res = document.mediasMgr.getSync(v)?.base64;
-        if (!res) {
-            return;
-        }
+        if (!res) return;
         media[v] = res;
     });
     return media;
@@ -1555,14 +1550,17 @@ function get_envs_from_selection(context: Context) {
     const envs: GroupShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        if (s.isVirtualShape) {
-            continue;
-        }
-        if (context.workspace.clipboard.envs.has(s.id)) {
-            continue;
-        }
+        if (s.isVirtualShape) continue;
+        if (context.workspace.clipboard.envs.has(s.id)) continue;
         if ([ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             envs.push(s as GroupShapeView);
+        } else {
+            let p = s.parent;
+            while (p) {
+                if ([ShapeType.Artboard, ShapeType.Group].includes(p.type)) break;
+                p = p.parent;
+            }
+            if (p && [ShapeType.Artboard, ShapeType.Group].includes(p.type)) envs.push(p as GroupShapeView);
         }
     }
     return envs;
