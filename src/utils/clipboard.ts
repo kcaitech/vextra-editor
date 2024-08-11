@@ -13,7 +13,7 @@ import {
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1,
+    makeShapeTransform2By1, Matrix,
     Page,
     PathShape,
     Shape,
@@ -998,26 +998,20 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         // 文字段落
         const source = JSON.parse(text_html.split(paras)[1]);
         const t_s = import_text(context.data, source, true);
-
-        if (!t_s) {
-            throw new Error('invalid paras');
-        }
-
-        const page = context.selection.selectedPage;
-        if (!page) {
-            throw new Error('outside page');
-        }
-
+        if (!t_s) throw new Error('invalid paras');
+        const page = context.selection.selectedPage!;
         const shape: TextShape = (t_s as TextShape);
         const layout = shape.getLayout();
-        shape.frame.width = layout.contentWidth;
-        shape.frame.height = layout.contentHeight;
-        const _f = shape.frame;
+        shape.size.width = layout.contentWidth;
+        shape.size.height = layout.contentHeight;
+        const _f = shape.size;
         const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-        shape.frame.x = xy?.x || _xy.x;
-        shape.frame.y = xy?.y || _xy.y;
+        const transform = new TransformRaw();
+        transform.translateX = xy?.x || _xy.x;
+        transform.translateY = xy?.y || _xy.y
+        shape.transform = transform;
         const editor = context.editor4Page(page);
-        const r = editor.insert(page.data, page.childs.length, shape);
+        const r = editor.insert(page.data, page.childs.length, shape, true);
 
         context.nextTick(page, () => {
             if (r) context.selection.selectShape(page.shapes.get(r.id));
@@ -1310,7 +1304,9 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
  * @returns { {x: number,y: number} } 位置
  */
 export function adjust_content_xy(context: Context, m: { width: number, height: number }, fixFrame = true) {
-    const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
+    const workspace = context.workspace;
+    const root = workspace.root;
+    const matrix = workspace.matrix;
 
     if (fixFrame) {
         const ratio_wh = m.width / m.height;
@@ -1328,7 +1324,10 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
         }
     }
 
-    const page_center = matrix.inverseCoord(root.center);
+    const page = context.selection.selectedPage!;
+    const __m = new Matrix(page.matrix2Root());
+    __m.multiAtLeft(matrix);
+    const page_center = __m.inverseCoord(root.center);
     return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
 }
 
