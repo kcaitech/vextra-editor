@@ -596,7 +596,7 @@ onUnmounted(() => {
                 fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
         </svg>
     </div>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
+<!--    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>-->
     <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
         <span>{{ t('system.hide_operation_interface') }}</span>
         <Key code="Ctrl(Shift) \"></Key>

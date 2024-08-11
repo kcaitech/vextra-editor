@@ -249,14 +249,16 @@ function contextMenuMount(e: MouseEvent) {
         if (shapes.length) {
             contextMenuItems.value.add(MenuItemType.Mask);
         }
-        const type = _shapes[0].type;
-        if (_shapes.length === 1 && type !== ShapeType.Table) {
-            contextMenuItems.value.add(MenuItemType.Flatten);
-            contextMenuItems.value.add(MenuItemType.Outline);
-        }
-        if (_shapes.length === 1 && _shapes[0].mask) {
-            contextMenuItems.value.delete(MenuItemType.Mask);
-            contextMenuItems.value.add(MenuItemType.UnMask);
+        if (_shapes.length) {
+            const type = _shapes[0].type;
+            if (_shapes.length === 1 && type !== ShapeType.Table) {
+                contextMenuItems.value.add(MenuItemType.Flatten);
+                contextMenuItems.value.add(MenuItemType.Outline);
+            }
+            if (_shapes.length === 1 && _shapes[0].mask) {
+                contextMenuItems.value.delete(MenuItemType.Mask);
+                contextMenuItems.value.add(MenuItemType.UnMask);
+            }
         }
     }
 
@@ -773,16 +775,16 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
-        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
-        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
-        <Rule :context="props.context" :page="(props.page as PageView)" />
-        <!-- 页面调整，确保在ContentView顶层 -->
-        <Space :context="props.context" :visible="spacePressed" />
-        <!-- Doge -->
-        <!-- <Doge/>-->
-    </div>
+<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+     @drop.prevent="(e: DragEvent) => { drop(e, props.context, t as Function) }" @dragover.prevent>
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
+    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+    <Rule :context="props.context" :page="(props.page as PageView)"/>
+    <!-- 页面调整，确保在ContentView顶层 -->
+    <Space :context="props.context" :visible="spacePressed"/>
+    <!-- Doge -->
+    <!-- <Doge/>-->
+</div>
 </template>
