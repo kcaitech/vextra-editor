@@ -1546,7 +1546,7 @@ function get_env_by_xy(context: Context, xy: XY) {
     return context.selection.selectedPage!;
 }
 
-function get_envs_from_selection(context: Context) {
+export function get_envs_from_selection(context: Context) {
     const shapes = context.selection.selectedShapes;
     const envs: GroupShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
