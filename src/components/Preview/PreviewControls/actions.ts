@@ -24,11 +24,11 @@ export class ProtoAction {
         } else if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.SCROLLTO) {
             this.artboardInScroll(action, matrix);
         } else if (action.navigationType === PrototypeNavigationType.OVERLAY) {
-            this.openDialog(action);
+            this.openDialog(action, matrix);
         } else if (action.connectionType === PrototypeConnectionType.CLOSE) {
             this.closeDialog();
         } else if (action.navigationType === PrototypeNavigationType.SWAP) {
-            this.replaceDialog(action);
+            this.replaceDialog(action, matrix);
         } else if (action.navigationType === PrototypeNavigationType.SWAPSTATE) {
             this.symbolStateSwitch(action);
         }
@@ -157,8 +157,9 @@ export class ProtoAction {
         }
     }
     // 打开浮层
-    openDialog(action: PrototypeActions) {
+    openDialog(action: PrototypeActions, matrix: Matrix) {
         this.m_context.preview.setInteractionAction(action);
+        delayAction(this.m_context, matrix);
     }
     // 关闭浮层
     closeDialog() {
@@ -171,11 +172,11 @@ export class ProtoAction {
     }
 
     // 替换浮层
-    replaceDialog(action: PrototypeActions) {
+    replaceDialog(action: PrototypeActions, matrix: Matrix) {
         const end_action = this.m_context.preview.endAction;
         this.m_context.preview.setSwapAction(end_action);
         this.closeDialog();
-        this.openDialog(action);
+        this.openDialog(action, matrix);
     }
     getMapRefIdLS(key: string): Map<string, string> {
         let jsonString = sessionStorage.getItem(key);
@@ -239,6 +240,7 @@ function executeDelayActionShape(context: Context, shape: ShapeView, protoAction
                     if (action.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
                         protoActionFn.symbolStateSwitch(action.actions, shape);
                     } else {
+                        
                         protoActionFn.executeActionx(action.actions, matrix);
                     }
                 }, time * 1000);
