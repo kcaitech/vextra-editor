@@ -247,7 +247,7 @@ const selected_watcher = (t: number | string) => {
         createShapeTracing();
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.setInteractionAction(undefined);
-        props.context.preview.setSwapAction(undefined);
+        props.context.preview.setSwapAction(undefined);        
         sessionStorage.removeItem(sessionRefIdKey);
         delayAction(props.context, props.matrix);
     }
@@ -266,7 +266,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
     props.context.preview.unwatch(preview_watcher);
-    sessionStorage.removeItem(sessionRefIdKey);
 })
 </script>
 

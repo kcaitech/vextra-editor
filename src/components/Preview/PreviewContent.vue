@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
-import { ArtboradView, makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, ShapeType, ShapeView, TransformRaw, XYsBounding } from '@kcdesign/data';
+import { ArtboradView, makeShapeTransform1By2, makeShapeTransform2By1, Matrix, OverlayBackgroundInteraction, OverlayBackgroundType, PageView, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, TransformRaw, XYsBounding } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'vue';
 import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
@@ -556,13 +556,14 @@ function search(e: MouseEvent) {
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
-    if (hover_shape && !hover_shape.prototypeInterAction) {
+    const actions = hover_shape?.prototypeInterAction;
+    if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
         if (p && p.type === ShapeType.Page) {
             return selectShapes(props.context, undefined);
         }
         while (p && p.type !== ShapeType.Page) {
-            if (p.prototypeInterAction) {
+            if (p.prototypeInterAction && p.prototypeInterAction.length) {
                 selectShapes(props.context, p);
                 break;
             } else {
@@ -827,6 +828,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
+    sessionStorage.removeItem(sessionRefIdKey);
 
     viewUpdater.atTarget();
     viewUpdater.atPage();

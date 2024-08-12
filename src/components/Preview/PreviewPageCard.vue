@@ -9,6 +9,7 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
+import { Preview } from "@/context/preview";
 
 interface Props {
     shapes: ShapeView[];
@@ -67,7 +68,7 @@ function assemble() {
         pageDom.dom.render();
         pageDom.ctx.loop(window.requestAnimationFrame);
         if (pageDom.dom.childs && props.selected) {
-            props.context.selection.selectShape(pageDom.dom.childs[0]);
+            props.context.selection.replaceSelectShape(pageDom.dom.childs[0]);
         }
         replaceSupernatantShape(pageDom.dom.childs[0]);
         setInnerTransform(pageDom.dom.childs);
@@ -127,11 +128,11 @@ watch(() => props.shapes, () => {
     assemble();
 })
 
-// const preview_watch = (t: number) => {
-//     if (t === Preview.SWAP_REF_STAT) {
-//         assemble();
-//     }
-// }
+const preview_watch = (t: number) => {
+    if (t === Preview.SWAP_REF_STAT) {
+        assemble();
+    }
+}
 
 function repaint() {
     assemble();
@@ -141,10 +142,10 @@ defineExpose({ pageSvg, repaint });
 
 onMounted(() => {
     assemble();
-    // props.context.preview.watch(preview_watch);
+    props.context.preview.watch(preview_watch);
 });
 onUnmounted(() => {
-    // props.context.preview.unwatch(preview_watch);
+    props.context.preview.unwatch(preview_watch);
 });
 </script>
 

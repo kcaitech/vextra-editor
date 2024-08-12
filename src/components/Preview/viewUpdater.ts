@@ -1095,6 +1095,8 @@ export class ViewUpdater {
         const boxs: Set<Box> = new Set();
         if (!view) return;
         this.hotZoneBox(e, matrix, shape, boxs);
+        const hover_shape = this.m_context.selection.hoveredShape;
+        if(hover_shape) return;
         const hotBoxs = Array.from(boxs);
         for (let i = 0; i < hotBoxs.length; i++) {
             const box = hotBoxs[i];

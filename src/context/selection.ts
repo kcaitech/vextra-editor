@@ -450,6 +450,11 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         }
     }
 
+    replaceSelectShape(shape: ShapeView) {
+        this.m_selectShapes.length = 0;
+        this.m_selectShapes.push(shape);
+    }
+
     // 通过id获取shape
     getShapeById(id: string): ShapeView | undefined {
         const page = this.m_selectPage;
