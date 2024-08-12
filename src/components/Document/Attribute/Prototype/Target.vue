@@ -76,7 +76,7 @@ const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
     targetname.value = ''
     curHoverValueIndex.value = '';
     const shapemap = new Map()
-    const art = (shape: ShapeView,) => {
+    const art = (shape: ShapeView) => {
         shapemap.set(shape.parent?.id, shape.id)
         if (shape.parent?.type !== ShapeType.Page) {
             return art(shape.parent!)

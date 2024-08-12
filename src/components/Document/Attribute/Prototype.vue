@@ -20,12 +20,15 @@
                                     <svg-icon icon-class="arrows-dr"></svg-icon>
                                 </div>
                                 <div class="item-content">
-                                    <span>{{ event.get(action.event.interactionType) }}</span>
+                                    <span class="event">{{ event.get(action.event.interactionType) }}</span>
                                     <div v-if="action.actions.connectionType !== 'NONE'" class="icon-img">
                                         <svg-icon :icon-class="actions.find(item => item.data.value === action.actions.connectionType &&
                 item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
                                     </div>
-                                    <span>{{ getText(action.actions) }}</span>
+                                    <span class="name">{{ getText(action.actions) }}</span>
+                                    <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
+                                        1
+                                    </div>
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
                                     <svg-icon icon-class="delete"></svg-icon>
@@ -165,7 +168,7 @@ import { ShapeType, ShapeView, SymbolRefView, BasicArray, PrototypeEvents, Proto
 import { debounce, throttle } from 'lodash';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { genOptions } from '@/utils/common';
-import { nextTick, onMounted, onUnmounted, ref, StyleValue, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, StyleValue, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Origin from "./Prototype/Origin.vue";
 import Overlay, { Type as T, Margin as M } from "./Prototype/Overlay.vue";
@@ -723,6 +726,26 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
         }
     }
 
+}
+
+const checkConflict = (event: string, id: string) => {
+    let map = new Map()
+    prototypeinteraction.value?.forEach((i, index) => {
+        if (i.event.interactionType === event) {
+            map.set(i.id, index)
+        }
+    })
+    const arr = Array.from(map.values())
+    const min = Math.min(...arr)
+    if (map.get(id) === min) {
+        console.log('=====================','1');
+        console.log(map);
+        
+        return false
+    } else {
+        console.log('=====================','2');
+        return true
+    }
 }
 
 const search = (shape: ShapeView, id: string | undefined) => {
@@ -1507,15 +1530,15 @@ onUnmounted(() => {
                 flex: 1;
                 gap: 4px;
                 height: 32px;
+                width: 180px;
                 font-size: 12px;
                 background-color: #F5F5F5;
                 border-radius: 6px;
-                text-align: center;
                 line-height: 32px;
-                padding-left: 9px;
+                padding: 0 9px;
                 box-sizing: border-box;
 
-                span {
+                .event {
                     font-size: 12px;
                     line-height: 32px;
                     white-space: nowrap;
@@ -1535,6 +1558,15 @@ onUnmounted(() => {
                         height: 12px;
                         color: white;
                     }
+                }
+
+                .name {
+                    font-size: 12px;
+                    line-height: 32px;
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
 
             }
