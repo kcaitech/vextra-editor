@@ -445,17 +445,17 @@ function outline() {
 
 const plugins = props.context.pluginsMgr.search2("content.menu");
 const comps: { component: any, params?: any }[] = [];
-comps.push({
-    component: () => {
-        if (props.items.has(MenuItemType.Comment)) {
+if (props.items.has(MenuItemType.Comment)) {
+    comps.push({
+        component: () => {
             return h(plugins.end[0].component, {
-                params: {},
+                params: plugins.end[0].params,
                 context: props.context,
                 onClose: () => emits('close')
             })
         }
-    }
-});
+    });
+}
 onMounted(() => {
     props.context.menu.watch(menu_watcher)
     document.addEventListener('mousedown', handleClickOutside);
@@ -596,7 +596,7 @@ onUnmounted(() => {
                 fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
         </svg>
     </div>
-<!--    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>-->
+    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
     <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
         <span>{{ t('system.hide_operation_interface') }}</span>
         <Key code="Ctrl(Shift) \"></Key>
