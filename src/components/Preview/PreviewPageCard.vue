@@ -30,8 +30,6 @@ const pageSvg = ref<SVGSVGElement>();
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 function assemble() {
-    const selectShapes = props.context.selection.selectedShapes;
-    const length = selectShapes.length;
     disassemble();
 
     let shapes: any = props.data;
@@ -39,7 +37,7 @@ function assemble() {
     if (shapes instanceof ShapeView) {
         shapes = adapt2Shape(shapes as any);
     }
-
+    
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
@@ -62,7 +60,6 @@ function assemble() {
     const dom: PageDom = new PageDom(domCtx, { data: page });
 
     pageDom = { dom, ctx: domCtx };
-
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
@@ -72,14 +69,6 @@ function assemble() {
         }
         replaceSupernatantShape(pageDom.dom.childs[0]);
         setInnerTransform(pageDom.dom.childs);
-        const els = pageSvg.value.childNodes;
-        if (!length && els.length > 0) {
-            // 当前page下没有shape时，应清除原来的子节点
-            for (let index = 0; index < els.length; index++) {
-                const el = els[index];
-                pageSvg.value.removeChild(el);
-            }
-        }
         emits('start-loop');
     }
 }

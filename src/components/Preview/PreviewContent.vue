@@ -41,7 +41,9 @@ function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
 
-    if (!shape || !page) return;
+    if (!shape || !page) {
+        return cur_shape = [];
+    }
 
     if (cur_shape[0].id !== shape.id) {
         cur_shape = toRaw([shape]);
@@ -70,7 +72,7 @@ function changePage() {
 
     const shape = props.context.selection.selectedShapes[0] || frameList[0];
     if (!shape) {
-        return;
+        return cur_shape = [];
     }
     cur_shape = toRaw([shape]);
 
@@ -84,14 +86,16 @@ function changePage() {
     nextTick(() => {
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         initMatrix();
-    });
+    });    
 }
 
 const togglePage = (p: number) => {
     const shape = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
 
-    if (!shape || !page) return;
+    if (!shape || !page) {
+        return cur_shape = [];
+    }
     cur_shape = toRaw([shape]);
 
     const naviList = props.context.preview.naviShapeList;
@@ -178,7 +182,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         const timer = setTimeout(() => {
             getTargetShapes();
         }, time * 1000);
@@ -216,7 +220,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         view.layout();
         view.render();
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         symrefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         symrefAnimate.value.style['transform'] = m.toString();
         if (view.el) {
@@ -629,7 +633,6 @@ const getTargetShapes = () => {
             const shape = shapes.find(item => item.id === action.targetNodeID);
             if (shape) {
                 // 移出动画
-                viewUpdater.slideAndshiftOutAnimate(action);
                 if (action.navigationType === PrototypeNavigationType.OVERLAY && viewBoxDialog.value) {
                     isSuperposed.value = true;
                     props.context.preview.setSupernatantIsOpen(true);
@@ -662,6 +665,7 @@ const getTargetShapes = () => {
                 const el = els[i] as SVGSVGElement;
                 if (m) {
                     if (i === els.length - 1) {
+                        viewUpdater.slideAndshiftOutAnimate(action);
                         viewUpdater.dissolveAnimate(action, els as any, 0);
                         viewUpdater.shiftInAnimate(action, els as any);
                         viewUpdater.pushAndslideInAnimate(action, els as any);
