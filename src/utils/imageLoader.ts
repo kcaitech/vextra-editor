@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import {
     ArtboradView,
-    ColVector3D,
+    ColVector3D, ImagePack,
     makeShapeTransform1By2,
     makeShapeTransform2By1, ShapeView,
     Transform,
@@ -9,6 +9,7 @@ import {
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { get_envs_from_selection } from "@/utils/clipboard";
+import { message } from "@/utils/message";
 
 /**
  *  · ImageTool
@@ -17,15 +18,6 @@ import { get_envs_from_selection } from "@/utils/clipboard";
  *  · 图片直接通过粘贴事件进入
  *  · 图片内嵌在图层内并通过粘贴事件进入
  */
-interface ImagePack {
-    size: {
-        width: number;
-        height: number;
-    },
-    buff: Uint8Array;
-    base64: string;
-}
-
 /**
  * @description 图片加载器
  */
@@ -63,7 +55,7 @@ export class ImageLoader {
                 reader.readAsDataURL(file);
                 reader.onload = (event) => {
                     const base64 = event?.target?.result;
-                    if (base64) resolve(Object.assign(data as any, { base64 }));
+                    if (base64) resolve(Object.assign(data as any, { base64, name: file.name }));
                     else reject('no base64');
                 }
             })
@@ -75,7 +67,12 @@ export class ImageLoader {
     packAll(files: FileList) {
         const task = [];
         const packFile = this.packFile;
-        for (const file of files) {
+        for (let i = 0; i < files.length; i++) {
+            if (i >= 20) {
+                message('info', '20 for max');
+                break;
+            }
+            const file = files[i];
             task.push(packFile(file));
         }
         return Promise.all(task);
@@ -114,15 +111,28 @@ export class ImageLoader {
             return { width, height };
         })();
         const context = this.context;
-
         const selection = context.selection;
-        const __envs = get_envs_from_selection(context);
-        if (__envs.length) {
-            // 如果存在指定容器选区，则进入对应的选区并且居中
+        // const __envs = get_envs_from_selection(context);
+        // if (__envs.length) {
+        //     // 如果存在指定容器选区，则进入对应的选区并且居中
+        //
+        // } else {
+        //     // 否则让所有图片于屏幕居中，如果遇见合适的容器，需要进去，如果是在页面下，且页面无法承接区域面积，则调整缩放比例
+        // }
 
-        } else {
-            // 否则让所有图片于屏幕居中，如果遇见合适的容器，需要进去，如果是在页面下，且页面无法承接区域面积，则调整缩放比例
+        // 先让所有图层到页面下去
+        fixScale();
+        const page = selection.selectedPage!;
+        const getInPage = page.transform2FromRoot.getInverse();
+        for (let i = 0; i < transforms.length; i++) {
+            const t = makeShapeTransform2By1(transforms[i]);
+            t.addTransform(getInPage);
+            transforms[i] = makeShapeTransform1By2(t);
         }
+
+        const __packs = packages.map((v, i) => ({ pack: v, transform: transforms[i] }));
+        const editor = context.editor4Page(page);
+        return editor.insertImagesToPage(__packs);
 
         function getEnvs(area: { x: number, y: number, width: number, height: number }) {
             const selection = context.selection;

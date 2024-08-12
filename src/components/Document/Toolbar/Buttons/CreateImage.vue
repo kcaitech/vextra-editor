@@ -37,13 +37,9 @@ async function select() {
 }
 
 function change(e: Event) {
-    if (!e.target) {
-        return;
-    }
+    if (!e.target) return;
     const files = (e.target as HTMLInputElement).files;
-    if (!files) {
-        return;
-    }
+    if (!files) return;
     if (files.length === 1) {
         const file = files[0];
         if (file.type === "image/svg+xml") {
@@ -99,7 +95,7 @@ function change(e: Event) {
         }
 
     } else if (files.length > 1) {
-        props.context.workspace.setFreezeStatus(true);
+        // props.context.workspace.setFreezeStatus(true);
         multiple(files);
         const loader = new ImageLoader(props.context);
         loader.packAll(files).then(res => {
@@ -114,7 +110,9 @@ function multiple(files: any) {
     let index = 0;
     const container: any = {};
     try {
-        iteration();
+        const loader = new ImageLoader(props.context);
+        loader.insetImageByPackages(files);
+        // iteration();
     } catch (error) {
         console.log(error);
         props.context.workspace.setFreezeStatus(false);
@@ -145,7 +143,7 @@ function multiple(files: any) {
                                         iteration();
                                     } else {
                                         media.push({ name: file.name, frame, buff: new Uint8Array(buff), base64 });
-                                        insert_imgs(props.context, t, media, container, origin);
+                                        insert_imgs(props.context, t, media, origin, container);
                                         after_import(props.context, container);
                                         if (picker.value) {
                                             (picker.value as HTMLInputElement).value = '';

@@ -429,15 +429,11 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
-    if (!permIsEdit(context) || context.tool.isLable) {
-        return;
-    }
+    if (!permIsEdit(context) || context.tool.isLable) return;
 
     e.preventDefault();
     const data = e?.dataTransfer?.files;
-    if (!data?.length || data[0]?.type.indexOf('image') < 0) {
-        return;
-    }
+    if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     const file = data[0];
     if (file.type === "image/svg+xml") {
@@ -486,10 +482,8 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
         const svg = event.target?.result;
         if (svg) {
             const parseResult = parse_svg.parse(svg as string);
-
             if (parseResult.shape) {
                 parseResult.shape.name = file.name.replace(".svg", "");
-
                 if (xy) {
                     parseResult.shape.x = xy.x - parseResult.shape.frame.width / 2;
                     parseResult.shape.y = xy.y - parseResult.shape.frame.height / 2;
@@ -501,7 +495,6 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);
                 editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
-
                 if (parseResult.mediaResourceMgr) {
                     const container: any = {};
                     parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
