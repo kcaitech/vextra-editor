@@ -11,13 +11,19 @@
                 <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
             </div>
             <div class="item-list">
-                <div class="item" v-for="shape in DomList" :key="shape.id" @click.stop="setTargetNode(shape.id)"
-                    @mouseover="curHoverValueIndex = shape.id" @mouseleave="curHoverValueIndex = ''">
+                <div class="item" v-for="shape in search ?? DomList" :key="shape.id"
+                    @click.stop="setTargetNode(shape.id)" @mouseover="curHoverValueIndex = shape.id"
+                    @mouseleave="curHoverValueIndex = ''">
                     <svg-icon :style="{ visibility: targetid === shape.id ? 'visible' : 'hidden' }"
                         :icon-class="curHoverValueIndex === shape.id ? 'white-select' : 'page-select'"></svg-icon>
-                    <span>{{ shape.name }}</span>
+                    <span v-html="highlightedName(shape.name)"></span>
                 </div>
-                <div v-if="!DomList.length" class="no-data"> {{ t('system.empty') }}</div>
+                <div v-if="!DomList.length && !searchvlue" class="no-data">
+                    {{ t('system.empty') }}
+                </div>
+                <div v-if="!search.length && searchvlue" class="no-data">
+                    {{ '没有匹配的内容' }}
+                </div>
             </div>
         </div>
     </div>
@@ -27,7 +33,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ArtboradView, PrototypeInterAction, PrototypeNavigationType, ShapeType, ShapeView } from '@kcdesign/data';
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
@@ -53,19 +59,43 @@ const setTargetNode = (id: string) => {
     showtargerlist.value = false
 }
 
+const search = computed(() => {
+    return DomList.value.filter(i => i.name.includes(searchvlue.value))
+})
+
+const highlightedName = (name: string) => {
+    return name.replace(
+        new RegExp(searchvlue.value, 'gi'), // 使用正则表达式进行全局和不区分大小写的搜索
+        `<span style="font-weight:600">${searchvlue.value}</span>`
+    );
+}
+
+
 const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
     DomList.value.length = 0
     targetname.value = ''
     curHoverValueIndex.value = '';
+    const shapemap = new Map()
+    const art = (shape: ShapeView,) => {
+        shapemap.set(shape.parent?.id, shape.id)
+        if (shape.parent?.type !== ShapeType.Page) {
+            return art(shape.parent!)
+        } else {
+            return shape
+        }
+    }
     if (nav === PrototypeNavigationType.SCROLLTO) {
         const shapes = props.context.selection.selectedShapes
-        if (!(shapes[0] instanceof ArtboradView)) return
-        for (let index = 0; index < shapes[0].childs.length; index++) {
-            const s = shapes[0].childs[index];
-            if (s.id === props.targetid) {
-                targetname.value = s.name
+        const s = art(shapes[0])
+        for (let index = 0; index < s.childs.length; index++) {
+            const shape = s.childs[index];
+            if (shape.id === props.targetid) {
+                targetname.value = shape.name
             }
-            DomList.value.push(s)
+            if (shape.id !== shapemap.get(s.id)) {
+                DomList.value.push(shape)
+            }
+
         }
     } else {
         const shapes = props.context.selection.selectedPage?.childs
@@ -81,6 +111,8 @@ const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
             }
         }
     }
+
+
 }
 
 function checktargetlist(e: MouseEvent) {
