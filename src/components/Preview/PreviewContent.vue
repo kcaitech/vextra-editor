@@ -36,6 +36,7 @@ const end_matrix = ref(new Matrix());
 const is_swap_shape = ref(false);
 const symrefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
+let event: MouseEvent;
 
 function page_watcher() {
     const shape = props.context.selection.selectedShapes[0];
@@ -61,6 +62,9 @@ function page_watcher() {
 
     initMatrix();
     viewUpdater.overlayBox(shape);
+    if (event) {
+        search(event);
+    }
 }
 
 function changePage() {
@@ -86,7 +90,7 @@ function changePage() {
     nextTick(() => {
         viewUpdater.mount(preview.value!, props.context.selection.selectedPage!.data, props.context.selection.selectedShapes[0], pageCard.value as any);
         initMatrix();
-    });    
+    });
 }
 
 const togglePage = (p: number) => {
@@ -158,9 +162,11 @@ const previewWatcher = (t: number | string, s?: any) => {
         const selected_shape = props.context.selection.selectedShapes[0];
         const shappe = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
         viewUpdater.artboardInnerScroll(action, el, shappe);
+        if (event) search(event);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
         updateDialogMatrix();
+        if (event) search(event);
     } else if (t === Preview.INTERACTION_CHANGE) {
         // 执行交互动作
         s ? backTargetShape(s) : getTargetShapes();
@@ -529,6 +535,7 @@ function onKeyUp(e: KeyboardEvent) {
 
 const onMouseMove_CV = (e: MouseEvent) => {
     if (e.buttons === 0 && !spacePressed.value) {
+        event = e;
         search(e); // 图形检索(hover)
         const h_shape = props.context.selection.hoveredShape;
         if (preview.value && !spacePressed.value) {
@@ -678,6 +685,7 @@ const getTargetShapes = () => {
                             viewUpdater.pageSvgSlideAnimate(action);
                             viewUpdater.pageSvgPushAnimate(action);
                             viewUpdater.dissolveAnimate(action, els as any, 1);
+                            if (event) search(event);
                         })
                     } else {
                         el.style['transform'] = m.toString();
@@ -737,6 +745,7 @@ const backTargetShape = (s?: string) => {
                         setTimeout(() => {
                             el.style['transform'] = m.toString();
                             viewUpdater.backPushAnimate(action);
+                            if (event) search(event);
                         })
                     } else {
                         el.style['transform'] = m.toString();
