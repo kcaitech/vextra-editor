@@ -1,17 +1,21 @@
-import { EL, ShapeView } from "@kcdesign/data";
+import { EL } from "@kcdesign/data";
 import _ from "lodash";
 
 const xmlns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
 
+const htmlelement: { [key: string]: 1 } = {
+    'div': 1,
+    'canvas': 1,
+}
+
 export function createElement(tag: string): HTMLElement | SVGElement {
-    // if (tag === "foreignObject") return document.createElement("foreignObject");
-    if (tag === "div") return document.createElement("div");
+    if (htmlelement[tag]) return document.createElement(tag);
     return document.createElementNS(xmlns, tag);
 }
 
-export function setAttribute(el: HTMLElement | SVGElement, key: string, value: string | { [key: string]: string }) {
+export function setAttribute(el: HTMLElement | SVGElement, key: string, value: (string | number) | { [key: string]: (string | number) }) {
     if (typeof value === 'object') {
         // parse value
         const attr = value as { [key: string]: string };
@@ -23,6 +27,7 @@ export function setAttribute(el: HTMLElement | SVGElement, key: string, value: s
 
         value = style;
     }
+    if (typeof value === 'number') value = String(value);
     if (key === "xlink:href" || key === "href") {
         el.setAttributeNS(xlink, key, value);
     } else {
@@ -31,8 +36,8 @@ export function setAttribute(el: HTMLElement | SVGElement, key: string, value: s
 }
 
 export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: {
-    [key: string]: string | { [key: string]: string }
-}, oldattrs: { [key: string]: string | { [key: string]: string } } = {}) {
+    [key: string]: (string | number) | { [key: string]: (string | number) }
+}, oldattrs: { [key: string]: (string | number) | { [key: string]: (string | number) } } = {}) {
     const tkeys = Object.keys(attrs);
     const okeys = Object.keys(oldattrs);
     for (let i = 0; i < tkeys.length; i++) {
