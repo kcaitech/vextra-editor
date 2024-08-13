@@ -39,7 +39,7 @@ function change(e: Event) {
     const files = (e.target as HTMLInputElement).files;
     if (!files) return;
     const loader = new ImageLoader(props.context);
-    loader.insetImageByPackages(files);
+    loader.insertImageByPackages(files);
     if (picker.value) (picker.value as HTMLInputElement).value = '';
 }
 

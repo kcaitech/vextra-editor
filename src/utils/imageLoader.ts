@@ -24,6 +24,7 @@ interface SVGParseResult {
  *  · 图片通过SVG内嵌的方式进入
  *  · 图片直接通过粘贴事件进入
  *  · 图片内嵌在图层内并通过粘贴事件进入
+ *  · 表格内引入图片
  */
 /**
  * @description 图片加载器
@@ -102,7 +103,7 @@ export class ImageLoader {
         return Promise.all(task);
     }
 
-    async insetImageByPackages(files: FileList, targetXY?: XY) {
+    async insertImageByPackages(files: FileList, targetXY?: XY) {
         const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[]).filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
