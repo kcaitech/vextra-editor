@@ -3,7 +3,7 @@
         <span>浮层设置</span>
         <div class="content">
             <div class="position">
-                <div v-for="i in  OverlayPositions " :key="i" :class="{ 'ptactive': position?.position === i }"
+                <div v-for="i in  OverlayPositionType " :key="i" :class="{ 'ptactive': position?.position === i }"
                     @click.stop="setPosition(i)">
                 </div>
             </div>
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { Reg_HEX } from "@/utils/color";
-import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositions, OverlayPosition, OverlayMargin } from "@kcdesign/data";
+import { Color, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayBackgroundType, OverlayPositionType, OverlayPosition, OverlayMargin } from "@kcdesign/data";
 import { message } from "@/utils/message";
 import { onMounted, ref, watch } from "vue";
 import { Context } from "@/context";
@@ -75,7 +75,7 @@ const props = defineProps<{
 const emits = defineEmits<{
     (e: "interaction", state: boolean): void;
     (e: "appearance", data: Type): void;
-    (e: "position", data: OverlayPositions): void;
+    (e: "position", data: OverlayPositionType): void;
     (e: "margin", data: Margin): void;
 }>()
 
@@ -106,7 +106,7 @@ function toHex(r: number, g: number, b: number) {
     return hex(r) + hex(g) + hex(b);
 }
 
-const setPosition = (val: OverlayPositions) => {
+const setPosition = (val: OverlayPositionType) => {
     emits('position', val)
     getPosition(props.targetNodeId)
 }
@@ -223,7 +223,7 @@ const getPosition = (targetID: string | undefined) => {
     const shape = shapes.find(i => i.id === targetID)
     if (!shape) return;
     const { overlayBackgroundAppearance, overlayBackgroundInteraction, overlayPositionType } = shape
-    position.value = overlayPositionType ?? new OverlayPosition(OverlayPositions.CENTER, new OverlayMargin())
+    position.value = overlayPositionType ?? new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
     event.value = overlayBackgroundInteraction ?? OverlayBackgroundInteraction.NONE
     Appearance.value = overlayBackgroundAppearance ?? new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, new Color(0.25, 0, 0, 0))
     background_color.value = Appearance.value.backgroundColor as Color

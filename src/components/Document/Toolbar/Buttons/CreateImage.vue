@@ -8,6 +8,8 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import { insert_imgs, Media, SVGReader } from '@/utils/content';
 import { Tool } from '@/context/tool';
 import { after_import } from '@/utils/clipboard';
+import { ImageLoader } from "@/utils/imageLoader";
+
 const { t } = useI18n();
 const props = defineProps<{
     params: {
@@ -26,12 +28,14 @@ function tool_watcher(t: number) {
         }
     }
 }
+
 async function select() {
     const filepicker = document.getElementById('filepicker');
     if (filepicker) {
         filepicker.click();
     }
 }
+
 function change(e: Event) {
     if (!e.target) {
         return;
@@ -61,6 +65,7 @@ function change(e: Event) {
         let base64: any;
 
         const img = new Image();
+        img.src = URL.createObjectURL(file);
 
         img.onload = function () {
             frame.width = img.width;
@@ -93,12 +98,16 @@ function change(e: Event) {
             reader.readAsArrayBuffer(file);
         }
 
-        img.src = URL.createObjectURL(file);
     } else if (files.length > 1) {
         props.context.workspace.setFreezeStatus(true);
         multiple(files);
+        const loader = new ImageLoader(props.context);
+        loader.packAll(files).then(res => {
+            console.log('res_all', res);
+        })
     }
 }
+
 function multiple(files: any) {
     const media: Media[] = [];
     const len = files.length;
@@ -166,6 +175,7 @@ function multiple(files: any) {
         img.src = URL.createObjectURL(file);
     }
 }
+
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
 })
@@ -174,15 +184,15 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
-        <ToolButton ref="button" @click="select" :selected="props.params.active" style="width: 32px">
-            <div class="svg-container">
-                <svg-icon icon-class="picture" />
-            </div>
-        </ToolButton>
-    </Tooltip>
-    <input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker"
-        @change="(e: Event) => { change(e) }" />
+<Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
+    <ToolButton ref="button" @click="select" :selected="props.params.active" style="width: 32px">
+        <div class="svg-container">
+            <svg-icon icon-class="picture"/>
+        </div>
+    </ToolButton>
+</Tooltip>
+<input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker"
+       @change="(e: Event) => { change(e) }"/>
 </template>
 <style scoped lang="scss">
 .svg-container {
@@ -195,7 +205,7 @@ onUnmounted(() => {
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    >svg {
+    > svg {
         width: 18px;
         height: 18px;
     }

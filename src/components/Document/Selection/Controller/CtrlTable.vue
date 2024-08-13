@@ -38,7 +38,8 @@ const editingCell = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
   matrix.reset(submatrix.toArray());
   if (editingCell.value) {
-    matrix.preTrans(editingCell.value.frame.x, editingCell.value.frame.y);
+    const transform = editingCell.value.transform;
+    matrix.preTrans(transform.translateX, transform.translateY);
   }
   return matrix.toArray();
 })

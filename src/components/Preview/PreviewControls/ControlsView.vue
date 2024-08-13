@@ -46,6 +46,14 @@ let eventTypeIndex: EventIndex = {
     mouseenter: -1,
     hover: -1
 }
+let eventTypeZIndex = {
+    click: false,
+    dblclick: false,
+    mousedown: false,
+    mouseup: false,
+    mouseenter: false,
+    hover: false
+}
 
 function pathMousedown(e: MouseEvent) {
     const selection = props.context.selection;
@@ -64,17 +72,21 @@ function pathMousedown(e: MouseEvent) {
         protoActionFn = new ProtoAction(props.context);
     }
     downXY = { x: e.x, y: e.y };
+
+    eventTypeZIndex.dblclick = false
+    eventTypeZIndex.mousedown = false
     if (e.button === 0) {
         const protoActions = hoveredShape.prototypeInterAction;
         if (!protoActions) return;
         if (dbl_action()) {
-            if (eventTypeIndex.click === -1 && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
-                for (let i = 0; i < protoActions.length; i++) {
+            if (!eventTypeZIndex.dblclick && eventTypeIndex.click === -1 && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
+                for (let i = protoActions.length - 1; i > -1; i--) {
                     const protoAction = protoActions[i];
                     const type = protoAction.event.interactionType;
                     if (type === PrototypeEvents.DBCLICK) {
                         console.log('双击事件');
                         e.stopPropagation();
+                        eventTypeZIndex.dblclick = true
                         protoActionFn.executeActionx(protoAction.actions, props.matrix);
                         break;
                     }
@@ -82,14 +94,17 @@ function pathMousedown(e: MouseEvent) {
             }
             return;
         }
-        for (let i = 0; i < protoActions.length; i++) {
-            const protoAction = protoActions[i];
-            const type = protoAction.event.interactionType;
-            if (type === PrototypeEvents.MOUSEDOWN) {
-                console.log('按下鼠标');
-                e.stopPropagation();
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                break;
+        if (!eventTypeZIndex.mousedown) {
+            for (let i = protoActions.length - 1; i > -1; i--) {
+                const protoAction = protoActions[i];
+                const type = protoAction.event.interactionType;
+                if (type === PrototypeEvents.MOUSEDOWN) {
+                    console.log('按下鼠标');
+                    e.stopPropagation();
+                    eventTypeZIndex.mousedown = true
+                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                    break;
+                }
             }
         }
     }
@@ -101,23 +116,7 @@ function pathMousedown(e: MouseEvent) {
 const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
     } else if (Math.hypot(e.x - downXY.x, e.y - downXY.y) > 3) {
-        const hoveredShape = props.context.selection.hoveredShape;
-        if (!hoveredShape) return;
-        const protoActions = hoveredShape.prototypeInterAction;
-        if (!protoActions) return;
-        if (!protoActionFn) {
-            protoActionFn = new ProtoAction(props.context);
-        }
-        for (let i = 0; i < protoActions.length; i++) {
-            const protoAction = protoActions[i];
-            const type = protoAction.event.interactionType;
-            if (type === PrototypeEvents.DRAG) {
-                console.log('拖拽事件');
-                e.stopPropagation();
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                break;
-            }
-        }
+        e.stopPropagation();
         isDragging = true;
     }
 }
@@ -131,19 +130,24 @@ const onMouseUp = (e: MouseEvent) => {
     if (!protoActionFn) {
         protoActionFn = new ProtoAction(props.context);
     }
-    for (let i = 0; i < protoActions.length; i++) {
+    eventTypeZIndex.click = false
+    eventTypeZIndex.mouseup = false
+
+    for (let i = protoActions.length - 1; i > -1; i--) {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
 
-        if (type === PrototypeEvents.ONCLICK && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
+        if (!eventTypeZIndex.click && type === PrototypeEvents.ONCLICK && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
             if (!isDragging && e.button === 0) {
                 console.log('单击事件');
+                eventTypeZIndex.click = true
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
-        if (type === PrototypeEvents.MOUSEUP) {
+        if (!eventTypeZIndex.mouseup && type === PrototypeEvents.MOUSEUP) {
             if (!isDragging && e.button === 0) {
                 console.log('松开鼠标');
+                eventTypeZIndex.mouseup = true
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
@@ -153,10 +157,18 @@ const onMouseUp = (e: MouseEvent) => {
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
+        if (isDragging) {
+            if (type === PrototypeEvents.DRAG) {
+                console.log('拖拽事件');
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            }
+        }
     }
     if (isDragging) {
         isDragging = false;
     }
+
+
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
@@ -165,21 +177,25 @@ const onMouseenter = () => {
     if (props.context.workspace.isPageDragging) {
         return;
     }
+    eventTypeZIndex.hover = false;
+    eventTypeZIndex.mouseenter = false;
     const hoveredShape = props.context.selection.hoveredShape;
     protoActionFn = new ProtoAction(props.context);
     if (hoveredShape) {
         const protoActions = hoveredShape.prototypeInterAction;
         if (!protoActions) return;
         eventTypeIndex = eventPriority(hoveredShape);
-        for (let i = 0; i < protoActions.length; i++) {
+        for (let i = protoActions.length - 1; i > -1; i--) {
             const protoAction = protoActions[i];
             const type = protoAction.event.interactionType;
             if (type === PrototypeEvents.HOVER || type === PrototypeEvents.MOUSEENTER) {
-                if (type === PrototypeEvents.HOVER && eventTypeIndex.mouseenter === -1) {
+                if (!eventTypeZIndex.hover && type === PrototypeEvents.HOVER && eventTypeIndex.mouseenter === -1) {
                     console.log('鼠标悬停');
+                    eventTypeZIndex.hover = true;
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                } else if (type === PrototypeEvents.MOUSEENTER) {
+                } else if (!eventTypeZIndex.mouseenter && type === PrototypeEvents.MOUSEENTER) {
                     console.log('hoveredShape: 移入');
+                    eventTypeZIndex.mouseenter = true
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 }
             }
