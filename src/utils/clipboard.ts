@@ -44,6 +44,7 @@ import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_sty
 import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
 import { flattenShapes } from "@/utils/cutout";
 import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
+import { ImageLoader } from "@/utils/imageLoader";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -1190,11 +1191,15 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
     if (navigator.clipboard && navigator.clipboard.read) {
         const type = data.types[0];
         const val = await data.getType(type);
-        image_reader(context, val, type, t, _xy);
+        // image_reader(context, val, type, t, _xy);
+        const loader = new ImageLoader(context);
+        loader.insetImageByPackages([val] as unknown as FileList);
     } else {
-        const type = data[0].type;
+        // const type = data[0].type;
         const val = data[0].getAsFile();
-        image_reader(context, val, type, t, _xy);
+        // image_reader(context, val, type, t, _xy);
+        const loader = new ImageLoader(context);
+        loader.insetImageByPackages([val] as unknown as FileList);
     }
 }
 

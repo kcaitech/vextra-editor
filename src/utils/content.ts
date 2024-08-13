@@ -38,6 +38,7 @@ import * as parse_svg from "@/svg_parser";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
+import { ImageLoader } from "@/utils/imageLoader";
 
 export interface Media {
     name: string
@@ -428,52 +429,13 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
     return Boolean(diff > dragActiveDis);
 }
 
-export function drop(e: DragEvent, context: Context, t: Function) {
+export function drop(e: DragEvent, context: Context) {
     if (!permIsEdit(context) || context.tool.isLable) return;
-
     e.preventDefault();
     const data = e?.dataTransfer?.files;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
-    const file = data[0];
-    if (file.type === "image/svg+xml") {
-        SVGReader(context, file, context.workspace.getRootXY(e as MouseEvent));
-        return;
-    }
-
-    item.contentType = file.type;
-    const frame = { width: 100, height: 100 };
-    const img = new Image();
-    img.onload = function () {
-        frame.width = img.width;
-        frame.height = img.height;
-        const origin = { width: img.width, height: img.height }
-
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const base64: any = event.target?.result;
-            if (!base64) {
-                return;
-            }
-
-            fr.onload = function (event) {
-                const buff = event.target?.result;
-                if (!(base64 && buff)) {
-                    return;
-                }
-
-                item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
-                const content = item!.content as Media;
-                const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
-                xy.x = xy.x - frame.width / 2;
-                xy.y = xy.y - frame.height / 2;
-                paster_image(context, xy, t, content, origin);
-            }
-            fr.readAsArrayBuffer(file);
-        }
-        fr.readAsDataURL(file);
-    }
-    img.src = URL.createObjectURL(file);
+    const loader = new ImageLoader(context);
+    loader.insetImageByPackages(data);
 }
 
 export function SVGReader(context: Context, file: File, xy?: XY) {

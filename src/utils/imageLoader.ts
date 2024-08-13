@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import {
     ColVector3D, ImagePack,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, ResourceMgr, Shape,
+    makeShapeTransform2By1, ResourceMgr, Shape, ShapeView,
     Transform,
     TransformRaw,
     UploadAssets
@@ -18,7 +18,7 @@ interface SVGParseResult {
 }
 
 /**
- *  · ImageTool
+ *  · ImageTool --ok
  *  · 图片拖入
  *  · 图片通过SVG内嵌的方式进入
  *  · 图片直接通过粘贴事件进入
@@ -78,7 +78,7 @@ export class ImageLoader {
                 reader.readAsDataURL(file);
                 reader.onload = (event) => {
                     const base64 = event?.target?.result;
-                    if (base64) resolve(Object.assign(data as any, { base64, name: file.name }));
+                    if (base64) resolve(Object.assign(data as any, { base64, name: file.name || this.context.workspace.t('shape.image') }));
                     else reject('no base64');
                 }
             })
@@ -197,7 +197,7 @@ export class ImageLoader {
         }
     }
 
-    async upload(buffs: { shape: Shape, upload: UploadAssets[] }[]) {
+    async upload(buffs: { shape: Shape | ShapeView, upload: UploadAssets[] }[]) {
         const context = this.context;
         let someError = false;
         let count = 0;
@@ -215,6 +215,6 @@ export class ImageLoader {
                 }
             }
         }
-        if (!someError) message('success', '图片资源上传成功，一共' + count + '张', 5);
+        if (!someError && count) message('success', '图片资源上传成功，一共' + count + '张', 3);
     }
 }
