@@ -1,12 +1,6 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
-import {
-    ColVector3D,
-    CtrlElementType, Matrix,
-    Scaler, ShapeSize,
-    ShapeView,
-    Transform
-} from "@kcdesign/data";
+import { ColVector3D, CtrlElementType, Matrix, Scaler, ShapeSize, ShapeView, Transform } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 
 type Box = {
@@ -420,11 +414,13 @@ export class ScaleHandler extends TransformHandler {
                 rbPointForSelection.x -= delta;
             }
             if (SHIFT) {
-                const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
-                const dy = (selectionHeight - afterHeight) / 2;
+                if (CET === CtrlElementType.RectLeft) {
+                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const dy = (selectionHeight - afterHeight) / 2;
 
-                ltPointForSelection.y += dy;
-                rbPointForSelection.y -= dy;
+                    ltPointForSelection.y += dy;
+                    rbPointForSelection.y -= dy;
+                }
             }
         }
 
@@ -439,11 +435,16 @@ export class ScaleHandler extends TransformHandler {
             if (ALT) rbPointForSelection.y -= delta;
 
             if (SHIFT) {
-                const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-                const dx = (selectionWidth - afterWidth) / 2;
+                if (CET === CtrlElementType.RectTop) {
+                    const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
+                    const dx = (selectionWidth - afterWidth) / 2;
 
-                ltPointForSelection.x += dx;
-                rbPointForSelection.x -= dx;
+                    ltPointForSelection.x += dx;
+                    rbPointForSelection.x -= dx;
+                }  else if (CET === CtrlElementType.RectLT) {
+                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    ltPointForSelection.y = selectionHeight - afterHeight;
+                }
             }
         }
 
@@ -461,9 +462,11 @@ export class ScaleHandler extends TransformHandler {
                 if (CET === CtrlElementType.RectRight) {
                     const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
                     const dy = (selectionHeight - afterHeight) / 2;
-
                     ltPointForSelection.y += dy;
                     rbPointForSelection.y -= dy;
+                } else if (CET === CtrlElementType.RectRT) {
+                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    ltPointForSelection.y = selectionHeight - afterHeight;
                 }
             }
         }
@@ -476,18 +479,18 @@ export class ScaleHandler extends TransformHandler {
             const delta = cursorPointFromSelection.y - rbPointForSelection.y;
             rbPointForSelection.y = cursorPointFromSelection.y;
 
-            if (ALT) {
-                ltPointForSelection.y -= delta;
-            }
+            if (ALT) ltPointForSelection.y -= delta;
 
             if (SHIFT) {
                 if (CET === CtrlElementType.RectBottom) {
                     const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
-
                     const dx = (selectionWidth - afterWidth) / 2;
-
                     ltPointForSelection.x += dx;
                     rbPointForSelection.x -= dx;
+                } else {
+                    const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
+                    const dy = selectionHeight - afterHeight;
+                    rbPointForSelection.y = selectionHeight - dy;
                 }
             }
         }
