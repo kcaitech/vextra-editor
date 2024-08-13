@@ -325,6 +325,7 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
+    if (!((e.target as HTMLElement).tagName === "DIV")) return;
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     e.stopPropagation();

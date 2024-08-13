@@ -27,7 +27,7 @@
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
-                                        1
+                                        <svg-icon icon-class="warning"></svg-icon>
                                     </div>
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
@@ -145,7 +145,7 @@
                     </div>
                     <div v-else class="default">设置窗口或其中控件的交互行为</div>
                 </div>
-                <div v-if="isProtoType.get('shape').shape.isContainer" class="overflow-roll">
+                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
                     <div class="text">溢出滚动</div>
                     <Select class="select" :source="overflowRoll"
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
@@ -729,21 +729,67 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
 }
 
 const checkConflict = (event: string, id: string) => {
+    console.log('111111');
+
     let map = new Map()
     prototypeinteraction.value?.forEach((i, index) => {
         if (i.event.interactionType === event) {
             map.set(i.id, index)
         }
     })
-    const arr = Array.from(map.values())
-    const min = Math.min(...arr)
+    const arr = Array.from(map.values());
+    const min = Math.min(...arr);
+    const idxs: number[] = [];
+    const result = (min: number, cur: string, event: PrototypeEvents[]): boolean => {
+        let m = min;
+        if (!prototypeinteraction.value) return false
+        event.forEach(e => {
+            let idx = prototypeinteraction.value!.findIndex(i => i.event.interactionType === e)
+            if (cur === PrototypeEvents.MOUSEDOWN) min = -99;
+            if (e.includes(PrototypeEvents.MOUSEDOWN)) {
+                min = 99
+            } else {
+                min = m
+            }
+            if (idx >= 0) {
+                idxs.push(idx)
+            }
+        })
+        console.log(min, idxs);
+
+        if (min < Math.min(...idxs)) {
+            return false
+        } else {
+            return true
+        }
+    }
+
+    const events: PrototypeEvents[] = []
+    prototypeinteraction.value?.forEach(i => events.push(i.event.interactionType))
+
     if (map.get(id) === min) {
-        console.log('=====================','1');
+        console.log('=====================', '1');
         console.log(map);
-        
-        return false
+
+        if (event === PrototypeEvents.HOVER && events.includes(PrototypeEvents.MOUSEENTER)) {
+            return result(min, event, [PrototypeEvents.MOUSEENTER])
+        } else if (event === PrototypeEvents.MOUSEENTER && events.includes(PrototypeEvents.HOVER)) {
+            return result(min, event, [PrototypeEvents.HOVER])
+        } else if (event === PrototypeEvents.ONCLICK && (events.includes(PrototypeEvents.DBCLICK) || events.includes(PrototypeEvents.MOUSEDOWN) || events.includes(PrototypeEvents.MOUSEUP))) {
+            return result(min, event, [PrototypeEvents.DBCLICK, PrototypeEvents.MOUSEDOWN, PrototypeEvents.MOUSEUP])
+        } else if (event === PrototypeEvents.DBCLICK && (events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.MOUSEDOWN) || events.includes(PrototypeEvents.MOUSEUP))) {
+            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.MOUSEDOWN, PrototypeEvents.MOUSEUP])
+        } else if (event === PrototypeEvents.MOUSEDOWN && (events.includes(PrototypeEvents.DBCLICK) || events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.DRAG))) {
+            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK, PrototypeEvents.DRAG])
+        } else if (event === PrototypeEvents.MOUSEUP && (events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.DBCLICK))) {
+            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
+        } else if (event === PrototypeEvents.MOUSEDOWN && events.includes(PrototypeEvents.MOUSEUP)) {
+            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
+        }else{
+            return false
+        }
     } else {
-        console.log('=====================','2');
+        console.log('=====================', '2');
         return true
     }
 }
@@ -1121,6 +1167,7 @@ const createAction = () => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
 
+
     if (!shape) return;
 
     const Events = new Set()
@@ -1153,7 +1200,7 @@ const createAction = () => {
     const Action = new PrototypeActions(v4(), PrototypeConnectionType.NONE)
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
-    e.insertPrototypeAction(shape as ShapeView, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
+    e.insertPrototypeAction(shape, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
     acitonindex.value = id
     updateData()
 }
@@ -1241,10 +1288,10 @@ function updateData() {
     if (shapes.length !== 1) return
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
-    if (types.includes(shape.type) && shape.parent?.type === ShapeType.Page) {
+    if (types.includes(shape.type)) {
         isContainer.value = true
         isProtoType.value.set('shape', { shape, isContainer })
-    } else if ((shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
+    } else if (((shape.parent?.isContainer || shape.parent?.type === ShapeType.SymbolRef) && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
         isContainer.value = false
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
@@ -1327,6 +1374,10 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     selection_change();
     watch_shapes();
+    document.addEventListener('dblclick', () => {
+        console.log('双击了');
+
+    })
 })
 
 onUnmounted(() => {
@@ -1567,6 +1618,16 @@ onUnmounted(() => {
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
+                }
+
+                .conflict{
+                    width: 14px;
+                    height: 14px;
+                    svg{
+                        width: 100%;
+                        height: 100%;
+                        color: #333333;
+                    }
                 }
 
             }
