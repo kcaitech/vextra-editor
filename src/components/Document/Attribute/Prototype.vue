@@ -26,9 +26,13 @@
                 item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
+
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
-                                        <svg-icon icon-class="delete"></svg-icon>
+                                        <Tooltip content="触发行为存在冲突，其他行为会被优先触发">
+                                            <svg-icon icon-class="warning"></svg-icon>
+                                        </Tooltip>
                                     </div>
+
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
                                     <svg-icon icon-class="delete"></svg-icon>
@@ -746,7 +750,7 @@ const checkConflict = (event: string, id: string) => {
         event.forEach(e => {
             let idx = prototypeinteraction.value!.findIndex(i => i.event.interactionType === e)
             if (cur === PrototypeEvents.MOUSEDOWN) min = -99;
-            if (e.includes(PrototypeEvents.MOUSEDOWN)) {
+            if (cur !== PrototypeEvents.MOUSEDOWN && event.includes(PrototypeEvents.MOUSEDOWN)) {
                 min = 99
             } else {
                 min = m
@@ -785,7 +789,7 @@ const checkConflict = (event: string, id: string) => {
             return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
         } else if (event === PrototypeEvents.MOUSEDOWN && events.includes(PrototypeEvents.MOUSEUP)) {
             return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
-        }else{
+        } else {
             return false
         }
     } else {
@@ -1620,10 +1624,12 @@ onUnmounted(() => {
                     white-space: nowrap;
                 }
 
-                .conflict{
+                .conflict {
+                    display: flex;
                     width: 14px;
                     height: 14px;
-                    svg{
+
+                    svg {
                         width: 100%;
                         height: 100%;
                         color: #333333;
