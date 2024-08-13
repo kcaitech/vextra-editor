@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import {
     ColVector3D, GroupShapeView, ImagePack,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, ResourceMgr, Shape, ShapeView,
+    makeShapeTransform2By1, Shape, ShapeView, SVGParseResult,
     Transform,
     TransformRaw,
     UploadAssets
@@ -13,10 +13,6 @@ import * as parse_svg from "@/svg_parser";
 import { upload_image } from "@/utils/content";
 import { XY } from "@/context/selection";
 
-interface SVGParseResult {
-    shape: Shape,
-    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
-}
 
 /**
  *  · ImageTool --ok
@@ -222,6 +218,7 @@ export class ImageLoader {
         const context = this.context;
         let someError = false;
         let count = 0;
+        const failed: Map<string, { shape: Shape | ShapeView, refs: string[] }> = new Map();
         for (const buffPack of buffs) {
             const { shape, upload } = buffPack;
             if (!upload.length) continue;
@@ -229,14 +226,32 @@ export class ImageLoader {
                 const { ref, buff } = assets;
                 const res = await upload_image(context, ref, buff);
                 if (!res) {
-                    // todo 重置图片内容
+                    let container = failed.get(shape.id)!;
+                    if (!container) {
+                        container = { shape, refs: [] };
+                        failed.set(shape.id, container);
+                    }
+                    container.refs.push(ref);
                     someError = true;
                 } else {
                     count++;
                 }
             }
         }
-        if (!someError && count) message('success', '图片资源上传成功，一共' + count + '张', 3);
+        if (someError) {
+            const page = this.context.selection.selectedPage!;
+            failed.forEach(v => {
+                const { shape, refs } = v;
+                refs.forEach((v) => this.context.data.mediasMgr.delete(v));
+                if (shape instanceof ShapeView) {
+                    shape.reloadImage(new Set(refs));
+                } else {
+                    const __view = page.getView(shape.id);
+                    __view?.reloadImage(new Set(refs));
+                }
+            });
+        } else if (count) message('success', '图片资源上传成功，一共' + count + '张', 3);
+
         return !someError;
     }
 }
