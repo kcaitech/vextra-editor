@@ -27,7 +27,7 @@
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
-                                        <svg-icon icon-class="warning"></svg-icon>
+                                        <svg-icon icon-class="delete"></svg-icon>
                                     </div>
                                 </div>
                                 <div class="delete" @click.stop="deleteAction(action.id)">
