@@ -229,7 +229,7 @@ onMounted(() => {
     }
 
     .item:hover {
-        background-color: #434343;
+        background-color: var(--active-color);
     }
 }
 </style>

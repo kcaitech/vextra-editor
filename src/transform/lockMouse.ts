@@ -6,10 +6,10 @@ export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
     readonly shapes: ShapeView[] = [];
 
-    constructor(context: Context, event: MouseEvent) {
+    constructor(context: Context, event: MouseEvent, shapes?: ShapeView[]) {
         super(context, event);
 
-        this.shapes = context.selection.selectedShapes;
+        this.shapes = shapes || context.selection.selectedShapes;
     }
 
     createApiCaller(transType: 'scaling' | 'translating' | 'rotating') {

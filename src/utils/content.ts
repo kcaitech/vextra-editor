@@ -35,7 +35,7 @@ import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/sym
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/svg_parser";
-import { sort_by_layer } from "@/utils/group_ungroup";
+import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 
@@ -336,7 +336,10 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
 }
 
 // 图片从init到insert
-export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: { width: number, height: number }) {
+export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media, origin: {
+    width: number,
+    height: number
+}) {
     const selection = context.selection;
     const page = selection.selectedPage;
     let asyncCreator: AsyncCreator | undefined;
@@ -367,7 +370,10 @@ export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t
     }
 }
 
-export function insert_imgs(context: Context, t: Function, media: Media[], origin: { width: number, height: number }, upload_container?: any) {
+export function insert_imgs(context: Context, t: Function, media: Media[], origin: {
+    width: number,
+    height: number
+}, upload_container?: any) {
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
@@ -643,6 +649,18 @@ export function flattenShapes(shapes: ShapeView[]) {
         }
         return result.concat(item);
     }, []);
+}
+
+export function noGroupShapesFrom(shapes: ShapeView[]) {
+    const result: ShapeView[] = [];
+    for (const shape of shapes) {
+        if (shape.type === ShapeType.Group) {
+            result.push(...noGroupShapesFrom(shape.childs));
+            continue;
+        }
+        result.push(shape);
+    }
+    return result;
 }
 
 export function page_scale(context: Context, scale: number) {
@@ -1124,11 +1142,11 @@ export function select_all(context: Context, reverse?: boolean) {
         select_all_for_path_edit(context);
         return;
     }
-
     const selection = context.selection;
+    const page = selection.selectedPage!;
     const selected = selection.selectedShapes;
     if (!selected.length) {
-        selection.rangeSelectShape(selection.selectedPage!.childs);
+        selection.rangeSelectShape(page.childs.filter((s: ShapeView) => !s.isLocked));
         return;
     }
 
@@ -1146,15 +1164,15 @@ export function select_all(context: Context, reverse?: boolean) {
         if (s.parent) p_map.set(s.parent.id, s.parent)
     });
     if (p_map.size > 1) {
-        const page = selection.selectedPage;
-        if (page && !reverse) selection.rangeSelectShape(page.childs);
+
+        if (page && !reverse) selection.rangeSelectShape(page.childs.filter((s: ShapeView) => !s.isLocked));
     } else {
         if (reverse) {
             const s_id = selected.map(s => s.id)
-            const r_shape = Array.from(p_map.values())[0].childs.filter((item: any) => !s_id.includes(item.id))
+            const r_shape = Array.from(p_map.values())[0].childs.filter((item: any) => !s_id.includes(item.id) && !item.isLocked);
             selection.rangeSelectShape(r_shape);
         } else {
-            selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+            selection.rangeSelectShape(Array.from(p_map.values())[0].childs.filter((s: ShapeView) => !s.isLocked));
         }
     }
 }
@@ -1432,5 +1450,11 @@ export function outlineSelection(context: Context) {
     const page = context.selection.selectedPage!;
     const shapes = context.selection.selectedShapes;
     const editor = context.editor4Page(page);
-    editor.outlineShapes(shapes);
+    editor.outlineShapes(shapes, context.workspace.t('attr.outlineNameSuffix'));
+}
+
+export function flattenSelection(context: Context) {
+    const page = context.selection.selectedPage!;
+    const editor = context.editor4Page(page);
+    editor.flattenSelection(compare_layer_3(context.selection.selectedShapes));
 }

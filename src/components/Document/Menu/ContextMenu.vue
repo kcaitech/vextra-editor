@@ -6,7 +6,7 @@ import Key from "@/components/common/Key.vue";
 import { MenuItemType } from "@/components/Document/Menu/index";
 import { useI18n } from "vue-i18n";
 import {
-    adapt_page,
+    adapt_page, flattenSelection,
     get_shape_within_document,
     lower_layer, outlineSelection,
     select_all,
@@ -433,6 +433,11 @@ function mask() {
     emits('close');
 }
 
+function flatten() {
+    flattenSelection(props.context);
+    emits('close');
+}
+
 function outline() {
     outlineSelection(props.context);
     emits('close');
@@ -440,17 +445,17 @@ function outline() {
 
 const plugins = props.context.pluginsMgr.search2("content.menu");
 const comps: { component: any, params?: any }[] = [];
-comps.push({
-    component: () => {
-        if (props.items.has(MenuItemType.Comment)) {
+if (props.items.has(MenuItemType.Comment)) {
+    comps.push({
+        component: () => {
             return h(plugins.end[0].component, {
-                params: {},
+                params: plugins.end[0].params,
                 context: props.context,
                 onClose: () => emits('close')
             })
         }
-    }
-});
+    });
+}
 onMounted(() => {
     props.context.menu.watch(menu_watcher)
     document.addEventListener('mousedown', handleClickOutside);
@@ -623,6 +628,10 @@ onUnmounted(() => {
     <div v-if="items.has(MenuItemType.Container)" @click="container" class="menu-item">
         <span>{{ t('system.create_container') }}</span>
         <Key code="Ctrl Alt G"></Key>
+    </div>
+    <div v-if="items.has(MenuItemType.Flatten)" @click="flatten" class="menu-item">
+        <span>{{ t('bool.cohere') }}</span>
+        <Key code="Ctrl E"></Key>
     </div>
     <div v-if="items.has(MenuItemType.Outline)" @click="outline" class="menu-item">
         <span>{{ t('system.outline') }}</span>

@@ -287,12 +287,6 @@ function windowBlur() {
         height: 22px;
 
         line-height: 22px;
-
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        padding: 0 2px;
         background-color: transparent;
         color: #bbb;
 
@@ -301,6 +295,14 @@ function windowBlur() {
         gap: 2px;
 
         box-sizing: border-box;
+
+        span {
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 
     .rename {
