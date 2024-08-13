@@ -738,8 +738,8 @@ export class ViewUpdater {
                 m.trans(0, trans);
             }
         } else if (animate_type.includes('SLIDE') && animate_type.includes('OUT')) {
-            const w = (box.right - box.left) * 0.3;
-            const h = (box.bottom - box.top) * 0.3;
+            const w = (box.right - box.left) * 0.2;
+            const h = (box.bottom - box.top) * 0.2;
             if (direction === 'RIGHT') {
                 const trans = (box.right - cur_box.right) - w;
                 m.trans(trans, 0);
@@ -765,8 +765,8 @@ export class ViewUpdater {
         const animate_type = type.split('_');
         const direction = animate_type.at(-1);
         if (animate_type.includes('SLIDE') && animate_type.includes('FROM')) {
-            const w = (box.right - box.left) * 0.3;
-            const h = (box.bottom - box.top) * 0.3;
+            const w = (box.right - box.left) * 0.2;
+            const h = (box.bottom - box.top) * 0.2;
             if (direction === 'RIGHT') {
                 const trans = (box.left - cur_box.left) + w;
                 m.trans(trans, 0);
@@ -805,7 +805,7 @@ export class ViewUpdater {
     // 容器内滚动
     scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
 
         el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
     }
@@ -814,7 +814,7 @@ export class ViewUpdater {
     dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         els[els.length - 1].style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         els[els.length - 1].style.opacity = `${value}`;
     }
@@ -827,7 +827,7 @@ export class ViewUpdater {
             action.transitionType === PrototypeTransitionType.MOVEFROMTOP ||
             action.transitionType === PrototypeTransitionType.MOVEFROMBOTTOM) {
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
@@ -839,7 +839,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             pageSvg.style.zIndex = '9';
             this.outAction(action);
@@ -849,9 +849,13 @@ export class ViewUpdater {
     pushAndslideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
-        if (animateType && (animateType.includes('SLIDE') || animateType.includes('PUSH'))) {
+        if (animateType && (animateType.includes('SLIDE') && animateType.includes('OUT'))) {
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = (action.transitionDuration ?? 0.3) - 0.05;
+            els[els.length - 1].style['transition'] = `transform ${time > 0 ? time : 0.001}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+        } else if (animateType && (animateType.includes('SLIDE') || animateType.includes('PUSH'))) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         }
     }
@@ -867,7 +871,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const animate_type = action.transitionType.split('_');
             const direction = animate_type.at(-1);
@@ -895,7 +899,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const direction = animateType.at(-1);
             const w = (box.right - box.left);
@@ -935,18 +939,16 @@ export class ViewUpdater {
         const m = new Matrix(this.v_matrix.clone());
         const direction = animate_type.at(-1);
         if (animate_type.includes('OUT')) {
+            const transx = (box.right - box.left);
+            const transy = (box.bottom - box.top);
             if (direction === 'RIGHT') {
-                const trans = box.right - box.left;
-                m.trans(trans, 0);
+                m.trans(transx, 0);
             } else if (direction === 'LEFT') {
-                const trans = box.right - box.left;
-                m.trans(-trans, 0);
+                m.trans(-transx, 0);
             } else if (direction === 'TOP') {
-                const trans = box.bottom - box.top;
-                m.trans(0, trans);
+                m.trans(0, transy);
             } else if (direction === 'BOTTOM') {
-                const trans = box.bottom - box.top;
-                m.trans(0, -trans);
+                m.trans(0, -transy);
             }
         }
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
@@ -972,7 +974,7 @@ export class ViewUpdater {
                 m.trans(0, h);
             }
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
             svgEl.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
@@ -988,7 +990,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
             const m = new Matrix(this.v_matrix.clone());
@@ -1012,7 +1014,7 @@ export class ViewUpdater {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE) return;
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         svgEl.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         svgEl.style.zIndex = '9';
         svgEl.style.opacity = '0';
@@ -1053,7 +1055,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             pageSvg.style.zIndex = '9';
             this.backOutAction(action);
@@ -1065,7 +1067,7 @@ export class ViewUpdater {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('MOVE') && animateType.includes('OUT')) {
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
@@ -1074,7 +1076,7 @@ export class ViewUpdater {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('PUSH')) {
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
@@ -1084,7 +1086,7 @@ export class ViewUpdater {
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
             const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
             this.backOutAction(action);
         }
@@ -1096,7 +1098,7 @@ export class ViewUpdater {
         if (!view) return;
         this.hotZoneBox(e, matrix, shape, boxs);
         const hover_shape = this.m_context.selection.hoveredShape;
-        if(hover_shape) return;
+        if (hover_shape) return;
         const hotBoxs = Array.from(boxs);
         for (let i = 0; i < hotBoxs.length; i++) {
             const box = hotBoxs[i];
@@ -1151,7 +1153,7 @@ export class ViewUpdater {
             }
             const isTrans = this.artboardInTrans(el);
             // 移除动画
-            const time = action.transitionDuration || 0.3;
+            const time = action.transitionDuration ?? 0.3;
             const timer = setTimeout(() => {
                 this.removeAnimate(el, isTrans);
             }, time * 1000);
@@ -1163,7 +1165,7 @@ export class ViewUpdater {
                 if (el) {
                     this.scrollAnimate(el as any, action);
                     // 移除动画
-                    const time = action.transitionDuration || 0.3;
+                    const time = action.transitionDuration ?? 0.3;
                     setTimeout(() => {
                         el.style['transition'] = '';
                     }, time * 1000);

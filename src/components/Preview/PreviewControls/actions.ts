@@ -43,7 +43,7 @@ export class ProtoAction {
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
         if (!action.transitionType) return;
         const type = action.transitionType.split('_');
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             // 即时
             this.m_context.selection.selectShape(shape);
@@ -71,7 +71,7 @@ export class ProtoAction {
             const shape = this.m_shapes.find(item => item.id === action.id);
             if (!action.action.transitionType) return;
             const type = action.action.transitionType.split('_');
-            const time = action.action.transitionDuration || 0.3;
+            const time = action.action.transitionDuration ?? 0.3;
             if (action.action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
                 this.m_context.selection.selectShape(shape);
             } else if (type.includes('DISSOLVE')) {
@@ -139,7 +139,7 @@ export class ProtoAction {
     symbolStateSwitch(action: PrototypeActions, shape?: ShapeView) {
         const down_shape = shape || this.m_context.selection.hoveredShape as SymbolRefView;
         if (!action.targetNodeID) return;
-        const time = action.transitionDuration || 0.3;
+        const time = action.transitionDuration ?? 0.3;
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
         maprefIdArray.set(down_shape.id, action.targetNodeID);
         this.saveMapRefIdLS(maprefIdArray, sessionRefIdKey);
