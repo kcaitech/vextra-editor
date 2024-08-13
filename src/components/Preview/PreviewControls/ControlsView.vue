@@ -68,7 +68,7 @@ function pathMousedown(e: MouseEvent) {
         const protoActions = hoveredShape.prototypeInterAction;
         if (!protoActions) return;
         if (dbl_action()) {
-            if (eventTypeIndex.dblclick > eventTypeIndex.click && eventTypeIndex.dblclick > eventTypeIndex.mousedown && eventTypeIndex.dblclick > eventTypeIndex.mouseup) {
+            if (eventTypeIndex.click === -1 && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
                 for (let i = 0; i < protoActions.length; i++) {
                     const protoAction = protoActions[i];
                     const type = protoAction.event.interactionType;
@@ -82,20 +82,18 @@ function pathMousedown(e: MouseEvent) {
             }
             return;
         }
-        if (eventTypeIndex.mousedown > eventTypeIndex.click && eventTypeIndex.mousedown > eventTypeIndex.dblclick) {
-            for (let i = 0; i < protoActions.length; i++) {
-                const protoAction = protoActions[i];
-                const type = protoAction.event.interactionType;
-                if (type === PrototypeEvents.MOUSEDOWN) {
-                    console.log('按下鼠标');
-                    e.stopPropagation();
-                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                    break;
-                }
+        for (let i = 0; i < protoActions.length; i++) {
+            const protoAction = protoActions[i];
+            const type = protoAction.event.interactionType;
+            if (type === PrototypeEvents.MOUSEDOWN) {
+                console.log('按下鼠标');
+                e.stopPropagation();
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                break;
             }
         }
     }
-    
+
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
 }
@@ -137,13 +135,13 @@ const onMouseUp = (e: MouseEvent) => {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
 
-        if (type === PrototypeEvents.ONCLICK && eventTypeIndex.click > eventTypeIndex.mouseup && eventTypeIndex.click > eventTypeIndex.mousedown && eventTypeIndex.click > eventTypeIndex.dblclick) {
+        if (type === PrototypeEvents.ONCLICK && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
             if (!isDragging && e.button === 0) {
                 console.log('单击事件');
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
         }
-        if (type === PrototypeEvents.MOUSEUP && eventTypeIndex.mouseup > eventTypeIndex.click && eventTypeIndex.mouseup > eventTypeIndex.dblclick) {
+        if (type === PrototypeEvents.MOUSEUP) {
             if (!isDragging && e.button === 0) {
                 console.log('松开鼠标');
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
@@ -177,10 +175,10 @@ const onMouseenter = () => {
             const protoAction = protoActions[i];
             const type = protoAction.event.interactionType;
             if (type === PrototypeEvents.HOVER || type === PrototypeEvents.MOUSEENTER) {
-                if (type === PrototypeEvents.HOVER && eventTypeIndex.hover > eventTypeIndex.mouseenter) {
+                if (type === PrototypeEvents.HOVER && eventTypeIndex.mouseenter === -1) {
                     console.log('鼠标悬停');
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
-                } else if (type === PrototypeEvents.MOUSEENTER && eventTypeIndex.mouseenter > eventTypeIndex.hover) {
+                } else if (type === PrototypeEvents.MOUSEENTER) {
                     console.log('hoveredShape: 移入');
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
                 }
@@ -248,7 +246,7 @@ const selected_watcher = (t: number | string) => {
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.clearSetTimeout();
         props.context.preview.setInteractionAction(undefined);
-        props.context.preview.setSwapAction(undefined);        
+        props.context.preview.setSwapAction(undefined);
         sessionStorage.removeItem(sessionRefIdKey);
         delayAction(props.context, props.matrix);
     }
