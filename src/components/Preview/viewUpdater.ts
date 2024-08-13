@@ -674,38 +674,38 @@ export class ViewUpdater {
             }
             if (!s) return;
             const scale = this.v_matrix.m00;
-            const { left, right, top, bottom } = s.overlayPositionType ? s.overlayPositionType.margin : { left: 0, right: 0, top: 0, bottom: 0 }
+            const { left, right, top, bottom } = s.overlayPosition ? s.overlayPosition.margin : { left: 0, right: 0, top: 0, bottom: 0 }
             m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
-            if (s.overlayPositionType?.position === OverlayPositionType.CENTER || !s.overlayPositionType) {
+            if (s.overlayPosition?.position === OverlayPositionType.CENTER || !s.overlayPosition) {
                 const c_x = (frame.width * scale) / 2;
                 const c_y = (frame.height * scale) / 2;
                 const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
                 m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
-            } else if (s.overlayPositionType.position === OverlayPositionType.TOPCENTER) {
+            } else if (s.overlayPosition.position === OverlayPositionType.TOPCENTER) {
                 const c_x = (frame.width * scale) / 2;
                 const v_centerx = (box.left + box.right) / 2
                 m.trans(v_centerx - (box.left + c_x), top);
-            } else if (s.overlayPositionType.position === OverlayPositionType.TOPRIGHT) {
+            } else if (s.overlayPosition.position === OverlayPositionType.TOPRIGHT) {
                 const r = (frame.width * scale) + box.left;
                 m.trans((box.right - r) - right, top);
-            } else if (s.overlayPositionType.position === OverlayPositionType.CENTERLEFT) {
+            } else if (s.overlayPosition.position === OverlayPositionType.CENTERLEFT) {
                 const c_y = (frame.height * scale) / 2;
                 const v_centery = (box.top + box.bottom) / 2
                 m.trans(left, v_centery - (box.top + c_y));
-            } else if (s.overlayPositionType.position === OverlayPositionType.CENTERRIGHT) {
+            } else if (s.overlayPosition.position === OverlayPositionType.CENTERRIGHT) {
                 const c_y = (frame.height * scale) / 2;
                 const v_centery = (box.top + box.bottom) / 2
                 const r = (frame.width * scale) + box.left;
                 m.trans((box.right - r) - right, v_centery - (box.top + c_y));
-            } else if (s.overlayPositionType.position === OverlayPositionType.BOTTOMCENTER) {
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMCENTER) {
                 const c_x = (frame.width * scale) / 2;
                 const v_centerx = (box.left + box.right) / 2
                 const b = (frame.height * scale) + box.top;
                 m.trans(v_centerx - (box.left + c_x), (box.bottom - b) - bottom);
-            } else if (s.overlayPositionType.position === OverlayPositionType.BOTTOMLEFT) {
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMLEFT) {
                 const b = (frame.height * scale) + box.top;
                 m.trans(left, (box.bottom - b) - bottom);
-            } else if (s.overlayPositionType.position === OverlayPositionType.BOTTOMRIGHT) {
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMRIGHT) {
                 const r = (frame.width * scale) + box.left;
                 const b = (frame.height * scale) + box.top;
                 m.trans((box.right - r) - right, (box.bottom - b) - bottom);
@@ -1129,7 +1129,7 @@ export class ViewUpdater {
         const viewbox = view.getBoundingClientRect();
         const downX = e.clientX - viewbox.x;
         const downY = e.clientY - viewbox.y;
-        if (shape.prototypeInterAction && shape.prototypeInterAction.length) {
+        if (shape.prototypeInterActions && shape.prototypeInterActions.length) {
             const box = viewBox(matrix, shape);
             if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
                 boxs.add(box);

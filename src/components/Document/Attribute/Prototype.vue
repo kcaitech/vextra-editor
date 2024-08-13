@@ -1118,7 +1118,7 @@ const setTransitionDuration = (id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    const oldval = (shape as ArtboradView).prototypeInterAction?.find(item => item.id === id)?.actions.transitionDuration;
+    const oldval = (shape as ArtboradView).prototypeInterActions?.find(item => item.id === id)?.actions.transitionDuration;
     const value = getDuration(animationtimevalue.value![0].value, oldval);
     e.setPrototypeActionTransitionDuration(shape as ShapeView, id, value / 1000)
     animationtimevalue.value![0].value = value + 'ms';
@@ -1181,7 +1181,7 @@ const createAction = () => {
     let events: PrototypeEvents[] = []
     const event = ref<PrototypeEvents>()
 
-    shape.prototypeInterAction?.forEach(i => {
+    shape.prototypeInterActions?.forEach(i => {
         events.push(i.event.interactionType)
     })
 
@@ -1291,7 +1291,7 @@ function updateData() {
     if (types.includes(shape.type)) {
         isContainer.value = true
         isProtoType.value.set('shape', { shape, isContainer })
-    } else if (((shape.parent?.isContainer || shape.parent?.type === ShapeType.SymbolRef) && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterAction !== undefined && shape.prototypeInterAction.length !== 0)) {
+    } else if (((shape.parent?.isContainer || shape.parent?.type === ShapeType.SymbolRef) && shape.parent.type !== ShapeType.Page) || (shape.prototypeInterActions !== undefined && shape.prototypeInterActions.length !== 0)) {
         isContainer.value = false
         isProtoType.value.set('shape', { shape, isContainer })
     } else {
@@ -1316,7 +1316,7 @@ function updateData() {
     if (isProtoType.value.size) {
         isProtoType.value.forEach((v, k) => {
             if (k) prototypestart.value = v.shape.prototypeStartPoint;
-            prototypeinteraction.value = v.shape.prototypeInterAction;
+            prototypeinteraction.value = v.shape.prototypeInterActions;
             if (prototypeinteraction.value) {
                 prototypeinteraction.value = [...prototypeinteraction.value].reverse()
             }

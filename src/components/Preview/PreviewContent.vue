@@ -532,7 +532,7 @@ const onMouseMove_CV = (e: MouseEvent) => {
         search(e); // 图形检索(hover)
         const h_shape = props.context.selection.hoveredShape;
         if (preview.value && !spacePressed.value) {
-            if (h_shape && h_shape.prototypeInterAction?.length) {
+            if (h_shape && h_shape.prototypeInterActions?.length) {
                 preview.value.style.cursor = 'pointer'
             } else {
                 preview.value.style.cursor = 'default'
@@ -560,14 +560,14 @@ function search(e: MouseEvent) {
     } else {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
-    const actions = hover_shape?.prototypeInterAction;
+    const actions = hover_shape?.prototypeInterActions;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
         if (p && p.type === ShapeType.Page) {
             return selectShapes(props.context, undefined);
         }
         while (p && p.type !== ShapeType.Page) {
-            if (p.prototypeInterAction && p.prototypeInterAction.length) {
+            if (p.prototypeInterActions && p.prototypeInterActions.length) {
                 selectShapes(props.context, p);
                 break;
             } else {
