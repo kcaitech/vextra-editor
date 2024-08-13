@@ -1,15 +1,21 @@
 import { Context } from "@/context";
 import {
-    ArtboradView,
     ColVector3D, ImagePack,
     makeShapeTransform1By2,
-    makeShapeTransform2By1, ShapeView,
+    makeShapeTransform2By1, ResourceMgr, Shape,
     Transform,
-    TransformRaw
+    TransformRaw,
+    UploadAssets
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
-import { get_envs_from_selection } from "@/utils/clipboard";
 import { message } from "@/utils/message";
+import * as parse_svg from "@/svg_parser";
+import { upload_image } from "@/utils/content";
+
+interface SVGParseResult {
+    shape: Shape,
+    mediaResourceMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>
+}
 
 /**
  *  · ImageTool
@@ -28,7 +34,24 @@ export class ImageLoader {
         this.context = context;
     }
 
+    SVGReader(file: File) {
+        const reader = new FileReader();
+        reader.readAsText(file);
+        return new Promise((resolve, reject) => {
+            reader.onload = (event) => {
+                const svg = event?.target?.result;
+                if (!svg) reject('no result');
+                const parseResult = parse_svg.parse(svg as string);
+                if (!parseResult.shape) reject('svg can not parse');
+                resolve(parseResult);
+            }
+        }).catch((e) => {
+            console.error(file.name + 'failed: ', e);
+        })
+    }
+
     packFile(file: File) {
+        if (file.type === "image/svg+xml") return this.SVGReader(file);
         const img = new Image();
         img.src = URL.createObjectURL(file);
 
@@ -66,7 +89,7 @@ export class ImageLoader {
 
     packAll(files: FileList) {
         const task = [];
-        const packFile = this.packFile;
+        const packFile = this.packFile.bind(this);
         for (let i = 0; i < files.length; i++) {
             if (i >= 20) {
                 message('info', '20 for max');
@@ -79,7 +102,7 @@ export class ImageLoader {
     }
 
     async insetImageByPackages(files: FileList) {
-        const packages = await this.packAll(files) as ImagePack[];
+        const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[]).filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
             const transforms: TransformRaw[] = [];
@@ -87,8 +110,9 @@ export class ImageLoader {
             for (let i = 0; i < packages.length; i++) {
                 if (i > 0) {
                     const p = packages[i - 1];
+                    const size = getSize(p);
                     offset += 20;
-                    offset += p.size.width;
+                    offset += size.width;
                 }
                 const __trans = new TransformRaw();
                 __trans.translateX = offset;
@@ -100,27 +124,17 @@ export class ImageLoader {
             let width = 0;
             let height = 0;
             for (const p of packages) {
-                const size = p.size;
+                const size = getSize(p);
                 width += size.width;
-                height += size.height;
+                size.height > height && (height = size.height);
             }
             const len = packages.length;
             width += len * 20;
-            height += len * 20;
 
             return { width, height };
         })();
         const context = this.context;
         const selection = context.selection;
-        // const __envs = get_envs_from_selection(context);
-        // if (__envs.length) {
-        //     // 如果存在指定容器选区，则进入对应的选区并且居中
-        //
-        // } else {
-        //     // 否则让所有图片于屏幕居中，如果遇见合适的容器，需要进去，如果是在页面下，且页面无法承接区域面积，则调整缩放比例
-        // }
-
-        // 先让所有图层到页面下去
         fixScale();
         const page = selection.selectedPage!;
         const getInPage = page.transform2FromRoot.getInverse();
@@ -130,31 +144,16 @@ export class ImageLoader {
             transforms[i] = makeShapeTransform1By2(t);
         }
 
-        const __packs = packages.map((v, i) => ({ pack: v, transform: transforms[i] }));
+        const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v }));
         const editor = context.editor4Page(page);
-        return editor.insertImagesToPage(__packs);
+        const result = editor.insertImagesToPage(__packs);
+        if (result) this.upload(result);
+        return true;
 
-        function getEnvs(area: { x: number, y: number, width: number, height: number }) {
-            const selection = context.selection;
-            let envs: ShapeView[] = [selection.selectedPage!];
-            if (selection.selectedShapes.length) {
-                const __envs = get_envs_from_selection(context);
-                if (__envs.length) envs = __envs;
-            } else {
-                const { x, y, width, height } = area;
-                const layers = selection.getLayers({ x, y });
-                if (layers.length) {
-                    for (let i = layers.length - 1; i > -1; i--) {
-                        const layer = layers[i];
-                        if (!(layer instanceof ArtboradView) || layer.isVirtualShape) continue;
-                        if (layer.size.width > width && layer.size.height > height) {
-                            envs = [layer];
-                            break;
-                        }
-                    }
-                }
-            }
-            return envs;
+        function getSize(pack: ImagePack | SVGParseResult) {
+            return (pack as ImagePack).size
+                ? (pack as ImagePack).size
+                : (pack as SVGParseResult).shape?.size;
         }
 
         function fixScale() {
@@ -168,7 +167,6 @@ export class ImageLoader {
             const containHeight = col1.y - col0.y;
             const ratioW = area.width / (containWidth * 0.92);
             const ratioH = area.height / (containHeight * 0.92);
-
             const matrix = context.workspace.matrix;
             if (ratioW > 1 || ratioH > 1) {
                 matrix.trans(-width / 2, -height / 2);
@@ -194,9 +192,29 @@ export class ImageLoader {
                 const t = makeShapeTransform2By1(transform)
                     .clone()
                     .addTransform(selectionTransform)
-
                 transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
             }
         }
+    }
+
+    async upload(buffs: { shape: Shape, upload: UploadAssets[] }[]) {
+        const context = this.context;
+        let someError = false;
+        let count = 0;
+        for (const buffPack of buffs) {
+            const { shape, upload } = buffPack;
+            if (!upload.length) continue;
+            for (const assets of upload) {
+                const { ref, buff } = assets;
+                const res = await upload_image(context, ref, buff);
+                if (!res) {
+                    // todo 重置图片内容
+                    someError = true;
+                } else {
+                    count++;
+                }
+            }
+        }
+        if (!someError) message('success', '图片资源上传成功，一共' + count + '张', 5);
     }
 }

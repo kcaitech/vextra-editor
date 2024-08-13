@@ -27,9 +27,9 @@ const C = {
         border: 'none',
     }
 }
-export const message = (type: MessageType, context: string) => {
+export const message = (type: MessageType, context: string, d = 2.5) => {
     const offset = 120;
-    const duration: number = 2.5;
+    const duration: number = d ?? 2.5;
     const fadeDur: number = 0.8;
     const speed: number = 0;
     const position: 'top' | 'bottom' = "top";
