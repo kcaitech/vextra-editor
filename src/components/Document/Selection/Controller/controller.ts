@@ -1,7 +1,7 @@
 import {
     adapt2Shape,
     AsyncPathEditor,
-    AsyncTransfer,
+    AsyncTransfer, ContactLineView,
     CurvePoint,
     Matrix,
     PathShapeView,
@@ -72,9 +72,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         if (shape.pathType) {
-            if (forbidden_to_modify_frame(shape) || !permIsEdit(context)) {
-                return;
-            }
+            if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
 
             workspace.setPathEditMode(true); // --开启对象编辑
             context.escstack.save('path-edit', exist_edit_mode);
@@ -130,9 +128,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 .asyncPathEditor(pathshape as PathShapeView, selection.selectedPage!)
         }
         //
-        if (!asyncPathEditor) {
-            return;
-        }
+        if (!asyncPathEditor) return;
         //
         directionCalc.down(event);
         //
@@ -145,15 +141,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         if (pathshape.pathType === PathType.Editable) {
             const __points = (pathshape as PathShapeView)?.segments[keys[0]]?.points;
-            if (!__points) {
-                return;
-            }
+            if (!__points) return;
             firstPoint = __points[values[0][0]] as CurvePoint;
         }
         //
-        if (!firstPoint) {
-            return;
-        }
+        if (!firstPoint) return;
         //
         const m = pathshape.matrix2Root();
         m.preScale(pathshape.frame.width, pathshape.frame.height);
