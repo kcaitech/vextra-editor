@@ -567,6 +567,7 @@ export class ScaleHandler extends TransformHandler {
                     transform2.translate(ColVector3D.FromXY(offsetX, offsetY));
                 }
 
+                // todo 取整之后scale发生轻微的变化没有更新到位
                 if (size.width > 0 && size.width < 1) {
                     size.width = 1;
                 } else {
