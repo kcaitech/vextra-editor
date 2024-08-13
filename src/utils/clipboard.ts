@@ -1193,13 +1193,13 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
         const val = await data.getType(type);
         // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
-        loader.insetImageByPackages([val] as unknown as FileList);
+        loader.insetImageByPackages([val] as unknown as FileList, _xy);
     } else {
         // const type = data[0].type;
         const val = data[0].getAsFile();
         // image_reader(context, val, type, t, _xy);
         const loader = new ImageLoader(context);
-        loader.insetImageByPackages([val] as unknown as FileList);
+        loader.insetImageByPackages([val] as unknown as FileList, _xy);
     }
 }
 

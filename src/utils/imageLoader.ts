@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import {
-    ColVector3D, ImagePack,
+    ColVector3D, GroupShapeView, ImagePack,
     makeShapeTransform1By2,
     makeShapeTransform2By1, ResourceMgr, Shape, ShapeView,
     Transform,
@@ -11,6 +11,7 @@ import { WorkSpace } from "@/context/workspace";
 import { message } from "@/utils/message";
 import * as parse_svg from "@/svg_parser";
 import { upload_image } from "@/utils/content";
+import { XY } from "@/context/selection";
 
 interface SVGParseResult {
     shape: Shape,
@@ -101,7 +102,7 @@ export class ImageLoader {
         return Promise.all(task);
     }
 
-    async insetImageByPackages(files: FileList) {
+    async insetImageByPackages(files: FileList, targetXY?: XY) {
         const packages = (await this.packAll(files) as (ImagePack | SVGParseResult)[]).filter(i => i);
         if (!packages?.length) return false;
         const transforms = (() => {
@@ -135,7 +136,7 @@ export class ImageLoader {
         })();
         const context = this.context;
         const selection = context.selection;
-        fixScale();
+        const env = fixTransform(targetXY);
         const page = selection.selectedPage!;
         const getInPage = page.transform2FromRoot.getInverse();
         for (let i = 0; i < transforms.length; i++) {
@@ -143,10 +144,9 @@ export class ImageLoader {
             t.addTransform(getInPage);
             transforms[i] = makeShapeTransform1By2(t);
         }
-
         const __packs = transforms.map((v, i) => ({ pack: packages[i], transform: v }));
         const editor = context.editor4Page(page);
-        const result = editor.insertImagesToPage(__packs);
+        const result = editor.insertImages(__packs, env);
         if (result) this.upload(result);
         return true;
 
@@ -156,44 +156,64 @@ export class ImageLoader {
                 : (pack as SVGParseResult).shape?.size;
         }
 
-        function fixScale() {
-            const { width, height } = context.workspace.root;
-            let clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
-            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(width, height)
-            ]);
-            const containWidth = col1.x - col0.x;
-            const containHeight = col1.y - col0.y;
-            const ratioW = area.width / (containWidth * 0.92);
-            const ratioH = area.height / (containHeight * 0.92);
-            const matrix = context.workspace.matrix;
-            if (ratioW > 1 || ratioH > 1) {
-                matrix.trans(-width / 2, -height / 2);
-                matrix.scale(1 / Math.max(ratioW, ratioH));
-                matrix.trans(width / 2, height / 2);
+        function fixTransform(targetXY?: XY) {
+            let env: GroupShapeView = context.selection.selectedPage!;
+            if (targetXY) {
+                const dx = targetXY.x;
+                const dy = targetXY.y;
+                const selectionTransform = new Transform()
+                    .setTranslate(ColVector3D.FromXY(dx, dy));
 
-                clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
-                context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+                env = context.selection.getClosestContainer(targetXY) as GroupShapeView;
+
+                for (let i = 0; i < transforms.length; i++) {
+                    const transform = transforms[i];
+                    const t = makeShapeTransform2By1(transform)
+                        .clone()
+                        .addTransform(selectionTransform)
+                        .addTransform(env.transform2FromRoot.getInverse())
+                    transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
+                }
+            } else {
+                const { width, height } = context.workspace.root;
+                let clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+                    ColVector3D.FromXY(0, 0),
+                    ColVector3D.FromXY(width, height)
+                ]);
+                const containWidth = col1.x - col0.x;
+                const containHeight = col1.y - col0.y;
+                const ratioW = area.width / (containWidth * 0.92);
+                const ratioH = area.height / (containHeight * 0.92);
+                const matrix = context.workspace.matrix;
+                if (ratioW > 1 || ratioH > 1) {
+                    matrix.trans(-width / 2, -height / 2);
+                    matrix.scale(1 / Math.max(ratioW, ratioH));
+                    matrix.trans(width / 2, height / 2);
+
+                    clientMatrix = makeShapeTransform2By1(context.workspace.matrix);
+                    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+                }
+
+                const centerAfterScale = clientMatrix.clone()
+                    .getInverse()
+                    .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
+
+                const dx = centerAfterScale.x - area.width / 2;
+                const dy = centerAfterScale.y - area.height / 2;
+
+                const selectionTransform = new Transform()
+                    .setTranslate(ColVector3D.FromXY(dx, dy));
+
+                for (let i = 0; i < transforms.length; i++) {
+                    const transform = transforms[i];
+                    const t = makeShapeTransform2By1(transform)
+                        .clone()
+                        .addTransform(selectionTransform)
+                    transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
+                }
             }
-
-            const centerAfterScale = clientMatrix.clone()
-                .getInverse()
-                .transform(ColVector3D.FromXY(width / 2, height / 2)).col0;
-
-            const dx = centerAfterScale.x - area.width / 2;
-            const dy = centerAfterScale.y - area.height / 2;
-
-            const selectionTransform = new Transform()
-                .setTranslate(ColVector3D.FromXY(dx, dy));
-
-            for (let i = 0; i < transforms.length; i++) {
-                const transform = transforms[i];
-                const t = makeShapeTransform2By1(transform)
-                    .clone()
-                    .addTransform(selectionTransform)
-                transforms[i] = makeShapeTransform1By2(t) as TransformRaw;
-            }
+            return env;
         }
     }
 
@@ -216,5 +236,6 @@ export class ImageLoader {
             }
         }
         if (!someError && count) message('success', '图片资源上传成功，一共' + count + '张', 3);
+        return !someError;
     }
 }
