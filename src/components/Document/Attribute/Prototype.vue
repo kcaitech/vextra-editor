@@ -186,7 +186,7 @@ import {
     PrototypeConnectionType,
     PrototypeNavigationType,
     PrototypeEasingType,
-    OverlayPositions,
+    OverlayPositionType,
     OverlayBackgroundInteraction,
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
@@ -933,7 +933,7 @@ const setOverlayBackgroundInteraction = (state: boolean, id: string) => {
 }
 
 //设置浮层位置
-const setOverlayPositionType = (data: OverlayPositions, id: string) => {
+const setOverlayPositionType = (data: OverlayPositionType, id: string) => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedPage?.childs
@@ -1194,7 +1194,7 @@ const createAction = () => {
         if (events.includes(type.value as PrototypeEvents)) {
             checktype()
         } else {
-            event.value = type.value
+            event.value = type.value as PrototypeEvents
         }
     }
     checktype()

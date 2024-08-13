@@ -13,7 +13,7 @@ import {
     import_shape_from_clipboard,
     import_text,
     makeShapeTransform1By2,
-    makeShapeTransform2By1,
+    makeShapeTransform2By1, Matrix,
     Page,
     PathShape,
     Shape,
@@ -405,9 +405,11 @@ export class Clipboard {
     async paste(t: Function, event?: ClipboardEvent, xy?: PageXY) {
         try {
             // @ts-ignore
-            if (navigator.clipboard.read || !event) {
-                return this.paste_async(t, xy);
+            if (navigator.clipboard.read) {
+                if (await this.paste_async(t, xy)) return;
             }
+
+            if (!event) return;
 
             // paste 监听事件触发，优先读取 '同步剪切板' 内容里面的内容
             const items = event.clipboardData && event.clipboardData.items;
@@ -432,9 +434,10 @@ export class Clipboard {
                 throw new Error('No valid data on clipboard.');
             }
             this.paste_clipboard_items(data, t, xy);
+            return true;
         } catch (error) {
             console.log('paste_async error:', error);
-            this.paste_cache(t, xy);
+            return this.paste_cache(t, xy);
         }
     }
 
@@ -567,9 +570,7 @@ export class Clipboard {
     }
 
     paste_cache(t: Function, xy?: PageXY) {
-        if (!this.cache) {
-            return;
-        }
+        if (!this.cache) return false;
 
         const { type, data } = this.cache;
 
@@ -583,6 +584,7 @@ export class Clipboard {
             const text = data['text/plain'];
             clipboard_text_plain2(this.context, text, xy);
         }
+        return true;
     }
 
     paste_cache_for_text() {
@@ -838,16 +840,11 @@ export class Clipboard {
     }
 }
 
-/**
- * @description 只存base64到剪切板
- */
 function sort_media(document: Document, exportCtx: ExfContext) {
     const media: any = {};
     exportCtx.medias.forEach(v => {
         const res = document.mediasMgr.getSync(v)?.base64;
-        if (!res) {
-            return;
-        }
+        if (!res) return;
         media[v] = res;
     });
     return media;
@@ -1003,26 +1000,20 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         // 文字段落
         const source = JSON.parse(text_html.split(paras)[1]);
         const t_s = import_text(context.data, source, true);
-
-        if (!t_s) {
-            throw new Error('invalid paras');
-        }
-
-        const page = context.selection.selectedPage;
-        if (!page) {
-            throw new Error('outside page');
-        }
-
+        if (!t_s) throw new Error('invalid paras');
+        const page = context.selection.selectedPage!;
         const shape: TextShape = (t_s as TextShape);
         const layout = shape.getLayout();
-        shape.frame.width = layout.contentWidth;
-        shape.frame.height = layout.contentHeight;
-        const _f = shape.frame;
+        shape.size.width = layout.contentWidth;
+        shape.size.height = layout.contentHeight;
+        const _f = shape.size;
         const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-        shape.frame.x = xy?.x || _xy.x;
-        shape.frame.y = xy?.y || _xy.y;
+        const transform = new TransformRaw();
+        transform.translateX = xy?.x || _xy.x;
+        transform.translateY = xy?.y || _xy.y
+        shape.transform = transform;
         const editor = context.editor4Page(page);
-        const r = editor.insert(page.data, page.childs.length, shape);
+        const r = editor.insert(page.data, page.childs.length, shape, true);
 
         context.nextTick(page, () => {
             if (r) context.selection.selectShape(page.shapes.get(r.id));
@@ -1315,7 +1306,9 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
  * @returns { {x: number,y: number} } 位置
  */
 export function adjust_content_xy(context: Context, m: { width: number, height: number }, fixFrame = true) {
-    const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
+    const workspace = context.workspace;
+    const root = workspace.root;
+    const matrix = workspace.matrix;
 
     if (fixFrame) {
         const ratio_wh = m.width / m.height;
@@ -1333,7 +1326,10 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
         }
     }
 
-    const page_center = matrix.inverseCoord(root.center);
+    const page = context.selection.selectedPage!;
+    const __m = new Matrix(page.matrix2Root());
+    __m.multiAtLeft(matrix);
+    const page_center = __m.inverseCoord(root.center);
     return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
 }
 
@@ -1555,14 +1551,17 @@ function get_envs_from_selection(context: Context) {
     const envs: GroupShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const s = shapes[i];
-        if (s.isVirtualShape) {
-            continue;
-        }
-        if (context.workspace.clipboard.envs.has(s.id)) {
-            continue;
-        }
+        if (s.isVirtualShape) continue;
+        if (context.workspace.clipboard.envs.has(s.id)) continue;
         if ([ShapeType.Artboard, ShapeType.Group].includes(s.type)) { // 暂时只支持容器和编组
             envs.push(s as GroupShapeView);
+        } else {
+            let p = s.parent;
+            while (p) {
+                if ([ShapeType.Artboard, ShapeType.Group].includes(p.type)) break;
+                p = p.parent;
+            }
+            if (p && [ShapeType.Artboard, ShapeType.Group].includes(p.type)) envs.push(p as GroupShapeView);
         }
     }
     return envs;

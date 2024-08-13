@@ -111,7 +111,7 @@ function close() {
         box-sizing: border-box;
 
         &:hover {
-            background-color: #434343;
+            background-color: var(--active-color);
         }
     }
 
