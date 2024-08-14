@@ -76,7 +76,7 @@ function pathMousedown(e: MouseEvent) {
     eventTypeZIndex.dblclick = false
     eventTypeZIndex.mousedown = false
     if (e.button === 0) {
-        const protoActions = hoveredShape.prototypeInterAction;
+        const protoActions = hoveredShape.prototypeInterActions;
         if (!protoActions) return;
         if (dbl_action()) {
             if (!eventTypeZIndex.dblclick && eventTypeIndex.click === -1 && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
@@ -125,7 +125,7 @@ const onMouseUp = (e: MouseEvent) => {
     e.stopPropagation();
     const hoveredShape = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
-    const protoActions = hoveredShape.prototypeInterAction;
+    const protoActions = hoveredShape.prototypeInterActions;
     if (!protoActions) return;
     if (!protoActionFn) {
         protoActionFn = new ProtoAction(props.context);
@@ -182,7 +182,7 @@ const onMouseenter = () => {
     const hoveredShape = props.context.selection.hoveredShape;
     protoActionFn = new ProtoAction(props.context);
     if (hoveredShape) {
-        const protoActions = hoveredShape.prototypeInterAction;
+        const protoActions = hoveredShape.prototypeInterActions;
         if (!protoActions) return;
         eventTypeIndex = eventPriority(hoveredShape);
         for (let i = protoActions.length - 1; i > -1; i--) {
@@ -212,7 +212,7 @@ const onMouseenter = () => {
 }
 
 const moveOutAction = (shape: ShapeView) => {
-    const protoActions = shape!.prototypeInterAction;
+    const protoActions = shape!.prototypeInterActions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
         const protoAction = protoActions[i];

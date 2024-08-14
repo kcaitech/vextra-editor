@@ -237,7 +237,7 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
 }
 
 export function eventPriority(shape: ShapeView): EventIndex {
-    const protoActions = shape.prototypeInterAction;
+    const protoActions = shape.prototypeInterActions;
     let eventTypeIndex: EventIndex = {
         click: -1,
         dblclick: -1,
@@ -307,10 +307,10 @@ const getFlows = (page: PageView, shapes: ShapeView[], flows: Map<string, string
 }
 
 const flowShapes = (page: PageView, startShape: ShapeView, target_ids: Set<string>) => {
-    if (startShape.prototypeInterAction) {
+    if (startShape.prototypeInterActions) {
         const target_id: Set<string> = new Set();
-        for (let index = 0; index < startShape.prototypeInterAction.length; index++) {
-            const action = startShape.prototypeInterAction[index].actions;
+        for (let index = 0; index < startShape.prototypeInterActions.length; index++) {
+            const action = startShape.prototypeInterActions[index].actions;
             if (!action) continue;
             const t = action.navigationType === PrototypeNavigationType.NAVIGATE || action.navigationType === PrototypeNavigationType.OVERLAY;
             if (action.targetNodeID && t && !target_ids.has(action.targetNodeID)) {
