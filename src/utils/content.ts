@@ -28,7 +28,7 @@ import { Action, ResultByAction } from "@/context/tool";
 import { WorkSpace } from '@/context/workspace';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { adjust_content_xy, after_import, paster_image } from "./clipboard";
+import { adjust_content_xy } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
@@ -39,6 +39,7 @@ import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
+import { UploadAssets } from "../../../kcdesign-data/src";
 
 export interface Media {
     name: string
@@ -456,13 +457,14 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 }
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);
-                editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
-                if (parseResult.mediaResourceMgr) {
-                    const container: any = {};
-                    parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
-                        container[k] = v;
-                    });
-                    after_import(context, container);
+                const shape = editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
+                if (parseResult.mediaResourceMgr && shape) {
+                    const upload: UploadAssets[] = [];
+                    parseResult.mediaResourceMgr.forEach((v, k) => {
+                        upload.push({ ref: k, buff: v.buff });
+                    })
+                    const loader = new ImageLoader(context);
+                    loader.upload([{ shape, upload }]);
                 }
             }
         }

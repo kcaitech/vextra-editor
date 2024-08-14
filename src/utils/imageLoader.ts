@@ -16,10 +16,10 @@ import { XY } from "@/context/selection";
 
 /**
  *  · ImageTool --ok
- *  · 图片拖入
- *  · 图片通过SVG内嵌的方式进入
- *  · 图片直接通过粘贴事件进入
- *  · 图片内嵌在图层内并通过粘贴事件进入
+ *  · 图片拖入 --ok
+ *  · 图片通过SVG内嵌的方式进入 --ok
+ *  · 图片直接通过粘贴事件进入 --ok
+ *  · 图片内嵌在图层内并通过粘贴事件进入 --ok
  *  · 表格内引入图片
  */
 /**
@@ -48,8 +48,8 @@ export class ImageLoader {
         })
     }
 
-    packFile(file: File) {
-        if (file.type === "image/svg+xml") return this.SVGReader(file);
+    packFile(file: File, readSVG = true) {
+        if (file.type === "image/svg+xml" && readSVG) return this.SVGReader(file);
         const img = new Image();
         img.src = URL.createObjectURL(file);
 
@@ -76,7 +76,10 @@ export class ImageLoader {
                 reader.readAsDataURL(file);
                 reader.onload = (event) => {
                     const base64 = event?.target?.result;
-                    if (base64) resolve(Object.assign(data as any, { base64, name: file.name || this.context.workspace.t('shape.image') }));
+                    if (base64) resolve(Object.assign(data as any, {
+                        base64,
+                        name: file.name || this.context.workspace.t('shape.image')
+                    }));
                     else reject('no base64');
                 }
             })
@@ -218,12 +221,14 @@ export class ImageLoader {
         const context = this.context;
         let someError = false;
         let count = 0;
+        const keySet = new Set<string>();
         const failed: Map<string, { shape: Shape | ShapeView, refs: string[] }> = new Map();
         for (const buffPack of buffs) {
             const { shape, upload } = buffPack;
             if (!upload.length) continue;
             for (const assets of upload) {
                 const { ref, buff } = assets;
+                if (keySet.has(ref)) continue;
                 const res = await upload_image(context, ref, buff);
                 if (!res) {
                     let container = failed.get(shape.id)!;
@@ -234,6 +239,7 @@ export class ImageLoader {
                     container.refs.push(ref);
                     someError = true;
                 } else {
+                    keySet.add(ref);
                     count++;
                 }
             }
@@ -250,7 +256,7 @@ export class ImageLoader {
                     __view?.reloadImage(new Set(refs));
                 }
             });
-        } else if (count) message('success', '图片资源上传成功，一共' + count + '张', 3);
+        } else if (count) message('success', this.context.workspace.t('home.image_uploaded').replace('xx', count), 3);
 
         return !someError;
     }
