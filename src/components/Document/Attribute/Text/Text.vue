@@ -20,6 +20,7 @@ import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
 import { TextSelectionLite } from '@/context/textselectionlite';
 import { Attribute } from '@/context/atrribute';
+import { is_mac } from "@/utils/common";
 
 interface Props {
     context: Context
@@ -28,6 +29,8 @@ interface Props {
     selectionChange: number
     trigger: any[]
 }
+
+const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -39,7 +42,7 @@ const isBold = ref<any>()
 const isTilt = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFang SC')
+const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -380,7 +383,7 @@ const _textFormat = () => {
         selectLevel.value = format.alignment || 'left'
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
-        fontName.value = format.fontName || 'PingFang SC'
+        fontName.value = format.fontName || DefaultFontName
         fonstSize.value = format.fontSize || 14
         textColor.value = format.color
         highlight.value = format.highlight
@@ -457,7 +460,7 @@ const _textFormat = () => {
         wordSpace.value = format.kerning || 0;
         selectVertical.value = format.verAlign || 'top';
         selectText.value = format.textBehaviour;
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         textColor.value = format.color;
