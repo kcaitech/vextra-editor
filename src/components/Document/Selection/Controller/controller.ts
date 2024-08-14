@@ -80,17 +80,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown(event: KeyboardEvent) {
-        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
-            return;
-        }
+        // 不处理输入框内的键盘事件
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
 
-        if (isDragging) {
-            return;
-        }
+        if (isDragging) return;
 
-        if (!directionCalc.is_catfish(event.code)) {
-            return;
-        }
+        if (!directionCalc.is_catfish(event.code)) return;
 
         if (event.altKey) {
             event.preventDefault();
@@ -227,54 +222,20 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (workspace.isEditing
             && is_mouse_on_content(e)
             && down_while_is_text_editing(e, context)
-        ) {
-            return;
-        }
+        ) return;
 
-        if (workspace.isPageDragging) {
-            return;
-        }
+        if (workspace.isPageDragging) return;
 
         matrix.reset(workspace.matrix.inverse);
 
         modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
-
         if (is_ctrl_element(e, context)) {
-            if (timer) {
-                handleDblClick();
-            }
-
+            if (timer) handleDblClick();
             initTimer();
             pre_to_translate(e);
         } else if (is_mouse_on_content(e)) {
             on_content(e);
         }
-    }
-
-    function on_content(e: MouseEvent) {
-        const h = selection.hoveredShape;
-        if (h) {
-            selection.selectShape(h);
-            pre_to_translate(e);
-        } else {
-            selection.resetSelectShapes();
-        }
-    }
-
-    function pre_to_translate(e: MouseEvent) {
-        shutdown_menu(e, context);
-
-        document.addEventListener('mouseup', mouseup);
-
-        if (!context.workspace.can_translate(e)) {
-            return;
-        }
-
-        transporter = new TranslateHandler(context, e, selection.selectedShapes);
-
-        document.addEventListener('mousemove', mousemove);
-
-        shapes = selection.selectedShapes;
     }
 
     async function mousemove(e: MouseEvent) {
@@ -305,9 +266,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function mouseup(e: MouseEvent) {
-        if (e.button !== 0) {
-            return;
-        }
+        if (e.button !== 0) return;
 
         if (isDragging) {
             isDragging = false;
@@ -320,6 +279,32 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
+    }
+
+    function on_content(e: MouseEvent) {
+        const h = selection.hoveredShape;
+        if (h) {
+            selection.selectShape(h);
+            pre_to_translate(e);
+        } else {
+            selection.resetSelectShapes();
+        }
+    }
+
+    function pre_to_translate(e: MouseEvent) {
+        shutdown_menu(e, context);
+
+        document.addEventListener('mouseup', mouseup);
+
+        if (!context.workspace.can_translate(e)) {
+            return;
+        }
+
+        transporter = new TranslateHandler(context, e, selection.selectedShapes);
+
+        document.addEventListener('mousemove', mousemove);
+
+        shapes = selection.selectedShapes;
     }
 
     function checkStatus() {
