@@ -198,6 +198,7 @@ import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { get_var_for_ref, states_tag_values_sort } from '@/utils/symbol';
 import { flattenShapes } from '@/utils/cutout';
+import { hover } from '@/utils/listview';
 
 
 enum Animation {
@@ -732,68 +733,32 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
 
 }
 
-const checkConflict = (event: string, id: string) => {
-    console.log('111111');
-
+const checkConflict = (event: PrototypeEvents, id: string) => {
     let map = new Map()
     prototypeinteraction.value?.forEach((i, index) => {
         if (i.event.interactionType === event) {
             map.set(i.id, index)
         }
     })
-    const arr = Array.from(map.values());
-    const min = Math.min(...arr);
-    const idxs: number[] = [];
-    const result = (min: number, cur: string, event: PrototypeEvents[]): boolean => {
-        let m = min;
-        if (!prototypeinteraction.value) return false
-        event.forEach(e => {
-            let idx = prototypeinteraction.value!.findIndex(i => i.event.interactionType === e)
-            if (cur === PrototypeEvents.MOUSEDOWN) min = -99;
-            if (cur !== PrototypeEvents.MOUSEDOWN && event.includes(PrototypeEvents.MOUSEDOWN)) {
-                min = 99
-            } else {
-                min = m
-            }
-            if (idx >= 0) {
-                idxs.push(idx)
-            }
-        })
-        console.log(min, idxs);
-
-        if (min < Math.min(...idxs)) {
-            return false
-        } else {
-            return true
-        }
-    }
-
+    const min = Math.min(...Array.from(map.values()));
     const events: PrototypeEvents[] = []
     prototypeinteraction.value?.forEach(i => events.push(i.event.interactionType))
 
-    if (map.get(id) === min) {
-        console.log('=====================', '1');
-        console.log(map);
-
+    const result = (event: PrototypeEvents): boolean => {
         if (event === PrototypeEvents.HOVER && events.includes(PrototypeEvents.MOUSEENTER)) {
-            return result(min, event, [PrototypeEvents.MOUSEENTER])
-        } else if (event === PrototypeEvents.MOUSEENTER && events.includes(PrototypeEvents.HOVER)) {
-            return result(min, event, [PrototypeEvents.HOVER])
-        } else if (event === PrototypeEvents.ONCLICK && (events.includes(PrototypeEvents.DBCLICK) || events.includes(PrototypeEvents.MOUSEDOWN) || events.includes(PrototypeEvents.MOUSEUP))) {
-            return result(min, event, [PrototypeEvents.DBCLICK, PrototypeEvents.MOUSEDOWN, PrototypeEvents.MOUSEUP])
-        } else if (event === PrototypeEvents.DBCLICK && (events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.MOUSEDOWN) || events.includes(PrototypeEvents.MOUSEUP))) {
-            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.MOUSEDOWN, PrototypeEvents.MOUSEUP])
-        } else if (event === PrototypeEvents.MOUSEDOWN && (events.includes(PrototypeEvents.DBCLICK) || events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.DRAG))) {
-            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK, PrototypeEvents.DRAG])
-        } else if (event === PrototypeEvents.MOUSEUP && (events.includes(PrototypeEvents.ONCLICK) || events.includes(PrototypeEvents.DBCLICK))) {
-            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
-        } else if (event === PrototypeEvents.MOUSEDOWN && events.includes(PrototypeEvents.MOUSEUP)) {
-            return result(min, event, [PrototypeEvents.ONCLICK, PrototypeEvents.DBCLICK])
+            return true
+        } else if ((event === PrototypeEvents.ONCLICK && events.includes(PrototypeEvents.MOUSEDOWN)) || (event === PrototypeEvents.ONCLICK && events.includes(PrototypeEvents.MOUSEUP))) {
+            return true
+        } else if ((event === PrototypeEvents.DBCLICK && events.includes(PrototypeEvents.MOUSEDOWN)) || (event === PrototypeEvents.DBCLICK && events.includes(PrototypeEvents.MOUSEUP)) || (event === PrototypeEvents.DBCLICK && events.includes(PrototypeEvents.ONCLICK))) {
+            return true
         } else {
             return false
         }
+    }
+
+    if (map.get(id) === min) {
+        return result(event)
     } else {
-        console.log('=====================', '2');
         return true
     }
 }
@@ -1122,7 +1087,7 @@ const setTransitionDuration = (id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    const oldval = (shape as ArtboradView).prototypeInterActions?.find(item => item.id === id)?.actions.transitionDuration;
+    const oldval = shape.prototypeInterActions?.find(item => item.id === id)?.actions.transitionDuration;
     const value = getDuration(animationtimevalue.value![0].value, oldval);
     e.setPrototypeActionTransitionDuration(shape as ShapeView, id, value / 1000)
     animationtimevalue.value![0].value = value + 'ms';

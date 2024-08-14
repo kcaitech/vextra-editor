@@ -76,6 +76,8 @@ function pathMousedown(e: MouseEvent) {
     eventTypeZIndex.dblclick = false
     eventTypeZIndex.mousedown = false
     if (e.button === 0) {
+        console.log('============1', e);
+
         const protoActions = hoveredShape.prototypeInterActions;
         if (!protoActions) return;
         if (dbl_action()) {
@@ -136,19 +138,20 @@ const onMouseUp = (e: MouseEvent) => {
     for (let i = protoActions.length - 1; i > -1; i--) {
         const protoAction = protoActions[i];
         const type = protoAction.event.interactionType;
-
-        if (!eventTypeZIndex.click && type === PrototypeEvents.ONCLICK && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
-            if (!isDragging && e.button === 0) {
-                console.log('单击事件');
-                eventTypeZIndex.click = true
-                protoActionFn.executeActionx(protoAction.actions, props.matrix);
-            }
-        }
         if (!eventTypeZIndex.mouseup && type === PrototypeEvents.MOUSEUP) {
             if (!isDragging && e.button === 0) {
                 console.log('松开鼠标');
                 eventTypeZIndex.mouseup = true
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            }
+        }
+        if (!(Math.hypot(e.x - downXY.x, e.y - downXY.y) > 3)) {
+            if (!eventTypeZIndex.click && type === PrototypeEvents.ONCLICK && eventTypeIndex.mousedown === -1 && eventTypeIndex.mouseup === -1) {
+                if (!isDragging && e.button === 0) {
+                    console.log('单击事件');
+                    eventTypeZIndex.click = true
+                    protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                }
             }
         }
         if (type === PrototypeEvents.RIGHTCLICK) {
