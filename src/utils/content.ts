@@ -1156,14 +1156,11 @@ function select_all_for_path_edit(context: Context) {
  */
 export function set_visible_for_shapes(context: Context) {
     let shapes = context.selection.selectedShapes;
-    const page = context.selection.selectedPage;
+    const page = context.selection.selectedPage!;
     shapes = shapes.filter(s => !is_parent_unvisible(s));
-    if (!page) {
-        return;
-    }
     const editor = context.editor4Page(page);
     editor.toggleShapesVisible(shapes);
-    context.selection.resetSelectShapes();
+    if (shapes.every(s => !s.isVisible)) hidden_selection(context);
 }
 
 /**
@@ -1329,10 +1326,7 @@ export const is_editing = (table: TableSelection) => {
 }
 
 export function hidden_selection(context: Context) {
-    if (context.workspace.is_path_edit_mode) {
-        return;
-    }
-
+    if (context.workspace.is_path_edit_mode) return;
     context.selection.notify(Selection.SELECTION_HIDDEN);
 }
 
