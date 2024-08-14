@@ -28,7 +28,7 @@ import { hexToX } from "@/components/common/ColorPicker/utils";
 import { Color } from "@kcdesign/data";
 import { Attribute } from "@/context/atrribute";
 import {
-    useArrow, useContact, useCutout,
+    useArrow, useAuto, useContact, useCutout,
     useEllipse,
     useFrame,
     useImage,
@@ -379,7 +379,7 @@ keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
         context.attr.notify(Attribute.VER_HILP);
         return;
     }
-    context.tool.setAction(Action.AutoV); // 自由光标
+    useAuto(context); // 自由光标
 }
 
 keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
