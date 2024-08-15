@@ -6,7 +6,7 @@ export class GroupShapeDom extends (GroupShapeView) {
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
-    hasOptiNode = true;
+    canOptiNode = true;
     optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
 
     render(): number {
