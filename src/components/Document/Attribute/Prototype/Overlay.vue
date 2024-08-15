@@ -1,9 +1,9 @@
 <template>
     <div class="set-float">
-        <span>浮层设置</span>
+        <span>{{t('prototype.overlay_set')}}</span>
         <div class="content">
             <div class="position">
-                <div v-for="i in  OverlayPositionType " :key="i" :class="{ 'ptactive': position?.position === i }"
+                <div v-for="i in  OverlayPositionType " :key="i" :class="{ 'ptactive': direction === i }"
                     @click.stop="setPosition(i)">
                 </div>
             </div>
@@ -11,16 +11,16 @@
                 <div class="margin-item" v-for=" i  in  margin " :key="i[0]"
                     :style="{ pointerEvents: position?.position?.includes(i[0]) ? 'auto' : 'none', opacity: position?.position?.includes(i[0]) ? 1 : 0.4 }">
                     <svg-icon icon-class="margin" :style="{ rotate: i[1] + 'deg' }"></svg-icon>
-                    <input v-if="i[0] === 'TOP'" ref="marginInput" :id="i[0]" type="text"
+                    <input v-select v-if="i[0] === 'TOP'" ref="marginInput" :id="i[0]" type="text"
                         :value="position?.position?.includes(i[0]) ? position.margin.top : '-'"
                         @change="setMargin($event, i[0], position?.margin.top!)">
-                    <input v-if="i[0] === 'BOTTOM'" ref="marginInput" :id="i[0]" type="text"
+                    <input v-select v-if="i[0] === 'BOTTOM'" ref="marginInput" :id="i[0]" type="text"
                         :value="position?.position?.includes(i[0]) ? position.margin.bottom : '-'"
                         @change="setMargin($event, i[0], position?.margin.bottom!)">
-                    <input v-if="i[0] === 'LEFT'" ref="marginInput" :id="i[0]" type="text"
+                    <input v-select v-if="i[0] === 'LEFT'" ref="marginInput" :id="i[0]" type="text"
                         :value="position?.position?.includes(i[0]) ? position.margin.left : '-'"
                         @change="setMargin($event, i[0], position?.margin.left!)">
-                    <input v-if="i[0] === 'RIGHT'" ref="marginInput" :id="i[0]" type="text"
+                    <input v-select v-if="i[0] === 'RIGHT'" ref="marginInput" :id="i[0]" type="text"
                         :value="position?.position?.includes(i[0]) ? position.margin.right : '-'"
                         @change="setMargin($event, i[0], position?.margin.right!)">
                 </div>
@@ -28,11 +28,11 @@
         </div>
         <div class="checkbox">
             <input type="checkbox" id="closetab" v-model="overlayclose" @change="setInteraction">
-            <label for="closetab">点击浮层外关闭浮层</label>
+            <label for="closetab">{{t('prototype.overlay_close')}}</label>
         </div>
         <div class="checkbox">
             <input type="checkbox" id="color" v-model="addmask" @change="setAppearance">
-            <label for="color">在浮层后添加遮罩</label>
+            <label for="color">{{t('prototype.overlay_background')}}</label>
         </div>
         <div v-if="addmask" class="setting">
             <ColorPicker class="color" :color="(background_color as Color)" :context="props.context"
@@ -93,6 +93,7 @@ const event = ref<OverlayBackgroundInteraction>()
 const Appearance = ref<OverlayBackgroundAppearance>()
 const overlayclose = ref<boolean>(false)
 const marginInput = ref<HTMLInputElement[]>();
+const direction = ref<string>('cen')
 
 const margin = new Map([
     ['TOP', 90],
@@ -107,6 +108,7 @@ function toHex(r: number, g: number, b: number) {
 }
 
 const setPosition = (val: OverlayPositionType) => {
+    if (val === direction.value) return
     emits('position', val)
     getPosition(props.targetNodeId)
 }
@@ -224,6 +226,7 @@ const getPosition = (targetID: string | undefined) => {
     if (!shape) return;
     const { overlayBackgroundAppearance, overlayBackgroundInteraction, overlayPosition } = shape
     position.value = overlayPosition ?? new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
+    direction.value = position.value.position
     event.value = overlayBackgroundInteraction ?? OverlayBackgroundInteraction.NONE
     Appearance.value = overlayBackgroundAppearance ?? new OverlayBackgroundAppearance(OverlayBackgroundType.NONE, new Color(0.25, 0, 0, 0))
     background_color.value = Appearance.value.backgroundColor as Color

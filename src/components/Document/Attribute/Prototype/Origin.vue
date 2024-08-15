@@ -1,7 +1,7 @@
 <template>
     <div class="origin">
         <div class="title" @click.stop=createOrigin>
-            <div class="text" :class="{ active: prototypestart }">流程起点</div>
+            <div class="text" :class="{ active: prototypestart }">{{ t('prototype.origin_title') }}</div>
             <div v-if="!prototypestart" class="add">
                 <svg-icon icon-class="add"></svg-icon>
             </div>
@@ -9,12 +9,12 @@
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
-        <div v-if="!prototypestart" class="default">设置选中容器为新流程起点</div>
+        <div v-if="!prototypestart" class="default">{{ t('prototype.origin_tips') }}</div>
         <div v-else class="originname">
             <label v-if="!showIpnut" for="name" @dblclick="showIpnut = true">{{ originName }}</label>
             <input v-focus v-if="showIpnut" id="name" type="text" v-model="originName" @blur="showIpnut = false"
                 @change="setOrigin" autocomplete="off">
-            <textarea v-select name="origindes" id="" cols="30" rows="10" placeholder="点击输入流程备注信息"
+            <textarea v-select name="origindes" id="" cols="30" rows="10" :placeholder="t('prototype.origin_des_pla')"
                 v-model="originDescribed" @change="setOrigin"></textarea>
         </div>
     </div>
@@ -25,6 +25,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { ShapeView, PrototypeStartingPoint, PageView, SymbolRefView } from "@kcdesign/data"
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 
 type Prototypestart = {
@@ -41,7 +42,7 @@ const emits = defineEmits<{
     (e: "deleteorigin"): void
     (e: "setorigin", data: PrototypeStartingPoint): void
 }>()
-
+const { t } = useI18n()
 const showIpnut = ref<boolean>(false)
 const originName = ref<string>('')
 const originDescribed = ref<string>('')
@@ -53,7 +54,10 @@ const start = computed<PrototypeStartingPoint>(() => {
 const maxnumber = (page: PageView) => {
     const shapes = page.childs;
     let start: PrototypeStartingPoint[] = [];
-    const regex = new RegExp(/流程 \d/)
+    const name = t('prototype.origin_default_name')
+    const regex = new RegExp(name + " \\d")
+    console.log(regex);
+
     let number = 0
     for (let index = 0; index < shapes.length; index++) {
         if (shapes[index].isContainer || shapes[index] instanceof SymbolRefView) {
@@ -76,7 +80,7 @@ const createOrigin = () => {
     if (props.prototypestart) return
     showIpnut.value = true
     const number = maxnumber(props.context.selection.selectedPage!)
-    const data = new PrototypeStartingPoint('流程 ' + number, '')
+    const data = new PrototypeStartingPoint(t('prototype.origin_default_name') + ' ' + number, '')
     emits('createorigin', data)
 }
 
@@ -214,7 +218,8 @@ onMounted(() => {
             &:focus {
                 border-color: #1878F5;
             }
-            &::-webkit-scrollbar{
+
+            &::-webkit-scrollbar {
                 width: 0;
                 height: 0;
             }

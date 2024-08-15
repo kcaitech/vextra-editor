@@ -156,20 +156,20 @@ function render() {
         source.value = cloneDeep(props.source);
         if (props.action) {
             if (props.action === PrototypeNavigationType.OVERLAY || props.action === PrototypeNavigationType.SWAP) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出', '移入']
+                source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein')]
             }
             if (props.action === PrototypeNavigationType.SWAPSTATE) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出']
+                source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve')]
             }
             if (props.action === PrototypeNavigationType.SCROLLTO) {
-                source.value = source.value.filter(i => ['即时', '位移'].includes(i.data.content));
-                arr.value = ['即时', '位移']
+                source.value = source.value.filter(i => [t('prototype.animation_instant'), t('prototype.animation_animate')].includes(i.data.content));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_animate')]
             }
             if (props.action === PrototypeNavigationType.NAVIGATE) {
-                source.value = source.value.filter(i => i.data.content !== '位移');
-                arr.value = ['即时', '淡入淡出', '移入', '移出', '滑入', '滑出', '推入']
+                source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein'), t('prototype.animation_moveout'), t('prototype.animation_slidein'), t('prototype.animation_slideout'), t('prototype.animation_push')]
             }
         }
         const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);

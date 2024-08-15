@@ -1,14 +1,14 @@
 <template>
     <div class="target">
-        <span>目标</span>
+        <span>{{t('prototype.interaction_destination')}}</span>
         <div class="targetname" @click.stop="showtargerlist = !showtargerlist">
-            <span :style="{ color: targetname ? '#000' : '#c8c8c8' }">{{ targetname || '请选择容器' }}</span>
+            <span :style="{ color: targetname ? '#000' : '#c8c8c8' }">{{ targetname || t('prototype.destination_select') }}</span>
             <div class="svg-wrap"><svg-icon icon-class="down"></svg-icon></div>
         </div>
         <div class="search-container" v-if="showtargerlist">
             <div class="header-search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input v-focus type="text" placeholder="搜索容器" v-model="searchvlue">
+                <input v-focus type="text" :placeholder="t('prototype.destination_search')" v-model="searchvlue">
             </div>
             <div class="item-list">
                 <div class="item" v-for="shape in search ?? DomList" :key="shape.id"
@@ -22,7 +22,7 @@
                     {{ t('system.empty') }}
                 </div>
                 <div v-if="!search.length && searchvlue" class="no-data">
-                    {{ '没有匹配的内容' }}
+                    {{ t('prototype.destination_search_null') }}
                 </div>
             </div>
         </div>

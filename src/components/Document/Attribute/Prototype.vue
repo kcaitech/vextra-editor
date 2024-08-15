@@ -8,7 +8,8 @@
                     @setorigin=setPrototypeStartPoint @deleteorigin=deleteOrigin></Origin>
                 <div class="interaction">
                     <div class="title" @click.stop="createAction">
-                        <div class="text" :class="{ active: prototypeinteraction?.length }">交互</div>
+                        <div class="text" :class="{ active: prototypeinteraction?.length }">
+                            {{ t('prototype.interaction') }}</div>
                         <div class="add">
                             <svg-icon icon-class="add"></svg-icon>
                         </div>
@@ -28,7 +29,7 @@
                                     <span class="name">{{ getText(action.actions) }}</span>
 
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
-                                        <Tooltip content="触发行为存在冲突，其他行为会被优先触发">
+                                        <Tooltip :content="t('prototype.warning')">
                                             <svg-icon icon-class="warning"></svg-icon>
                                         </Tooltip>
                                     </div>
@@ -40,7 +41,7 @@
                             </div>
                             <div class="item-setting" v-if="showaction && acitonindex === action.id">
                                 <div class="trigger">
-                                    <span>触发</span>
+                                    <span>{{ t('prototype.interaction_trigger') }}</span>
                                     <Select class="select" id="select" :visibility="true" :iscontainer="isContainer"
                                         :minwidth="100" :source="trigger"
                                         :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
@@ -51,7 +52,7 @@
                                         @change="setPrototypeActionEventTime(action.id)">
                                 </div>
                                 <div class="action">
-                                    <span>动作</span>
+                                    <span>{{ t('prototype.interaction_action') }}</span>
                                     <Select class="select" id="select" :visibility="true" :status="hasStatus"
                                         :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
                 item.data.type === action.actions.navigationType)?.data"
@@ -67,28 +68,28 @@
                                     @settargetnode="selectTargetNode($event, action.id)"></Target>
                                 <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
                                     class="retract">
-                                    <span>缩进</span>
-                                    <div class="retract-y">
-                                        <Tooltip content="Y轴缩进" :offset="15">
-                                            <svg-icon icon-class="indent-y" @click.stop></svg-icon>
-                                        </Tooltip>
-                                        <input v-select ref="indenty" class="indent" type="text"
-                                            :value="action.actions.extraScrollOffset?.y ?? 0"
-                                            @change="setExtraScrollOffsetY(action.id, action.actions.extraScrollOffset?.y ?? 0)">
-                                    </div>
+                                    <span>{{ t('prototype.interaction_offset') }}</span>
                                     <div class="retract-x">
-                                        <Tooltip content="X轴缩进" :offset="15">
+                                        <Tooltip :content="t('prototype.offsetx')" :offset="15">
                                             <svg-icon icon-class="indent-x" @click.stop></svg-icon>
                                         </Tooltip>
                                         <input v-select ref="indentx" class="indent" type="text"
                                             :value="action.actions.extraScrollOffset?.x ?? 0"
                                             @change="setExtraScrollOffsetX(action.id, action.actions.extraScrollOffset?.x ?? 0)">
                                     </div>
+                                    <div class="retract-y">
+                                        <Tooltip :content="t('prototype.offsety')" :offset="15">
+                                            <svg-icon icon-class="indent-y" @click.stop></svg-icon>
+                                        </Tooltip>
+                                        <input v-select ref="indenty" class="indent" type="text"
+                                            :value="action.actions.extraScrollOffset?.y ?? 0"
+                                            @change="setExtraScrollOffsetY(action.id, action.actions.extraScrollOffset?.y ?? 0)">
+                                    </div>
                                 </div>
                                 <div v-if="action.actions.connectionType === PrototypeConnectionType.URL" class="link">
-                                    <span>链接</span>
-                                    <input v-select ref="connectionURL" type="text" placeholder="输入链接地址"
-                                        :value="action.actions.connectionURL"
+                                    <span>{{ t('prototype.interaction_link') }}</span>
+                                    <input v-select ref="connectionURL" type="text"
+                                        :placeholder="t('prototype.link_tips')" :value="action.actions.connectionURL"
                                         @change="setPrototypeActionURL(action.id)">
                                 </div>
                                 <Overlay
@@ -99,7 +100,7 @@
                                     @position="setOverlayPositionType($event, action.actions.targetNodeID)"
                                     @margin="setOverlayPositionMargin($event, action.actions.targetNodeID)"></Overlay>
                                 <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
-                                    <span>动画设置</span>
+                                    <span>{{ t('prototype.animation_set') }}</span>
                                     <div class="wrapper">
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
@@ -113,7 +114,7 @@
                                         </div>
                                     </div>
                                     <div class="animation">
-                                        <span>动画</span>
+                                        <span>{{ t('prototype.interaction_animation') }}</span>
                                         <Select class="select" id="select" :source="animation" :animation="true"
                                             :action=action.actions.navigationType
                                             :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
@@ -133,7 +134,7 @@
                                     </div>
                                     <div v-if="action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
                                         class="effect">
-                                        <span>效果</span>
+                                        <span>{{ t('prototype.interaction_curve') }}</span>
                                         <Select class="select" id="select" :minwidth="100" :visibility="true"
                                             :source="effect"
                                             :selected="effect.find(item => item.data.value === action.actions.easingType)?.data || effect.find(item => item.id === 0)?.data"
@@ -147,17 +148,17 @@
                         </div>
 
                     </div>
-                    <div v-else class="default">设置窗口或其中控件的交互行为</div>
+                    <div v-else class="default">{{ t('prototype.interaction_tips') }}</div>
                 </div>
                 <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
-                    <div class="text">溢出滚动</div>
+                    <div class="text">{{ t('prototype.overflow') }}</div>
                     <Select class="select" :source="overflowRoll"
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
             </div>
             <div v-else class="tips">
-                <span>交互</span>
+                <span>{{ t('prototype.interaction') }}</span>
             </div>
 
         </el-scrollbar>
@@ -244,49 +245,49 @@ const Direction = new Map([
 ])
 
 const overflowRoll: SelectSource[] = genOptions([
-    [ScrollDirection.NONE, '不滚动'],
-    [ScrollDirection.HORIZONTAL, '水平'],
-    [ScrollDirection.VERTICAL, '垂直'],
-    [ScrollDirection.BOTH, '水平并垂直']
+    [ScrollDirection.NONE, t('prototype.flow_no')],
+    [ScrollDirection.HORIZONTAL, t('prototype.flow_h')],
+    [ScrollDirection.VERTICAL, t('prototype.flow_v')],
+    [ScrollDirection.BOTH, t('prototype.flow_b')]
 ])
 
 const trigger: SelectSource[] = genOptions([
-    [PrototypeEvents.ONCLICK, '单击'],
-    [PrototypeEvents.DBCLICK, '双击'],
-    [PrototypeEvents.RIGHTCLICK, '右键'],
-    [PrototypeEvents.DRAG, '拖拽'],
-    [PrototypeEvents.HOVER, '悬停'],
-    [PrototypeEvents.MOUSEENTER, '光标移入'],
-    [PrototypeEvents.MOUSELEAVE, '光标移出'],
-    [PrototypeEvents.MOUSEDOWN, '按下鼠标'],
-    [PrototypeEvents.MOUSEUP, '松开鼠标'],
-    [PrototypeEvents.AFTERTIMEOUT, '延迟'],
+    [PrototypeEvents.ONCLICK, t('prototype.trigger_click')],
+    [PrototypeEvents.DBCLICK, t('prototype.trigger_dbclick')],
+    [PrototypeEvents.RIGHTCLICK, t('prototype.trigger_right')],
+    [PrototypeEvents.DRAG, t('prototype.trigger_drag')],
+    [PrototypeEvents.HOVER, t('prototype.trigger_hover')],
+    [PrototypeEvents.MOUSEENTER, t('prototype.trigger_mouseenter')],
+    [PrototypeEvents.MOUSELEAVE, t('prototype.trigger_mouseleave')],
+    [PrototypeEvents.MOUSEDOWN, t('prototype.trigger_mousedown')],
+    [PrototypeEvents.MOUSEUP, t('prototype.trigger_mouseup')],
+    [PrototypeEvents.AFTERTIMEOUT, t('prototype.trigger_delay')],
 ])
 
 const event = new Map([
-    [PrototypeEvents.ONCLICK, '单击'],
-    [PrototypeEvents.DBCLICK, '双击'],
-    [PrototypeEvents.RIGHTCLICK, '右键'],
-    [PrototypeEvents.DRAG, '拖拽'],
-    [PrototypeEvents.HOVER, '悬停'],
-    [PrototypeEvents.MOUSEENTER, '光标移入'],
-    [PrototypeEvents.MOUSELEAVE, '光标移出'],
-    [PrototypeEvents.MOUSEDOWN, '按下鼠标'],
-    [PrototypeEvents.MOUSEUP, '松开鼠标'],
-    [PrototypeEvents.AFTERTIMEOUT, '延迟'],
+    [PrototypeEvents.ONCLICK, t('prototype.trigger_click')],
+    [PrototypeEvents.DBCLICK, t('prototype.trigger_dbclick')],
+    [PrototypeEvents.RIGHTCLICK, t('prototype.trigger_right')],
+    [PrototypeEvents.DRAG, t('prototype.trigger_drag')],
+    [PrototypeEvents.HOVER, t('prototype.trigger_hover')],
+    [PrototypeEvents.MOUSEENTER, t('prototype.trigger_mouseenter')],
+    [PrototypeEvents.MOUSELEAVE, t('prototype.trigger_mouseleave')],
+    [PrototypeEvents.MOUSEDOWN, t('prototype.trigger_mousedown')],
+    [PrototypeEvents.MOUSEUP, t('prototype.trigger_mouseup')],
+    [PrototypeEvents.AFTERTIMEOUT, t('prototype.trigger_delay')],
 ])
 
 
 const actions: SelectSource[] = genOptions([
-    [PrototypeConnectionType.NONE, '无'],
-    [PrototypeConnectionType.INTERNALNODE, '跳转页面', 'jump-page', PrototypeNavigationType.NAVIGATE],
-    [PrototypeConnectionType.BACK, '返回上一页面', 'retrun-page'],
-    [PrototypeConnectionType.INTERNALNODE, '容器内滚动', 'scroll-page', PrototypeNavigationType.SCROLLTO],
-    [PrototypeConnectionType.URL, '打开链接', 'open-link'],
-    [PrototypeConnectionType.INTERNALNODE, '组件状态切换', 'component-state', PrototypeNavigationType.SWAPSTATE],
-    [PrototypeConnectionType.INTERNALNODE, '打开浮层', 'open-float-layer', PrototypeNavigationType.OVERLAY],
-    [PrototypeConnectionType.CLOSE, '关闭浮层', 'close-float-layer'],
-    [PrototypeConnectionType.INTERNALNODE, '替换浮层', 'change-float-layer', PrototypeNavigationType.SWAP],
+    [PrototypeConnectionType.NONE, t('prototype.action_none')],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_nav'), 'jump-page', PrototypeNavigationType.NAVIGATE],
+    [PrototypeConnectionType.BACK, t('prototype.action_back'), 'retrun-page'],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_scroll'), 'scroll-page', PrototypeNavigationType.SCROLLTO],
+    [PrototypeConnectionType.URL, t('prototype.action_link'), 'open-link'],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_change'), 'component-state', PrototypeNavigationType.SWAPSTATE],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_open'), 'open-float-layer', PrototypeNavigationType.OVERLAY],
+    [PrototypeConnectionType.CLOSE, t('prototype.action_swap'), 'close-float-layer'],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_close'), 'change-float-layer', PrototypeNavigationType.SWAP],
 ])
 
 
@@ -301,24 +302,24 @@ const icon = new Map([
 ])
 
 const animation: SelectSource[] = genOptions([
-    [Animation.INSTANT, '即时'],
-    [Animation.DISSOLVE, '淡入淡出'],
-    [Animation.SLIDE, '滑入'],
-    [Animation.SLIDEOUT, '滑出'],
-    [Animation.MOVE, '移入'],
-    [Animation.MOVEOUT, '移出'],
-    [Animation.PUSH, '推入'],
-    [Animation.SCROLL, '位移']
+    [Animation.INSTANT, t('prototype.animation_instant')],
+    [Animation.DISSOLVE, t('prototype.animation_dissolve')],
+    [Animation.SLIDE, t('prototype.animation_slidein')],
+    [Animation.SLIDEOUT, t('prototype.animation_slideout')],
+    [Animation.MOVE, t('prototype.animation_movein')],
+    [Animation.MOVEOUT, t('prototype.animation_moveout')],
+    [Animation.PUSH, t('prototype.animation_push')],
+    [Animation.SCROLL, t('prototype.animation_animate')]
 ])
 
 const effect: SelectSource[] = genOptions([
-    [PrototypeEasingType.LINEAR, '线性渐变'],
-    [PrototypeEasingType.INCUBIC, '缓入'],
-    [PrototypeEasingType.OUTCUBIC, '缓出'],
-    [PrototypeEasingType.INOUTCUBIC, '缓入缓出'],
-    [PrototypeEasingType.INBACKCUBIC, '后撤缓入'],
-    [PrototypeEasingType.OUTBACKCUBIC, '停滞缓入'],
-    [PrototypeEasingType.INOUTBACKCUBIC, '弹性渐变']
+    [PrototypeEasingType.LINEAR, t('prototype.curve_linear')],
+    [PrototypeEasingType.INCUBIC, t('prototype.curve_easein')],
+    [PrototypeEasingType.OUTCUBIC, t('prototype.curve_easeout')],
+    [PrototypeEasingType.INOUTCUBIC, t('prototype.curve_easeinout')],
+    [PrototypeEasingType.INBACKCUBIC, t('prototype.curve_easeinback')],
+    [PrototypeEasingType.OUTBACKCUBIC, t('prototype.curve_easeoutback')],
+    [PrototypeEasingType.INOUTBACKCUBIC, t('prototype.curve_easeinoutback')]
 ])
 
 const easingFn = new Map([
@@ -333,29 +334,29 @@ const easingFn = new Map([
 
 
 const animations = new Map([
-    [PrototypeTransitionType.INSTANTTRANSITION, '即时'],
-    [PrototypeTransitionType.DISSOLVE, '淡入淡出'],
-    [PrototypeTransitionType.MOVEFROMLEFT, '移入'],
-    [PrototypeTransitionType.MOVEFROMRIGHT, '移入'],
-    [PrototypeTransitionType.MOVEFROMTOP, '移入'],
-    [PrototypeTransitionType.MOVEFROMBOTTOM, '移入'],
-    [PrototypeTransitionType.MOVEOUTTOLEFT, '移出'],
-    [PrototypeTransitionType.MOVEOUTTORIGHT, '移出'],
-    [PrototypeTransitionType.MOVEOUTTOTOP, '移出'],
-    [PrototypeTransitionType.MOVEOUTTOBOTTOM, '移出'],
-    [PrototypeTransitionType.SLIDEFROMLEFT, '滑入'],
-    [PrototypeTransitionType.SLIDEFROMRIGHT, '滑入'],
-    [PrototypeTransitionType.SLIDEFROMTOP, '滑入'],
-    [PrototypeTransitionType.SLIDEFROMBOTTOM, '滑入'],
-    [PrototypeTransitionType.SLIDEOUTTOLEFT, '滑出'],
-    [PrototypeTransitionType.SLIDEOUTTORIGHT, '滑出'],
-    [PrototypeTransitionType.SLIDEOUTTOTOP, '滑出'],
-    [PrototypeTransitionType.SLIDEOUTTOBOTTOM, '滑出'],
-    [PrototypeTransitionType.PUSHFROMLEFT, '推入'],
-    [PrototypeTransitionType.PUSHFROMRIGHT, '推入'],
-    [PrototypeTransitionType.PUSHFROMTOP, '推入'],
-    [PrototypeTransitionType.PUSHFROMBOTTOM, '推入'],
-    [PrototypeTransitionType.SCROLLANIMATE, '位移']
+    [PrototypeTransitionType.INSTANTTRANSITION, t('prototype.animation_instant')],
+    [PrototypeTransitionType.DISSOLVE, t('prototype.animation_dissolve')],
+    [PrototypeTransitionType.MOVEFROMLEFT, t('prototype.animation_movein')],
+    [PrototypeTransitionType.MOVEFROMRIGHT, t('prototype.animation_movein')],
+    [PrototypeTransitionType.MOVEFROMTOP, t('prototype.animation_movein')],
+    [PrototypeTransitionType.MOVEFROMBOTTOM, t('prototype.animation_movein')],
+    [PrototypeTransitionType.MOVEOUTTOLEFT, t('prototype.animation_moveout')],
+    [PrototypeTransitionType.MOVEOUTTORIGHT, t('prototype.animation_moveout')],
+    [PrototypeTransitionType.MOVEOUTTOTOP, t('prototype.animation_moveout')],
+    [PrototypeTransitionType.MOVEOUTTOBOTTOM, t('prototype.animation_moveout')],
+    [PrototypeTransitionType.SLIDEFROMLEFT, t('prototype.animation_slidein')],
+    [PrototypeTransitionType.SLIDEFROMRIGHT, t('prototype.animation_slidein')],
+    [PrototypeTransitionType.SLIDEFROMTOP, t('prototype.animation_slidein')],
+    [PrototypeTransitionType.SLIDEFROMBOTTOM, t('prototype.animation_slidein')],
+    [PrototypeTransitionType.SLIDEOUTTOLEFT, t('prototype.animation_slideout')],
+    [PrototypeTransitionType.SLIDEOUTTORIGHT, t('prototype.animation_slideout')],
+    [PrototypeTransitionType.SLIDEOUTTOTOP, t('prototype.animation_slideout')],
+    [PrototypeTransitionType.SLIDEOUTTOBOTTOM, t('prototype.animation_slideout')],
+    [PrototypeTransitionType.PUSHFROMLEFT, t('prototype.animation_push')],
+    [PrototypeTransitionType.PUSHFROMRIGHT, t('prototype.animation_push')],
+    [PrototypeTransitionType.PUSHFROMTOP, t('prototype.animation_push')],
+    [PrototypeTransitionType.PUSHFROMBOTTOM, t('prototype.animation_push')],
+    [PrototypeTransitionType.SCROLLANIMATE, t('prototype.animation_animate')]
 ])
 
 const qsa = ref<StyleValue | null>()
@@ -419,10 +420,10 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
     const Bezier = `all ${T}s cubic-bezier(${FN.join()}) 0s`
     const W = 54
     const H = 64
-    if (animations.get(type as PrototypeTransitionType) === '即时') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_instant')) {
         return
     }
-    if (animations.get(type as PrototypeTransitionType) === '淡入淡出') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_dissolve')) {
         qsb.value = {
             transition: '',
             zIndex: 2,
@@ -433,7 +434,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
             opacity: 1,
         }
     }
-    if (animations.get(type as PrototypeTransitionType) === '位移') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_animate')) {
         mbb.value = {
             transition: Bezier,
             opacity: 1,
@@ -447,7 +448,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
             left: W + 'px',
         }
     }
-    if (animations.get(type as PrototypeTransitionType) === '移入') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_movein')) {
         mbb.value = {
             transition: Bezier,
             opacity: 1,
@@ -487,7 +488,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
             }
         }
     }
-    if (animations.get(type as PrototypeTransitionType) === '移出') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_moveout')) {
         qsb.value = {
             transition: '',
             zIndex: 2,
@@ -521,7 +522,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
         }
 
     }
-    if (animations.get(type as PrototypeTransitionType) === '滑入') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_slidein')) {
         qsa.value = {
             transition: '',
             zIndex: 2,
@@ -587,7 +588,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
             }
         }
     }
-    if (animations.get(type as PrototypeTransitionType) === '滑出') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_slideout')) {
         qsa.value = {
             transition: '',
             zIndex: 2,
@@ -659,7 +660,7 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
             }
         }
     }
-    if (animations.get(type as PrototypeTransitionType) === '推入') {
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_push')) {
         qsa.value = {
             transition: '',
             zIndex: 2,
