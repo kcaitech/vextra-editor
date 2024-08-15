@@ -14,7 +14,6 @@ import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
 import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
-import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
 import { keyboard, selectedShape } from '@/utils/preview';
@@ -30,92 +29,13 @@ const loading = ref<boolean>(false);
 // const null_context = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
-const sub_loading = ref<boolean>(false);
+// const sub_loading = ref<boolean>(false);
 const leftTriggleVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 const showTop = ref<boolean>(true);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const inited = ref(false);
-// const docInfo: any = ref({});
-// type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
-// let documentLoader: UnwrappedPromise<ReturnType<typeof importRemote>>['loader'] | undefined = undefined;
-// const getDocumentInfo = async () => {
-//     try {
-//         loading.value = true;
-//         const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
-//         const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-//         const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
-//         if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
-//             if (docKeyRes.code === 403) {
-//                 if (docKeyRes.message === "审核不通过") {
-//                     router.push("/files");
-//                     ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
-//                     return;
-//                 }
-//                 router.push("/files");
-//                 ElMessage.error({ duration: 3000, message: docKeyRes.message })
-//                 return;
-//             } else {
-//                 router.push("/files");
-//                 ElMessage.error({ duration: 3000, message: docInfoRes.message })
-//                 return;
-//             }
-//         }
-//         const docInfoData = docInfoRes.data;
-//         const docKeyData = docKeyRes.data;
-//         docInfo.value = docInfoData;
-//         const repo = new Repository();
-//         const storageOptions: StorageOptions = {
-//             endPoint: docKeyData.endpoint,
-//             region: docKeyData.region,
-//             accessKey: docKeyData.access_key,
-//             secretKey: docKeyData.secret_access_key,
-//             sessionToken: docKeyData.session_token,
-//             bucketName: docKeyData.bucket_name,
-//         }
-//         let storage: IStorage;
-//         if (docKeyData.provider === "oss") {
-//             storage = new OssStorage(storageOptions);
-//         } else {
-//             storage = new S3Storage(storageOptions);
-//         }
-//         const path = docInfoData.document.path;
-//         const versionId = docInfoData.document.version_id ?? "";
-//         const d = await importRemote(storage, path, "", versionId, repo)
-//         const document = d.document;
-//         documentLoader = d.loader;
-//         if (document) {
-//             const coopRepo = new CoopRepository(document, repo);
-//             const file_name = docInfoData.document?.name || document.name;
-//             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ${t('product.name')}` : `${file_name} - ${t('product.name')}`;
-//             kcdesk?.fileSetName(file_name);
-//             context = new Context(document, coopRepo);
-//             context.comment.setDocumentInfo(docInfoData);
-//             null_context.value = false;
-//             init_watcher();
-//             init_keyboard_uints();
-//             const docId = route.query.id as string;
-//             const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
-//             if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId)) {
-//                 router.push("/files");
-//                 return;
-//             }
-//             await context.communication.docResourceUpload.start(getToken, docId);
-//             await context.communication.docSelectionOp.start(getToken, docId, context);
-//             const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
-//             const page: PageListItem | undefined = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
-//             const frameId = route.query.frame_id as string;
-//             context.preview.setDocInfoId(docInfoData.document.id);
-//             switchPage(page?.id || context!.data.pagesList[0]?.id, frameId);
-//             loading.value = false;
-//         }
-//     } catch (err) {
-//         loading.value = false;
-//         console.log(err);
-//         throw err;
-//     }
-// }
 
 function switchPage(id?: string) {
     if (!id) return
@@ -147,13 +67,13 @@ function previewWatcher(t: number | string) {
         showHiddenLeft();
     }
 }
-function workspaceWatcher(t: number, o?: any) {
-    if (t === WorkSpace.FREEZE) {
-        sub_loading.value = true;
-    } else if (t === WorkSpace.THAW) {
-        sub_loading.value = false;
-    }
-}
+// function workspaceWatcher(t: number, o?: any) {
+//     if (t === WorkSpace.FREEZE) {
+//         sub_loading.value = true;
+//     } else if (t === WorkSpace.THAW) {
+//         sub_loading.value = false;
+//     }
+// }
 
 const selectionWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE) {
@@ -212,7 +132,7 @@ function mouseleave() {
 function init_watcher() {
 
     context.preview.watch(previewWatcher);
-    context.workspace.watch(workspaceWatcher);
+    // context.workspace.watch(workspaceWatcher);
     context.selection.watch(selectionWatcher);
 }
 
@@ -244,7 +164,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     context.preview.unwatch(previewWatcher);
-    context.workspace.unwatch(workspaceWatcher);
+    // context.workspace.unwatch(workspaceWatcher);
     context.selection.unwatch(selectionWatcher);
     uninstall_keyboard_units();
 })
@@ -253,7 +173,6 @@ onUnmounted(() => {
 
 <template>
     <div class="main" style="height: 100vh;">
-        <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context" v-if="!loading"></Toolbar>
         </div>
@@ -272,7 +191,7 @@ onUnmounted(() => {
                     :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
             </template>
         </ColSplitView>
-        <SubLoading v-if="sub_loading"></SubLoading>
+        <Loading v-if="loading" :size="20"></Loading>
     </div>
 </template>
 

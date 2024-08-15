@@ -4,7 +4,7 @@ import { DomCtx } from "./domctx";
 import { ArtboradDom } from "./artboard";
 import { GroupShapeDom } from "./groupshape";
 
-const MAX_NODE_SUPPORT = 5000;
+const MAX_NODE_SUPPORT = 2000;
 function intersect_range(lx0: number, lx1: number, rx0: number, rx1: number): boolean {
     return lx0 < rx1 && lx1 > rx0;
 }
@@ -127,7 +127,10 @@ export class PageDom extends (PageView) {
     }
 
     onRenderIdle(): boolean {
-        if (this.nodeCount < MAX_NODE_SUPPORT) return false;
+        if (this.nodeCount < MAX_NODE_SUPPORT) {
+            this.emit('renderidle')
+            return false;
+        }
         this.m_has_image = true;
         // 将一些节点转换成image
         const ctx = this.m_ctx as DomCtx;
@@ -148,7 +151,8 @@ export class PageDom extends (PageView) {
                 }
             }
         }
-
+        // render finished
+        this.emit('renderidle')
         return false;
     }
 }
