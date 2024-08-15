@@ -278,8 +278,8 @@ onMounted(() => {
 
             // background-color: #F5F5F5;
             div {
-                width: 100%;
-                height: 100%;
+                width: 22px;
+                height: 22px;
                 border-radius: 3px;
                 background-color: var(--input-background);
             }
@@ -359,7 +359,6 @@ onMounted(() => {
         align-items: center;
         justify-content: space-between;
         padding: 10px 8px;
-        width: 172px;
         height: 32px;
         background-color: #f5f5f5;
         border-radius: 6px;

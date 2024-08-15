@@ -228,7 +228,9 @@ onMounted(() => {
             <div v-else-if="visibility">
                 <div v-for="(c, idx) in source" class="item-default" :style="c.data.type === PrototypeNavigationType.SWAPSTATE ? {
             pointerEvents: props.status ? 'auto' : 'none',
-            opacity: props.status ? 1 : 0.4
+            opacity: props.status ? 1 : 0.4,
+            borderTop:'1px solid #EBEBEB',
+            borderBottom:'1px solid #EBEBEB',
         } : c.data.content === '延迟' ? {
             pointerEvents: props.iscontainer ? 'auto' : 'none',
             opacity: props.iscontainer ? 1 : 0.4

@@ -93,6 +93,7 @@ const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
     if (nav === PrototypeNavigationType.SCROLLTO) {
         const shapes = props.context.selection.selectedShapes
         const s = art(shapes[0])
+        if (s.type === ShapeType.SymbolUnion) return
         for (let index = 0; index < s.childs.length; index++) {
             const shape = s.childs[index];
             if (shape.id === props.targetid) {
@@ -141,9 +142,15 @@ watch(showtargerlist, () => {
         getDomList(props.actionid, props.type)
         nextTick(() => {
             const muen = document.querySelector('.search-container');
+            const el = document.querySelector('.targetname');
+            (el as HTMLElement).classList.add('action');
+            (muen as HTMLElement).style.width = (el as HTMLElement).clientWidth + 'px';
             (muen as HTMLDivElement).addEventListener('blur', onblur);
             (muen as HTMLDivElement).focus()
         })
+    } else {
+        const el = document.querySelector('.targetname');
+        (el as HTMLElement).classList.remove('action')
     }
 })
 
@@ -164,6 +171,10 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.action {
+    background-color: #EBEBEB !important;
+}
+
 .target {
     position: relative;
     display: flex;
@@ -193,6 +204,7 @@ onMounted(() => {
         border-radius: 6px;
         font-size: 12px;
         box-sizing: border-box;
+        overflow: hidden;
 
         &:hover {
             background-color: #EBEBEB;

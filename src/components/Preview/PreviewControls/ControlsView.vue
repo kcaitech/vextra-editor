@@ -274,6 +274,8 @@ const selected_watcher = (t: number | string) => {
 const preview_watcher = (t: number) => {
     if (t === Preview.MATRIX_CHANGE) {
         createShapeTracing();
+    } else if (t === Preview.SWAP_REF_STAT) {
+        delayAction(props.context, props.matrix);
     }
 }
 

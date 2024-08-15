@@ -27,7 +27,6 @@
                 item.data.type === action.actions.navigationType)?.data.icon"></svg-icon>
                                     </div>
                                     <span class="name">{{ getText(action.actions) }}</span>
-
                                     <div v-if="checkConflict(action.event.interactionType, action.id)" class="conflict">
                                         <Tooltip :content="t('prototype.warning')">
                                             <svg-icon icon-class="warning"></svg-icon>
@@ -47,7 +46,7 @@
                                             :minwidth="100" :source="trigger"
                                             :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
                                             @select="setPrototypeActionEvent($event, action.id)"></Select>
-                                        <input v-select ref="aftertimeout"
+                                        <input class="time" v-select ref="aftertimeout"
                                             v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT"
                                             type="text"
                                             :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
@@ -71,31 +70,36 @@
                                     :context="props.context" :actionid="action.id" :type="action.actions.navigationType"
                                     :targetid="action.actions.targetNodeID"
                                     @settargetnode="selectTargetNode($event, action.id)"></Target>
-                                <div v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO"
-                                    class="retract">
+                                <div class="retract"
+                                    v-if="action.actions.navigationType === PrototypeNavigationType.SCROLLTO">
                                     <span>{{ t('prototype.interaction_offset') }}</span>
-                                    <div class="retract-x">
-                                        <Tooltip :content="t('prototype.offsetx')" :offset="15">
-                                            <svg-icon icon-class="indent-x" @click.stop></svg-icon>
-                                        </Tooltip>
-                                        <input v-select ref="indentx" class="indent" type="text"
-                                            :value="action.actions.extraScrollOffset?.x ?? 0"
-                                            @change="setExtraScrollOffsetX(action.id, action.actions.extraScrollOffset?.x ?? 0)">
-                                    </div>
-                                    <div class="retract-y">
-                                        <Tooltip :content="t('prototype.offsety')" :offset="15">
-                                            <svg-icon icon-class="indent-y" @click.stop></svg-icon>
-                                        </Tooltip>
-                                        <input v-select ref="indenty" class="indent" type="text"
-                                            :value="action.actions.extraScrollOffset?.y ?? 0"
-                                            @change="setExtraScrollOffsetY(action.id, action.actions.extraScrollOffset?.y ?? 0)">
+                                    <div class="container">
+                                        <div class="retract-x">
+                                            <Tooltip :content="t('prototype.offsetx')" :offset="15">
+                                                <svg-icon icon-class="indent-x" @click.stop></svg-icon>
+                                            </Tooltip>
+                                            <input v-select ref="indentx" class="indent" type="text"
+                                                :value="action.actions.extraScrollOffset?.x ?? 0"
+                                                @change="setExtraScrollOffsetX(action.id, action.actions.extraScrollOffset?.x ?? 0)">
+                                        </div>
+                                        <div class="retract-y">
+                                            <Tooltip :content="t('prototype.offsety')" :offset="15">
+                                                <svg-icon icon-class="indent-y" @click.stop></svg-icon>
+                                            </Tooltip>
+                                            <input v-select ref="indenty" class="indent" type="text"
+                                                :value="action.actions.extraScrollOffset?.y ?? 0"
+                                                @change="setExtraScrollOffsetY(action.id, action.actions.extraScrollOffset?.y ?? 0)">
+                                        </div>
                                     </div>
                                 </div>
-                                <div v-if="action.actions.connectionType === PrototypeConnectionType.URL" class="link">
+                                <div class="link" v-if="action.actions.connectionType === PrototypeConnectionType.URL">
                                     <span>{{ t('prototype.interaction_link') }}</span>
-                                    <input v-select ref="connectionURL" type="text"
-                                        :placeholder="t('prototype.link_tips')" :value="action.actions.connectionURL"
-                                        @change="setPrototypeActionURL(action.id)">
+                                    <div class="container">
+                                        <input class="url" v-select ref="connectionURL" type="text"
+                                            :placeholder="t('prototype.link_tips')"
+                                            :value="action.actions.connectionURL"
+                                            @change="setPrototypeActionURL(action.id)">
+                                    </div>
                                 </div>
                                 <Overlay
                                     v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
@@ -104,7 +108,7 @@
                                     @interaction="setOverlayBackgroundInteraction($event, action.actions.targetNodeID)"
                                     @position="setOverlayPositionType($event, action.actions.targetNodeID)"
                                     @margin="setOverlayPositionMargin($event, action.actions.targetNodeID)"></Overlay>
-                                <div v-if="action.actions.connectionType === 'INTERNAL_NODE'" class="set-animation">
+                                <div class="set-animation" v-if="action.actions.connectionType === 'INTERNAL_NODE'">
                                     <span>{{ t('prototype.animation_set') }}</span>
                                     <div class="wrapper">
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
@@ -120,33 +124,40 @@
                                     </div>
                                     <div class="animation">
                                         <span>{{ t('prototype.interaction_animation') }}</span>
-                                        <Select class="select" id="select" :source="animation" :animation="true"
-                                            :action=action.actions.navigationType
-                                            :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
-                                            @select="setPrototypeActionTransition($event, action.id)"></Select>
+                                        <div class="container">
+                                            <Select class="select" id="select" :source="animation" :animation="true"
+                                                :action=action.actions.navigationType
+                                                :selected="animation.find(item => animations.get(action.actions.transitionType!) === item.data.content)?.data"
+                                                @select="setPrototypeActionTransition($event, action.id)"></Select>
+                                        </div>
                                     </div>
-                                    <div v-if="action.actions.transitionType?.split('_').findLast(d => Array.from(Direction.keys()).includes(d))"
-                                        class="direction">
-                                        <div class="content">
-                                            <div class="icon"
-                                                :class="{ 'select-item': action.actions.transitionType?.split('_').findLast(i => i) === i[0] }"
-                                                v-for="  i  of  Direction " :key="i[0]"
-                                                @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
-                                                <svg-icon :style="{ rotate: (`${i[1]}` + 'deg') }"
-                                                    icon-class="right-arrows"></svg-icon>
+                                    <div class="direction"
+                                        v-if="action.actions.transitionType?.split('_').findLast(d => Array.from(Direction.keys()).includes(d))">
+                                        <span></span>
+                                        <div class="container">
+                                            <div class="content">
+                                                <div class="icon"
+                                                    :class="{ 'select-item': action.actions.transitionType?.split('_').findLast(i => i) === i[0] }"
+                                                    v-for="  i  of  Direction " :key="i[0]"
+                                                    @click.stop="setPrototypeActionTransitionDirection(action.actions.transitionType, action.id, i[0])">
+                                                    <svg-icon :style="{ rotate: (`${i[1]}` + 'deg') }"
+                                                        icon-class="right-arrows"></svg-icon>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
-                                        class="effect">
+                                    <div class="effect"
+                                        v-if="action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION">
                                         <span>{{ t('prototype.interaction_curve') }}</span>
-                                        <Select class="select" id="select" :minwidth="100" :visibility="true"
-                                            :source="effect"
-                                            :selected="effect.find(item => item.data.value === action.actions.easingType)?.data || effect.find(item => item.id === 0)?.data"
-                                            @select="setProtoTypeEasingType($event, action.id)"></Select>
-                                        <input v-select ref="animationtimevalue" type="text" placeholder="时间"
-                                            @change="setTransitionDuration(action.id)"
-                                            :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
+                                        <div class="container">
+                                            <Select class="select" id="select" :minwidth="100" :visibility="true"
+                                                :source="effect"
+                                                :selected="effect.find(item => item.data.value === action.actions.easingType)?.data || effect.find(item => item.id === 0)?.data"
+                                                @select="setProtoTypeEasingType($event, action.id)"></Select>
+                                            <input v-select ref="animationtimevalue" type="text" placeholder="时间"
+                                                @change="setTransitionDuration(action.id)"
+                                                :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -291,8 +302,8 @@ const actions: SelectSource[] = genOptions([
     [PrototypeConnectionType.URL, t('prototype.action_link'), 'open-link'],
     [PrototypeConnectionType.INTERNALNODE, t('prototype.action_change'), 'component-state', PrototypeNavigationType.SWAPSTATE],
     [PrototypeConnectionType.INTERNALNODE, t('prototype.action_open'), 'open-float-layer', PrototypeNavigationType.OVERLAY],
-    [PrototypeConnectionType.CLOSE, t('prototype.action_swap'), 'close-float-layer'],
-    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_close'), 'change-float-layer', PrototypeNavigationType.SWAP],
+    [PrototypeConnectionType.CLOSE, t('prototype.action_close'), 'close-float-layer'],
+    [PrototypeConnectionType.INTERNALNODE, t('prototype.action_swap'), 'change-float-layer', PrototypeNavigationType.SWAP],
 ])
 
 
@@ -785,9 +796,9 @@ const search = (shape: ShapeView, id: string | undefined) => {
 
 const getText = (actions: PrototypeActions) => {
     if (actions.connectionType === PrototypeConnectionType.BACK) {
-        return '返回上一页面'
+        return t('prototype.action_back')
     } else if (actions.connectionType === PrototypeConnectionType.CLOSE) {
-        return '关闭浮层'
+        return t('prototype.action_close')
     } else if (actions.connectionType === PrototypeConnectionType.URL) {
         return actions.connectionURL
     } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SCROLLTO) {
@@ -1013,7 +1024,7 @@ const setPrototypeActionURL = (id: string) => {
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    if (value) e.setPrototypeActionConnectionURL(shape as ShapeView, id, value)
+    e.setPrototypeActionConnectionURL(shape as ShapeView, id, value)
     connectionURL.value[0].blur()
     updateData()
 }
@@ -1637,7 +1648,9 @@ onUnmounted(() => {
 
 
             .trigger,
-            .action {
+            .action,
+            .link,
+            .retract {
                 position: relative;
                 display: flex;
                 gap: 8px;
@@ -1656,6 +1669,50 @@ onUnmounted(() => {
                     display: flex;
                     gap: 8px;
 
+                    .select {
+                        flex: 1;
+                    }
+
+                    .retract-y,
+                    .retract-x {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        padding: 9px 8px;
+                        flex: 1;
+                        height: 32px;
+                        background-color: #F5F5F5;
+                        border-radius: 6px;
+                        border: 1px solid transparent;
+                        box-sizing: border-box;
+                        overflow: hidden;
+
+
+                        svg {
+                            outline: none;
+                            max-width: 14px;
+                            height: 14px;
+                        }
+
+                        .indent {
+                            padding: 0;
+                            outline: none;
+                            border: none;
+                        }
+
+                        &:has(.indent:focus) {
+                            border: 1px solid #1878F5;
+                        }
+                    }
+
+                    .time {
+                        flex: 0.5;
+                    }
+
+                    .url {
+                        flex: 1;
+                    }
+
                     input {
                         outline: none;
                         border: none;
@@ -1667,193 +1724,11 @@ onUnmounted(() => {
                         border: 1px solid transparent;
                         background-color: #F5F5F5;
                         box-sizing: border-box;
+                        overflow: hidden;
 
                         &:focus {
                             border: 1px solid #1878F5;
                         }
-                    }
-                }
-            }
-
-
-            .target,
-            .retract,
-            .link {
-                position: relative;
-                display: flex;
-                gap: 8px;
-
-                span {
-                    font-size: 12px;
-                    line-height: 32px;
-                    white-space: nowrap;
-                }
-
-                .svg-wrap {
-                    display: flex;
-                    position: absolute;
-                    right: 9px;
-                    height: 32px;
-                    flex: 0 0 10px;
-
-                    svg {
-                        margin: auto 0;
-                        width: 10px;
-                        height: 12px;
-                        transition: 0.3s;
-                        color: #666666;
-                    }
-
-                    &:hover svg {
-                        transform: translateY(2px);
-                    }
-                }
-
-                .targetname {
-                    display: flex;
-                    align-items: center;
-                    cursor: default;
-                    outline: none;
-                    border: none;
-                    width: 100%;
-                    padding: 10px;
-                    height: 32px;
-                    background-color: #F5F5F5;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    box-sizing: border-box;
-
-                    &:hover {
-                        background-color: #EBEBEB;
-                    }
-                }
-
-                .search-container {
-                    position: absolute;
-                    top: 38px;
-                    left: 32px;
-                    width: 140px;
-                    padding: 6px 0;
-                    border-radius: 4px;
-                    background-color: white;
-                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    box-sizing: border-box;
-                    z-index: 999;
-
-                    .header-search {
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        margin: 0 6px;
-                        height: 32px;
-                        padding: 10px 8px;
-                        border-radius: 6px;
-                        margin-bottom: 6px;
-                        background-color: #F5F5F5;
-                        box-sizing: border-box;
-
-                        svg {
-                            width: 12px;
-                            height: 12px;
-                        }
-
-                        input {
-                            outline: none;
-                            border: none;
-                            padding: 0;
-                            width: 100%;
-                            font-size: 12px;
-                            background-color: transparent;
-
-                            &::placeholder {
-                                color: #BFBFBF;
-                            }
-                        }
-                    }
-
-                    .item-list {
-                        max-height: 200px;
-                        overflow-y: scroll;
-
-                        &::-webkit-scrollbar {
-                            width: 0;
-                            height: 0;
-                        }
-
-                        .no-data {
-                            height: var(--default-input-height);
-                            color: var(--theme-color);
-                            line-height: var(--default-input-height);
-                            padding-left: 8px;
-                        }
-
-                        .item {
-                            display: flex;
-                            justify-content: flex-start;
-                            align-items: center;
-                            gap: 8px;
-                            height: 32px;
-                            padding: 0 6px;
-
-                            svg {
-                                flex: 0 0 12px;
-                                height: 12px;
-                            }
-
-                            &:hover {
-                                background-color: var(--active-color);
-                                color: white;
-                            }
-                        }
-                    }
-                }
-
-                .retract-y,
-                .retract-x {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    padding: 9px 8px;
-                    flex: 1;
-                    height: 32px;
-                    background-color: #F5F5F5;
-                    border-radius: 6px;
-                    border: 1px solid transparent;
-                    box-sizing: border-box;
-                    overflow: hidden;
-
-
-                    svg {
-                        outline: none;
-                        max-width: 14px;
-                        height: 14px;
-                    }
-
-                    .indent {
-                        padding: 0;
-                        outline: none;
-                        border: none;
-                    }
-
-                    &:has(.indent:focus) {
-                        border: 1px solid #1878F5;
-                    }
-                }
-
-                input {
-                    outline: none;
-                    border: none;
-                    font-size: 12px;
-                    padding: 10px 8px;
-                    height: 32px;
-                    width: 100%;
-                    border-radius: 6px;
-                    border: 1px solid transparent;
-                    background-color: #F5F5F5;
-                    box-sizing: border-box;
-
-                    &:focus {
-                        border: 1px solid #1878F5;
                     }
                 }
             }
@@ -1942,176 +1817,60 @@ onUnmounted(() => {
                     margin-top: 8px;
 
                     span {
+                        flex: 0.2;
+                        font-size: 12px;
+                        line-height: 32px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                         white-space: nowrap;
                     }
 
-                    input {
-                        font-size: 12px;
-                        outline: none;
-                        border: none;
-                        padding: 10px 8px;
-                        width: 54px;
-                        height: 32px;
-                        border-radius: 6px;
-                        background-color: #F5F5F5;
-                        box-sizing: border-box;
+                    .container {
+                        flex: 0.8;
+                        display: flex;
+                        gap: 8px;
 
-                    }
-
-                    .content {
-                        display: grid;
-                        align-items: center;
-                        grid-template-columns: 1fr 1fr 1fr 1fr;
-                        grid-template-rows: 1fr;
-                        width: 148px;
-                        height: 32px;
-                        padding: 2px;
-                        border-radius: 6px;
-                        background-color: #F5F5F5;
-                        box-sizing: border-box;
-
-                        .icon {
-                            @include flex(center, center);
-                            width: 34px;
-                            height: 28px;
-                            border-radius: 4px;
-                            box-sizing: border-box;
-                            transition: all 0.3s;
-
-                            svg {
-                                width: 16px;
-                                height: 16px;
-                            }
-                        }
-                    }
-                }
-            }
-
-            .set-float {
-                display: flex;
-                flex-direction: column;
-
-                span {
-                    line-height: 32px;
-                }
-
-                .content {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 4px;
-                    width: 100%;
-                    height: 70px;
-
-                    .position {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr 1fr;
-                        grid-template-rows: 1fr 1fr 1fr;
-                        gap: 2px;
-                        padding: 2px;
-                        border-radius: 6px;
-                        border: 1px solid #F5F5F5;
-                        box-sizing: border-box;
-
-                        // background-color: #F5F5F5;
-                        div {
-                            width: 100%;
-                            height: 100%;
-                            border-radius: 3px;
-                            background-color: #F5F5F5;
-                        }
-                    }
-
-                    .margin {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        grid-template-rows: 1fr 1fr;
-                        gap: 4px;
-
-                        div {
-                            width: 47px;
-                            height: 100%;
+                        input {
+                            font-size: 12px;
+                            outline: none;
+                            border: none;
+                            padding: 10px 8px;
+                            width: 54px;
+                            height: 32px;
                             border-radius: 6px;
                             background-color: #F5F5F5;
+                            box-sizing: border-box;
+
                         }
-                    }
-                }
 
-                .checkbox {
-                    display: flex;
-                    align-items: center;
-                    line-height: 32px;
+                        .content {
+                            display: grid;
+                            align-items: center;
+                            grid-template-columns: 1fr 1fr 1fr 1fr;
+                            grid-template-rows: 1fr;
+                            width: 100%;
+                            height: 32px;
+                            padding: 2px;
+                            border-radius: 6px;
+                            background-color: #F5F5F5;
+                            box-sizing: border-box;
 
-                    input[type=checkbox] {
-                        position: relative;
-                        padding: 0;
-                        width: 14px;
-                        height: 14px;
-                    }
+                            .icon {
+                                @include flex(center, center);
+                                height: 28px;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                                transition: all 0.3s;
 
-                    input[type=checkbox]:checked::after {
-                        position: absolute;
-                        width: 100%;
-                        height: 100%;
-                        content: "";
-                        color: #FFFFFF;
-                        border-radius: 3px;
-                        border: 1px solid rgb(24, 120, 245);
-                        background-image: url('@/assets/select-icon.svg');
-                        background-repeat: no-repeat;
-                        background-position: center center;
-                        background-size: 60% 40%;
-                        background-color: rgb(24, 120, 245);
-                        box-sizing: border-box;
-                    }
-                }
+                                svg {
+                                    width: 16px;
+                                    height: 16px;
+                                }
+                            }
+                        }
 
-                .checkbox:has(input[type]:disabled) {
-                    opacity: 0.4;
-                }
-
-                .setting {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 10px 8px;
-                    height: 32px;
-                    background-color: #f5f5f5;
-                    border-radius: 6px;
-                    border: 1px solid transparent;
-                    box-sizing: border-box;
-
-                    input {
-                        outline: none;
-                        border: none;
-                        font-size: 12px;
-                        background-color: transparent;
                     }
 
-                    #clr {
-                        width: 70%;
-                        padding: 0 8px;
-                    }
-
-                    #alpha {
-                        width: 30%;
-                    }
-                }
-            }
-
-            .component-status {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 8px;
-
-                .state {
-                    display: flex;
-                    align-items: center;
-                    width: 140px;
-
-                    span {
-                        white-space: nowrap;
-                    }
                 }
             }
         }

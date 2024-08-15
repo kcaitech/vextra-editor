@@ -1,11 +1,14 @@
 <template>
     <div class="component-status">
         <div class="state" v-for="i in variables" :key="i.variable.id">
-            <span>{{ i.variable.name }}：</span>
-            <Select class="select" id="select" :visibility="true"
-                :source="genOptions(i.values.map((v, idx) => { return [idx, v]; }))"
-                :selected="genOptions(i.values.map((v, idx) => { return [idx, v]; })).find(t => t.data.content === i.current_state)?.data"
-                @select="changetarget($event, i.variable.id)"></Select>
+            <span></span>
+            <div class="container">
+                <span>{{ i.variable.name }}：</span>
+                <Select class="select" id="select" :visibility="true"
+                    :source="genOptions(i.values.map((v, idx) => { return [idx, v]; }))"
+                    :selected="genOptions(i.values.map((v, idx) => { return [idx, v]; })).find(t => t.data.content === i.current_state)?.data"
+                    @select="changetarget($event, i.variable.id)"></Select>
+            </div>
         </div>
     </div>
 
@@ -44,7 +47,7 @@ const variables = ref<RefAttriListItem[] | StatusValueItem[]>([])
 
 const changetarget = (data: SelectItem, id: string) => {
     console.log(id);
-    
+
     emits('changestatus', { data, id })
 }
 
@@ -99,11 +102,34 @@ onMounted(() => {
     .state {
         display: flex;
         align-items: center;
-        width: 140px;
+        justify-content: space-between;
+        width: 100%;
+        gap: 8px;
 
         span {
+            flex: 0.2;
+            font-size: 12px;
+            line-height: 32px;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        .container {
+            flex: 0.8;
+            display: flex;
+            gap: 8px;
+
+            span {
+                flex: 0.35;
+            }
+            .select{
+                flex: 0.65;
+            }
+
+        }
     }
+
+
 }
 </style>
