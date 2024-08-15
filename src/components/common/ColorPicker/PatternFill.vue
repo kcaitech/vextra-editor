@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import PatternToolBit from "@/components/common/ColorPicker/PatternToolBit.vue";
-import { insert_imgs, modify_imgs, SVGReader } from "@/utils/content";
-import { after_import } from "@/utils/clipboard";
+import { modify_imgs } from "@/utils/content";
 import { ref, watch } from "vue";
 import { Context } from "@/context";
 import PatternMode from "./PatternMode.vue"
-import { ColorPicker, ImageScaleMode, PaintFilter, PaintFilterType, ShapeType } from "@kcdesign/data";
+import { ColorPicker, ImagePack, ImageScaleMode, PaintFilter, PaintFilterType, ShapeType } from "@kcdesign/data";
 import { ImgFrame } from "@/context/atrribute";
 import { flattenShapes } from "@/utils/cutout";
+import { useI18n } from "vue-i18n";
+import { ImageLoader } from "@/utils/imageLoader";
 
-const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
+const accept = 'image/png, image/jpeg, image/gif, image/svg+xml';
 const picker = ref<HTMLInputElement>();
 
 const props = defineProps<{
@@ -27,60 +28,35 @@ const emits = defineEmits<{
 }>();
 let colorEditor: ColorPicker | undefined;
 const paint_filter = ref<PaintFilter>();
+const t = useI18n().t;
 
 function change(e: Event) {
-    if (e.target) {
-        const files = (e.target as HTMLInputElement).files;
-        if (!files?.length) {
-            return;
-        }
-        const file = files[0];
-        const frame: { width: number, height: number } = { width: 100, height: 100 };
-        const reader = new FileReader();
-        let buff: any, base64: any;
-        const img = new Image();
-        img.onload = function () {
-            frame.width = img.width;
-            frame.height = img.height;
-            const origin = { width: img.width, height: img.height }
-            reader.onload = function (evt) {
-                if (!evt.target?.result) {
-                    return;
-                }
-                buff = evt.target.result;
-                if (!buff) {
-                    return;
-                }
-                reader.onload = function (evt) {
-                    if (!evt.target?.result) {
-                        return;
-                    }
-                    base64 = evt.target.result;
-                    if (!(buff && base64)) {
-                        return;
-                    }
-                    const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
-                    const container: any = {};
-                    modify_imgs(props.context, [media], container);
-                    const keys = Array.from(Object.keys(container) || []) as string[];
-                    const imageMgr = { buff: new Uint8Array(buff), base64: base64 }
-                    changeImageRef(keys[0], origin, imageMgr);
-                    after_import(props.context, container);
-                    if (picker.value) (picker.value as HTMLInputElement).value = '';
-                }
-                reader.readAsDataURL(file);
-            }
-            reader.readAsArrayBuffer(file);
-        }
-        img.src = URL.createObjectURL(file);
-    }
+    if (!e.target) return;
+    const files = (e.target as HTMLInputElement).files;
+    if (!files?.length) return;
+    const file = files[0];
+    const imageLoader = new ImageLoader(props.context);
+    imageLoader
+        .packFile(file, false)
+        .then(res => {
+            if (!res) return;
+            const result = res as ImagePack;
+            const { size, buff, base64 } = result;
+            const media = { name: file.name || '', frame: result.size, buff, base64 };
+            const container: any = {};
+            modify_imgs(props.context, [media], container);
+            const keys = Array.from(Object.keys(container) || []) as string[];
+            changeImageRef(keys[0], size, { buff, base64 });
+            const selected = props.context.selection.selectedShapes;
+            const upload = selected.map(shape => ({ shape, upload: [{ buff, ref: keys[0] }] }));
+            imageLoader.upload(upload)
+        });
+    if (picker.value) (picker.value as HTMLInputElement).value = '';
 }
 
 function selectImage() {
-    const filepicker = document.getElementById('fillfilepicker');
-    if (filepicker) {
-        filepicker.click();
-    }
+    const filepicker = picker.value;
+    if (filepicker) filepicker.click();
 }
 
 const changeImageRef = (urlRef: string, origin: ImgFrame, imageMgr: any) => {
@@ -128,31 +104,31 @@ watch(() => props.paintFilter, (v) => {
         <div class="mask" @click="selectImage">
             <img :src="image" alt="">
             <div class="pic-picker">
-                <div> {{ '选择图片' }}</div>
+                <div> {{ t('attr.selected_picture') }}</div>
             </div>
             <input type="file" ref="picker" :accept="accept" :multiple="false" id="fillfilepicker"
                    @change.stop="(e: Event) => { change(e) }"/>
         </div>
     </div>
     <div class="tool">
-        <pattern-tool-bit type="亮度" :value="paint_filter?.exposure || 0"
+        <pattern-tool-bit :type="t('attr.brightness')" :value="paint_filter?.exposure || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Exposure)" @down="startChange"
                           @onUp="endChange"/>
-        <pattern-tool-bit type="对比度" :value="paint_filter?.contrast || 0"
+        <pattern-tool-bit :type="t('attr.contrast')" :value="paint_filter?.contrast || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Contrast)" @down="startChange"
                           @onUp="endChange"/>
-        <pattern-tool-bit type="饱和度" :value="paint_filter?.saturation || 0"
+        <pattern-tool-bit :type="t('attr.saturation')" :value="paint_filter?.saturation || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Saturation)" @down="startChange"
                           @onUp="endChange"/>
-        <pattern-tool-bit type="色温" :value="paint_filter?.temperature || 0"
+        <pattern-tool-bit :type="t('attr.temperature')" :value="paint_filter?.temperature || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Temperature)" @down="startChange"
                           @onUp="endChange"/>
-        <pattern-tool-bit type="色调" :value="paint_filter?.tint || 0"
+        <pattern-tool-bit :type="t('attr.tint')" :value="paint_filter?.tint || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Tint)" @down="startChange" @onUp="endChange"/>
-        <pattern-tool-bit type="阴影" :value="paint_filter?.shadow || 0"
+        <pattern-tool-bit :type="t('attr.shadow')" :value="paint_filter?.shadow || 0"
                           @change="(v) => changePaint(v, PaintFilterType.Shadow)" @down="startChange"
                           @onUp="endChange"/>
-        <pattern-tool-bit type="色相" :value="(paint_filter?.hue || 0) * (100 / 180)"
+        <pattern-tool-bit :type="t('attr.hue')" :value="(paint_filter?.hue || 0) * (100 / 180)"
                           @change="(v) => changePaint(v, PaintFilterType.Hue)" @down="startChange" @onUp="endChange"/>
     </div>
 </div>

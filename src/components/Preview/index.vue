@@ -9,7 +9,6 @@ import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
 import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
-import SubLoading from '@/components/common/SubLoading.vue';
 import { Preview } from '@/context/preview';
 import PreviewContent from './PreviewContent.vue';
 import { keyboard, selectedShape } from '@/utils/preview';
@@ -23,7 +22,7 @@ const { t } = useI18n();
 const loading = ref<boolean>(false);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
-const sub_loading = ref<boolean>(false);
+// const sub_loading = ref<boolean>(false);
 const leftTriggleVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
@@ -60,13 +59,13 @@ function previewWatcher(t: number | string) {
         showHiddenLeft();
     }
 }
-function workspaceWatcher(t: number, o?: any) {
-    if (t === WorkSpace.FREEZE) {
-        sub_loading.value = true;
-    } else if (t === WorkSpace.THAW) {
-        sub_loading.value = false;
-    }
-}
+// function workspaceWatcher(t: number, o?: any) {
+//     if (t === WorkSpace.FREEZE) {
+//         sub_loading.value = true;
+//     } else if (t === WorkSpace.THAW) {
+//         sub_loading.value = false;
+//     }
+// }
 
 const selectionWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE) {
@@ -117,7 +116,7 @@ function mouseleave() {
 function init_watcher() {
 
     context.preview.watch(previewWatcher);
-    context.workspace.watch(workspaceWatcher);
+    // context.workspace.watch(workspaceWatcher);
     context.selection.watch(selectionWatcher);
 }
 
@@ -142,7 +141,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     context.preview.unwatch(previewWatcher);
-    context.workspace.unwatch(workspaceWatcher);
+    // context.workspace.unwatch(workspaceWatcher);
     context.selection.unwatch(selectionWatcher);
     uninstall_keyboard_units();
 })
@@ -151,7 +150,6 @@ onUnmounted(() => {
 
 <template>
     <div class="main" style="height: 100vh;">
-        <Loading v-if="loading" :size="20"></Loading>
         <div id="top" @dblclick="switchFullScreen" v-if="showTop">
             <Toolbar :context="context" v-if="!loading"></Toolbar>
         </div>
@@ -170,7 +168,7 @@ onUnmounted(() => {
                     :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
             </template>
         </ColSplitView>
-        <SubLoading v-if="sub_loading"></SubLoading>
+        <Loading v-if="loading" :size="20"></Loading>
     </div>
 </template>
 

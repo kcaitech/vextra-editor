@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Matrix, PageView, adapt2Shape } from '@kcdesign/data';
+import { Matrix, Page, PageView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
-import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
 import { PageDom } from './vdom/page';
@@ -16,7 +15,8 @@ interface Props {
         data: PageView
         matrix: Matrix
         noCutout?: boolean,
-        closeLoading?: () => void,
+        onRenderDone?: () => void,
+        onContentVisible?: () => void,
         visibleRect?: { x: number, y: number, width: number, height: number }
     }
 }
@@ -32,10 +32,6 @@ const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
 const cutoutVisible = ref<boolean>(true);
-
-// const emit = defineEmits<{
-//     (e: 'closeLoading'): void;
-// }>();
 
 const show_c = computed<boolean>(() => {
     return !props.params.noCutout && cutoutVisible.value;
@@ -88,24 +84,39 @@ function updateVisibleRect() {
     page.optimizeClientVisibleNodes({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y })
 }
 
+const prepareDom = (page: Page | PageView) => {
+    const dom = props.context.getPageDom(page);
+    if (dom && pagesvg.value) {
+        dom.dom.bind(pagesvg.value);
+        dom.dom.render();
+        dom.ctx.loop(window.requestAnimationFrame);
+        removeRenderidle = dom.dom.once("renderidle", () => {
+            if (props.params.onRenderDone) props.params.onRenderDone();
+            removeRenderidle = undefined;
+        })
+        props.context.nextTick(props.params.data, () => {
+            if (props.params.onContentVisible) props.params.onContentVisible();
+        })
+    }
+}
+
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
     old.unwatch(page_watcher);
     value.watch(page_watcher);
     pageViewRegister(true);
     page_watcher();
 
+    if (removeRenderidle) {
+        removeRenderidle.remove();
+        removeRenderidle = undefined;
+    }
     if (old) {
         const dom = props.context.getPageDom(old.data);
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
-    const dom = props.context.getPageDom(value.data);
-    if (dom && pagesvg.value) {
-        dom.dom.bind(pagesvg.value);
-        dom.dom.render();
-        dom.ctx.loop(window.requestAnimationFrame);
-    }
+    prepareDom(value.data);
 
     updateVisibleRect();
 })
@@ -146,16 +157,11 @@ function selection_watcher(...args: any[]) {
     }
 }
 
+let removeRenderidle: {
+    remove: () => void;
+} | undefined;
 onMounted(() => {
-    const dom = props.context.getPageDom(props.params.data);
-    if (dom && pagesvg.value) {
-        dom.dom.bind(pagesvg.value);
-        dom.dom.render();
-        dom.ctx.loop(window.requestAnimationFrame);
-        props.context.nextTick(props.params.data, () => {
-            if (props.params.closeLoading) props.params.closeLoading();
-        })
-    }
+    prepareDom(props.params.data);
 })
 
 onUnmounted(() => {
@@ -164,6 +170,10 @@ onUnmounted(() => {
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
+    }
+    if (removeRenderidle) {
+        removeRenderidle.remove();
+        removeRenderidle = undefined;
     }
 })
 

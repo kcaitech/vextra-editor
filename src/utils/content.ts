@@ -28,7 +28,7 @@ import { Action, ResultByAction } from "@/context/tool";
 import { WorkSpace } from '@/context/workspace';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { adjust_content_xy, after_import, paster_image } from "./clipboard";
+import { adjust_content_xy } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
@@ -38,6 +38,8 @@ import * as parse_svg from "@/svg_parser";
 import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
+import { ImageLoader } from "@/utils/imageLoader";
+import { UploadAssets } from "../../../kcdesign-data/src";
 
 export interface Media {
     name: string
@@ -404,7 +406,7 @@ export function insert_imgs(context: Context, t: Function, media: Media[], origi
             context.selection.rangeSelectShape(selects);
         })
     }
-    context.workspace.setFreezeStatus(false);
+    // context.workspace.setFreezeStatus(false);
 }
 
 export function modify_imgs(context: Context, media: Media[], upload_container?: any) {
@@ -418,7 +420,7 @@ export function modify_imgs(context: Context, media: Media[], upload_container?:
             upload_container[ref] = media[i];
         }
     }
-    context.workspace.setFreezeStatus(false);
+    // context.workspace.setFreezeStatus(false);
 }
 
 export function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
@@ -428,56 +430,13 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
     return Boolean(diff > dragActiveDis);
 }
 
-export function drop(e: DragEvent, context: Context, t: Function) {
-    if (!permIsEdit(context) || context.tool.isLable) {
-        return;
-    }
-
+export function drop(e: DragEvent, context: Context) {
+    if (!permIsEdit(context) || context.tool.isLable) return;
     e.preventDefault();
     const data = e?.dataTransfer?.files;
-    if (!data?.length || data[0]?.type.indexOf('image') < 0) {
-        return;
-    }
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
-    const file = data[0];
-    if (file.type === "image/svg+xml") {
-        SVGReader(context, file, context.workspace.getRootXY(e as MouseEvent));
-        return;
-    }
-
-    item.contentType = file.type;
-    const frame = { width: 100, height: 100 };
-    const img = new Image();
-    img.onload = function () {
-        frame.width = img.width;
-        frame.height = img.height;
-        const origin = { width: img.width, height: img.height }
-
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const base64: any = event.target?.result;
-            if (!base64) {
-                return;
-            }
-
-            fr.onload = function (event) {
-                const buff = event.target?.result;
-                if (!(base64 && buff)) {
-                    return;
-                }
-
-                item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
-                const content = item!.content as Media;
-                const xy: PageXY = context.workspace.getRootXY(e as MouseEvent)
-                xy.x = xy.x - frame.width / 2;
-                xy.y = xy.y - frame.height / 2;
-                paster_image(context, xy, t, content, origin);
-            }
-            fr.readAsArrayBuffer(file);
-        }
-        fr.readAsDataURL(file);
-    }
-    img.src = URL.createObjectURL(file);
+    if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
+    const loader = new ImageLoader(context);
+    loader.insertImageByPackages(data);
 }
 
 export function SVGReader(context: Context, file: File, xy?: XY) {
@@ -486,10 +445,8 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
         const svg = event.target?.result;
         if (svg) {
             const parseResult = parse_svg.parse(svg as string);
-
             if (parseResult.shape) {
                 parseResult.shape.name = file.name.replace(".svg", "");
-
                 if (xy) {
                     parseResult.shape.x = xy.x - parseResult.shape.frame.width / 2;
                     parseResult.shape.y = xy.y - parseResult.shape.frame.height / 2;
@@ -500,14 +457,14 @@ export function SVGReader(context: Context, file: File, xy?: XY) {
                 }
                 const page = context.selection.selectedPage!;
                 const editor = context.editor4Page(page);
-                editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
-
-                if (parseResult.mediaResourceMgr) {
-                    const container: any = {};
-                    parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
-                        container[k] = v;
-                    });
-                    after_import(context, container);
+                const shape = editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
+                if (parseResult.mediaResourceMgr && shape) {
+                    const upload: UploadAssets[] = [];
+                    parseResult.mediaResourceMgr.forEach((v, k) => {
+                        upload.push({ ref: k, buff: v.buff });
+                    })
+                    const loader = new ImageLoader(context);
+                    loader.upload([{ shape, upload }]);
                 }
             }
         }
@@ -1009,20 +966,17 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
     const state = symbol;
     const selection = context.selection, workspace = context.workspace;
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
-    const page = selection.selectedPage;
+    const page = selection.selectedPage!;
     if (page) {
+        const m = new Matrix(page.matrix2Root().inverse);
+        position = m.computeCoord3(position);
         const editor = context.editor4Page(page);
-        // const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
-        frame.x = position.x - state.frame.width / 2 - page.frame.x;
-        frame.y = position.y - state.frame.height / 2 - page.frame.y;
-        const childs = (page).childs;
+        frame.x = position.x - state.frame.width / 2;
+        frame.y = position.y - state.frame.height / 2;
+        const childs = page.childs;
         let id = symbol.id;
         let name = symbol.name;
-        // if (is_state(symbol)) {
-        //     id = symbol.parent!.id;
-        //     name = symbol.parent!.name;
-        // }
         let count = 1;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
@@ -1199,14 +1153,11 @@ function select_all_for_path_edit(context: Context) {
  */
 export function set_visible_for_shapes(context: Context) {
     let shapes = context.selection.selectedShapes;
-    const page = context.selection.selectedPage;
+    const page = context.selection.selectedPage!;
     shapes = shapes.filter(s => !is_parent_unvisible(s));
-    if (!page) {
-        return;
-    }
     const editor = context.editor4Page(page);
     editor.toggleShapesVisible(shapes);
-    context.selection.resetSelectShapes();
+    if (shapes.every(s => !s.isVisible)) hidden_selection(context);
 }
 
 /**
@@ -1372,10 +1323,7 @@ export const is_editing = (table: TableSelection) => {
 }
 
 export function hidden_selection(context: Context) {
-    if (context.workspace.is_path_edit_mode) {
-        return;
-    }
-
+    if (context.workspace.is_path_edit_mode) return;
     context.selection.notify(Selection.SELECTION_HIDDEN);
 }
 

@@ -18,10 +18,12 @@ import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEd
 import { throttle } from 'lodash';
 import FontWeightSelected from '../Text/FontWeightSelected.vue';
 import { fontWeightConvert } from '../Text/FontNameList';
+import { is_mac } from "@/utils/common";
 interface Props {
     context: Context
     shape: TableView
 }
+const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -33,7 +35,7 @@ const isBold = ref<any>()
 const isTilt = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFang SC')
+const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -366,7 +368,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         textColor.value = format.color;
         highlight.value = format.highlight;
@@ -449,7 +451,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         isBold.value = format.weight;

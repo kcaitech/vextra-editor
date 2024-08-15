@@ -224,16 +224,16 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g
-        v-for="(b, i) in paths"
-        :key="i"
-        @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-        @mouseenter="() => bar_mouseenter(b.type)"
-        @mouseleave="bar_mouseleave"
-    >
-        <path :d="b.path" class="main-path" :stroke="theme"/>
-        <path :d="b.path" class="assist-path"/>
-    </g>
+<g
+    v-for="(b, i) in paths"
+    :key="i"
+    @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+    @mouseenter="() => bar_mouseenter(b.type)"
+    @mouseleave="bar_mouseleave"
+>
+    <path :d="b.path" class="main-path" :stroke="theme"/>
+    <path :d="b.path" class="assist-path"/>
+</g>
 </template>
 <style lang='scss' scoped>
 .main-path {

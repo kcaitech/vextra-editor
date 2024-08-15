@@ -10,7 +10,6 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import { PageView } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
-import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
@@ -36,8 +35,9 @@ const leftTriggerVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
-const loading = ref<boolean>(false);
-const sub_loading = ref<boolean>(false);
+const loading = ref<boolean>(true);
+const contentvisible = ref<boolean>(false);
+// const sub_loading = ref<boolean>(false);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
 const fileName = ref<string>(t('product.name'));
@@ -191,11 +191,12 @@ function init_keyboard_units() {
 }
 
 function workspaceWatcher(t: number, o?: any) {
-    if (t === WorkSpace.FREEZE) {
-        sub_loading.value = true;
-    } else if (t === WorkSpace.THAW) {
-        sub_loading.value = false;
-    } else if (t === WorkSpace.HIDDEN_UI) {
+    // if (t === WorkSpace.FREEZE) {
+    //     sub_loading.value = true;
+    // } else if (t === WorkSpace.THAW) {
+    //     sub_loading.value = false;
+    // } else 
+    if (t === WorkSpace.HIDDEN_UI) {
         o ? keyToggleLR() : keyToggleTB();
     }
 }
@@ -206,6 +207,10 @@ let netErr: any = null
 
 const closeLoading = () => {
     loading.value = false;
+    contentvisible.value = true;
+}
+const onContentVisible = () => {
+    contentvisible.value = true;
 }
 
 const changeLeftWidth = (width: number) => {
@@ -264,9 +269,8 @@ onUnmounted(() => {
 
 <template>
 <div class="editor" style="height: 100vh;">
-    <Loading v-if="loading" :size="20"/>
-    <div id="top" v-if="showTop">
-        <Toolbar :context="context as Context" v-if="!loading"/>
+    <div id="top" v-if="showTop && contentvisible">
+        <Toolbar :context="context as Context"/>
     </div>
     <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
                   v-if="inited" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }"
@@ -282,7 +286,7 @@ onUnmounted(() => {
         <template #slot2>
             <ContentView v-if="curPage !== undefined" id="content" :context="context as Context"
                          @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)"
-                         @closeLoading="closeLoading">
+                         @closeLoading="closeLoading" @contentVisible="onContentVisible">
             </ContentView>
         </template>
 
@@ -294,9 +298,9 @@ onUnmounted(() => {
             </Attribute>
         </template>
     </ColSplitView>
-    <SubLoading v-if="sub_loading"/>
 
     <Bridge v-if="bridge" :context="context as Context"/>
+    <Loading v-if="loading" :size="20"/>
 </div>
 </template>
 

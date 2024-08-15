@@ -2,9 +2,18 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { PathShapeView, RadiusType, ShapeType, ShapeView, SymbolView } from '@kcdesign/data';
+import {
+    CutoutShape,
+    CutoutShapeView,
+    PathShapeView,
+    RadiusType,
+    ShapeType,
+    ShapeView,
+    SymbolView,
+    TableView, TextShapeView
+} from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
-import { flattenShapes, hidden_selection } from "@/utils/content";
+import { hidden_selection } from "@/utils/content";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { LockMouse } from "@/transform/lockMouse";
 import Tooltip from "@/components/common/Tooltip.vue";
@@ -38,6 +47,7 @@ function get_value_from_input(val: any) {
 function noGroupShapesFrom(shapes: ShapeView[]) {
     const result: ShapeView[] = [];
     for (const shape of shapes) {
+        if (shape instanceof TableView || shape instanceof TextShapeView || shape instanceof CutoutShapeView) continue;
         if (shape.type === ShapeType.Group) {
             result.push(...noGroupShapesFrom(shape.childs));
             continue;
@@ -48,7 +58,7 @@ function noGroupShapesFrom(shapes: ShapeView[]) {
 }
 
 function change(val: any, type: string) {
-    const shapes = flattenShapes(props.context.selection.selectedShapes).filter(i => i.type !== ShapeType.Group);
+    const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     val = get_value_from_input(val);
 
     if (rect.value) {
@@ -307,7 +317,7 @@ async function dragstart(e: MouseEvent) {
         });
     }
 
-    lockMouseHandler = new LockMouse(props.context, e, flattenShapes(props.context.selection.selectedShapes).filter(i => i.type !== ShapeType.Group));
+    lockMouseHandler = new LockMouse(props.context, e, noGroupShapesFrom(props.context.selection.selectedShapes));
     document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 

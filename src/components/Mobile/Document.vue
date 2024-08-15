@@ -14,7 +14,7 @@ import PageViewVue from "@/components/Document/Content/PageView.vue";
 import { adapt_page2 } from "@/utils/content";
 import { SelectSource } from "@/components/common/Select.vue";
 import { IContext } from "@/openapi";
-
+import Loading from '@/components/common/Loading.vue';
 const props = defineProps<{ context: IContext }>()
 
 const initialized = ref<boolean>(false);
@@ -24,13 +24,13 @@ const curPage = shallowRef<PageView | undefined>(undefined);
 const showpagelist = ref<boolean>(false)
 const HEAD_HEIGHT = 0;
 const HEAD_HEIGHT_CSS = `${HEAD_HEIGHT}px`;
-
+const loading = ref<boolean>(true);
 const product_name = t('product.name');
 const fileName = ref<string>(product_name);
 
-const emit = defineEmits<{
-    (e: 'closeLoading'): void;
-}>();
+// const emit = defineEmits<{
+//     (e: 'closeLoading'): void;
+// }>();
 
 const autosave = t('message.autosave');
 const link_success = t('message.link_success');
@@ -76,8 +76,9 @@ function closeNetMsg() {
     insertNetworkInfo('networkSuccess', false, link_success);
 }
 
-const closeLoading = () => {
-    emit('closeLoading');
+const onRenderDone = () => {
+    // emit('closeLoading');
+    loading.value = false;
 }
 
 const matrix = ref<Matrix>(new Matrix() as any);
@@ -341,7 +342,7 @@ const showEl = () => {
 const pageParams = {
     get data() { return curPage.value! },
     get matrix() { return matrix.value as Matrix },
-    closeLoading,
+    onRenderDone,
     noCutout: true,
 }
 
@@ -368,6 +369,7 @@ const pageParams = {
         <div class="pageview" @touchstart="start" @touchmove="move" @touchend="end" @click="showpagelist = false">
             <PageViewVue v-if="initialized && curPage" :context="context as Context" :params="pageParams" />
         </div>
+        <Loading v-if="loading" :size="20"/>
     </div>
 </template>
 
