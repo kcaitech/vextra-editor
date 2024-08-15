@@ -367,6 +367,7 @@ function onMouseMove(e: MouseEvent) {
             preview.value.style.cursor = 'grabbing';
         }
     } else if (e.button === 0) {
+        if (!isDragging) return;
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
         if (!hover_shape) {
@@ -495,7 +496,7 @@ function onMouseUp(e: MouseEvent) {
             }
         }
     }
-
+    isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
