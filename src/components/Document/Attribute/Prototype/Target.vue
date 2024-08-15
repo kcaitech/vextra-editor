@@ -1,8 +1,9 @@
 <template>
     <div class="target">
-        <span>{{t('prototype.interaction_destination')}}</span>
+        <span>{{ t('prototype.interaction_destination') }}</span>
         <div class="targetname" @click.stop="showtargerlist = !showtargerlist">
-            <span :style="{ color: targetname ? '#000' : '#c8c8c8' }">{{ targetname || t('prototype.destination_select') }}</span>
+            <span :style="{ color: targetname ? '#000' : '#c8c8c8' }">{{ targetname || t('prototype.destination_select')
+                }}</span>
             <div class="svg-wrap"><svg-icon icon-class="down"></svg-icon></div>
         </div>
         <div class="search-container" v-if="showtargerlist">
@@ -64,10 +65,15 @@ const search = computed(() => {
 })
 
 const highlightedName = (name: string) => {
-    return name.replace(
-        new RegExp(searchvlue.value, 'gi'), // 使用正则表达式进行全局和不区分大小写的搜索
-        `<span style="font-weight:600">${searchvlue.value}</span>`
-    );
+    if (searchvlue.value && name.includes(searchvlue.value)) {
+        return name.replace(
+            new RegExp(searchvlue.value, 'g'), // 使用正则表达式进行全局和不区分大小写的搜索
+            `<span style="font-weight:600">${searchvlue.value}</span>`
+        );
+    } else {
+        return `<span>${name}</span>`
+    }
+
 }
 
 
@@ -76,7 +82,7 @@ const getDomList = (id: string, nav: PrototypeNavigationType | undefined) => {
     targetname.value = ''
     curHoverValueIndex.value = '';
     const shapemap = new Map()
-    const art = (shape: ShapeView):ShapeView => {
+    const art = (shape: ShapeView): ShapeView => {
         shapemap.set(shape.parent?.id, shape.id)
         if (shape.parent?.type !== ShapeType.Page) {
             return art(shape.parent!)
@@ -164,38 +170,24 @@ onMounted(() => {
     gap: 8px;
 
     span {
+        flex: 0.2;
+        font-size: 12px;
         line-height: 32px;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .svg-wrap {
-        display: flex;
-        position: absolute;
-        right: 9px;
-        height: 32px;
-        flex: 0 0 10px;
 
-        svg {
-            margin: auto 0;
-            width: 10px;
-            height: 12px;
-            transition: 0.3s;
-            color: #666666;
-        }
-
-        &:hover svg {
-            transform: translateY(2px);
-        }
-    }
 
     .targetname {
+        flex: 0.8;
         display: flex;
         align-items: center;
         cursor: default;
         outline: none;
         border: none;
         width: 100%;
-        padding: 10px;
         height: 32px;
         background-color: #F5F5F5;
         border-radius: 6px;
@@ -205,12 +197,41 @@ onMounted(() => {
         &:hover {
             background-color: #EBEBEB;
         }
+
+        span {
+            flex: 0.8;
+            padding: 0 9px;
+            color: rgb(0, 0, 0);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .svg-wrap {
+            display: flex;
+            position: absolute;
+            right: 9px;
+            height: 32px;
+            flex: 0 0 10px;
+
+            svg {
+                margin: auto 0;
+                width: 10px;
+                height: 12px;
+                transition: 0.3s;
+                color: #666666;
+            }
+
+            &:hover svg {
+                transform: translateY(2px);
+            }
+        }
     }
 
     .search-container {
         position: absolute;
         top: 38px;
-        left: 32px;
+        right: 0;
         width: 140px;
         padding: 6px 0;
         border-radius: 4px;
@@ -282,6 +303,15 @@ onMounted(() => {
                 &:hover {
                     background-color: var(--active-color);
                     color: white;
+                }
+
+                span {
+                    flex: 1;
+                    font-size: 12px;
+                    line-height: 32px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
             }
         }

@@ -42,21 +42,26 @@
                             <div class="item-setting" v-if="showaction && acitonindex === action.id">
                                 <div class="trigger">
                                     <span>{{ t('prototype.interaction_trigger') }}</span>
-                                    <Select class="select" id="select" :visibility="true" :iscontainer="isContainer"
-                                        :minwidth="100" :source="trigger"
-                                        :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
-                                        @select="setPrototypeActionEvent($event, action.id)"></Select>
-                                    <input v-select ref="aftertimeout"
-                                        v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT" type="text"
-                                        :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
-                                        @change="setPrototypeActionEventTime(action.id)">
+                                    <div class="container">
+                                        <Select class="select" id="select" :visibility="true" :iscontainer="isContainer"
+                                            :minwidth="100" :source="trigger"
+                                            :selected="trigger.find(item => item.data.value === action.event.interactionType)?.data"
+                                            @select="setPrototypeActionEvent($event, action.id)"></Select>
+                                        <input v-select ref="aftertimeout"
+                                            v-if="action.event.interactionType === PrototypeEvents.AFTERTIMEOUT"
+                                            type="text"
+                                            :value="(action.event.transitionTimeout ? action.event.transitionTimeout : 0.8) * 1000 + 'ms'"
+                                            @change="setPrototypeActionEventTime(action.id)">
+                                    </div>
                                 </div>
                                 <div class="action">
                                     <span>{{ t('prototype.interaction_action') }}</span>
-                                    <Select class="select" id="select" :visibility="true" :status="hasStatus"
-                                        :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
+                                    <div class="container">
+                                        <Select class="select" id="select" :visibility="true" :status="hasStatus"
+                                            :source="actions" :selected="actions.find(item => item.data.value === action.actions.connectionType &&
                 item.data.type === action.actions.navigationType)?.data"
-                                        @select="setPrototypeActionConnNav($event, action.id)"></Select>
+                                            @select="setPrototypeActionConnNav($event, action.id)"></Select>
+                                    </div>
                                 </div>
                                 <Status v-if="action.actions.navigationType === PrototypeNavigationType.SWAPSTATE"
                                     :context="props.context" :targetNodeId="action.actions.targetNodeID"
@@ -1167,7 +1172,7 @@ const createAction = () => {
 
     if (!event.value) return
     const Event = new PrototypeEvent(event.value)
-    const Action = new PrototypeActions(v4(), PrototypeConnectionType.NONE)
+    const Action = new PrototypeActions(PrototypeConnectionType.NONE)
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
@@ -1630,8 +1635,47 @@ onUnmounted(() => {
             font-weight: 400;
             gap: 8px;
 
+
             .trigger,
-            .action,
+            .action {
+                position: relative;
+                display: flex;
+                gap: 8px;
+
+                span {
+                    flex: 0.2;
+                    font-size: 12px;
+                    line-height: 32px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .container {
+                    flex: 0.8;
+                    display: flex;
+                    gap: 8px;
+
+                    input {
+                        outline: none;
+                        border: none;
+                        font-size: 12px;
+                        padding: 10px 8px;
+                        height: 32px;
+                        width: 100%;
+                        border-radius: 6px;
+                        border: 1px solid transparent;
+                        background-color: #F5F5F5;
+                        box-sizing: border-box;
+
+                        &:focus {
+                            border: 1px solid #1878F5;
+                        }
+                    }
+                }
+            }
+
+
             .target,
             .retract,
             .link {
