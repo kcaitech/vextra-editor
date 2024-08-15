@@ -125,20 +125,6 @@ export function gen_offset_map(shape: ShapeView, down: PageXY) {
     }
 }
 
-export function pre_translate(context: Context, shapes: ShapeView[]) {
-    context.selection.unHoverShape();
-    context.workspace.setSelectionViewUpdater(false);
-    context.workspace.translating(true);
-    context.assist.set_trans_target(shapes);
-    context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
-}
-
-export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
-    if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
-    else if (update_type === 2) startPosition.y = mousePosition.y;
-    else if (update_type === 1) startPosition.x = mousePosition.x;
-}
-
 export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: ShapeView[], shape: ShapeView) {
     if (!shapes.length) return;
     const p = shape.matrix2Root().computeCoord2(4, 4);

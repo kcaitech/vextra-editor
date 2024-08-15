@@ -25,7 +25,6 @@ import {
     remove_blur_from_window,
     remove_move_and_up_from_document,
     shapes_picker,
-    shutdown_menu,
     update_comment
 } from "@/utils/mouse";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
@@ -292,18 +291,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function pre_to_translate(e: MouseEvent) {
-        shutdown_menu(e, context);
-
         document.addEventListener('mouseup', mouseup);
-
-        if (!context.workspace.can_translate(e)) {
-            return;
-        }
-
+        if (!context.workspace.can_translate(e)) return;
         transporter = new TranslateHandler(context, e, selection.selectedShapes);
-
         document.addEventListener('mousemove', mousemove);
-
         shapes = selection.selectedShapes;
     }
 
