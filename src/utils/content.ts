@@ -966,20 +966,17 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
     const state = symbol;
     const selection = context.selection, workspace = context.workspace;
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
-    const page = selection.selectedPage;
+    const page = selection.selectedPage!;
     if (page) {
+        const m = new Matrix(page.matrix2Root().inverse);
+        position = m.computeCoord3(position);
         const editor = context.editor4Page(page);
-        // const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
-        frame.x = position.x - state.frame.width / 2 - page.frame.x;
-        frame.y = position.y - state.frame.height / 2 - page.frame.y;
-        const childs = (page).childs;
+        frame.x = position.x - state.frame.width / 2;
+        frame.y = position.y - state.frame.height / 2;
+        const childs = page.childs;
         let id = symbol.id;
         let name = symbol.name;
-        // if (is_state(symbol)) {
-        //     id = symbol.parent!.id;
-        //     name = symbol.parent!.name;
-        // }
         let count = 1;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
