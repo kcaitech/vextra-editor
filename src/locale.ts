@@ -7,5 +7,5 @@ function fixLocale(locale: string) {
 在css中使用
 https://www.w3.org/International/questions/qa-css-lang.zh-hans.html
 **/
-// export const locale = fixLocale(localStorage.getItem('locale') || navigator.language || 'en');
-export const locale = fixLocale('en');
+export const locale = fixLocale(localStorage.getItem('locale') || navigator.language || 'en');
+// export const locale = fixLocale('en');
