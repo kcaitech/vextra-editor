@@ -8,6 +8,11 @@ export class GroupShapeDom extends (GroupShapeView) {
 
     canOptiNode = true;
     optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
+    optiel_dirty?: boolean;
+    protected onChildChange(...args: any[]) {
+        super.onChildChange(...args);
+        this.optiel_dirty = true;
+    }
 
     render(): number {
         const version: number = super.render();

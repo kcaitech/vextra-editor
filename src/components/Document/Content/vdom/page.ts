@@ -1,8 +1,13 @@
 import { EL, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
-import { NodeType, opti2none, OPTI_NODE_COUNT, optiNode, unOptiNode } from "./optinode";
+import { NodeType, opti2none, optiNode, unOptiNode } from "./optinode";
 
+const OPTI_NODE_COUNT = 3000;
+
+const OPTI_AS_CANVAS_COUNT = 5000;
+
+const OPTI_INSIDE_COUNT = 1000;
 
 function intersect_range(lx0: number, lx1: number, rx0: number, rx1: number): boolean {
     return lx0 < rx1 && lx1 > rx0;
@@ -110,8 +115,8 @@ export class PageDom extends (PageView) {
         const optiNodes: (ShapeView & NodeType)[] = [];
         let optiNodesCount = 0;
 
-        for (let i = 0, len = this.m_children.length; i < len; i++) {
-            const c = this.m_children[i] as (ShapeView & NodeType);
+        for (let i = 0, len = node.m_children.length; i < len; i++) {
+            const c = node.m_children[i] as (ShapeView & NodeType);
             if (!c.isVisible) {
                 unOptiNode(c);
             } else if (c.canOptiNode) {
@@ -132,19 +137,16 @@ export class PageDom extends (PageView) {
             }
         }
 
-        if (level > 0 || optiNodesCount > OPTI_NODE_COUNT) { // 当前节点大量不可见时，直接用svg
-
-
+        if (level > 0 || optiNodesCount > OPTI_INSIDE_COUNT) { // 当前节点大量不可见时，直接用svg
             for (let i = 0, len = optiNodes.length; i < len; ++i) {
-
-                // todo 深入子节点
+                // todo 深入子节点 1
                 // todo 当前节点大量不可见时，不用canvas 1
                 // 当前缩放，用于计算canvas大小
                 // 
                 // todo 异步canvas 1
                 const c = optiNodes[i];
 
-                if (c.nodeCount > OPTI_NODE_COUNT) {
+                if (c.nodeCount > OPTI_INSIDE_COUNT) {
                     // 
                     const transform = c.transform.inverse;
                     const vlt = transform.computeCoord(client_visible_rect);
@@ -160,7 +162,10 @@ export class PageDom extends (PageView) {
                     const dw = Math.max(dlt.x, drb.x) - dx;
                     const dh = Math.max(dlt.y, drb.y) - dy;
 
-                    const ret = this._optimizeClientVisibleNodes(c, startTime, { x: vx, y: vy, width: vw, height: vh }, { x: dx, y: dy, width: dw, height: dh }, optimize, level + 1, focusid);
+                    const _client_visible_rect = { x: vx, y: vy, width: vw, height: vh };
+                    const _client_drop_rect = { x: dx, y: dy, width: dw, height: dh };
+
+                    const ret = this._optimizeClientVisibleNodes(c, startTime, _client_visible_rect, _client_drop_rect, optimize, level + 1, focusid);
 
                     hasOptimizing = hasOptimizing || ret.hasOptimizing;
                     if (ret.expired) {
@@ -171,7 +176,7 @@ export class PageDom extends (PageView) {
 
                 const id = objectId(c);
                 const pre = this.m_optimize.get(id);
-                const ret = optiNode(c, true, focusid[id], pre?.image);
+                const ret = optiNode(c, this.m_optimize_type, true, focusid[id], pre?.image);
 
                 if (ret !== false) {
                     optimize.push(id);
@@ -193,7 +198,7 @@ export class PageDom extends (PageView) {
     }
 
     canOptiNode: boolean = true;
-// todo 图片更新还有问题
+    // todo 图片更新还有问题
     private optimizeClientVisibleNodes() {
         if (!this.m_visible_rect || !this.m_optimize) return false;
 
@@ -217,6 +222,7 @@ export class PageDom extends (PageView) {
 
         const ret = this._optimizeClientVisibleNodes(this as (ShapeView & NodeType), Date.now(), client_visible_rect, client_drop_rect, optimize, 0, focusid)
         if (ret.expired) return true;
+        let hasOptimizing = ret.hasOptimizing;
 
         // todo找差值，进行unopti
         if (optimize.length !== this.m_optimize.size) {
@@ -233,11 +239,20 @@ export class PageDom extends (PageView) {
             for (let i = 0, len = unopti.length; i < len; ++i) {
                 const n = unopti[i];
                 unOptiNode(n);
+                // 如果n的上一级现在有优化，需要重新更新
+                let p = n.parent as (ShapeView & NodeType);
+                while (p) {
+                    if (p.canOptiNode && p.optiel) {
+                        p.optiel_dirty = true;
+                        hasOptimizing = true;
+                    }
+                    p = p.parent as (ShapeView & NodeType);
+                }
                 this.m_optimize.delete(objectId(n));
             }
         }
 
-        return ret.hasOptimizing;
+        return hasOptimizing;
     }
 
     m_optimize?: Map<number, {
@@ -246,6 +261,7 @@ export class PageDom extends (PageView) {
             imageel: SVGImageElement
         }
     }>;
+    m_optimize_type: 'image' | 'canvas' = 'image'
 
     onBeforeRender() {
 
@@ -272,6 +288,7 @@ export class PageDom extends (PageView) {
 
         if (!this.m_optimize && this.nodeCount > OPTI_NODE_COUNT) {
             this.m_optimize = new Map();
+            if (this.nodeCount > OPTI_AS_CANVAS_COUNT) this.m_optimize_type = 'canvas'
         }
 
         if (this.m_optimize && this.optimizeClientVisibleNodes()) {

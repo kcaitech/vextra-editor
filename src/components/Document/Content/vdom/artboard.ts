@@ -8,10 +8,11 @@ export class ArtboradDom extends (ArtboradView) {
     // 1. 太小时显示成image
     // 2. 
 
-    // protected onChildChange(...args: any[]) {
-    //     super.onChildChange(...args);
-    //     this.m_childs_changed = true;
-    // }
+    optiel_dirty?: boolean;
+    protected onChildChange(...args: any[]) {
+        super.onChildChange(...args);
+        this.optiel_dirty = true;
+    }
 
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
     m_save_version: number = -1;

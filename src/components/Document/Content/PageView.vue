@@ -159,7 +159,7 @@ function selection_watcher(...args: any[]) {
         const selectedShapes = props.context.selection.selectedShapes;
         const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
         const dom = props.context.getPageDom(props.params.data);
-        dom.ctx.updateFocusShape(focus ? adapt2Shape(focus) : undefined);
+        dom.ctx.updateFocusShape(focus);
     }
 }
 

@@ -8,6 +8,11 @@ export class SymbolRefDom extends (SymbolRefView) {
 
     canOptiNode = true;
     optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
+    optiel_dirty?: boolean;
+    onDataChange(...args: any[]) {
+        super.onDataChange(...args);
+        this.optiel_dirty = true;
+    }
 
     render(): number {
         const version: number = super.render();

@@ -11,12 +11,13 @@ export type NodeType = ShapeView & EL & {
     m_save_version: number,
     m_save_render: EL & { el?: HTMLElement | SVGElement },
 }
-export const OPTI_NODE_COUNT = 3000;
+// export const OPTI_NODE_COUNT = 3000;
 // export const MAX_OPTI_LEVEL = 3;
 const _2IMAGE_NODE_COUNT = 10; // 小于这个的不转成image了
-const _2CANVAS_NODE_COUNT = 500; // 太大了需要用canvas
+const _2CANVAS_NODE_COUNT = 300; // 太大了需要用canvas
 
-export function optiNode(_this: NodeType, visible: boolean, focused: boolean, _image?: {
+
+export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible: boolean, focused: boolean, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }): boolean | {
@@ -24,14 +25,16 @@ export function optiNode(_this: NodeType, visible: boolean, focused: boolean, _i
     imageel: SVGImageElement
 } {
     if (_this.optiel && (_this.optiel_type === 'none' || !_this.optiel_dirty)) return true;
-    if (!_this.eltag) return false;
+    if (!_this.eltag) {
+        return false;
+    }
 
     if (visible && focused) {
         unOptiNode(_this);
         return false;
     }
     if (visible) {
-        return opti2image(_this, _image);
+        return opti2image(_this, optiType, _image);
     } else {
         opti2none(_this);
     }
@@ -59,14 +62,15 @@ export function opti2none(_this: NodeType) {
     }
 }
 
-function opti2image(_this: NodeType, _image?: {
+function opti2image(_this: NodeType, optiType: 'image' | 'canvas', _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
     if (_this.nodeCount < _2IMAGE_NODE_COUNT) {
         unOptiNode(_this);
         return false;
-    } else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
+    }
+     else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
         _opti2image(_this);
         return true;
     } else {
@@ -76,10 +80,10 @@ function opti2image(_this: NodeType, _image?: {
 
 function _opti2image(_this: NodeType) {
 
+    let el = _this.el; // 当前在dom
     if (_this.optiel) {
         if (_this.optiel_type === 'image' && !_this.optiel_dirty) return true;
-        _this.el = _this.optiel;
-        _this.optiel = undefined;
+        el = _this.optiel;
     }
 
     // 打包成svg
@@ -95,7 +99,7 @@ function _opti2image(_this: NodeType) {
         width: frame.width,
         height: frame.height
     }
-    const svg = stringh('svg', svgprops, _this.el?.innerHTML.replaceAll("#", "%23"));
+    const svg = stringh('svg', svgprops, el?.innerHTML.replaceAll("#", "%23"));
     const href = "data:image/svg+xml," + svg;
     _this.optiel = createElement('image');
     const props: any = {};
@@ -109,7 +113,7 @@ function _opti2image(_this: NodeType) {
 
     const saveel = _this.el;
     _this.el = _this.optiel;
-    _this.optiel = saveel;
+    _this.optiel = el;
     _this.optiel_dirty = undefined;
     _this.optiel_type = 'image';
     if (saveel && saveel.parentNode) {
@@ -122,21 +126,21 @@ function _opti2canvas(_this: NodeType, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
+    let el = _this.el; // 当前在dom
     if (_this.optiel) {
         if (_this.optiel_type === 'canvas' && !_this.optiel_dirty) return true; // 优化完成
-        _this.el = _this.optiel;
-        _this.optiel = undefined;
+        el = _this.optiel;
     }
 
-    const image = _opti2canvasStep1(_this, _image);
+    const image = _opti2canvasStep1(_this, el, _image);
     if (image.loaded) {
-        _opti2canvasStep2(_this, image);
+        _opti2canvasStep2(_this, el, image);
         return true;
     }
     return image;
 }
 
-function _opti2canvasStep1(_this: NodeType, _image?: {
+function _opti2canvasStep1(_this: NodeType, el: SVGElement | HTMLElement | undefined, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }): {
@@ -157,7 +161,7 @@ function _opti2canvasStep1(_this: NodeType, _image?: {
         width: frame.width,
         height: frame.height
     }
-    const svg = stringh('svg', svgprops, _this.el?.innerHTML.replaceAll("#", "%23"));
+    const svg = stringh('svg', svgprops, el?.innerHTML.replaceAll("#", "%23"));
     const href = "data:image/svg+xml," + svg;
     const imageel = createElement('image') as SVGImageElement;
     const imageprops: any = {};
@@ -179,7 +183,7 @@ function _opti2canvasStep1(_this: NodeType, _image?: {
     return ret;
 }
 
-function _opti2canvasStep2(_this: NodeType, _image: {
+function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undefined, _image: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
@@ -197,22 +201,24 @@ function _opti2canvasStep2(_this: NodeType, _image: {
     // 判断是否cancel掉了
 
     canvasCtx.drawImage(_image.imageel, 0, 0); // foreignObject会丢失
-    _this.optiel = createElement('foreignObject');
-    _this.optiel_dirty = undefined;
-    _this.optiel_type = 'canvas';
+    const href = canvas.toDataURL();
     const props: any = {};
+    _this.optiel = createElement('image');
+    props.href = href;
+
+    // _this.optiel = createElement('foreignObject');
+    // _this.optiel.appendChild(canvas);
+
     props.x = frame.x;
     props.y = frame.y;
     props.width = frame.width;
     props.height = frame.height;
     Object.assign(props, _this.elattr);
-
     batchSetAttribute(_this.optiel, props);
-    _this.optiel.appendChild(canvas);
 
     const saveel = _this.el;
     _this.el = _this.optiel;
-    _this.optiel = saveel;
+    _this.optiel = el;
 
     _this.optiel_dirty = undefined;
     _this.optiel_type = 'canvas';
