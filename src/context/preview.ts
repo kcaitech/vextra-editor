@@ -45,6 +45,7 @@ export class Preview extends WatchableObject {
     private m_setTimeouts: Set<any> = new Set();
     private m_arboard_inner_transform: Map<string, TransformRaw> = new Map();
     private m_inner_scroll: ShapeView | undefined;
+    private m_save_last_shape: ShapeView | undefined;
 
     constructor(context: Context) {
         super();
@@ -233,5 +234,13 @@ export class Preview extends WatchableObject {
 
     clearInnerTransform() {
         this.m_arboard_inner_transform.clear();
+    }
+
+    saveLastHoverShape(shape: ShapeView | undefined) {
+        this.m_save_last_shape = shape;
+    }
+
+    get saveShape() {
+        return this.m_save_last_shape;
     }
 }

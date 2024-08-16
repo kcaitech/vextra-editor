@@ -230,6 +230,7 @@ export function selectShapes(context: Context, shapes: ShapeView | undefined) {
     const hoveredShape = shapes;
     const selection = context.selection;
     if (hoveredShape) {
+        context.preview.saveLastHoverShape(hoveredShape);
         selection.hoverShape(hoveredShape);
     } else {
         selection.unHoverShape();

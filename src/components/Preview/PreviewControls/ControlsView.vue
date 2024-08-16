@@ -4,7 +4,7 @@ import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
 import { eventPriority, getFrameList, getPreviewMatrix } from '@/utils/preview';
-import { Matrix, PathShapeView, PrototypeEvents, sessionRefIdKey, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, PrototypeEvents, PrototypeNavigationType, sessionRefIdKey, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { delayAction, ProtoAction } from './actions';
 
@@ -29,6 +29,10 @@ export interface EventIndex {
     mouseenter: number,
     hover: number
 }
+
+const emit = defineEmits<{
+    (e: "updateSearch", event: MouseEvent): void;
+}>();
 
 const props = defineProps<Props>();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
@@ -56,6 +60,7 @@ let eventTypeZIndex = {
 }
 
 function pathMousedown(e: MouseEvent) {
+    emit('updateSearch', e);
     const selection = props.context.selection;
     if (props.context.workspace.isPageDragging) {
         return;
@@ -65,6 +70,7 @@ function pathMousedown(e: MouseEvent) {
     }
 
     const hoveredShape = selection.hoveredShape;
+
     if (!hoveredShape) {
         return;
     }
@@ -76,8 +82,6 @@ function pathMousedown(e: MouseEvent) {
     eventTypeZIndex.dblclick = false
     eventTypeZIndex.mousedown = false
     if (e.button === 0) {
-        console.log('============1', e);
-
         const protoActions = hoveredShape.prototypeInterActions;
         if (!protoActions) return;
         if (dbl_action()) {
@@ -125,6 +129,7 @@ const onMouseMove = (e: MouseEvent) => {
 
 const onMouseUp = (e: MouseEvent) => {
     e.stopPropagation();
+    emit('updateSearch', e);
     const hoveredShape = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
     const protoActions = hoveredShape.prototypeInterActions;
@@ -204,17 +209,18 @@ const onMouseenter = () => {
             }
         }
         if (saveShape.value) {
-            moveOutAction(saveShape.value);
+            moveOutAction();
         }
         saveShape.value = hoveredShape;
     } else {
         if (!saveShape.value) return;
-        moveOutAction(saveShape.value);
+        moveOutAction();
         saveShape.value = undefined;
     }
 }
 
-const moveOutAction = (shape: ShapeView) => {
+const moveOutAction = () => {
+    const shape = props.context.preview.saveShape;
     const protoActions = shape!.prototypeInterActions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
@@ -222,7 +228,11 @@ const moveOutAction = (shape: ShapeView) => {
         const type = protoAction.event.interactionType;
         if (type === PrototypeEvents.MOUSELEAVE && protoActionFn) {
             console.log('saveShape.value: 移出');
-            protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            if (protoAction.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
+                protoActionFn.symbolStateSwitch(protoAction.actions, shape);
+            } else {
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            }
             break;
         }
     }

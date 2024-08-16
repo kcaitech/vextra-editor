@@ -628,6 +628,11 @@ function search2(e: MouseEvent) {
     return hover_shape;
 }
 
+const updateSearch = (e: MouseEvent) => {
+    selectShapes(props.context, undefined);
+    search(e);
+}
+
 const closeMenu = () => {
     isMenu.value = false;
 }
@@ -903,7 +908,8 @@ onUnmounted(() => {
             </div>
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix">
+        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
+            @updateSearch="updateSearch">
         </ControlsView>
         <div class="overlay" v-if="is_overlay"></div>
         <div v-if="cur_shape" class="preview_overlay"></div>

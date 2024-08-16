@@ -141,10 +141,13 @@ export class ProtoAction {
         if (!action.targetNodeID) return;
         const time = action.transitionDuration ?? 0.3;
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
+        console.log(down_shape.id, action.targetNodeID);
+        
         maprefIdArray.set(down_shape.id, action.targetNodeID);
         this.saveMapRefIdLS(maprefIdArray, sessionRefIdKey);
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
+            this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH);
         } else {
             // 执行动画
             this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action, shape);
