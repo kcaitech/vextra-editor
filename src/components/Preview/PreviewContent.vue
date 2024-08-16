@@ -122,7 +122,7 @@ const getEndElement = () => {
     }
     return el;
 }
-const previewWatcher = (t: number | string, s?: any) => {
+const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
@@ -202,7 +202,7 @@ const previewWatcher = (t: number | string, s?: any) => {
             return;
         }
         const action = s as PrototypeActions;
-        const hover_shape = props.context.selection.hoveredShape;
+        const hover_shape = action_s || props.context.selection.hoveredShape;
         if (!action.targetNodeID || !hover_shape || !symrefAnimate.value) return;
         const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
         const box = viewBox(matrix, hover_shape);
@@ -232,6 +232,24 @@ const previewWatcher = (t: number | string, s?: any) => {
         if (view.el) {
             symrefAnimate.value.appendChild(view.el);
             symrefAnimate.value.style.opacity = '1';
+            const timer = setTimeout(() => {
+                view.el && symrefAnimate.value?.removeChild(view.el);
+            }, time * 1000);
+            props.context.preview.addSetTimeout(timer);
+        }
+    }
+}
+
+const removeChildSymrefAnimate = () => {
+    if (!symrefAnimate.value) return;
+    const els = symrefAnimate.value.childNodes;
+    symrefAnimate.value.style['transition'] = '';
+    symrefAnimate.value.style['transform'] = '';
+    symrefAnimate.value.style.opacity = '0';
+    if (els.length > 0) {
+        for (let index = 0; index < els.length; index++) {
+            const el = els[index];
+            symrefAnimate.value.removeChild(el);
         }
     }
 }
@@ -241,6 +259,7 @@ const selectionWatcher = (v: number | string) => {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
+        removeChildSymrefAnimate();
         props.context.preview.clearInnerTransform();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {

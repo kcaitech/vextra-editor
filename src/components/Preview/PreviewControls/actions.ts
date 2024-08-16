@@ -147,7 +147,7 @@ export class ProtoAction {
             this.m_context.preview.notify(Preview.SWAP_REF_STAT);
         } else {
             // 执行动画
-            this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action);
+            this.m_context.preview.notify(Preview.SYMBOL_REF_SWITCH, action, shape);
             const timer = setTimeout(() => {
                 this.m_context.preview.notify(Preview.SWAP_REF_STAT);
                 // 清除操作
