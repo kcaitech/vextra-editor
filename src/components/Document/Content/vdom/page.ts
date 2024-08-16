@@ -1,7 +1,7 @@
 import { EL, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
-import { NodeType, opti2none, optiNode, unOptiNode } from "./optinode";
+import { NodeType, opti2none, optiNode, OptiType, unOptiNode } from "./optinode";
 
 const OPTI_NODE_COUNT = 3000;
 const OPTI_AS_CANVAS_COUNT = 5000;
@@ -75,11 +75,6 @@ export class PageDom extends (PageView) {
     }
 
     updateVisibleRect(visible_rect: { x: number, y: number, width: number, height: number }, matrix: Matrix) {
-        // if (!this.m_visible_rect) this.m_visible_rect = { x: 0, y: 0, width: 0, height: 0 }
-        // this.m_visible_rect.x = visibleRect.x;
-        // this.m_visible_rect.y = visibleRect.y;
-        // this.m_visible_rect.width = visibleRect.width;
-        // this.m_visible_rect.height = visibleRect.height;
         this.m_render_args = { visible_rect, matrix }
         this.m_ctx.continueLoop();
     }
@@ -243,9 +238,11 @@ export class PageDom extends (PageView) {
                 // 如果n的上一级现在有优化，需要重新更新
                 let p = n.parent as (ShapeView & NodeType);
                 while (p) {
-                    if (p.canOptiNode && p.optiel) {
-                        p.optiel_dirty = true;
-                        hasOptimizing = true;
+                    if (p.canOptiNode && p.optis && p.optis.records[OptiType.image]) {
+                        p.optis.records[OptiType.image].dirty = true;
+                        if (p.el === p.optis.records[OptiType.image].el) {
+                            hasOptimizing = true; // 需要更新
+                        }
                     }
                     p = p.parent as (ShapeView & NodeType);
                 }
@@ -272,11 +269,13 @@ export class PageDom extends (PageView) {
 
         const ctx = this.m_ctx as DomCtx;
         const shape = ctx.getFocusShape(); // todo
-
+        // const client_visible_rect = this.client_visible_rect;
+        // todo 仅有编辑时需要提前unopti
         let p = shape;
         while (p) {
             const n = p as (ShapeView & NodeType);
-            if (n.canOptiNode && n.optiel) {
+            if (n.canOptiNode && n.optis) {
+                
                 unOptiNode(n);
                 this.m_optimize.delete(objectId(p));
                 // break; // 正常只会有一个

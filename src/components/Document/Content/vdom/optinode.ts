@@ -2,11 +2,32 @@ import { EL, stringh, ShapeView, Matrix } from "@kcdesign/data";
 import { batchSetAttribute, createElement, elpatch } from "./patch";
 
 
+export enum OptiType {
+    'none', 'image'
+}
+
+const optiTypes = [OptiType.none, OptiType.image]
+
+interface OptiRecordItem {
+    el: HTMLElement | SVGElement,
+    dirty?: boolean, // image & canvas
+    canvas?: { // canvas
+        loaded: boolean,
+        imageel: SVGImageElement,
+        ready: boolean,
+    }
+}
+
+interface OptiRecords {
+    [key: string]: OptiRecordItem
+}
+
 export type NodeType = ShapeView & EL & {
     el?: HTMLElement | SVGElement,
-    optiel?: HTMLElement | SVGElement,
-    optiel_type?: 'none' | 'image' | 'canvas' | 'canvas_pre',
-    optiel_dirty?: boolean,
+    optis?: {
+        origin: HTMLElement | SVGElement,
+        records: OptiRecords
+    }
     canOptiNode: boolean,
     m_save_version: number,
     m_save_render: EL & { el?: HTMLElement | SVGElement },
@@ -16,7 +37,6 @@ export type NodeType = ShapeView & EL & {
 const _2IMAGE_NODE_COUNT = 10; // 小于这个的不转成image了
 const _2CANVAS_NODE_COUNT = 300; // 太大了需要用canvas
 
-
 export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible: boolean, focused: boolean, matrix: Matrix, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
@@ -24,12 +44,14 @@ export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible:
     loaded: boolean,
     imageel: SVGImageElement
 } {
-    if (_this.optiel && (_this.optiel_type === 'none' || !_this.optiel_dirty)) return true;
-    if (!_this.eltag) {
+    // if (_this.optiel && (_this.optiel_type === 'none' || !_this.optiel_dirty)) return true;
+    if (!_this.el || !_this.eltag) {
         return false;
     }
 
     if (visible && focused) {
+        // todo keep
+        // 
         unOptiNode(_this);
         return false;
     }
@@ -48,21 +70,32 @@ export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible:
 }
 
 export function opti2none(_this: NodeType) {
-    if (_this.optiel) {
-        if (_this.optiel_type === 'none') return;
-        _this.el = _this.optiel;
-        _this.optiel = undefined;
+    if (!_this.el) throw new Error();
+    if (!_this.optis) {
+        _this.optis = { origin: _this.el, records: {} }
+    }
+    else if (_this.optis.records[OptiType.none]) {
+        if (_this.el === _this.optis.records[OptiType.none].el) return;
+    }
+    else {
+        _this.optis.records[OptiType.none] = {
+            el: createElement(_this.eltag)
+        }
+    }
+    if (_this.optis && _this.optis.records[OptiType.none]) {
+        if (_this.el === _this.optis.records[OptiType.none].el) return;
     }
 
-    _this.optiel = createElement(_this.eltag);
-    _this.optiel_dirty = undefined;
-    _this.optiel_type = 'none';
     const saveel = _this.el;
-    _this.el = _this.optiel;
-    _this.optiel = saveel;
+    _this.el = _this.optis.records[OptiType.none].el;
 
     if (saveel && saveel.parentNode) {
         saveel.parentNode.replaceChild(_this.el!, saveel);
+    }
+
+    // image dirty时需要删除；省内存
+    if (_this.optis.records[OptiType.image] && _this.optis.records[OptiType.image].dirty) {
+        delete _this.optis.records[OptiType.image];
     }
 }
 
@@ -74,21 +107,25 @@ function opti2image(_this: NodeType, optiType: 'image' | 'canvas', matrix: Matri
         unOptiNode(_this);
         return false;
     }
-    // _opti2image(_this);
-    // return true;
-    else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
-        _opti2image(_this);
-        return true;
-    } else {
-        return _opti2canvas(_this, matrix, _image);
-    }
+    // canvas还有些问题
+    _opti2image(_this);
+    return true;
+    // else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
+    //     _opti2image(_this);
+    //     return true;
+    // } else {
+    //     return _opti2canvas(_this, matrix, _image);
+    // }
 }
 
 function _opti2image(_this: NodeType) {
 
     let el = _this.el; // 当前在dom
     if (_this.optiel) {
-        if (_this.optiel_type === 'image' && !_this.optiel_dirty) return true;
+        if (_this.optiel_type === 'image' && !_this.optiel_dirty) {
+            if (el) el.style.display = 'block';
+            return true;
+        }
         el = _this.optiel;
     }
 
@@ -134,7 +171,10 @@ function _opti2canvas(_this: NodeType, matrix: Matrix, _image?: {
 }) {
     let el = _this.el; // 当前在dom
     if (_this.optiel) {
-        if (_this.optiel_type === 'canvas' && !_this.optiel_dirty) return true; // 优化完成
+        if (_this.optiel_type === 'canvas' && !_this.optiel_dirty) {
+            if (el) el.style.display = 'block';
+            return true; // 优化完成
+        }
         el = _this.optiel;
     }
 
@@ -238,12 +278,18 @@ function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undef
 }
 
 export function unOptiNode(_this: NodeType) {
-    if (!_this.optiel) return;
+
+    // todo image dirty时需要删除
+
+    if (!_this.optiel) {
+        if (_this.el) _this.el.style.display = 'block'
+        return;
+    }
 
     const saveel = _this.el;
     _this.el = _this.optiel;
     _this.optiel = undefined;
-
+    _this.el.style.display = 'block'
     if (saveel && saveel.parentNode && _this.el) {
         saveel.parentNode.replaceChild(_this.el, saveel);
     }
