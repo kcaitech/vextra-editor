@@ -1,14 +1,12 @@
-import { EL, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
+import { EL, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
 import { NodeType, opti2none, optiNode, unOptiNode } from "./optinode";
 
 const OPTI_NODE_COUNT = 3000;
-
 const OPTI_AS_CANVAS_COUNT = 5000;
-
 const OPTI_INSIDE_COUNT = 1000;
-
+const OPTI_MIN_COUNT = 20;
 function intersect_range(lx0: number, lx1: number, rx0: number, rx1: number): boolean {
     return lx0 < rx1 && lx1 > rx0;
 }
@@ -71,20 +69,24 @@ export class PageDom extends (PageView) {
     }
 
     // 在缩放、移动内容、可见窗口大小改变时，增加删除节点
-    m_visible_rect?: Rect;
+    m_render_args?: {
+        visible_rect: Rect,
+        matrix: Matrix
+    }
 
-    updateVisibleRect(visibleRect: { x: number, y: number, width: number, height: number }) {
-        if (!this.m_visible_rect) this.m_visible_rect = { x: 0, y: 0, width: 0, height: 0 }
-        this.m_visible_rect.x = visibleRect.x;
-        this.m_visible_rect.y = visibleRect.y;
-        this.m_visible_rect.width = visibleRect.width;
-        this.m_visible_rect.height = visibleRect.height;
+    updateVisibleRect(visible_rect: { x: number, y: number, width: number, height: number }, matrix: Matrix) {
+        // if (!this.m_visible_rect) this.m_visible_rect = { x: 0, y: 0, width: 0, height: 0 }
+        // this.m_visible_rect.x = visibleRect.x;
+        // this.m_visible_rect.y = visibleRect.y;
+        // this.m_visible_rect.width = visibleRect.width;
+        // this.m_visible_rect.height = visibleRect.height;
+        this.m_render_args = { visible_rect, matrix }
         this.m_ctx.continueLoop();
     }
 
     private get client_visible_rect(): Rect {
-        if (!this.m_visible_rect) throw new Error();
-        const visible_rect = this.m_visible_rect;
+        if (!this.m_render_args) throw new Error();
+        const visible_rect = this.m_render_args.visible_rect;
         const extend = Math.round(Math.max(100, Math.max(visible_rect.width, visible_rect.height) * 0.4));
         const client_visible_rect = {} as Rect;
         client_visible_rect.x = visible_rect.x - extend;
@@ -95,8 +97,8 @@ export class PageDom extends (PageView) {
     }
 
     private get client_drop_rect(): Rect {
-        if (!this.m_visible_rect) throw new Error();
-        const visible_rect = this.m_visible_rect;
+        if (!this.m_render_args) throw new Error();
+        const visible_rect = this.m_render_args.visible_rect;
         const dropextend = Math.round(Math.max(500, Math.max(visible_rect.width, visible_rect.height) * 1.0));
         const client_drop_rect = {} as Rect;
         client_drop_rect.x = visible_rect.x - dropextend;
@@ -108,7 +110,7 @@ export class PageDom extends (PageView) {
 
     // 可见区域+20%绘制
     // 可见区域+50%以外drop
-    private _optimizeClientVisibleNodes(node: (ShapeView & NodeType), startTime: number, client_visible_rect: Rect, client_drop_rect: Rect, optimize: number[], level: number, focusid: { [key: number]: true }): { expired: boolean, hasOptimizing: boolean } {
+    private _optimizeClientVisibleNodes(node: (ShapeView & NodeType), startTime: number, client_visible_rect: Rect, client_drop_rect: Rect, optimize: number[], level: number, focusid: { [key: number]: true }, matrix: Matrix): { expired: boolean, hasOptimizing: boolean } {
         if (!this.m_optimize) throw new Error();
 
         let hasOptimizing = false;
@@ -139,15 +141,11 @@ export class PageDom extends (PageView) {
 
         if (level > 0 || optiNodesCount > OPTI_INSIDE_COUNT) { // 当前节点大量不可见时，直接用svg
             for (let i = 0, len = optiNodes.length; i < len; ++i) {
-                // todo 深入子节点 1
-                // todo 当前节点大量不可见时，不用canvas 1
-                // 当前缩放，用于计算canvas大小
-                // 
-                // todo 异步canvas 1
+
                 const c = optiNodes[i];
 
-                if (c.nodeCount > OPTI_INSIDE_COUNT) {
-                    // 
+                if (c.nodeCount > OPTI_INSIDE_COUNT && (c.nodeCount / c.m_children.length) > OPTI_MIN_COUNT) {
+
                     const transform = c.transform.inverse;
                     const vlt = transform.computeCoord(client_visible_rect);
                     const vrb = transform.computeCoord(client_visible_rect.x + client_visible_rect.width, client_visible_rect.y + client_visible_rect.height);
@@ -165,7 +163,10 @@ export class PageDom extends (PageView) {
                     const _client_visible_rect = { x: vx, y: vy, width: vw, height: vh };
                     const _client_drop_rect = { x: dx, y: dy, width: dw, height: dh };
 
-                    const ret = this._optimizeClientVisibleNodes(c, startTime, _client_visible_rect, _client_drop_rect, optimize, level + 1, focusid);
+                    const _matrix = matrix.clone();
+                    _matrix.multi(c.transform.toArray())
+
+                    const ret = this._optimizeClientVisibleNodes(c, startTime, _client_visible_rect, _client_drop_rect, optimize, level + 1, focusid, _matrix);
 
                     hasOptimizing = hasOptimizing || ret.hasOptimizing;
                     if (ret.expired) {
@@ -176,7 +177,7 @@ export class PageDom extends (PageView) {
 
                 const id = objectId(c);
                 const pre = this.m_optimize.get(id);
-                const ret = optiNode(c, this.m_optimize_type, true, focusid[id], pre?.image);
+                const ret = optiNode(c, this.m_optimize_type, true, focusid[id], matrix, pre?.image);
 
                 if (ret !== false) {
                     optimize.push(id);
@@ -200,7 +201,7 @@ export class PageDom extends (PageView) {
     canOptiNode: boolean = true;
     // todo 图片更新还有问题
     private optimizeClientVisibleNodes() {
-        if (!this.m_visible_rect || !this.m_optimize) return false;
+        if (!this.m_render_args || !this.m_optimize) return false;
 
         const client_visible_rect = this.client_visible_rect;
         const client_drop_rect = this.client_drop_rect;
@@ -220,7 +221,7 @@ export class PageDom extends (PageView) {
             }
         }
 
-        const ret = this._optimizeClientVisibleNodes(this as (ShapeView & NodeType), Date.now(), client_visible_rect, client_drop_rect, optimize, 0, focusid)
+        const ret = this._optimizeClientVisibleNodes(this as (ShapeView & NodeType), Date.now(), client_visible_rect, client_drop_rect, optimize, 0, focusid, this.m_render_args.matrix.clone())
         if (ret.expired) return true;
         let hasOptimizing = ret.hasOptimizing;
 
@@ -265,7 +266,7 @@ export class PageDom extends (PageView) {
 
     onBeforeRender() {
 
-        if (!this.m_optimize || !this.m_visible_rect) {
+        if (!this.m_optimize || !this.m_render_args) {
             return;
         }
 

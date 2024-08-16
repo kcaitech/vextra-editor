@@ -87,7 +87,7 @@ function updateVisibleRect() {
     const rb = matrixWithFrame_inverse.computeCoord(rect.x + rect.width, rect.y + rect.height); // root坐标系
     const page = props.params.data as PageDom;
     const innerFrame = page.frame;
-    page.updateVisibleRect({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y })
+    page.updateVisibleRect({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y }, matrixWithFrame)
 }
 
 const prepareDom = (page: Page | PageView) => {

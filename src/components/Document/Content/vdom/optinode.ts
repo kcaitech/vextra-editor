@@ -1,4 +1,4 @@
-import { EL, stringh, ShapeView } from "@kcdesign/data";
+import { EL, stringh, ShapeView, Matrix } from "@kcdesign/data";
 import { batchSetAttribute, createElement, elpatch } from "./patch";
 
 
@@ -17,7 +17,7 @@ const _2IMAGE_NODE_COUNT = 10; // 小于这个的不转成image了
 const _2CANVAS_NODE_COUNT = 300; // 太大了需要用canvas
 
 
-export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible: boolean, focused: boolean, _image?: {
+export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible: boolean, focused: boolean, matrix: Matrix, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }): boolean | {
@@ -33,8 +33,12 @@ export function optiNode(_this: NodeType, optiType: 'image' | 'canvas', visible:
         unOptiNode(_this);
         return false;
     }
-    if (visible) {
-        return opti2image(_this, optiType, _image);
+    const frame = _this.visibleFrame;
+    if (frame.width === 0 || frame.height === 0) {
+        opti2none(_this);
+    }
+    else if (visible) {
+        return opti2image(_this, optiType, matrix, _image);
     } else {
         opti2none(_this);
     }
@@ -62,7 +66,7 @@ export function opti2none(_this: NodeType) {
     }
 }
 
-function opti2image(_this: NodeType, optiType: 'image' | 'canvas', _image?: {
+function opti2image(_this: NodeType, optiType: 'image' | 'canvas', matrix: Matrix, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
@@ -70,11 +74,13 @@ function opti2image(_this: NodeType, optiType: 'image' | 'canvas', _image?: {
         unOptiNode(_this);
         return false;
     }
-     else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
+    // _opti2image(_this);
+    // return true;
+    else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
         _opti2image(_this);
         return true;
     } else {
-        return _opti2canvas(_this, _image);
+        return _opti2canvas(_this, matrix, _image);
     }
 }
 
@@ -122,7 +128,7 @@ function _opti2image(_this: NodeType) {
     return true;
 }
 
-function _opti2canvas(_this: NodeType, _image?: {
+function _opti2canvas(_this: NodeType, matrix: Matrix, _image?: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
@@ -134,7 +140,7 @@ function _opti2canvas(_this: NodeType, _image?: {
 
     const image = _opti2canvasStep1(_this, el, _image);
     if (image.loaded) {
-        _opti2canvasStep2(_this, el, image);
+        _opti2canvasStep2(_this, el, matrix, image);
         return true;
     }
     return image;
@@ -183,7 +189,7 @@ function _opti2canvasStep1(_this: NodeType, el: SVGElement | HTMLElement | undef
     return ret;
 }
 
-function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undefined, _image: {
+function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undefined, matrix: Matrix, _image: {
     loaded: boolean,
     imageel: SVGImageElement
 }) {
@@ -193,21 +199,24 @@ function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undef
     //     _this.optiel = undefined;
     // }
 
+    const _matrix = matrix.clone();
+    _matrix.multi(_this.transform.toArray());
+
     const frame = _this.visibleFrame;
+    const wh = _matrix.computeRef(frame.width, frame.height);
+
     const canvas = createElement('canvas') as HTMLCanvasElement;
-    batchSetAttribute(canvas, { width: frame.width, height: frame.height }); // todo 要获取当前缩放值，计算真实的显示大小
+    const scale = window.devicePixelRatio;
+    canvas.width = Math.floor(wh.x * scale);
+    canvas.height = Math.floor(wh.y * scale);
     const canvasCtx = canvas.getContext('2d')!;
-
-    // 判断是否cancel掉了
-
+    // canvasCtx.scale(scale, scale);
+    canvasCtx.scale(canvas.width / frame.width, canvas.height / frame.height);
     canvasCtx.drawImage(_image.imageel, 0, 0); // foreignObject会丢失
     const href = canvas.toDataURL();
     const props: any = {};
     _this.optiel = createElement('image');
     props.href = href;
-
-    // _this.optiel = createElement('foreignObject');
-    // _this.optiel.appendChild(canvas);
 
     props.x = frame.x;
     props.y = frame.y;

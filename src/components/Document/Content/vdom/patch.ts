@@ -106,6 +106,8 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         // }
         _tar.el = el;
         _old = undefined;
+    } else {
+        // todo 脱离文档更新？
     }
 
     // attr
