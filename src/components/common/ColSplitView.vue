@@ -169,6 +169,7 @@ watchEffect(initSizeBounds);
 
     .column1 {
         position: relative;
+        background-color: #fff;
     }
 
     .column2 {
@@ -179,6 +180,7 @@ watchEffect(initSizeBounds);
 
     .column3 {
         position: relative;
+        background-color: #fff;
     }
 }
 </style>

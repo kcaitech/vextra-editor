@@ -390,6 +390,7 @@ export const preview: any = {
     fill_screen: 'Fill screen',
     fit_width: 'Fit width',
     fit_screen: 'Fit screen',
+    all: 'All canvas'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

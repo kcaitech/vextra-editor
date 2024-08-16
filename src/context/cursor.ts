@@ -39,12 +39,8 @@ export class Cursor extends WatchableObject {
     }
 
     setType(type: CursorType, rotate: number) {
-        if (this.m_freeze) {
-            return;
-        }
-
+        if (this.m_freeze) return;
         let res = this.m_styler.getClass(type, rotate) || this.m_auto;
-
         this.m_current_cursor_type = res;
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
@@ -70,17 +66,13 @@ export class Cursor extends WatchableObject {
     }
 
     reset() {
-        if (this.m_freeze) {
-            return;
-        }
+        if (this.m_freeze) return;
         this.m_current_cursor_type = this.m_auto;
-
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
     }
 
     resetForce() {
         this.m_current_cursor_type = this.m_auto;
-
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
     }
 

@@ -63,6 +63,7 @@ function unwatch_shapes(shapes: ShapeView[]) {
 }
 
 onMounted(() => {
+
     watch_shapes(props.shapes)
     update_list();
 })

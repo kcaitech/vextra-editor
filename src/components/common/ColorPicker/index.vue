@@ -1450,12 +1450,13 @@ onUnmounted(() => {
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     flex: 0 0 16px;
+    background-color: var(--theme-color-anti);
 
     img {
         border-radius: 3px;
         width: 16px;
         height: 16px;
-        object-fit: fill;
+        object-fit: contain;
     }
 
     .popover {

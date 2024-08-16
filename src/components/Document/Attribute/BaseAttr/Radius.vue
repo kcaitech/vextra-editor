@@ -2,7 +2,16 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { PathShapeView, RadiusType, ShapeView, SymbolView } from '@kcdesign/data';
+import {
+    CutoutShape,
+    CutoutShapeView,
+    PathShapeView,
+    RadiusType,
+    ShapeType,
+    ShapeView,
+    SymbolView,
+    TableView, TextShapeView
+} from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
@@ -35,8 +44,21 @@ function get_value_from_input(val: any) {
     return Number(value.toFixed(0));
 }
 
+function noGroupShapesFrom(shapes: ShapeView[]) {
+    const result: ShapeView[] = [];
+    for (const shape of shapes) {
+        if (shape instanceof TableView || shape instanceof TextShapeView || shape instanceof CutoutShapeView) continue;
+        if (shape.type === ShapeType.Group) {
+            result.push(...noGroupShapesFrom(shape.childs));
+            continue;
+        }
+        result.push(shape);
+    }
+    return result;
+}
+
 function change(val: any, type: string) {
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     val = get_value_from_input(val);
 
     if (rect.value) {
@@ -175,9 +197,7 @@ function get_radius_for_shape(shape: ShapeView) {
 function get_all_values(shapes: ShapeView[]) {
     reset_radius_value();
     const first_shape = shapes[0];
-    if (!first_shape) {
-        return;
-    }
+    if (!first_shape) return;
     const f_r = get_rect_shape_all_value(first_shape);
     radius.lt = fixedZero(f_r.lt);
     radius.rt = fixedZero(f_r.rt);
@@ -229,10 +249,8 @@ function get_rect_shape_all_value(shape: ShapeView) {
 function modify_radius_value() {
     reset_radius_value();
 
-    const selected = props.context.selection.selectedShapes;
-    if (!selected.length) {
-        return;
-    }
+    const selected = noGroupShapesFrom(props.context.selection.selectedShapes);
+    if (!selected.length) return;
 
     if (rect.value) {
         get_all_values(selected);
@@ -255,7 +273,6 @@ function modify_radius_value() {
     }
 
     radius.lt = fixedZero(init);
-    return;
 }
 
 const watchedShapes = new Map();
@@ -265,7 +282,7 @@ function watch_shapes() {
         v.unwatch(update);
         watchedShapes.delete(k);
     })
-    const selectedShapes = props.context.selection.selectedShapes;
+    const selectedShapes = noGroupShapesFrom(props.context.selection.selectedShapes);
     if (selectedShapes.length > 0) {
         const first = selectedShapes[0];
         watchedShapes.set(first.id, first);
@@ -300,31 +317,25 @@ async function dragstart(e: MouseEvent) {
         });
     }
 
-    lockMouseHandler = new LockMouse(props.context, e);
+    lockMouseHandler = new LockMouse(props.context, e, noGroupShapesFrom(props.context.selection.selectedShapes));
     document.addEventListener('pointerlockchange', pointerLockChange, false);
 }
 
 function draggingLT(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
 
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
 
-    if (isNaN(Number(radius.lt))) {
-        return;
-    }
+    if (isNaN(Number(radius.lt))) return;
 
     let values = [Number(radius.lt), -1, -1, -1];
     values[0] += e.movementX;
 
-    if (values[0] < 0) {
-        return;
-    }
+    if (values[0] < 0) return;
 
     if (!rect.value) {
         values = [values[0]]
@@ -434,38 +445,38 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="tr">
-        <MdNumberInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
-                       @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT"
-                       @dragend="dragend">
-        </MdNumberInput>
-        <div class="space" v-if="!rect"></div>
-        <MdNumberInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
-                       :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart"
-                       @dragging="draggingRT"
-                       @dragend="dragend"></MdNumberInput>
-        <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
-            <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
-                <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
-                          :class="{ 'active': rect }"></svg-icon>
-            </div>
-        </Tooltip>
-    </div>
-    <div class="tr" v-if="rect">
-        <MdNumberInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
-                       :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart"
-                       @dragging="draggingLB"
-                       @dragend="dragend"></MdNumberInput>
-        <MdNumberInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
-                       :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart"
-                       @dragging="draggingRB"
-                       @dragend="dragend"></MdNumberInput>
-        <div style="width: 32px;height: 32px;"></div>
-    </div>
-    <teleport to="body">
-        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+<div class="tr">
+    <MdNumberInput icon="radius" :draggable="radius.lt !== mixed" :value="radius.lt" :disabled="disabled"
+                   @change="value => change(value, 'lt')" @dragstart="dragstart" @dragging="draggingLT"
+                   @dragend="dragend">
+    </MdNumberInput>
+    <div class="space" v-if="!rect"></div>
+    <MdNumberInput v-if="rect" class="r-90" icon="radius" :draggable="radius.rt !== mixed" :value="radius.rt"
+                   :disabled="disabled" @change="value => change(value, 'rt')" @dragstart="dragstart"
+                   @dragging="draggingRT"
+                   @dragend="dragend"></MdNumberInput>
+    <Tooltip v-if="can_be_rect" :content="t('attr.independentCorners')">
+        <div class="more-for-radius" @click="rectToggle" :class="{ 'active': rect }">
+            <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'"
+                      :class="{ 'active': rect }"></svg-icon>
         </div>
-    </teleport>
+    </Tooltip>
+</div>
+<div class="tr" v-if="rect">
+    <MdNumberInput class="r-270" icon="radius" :draggable="radius.lb !== mixed" :value="radius.lb"
+                   :disabled="disabled" @change="value => change(value, 'lb')" @dragstart="dragstart"
+                   @dragging="draggingLB"
+                   @dragend="dragend"></MdNumberInput>
+    <MdNumberInput class="r-180" icon="radius" :draggable="radius.rb !== mixed" :value="radius.rb"
+                   :disabled="disabled" @change="value => change(value, 'rb')" @dragstart="dragstart"
+                   @dragging="draggingRB"
+                   @dragend="dragend"></MdNumberInput>
+    <div style="width: 32px;height: 32px;"></div>
+</div>
+<teleport to="body">
+    <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+    </div>
+</teleport>
 </template>
 <style scoped lang="scss">
 .tr {

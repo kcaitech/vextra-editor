@@ -30,6 +30,8 @@ const showMenu = (e: MouseEvent) => {
         props.context.preview.notify(Preview.MENU_VISIBLE);
         isMenu.value = true;
     }
+    console.log(isMenu.value);
+    
 }
 
 const closeMenu = () => {

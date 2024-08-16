@@ -51,7 +51,8 @@ export enum MenuItemType {
     Mask,
     UnMask,
 
-    Outline
+    Outline,
+    Flatten
 }
 
 export enum MountedAreaType { // 不同区域生成不同的菜单项

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
 import { Matrix, ShapeView } from '@kcdesign/data';
-import { onUnmounted } from 'vue';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Props {
     view: number;
@@ -20,13 +19,13 @@ function updateIconClass() {
     const s = props.shape;
     if (s.data.mask) return icon_class.value = "layer-mask";
     if (s.isImageFill) return icon_class.value = "layer-image";
-    else return icon_class.value = `layer-${props.shape.type}`;
+    else return icon_class.value = `layer-${s.type}`;
 }
 
 
 function getPath() {
     const shape = props.shape.data;
-    is_image.value = shape.getImageFill() && !shape.mask;
+    is_image.value = shape.isImageFill && !shape.mask;
     flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
 
     if (!flex_abbr.value) return updateIconClass();
@@ -73,8 +72,8 @@ onUnmounted(stop);
     <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
         <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"/>
     </svg>
-    <svg-icon v-else-if="is_image" icon-class="layer-image" :fill="theme" :stroke="theme"></svg-icon>
-    <svg-icon v-else :icon-class="icon_class" :fill="theme"></svg-icon>
+    <svg-icon v-else-if="is_image" icon-class="layer-image" :fill="theme" :stroke="theme"/>
+    <svg-icon v-else :icon-class="icon_class" :fill="theme"/>
 </div>
 </template>
 <style scoped lang="scss">

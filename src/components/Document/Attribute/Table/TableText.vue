@@ -18,10 +18,12 @@ import { getGradient, gradient_equals } from '../../Selection/Controller/ColorEd
 import { throttle } from 'lodash';
 import FontWeightSelected from '../Text/FontWeightSelected.vue';
 import { fontWeightConvert } from '../Text/FontNameList';
+import { is_mac } from "@/utils/common";
 interface Props {
     context: Context
     shape: TableView
 }
+const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -33,7 +35,7 @@ const isBold = ref<any>()
 const isTilt = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFang SC')
+const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -103,58 +105,31 @@ const onShowSizeBlur = (e: Event) => {
 const cellSelect = (table: TableSelection) => {
     return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
 }
-// 设置加粗
-const onBold = (weight: number) => {
+// 设置字重
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
     isBold.value = weight
-    if (shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        const editor = props.context.editor4TextShape(shape.value)
-        if (isSelectText()) {
-            editor.setTextWeight(isBold.value, 0, Infinity)
-        } else {
-            editor.setTextWeight(isBold.value, textIndex, selectLength)
-        }
-    } else {
-        const table = props.shape;
-        const table_Selection = props.context.tableSelection;
-        const editor = props.context.editor4Table(table)
-        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextWeight(isBold.value);
-        } else {
-            const cell_selection = cellSelect(table_Selection)
-            editor.setTextWeight(isBold.value, cell_selection);
-        }
-    }
-    textFormat();
-}
-// 设置文本倾斜
-const onTilt = (italic: boolean) => {
     isTilt.value = italic
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
         if (isSelectText()) {
-            editor.setTextItalic(isTilt.value, 0, Infinity)
+            editor.setTextWeight(weight, italic, 0, Infinity)
         } else {
-            editor.setTextItalic(isTilt.value, textIndex, selectLength)
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
         }
     } else {
         const table = props.shape;
         const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
-            editor.setTextItalic(isTilt.value);
+            editor.setTextWeight(weight, italic);
         } else {
             const cell_selection = cellSelect(table_Selection)
-            editor.setTextItalic(isTilt.value, cell_selection);
+            editor.setTextWeight(weight, italic, cell_selection);
         }
     }
     textFormat();
-}
-const setFontWeight = (weight: number, italic: boolean) => {
-    fontWeight.value = fontWeightConvert(weight, italic);
-    onBold(weight);
-    onTilt(italic);
 }
 
 // 设置水平对齐
@@ -393,7 +368,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         textColor.value = format.color;
         highlight.value = format.highlight;
@@ -476,7 +451,7 @@ const textFormat = (_t?: any) => {
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
         selectVertical.value = format.verAlign || 'top';
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         isBold.value = format.weight;

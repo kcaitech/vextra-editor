@@ -361,13 +361,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     const action = props.context.tool.action;
     const selection = props.context.selection;
 
-    if (!(action === Action.AutoV || action === Action.AutoK)) {
-        return;
-    }
-
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0 || action !== Action.AutoV) return;
 
     e.stopPropagation();
 
@@ -376,9 +370,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 
     const hoveredShape = selection.hoveredShape;
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
 
     if (e.shiftKey) {
         multi_select_shape(props.context, hoveredShape);
@@ -436,10 +428,7 @@ function page_watcher() {
 
 function remove_page_watcher() {
     const page = props.context.selection.selectedPage;
-
-    if (page) {
-        page.unwatch(shapesWatcher);
-    }
+    if (page) page.unwatch(shapesWatcher);
 }
 
 // hooks
@@ -466,29 +455,28 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- 描边 -->
-    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-         style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="tracingFrame.path" fill="none" stroke="transparent"
-              :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-              stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-    </svg>
-    <!-- 控制 -->
-    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-               :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
-               :shape="context.selection.selectedShapes[0]" :theme="theme">
-    </component>
-    <!-- 辅助 -->
-    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <gapAssist :context="props.context"></gapAssist>
-    <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
-               :update-trigger="updateTrigger"></LableLine>
-    <!-- 选中大小 -->
-    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
+<!-- 描边 -->
+<svg v-if="tracing" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" overflow="visible"
+     :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+     style="transform: translate(0px, 0px); position: absolute;">
+    <path :d="tracingFrame.path" fill="none" stroke="transparent"
+          :stroke-width="context.selection.hoverStroke" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+    <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+</svg>
+<!-- 控制 -->
+<component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+           :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
+           :shape="context.selection.selectedShapes[0]" :theme="theme">
+</component>
+<!-- 辅助 -->
+<Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+<gapAssist :context="props.context"></gapAssist>
+<!-- 标注线 -->
+<LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
+           :update-trigger="updateTrigger"></LableLine>
+<!-- 选中大小 -->
+<ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

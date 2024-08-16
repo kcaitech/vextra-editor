@@ -4,6 +4,7 @@ import {
     GroupShapeView,
     Matrix, PageView,
     PathShapeView,
+    Shape,
     ShapeType,
     ShapeView,
     SymbolRefView
@@ -39,6 +40,37 @@ export function scout(context: Context): Scout {
         path.setAttributeNS(null, 'd', d);
 
         const scale = context.workspace.curScale;
+
+        let stroke = 14 / scale;
+
+        let isClosed = true;
+
+        if ((shape as PathShapeView)?.segments?.length) {
+            const segments = (shape as PathShapeView).segments;
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].isClosed) {
+                    isClosed = false;
+                    break;
+                }
+            }
+        }
+
+        path.setAttributeNS(null, 'stroke-width', `${stroke}`);
+
+        if (isClosed) {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        } else {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint) || (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        }
+    }
+
+    function isPointInShapeForPreview(shape: ShapeView, point: XY, d: string, matrix: Matrix): boolean {
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y;
+
+        path.setAttributeNS(null, 'd', d);
+
+        const scale = matrix.m00;
 
         let stroke = 14 / scale;
 
@@ -115,7 +147,7 @@ export function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth }
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke, isPointInStrokeByWidth, isPointInShapeForPreview }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -132,7 +164,7 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-export function getPathOnPageString(shape: ShapeView): string { // path坐标系：页面
+export function getPathOnPageString(shape: ShapeView | Shape): string { // path坐标系：页面
     const path = shape.getPath().clone();
     const m2page = shape.matrix2Root();
     path.transform(m2page);

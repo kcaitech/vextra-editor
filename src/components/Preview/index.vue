@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-// import * as share_api from '@/request/share'
-import { ElMessage } from 'element-plus';
-import { importRemote, Repository, Page, CoopRepository, IStorage, PageView, PageListItem } from '@kcdesign/data';
-// import { OssStorage, S3Storage, StorageOptions } from '@/utils/storage';
-import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-// import kcdesk from '@/kcdesk';
+import { Page, PageView } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
 import { WorkSpace } from '@/context/workspace';
-// import { SCREEN_SIZE } from '@/settings';
 import { initpal } from '@/components/common/initpal';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -24,9 +19,7 @@ const props = defineProps<{ context: IContext }>()
 const context = props.context as Context;
 
 const { t } = useI18n();
-// let context: Context | undefined;
 const loading = ref<boolean>(false);
-// const null_context = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
 // const sub_loading = ref<boolean>(false);
@@ -36,7 +29,6 @@ let uninstall_keyboard_units: () => void = () => {
 const showTop = ref<boolean>(true);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const inited = ref(false);
-
 function switchPage(id?: string) {
     if (!id) return
     const cur_page = context.selection.selectedPage;
@@ -83,15 +75,7 @@ const selectionWatcher = (t: number | string) => {
 }
 
 function switchFullScreen() {
-    // const element = document.documentElement;
-    // const isFullScreen = document.fullscreenElement;
-    // if (isFullScreen === null) {
-    //     element.requestFullscreen && element.requestFullscreen();
-    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
-    // } else {
-    //     document.exitFullscreen && document.exitFullscreen();
-    //     localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
-    // }
+
 }
 let timerForLeft: any;
 const showHiddenLeft = () => {
@@ -141,17 +125,11 @@ function init_keyboard_uints() {
     uninstall_keyboard_units = keyboard(context);
 }
 
-function init_screen_size() {
-    // localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
-}
-
 const changeLeftWidth = (width: number) => {
     Left.value.leftWidth = width;
 }
 
 onMounted(() => {
-    // getDocumentInfo();
-    init_screen_size();
     initpal().then(() => {
         inited.value = true;
     }).catch((e) => {
@@ -159,7 +137,6 @@ onMounted(() => {
     })
     init_keyboard_uints();
     init_watcher();
-    // switchPage(props.context.data.pagesList[0]?.id);
 })
 
 onUnmounted(() => {
@@ -234,7 +211,7 @@ onUnmounted(() => {
         padding: 10px 8px;
         box-sizing: border-box;
         position: relative;
-        z-index: 19;
+        z-index: 21;
     }
 
     #center {
