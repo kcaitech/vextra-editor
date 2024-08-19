@@ -87,8 +87,6 @@ export function opti2none(_this: NodeType) {
         }
     }
 
-    console.log("opti2none")
-
     const saveel = _this.el;
     _this.el = _this.optis.records[OptiType.none].el;
 
@@ -146,10 +144,9 @@ function _opti2image(_this: NodeType) {
     //     }
     // }
 
-    console.log("_opti2image")
-
     // 打包成svg
-    const frame = _this.visibleFrame;
+    const { x, y, width, height } = _this.visibleFrame;
+
     const svgprops: any = {
         version: "1.1",
         xmlns: "http://www.w3.org/2000/svg",
@@ -157,10 +154,11 @@ function _opti2image(_this: NodeType) {
         "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
         preserveAspectRatio: "xMinYMin meet",
         overflow: "visible", // 阴影可能在外面，或者说visibleFrame现在计算的还不对
-        viewbox: `${frame.x} ${frame.y} ${frame.width} ${frame.height}`,
-        width: frame.width,
-        height: frame.height
+        viewBox: `${x} ${y} ${width} ${height}`,
+        width: width,
+        height: height
     }
+
     const svg = stringh('svg', svgprops, _this.optis.origin.innerHTML.replaceAll("#", "%23"));
     const href = "data:image/svg+xml," + svg;
     // _this.optis.records[OptiType.image].el = createElement('image');
@@ -168,12 +166,12 @@ function _opti2image(_this: NodeType) {
         el: createElement("image")
     }
     const props: any = {};
-    props.href = href;
-    props.x = frame.x;
-    props.y = frame.y;
-    props.width = frame.width;
-    props.height = frame.height;
     Object.assign(props, _this.elattr);
+    props.href = href;
+    props.x = x;
+    props.y = y;
+    props.width = width;
+    props.height = height;
     batchSetAttribute(_this.optis.records[OptiType.image].el, props);
 
     const saveel = _this.el;
@@ -325,8 +323,10 @@ export function unOptiNode(_this: NodeType) {
 
 export function optiRender(_this: NodeType, version: number) {
     if (version !== _this.m_save_version || !_this.el) {
-        const saveel = _this.el;
+        let saveel;
         if (_this.optis) {
+            if (!_this.el) throw new Error()
+            saveel = _this.el;
             _this.el = _this.optis.origin;
         }
         elpatch(_this, _this.m_save_render); // 这里才转化为html或者svg节点
