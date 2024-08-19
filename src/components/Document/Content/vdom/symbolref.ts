@@ -1,5 +1,5 @@
 import { EL, SymbolRefView } from "@kcdesign/data";
-import { optiRender } from "./optinode";
+import { NodeType, optiRender, OptiType } from "./optinode";
 
 export class SymbolRefDom extends (SymbolRefView) {
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
@@ -8,7 +8,10 @@ export class SymbolRefDom extends (SymbolRefView) {
 
     canOptiNode = true;
     optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
-    optiel_dirty?: boolean;
+    set optiel_dirty(dirty: boolean) {
+        const _this = this as NodeType
+        if (_this.optis?.records[OptiType.image]) _this.optis.records[OptiType.image].dirty = dirty;
+    }
     onDataChange(...args: any[]) {
         super.onDataChange(...args);
         this.optiel_dirty = true;

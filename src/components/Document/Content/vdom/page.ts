@@ -193,6 +193,9 @@ export class PageDom extends (PageView) {
         return { expired: false, hasOptimizing };
     }
 
+    set optiel_dirty(dirty: boolean) {
+    }
+
     canOptiNode: boolean = true;
     // todo 图片更新还有问题
     private optimizeClientVisibleNodes() {
