@@ -1,4 +1,3 @@
-// import kcdesk from "@/kcdesk";
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
 import { ArtboradView, Matrix, PageView, PrototypeEvents, PrototypeNavigationType, ScrollDirection, Shape, ShapeType, ShapeView, TransformRaw } from "@kcdesign/data";

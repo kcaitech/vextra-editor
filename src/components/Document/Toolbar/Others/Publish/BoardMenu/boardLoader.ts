@@ -1,5 +1,6 @@
 import { Context } from "@/context";
 import { Artboard, Page } from "@kcdesign/data";
+import { nextTick } from "vue";
 
 export interface BoardMenuItem {
     page: Page;
@@ -55,8 +56,15 @@ export class BoardLoader {
 
     fold(page: Page) {
         for (const li of this.m_list) {
-            if (li.page.id === page.id) li.fold = !li.fold;
-            else li.fold = true;
+            if (li.page.id === page.id) {
+                if (li.fold) {
+                    nextTick(() => {
+                        li.fold = false;
+                    });
+                } else {
+                    li.fold = true;
+                }
+            } else li.fold = true;
         }
     }
 

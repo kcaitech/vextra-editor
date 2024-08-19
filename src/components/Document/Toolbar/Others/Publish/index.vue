@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import DownloadJS from "@/components/Document/Toolbar/Others/Publish/DownloadJS.vue";
 
 const props = defineProps<{
-    context: Context
+    context: Context;
 }>();
 const popover = ref<boolean>(false);
 const t = useI18n().t;

@@ -15,7 +15,7 @@ const emits = defineEmits<{
     (e: 'loaded'): void;
 }>()
 const loading = ref<boolean>(false);
-
+const downloading = ref<boolean>(false);
 const boardList = ref<BoardMenuItem[]>([]);
 const lister = ref<BoardLoader>(new BoardLoader(props.context, boardList.value as BoardMenuItem[]));
 
@@ -28,6 +28,13 @@ function init() {
     loading.value = true;
     lister.value.load(boardLoaded, () => {
     });
+}
+
+function download() {
+    downloading.value = true;
+    setTimeout(() => {
+        downloading.value = false;
+    }, 5000)
 }
 
 onMounted(init);
@@ -53,13 +60,15 @@ onMounted(init);
                         cursor: pointer;padding: 0 6px;
                         background-color: var(--active-color); border-radius: 4px;
                         color: var(--theme-color-anti); font-size: 13px;"
+                        @click="download"
                     >
-                        {{ t('home.download') }}
+                        {{ downloading ? t('home.downloading') : t('home.download') }}
                     </div>
                 </div>
             </div>
-
         </div>
+        <div
+            :style="{width: '100%', height: '100%', opacity: 0.4,'background-color': downloading ? '#fff' : 'transparent',transition: '0.2s','pointer-events': downloading? 'auto' : 'none', 'z-index': downloading ? 1 : -1, top: 0, position: 'absolute'}"/>
     </div>
 </div>
 
@@ -76,7 +85,7 @@ onMounted(init);
     background-color: transparent;
 
     .download-js-wrap {
-        width: 462px;
+        width: 500px;
         padding: 0 24px 8px 24px;
         margin: 120px auto auto;
         transform: translateY(0);
