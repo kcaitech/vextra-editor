@@ -629,8 +629,26 @@ function search2(e: MouseEvent) {
 }
 
 const updateSearch = (e: MouseEvent) => {
-    selectShapes(props.context, undefined);
-    search(e);
+    const hover_shape = search2(e);
+    if (hover_shape) {
+        const actions = hover_shape?.prototypeInterActions;
+        if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
+            let p = hover_shape.parent;
+            if (p && p.type === ShapeType.Page) {
+                return;
+            }
+            while (p && p.type !== ShapeType.Page) {
+                if (p.prototypeInterActions && p.prototypeInterActions.length) {
+                    props.context.selection.previewHoverShape(p);
+                    break;
+                } else {
+                    p = p.parent;
+                }
+            }
+        } else {
+            props.context.selection.previewHoverShape(hover_shape);
+        }
+    }
 }
 
 const closeMenu = () => {
