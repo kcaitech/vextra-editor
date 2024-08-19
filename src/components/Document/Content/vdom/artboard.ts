@@ -27,7 +27,7 @@ export class ArtboradDom extends (ArtboradView) {
     }
 
     canOptiNode = true;
-    optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
+    // optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
 
     render(): number {
         const version: number = super.render();

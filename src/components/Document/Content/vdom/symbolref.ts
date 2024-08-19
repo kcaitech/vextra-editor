@@ -7,7 +7,7 @@ export class SymbolRefDom extends (SymbolRefView) {
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
     canOptiNode = true;
-    optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
+    // optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
     set optiel_dirty(dirty: boolean) {
         const _this = this as NodeType
         if (_this.optis?.records[OptiType.image]) _this.optis.records[OptiType.image].dirty = dirty;
