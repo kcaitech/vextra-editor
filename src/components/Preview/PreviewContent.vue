@@ -188,11 +188,15 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
-        const time = action.transitionDuration ?? 0.3;
-        const timer = setTimeout(() => {
+        if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             getTargetShapes();
-        }, time * 1000);
-        props.context.preview.addSetTimeout(timer);
+        } else {
+            const time = action.transitionDuration ?? 0.3;
+            const timer = setTimeout(() => {
+                getTargetShapes();
+            }, time * 1000);
+            props.context.preview.addSetTimeout(timer);
+        }
     } else if (t === Preview.SYMBOL_REF_SWITCH) {
         const m = new Matrix();
         if (!s && symrefAnimate.value) {
@@ -628,8 +632,8 @@ function search2(e: MouseEvent) {
     return hover_shape;
 }
 
-const updateSearch = (e: MouseEvent) => {
-    const hover_shape = search2(e);
+const updateSearch = (e?: MouseEvent) => {
+    const hover_shape = search2(e || event);
     if (hover_shape) {
         const actions = hover_shape?.prototypeInterActions;
         if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {

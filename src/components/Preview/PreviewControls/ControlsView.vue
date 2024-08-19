@@ -4,7 +4,7 @@ import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
 import { eventPriority, getFrameList, getPreviewMatrix } from '@/utils/preview';
-import { Matrix, PathShapeView, PrototypeEvents, PrototypeNavigationType, sessionRefIdKey, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { delayAction, ProtoAction } from './actions';
 
@@ -31,7 +31,7 @@ export interface EventIndex {
 }
 
 const emit = defineEmits<{
-    (e: "updateSearch", event: MouseEvent): void;
+    (e: "updateSearch", event?: MouseEvent): void;
 }>();
 
 const props = defineProps<Props>();
@@ -60,6 +60,8 @@ let eventTypeZIndex = {
 }
 
 function pathMousedown(e: MouseEvent) {
+    console.log(111);
+
     emit('updateSearch', e);
     const selection = props.context.selection;
     if (props.context.workspace.isPageDragging) {
@@ -201,10 +203,28 @@ const onMouseenter = () => {
                     console.log('鼠标悬停');
                     eventTypeZIndex.hover = true;
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                    if (protoAction.actions.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+                        emit('updateSearch');
+                    } else {
+                        const time = protoAction.actions.transitionDuration ?? 0.3;
+                        const timer = setTimeout(() => {
+                            emit('updateSearch');
+                        }, time * 1000);
+                        props.context.preview.addSetTimeout(timer);
+                    }
                 } else if (!eventTypeZIndex.mouseenter && type === PrototypeEvents.MOUSEENTER) {
                     console.log('hoveredShape: 移入');
                     eventTypeZIndex.mouseenter = true
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                    if (protoAction.actions.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+                        emit('updateSearch');
+                    } else {
+                        const time = protoAction.actions.transitionDuration ?? 0.3;
+                        const timer = setTimeout(() => {
+                            emit('updateSearch');
+                        }, time * 1000);
+                        props.context.preview.addSetTimeout(timer);
+                    }
                 }
             }
         }
@@ -241,7 +261,6 @@ const moveOutAction = () => {
 function createShapeTracing() {
     const hoveredShape = props.context.selection.hoveredShape;
     tracing.value = false;
-
     if (!hoveredShape) {
         return;
     }
@@ -278,6 +297,8 @@ const selected_watcher = (t: number | string) => {
         props.context.preview.setSwapAction(undefined);
         sessionStorage.removeItem(sessionRefIdKey);
         delayAction(props.context, props.matrix);
+    } else if (t === Selection.PREVIEW_HOVER_CHANGE) {
+        createShapeTracing();
     }
 }
 
@@ -307,8 +328,8 @@ onUnmounted(() => {
         <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="transparent"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="red"
+            stroke-width="3" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
 </template>
