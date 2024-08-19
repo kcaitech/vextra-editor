@@ -170,10 +170,11 @@ const getPosition = (shape: ShapeView) => {
     } else {
         const { left, top, right, bottom } = getShadowMax(shape);
         const { l_max, t_max, r_max, b_max } = getShapeBorderMax(shape);
-        xy.value.x = shape.transform.translateX - left - l_max;
-        xy.value.y = shape.transform.translateY - top - t_max;
-        width.value = shape.frame.width + (left + l_max) + (right + r_max);
-        height.value = shape.frame.height + (top + t_max) + (bottom + b_max);
+        const { x, y, width: _w, height: _h } = shape._p_frame;
+        xy.value.x = x - left - l_max;
+        xy.value.y = y - top - t_max;
+        width.value = _w + (left + l_max) + (right + r_max);
+        height.value = _h + (top + t_max) + (bottom + b_max);
     }
 }
 

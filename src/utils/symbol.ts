@@ -14,7 +14,7 @@ import {
     SymbolView,
     Variable,
     VariableType,
-    adapt2Shape
+    adapt2Shape,
 } from "@kcdesign/data";
 import { compare_layer_3 } from "./group_ungroup";
 import { debounce } from "lodash";
@@ -23,6 +23,7 @@ import { get_name } from "@/utils/shapelist";
 import { XY } from "@/context/selection";
 import { isTarget } from "@/utils/common";
 import { message } from "@/utils/message";
+import { SymbolDom } from "@/components/Document/Content/vdom/symbol";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -282,7 +283,8 @@ export const clear_scroll_target = debounce(_clear_scroll_target, 300);
 // endregion
 // region union属性列表相关
 export interface AttriListItem {
-    variable: Variable
+    variable: Variable,
+    current_state: string,
     values: { key: string, value: string }[]
 }
 
@@ -299,7 +301,7 @@ export function variable_sort(symbol: SymbolView, t: Function) {
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
-        const item: { variable: Variable, values: any[] } = { variable: v, values: [] };
+        const item: { variable: Variable, current_state: string, values: any[] } = { variable: v, current_state: '', values: [] };
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(symbol, v, t);
             list.splice(status_index++, 0, item);
@@ -344,6 +346,7 @@ export function delete_variable(context: Context, variable: Variable) {
 // region 可变组件属性列表相关
 export interface StatusValueItem {
     variable: Variable
+    current_state: string
     values: any[]
 }
 
@@ -352,14 +355,18 @@ export interface StatusValueItem {
  */
 export function states_tag_values_sort(shapes: SymbolView[], t: Function) {
     const result: StatusValueItem[] = [];
+    const defaultVal = t('compos.dlt');
     if (shapes.length === 1) {
         const par = shapes[0].parent as SymbolView;
         const variables = par.variables;
         if (!variables) return result;
         variables.forEach((v, k) => {
             if (v.type !== VariableType.Status) return;
+            let val = shapes[0].symtags?.get(v.id) || SymbolShape.Default_State;
+            if (val === SymbolShape.Default_State) val = defaultVal;
             const item: StatusValueItem = {
                 variable: v,
+                current_state: val,
                 values: tag_values_sort(par, v, t)
             }
             result.push(item);
@@ -751,6 +758,7 @@ export function get_x_type_option(symbol: SymbolView, group: ShapeView, type: Va
 
 export interface RefAttriListItem {
     variable: Variable
+    current_state: string
     values: any[]
 }
 
@@ -762,12 +770,11 @@ export interface RefAttriListItem {
 export function get_var_for_ref(symref: SymbolRefView, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-
     const sym = symref.symData;
+
     if (!sym) {
         return false;
     }
-
 
     const parent = sym.parent;
 
@@ -784,7 +791,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         }
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            let i = state.symtags?.get(v.id) || t('compos.dlt');
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Status) {
                 item.values = tag_values_sort(usym as SymbolShape, v, t);
                 result.push(item);
@@ -795,7 +804,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let instance_index: number = result.length;
         let text_index: number = instance_index;
         sub_variables.forEach((v: Variable) => { // 整理顺序
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            let i = state.symtags?.get(v.id) || t('compos.dlt')
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Visible) {
                 result2.push(item);
             } else if (v.type === VariableType.SymbolRef) {
@@ -815,7 +826,9 @@ export function get_var_for_ref(symref: SymbolRefView, t: Function) {
         let text_index: number = 0;
 
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
+            const item: RefAttriListItem = { variable: v, current_state: '', values: [] };
+            const i = sym.symtags?.get(v.id) || t('compos.dlt')
+            item.current_state = i === SymbolShape.Default_State ? t('compos.dlt') : i
             if (v.type === VariableType.Visible) {
                 const overrides = symref.findOverride(v.id, OverrideType.Visible);
                 if (overrides) item.variable = overrides[overrides.length - 1];

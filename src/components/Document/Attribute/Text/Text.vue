@@ -20,6 +20,7 @@ import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
 import { TextSelectionLite } from '@/context/textselectionlite';
 import { Attribute } from '@/context/atrribute';
+import { is_mac } from "@/utils/common";
 
 interface Props {
     context: Context
@@ -28,6 +29,8 @@ interface Props {
     selectionChange: number
     trigger: any[]
 }
+
+const DefaultFontName = is_mac() ? 'PingFang SC' : '微软雅黑';
 
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -39,7 +42,7 @@ const isBold = ref<any>()
 const isTilt = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('PingFang SC')
+const fontName = ref(DefaultFontName)
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
@@ -132,46 +135,25 @@ const onShowSizeBlur = (e: Event) => {
 const length = computed(() => {
     return props.textShapes.length === 1;
 })
-// 设置加粗
-const onBold = (weight: number) => {
+// 设置字重
+const setFontWeight = (weight: number, italic: boolean) => {
+    fontWeight.value = fontWeightConvert(weight, italic);
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextWeight(weight, 0, Infinity)
+            editor.setTextWeight(weight, italic, 0, Infinity)
         } else {
-            editor.setTextWeight(weight, textIndex, selectLength)
+            editor.setTextWeight(weight, italic, textIndex, selectLength)
             textFormat()
         }
     } else {
-        editor.setTextWeightMulti(props.textShapes, weight);
+        editor.setTextWeightMulti(props.textShapes, weight, italic);
     }
     const textAttr = props.context.textSelection.getTextAttr;
     textAttr.weight = weight;
-    props.context.textSelection.setTextAttr(textAttr);
-}
-// 设置文本倾斜
-const onTilt = (italic: boolean) => {
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen()
-        if (isSelectText()) {
-            editor.setTextItalic(italic, 0, Infinity)
-        } else {
-            editor.setTextItalic(italic, textIndex, selectLength)
-            textFormat()
-        }
-    } else {
-        editor.setTextItalicMulti(props.textShapes, italic);
-    }
-    const textAttr = props.context.textSelection.getTextAttr;
     textAttr.italic = italic;
     props.context.textSelection.setTextAttr(textAttr);
-}
-const setFontWeight = (weight: number, italic: boolean) => {
-    fontWeight.value = fontWeightConvert(weight, italic);
-    onBold(weight);
-    onTilt(italic);
 }
 
 // 设置水平对齐
@@ -380,7 +362,7 @@ const _textFormat = () => {
         selectLevel.value = format.alignment || 'left'
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
-        fontName.value = format.fontName || 'PingFang SC'
+        fontName.value = format.fontName || DefaultFontName
         fonstSize.value = format.fontSize || 14
         textColor.value = format.color
         highlight.value = format.highlight
@@ -457,7 +439,7 @@ const _textFormat = () => {
         wordSpace.value = format.kerning || 0;
         selectVertical.value = format.verAlign || 'top';
         selectText.value = format.textBehaviour;
-        fontName.value = format.fontName || 'PingFang SC';
+        fontName.value = format.fontName || DefaultFontName;
         fonstSize.value = format.fontSize || 14;
         highlight.value = format.highlight;
         textColor.value = format.color;

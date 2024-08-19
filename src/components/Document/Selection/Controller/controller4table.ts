@@ -235,8 +235,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
             get_matrix4table();
             init_down_timer();
             table_selection = context.tableSelection;
-            // table_selection.resetSelection();
-            // table_selection.setEditingCell();
         }
     }
     function init_down_timer() {

@@ -149,8 +149,6 @@ function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
   } else {
     cell_menu_type.value = cmt;
   }
-  console.log(x, y, cm);
-  
   cell_menu_posi.value.x = x;
   cell_menu_posi.value.y = y
   cell_menu.value = cm;

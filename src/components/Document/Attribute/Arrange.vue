@@ -298,7 +298,6 @@ onUnmounted(() => {
 }
 
 .disable {
-    width: 40px;
     height: 28px;
     display: flex;
     justify-content: center;

@@ -2,6 +2,7 @@
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
+import Prototype from "@/components/Document/Attribute/Prototype.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 // import { Perm } from "@/context/workspace";
@@ -19,7 +20,7 @@ interface Props {
 interface Emits {
     (e: 'showAttrbute'): void
 }
-type Tab = "Design" | "Inspect";
+type Tab = "Design" |"Prototype"| "Inspect";
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
@@ -32,6 +33,10 @@ const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
         id: 'Design'
+    },
+    {
+        title: t('attr.prototype'),
+        id: 'Prototype'
     },
     // {
     //     title: t('attr.inspect'),
@@ -47,7 +52,7 @@ function toggle(id: Tab) {
 }
 function init() {
     if (currentTab.value === 'Design') {
-        const selected = props.context.selection.selectedShapes;
+        const selected = [...props.context.selection.selectedShapes];
         if (selected.length) {
             props.context.selection.rangeSelectShape(selected);
         }
@@ -124,7 +129,7 @@ onUnmounted(() => {
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
-                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                    :id="`tabs-id-${i.id}`" @click.stop="toggle(i.id)"
                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
                     {{ i.title }}
                 </div>
@@ -134,6 +139,7 @@ onUnmounted(() => {
             </div>
             <div class="body">
                 <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
+                <Prototype :context="props.context" v-if="currentTab === 'Prototype'"></Prototype>
                 <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
                 <template v-if="!context.readonly">
                     <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"

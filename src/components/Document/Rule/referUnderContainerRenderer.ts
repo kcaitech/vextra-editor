@@ -88,9 +88,7 @@ export class ReferUnderContainerRenderer {
         const ctx = this.m_context;
 
         // 如果当前容器不在客户端可视范围内或者当前容器存在角度则不进行绘制
-        if (isShapeOut(ctx, shape) || (shape.rotation || 0) % 180) {
-            return;
-        }
+        if (isShapeOut(ctx, shape) || !shape.isVisible || (shape.rotation || 0) % 180) return;
 
         const matrix = shape.matrix2Root();
         matrix.multiAtLeft(ctx.workspace.matrix);

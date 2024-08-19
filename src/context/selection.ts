@@ -106,6 +106,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     static CHANGE_USER_STATE = 19;
 
+    static PREVIEW_HOVER_CHANGE = 20;
+
     // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
@@ -448,6 +450,11 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
+    }
+
+    replaceSelectShape(shape: ShapeView) {
+        this.m_selectShapes.length = 0;
+        this.m_selectShapes.push(shape);
     }
 
     // 通过id获取shape
@@ -827,5 +834,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     userSelectionData(data: DocSelectionData[]) {
         this.userSelectionList = data;
         this.notify(Selection.CHANGE_USER_STATE);
+    }
+
+    previewHoverShape(shape: ShapeView) {
+        this.m_hoverShape = shape;
+        this.notify(Selection.PREVIEW_HOVER_CHANGE);
     }
 }
