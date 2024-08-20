@@ -35,7 +35,7 @@ export class ArtboradDom extends (ArtboradView) {
         return version;
     }
     asyncRender(): number {
-        if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
+        // if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
         const version: number = super.asyncRender();
         optiRender(this, version);
         return version;

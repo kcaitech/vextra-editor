@@ -93,10 +93,18 @@ function updateVisibleRect() {
 const prepareDom = (page: Page | PageView) => {
     const dom = props.context.getPageDom(page);
     if (dom && pagesvg.value) {
-        dom.dom.bind(pagesvg.value);
-        dom.dom.asyncRender();
         dom.ctx.loop(window.requestAnimationFrame);
+
+        // clear pagesvg
+        const svg = pagesvg.value;
+        const childs = Array.from(svg.childNodes);
+        childs.forEach(c => svg.removeChild(c))
+
         removeRenderidle = dom.dom.once("renderidle", () => {
+            if (pagesvg.value) { // 离屏更新，绘制好后再bind
+                dom.dom.bind(pagesvg.value);
+                dom.dom.asyncRender();
+            }
             if (props.params.onRenderDone) props.params.onRenderDone();
             removeRenderidle = undefined;
         })

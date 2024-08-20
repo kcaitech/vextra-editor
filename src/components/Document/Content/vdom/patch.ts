@@ -122,7 +122,8 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         if (!tchild.el) { // 子对象渲染完后，parent也需要渲染
             // 是可能的
             // throw new Error("something wrong");
-            continue;
+            tchild.el = createElement('g');
+            // continue;
         }
         const childNodes = _tar.el.childNodes;
         if (childNodes[idx] === tchild.el) {

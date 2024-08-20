@@ -59,7 +59,7 @@ export class PageDom extends (PageView) {
 
     render(): number {
         const version: number = super.render();
-        if (version !== this.m_save_version || !this.el) {
+        if (version !== this.m_save_version && this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
@@ -69,9 +69,8 @@ export class PageDom extends (PageView) {
     }
 
     asyncRender(): number {
-        // if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
         const version: number = super.asyncRender();
-        if (version !== this.m_save_version || !this.el) {
+        if (version !== this.m_save_version && this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
@@ -290,7 +289,6 @@ export class PageDom extends (PageView) {
         while (p) {
             const n = p as (ShapeView & NodeType);
             if (n.canOptiNode && n.optis) {
-                
                 unOptiNode(n);
                 this.m_optimize.delete(objectId(p));
                 // break; // 正常只会有一个
@@ -300,12 +298,10 @@ export class PageDom extends (PageView) {
     }
 
     onRenderIdle(): boolean {
-
         if (!this.m_optimize && this.nodeCount > OPTI_NODE_COUNT) {
             this.m_optimize = new Map();
             if (this.nodeCount > OPTI_AS_CANVAS_COUNT) this.m_optimize_type = 'canvas'
         }
-
         if (this.m_optimize && this.optimizeClientVisibleNodes()) {
             return true;
         }
