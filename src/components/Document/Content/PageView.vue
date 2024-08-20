@@ -34,6 +34,7 @@ const viewbox = ref<string>('0 0 100 100');
 const cutoutVisible = ref<boolean>(true);
 const transform = ref<string>('');
 const transformArr = ref<number[]>(new Matrix().toArray());
+const pageReady = ref<boolean>(false);
 // const emit = defineEmits<{
 //     (e: 'closeLoading'): void;
 // }>();
@@ -91,6 +92,7 @@ function updateVisibleRect() {
 }
 
 const prepareDom = (page: Page | PageView) => {
+    pageReady.value = false;
     const dom = props.context.getPageDom(page);
     if (dom && pagesvg.value) {
         dom.ctx.loop(window.requestAnimationFrame);
@@ -104,6 +106,7 @@ const prepareDom = (page: Page | PageView) => {
             if (pagesvg.value) { // 离屏更新，绘制好后再bind
                 dom.dom.bind(pagesvg.value);
                 dom.dom.asyncRender();
+                pageReady.value = true;
             }
             if (props.params.onRenderDone) props.params.onRenderDone();
             removeRenderidle = undefined;
@@ -196,9 +199,9 @@ onUnmounted(() => {
 <template>
     <svg ref="pagesvg" :style="{ transform }" :data-area="rootId" :width="width" :height="height"
         :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="show_c" :context="props.context" :data="params.data" :matrix="props.params.matrix"
+    <ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
         :transform="transformArr" />
-    <ShapeTitles v-if="show_t" :context="props.context" :data="params.data" />
+    <ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data" />
 
 </template>
 
