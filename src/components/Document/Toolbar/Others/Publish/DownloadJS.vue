@@ -46,10 +46,22 @@ function showToast(type: 0 | 1) {
     }, 2000));
 }
 
+
 async function download() {
     downloading.value = true;
     const packer = new MossPacker(props.context);
-    await packer.pack();
+    const config = (() => {
+        let pageId: string = '';
+        let boardId: string = '';
+        for (const li of boardList.value) {
+            if (!li.selected) continue;
+            pageId = li.page.id;
+            boardId = li.selected.id;
+            break;
+        }
+        return { pageId, boardId };
+    })();
+    await packer.pack(config);
     showToast(1);
     downloading.value = false;
 }
@@ -74,7 +86,7 @@ onUnmounted(() => {
         </div>
         <div style="width: 100%;height: fit-content; min-height: 120px; position: relative">
             <div v-if="loading" class="loader"/>
-            <div v-else style="height: fit-content; width: 100%;">
+            <div v-else-if="boardList.length" style="height: fit-content; width: 100%;">
                 <BoardMenu :context="context" :lister="lister as BoardLoader"
                            :board-list="boardList as BoardMenuItem[]"/>
                 <div class="download">
@@ -89,6 +101,12 @@ onUnmounted(() => {
                         {{ downloading ? t('home.downloading') : t('home.download') }}
                     </div>
                 </div>
+            </div>
+            <div v-else style="
+            width: 100%; height: 72px;
+            color: grey;
+            font-size: 13px;
+            display: flex; align-items: center;justify-content: center">{{ t('home.no_board') }}
             </div>
         </div>
         <div :style="{

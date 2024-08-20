@@ -29,7 +29,7 @@ export class MossPacker {
         }
     }
 
-    async pack() {
+    async pack(config: any) {
         try {
             const data = await exportExForm(this.m_doc)
                 .catch((error) => {
@@ -37,13 +37,18 @@ export class MossPacker {
                 });
             console.log('__data__', data);
             if (!data) throw new Error('invalid data');
-            const blob = new Blob([JSON.stringify(data)], { type: 'mdd' });
+
             const zip = new JSZip();
             const main = zip.folder('');
             if (!main) throw new Error('wrong main folder')
 
+            // 配置文件
+            const configBlob = new Blob([JSON.stringify(config)], { type: 'config' });
+            main.file('.config', configBlob);
+
             // 文档
-            main.file(this.createDocName(this.m_doc.name), blob);
+            const dataBlob = new Blob([JSON.stringify(data)], { type: 'mdd' });
+            main.file(this.createDocName(this.m_doc.name), dataBlob);
 
             // 静态资源
             const imageFolder = main.folder('assets');
