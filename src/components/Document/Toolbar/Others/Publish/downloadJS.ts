@@ -16,23 +16,6 @@ export class MossPacker {
         return name.replace(reg, '') + '.mdd';
     }
 
-    async documentExport(doc: Document) {
-        const data = await exportExForm(doc).catch((error) => {
-            console.log('__error__', error);
-        });
-        if (data) {
-            console.log('__data__', data);
-            const blob = new Blob([encodeURIComponent(JSON.stringify(data))], { type: 'mdd' });
-            const url = URL.createObjectURL(blob);
-            const _link = document.createElement('a');
-            _link.href = url;
-            _link.download = this.createDocName(doc.name);
-            _link.target = "_blank";
-            _link.click();
-            URL.revokeObjectURL(url);
-        }
-    }
-
     createHTML() {
     }
 
