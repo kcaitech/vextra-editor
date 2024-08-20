@@ -160,8 +160,8 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         // 滚动动画
         const action = s as PrototypeActions;
         const selected_shape = props.context.selection.selectedShapes[0];
-        const shappe = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
-        viewUpdater.artboardInnerScroll(action, el, shappe);
+        const shape = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
+        viewUpdater.artboardInnerScroll(action, el, shape);
         if (event) search(event);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
@@ -177,7 +177,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         const naviList = props.context.preview.naviShapeList;
         const frameList = naviList.length > 0 ? naviList : getFrameList(page);
         listLength.value = frameList.length;
-        const index = frameList.findIndex(item => item.id === shape.id);
+        const index = frameList.findIndex(item => item.id === shape?.id);
         curPage.value = index + 1;
     } else if (t === Preview.SUPERNATANT_CLOSR) {
         // 关闭浮层动作
@@ -493,6 +493,7 @@ function onMouseUp(e: MouseEvent) {
             const select_shape = props.context.selection.selectedShapes[0];
             const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
             const shape = isSuperposed.value ? target_shapes.at(-1) : select_shape;
+            if (!shape) return;
             viewUpdater.getHotZone(e, matrix, shape as ShapeView);
         }
     }
@@ -594,9 +595,6 @@ function search(e: MouseEvent) {
     const actions = hover_shape?.prototypeInterActions;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
-        if (p && p.type === ShapeType.Page) {
-            return selectShapes(props.context, undefined);
-        }
         while (p && p.type !== ShapeType.Page) {
             if (p.prototypeInterActions && p.prototypeInterActions.length) {
                 selectShapes(props.context, p);
@@ -604,6 +602,9 @@ function search(e: MouseEvent) {
             } else {
                 p = p.parent;
             }
+        }
+        if (p && p.type === ShapeType.Page) {
+            return selectShapes(props.context, undefined);
         }
     } else {
         selectShapes(props.context, hover_shape);
@@ -665,6 +666,7 @@ const getTargetShapes = () => {
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
     const selectShape = props.context.selection.selectedShapes[0];
+    if (!selectShape) return;
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
@@ -750,6 +752,7 @@ const backTargetShape = (s?: string) => {
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
     const selectShape = props.context.selection.selectedShapes[0];
+    if (!selectShape) return;
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
@@ -825,6 +828,7 @@ function startLoop() {
 const updateDialogMatrix = () => {
     const page = props.context.selection.selectedPage;
     const selectShape = props.context.selection.selectedShapes[0];
+    // if (!selectShape) return;
     const els = document.querySelectorAll('.dailogCard');
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     const shapes = getFrameList(page!);

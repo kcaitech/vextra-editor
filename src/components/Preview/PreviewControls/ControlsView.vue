@@ -60,8 +60,6 @@ let eventTypeZIndex = {
 }
 
 function pathMousedown(e: MouseEvent) {
-    console.log(111);
-
     emit('updateSearch', e);
     const selection = props.context.selection;
     if (props.context.workspace.isPageDragging) {
@@ -241,6 +239,7 @@ const onMouseenter = () => {
 
 const moveOutAction = () => {
     const shape = props.context.preview.saveShape;
+    if(!shape) return;
     const protoActions = shape!.prototypeInterActions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
@@ -249,7 +248,7 @@ const moveOutAction = () => {
         if (type === PrototypeEvents.MOUSELEAVE && protoActionFn) {
             console.log('saveShape.value: 移出');
             if (protoAction.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
-                protoActionFn.symbolStateSwitch(protoAction.actions, shape);
+                protoActionFn.symbolStateSwitch(protoAction.actions, protoAction.id, shape);
             } else {
                 protoActionFn.executeActionx(protoAction.actions, props.matrix);
             }
@@ -293,6 +292,7 @@ const selected_watcher = (t: number | string) => {
         createShapeTracing();
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.clearSetTimeout();
+        props.context.preview.clearDelaySetTimeout();
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
         sessionStorage.removeItem(sessionRefIdKey);

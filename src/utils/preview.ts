@@ -299,7 +299,7 @@ export const getFlowPathShapes = (context: Context, flows: Map<string, string[]>
 const getFlows = (page: PageView, shapes: ShapeView[], flows: Map<string, string[]>) => {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if (shape.prototypeStartPoint) {
+        if (shape && shape.prototypeStartPoint) {
             const target_ids: Set<string> = new Set([shape.id]);
             flowShapes(page, shape, target_ids);
             flows.set(shape.id, Array.from(target_ids.values()));
