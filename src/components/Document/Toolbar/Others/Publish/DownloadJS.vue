@@ -101,8 +101,8 @@ onUnmounted(() => {
             left: 0,
             position: 'absolute'
         }">
-            <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : 'red'}">{{ toast.content }}</div>
         </div>
+        <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : 'red'}">{{ toast.content }}</div>
     </div>
 </div>
 </template>
@@ -118,6 +118,7 @@ onUnmounted(() => {
     background-color: transparent;
 
     .download-js-wrap {
+        position: relative;
         width: 500px;
         padding: 0 24px 8px 24px;
         margin: 120px auto auto;
@@ -187,6 +188,8 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 13px;
+    z-index: 1;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.18);
 }
 
 @keyframes move {
