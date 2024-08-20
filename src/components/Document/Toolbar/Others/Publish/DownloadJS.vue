@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { BoardLoader, BoardMenuItem } from "@/components/Document/Toolbar/Others/Publish/BoardMenu/boardLoader";
 import { Context } from "@/context";
@@ -18,10 +18,14 @@ const loading = ref<boolean>(false);
 const downloading = ref<boolean>(false);
 const boardList = ref<BoardMenuItem[]>([]);
 const lister = ref<BoardLoader>(new BoardLoader(props.context, boardList.value as BoardMenuItem[]));
+const toast = ref<{ show: boolean; type: 0 | 1; content: string }>({
+    show: false,
+    type: 1,
+    content: t('home.downloaded')
+});
 
 function boardLoaded() {
     loading.value = false;
-    console.log('__board_list__', boardList.value);
 }
 
 function init() {
@@ -30,14 +34,33 @@ function init() {
     });
 }
 
+const timerSet = new Set<any>();
+
+function showToast(type: 0 | 1) {
+    toast.value.show = true;
+    toast.value.type = type;
+    toast.value.content = type ? t('home.downloaded') : '下载失败';
+    timerSet.add(setTimeout(() => {
+        toast.value.show = false;
+    }, 2000));
+}
+
 function download() {
     downloading.value = true;
     setTimeout(() => {
         downloading.value = false;
-    }, 5000)
+        showToast(1);
+    }, 1500)
 }
 
 onMounted(init);
+onUnmounted(() => {
+    timerSet.forEach(t => {
+        clearTimeout(t);
+        t = null;
+    });
+    timerSet.clear();
+})
 </script>
 <template>
 <div class="overlay" @click="emits('close')">
@@ -67,11 +90,21 @@ onMounted(init);
                 </div>
             </div>
         </div>
-        <div
-            :style="{width: '100%', height: '100%', opacity: 0.4,'background-color': downloading ? '#fff' : 'transparent',transition: '0.2s','pointer-events': downloading? 'auto' : 'none', 'z-index': downloading ? 1 : -1, top: 0, position: 'absolute'}"/>
+        <div :style="{
+            width: '100%',
+            height: '100%',
+            'background-color': downloading ? 'rgba(255, 255, 255, 0.4)' : 'transparent',
+            transition: '0.2s',
+            'pointer-events': downloading? 'auto' : 'none',
+            'z-index': downloading ? 1 : -1,
+            top: 0,
+            left: 0,
+            position: 'absolute'
+        }">
+            <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : 'red'}">{{ toast.content }}</div>
+        </div>
     </div>
 </div>
-
 </template>
 <style scoped lang="scss">
 .overlay {
@@ -88,7 +121,6 @@ onMounted(init);
         width: 500px;
         padding: 0 24px 8px 24px;
         margin: 120px auto auto;
-        transform: translateY(0);
         border: 1px solid #F0F0F0;
         border-radius: 16px;
         background-color: white;
@@ -96,6 +128,7 @@ onMounted(init);
         overflow: hidden;
         z-index: 1000;
         box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.18);
+        transform: translateY(0);
         animation: move 0.25s ease-in-out;
 
         .close {
@@ -138,6 +171,22 @@ onMounted(init);
     & {
         animation: spin 1s linear infinite;
     }
+}
+
+.toast {
+    position: absolute;
+    width: fit-content;
+    height: 32px;
+    border-radius: var(--default-radius);
+    padding: 0 6px;
+    background-color: var(--theme-color);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
 }
 
 @keyframes move {
