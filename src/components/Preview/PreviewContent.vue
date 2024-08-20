@@ -828,7 +828,7 @@ function startLoop() {
 const updateDialogMatrix = () => {
     const page = props.context.selection.selectedPage;
     const selectShape = props.context.selection.selectedShapes[0];
-    // if (!selectShape) return;
+    if (!selectShape) return;
     const els = document.querySelectorAll('.dailogCard');
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     const shapes = getFrameList(page!);

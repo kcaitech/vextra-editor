@@ -719,7 +719,7 @@ export class ViewUpdater {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return m;
+        if(!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
@@ -761,7 +761,7 @@ export class ViewUpdater {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return m;
+        if(!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
