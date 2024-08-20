@@ -94,7 +94,7 @@ const prepareDom = (page: Page | PageView) => {
     const dom = props.context.getPageDom(page);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
-        dom.dom.render();
+        dom.dom.asyncRender();
         dom.ctx.loop(window.requestAnimationFrame);
         removeRenderidle = dom.dom.once("renderidle", () => {
             if (props.params.onRenderDone) props.params.onRenderDone();

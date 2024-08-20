@@ -21,16 +21,22 @@ export class ArtboradDom extends (ArtboradView) {
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
-    protected checkAndResetDirty(): boolean {
-        if (super.checkAndResetDirty()) return true;
-        return !this.el;
-    }
+    // protected checkAndResetDirty(): boolean {
+    //     if (super.checkAndResetDirty()) return true;
+    //     return !this.el;
+    // }
 
     canOptiNode = true;
     // optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
 
     render(): number {
         const version: number = super.render();
+        optiRender(this, version);
+        return version;
+    }
+    asyncRender(): number {
+        if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
+        const version: number = super.asyncRender();
         optiRender(this, version);
         return version;
     }

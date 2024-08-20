@@ -18,7 +18,7 @@ function intersect_rect(lhs: Rect, rhs: Rect): boolean {
         intersect_range(lhs.y, lhs.y + lhs.height, rhs.y, rhs.y + rhs.height);
 }
 
-const frame_time = 40;
+const frame_time = 20;
 
 export class PageDom extends (PageView) {
 
@@ -59,6 +59,18 @@ export class PageDom extends (PageView) {
 
     render(): number {
         const version: number = super.render();
+        if (version !== this.m_save_version || !this.el) {
+            elpatch(this, this.m_save_render);
+            this.m_save_version = version;
+            this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
+            this.m_save_render.el = this.el;
+        }
+        return version;
+    }
+
+    asyncRender(): number {
+        // if (!this.el && this.parent) this.m_ctx.setDirty(this.parent); // 子对象更新后，parent也要更新
+        const version: number = super.asyncRender();
         if (version !== this.m_save_version || !this.el) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
