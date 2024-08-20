@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { computed, onMounted, onUpdated, ref, watch } from 'vue';
+import { onUpdated, ref } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
@@ -137,7 +137,7 @@ function setColor(clr: string, alpha: number) {
 }
 
 function onColorChange(e: Event) {
-   ( e.target as HTMLInputElement)?.blur();
+    (e.target as HTMLInputElement)?.blur();
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') value = "#" + value;
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
@@ -435,61 +435,61 @@ function dragEnd() {
 </script>
 
 <template>
-    <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
-            :title="`${t('shadow.shadow_setting')}`">
-            <template #trigger>
-                <div class="trigger" @click="showMenu">
-                    <svg-icon icon-class="gear"></svg-icon>
-                </div>
-            </template>
-            <template #body>
-                <div class="options-container">
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.position') }}</div>
-                        <ShadowInput ticon="X" :shadow-v="shadow.offsetX" :reflush="reflush" @on-change="setOffsetX"
-                            @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
-                        </ShadowInput>
-                        <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush"
-                            @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
-                        </ShadowInput>
-                    </div>
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.effect') }}</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
-                            :tootip="`${t('shadow.blur')}`" :reflush="reflush" @dragstart="dragStart"
-                            @dragging="draggingB" @dragend="dragEnd">
-                        </ShadowInput>
-                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disabled"
-                            :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart" @dragging="draggingS"
-                            @dragend="dragEnd">
-                        </ShadowInput>
-                    </div>
-                    <div class="setting">
-                        <div class="name-title">{{ t('shadow.color') }}</div>
-                        <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
-                                @change="(c: Color) => getColorFromPicker(c)" />
-                            <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
-                                @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false" />
-                            <input ref="alphaShadow" style="text-align: right;"
-                                :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
-                                @click="alphaClick" @blur="is_alpha_select = false" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </Popover>
-        <teleport to="body">
-            <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+<div class="border-detail-container" @mousedown.stop>
+    <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
+             :title="`${t('shadow.shadow_setting')}`">
+        <template #trigger>
+            <div class="trigger" @click="showMenu">
+                <svg-icon icon-class="gear"></svg-icon>
             </div>
-        </teleport>
-    </div>
+        </template>
+        <template #body>
+            <div class="options-container">
+                <div class="setting">
+                    <div class="name-title">{{ t('shadow.position') }}</div>
+                    <ShadowInput ticon="X" :shadow-v="shadow.offsetX" :reflush="reflush" @on-change="setOffsetX"
+                                 @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
+                    </ShadowInput>
+                    <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush"
+                                 @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
+                    </ShadowInput>
+                </div>
+                <div class="setting">
+                    <div class="name-title">{{ t('shadow.effect') }}</div>
+                    <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
+                                 :tootip="`${t('shadow.blur')}`" :reflush="reflush" @dragstart="dragStart"
+                                 @dragging="draggingB" @dragend="dragEnd">
+                    </ShadowInput>
+                    <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disabled"
+                                 :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart" @dragging="draggingS"
+                                 @dragend="dragEnd">
+                    </ShadowInput>
+                </div>
+                <div class="setting">
+                    <div class="name-title">{{ t('shadow.color') }}</div>
+                    <div class="color">
+                        <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
+                                     @change="(c: Color) => getColorFromPicker(c)"/>
+                        <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
+                               @change="e => onColorChange(e)" @click="colorClick" @blur="is_color_select = false"/>
+                        <input ref="alphaShadow" style="text-align: right;"
+                               :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
+                               @click="alphaClick" @blur="is_alpha_select = false"/>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </Popover>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
+</div>
 </template>
 
 <style scoped lang="scss">
 .border-detail-container {
-    >.popover {
+    > .popover {
         width: 28px;
         height: 28px;
 
@@ -501,7 +501,7 @@ function dragEnd() {
             align-items: center;
             border-radius: var(--default-radius);
 
-            >svg {
+            > svg {
                 width: 16px;
                 height: 16px;
             }
@@ -519,19 +519,19 @@ function dragEnd() {
             box-sizing: border-box;
             height: 100%;
 
-            >div {
+            > div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                >label {
+                > label {
                     flex: 0 0 72px;
                     text-align: left;
                     box-sizing: border-box;
                     font-weight: var(--font-default-bold);
                 }
 
-                >.thickness-container {
+                > .thickness-container {
                     box-sizing: border-box;
                     padding: 0 14px;
                     background-color: var(--input-background);
@@ -541,13 +541,13 @@ function dragEnd() {
                     display: flex;
                     align-items: center;
 
-                    >svg {
+                    > svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                     }
 
-                    >input {
+                    > input {
                         outline: none;
                         border: none;
                         width: calc(100% - 37px);
@@ -559,7 +559,7 @@ function dragEnd() {
                         width: 10px;
                         height: 100%;
 
-                        >svg {
+                        > svg {
                             width: 10px;
                             height: 10px;
                         }
@@ -590,7 +590,7 @@ function dragEnd() {
         margin-left: 8px;
     }
 
-    input+input {
+    input + input {
         width: 50px;
     }
 
@@ -637,7 +637,7 @@ function dragEnd() {
         justify-content: center;
         align-items: center;
 
-        >svg {
+        > svg {
             width: 60%;
             height: 60%;
         }
