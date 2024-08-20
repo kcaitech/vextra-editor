@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { BoardLoader, BoardMenuItem } from "@/components/Document/Toolbar/Others/Publish/BoardMenu/boardLoader";
 import { Context } from "@/context";
 import BoardMenu from "@/components/Document/Toolbar/Others/Publish/BoardMenu/BoardMenu.vue";
+import { MossPacker } from "@/components/Document/Toolbar/Others/Publish/downloadJS";
 
 const t = useI18n().t;
 
@@ -45,12 +46,12 @@ function showToast(type: 0 | 1) {
     }, 2000));
 }
 
-function download() {
+async function download() {
     downloading.value = true;
-    setTimeout(() => {
-        downloading.value = false;
-        showToast(1);
-    }, 1500)
+    const packer = new MossPacker(props.context);
+    await packer.pack();
+    showToast(1);
+    downloading.value = false;
 }
 
 onMounted(init);
