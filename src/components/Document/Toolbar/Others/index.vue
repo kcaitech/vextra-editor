@@ -17,7 +17,7 @@ const props = defineProps<Props>();
 const plugins = props.context.pluginsMgr.search2('toolbar.others');
 const comps: { component: any, params?: any }[] = []
 comps.push(...plugins.begin)
-comps.push({ component: PublishEnter })
+// comps.push({ component: PublishEnter })
 comps.push({ component: LableToggle })
 comps.push({ component: Scale })
 comps.push(...plugins.end)
