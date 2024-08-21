@@ -13,3 +13,7 @@ export const template = `
 </body>
 </html>
 `
+
+export const readme = `
+_supported by moss.design_
+`

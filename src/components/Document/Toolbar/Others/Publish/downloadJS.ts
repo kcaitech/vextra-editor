@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Document, exportExForm } from "@kcdesign/data";
 import JSZip from "jszip";
-import { template } from "@/components/Document/Toolbar/Others/Publish/index.template";
+import { readme, template } from "@/components/Document/Toolbar/Others/Publish/index.template";
 
 export class MossPacker {
     private m_context: Context;
@@ -34,6 +34,7 @@ export class MossPacker {
     async pack(config: any) {
         try {
             const doc = this.m_doc;
+            const createName = this.createDocName;
 
             const data = await exportExForm(doc)
                 .catch((error) => {
@@ -50,8 +51,6 @@ export class MossPacker {
             const configBlob = new Blob([JSON.stringify(config)], { type: 'config' });
             main.file('.config', configBlob);
 
-            const createName = this.createDocName;
-
             // .mdd
             const zipMDD = new JSZip();
             const mddFolder = zipMDD.folder('');
@@ -67,6 +66,9 @@ export class MossPacker {
 
             // index.html
             main.file('index.html', template);
+
+            // README.md
+            main.file('README.md', readme);
 
             const content = await zip.generateAsync({ type: 'blob' });
 
