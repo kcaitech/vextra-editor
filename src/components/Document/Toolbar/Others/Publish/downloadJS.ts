@@ -35,7 +35,7 @@ export class MossPacker {
 
             const web = zip.folder('web')!;
 
-            const html = generateIndexHTML();
+            const html = generateIndexHTML(createName(data.document_meta.name));
             web.file('index.html', html);
 
             const loader = await generateIndexJS();
@@ -64,8 +64,8 @@ export class MossPacker {
             return readme;
         }
 
-        function generateIndexHTML() {
-            return template;
+        function generateIndexHTML(title: string) {
+            return template.replace('<%title%>', title);
         }
 
         async function generateIndexJS() {
