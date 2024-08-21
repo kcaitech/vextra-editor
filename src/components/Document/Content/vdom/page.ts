@@ -3,9 +3,9 @@ import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
 import { NodeType, opti2none, optiNode, OptiStatus, OptiType, unOptiNode } from "./optinode";
 
-const OPTI_NODE_COUNT = 3000;
-const OPTI_AS_CANVAS_COUNT = 5000;
-const OPTI_INSIDE_COUNT = 1000;
+const OPTI_NODE_COUNT = 5000;
+const OPTI_AS_CANVAS_COUNT = 20000;
+const OPTI_INSIDE_COUNT = 2000;
 const OPTI_MIN_COUNT = 20;
 function intersect_range(lx0: number, lx1: number, rx0: number, rx1: number): boolean {
     return lx0 < rx1 && lx1 > rx0;

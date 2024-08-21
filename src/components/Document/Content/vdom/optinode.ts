@@ -38,7 +38,7 @@ export type NodeType = ShapeView & EL & {
 // export const OPTI_NODE_COUNT = 3000;
 // export const MAX_OPTI_LEVEL = 3;
 const _2IMAGE_NODE_COUNT = 10; // 小于这个的不转成image了
-const _2CANVAS_NODE_COUNT = 300; // 太大了需要用canvas
+const _2CANVAS_NODE_COUNT = 500; // 太大了需要用canvas
 
 export enum OptiStatus {
     none, done, optimizing,
@@ -106,7 +106,7 @@ function opti2image(_this: NodeType, optiType: 'image' | 'canvas', matrix: Matri
     // canvas还有些问题
     // _opti2image(_this);
     // return OptiStatus.done;
-    else if (_this.nodeCount < _2CANVAS_NODE_COUNT) {
+    else if (_this.nodeCount < _2CANVAS_NODE_COUNT || optiType === 'image') {
         _opti2image(_this);
         return OptiStatus.done;
     } else {
