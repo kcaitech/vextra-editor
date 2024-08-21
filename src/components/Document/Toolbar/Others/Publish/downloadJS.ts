@@ -25,7 +25,6 @@ export class MossPacker {
             .catch((error) => {
                 throw error
             });
-        console.log('__data__', data);
         if (!data) throw new Error('invalid data');
 
         try {
