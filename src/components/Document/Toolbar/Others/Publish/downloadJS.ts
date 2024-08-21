@@ -44,6 +44,9 @@ export class MossPacker {
             const html = generateIndexHTML();
             web.file('index.html', html);
 
+            const loader = await generateIndexJS();
+            if (loader) web.file('index.js', loader);
+
             const _static = web.folder('static')!;
             const config = generateConfig();
             _static.file('.config', config);
@@ -71,8 +74,16 @@ export class MossPacker {
             return template;
         }
 
-        function generateIndexJS() {
-            return; // todo index.js
+        async function generateIndexJS() {
+            const response = await fetch('/static/prototype/index.prototype.js');
+            const reader = response.body?.getReader();
+            const values: Uint8Array[] = [];
+            while (reader) {
+                const r = await reader.read();
+                if (r.value) values.push(r.value);
+                if (r.done) break;
+            }
+            return new Blob([...values]);
         }
 
         function generateConfig() {
