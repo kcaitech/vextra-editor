@@ -173,6 +173,7 @@ onUnmounted(() => {
     width: 100%;
     align-items: center;
     justify-content: center;
+    margin-top: 16px;
 }
 
 .loader {
