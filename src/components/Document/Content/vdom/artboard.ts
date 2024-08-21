@@ -1,5 +1,5 @@
 import { ArtboradView, EL } from "@kcdesign/data";
-import { NodeType, optiRender, OptiType } from "./optinode";
+import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 // const MAX_NODE_SUPPORT = 50; // 小于这个的不转成image了
 export class ArtboradDom extends (ArtboradView) {
@@ -10,7 +10,7 @@ export class ArtboradDom extends (ArtboradView) {
 
     set optiel_dirty(dirty: boolean) {
         const _this = this as NodeType
-        if (_this.optis?.records[OptiType.image]) _this.optis.records[OptiType.image].dirty = dirty;
+        optiSetDirty(_this);
     }
     protected onChildChange(...args: any[]) {
         super.onChildChange(...args);

@@ -1,5 +1,5 @@
 import { EL, GroupShapeView } from "@kcdesign/data";
-import { NodeType, optiRender, OptiType } from "./optinode";
+import { NodeType, optiRender, optiSetDirty, OptiType } from "./optinode";
 
 export class GroupShapeDom extends (GroupShapeView) {
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
@@ -10,7 +10,7 @@ export class GroupShapeDom extends (GroupShapeView) {
     optiel?: HTMLElement | SVGElement; // 绘制优化，不可见的节点暂存不显示
     set optiel_dirty(dirty: boolean) {
         const _this = this as NodeType
-        if (_this.optis?.records[OptiType.image]) _this.optis.records[OptiType.image].dirty = dirty;
+        optiSetDirty(_this);
     }
     protected onChildChange(...args: any[]) {
         super.onChildChange(...args);

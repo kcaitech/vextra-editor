@@ -1,7 +1,7 @@
 import { EL, Matrix, objectId, PageView, PropsType, ShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 import { DomCtx } from "./domctx";
-import { NodeType, opti2none, optiNode, OptiType, unOptiNode } from "./optinode";
+import { NodeType, opti2none, optiNode, OptiStatus, OptiType, unOptiNode } from "./optinode";
 
 const OPTI_NODE_COUNT = 3000;
 const OPTI_AS_CANVAS_COUNT = 5000;
@@ -85,8 +85,12 @@ export class PageDom extends (PageView) {
         matrix: Matrix
     }
 
+    m_delay_optimize: number = 0;
+
     updateVisibleRect(visible_rect: { x: number, y: number, width: number, height: number }, matrix: Matrix) {
         this.m_render_args = { visible_rect, matrix }
+        // delay 更新
+        this.m_delay_optimize = Date.now();
         this.m_ctx.continueLoop();
     }
 
@@ -182,15 +186,14 @@ export class PageDom extends (PageView) {
                 }
 
                 const id = objectId(c);
-                const pre = this.m_optimize.get(id);
-                const ret = optiNode(c, this.m_optimize_type, true, focusid[id], matrix, pre?.image);
+                const ret = optiNode(c, this.m_optimize_type, true, focusid[id], matrix);
 
-                if (ret !== false) {
+                if (ret !== OptiStatus.none) {
                     optimize.push(id);
-                    if (ret === true) {
+                    if (ret === OptiStatus.done) {
                         this.m_optimize.set(id, { node: c });
                     } else {
-                        this.m_optimize.set(id, { node: c, image: ret });
+                        this.m_optimize.set(id, { node: c, optimizing: true });
                         hasOptimizing = true;
                     }
 
@@ -268,10 +271,7 @@ export class PageDom extends (PageView) {
     }
 
     m_optimize?: Map<number, {
-        node: ShapeView & NodeType, image?: {
-            loaded: boolean,
-            imageel: SVGImageElement
-        }
+        node: ShapeView & NodeType, optimizing?: boolean
     }>;
     m_optimize_type: 'image' | 'canvas' = 'image'
 
@@ -302,9 +302,12 @@ export class PageDom extends (PageView) {
             this.m_optimize = new Map();
             if (this.nodeCount > OPTI_AS_CANVAS_COUNT) this.m_optimize_type = 'canvas'
         }
-        if (this.m_optimize && this.optimizeClientVisibleNodes()) {
-            return true;
+        if (this.m_optimize) {
+            const delay_optimize = 100;
+            if (Date.now() - this.m_delay_optimize < delay_optimize) return true;
+            if (this.optimizeClientVisibleNodes()) return true;
         }
+
         this.emit('renderidle')
         return false;
 
