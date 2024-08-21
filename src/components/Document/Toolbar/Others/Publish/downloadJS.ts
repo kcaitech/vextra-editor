@@ -17,11 +17,6 @@ export class MossPacker {
         return name.replace(reg, '') + (suffix ? `.${suffix}` : '');
     }
 
-    createHTML() {
-
-    }
-
-
     async pack(config: any) {
         const doc = this.m_doc;
         const createName = this.createDocName;
