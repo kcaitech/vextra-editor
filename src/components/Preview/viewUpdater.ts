@@ -719,6 +719,7 @@ export class ViewUpdater {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
@@ -760,6 +761,7 @@ export class ViewUpdater {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
@@ -862,6 +864,7 @@ export class ViewUpdater {
     // 滑入动画
     pageSvgSlideAnimate(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const m = new Matrix(this.v_matrix.clone());
         if (action.transitionType === PrototypeTransitionType.SLIDEFROMBOTTOM ||
@@ -892,6 +895,7 @@ export class ViewUpdater {
     // pageSvg推出动画
     pageSvgPushAnimate(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const m = new Matrix(this.v_matrix.clone());
         const animateType = action.transitionType?.split('_');
@@ -933,6 +937,7 @@ export class ViewUpdater {
     // 移出动作
     outAction(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const animate_type = action.transitionType?.split('_');
         if (!animate_type) return;
@@ -958,6 +963,7 @@ export class ViewUpdater {
     backSlideInAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
         const animateType = action.transitionType?.split('_');
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape) return;
         if (animateType && animateType.includes('SLIDE') && animateType.includes('FROM')) {
             const box = viewBox(this.v_matrix, select_shape);
             const m = new Matrix(this.v_matrix.clone());
@@ -986,6 +992,7 @@ export class ViewUpdater {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('OUT') && animateType.includes('SLIDE')) {
             const select_shape = this.m_context.selection.selectedShapes[0];
+            if(!select_shape) return;
             const box = viewBox(this.v_matrix, select_shape);
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
@@ -1029,6 +1036,7 @@ export class ViewUpdater {
     }
     backOutAction(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
+        if(!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const animate_type = action.transitionType?.split('_');
         if (!animate_type) return;
@@ -1171,8 +1179,9 @@ export class ViewUpdater {
                     }, time * 1000);
                 }
             }
-            let stepx = this.m_context.preview.artboardScrollOffset.x;
-            let stepy = this.m_context.preview.artboardScrollOffset.y;
+            const trans = (inner_shape as ArtboradView).innerTransform;
+            let stepx = this.m_context.preview.artboardScrollOffset.x - (trans?.translateX || 0);
+            let stepy = this.m_context.preview.artboardScrollOffset.y - (trans?.translateY || 0);
             scrollAtrboard(inner_shape, { x: stepx, y: stepy });
         }
     }

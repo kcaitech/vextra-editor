@@ -43,8 +43,10 @@ export class Preview extends WatchableObject {
     private m_swap_action: Set<PrototypeActions> = new Set();
     private m_navi_shape_list: ShapeView[] = [];
     private m_setTimeouts: Set<any> = new Set();
+    private m_delaySetTimeouts: Map<string, any> = new Map();
     private m_arboard_inner_transform: Map<string, TransformRaw> = new Map();
     private m_inner_scroll: ShapeView | undefined;
+    private m_save_last_shape: ShapeView | undefined;
 
     constructor(context: Context) {
         super();
@@ -223,6 +225,30 @@ export class Preview extends WatchableObject {
         this.m_setTimeouts.clear();
     }
 
+    get delaySetTimeout() {
+        return this.m_delaySetTimeouts;
+    }
+
+    addDelaySetTimeout(key: string, value: any) {
+        this.m_delaySetTimeouts.set(key, value);
+    }
+
+    deleteDelaySetTimeout(key: string) {
+        const timer = this.m_delaySetTimeouts.get(key);
+        if (timer) {
+            clearTimeout(timer);
+            this.m_delaySetTimeouts.delete(key);
+        }
+    }
+
+    clearDelaySetTimeout() {
+        this.m_delaySetTimeouts.forEach((v, k) => {
+            clearTimeout(v);
+            this.m_delaySetTimeouts.delete(k);
+        })
+        this.m_delaySetTimeouts.clear();
+    }
+
     setInnerTransform(key: string, value: TransformRaw) {
         this.m_arboard_inner_transform.set(key, value);
     }
@@ -233,5 +259,13 @@ export class Preview extends WatchableObject {
 
     clearInnerTransform() {
         this.m_arboard_inner_transform.clear();
+    }
+
+    saveLastHoverShape(shape: ShapeView | undefined) {        
+        this.m_save_last_shape = shape;
+    }
+
+    get saveShape() {
+        return this.m_save_last_shape;
     }
 }

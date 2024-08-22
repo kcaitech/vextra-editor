@@ -4,7 +4,7 @@ import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
 import { eventPriority, getFrameList, getPreviewMatrix } from '@/utils/preview';
-import { Matrix, PathShapeView, PrototypeEvents, sessionRefIdKey, ShapeView } from '@kcdesign/data';
+import { Matrix, PathShapeView, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { delayAction, ProtoAction } from './actions';
 
@@ -29,6 +29,10 @@ export interface EventIndex {
     mouseenter: number,
     hover: number
 }
+
+const emit = defineEmits<{
+    (e: "updateSearch", event?: MouseEvent): void;
+}>();
 
 const props = defineProps<Props>();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
@@ -56,6 +60,7 @@ let eventTypeZIndex = {
 }
 
 function pathMousedown(e: MouseEvent) {
+    emit('updateSearch', e);
     const selection = props.context.selection;
     if (props.context.workspace.isPageDragging) {
         return;
@@ -65,6 +70,7 @@ function pathMousedown(e: MouseEvent) {
     }
 
     const hoveredShape = selection.hoveredShape;
+
     if (!hoveredShape) {
         return;
     }
@@ -76,8 +82,6 @@ function pathMousedown(e: MouseEvent) {
     eventTypeZIndex.dblclick = false
     eventTypeZIndex.mousedown = false
     if (e.button === 0) {
-        console.log('============1', e);
-
         const protoActions = hoveredShape.prototypeInterActions;
         if (!protoActions) return;
         if (dbl_action()) {
@@ -125,6 +129,7 @@ const onMouseMove = (e: MouseEvent) => {
 
 const onMouseUp = (e: MouseEvent) => {
     e.stopPropagation();
+    emit('updateSearch', e);
     const hoveredShape = props.context.selection.hoveredShape;
     if (!hoveredShape) return;
     const protoActions = hoveredShape.prototypeInterActions;
@@ -196,25 +201,45 @@ const onMouseenter = () => {
                     console.log('鼠标悬停');
                     eventTypeZIndex.hover = true;
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                    if (protoAction.actions.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+                        emit('updateSearch');
+                    } else {
+                        const time = protoAction.actions.transitionDuration ?? 0.3;
+                        const timer = setTimeout(() => {
+                            emit('updateSearch');
+                        }, time * 1000);
+                        props.context.preview.addSetTimeout(timer);
+                    }
                 } else if (!eventTypeZIndex.mouseenter && type === PrototypeEvents.MOUSEENTER) {
                     console.log('hoveredShape: 移入');
                     eventTypeZIndex.mouseenter = true
                     protoActionFn.executeActionx(protoAction.actions, props.matrix);
+                    if (protoAction.actions.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
+                        emit('updateSearch');
+                    } else {
+                        const time = protoAction.actions.transitionDuration ?? 0.3;
+                        const timer = setTimeout(() => {
+                            emit('updateSearch');
+                        }, time * 1000);
+                        props.context.preview.addSetTimeout(timer);
+                    }
                 }
             }
         }
         if (saveShape.value) {
-            moveOutAction(saveShape.value);
+            moveOutAction();
         }
         saveShape.value = hoveredShape;
     } else {
         if (!saveShape.value) return;
-        moveOutAction(saveShape.value);
+        moveOutAction();
         saveShape.value = undefined;
     }
 }
 
-const moveOutAction = (shape: ShapeView) => {
+const moveOutAction = () => {
+    const shape = props.context.preview.saveShape;
+    if(!shape) return;
     const protoActions = shape!.prototypeInterActions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
@@ -222,7 +247,11 @@ const moveOutAction = (shape: ShapeView) => {
         const type = protoAction.event.interactionType;
         if (type === PrototypeEvents.MOUSELEAVE && protoActionFn) {
             console.log('saveShape.value: 移出');
-            protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            if (protoAction.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
+                protoActionFn.symbolStateSwitch(protoAction.actions, protoAction.id, shape);
+            } else {
+                protoActionFn.executeActionx(protoAction.actions, props.matrix);
+            }
             break;
         }
     }
@@ -231,7 +260,6 @@ const moveOutAction = (shape: ShapeView) => {
 function createShapeTracing() {
     const hoveredShape = props.context.selection.hoveredShape;
     tracing.value = false;
-
     if (!hoveredShape) {
         return;
     }
@@ -264,10 +292,13 @@ const selected_watcher = (t: number | string) => {
         createShapeTracing();
     } else if (t === Selection.CHANGE_SHAPE) {
         props.context.preview.clearSetTimeout();
+        props.context.preview.clearDelaySetTimeout();
         props.context.preview.setInteractionAction(undefined);
         props.context.preview.setSwapAction(undefined);
         sessionStorage.removeItem(sessionRefIdKey);
         delayAction(props.context, props.matrix);
+    } else if (t === Selection.PREVIEW_HOVER_CHANGE) {
+        createShapeTracing();
     }
 }
 

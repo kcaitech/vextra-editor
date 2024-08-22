@@ -816,7 +816,7 @@ const getText = (actions: PrototypeActions) => {
         }
         a(shape!, actions.targetNodeID!)
         return targetnmae.value
-    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
+    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) { 
         const page = props.context.selection.selectedPage
         if (!page) return
         const a = search(page, actions.targetNodeID)

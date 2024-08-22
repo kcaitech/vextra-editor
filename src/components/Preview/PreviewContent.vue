@@ -122,7 +122,7 @@ const getEndElement = () => {
     }
     return el;
 }
-const previewWatcher = (t: number | string, s?: any) => {
+const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
     if (t === Preview.MENU_CHANGE) {
         const type = props.context.preview.scaleType;
         if (type === ScaleType.Actual) {
@@ -160,8 +160,8 @@ const previewWatcher = (t: number | string, s?: any) => {
         // 滚动动画
         const action = s as PrototypeActions;
         const selected_shape = props.context.selection.selectedShapes[0];
-        const shappe = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
-        viewUpdater.artboardInnerScroll(action, el, shappe);
+        const shape = target_shapes.length ? target_shapes[target_shapes.length - 1] : selected_shape;
+        viewUpdater.artboardInnerScroll(action, el, shape);
         if (event) search(event);
     } else if (t === Preview.MATRIX_CHANGE) {
         // 更新浮层位置
@@ -177,7 +177,7 @@ const previewWatcher = (t: number | string, s?: any) => {
         const naviList = props.context.preview.naviShapeList;
         const frameList = naviList.length > 0 ? naviList : getFrameList(page);
         listLength.value = frameList.length;
-        const index = frameList.findIndex(item => item.id === shape.id);
+        const index = frameList.findIndex(item => item.id === shape?.id);
         curPage.value = index + 1;
     } else if (t === Preview.SUPERNATANT_CLOSR) {
         // 关闭浮层动作
@@ -188,11 +188,15 @@ const previewWatcher = (t: number | string, s?: any) => {
         const m = viewUpdater.readyPosition(end_matrix.value as Matrix, end_shape, action.transitionType);
         const el = els[els.length - 1] as SVGSVGElement;
         el.style['transform'] = m.toString();
-        const time = action.transitionDuration ?? 0.3;
-        const timer = setTimeout(() => {
+        if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
             getTargetShapes();
-        }, time * 1000);
-        props.context.preview.addSetTimeout(timer);
+        } else {
+            const time = action.transitionDuration ?? 0.3;
+            const timer = setTimeout(() => {
+                getTargetShapes();
+            }, time * 1000);
+            props.context.preview.addSetTimeout(timer);
+        }
     } else if (t === Preview.SYMBOL_REF_SWITCH) {
         const m = new Matrix();
         if (!s && symrefAnimate.value) {
@@ -202,7 +206,7 @@ const previewWatcher = (t: number | string, s?: any) => {
             return;
         }
         const action = s as PrototypeActions;
-        const hover_shape = props.context.selection.hoveredShape;
+        const hover_shape = action_s || props.context.selection.hoveredShape;
         if (!action.targetNodeID || !hover_shape || !symrefAnimate.value) return;
         const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
         const box = viewBox(matrix, hover_shape);
@@ -232,6 +236,24 @@ const previewWatcher = (t: number | string, s?: any) => {
         if (view.el) {
             symrefAnimate.value.appendChild(view.el);
             symrefAnimate.value.style.opacity = '1';
+            const timer = setTimeout(() => {
+                view.el && symrefAnimate.value?.removeChild(view.el);
+            }, time * 1000);
+            props.context.preview.addSetTimeout(timer);
+        }
+    }
+}
+
+const removeChildSymrefAnimate = () => {
+    if (!symrefAnimate.value) return;
+    const els = symrefAnimate.value.childNodes;
+    symrefAnimate.value.style['transition'] = '';
+    symrefAnimate.value.style['transform'] = '';
+    symrefAnimate.value.style.opacity = '0';
+    if (els.length > 0) {
+        for (let index = 0; index < els.length; index++) {
+            const el = els[index];
+            symrefAnimate.value.removeChild(el);
         }
     }
 }
@@ -241,6 +263,7 @@ const selectionWatcher = (v: number | string) => {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
+        removeChildSymrefAnimate();
         props.context.preview.clearInnerTransform();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {
@@ -335,19 +358,25 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
-    if (!((e.target as HTMLElement).tagName === "DIV")) return;
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     e.stopPropagation();
 
     isMenu.value = false;
     if (e.button === 2) {
+        if (!preview.value) return;
         props.context.preview.notify(Preview.MENU_VISIBLE);
         top.value = e.y;
         left.value = e.x;
-        nextTick(() => {
-            isMenu.value = true;
-        })
+        const root = preview.value.getBoundingClientRect();
+        const downX = e.clientX - root.x;
+        const downY = e.clientY - root.y;
+        const box = viewBox(viewUpdater.v_matrix, shape);
+        if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
+            nextTick(() => {
+                isMenu.value = true;
+            })
+        }
     } else if (e.button === 0) {
         isDragging = false;
         downXY.x = e.clientX;
@@ -367,7 +396,6 @@ function onMouseMove(e: MouseEvent) {
             preview.value.style.cursor = 'grabbing';
         }
     } else if (e.button === 0) {
-        if (!isDragging) return;
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
         if (!hover_shape) {
@@ -470,6 +498,7 @@ function onMouseUp(e: MouseEvent) {
             const select_shape = props.context.selection.selectedShapes[0];
             const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
             const shape = isSuperposed.value ? target_shapes.at(-1) : select_shape;
+            if (!shape) return;
             viewUpdater.getHotZone(e, matrix, shape as ShapeView);
         }
     }
@@ -571,9 +600,6 @@ function search(e: MouseEvent) {
     const actions = hover_shape?.prototypeInterActions;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
-        if (p && p.type === ShapeType.Page) {
-            return selectShapes(props.context, undefined);
-        }
         while (p && p.type !== ShapeType.Page) {
             if (p.prototypeInterActions && p.prototypeInterActions.length) {
                 selectShapes(props.context, p);
@@ -581,6 +607,9 @@ function search(e: MouseEvent) {
             } else {
                 p = p.parent;
             }
+        }
+        if (p && p.type === ShapeType.Page) {
+            return selectShapes(props.context, undefined);
         }
     } else {
         selectShapes(props.context, hover_shape);
@@ -609,6 +638,29 @@ function search2(e: MouseEvent) {
     return hover_shape;
 }
 
+const updateSearch = (e?: MouseEvent) => {
+    const hover_shape = search2(e || event);
+    if (hover_shape) {
+        const actions = hover_shape?.prototypeInterActions;
+        if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
+            let p = hover_shape.parent;
+            if (p && p.type === ShapeType.Page) {
+                return;
+            }
+            while (p && p.type !== ShapeType.Page) {
+                if (p.prototypeInterActions && p.prototypeInterActions.length) {
+                    props.context.selection.previewHoverShape(p);
+                    break;
+                } else {
+                    p = p.parent;
+                }
+            }
+        } else {
+            props.context.selection.previewHoverShape(hover_shape);
+        }
+    }
+}
+
 const closeMenu = () => {
     isMenu.value = false;
 }
@@ -619,6 +671,7 @@ const getTargetShapes = () => {
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
     const selectShape = props.context.selection.selectedShapes[0];
+    if (!selectShape) return;
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
@@ -704,6 +757,7 @@ const backTargetShape = (s?: string) => {
     const shapes = getFrameList(page!);
     const actions = props.context.preview.interactionAction;
     const selectShape = props.context.selection.selectedShapes[0];
+    if (!selectShape) return;
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
@@ -779,6 +833,7 @@ function startLoop() {
 const updateDialogMatrix = () => {
     const page = props.context.selection.selectedPage;
     const selectShape = props.context.selection.selectedShapes[0];
+    if (!selectShape) return;
     const els = document.querySelectorAll('.dailogCard');
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     const shapes = getFrameList(page!);
@@ -884,7 +939,8 @@ onUnmounted(() => {
             </div>
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix">
+        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
+            @updateSearch="updateSearch">
         </ControlsView>
         <div class="overlay" v-if="is_overlay"></div>
         <div v-if="cur_shape" class="preview_overlay"></div>
