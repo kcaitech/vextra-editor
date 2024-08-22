@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { ArtboradView, Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -10,7 +10,7 @@ export class ProtoAction {
         this.m_context = context;
     }
 
-    executeActionx(action: PrototypeActions, matrix: Matrix) {
+    executeActionx(action: PrototypeActions, matrix: Matrix, id?: string) {
         const page = this.m_context.selection.selectedPage;
         this.m_shapes = getFrameList(page!);
         if (action.connectionType === PrototypeConnectionType.INTERNALNODE && action.navigationType === PrototypeNavigationType.NAVIGATE) {
@@ -32,6 +32,7 @@ export class ProtoAction {
         } else if (action.navigationType === PrototypeNavigationType.SWAPSTATE) {
             this.symbolStateSwitch(action);
         }
+        if (id) this.m_context.preview.deleteDelaySetTimeout(id);
     }
     // 跳转页面
     actionSkipPage(action: PrototypeActions) {
@@ -39,7 +40,7 @@ export class ProtoAction {
         if (!shapeId) return;
         const shape = this.m_shapes.find(item => item.id === shapeId);
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if (!shape) return;
+        if (!shape || !select_shape) return;
         this.m_context.preview.setFromShapeAction({ id: select_shape.id, action: action });
         if (!action.transitionType) return;
         const type = action.transitionType.split('_');
@@ -69,7 +70,7 @@ export class ProtoAction {
         const action = this.m_context.preview.protoAction;
         if (action) {
             const shape = this.m_shapes.find(item => item.id === action.id);
-            if (!action.action.transitionType) return;
+            if (!action.action.transitionType || !shape) return;
             const type = action.action.transitionType.split('_');
             const time = action.action.transitionDuration ?? 0.3;
             if (action.action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
@@ -94,7 +95,7 @@ export class ProtoAction {
     artboardInScroll(action: PrototypeActions, matrix: Matrix) {
         const page = this.m_context.selection.selectedPage;
         if (!page || !action.targetNodeID) return;
-        const target_shape = page.getShape(action.targetNodeID);
+        const target_shape = page.getShape(action.targetNodeID);        
         if (!target_shape) return;
         const scroll_shape = this.scrollParent(target_shape);
         if (scroll_shape) {
@@ -136,13 +137,11 @@ export class ProtoAction {
         document.body.removeChild(a);
     }
     // 组件状态替换
-    symbolStateSwitch(action: PrototypeActions, shape?: ShapeView) {
+    symbolStateSwitch(action: PrototypeActions, id?: string, shape?: ShapeView) {
         const down_shape = shape || this.m_context.selection.hoveredShape as SymbolRefView;
         if (!action.targetNodeID) return;
         const time = action.transitionDuration ?? 0.3;
         const maprefIdArray = this.getMapRefIdLS(sessionRefIdKey);
-        console.log(down_shape.id, action.targetNodeID);
-        
         maprefIdArray.set(down_shape.id, action.targetNodeID);
         this.saveMapRefIdLS(maprefIdArray, sessionRefIdKey);
         if (action.transitionType === PrototypeTransitionType.INSTANTTRANSITION) {
@@ -158,6 +157,7 @@ export class ProtoAction {
             }, time * 1000);
             this.m_context.preview.addSetTimeout(timer);
         }
+        if (id) this.m_context.preview.deleteDelaySetTimeout(id);
     }
     // 打开浮层
     openDialog(action: PrototypeActions, matrix: Matrix) {
@@ -228,6 +228,7 @@ export const delayAction = (context: Context, matrix: Matrix) => {
             shape = s;
         }
     }
+    if(!shape) return;
     const protoActionFn = new ProtoAction(context);
     executeDelayActionShape(context, shape, protoActionFn, matrix);
 }
@@ -239,16 +240,17 @@ function executeDelayActionShape(context: Context, shape: ShapeView, protoAction
             const action = actions[i];
             if (action.event.interactionType === PrototypeEvents.AFTERTIMEOUT) {
                 const time = action.event.transitionTimeout || 0.8;
-                const timer = setTimeout(() => {
-                    if (action.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
-                        protoActionFn.symbolStateSwitch(action.actions, shape);
-                    } else {
-                        
-                        protoActionFn.executeActionx(action.actions, matrix);
-                    }
-                }, time * 1000);
-                context.preview.addSetTimeout(timer);
-                break;
+                const timers = context.preview.delaySetTimeout;
+                if (!timers.has(action.id)) {
+                    const timer = setTimeout(() => {
+                        if (action.actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
+                            protoActionFn.symbolStateSwitch(action.actions, action.id, shape);
+                        } else {
+                            protoActionFn.executeActionx(action.actions, matrix, action.id);
+                        }
+                    }, time * 1000);
+                    context.preview.addDelaySetTimeout(action.id, timer);
+                }
             }
         }
     }

@@ -81,9 +81,11 @@ function mouseleave(t: 'left' | 'right') {
 
 function switchPage(id?: string, frame_id?: string) {
     if (!id) return
-
     const ctx: Context = props.context as Context;
+    if (ctx.selection.selectedPage?.id === id) return;
     ctx.selection.selectPage(id);
+    // todo delay show loading
+    loading.value = true;
 }
 
 
@@ -91,7 +93,6 @@ function selectionWatcher(t: number | string) {
     const ctx: Context = props.context as Context;
     if (t === Selection.CHANGE_PAGE) {
         curPage.value = ctx.selection.selectedPage;
-
     }
 }
 

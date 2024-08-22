@@ -56,28 +56,6 @@ export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: {
     }
 }
 
-const _escapeChars: { [key: string]: string } = {};
-_escapeChars['<'] = '&lt;';
-_escapeChars['>'] = '&gt;';
-_escapeChars['&'] = '&amp;';
-
-function escapeWebChar(text: string) {
-    const ret: string[] = [];
-    let i = 0, j = 0, len = text.length;
-    for (; i < len; ++i) {
-        const e = _escapeChars[text[i]];
-        if (e) {
-            if (i > j) ret.push(text.substring(j, i));
-            ret.push(e);
-            j = i + 1;
-        }
-    }
-    if (ret.length > 0) {
-        if (i > j) ret.push(text.substring(j, i));
-        return ret.join('');
-    }
-    return text;
-}
 
 function inner_elpatch(tar: EL, old: EL | undefined) {
     let _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
@@ -106,6 +84,8 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         // }
         _tar.el = el;
         _old = undefined;
+    } else {
+        // todo 脱离文档更新？
     }
 
     // attr
@@ -114,7 +94,7 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     // string
     if (!Array.isArray(_tar.elchilds)) {
         if (!_old || _old.elchilds !== _tar.elchilds) {
-            _tar.el.innerHTML = escapeWebChar(_tar.elchilds);
+            _tar.el.innerHTML = (_tar.elchilds);
         }
         return;
     }
@@ -139,10 +119,11 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
             const ochild = _old && getResue(tchild, _old, i) as (EL & { el?: HTMLElement | SVGElement }) | undefined;
             inner_elpatch(tchild, ochild); // 由view节点自己patch
         }
-        if (!tchild.el) {
+        if (!tchild.el) { // 子对象渲染完后，parent也需要渲染
             // 是可能的
             // throw new Error("something wrong");
-            continue;
+            tchild.el = createElement('g');
+            // continue;
         }
         const childNodes = _tar.el.childNodes;
         if (childNodes[idx] === tchild.el) {
@@ -167,10 +148,24 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
 }
 
 export function elpatch(tar: EL, old: EL | undefined) {
-    inner_elpatch(tar, old);
-
     const _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
     const _tar = tar as EL & { el?: HTMLElement | SVGElement };
+    
+    // todo 待验证是否有用
+    // let _tar_el: HTMLElement | SVGElement | undefined;
+    // if (_tar.el) {
+    //     _tar_el = _tar.el;
+    //     _tar_el.style.display = 'none'
+    // }
+
+    // let _old_el: HTMLElement | SVGElement | undefined;
+    // if (_old?.el) {
+    //     _old_el = _old.el;
+    //     _old_el.style.display = 'none'
+    // }
+
+    inner_elpatch(tar, old);
+
     if (!_tar.el?.parentNode && _old?.el?.parentNode) { // 未加入到dom
         const newel = _tar.el;
         const oldel = _old?.el!;
@@ -183,4 +178,11 @@ export function elpatch(tar: EL, old: EL | undefined) {
             p.removeChild(oldel);
         }
     }
+
+    // if (_tar_el) {
+    //     _tar_el.style.display = ''
+    // }
+    // if (_old_el) {
+    //     _old_el.style.display = ''
+    // }
 }
