@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
-import { Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { ArtboradView, Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 
 export class ProtoAction {
     private m_context: Context
@@ -95,7 +95,7 @@ export class ProtoAction {
     artboardInScroll(action: PrototypeActions, matrix: Matrix) {
         const page = this.m_context.selection.selectedPage;
         if (!page || !action.targetNodeID) return;
-        const target_shape = page.getShape(action.targetNodeID);
+        const target_shape = page.getShape(action.targetNodeID);        
         if (!target_shape) return;
         const scroll_shape = this.scrollParent(target_shape);
         if (scroll_shape) {
@@ -251,7 +251,6 @@ function executeDelayActionShape(context: Context, shape: ShapeView, protoAction
                     }, time * 1000);
                     context.preview.addDelaySetTimeout(action.id, timer);
                 }
-                break;
             }
         }
     }

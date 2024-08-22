@@ -358,19 +358,25 @@ const left = ref(0);
 let downXY = { x: 0, y: 0 };
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
-    if (!((e.target as HTMLElement).tagName === "DIV")) return;
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     e.stopPropagation();
 
     isMenu.value = false;
     if (e.button === 2) {
+        if (!preview.value) return;
         props.context.preview.notify(Preview.MENU_VISIBLE);
         top.value = e.y;
         left.value = e.x;
-        nextTick(() => {
-            isMenu.value = true;
-        })
+        const root = preview.value.getBoundingClientRect();
+        const downX = e.clientX - root.x;
+        const downY = e.clientY - root.y;
+        const box = viewBox(viewUpdater.v_matrix, shape);
+        if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
+            nextTick(() => {
+                isMenu.value = true;
+            })
+        }
     } else if (e.button === 0) {
         isDragging = false;
         downXY.x = e.clientX;
@@ -390,7 +396,6 @@ function onMouseMove(e: MouseEvent) {
             preview.value.style.cursor = 'grabbing';
         }
     } else if (e.button === 0) {
-        if (!isDragging) return;
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
         if (!hover_shape) {

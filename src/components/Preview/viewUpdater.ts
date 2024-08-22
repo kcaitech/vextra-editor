@@ -1179,8 +1179,9 @@ export class ViewUpdater {
                     }, time * 1000);
                 }
             }
-            let stepx = this.m_context.preview.artboardScrollOffset.x;
-            let stepy = this.m_context.preview.artboardScrollOffset.y;
+            const trans = (inner_shape as ArtboradView).innerTransform;
+            let stepx = this.m_context.preview.artboardScrollOffset.x - (trans?.translateX || 0);
+            let stepy = this.m_context.preview.artboardScrollOffset.y - (trans?.translateY || 0);
             scrollAtrboard(inner_shape, { x: stepx, y: stepy });
         }
     }
