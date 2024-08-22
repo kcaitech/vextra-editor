@@ -154,7 +154,7 @@ export class PageDom extends (PageView) {
 
                 const c = optiNodes[i];
 
-                if (c.nodeCount > OPTI_INSIDE_COUNT && (c.nodeCount / c.m_children.length) > OPTI_MIN_COUNT) {
+                if (c.nodeCount > OPTI_INSIDE_COUNT && ((c.nodeCount / c.m_children.length) > OPTI_MIN_COUNT || focusid[objectId(c)])) {
 
                     const transform = c.transform.inverse;
                     const vlt = transform.computeCoord(client_visible_rect);
@@ -211,6 +211,7 @@ export class PageDom extends (PageView) {
     }
 
     canOptiNode: boolean = true;
+    preFocusId: { [key: number]: true } = {}
     // todo 图片更新还有问题
     private optimizeClientVisibleNodes() {
         if (!this.m_render_args || !this.m_optimize) return false;
@@ -224,13 +225,15 @@ export class PageDom extends (PageView) {
         const ctx = this.m_ctx as DomCtx;
 
         const focusshape = ctx.getFocusShape();
-        const focusid: { [key: number]: true } = {};
-        {
-            let p = focusshape;
+        let focusid: { [key: number]: true } = this.preFocusId;
+        if (focusshape) {
+            focusid = {}
+            let p: ShapeView | undefined = focusshape;
             while (p) {
                 focusid[objectId(p)] = true;
                 p = p.parent;
             }
+            this.preFocusId = focusid;
         }
 
         const ret = this._optimizeClientVisibleNodes(this as (ShapeView & NodeType), Date.now(), client_visible_rect, client_drop_rect, optimize, 0, focusid, this.m_render_args.matrix.clone())

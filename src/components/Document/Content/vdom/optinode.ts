@@ -154,7 +154,7 @@ function _opti2image(_this: NodeType) {
         height: height
     }
 
-    const svg = stringh('svg', svgprops, _this.optis.origin.innerHTML.replaceAll("#", "%23"));
+    const svg = stringh('svg', svgprops, _this.innerHTML.replaceAll("#", "%23"));
     const href = "data:image/svg+xml," + svg;
     // _this.optis.records[OptiType.image].el = createElement('image');
     _this.optis.records[OptiType.image] = {
@@ -257,12 +257,12 @@ function _opti2canvasStep1(_this: NodeType, el: SVGElement | HTMLElement): {
         height: height
     }
 
-    const svg = stringh('svg', svgprops, el.innerHTML.replaceAll("#", "%23"));
+    const svg = stringh('svg', svgprops, _this.innerHTML.replaceAll("#", "%23"));
     const href = "data:image/svg+xml," + svg;
     const imageel = createElement('image') as SVGImageElement;
     const props: any = {};
     Object.assign(props, _this.elattr);
-    props.href = href;
+    props.href = href; // 这个耗时
     props.x = x;
     props.y = y;
     props.width = width;
@@ -325,22 +325,13 @@ function _opti2canvasStep2(_this: NodeType, el: SVGElement | HTMLElement | undef
     canvas.width = Math.floor(wh.x * scale);
     canvas.height = Math.floor(wh.y * scale);
     const canvasCtx = canvas.getContext('2d')!;
-    // canvasCtx.scale(scale, scale);
     canvasCtx.scale(canvas.width / frame.width, canvas.height / frame.height);
-    canvasCtx.drawImage(_image.imageel, 0, 0); // foreignObject会丢失
-    const href = canvas.toDataURL();
-    const props: any = {};
 
-    // if (!_this.optis) throw new Error();
+    canvasCtx.drawImage(_image.imageel, 0, 0); // foreignObject会丢失 // 这个耗时
+    const href = canvas.toDataURL(); // 耗时
     const optiel = createElement("image") as SVGImageElement;
-    // _this.optis.records[OptiType.canvas] = {
-    //     el: optiel,
-    //     scale: matrix.m00
-    // }
-
-    // _this.optiel = createElement('image');
+    const props: any = {};
     props.href = href;
-
     props.x = frame.x;
     props.y = frame.y;
     props.width = frame.width;
