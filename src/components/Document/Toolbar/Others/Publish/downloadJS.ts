@@ -17,19 +17,19 @@ export class MossPacker {
         return name.replace(reg, '') + (suffix ? `.${suffix}` : '');
     }
 
-    async pack(config: any) {
+    async pack(config: any, commit: Function) {
         const doc = this.m_doc;
         const createName = this.createDocName;
 
+        commit('导出文档...');
+        await __ease();
         const data = await exportExForm(doc)
             .catch((error) => {
                 throw error
             });
         if (!data) throw new Error('invalid data');
-
         try {
             const zip = new JSZip();
-
             const readmeBlob = generateReadme();
             zip.file('README.md', readmeBlob);
 
@@ -38,6 +38,8 @@ export class MossPacker {
             const html = generateIndexHTML(createName(data.document_meta.name));
             web.file('index.html', html);
 
+            commit('导出脚本...');
+            await __ease();
             const loader = await generateIndexJS();
             if (loader) web.file('index.js', loader);
 
@@ -50,6 +52,8 @@ export class MossPacker {
             const images = _static.folder('images')!;
             await generateImages(images, this.m_context);
 
+            commit('打包...');
+            await __ease();
             const content = await zip.generateAsync({ type: 'blob' });
 
             const link = document.createElement('a');
@@ -58,6 +62,8 @@ export class MossPacker {
             link.click();
         } catch (e) {
             console.error(e);
+        } finally {
+            commit('');
         }
 
         function generateReadme() {
@@ -95,6 +101,8 @@ export class MossPacker {
         }
 
         async function generateImages(folder: JSZip, context: Context) {
+            commit('下载图片资源...');
+            await __ease();
             if (!data.media_names.length) return;
             const manager = context.data.mediasMgr;
             for (const ref of data.media_names) {
@@ -102,6 +110,16 @@ export class MossPacker {
                 if (!media) continue;
                 folder.file(ref, media.buff);
             }
+        }
+
+        function __ease() {
+            return new Promise((resolve, reject) => {
+                let timer: any = setTimeout(() => {
+                    resolve(true);
+                    clearTimeout(timer);
+                    timer = null;
+                }, 1000 * Math.random());
+            });
         }
     }
 }

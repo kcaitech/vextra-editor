@@ -47,6 +47,11 @@ function showToast(type: 0 | 1) {
     }, 2000));
 }
 
+const status = ref<string>();
+
+function updateStatus(__sts: string) {
+    status.value = __sts;
+}
 
 async function download() {
     downloading.value = true;
@@ -65,7 +70,7 @@ async function download() {
         }
         return { pageId, boardId, backgroundColor };
     })();
-    await packer.pack(config);
+    await packer.pack(config, updateStatus);
     showToast(1);
     downloading.value = false;
 }
@@ -132,6 +137,9 @@ onUnmounted(() => {
         }">
         </div>
         <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : 'red'}">{{ toast.content }}</div>
+        <div v-if="status" style="position: absolute; bottom: 10px; right: 34px; color: grey;font-style: italic;font-size: 12px;">
+            {{ status }}
+        </div>
     </div>
 </div>
 </template>
