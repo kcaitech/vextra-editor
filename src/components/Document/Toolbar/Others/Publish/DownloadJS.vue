@@ -5,6 +5,7 @@ import { BoardLoader, BoardMenuItem } from "@/components/Document/Toolbar/Others
 import { Context } from "@/context";
 import BoardMenu from "@/components/Document/Toolbar/Others/Publish/BoardMenu/BoardMenu.vue";
 import { MossPacker } from "@/components/Document/Toolbar/Others/Publish/downloadJS";
+import { message } from "@/utils/message";
 
 const t = useI18n().t;
 
@@ -53,13 +54,16 @@ async function download() {
     const config = (() => {
         let pageId: string = '';
         let boardId: string = '';
+        let backgroundColor = '#fff'
         for (const li of boardList.value) {
             if (!li.selected) continue;
             pageId = li.page.id;
             boardId = li.selected.id;
+            const fills = li.selected.getFills();
+            if (fills.length) backgroundColor = fills[0].color.toHex();
             break;
         }
-        return { pageId, boardId };
+        return { pageId, boardId, backgroundColor };
     })();
     await packer.pack(config);
     showToast(1);
@@ -73,6 +77,9 @@ onUnmounted(() => {
         t = null;
     });
     timerSet.clear();
+    if (downloading.value) {
+        message('info', '下载被终止');
+    }
 })
 </script>
 <template>
@@ -95,10 +102,13 @@ onUnmounted(() => {
                         display: flex;align-items:center;
                         cursor: pointer;padding: 0 6px;
                         background-color: var(--active-color); border-radius: 4px;
-                        color: var(--theme-color-anti); font-size: 13px;"
+                        color: var(--theme-color-anti); font-size: 13px; gap: 8px;"
                         @click="download"
                     >
-                        {{ downloading ? t('home.downloading') : t('home.download') }}
+                        <span>{{ downloading ? t('home.downloading') : t('home.download') }}</span>
+                        <div v-if="downloading" style="position: relative; width: 14px; height: 14px;">
+                            <div class="loader-2"/>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,6 +196,21 @@ onUnmounted(() => {
     border: 2px solid transparent;
     border-top: 2px solid var(--active-color);
     border-left: 2px solid var(--active-color);;
+    border-radius: 50%;
+    box-sizing: border-box;
+
+    & {
+        animation: spin 1s linear infinite;
+    }
+}
+
+.loader-2 {
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--theme-color-anti);
+    border-left: 2px solid var(--theme-color-anti);;
     border-radius: 50%;
     box-sizing: border-box;
 
