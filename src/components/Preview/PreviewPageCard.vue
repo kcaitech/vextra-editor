@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeSize, ShapeType,
+    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from "@kcdesign/data";
@@ -29,6 +29,7 @@ const pageSvg = ref<SVGSVGElement>();
 
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
+
 function assemble() {
     disassemble();
 
@@ -37,7 +38,7 @@ function assemble() {
     if (shapes instanceof ShapeView) {
         shapes = adapt2Shape(shapes as any);
     }
-    
+
     const borders = new BasicArray<Border>();
     const fills = new BasicArray<Fill>();
     const style = new Style(borders, fills, new BasicArray<Shadow>());
@@ -139,7 +140,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
+<svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
 </template>
 
 <style scoped lang="scss">

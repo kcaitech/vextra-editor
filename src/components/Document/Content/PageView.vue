@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Page, PageView, adapt2Shape } from '@kcdesign/data';
+import { Matrix, Page, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -24,7 +24,6 @@ interface Props {
 const props = defineProps<Props>();
 const matrixWithFrame = new Matrix();
 const matrixWithFrame_inverse = new Matrix();
-// const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
@@ -35,10 +34,6 @@ const cutoutVisible = ref<boolean>(true);
 const transform = ref<string>('');
 const transformArr = ref<number[]>(new Matrix().toArray());
 const pageReady = ref<boolean>(false);
-// const emit = defineEmits<{
-//     (e: 'closeLoading'): void;
-// }>();
-
 const show_c = computed<boolean>(() => {
     return !props.params.noCutout && cutoutVisible.value;
 })
@@ -77,12 +72,11 @@ function page_watcher() {
     viewbox.value = `${innerFrame.x} ${innerFrame.y} ${width.value} ${height.value}`;
     transform.value = matrixWithFrame.toString();
     transformArr.value = matrixWithFrame.toArray();
-    // reflush.value++;
     updateVisibleRect();
 }
 
 function updateVisibleRect() {
-    const rect = props.params.visibleRect; // rootview
+    const rect = props.params.visibleRect;
     if (!rect) return;
     const lt = matrixWithFrame_inverse.computeCoord(rect);
     const rb = matrixWithFrame_inverse.computeCoord(rect.x + rect.width, rect.y + rect.height); // root坐标系

@@ -1,11 +1,23 @@
 import { Context } from '@/context';
 import { ElMessage } from 'element-plus';
-import { ArtboradView, Matrix, PageView, PrototypeEvents, PrototypeNavigationType, ScrollDirection, Shape, ShapeType, ShapeView, TransformRaw } from "@kcdesign/data";
+import {
+    ArtboradView,
+    Matrix,
+    PageView,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    ScrollDirection,
+    Shape,
+    ShapeType,
+    ShapeView,
+    TransformRaw
+} from "@kcdesign/data";
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
 import { EventIndex } from '@/components/Preview/PreviewControls/ControlsView.vue';
 import { XYsBounding } from './common';
+
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
     if (!page) return;
@@ -30,6 +42,7 @@ export function open_preview(doc_id: string, context: Context, t: Function, artb
 }
 
 export function getFrameList(page: PageView) {
+    if (!page.childs.length) page.m_ctx.layoutAll();
     return page.childs.filter(item => item.type === ShapeType.Artboard || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef);
 }
 
@@ -129,7 +142,6 @@ function getNextScaleType(current: ScaleType): ScaleType {
     if (index === -1) return ScaleType.Actual;
     return types[index % types.length];
 }
-
 
 
 export const setWindowTitle = (context: Context, page: PageView) => {

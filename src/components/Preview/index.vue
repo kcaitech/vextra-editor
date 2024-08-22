@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import { Page, PageView } from '@kcdesign/data';
+import { PageView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { WorkSpace } from '@/context/workspace';
 import { initpal } from '@/components/common/initpal';
 import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -22,13 +21,13 @@ const { t } = useI18n();
 const loading = ref<boolean>(false);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
-// const sub_loading = ref<boolean>(false);
 const leftTriggleVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 const showTop = ref<boolean>(true);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const inited = ref(false);
+
 function switchPage(id?: string) {
     if (!id) return
     const cur_page = context.selection.selectedPage;
@@ -59,27 +58,18 @@ function previewWatcher(t: number | string) {
         showHiddenLeft();
     }
 }
-// function workspaceWatcher(t: number, o?: any) {
-//     if (t === WorkSpace.FREEZE) {
-//         sub_loading.value = true;
-//     } else if (t === WorkSpace.THAW) {
-//         sub_loading.value = false;
-//     }
-// }
 
 const selectionWatcher = (t: number | string) => {
     if (t === Selection.CHANGE_PAGE) {
-        const ctx: Context = context;
-        curPage.value = ctx.selection.selectedPage;
+        curPage.value = context.selection.selectedPage;
     }
 }
 
 function switchFullScreen() {
-
 }
+
 let timerForLeft: any;
 const showHiddenLeft = () => {
-
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -101,6 +91,7 @@ function mouseenter() {
     }
     leftTriggleVisible.value = true;
 }
+
 function mouseleave() {
     const delay = 80;
     timerForLeft = setTimeout(() => {
@@ -109,19 +100,14 @@ function mouseleave() {
         clearTimeout(timerForLeft);
         timerForLeft = undefined;
     }, delay);
-
 }
 
-
 function init_watcher() {
-
     context.preview.watch(previewWatcher);
-    // context.workspace.watch(workspaceWatcher);
     context.selection.watch(selectionWatcher);
 }
 
-function init_keyboard_uints() {
-
+function init_keyboard_units() {
     uninstall_keyboard_units = keyboard(context);
 }
 
@@ -135,13 +121,12 @@ onMounted(() => {
     }).catch((e) => {
         console.log(e)
     })
-    init_keyboard_uints();
+    init_keyboard_units();
     init_watcher();
 })
 
 onUnmounted(() => {
     context.preview.unwatch(previewWatcher);
-    // context.workspace.unwatch(workspaceWatcher);
     context.selection.unwatch(selectionWatcher);
     uninstall_keyboard_units();
 })
@@ -149,27 +134,28 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="main" style="height: 100vh;">
-        <div id="top" @dblclick="switchFullScreen" v-if="showTop">
-            <Toolbar :context="context" v-if="!loading"></Toolbar>
-        </div>
-        <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }" v-if="inited"
-            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }" :right="0" :context="context"
-            @changeLeftWidth="changeLeftWidth">
-            <template #slot1>
-                <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @mouseenter="mouseenter"
-                    :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
-                    @showNavigation="showHiddenLeft" @switchpage="switchPage">
-                </Navigation>
-            </template>
-
-            <template #slot2>
-                <PreviewContent v-if="curPage !== undefined" id="content" :context="context" @mouseenter="mouseleave"
-                    :showTop="showTop" :page="(curPage as PageView)"></PreviewContent>
-            </template>
-        </ColSplitView>
-        <Loading v-if="loading" :size="20"></Loading>
+<div class="main" style="height: 100vh;">
+    <div id="top" @dblclick="switchFullScreen" v-if="showTop">
+        <Toolbar :context="context" v-if="!loading"></Toolbar>
     </div>
+    <ColSplitView v-if="inited" id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
+                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }" :right="0"
+                  :context="context"
+                  @changeLeftWidth="changeLeftWidth">
+        <template #slot1>
+            <Navigation v-if="curPage" id="navigation" :context="context" @mouseenter="mouseenter"
+                        :page="curPage as PageView" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
+                        @showNavigation="showHiddenLeft" @switchpage="switchPage">
+            </Navigation>
+        </template>
+
+        <template #slot2>
+            <PreviewContent v-if="curPage" id="content" :context="context" @mouseenter="mouseleave"
+                            :showTop="showTop" :page="curPage as PageView"/>
+        </template>
+    </ColSplitView>
+    <Loading v-if="loading" :size="20"></Loading>
+</div>
 </template>
 
 <style scoped lang="scss">

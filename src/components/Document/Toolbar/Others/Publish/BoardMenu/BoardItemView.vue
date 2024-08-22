@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { BoardLoader, BoardMenuItem } from "@/components/Document/Toolbar/Others/Publish/BoardMenu/boardLoader";
 import ShapeCard from "@/components/common/ShapeCard.vue";
+import Tooltip from "@/components/common/Tooltip.vue";
 
-const props = defineProps<{
+defineProps<{
     data: BoardMenuItem;
     lister: BoardLoader;
 }>();
@@ -32,9 +33,11 @@ const props = defineProps<{
                 border-radius: 4px;"
              @click="() => lister.selected(data.page, board)"
         >
-            <ShapeCard :shape="board"/>
+            <Tooltip :content="board.name">
+                <ShapeCard :shape="board"/>
+            </Tooltip>
             <div v-if="data.selected?.id === board.id"
-                 style="position: absolute;width: 100%; height: 100%;background-color: rgba(255, 255, 255, 0.3); top: 0;">
+                 style="position: absolute;width: 100%; height: 100%;background-color: rgba(255, 255, 255, 0.3); top: 0; pointer-events: none;">
                 <svg-icon style="position: absolute; top: 6px; right: 6px;width: 12px; height: 12px;"
                           icon-class="comment-solved"/>
             </div>
@@ -42,6 +45,3 @@ const props = defineProps<{
     </div>
 </div>
 </template>
-<style scoped lang="scss">
-
-</style>

@@ -93,7 +93,7 @@ onUnmounted(() => {
         </div>
         <div style="width: 100%;height: fit-content; min-height: 120px; position: relative">
             <div v-if="loading" class="loader"/>
-            <div v-else-if="boardList.length" style="height: fit-content; width: 100%;">
+            <div v-else-if="boardList.length" style="height: fit-content; width: 100%;margin-top: 8px;">
                 <BoardMenu :context="context" :lister="lister as BoardLoader"
                            :board-list="boardList as BoardMenuItem[]"/>
                 <div class="download">

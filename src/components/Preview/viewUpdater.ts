@@ -1,4 +1,17 @@
-import { ColVector3D, Matrix, Page, OverlayPositionType, PrototypeActions, PrototypeNavigationType, PrototypeTransitionType, Shape, ShapeView, makeShapeTransform2By1, ShapeType, ArtboradView } from "@kcdesign/data";
+import {
+    ColVector3D,
+    Matrix,
+    Page,
+    OverlayPositionType,
+    PrototypeActions,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    Shape,
+    ShapeView,
+    makeShapeTransform2By1,
+    ShapeType,
+    ArtboradView
+} from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
@@ -30,7 +43,7 @@ export class ViewUpdater {
     private matrix: Matrix = new Matrix();
     private m_container: HTMLDivElement | undefined; // 整个黑盒子
 
-    private m_image_map: Map<string, string> = new Map(); // todo 缓存，使列表流畅
+    private m_image_map: Map<string, string> = new Map();
     private m_dirty_target: Map<string, Shape> = new Map();
 
     private m_lazy_updater: DirtyCleaner;
@@ -715,11 +728,12 @@ export class ViewUpdater {
         }
         return m;
     }
+
     readyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape || !shape) return m;
+        if (!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
@@ -757,11 +771,12 @@ export class ViewUpdater {
         }
         return m;
     }
+
     backReadyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
         const m = new Matrix(matrix.clone());
         if (!type) return m;
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape || !shape) return m;
+        if (!select_shape || !shape) return m;
         const box = viewBox(this.v_matrix, select_shape);
         const cur_box = viewBox(matrix, shape);
         const animate_type = type.split('_');
@@ -799,11 +814,13 @@ export class ViewUpdater {
         }
         return m;
     }
+
     getCurLayerShape(context: Context, id?: string) {
         const page = context.selection.selectedPage;
         const shapes = getFrameList(page!);
         return shapes.find(item => item.id === id);
     }
+
     // 容器内滚动
     scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
@@ -847,6 +864,7 @@ export class ViewUpdater {
             this.outAction(action);
         }
     }
+
     // 滑入 推入动画
     pushAndslideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
         if (!els) return;
@@ -861,10 +879,11 @@ export class ViewUpdater {
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
         }
     }
+
     // 滑入动画
     pageSvgSlideAnimate(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return;
+        if (!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const m = new Matrix(this.v_matrix.clone());
         if (action.transitionType === PrototypeTransitionType.SLIDEFROMBOTTOM ||
@@ -892,10 +911,11 @@ export class ViewUpdater {
             pageSvg.style['transform'] = m.toString();
         }
     }
+
     // pageSvg推出动画
     pageSvgPushAnimate(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return;
+        if (!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const m = new Matrix(this.v_matrix.clone());
         const animateType = action.transitionType?.split('_');
@@ -937,7 +957,7 @@ export class ViewUpdater {
     // 移出动作
     outAction(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return;
+        if (!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const animate_type = action.transitionType?.split('_');
         if (!animate_type) return;
@@ -963,7 +983,7 @@ export class ViewUpdater {
     backSlideInAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
         const animateType = action.transitionType?.split('_');
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return;
+        if (!select_shape) return;
         if (animateType && animateType.includes('SLIDE') && animateType.includes('FROM')) {
             const box = viewBox(this.v_matrix, select_shape);
             const m = new Matrix(this.v_matrix.clone());
@@ -988,11 +1008,12 @@ export class ViewUpdater {
             svgEl.style['transform'] = m.toString();
         }
     }
+
     backSlideOutAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('OUT') && animateType.includes('SLIDE')) {
             const select_shape = this.m_context.selection.selectedShapes[0];
-            if(!select_shape) return;
+            if (!select_shape) return;
             const box = viewBox(this.v_matrix, select_shape);
             const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
             if (!pageSvg) return;
@@ -1017,6 +1038,7 @@ export class ViewUpdater {
             svgEl.style['transform'] = m.toString();
         }
     }
+
     backDissolveAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
         if (action.transitionType !== PrototypeTransitionType.DISSOLVE) return;
         const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
@@ -1034,9 +1056,10 @@ export class ViewUpdater {
             }
         }
     }
+
     backOutAction(action: PrototypeActions) {
         const select_shape = this.m_context.selection.selectedShapes[0];
-        if(!select_shape) return;
+        if (!select_shape) return;
         const box = viewBox(this.v_matrix, select_shape);
         const animate_type = action.transitionType?.split('_');
         if (!animate_type) return;
@@ -1079,6 +1102,7 @@ export class ViewUpdater {
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
+
     backPushInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
         if (!els) return;
         const animateType = action.transitionType?.split('_');
@@ -1088,6 +1112,7 @@ export class ViewUpdater {
             els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         }
     }
+
     backPushAnimate(action: PrototypeActions) {
         const animateType = action.transitionType?.split('_');
         if (animateType && animateType.includes('PUSH')) {
@@ -1132,6 +1157,7 @@ export class ViewUpdater {
             }, 300);
         }
     }
+
     hotZoneBox(e: MouseEvent, matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
         const view = this.m_container!;
         const viewbox = view.getBoundingClientRect();
@@ -1205,6 +1231,7 @@ export class ViewUpdater {
         return;
     }
 }
+
 class DirtyCleaner {
     private m_image_map: Map<string, string>; // todo 缓存，使列表流畅
     private m_dirty_target: Map<string, Shape>;
