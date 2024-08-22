@@ -9,6 +9,12 @@ export interface BoardMenuItem {
     selected: Artboard | undefined;
 }
 
+export interface PrototypeStash {
+    docID: string;
+    pageID: string;
+    boardID: string;
+}
+
 export class BoardLoader {
     private m_context: Context;
     private m_list: BoardMenuItem[];
@@ -46,6 +52,25 @@ export class BoardLoader {
             if (!list.length) throw new Error('no board');
             list[0].fold = false;
             list[0].selected = list[0].boards[0];
+            const stash = JSON.parse(localStorage.getItem('prototype-stash') || '') as PrototypeStash;
+            if (!stash) return;
+            const stashPage = (function () {
+                for (const li of list) {
+                    if (li.page.id === stash.pageID) return li;
+                }
+            })();
+            if (!stashPage) return;
+            list[0].fold = true;
+            list[0].selected = undefined;
+            stashPage.fold = false;
+            stashPage.selected = stashPage.boards[0];
+            const stashBoard = (function () {
+                for (const board of stashPage.boards) {
+                    if (board.id === stash.boardID) return board;
+                }
+            })();
+            if (!stashBoard) return;
+            stashPage.selected = stashBoard;
         } catch (e) {
             console.error(e);
             reject();
@@ -69,6 +94,12 @@ export class BoardLoader {
     }
 
     selected(page: Page, board: Artboard) {
+        const stash: PrototypeStash = {
+            docID: this.m_context.data.id,
+            pageID: page.id,
+            boardID: board.id
+        };
+        localStorage.setItem('prototype-stash', JSON.stringify(stash));
         for (const li of this.m_list) {
             if (li.selected?.id === board.id) return;
             if (li.page.id !== page.id) li.selected = undefined;
