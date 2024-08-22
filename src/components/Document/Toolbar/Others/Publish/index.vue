@@ -43,7 +43,7 @@ onUnmounted(() => {
         <svg-icon style="width: 12px; height: 12px;flex: 0 0 12px;" icon-class="white-down"/>
     </div>
     <div v-if="popover" class="publish-options-wrap">
-        <div>{{ t('home.publish') }}</div>
+        <div style="opacity: 0.4; pointer-events: none;">{{ t('home.publish') }}</div>
         <div @click="downloadJs = true;">{{ t('home.downloadJs') }}</div>
     </div>
     <teleport to="body">
