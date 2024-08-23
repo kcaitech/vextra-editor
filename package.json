@@ -1,7 +1,7 @@
 {
   "name": "@kcdesign/editor",
   "description": "kcdesign editor",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "private": false,
   "type": "module",
   "author": "kcaitech.com",
