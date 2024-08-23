@@ -958,7 +958,7 @@ onUnmounted(() => {
     <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
                   @updateSearch="updateSearch">
     </ControlsView>
-    <div class="overlay" v-if="is_overlay"></div>
+    <div v-if="is_overlay" class="overlay"></div>
     <div v-if="cur_shape" class="preview_overlay"></div>
 </div>
 </template>
