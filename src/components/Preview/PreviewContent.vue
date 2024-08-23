@@ -52,8 +52,6 @@ const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
 
-(window as any).__cur_shape = cur_shape;
-
 function page_watcher() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
@@ -308,6 +306,7 @@ const initMatrix = () => {
     } else {
         viewUpdater.modifyTransformKeepScale();
     }
+    // viewUpdater.modifyTransformFixPrototype();
     if (is_overlay.value && pageCard.value) {
         is_overlay.value = false;
     }

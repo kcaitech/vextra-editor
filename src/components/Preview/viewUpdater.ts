@@ -327,6 +327,38 @@ export class ViewUpdater {
         this.setAttri(matrix);
     }
 
+    modifyTransformFixPrototype() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const box = this.getBoundingBox()!;
+        const boxWidth = box.width;
+
+        const root = container.getBoundingClientRect();
+        const rootWidth = root.width;
+        const rootHeight = root.height;
+
+        const ratio = boxWidth / rootWidth;
+
+        const max = 256;
+        const min = 0.02;
+        let scale = 1 / ratio;
+        if (scale < min) {
+            scale = min;
+        } else if (scale > max) {
+            scale = max;
+        }
+
+        const matrix = this.getCenterMatrix();
+        matrix.trans(-rootWidth / 2, -rootHeight / 2);
+        matrix.scale(scale);
+        matrix.trans(rootWidth / 2, rootHeight / 2);
+        matrix.trans(0, (box.height * scale - rootHeight) / 2);
+        this.setAttri(matrix);
+    }
     mount(container: HTMLDivElement, page: Page, current: ShapeView | undefined, pageCard: PCard | undefined) {
         this.m_container = container;
 
@@ -670,7 +702,12 @@ export class ViewUpdater {
         }
     }
 
-    updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: { top: number, bottom: number, left: number, right: number }) {
+    updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: {
+        top: number,
+        bottom: number,
+        left: number,
+        right: number
+    }) {
         const cur_shape = context.selection.selectedShapes[0];
         if (!cur_shape) return;
         const cur_frame = cur_shape._p_frame;
@@ -687,7 +724,12 @@ export class ViewUpdater {
             }
             if (!s) return;
             const scale = this.v_matrix.m00;
-            const { left, right, top, bottom } = s.overlayPosition ? s.overlayPosition.margin : { left: 0, right: 0, top: 0, bottom: 0 }
+            const { left, right, top, bottom } = s.overlayPosition ? s.overlayPosition.margin : {
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0
+            }
             m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
             if (s.overlayPosition?.position === OverlayPositionType.CENTER || !s.overlayPosition) {
                 const c_x = (frame.width * scale) / 2;

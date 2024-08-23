@@ -75,7 +75,7 @@ export class MossPacker {
         }
 
         async function generateIndexJS() {
-            const response = await fetch('/static/prototype/index.prototype.js');
+            const response = await fetch('/c2/static/prototype/index.prototype.js');
             const reader = response.body?.getReader();
             const values: Uint8Array[] = [];
             while (reader) {
