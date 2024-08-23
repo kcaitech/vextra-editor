@@ -306,7 +306,6 @@ const initMatrix = () => {
     } else {
         viewUpdater.modifyTransformKeepScale();
     }
-    // viewUpdater.modifyTransformFixPrototype();
     if (is_overlay.value && pageCard.value) {
         is_overlay.value = false;
     }
@@ -955,8 +954,8 @@ onUnmounted(() => {
             <svg-icon icon-class="right-arrow"></svg-icon>
         </div>
     </div>
-    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-    <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
+    <MenuVue v-if="isMenu" :context="context" :top="top" :left="left" @close="closeMenu"></MenuVue>
+    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
                   @updateSearch="updateSearch">
     </ControlsView>
     <div class="overlay" v-if="is_overlay"></div>

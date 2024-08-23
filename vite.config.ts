@@ -4,14 +4,22 @@ import vue from '@vitejs/plugin-vue'
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
 import dts from "vite-plugin-dts";
 import arraybuffer from "vite-plugin-arraybuffer";
+import * as fs from "fs";
 
 const PRODUCTION = process.env.NODE_ENV === 'production'
 console.log('config for ' + process.env.NODE_ENV)
 
+// const r = fs.readFileSync('')
+// const prototypeJsB64 = new Blob();
+
 export default defineConfig({
-    define: {
-        global: 'window'
-    },
+    define: Object.entries({
+        global: 'window',
+        // PROTOTYPE_JS_BLOB: prototypeJsBlob,
+    }).reduce((res, [key, value]) => {
+        res[key] = JSON.stringify(value);
+        return res;
+    }, {} as any),
     build: {
         // assetsInlineLimit: 409600, // 400kb
         minify: PRODUCTION ? "terser" : false,

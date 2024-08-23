@@ -3,6 +3,8 @@ import { Document, exportExForm } from "@kcdesign/data";
 import JSZip from "jszip";
 import { readme, template } from "@/components/Document/Toolbar/Others/Publish/index.template";
 
+declare const PROTOTYPE_JS_BLOB: Blob | undefined;
+
 export class MossPacker {
     private m_context: Context;
     private m_doc: Document;
@@ -40,8 +42,9 @@ export class MossPacker {
 
             commit('导出脚本...');
             await __ease();
-            const loader = await generateIndexJS();
-            if (loader) web.file('index.js', loader);
+            // const loader = await generateIndexJS();
+            // if (loader) web.file('index.js', loader);
+            web.file('index.js', PROTOTYPE_JS_BLOB!)
 
             const _static = web.folder('static')!;
             const config = generateConfig();
