@@ -32,12 +32,12 @@ function __init() {
     }
 }
 
-function destory() {
+function destroy() {
     window.removeEventListener('focus', refresh);
 }
 
 onMounted(__init);
-onUnmounted(destory);
+onUnmounted(destroy);
 </script>
 <template>
 <div ref="root" class="root">

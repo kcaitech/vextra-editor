@@ -321,7 +321,6 @@ function updateMouse(e: MouseEvent) {
     mouseOnClient.y = e.clientY;
 }
 
-// mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
     if (firstTime) {
         search(e);
@@ -345,8 +344,6 @@ function onMouseDown(e: MouseEvent) {
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
-        const action = props.context.tool.action;
-        // if (action === Action.AddComment) return;
         contextMenuMount(e);
     }
 }
@@ -372,7 +369,6 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-// mousemove(target：contentview)
 let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 
@@ -392,7 +388,6 @@ function onMouseMove_CV(e: MouseEvent) {
     updateMouse(e);
 }
 
-// mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) return;
     isMouseLeftPress = false;
@@ -410,12 +405,10 @@ function onMouseUp(e: MouseEvent) {
     document.removeEventListener('mouseup', onMouseUp);
 }
 
-// mouseleave
 function onMouseLeave() {
     props.context.selection.unHoverShape();
 }
 
-// #endregion
 function selectEnd() {
     if (!props.context.workspace.select) {
         return;
@@ -586,7 +579,6 @@ onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
     props.context.workspace.init(t.bind(getCurrentInstance()));
-    // props.context.workspace.setFreezeStatus(true);
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
@@ -610,7 +602,6 @@ onMounted(() => {
         _updateRoot(props.context, root.value);
         initMatrix(props.page);
     });
-    // props.context.workspace.setFreezeStatus(false)
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
@@ -788,7 +779,7 @@ comps.push(...plugins.end);
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
     <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
     <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <Displayer :context="props.context" />
+<!--    <Displayer :context="props.context" />-->
     <!-- 页面调整，确保在ContentView顶层 -->
     <Space :context="props.context" :visible="spacePressed"/>
 </div>
