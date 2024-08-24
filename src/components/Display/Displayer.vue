@@ -1,68 +1,52 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from "vue";
+import { RefreshTiming } from "./react";
+import { Context } from "@/context";
 
+const props = withDefaults(
+    defineProps<{
+        context: Context;
+        refreshTiming?: RefreshTiming;
+        backgroundColor?: string;
+    }>(),
+    {
+        backgroundColor: '#000',
+        refreshTiming: RefreshTiming.Focus
+    }
+);
+
+const root = ref<HTMLDivElement>();
+
+function refresh() {
+    console.log('__refresh__');
+}
+
+function __init() {
+    const rootEL = root.value;
+    if (rootEL) {
+        rootEL.style.backgroundColor = props.backgroundColor;
+    }
+    if (props.refreshTiming === RefreshTiming.Focus) {
+        console.log('__focus__');
+        window.addEventListener('focus', refresh);
+    }
+}
+
+function destory() {
+    window.removeEventListener('focus', refresh);
+}
+
+onMounted(__init);
+onUnmounted(destory);
 </script>
 <template>
-<div class="main">
-    <h1>⚙🍐⚙</h1>
+<div ref="root" class="root">
+
 </div>
 </template>
 <style lang="scss">
-html,
-body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-family);
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: 100vh;
-
-    &::-webkit-scrollbar {
-        height: 0;
-        width: 0;
-    }
-}
-
-#app {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-.main {
-    min-width: 460px;
-    width: 100%;
-    height: 100vh;
-    overflow-x: auto;
-
-    @media (max-width: 460px) {
-        overflow-x: scroll;
-    }
-
-    &::-webkit-scrollbar {
-        display: none;
-    }
-
-    &::-webkit-scrollbar-track {
-        display: none;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        display: none;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-        display: none;
-    }
-
-    &::-webkit-scrollbar-thumb:active {
-        display: none;
-    }
-
-    #content {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-    }
+.root {
+    width: 600px;
+    height: 600px;
 }
 </style>
