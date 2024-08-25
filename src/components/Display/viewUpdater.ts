@@ -9,7 +9,7 @@ import {
     ShapeView,
     makeShapeTransform2By1,
     ArtboradView
-} from "@kcdesign/data";
+} from '@kcdesign/data';
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";

@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
-import { ArtboradView, Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import { ArtboradView, Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from '@kcdesign/data';
 
 export class ProtoAction {
     private m_context: Context

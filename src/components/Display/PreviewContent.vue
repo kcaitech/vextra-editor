@@ -19,7 +19,7 @@ import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'v
 import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
-import { ViewUpdater } from "@/components/Preview/viewUpdater";
+import { ViewUpdater } from "@/components/Display/viewUpdater";
 import { Selection } from '@/context/selection';
 import ControlsView from './PreviewControls/ControlsView.vue';
 

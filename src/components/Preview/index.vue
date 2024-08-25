@@ -4,12 +4,12 @@ import { useI18n } from 'vue-i18n';
 import { PageView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
 import { initpal } from '@/components/common/initpal';
-import Toolbar from '@/components/Preview/PreviewToolbar/index.vue'
+import Toolbar from '@/components/Display/PreviewToolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import Loading from '@/components/common/Loading.vue';
-import Navigation from '@/components/Preview/PreviewNavigation/index.vue'
+import Navigation from '@/components/Display/PreviewNavigation/index.vue'
 import { Preview } from '@/context/preview';
-import PreviewContent from './PreviewContent.vue';
+import PreviewContent from '../Display/PreviewContent.vue';
 import { keyboard, selectedShape } from '@/utils/preview';
 import { IContext } from '@/openapi';
 import { Selection } from '@/context/selection';

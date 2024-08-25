@@ -15,7 +15,7 @@ import {
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
-import { EventIndex } from '@/components/Preview/PreviewControls/ControlsView.vue';
+import { EventIndex } from '@/components/Display/PreviewControls/ControlsView.vue';
 import { XYsBounding } from './common';
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
