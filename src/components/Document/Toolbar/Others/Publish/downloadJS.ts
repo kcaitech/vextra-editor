@@ -42,9 +42,9 @@ export class MossPacker {
 
             commit('导出脚本...');
             await __ease();
-            // const loader = await generateIndexJS();
-            // if (loader) web.file('index.js', loader);
-            web.file('index.js', PROTOTYPE_JS_BLOB!)
+            const loader = await generateIndexJS();
+            if (loader) web.file('index.js', loader);
+            // web.file('index.js', PROTOTYPE_JS_BLOB!)
 
             const _static = web.folder('static')!;
             const config = generateConfig();
