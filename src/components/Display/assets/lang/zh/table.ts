@@ -1,0 +1,25 @@
+import { ShapeType } from "@kcdesign/data";
+export const table: any = {
+    table: '表格',
+    table_style: '表格样式',
+    del_column: '删除行列',
+    del_select_row: '删除选中行',
+    del_select_col: '删除选中列',
+    del_table: '删除整个表格',
+    split_cell: '拆分单元格',
+    split_towrow: '拆分为两行',
+    split_towcol: '拆分为两列',
+    insert_column: '插入行列',
+    merge_cell: '合并单元格',
+    top_insert: '上方插入行',
+    bottom_insert: '下方插入行',
+    left_insert: '左侧插入列',
+    right_insert: '右侧插入列',
+    confirm: '确定',
+    row: '行',
+    col: '列',
+    insert_table: '插入表格',
+    row_num: '行数',
+    col_num: '列数',
+    column_table: '指定行列表格'
+}

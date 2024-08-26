@@ -17,7 +17,7 @@ import { Selection } from '@/context/selection';
 const props = defineProps<{ context: IContext }>()
 const context = props.context as Context;
 
-const { t } = useI18n();
+const {t} = useI18n();
 const loading = ref<boolean>(false);
 const showLeft = ref<boolean>(true);
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -25,7 +25,7 @@ const leftTriggleVisible = ref<boolean>(false);
 let uninstall_keyboard_units: () => void = () => {
 };
 const showTop = ref<boolean>(true);
-const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
+const Left = ref({leftMin: 250, leftWidth: 250, leftMinWidth: 250});
 const inited = ref(false);
 
 function switchPage(id?: string) {
@@ -134,28 +134,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="main" style="height: 100vh;">
-    <div id="top" @dblclick="switchFullScreen" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading"></Toolbar>
-    </div>
-    <ColSplitView v-if="inited" id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
-                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }" :right="0"
-                  :context="context"
-                  @changeLeftWidth="changeLeftWidth">
-        <template #slot1>
-            <Navigation v-if="curPage" id="navigation" :context="context" @mouseenter="mouseenter"
-                        :page="curPage as PageView" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
-                        @showNavigation="showHiddenLeft" @switchpage="switchPage">
-            </Navigation>
-        </template>
+    <div class="main" style="height: 100vh;">
+        <!--    <div id="top" @dblclick="switchFullScreen" v-if="showTop">-->
+        <!--        <Toolbar :context="context" v-if="!loading"></Toolbar>-->
+        <!--    </div>-->
+        <!--    <ColSplitView v-if="inited" id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"-->
+        <!--                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.4 }" :right="0"-->
+        <!--                  :context="context"-->
+        <!--                  @changeLeftWidth="changeLeftWidth">-->
+        <!--        <template #slot1>-->
+        <!--            <Navigation v-if="curPage" id="navigation" :context="context" @mouseenter="mouseenter"-->
+        <!--                        :page="curPage as PageView" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"-->
+        <!--                        @showNavigation="showHiddenLeft" @switchpage="switchPage">-->
+        <!--            </Navigation>-->
+        <!--        </template>-->
 
-        <template #slot2>
-            <PreviewContent v-if="curPage" id="content" :context="context" @mouseenter="mouseleave"
-                            :showTop="showTop" :page="curPage as PageView"/>
-        </template>
-    </ColSplitView>
-    <Loading v-if="loading" :size="20"></Loading>
-</div>
+        <!--        <template #slot2>-->
+        <!--            <PreviewContent v-if="curPage" id="content" :context="context" @mouseenter="mouseleave"-->
+        <!--                            :showTop="showTop" :page="curPage as PageView"/>-->
+        <!--        </template>-->
+        <!--    </ColSplitView>-->
+        <PreviewContent v-if="inited&&curPage" id="content" :context="context" @mouseenter="mouseleave"
+                        :showTop="showTop" :page="curPage as PageView" mode="display"/>
+        <Loading v-if="loading" :size="20"></Loading>
+    </div>
 </template>
 
 <style scoped lang="scss">

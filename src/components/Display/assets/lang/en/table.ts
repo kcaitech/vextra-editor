@@ -1,0 +1,25 @@
+import { ShapeType } from "@kcdesign/data";
+export const table: any = {
+    table: 'Table',
+    table_style: 'Table style',
+    del_column: 'Delete column',
+    del_select_row: 'Delete selected row',
+    del_select_col: 'Delete selected col',
+    del_table: 'Delete table',
+    split_cell: 'Split cell',
+    split_towrow: 'Split two rows',
+    split_towcol: 'Split two cols',
+    insert_column: 'Insert column',
+    merge_cell: 'Merge cells',
+    top_insert: 'Top insert row',
+    bottom_insert: 'Insert row below',
+    left_insert: 'Left insert column',
+    right_insert: 'Right insert column',
+    confirm: 'Confirm',
+    row: 'row',
+    col: 'col',
+    insert_table: 'Insert table',
+    row_num: 'Number of rows',
+    col_num: 'Number of columns',
+    column_table: 'Designated column table'
+}

@@ -30,11 +30,12 @@ import { initComsMap } from '../Document/Content/vdom/comsmap';
 import { SymbolDom } from '../Document/Content/vdom/symbol';
 import { is_mac } from '@/utils/common';
 
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<{
-    context: Context
-    page: PageView
-    showTop: boolean
+    context: Context;
+    page: PageView;
+    showTop: boolean;
+    mode: 'preview' | 'display';
 }>();
 type PCard = InstanceType<typeof PageCard>
 const preview = ref<HTMLDivElement>();
@@ -51,6 +52,8 @@ const is_swap_shape = ref(false);
 const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
+
+const previewMode = props.mode === 'preview';
 
 function page_watcher() {
     const selection = props.context.selection;
@@ -240,7 +243,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         ];
         const sym_box = XYsBounding(points);
         m.trans(box.left - sym_box.left, box.top - sym_box.top);
-        const view = new SymbolDom(domCtx, { data: sym });
+        const view = new SymbolDom(domCtx, {data: sym});
         view.layout();
         view.render();
         const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
@@ -281,7 +284,7 @@ const selectionWatcher = (v: number | string) => {
         props.context.preview.clearInnerTransform();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {
-            ElMessage.error({ duration: 3000, message: `${t('home.not_preview_frame')}` });
+            ElMessage.error({duration: 3000, message: `${t('home.not_preview_frame')}`});
             props.context.selection.selectShape(undefined);
         }
         watch_shapes();
@@ -294,18 +297,23 @@ const selectionWatcher = (v: number | string) => {
 }
 
 const initMatrix = () => {
-    const type = props.context.preview.scaleType;
-    if (type === ScaleType.FillScreen) {
-        viewUpdater.modifyTransformToFill();
-    } else if (type === ScaleType.FitScreen) {
-        viewUpdater.modifyTransformToFit();
-    } else if (type === ScaleType.FitWidth) {
-        viewUpdater.modifyTransformToFillByWidth();
-    } else if (type === ScaleType.Actual) {
-        viewUpdater.modifyTransform();
+    if (previewMode) {
+        const type = props.context.preview.scaleType;
+        if (type === ScaleType.FillScreen) {
+            viewUpdater.modifyTransformToFill();
+        } else if (type === ScaleType.FitScreen) {
+            viewUpdater.modifyTransformToFit();
+        } else if (type === ScaleType.FitWidth) {
+            viewUpdater.modifyTransformToFillByWidth();
+        } else if (type === ScaleType.Actual) {
+            viewUpdater.modifyTransform();
+        } else {
+            viewUpdater.modifyTransformKeepScale();
+        }
     } else {
-        viewUpdater.modifyTransformKeepScale();
+        viewUpdater.modifyTransformFixPrototype();
     }
+
     if (is_overlay.value && pageCard.value) {
         is_overlay.value = false;
     }
@@ -316,9 +324,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
-    const { ctrlKey, metaKey } = e;
+    const {ctrlKey, metaKey} = e;
     if (ctrlKey || metaKey) { // 缩放
-        viewUpdater.scale(e);
+        previewMode && viewUpdater.scale(e);
     } else {
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
@@ -333,17 +341,17 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
                 stepx = stepy;
                 stepy = 0;
             }
-            let scroll = scrollAtrboard(artboard, { x: -stepx / scale, y: -stepy / scale });
+            let scroll = scrollAtrboard(artboard, {x: -stepx / scale, y: -stepy / scale});
             let p_x = hover_shape.parent;
             p_x = getScrollShape(p_x);
             while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                scroll.x = scrollAtrboard(p_x as ArtboradView, { x: -stepx / scale, y: 0 }).x;
+                scroll.x = scrollAtrboard(p_x as ArtboradView, {x: -stepx / scale, y: 0}).x;
                 p_x = p_x.parent;
             }
             let p_y = hover_shape.parent;
             p_y = getScrollShape(p_y);
             while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: -stepy / scale }).y;
+                scroll.y = scrollAtrboard(p_y as ArtboradView, {x: 0, y: -stepy / scale}).y;
                 p_y = p_y.parent;
             }
             viewUpdater.trans(e, scroll);
@@ -370,7 +378,7 @@ watch(() => props.showTop, (v) => {
 const isMenu = ref(false);
 const top = ref(0);
 const left = ref(0);
-let downXY = { x: 0, y: 0 };
+let downXY = {x: 0, y: 0};
 let isDragging = false;
 const onMouseDown = (e: MouseEvent) => {
     const shape = props.context.selection.selectedShapes[0];
@@ -422,17 +430,17 @@ function onMouseMove(e: MouseEvent) {
             if (diff > 4) {
                 artboard = hover_shape as ArtboradView;
                 const scale = viewUpdater.v_matrix.m00;
-                let scroll = scrollAtrboard(artboard, { x: e.movementX / scale, y: e.movementY / scale });
+                let scroll = scrollAtrboard(artboard, {x: e.movementX / scale, y: e.movementY / scale});
                 let p_x = hover_shape.parent;
                 p_x = getScrollShape(p_x);
                 while (p_x && p_x.type !== ShapeType.Page && !scroll.x) {
-                    scroll.x = scrollAtrboard(p_x as ArtboradView, { x: e.movementX / scale, y: 0 }).x;
+                    scroll.x = scrollAtrboard(p_x as ArtboradView, {x: e.movementX / scale, y: 0}).x;
                     p_x = p_x.parent;
                 }
                 let p_y = hover_shape.parent;
                 p_y = getScrollShape(p_y);
                 while (p_y && p_y.type !== ShapeType.Page && !scroll.y) {
-                    scroll.y = scrollAtrboard(p_y as ArtboradView, { x: 0, y: e.movementY / scale }).y;
+                    scroll.y = scrollAtrboard(p_y as ArtboradView, {x: 0, y: e.movementY / scale}).y;
                     p_y = p_y.parent;
                 }
                 pageViewDragging(e, scroll);
@@ -598,8 +606,8 @@ function search(e: MouseEvent) {
     const page = props.context.selection.selectedPage;
     if (!preview.value || !shapes || !page) return;
     const scout = props.context.selection.scout;
-    const { x, y } = preview.value.getBoundingClientRect();
-    const xy = { x: e.clientX - x, y: e.clientY - y };
+    const {x, y} = preview.value.getBoundingClientRect();
+    const xy = {x: e.clientX - x, y: e.clientY - y};
     let hover_shape: ShapeView | undefined;
     if (isSuperposed.value) {
         if (target_shapes.length) {
@@ -637,8 +645,8 @@ function search2(e: MouseEvent) {
     const page = props.context.selection.selectedPage;
     if (!preview.value || !shapes || !page) return;
     const scout = props.context.selection.scout;
-    const { x, y } = preview.value.getBoundingClientRect();
-    const xy = { x: e.clientX - x, y: e.clientY - y };
+    const {x, y} = preview.value.getBoundingClientRect();
+    const xy = {x: e.clientX - x, y: e.clientY - y};
     let hover_shape: ShapeView | undefined;
     if (isSuperposed.value) {
         if (target_shapes.length) {
@@ -931,36 +939,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
-              :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
-    <!-- 浮层和动画卡片 -->
-    <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-        <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
-                  :context="context" :shapes="target_shapes"/>
-    </div>
-    <!-- 实例切换动画 -->
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100" width="100" height="100">
-    </svg>
-    <div class="toggle" v-if="listLength">
-        <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+         @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+                  :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
+        <!-- 浮层和动画卡片 -->
+        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
+            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
+                      :context="context" :shapes="target_shapes"/>
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"></svg-icon>
+        <!-- 实例切换动画 -->
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
+             viewBox="0 0 100 100" width="100" height="100">
+        </svg>
+        <div class="toggle" v-if="listLength && previewMode">
+            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow"/>
+            </div>
         </div>
+        <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu"/>
+        <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
+                      @updateSearch="updateSearch">
+        </ControlsView>
+        <div v-if="is_overlay" class="overlay"/>
+        <div v-if="cur_shape" class="preview_overlay"/>
     </div>
-    <MenuVue v-if="isMenu" :context="context" :top="top" :left="left" @close="closeMenu"></MenuVue>
-    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
-                  @updateSearch="updateSearch">
-    </ControlsView>
-    <div v-if="is_overlay" class="overlay"></div>
-    <div v-if="cur_shape" class="preview_overlay"></div>
-</div>
 </template>
 
 <style scoped lang="scss">
