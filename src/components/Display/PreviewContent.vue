@@ -550,6 +550,7 @@ function onMouseUp(e: MouseEvent) {
     isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+
 }
 
 const isSpacePressed = () => {

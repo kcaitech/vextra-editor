@@ -3,8 +3,6 @@ import { Document, exportExForm } from "@kcdesign/data";
 import JSZip from "jszip";
 import { readme, template } from "@/components/Document/Toolbar/Others/Publish/index.template";
 
-declare const PROTOTYPE_JS_BLOB: Blob | undefined;
-
 export class MossPacker {
     private m_context: Context;
     private m_doc: Document;
@@ -78,7 +76,10 @@ export class MossPacker {
         }
 
         async function generateIndexJS() {
-            const response = await fetch('/c2/static/prototype/index.prototype.js');
+            const channel = (window as any).APP_VERSION_CHANNEL;
+            let url = '/static/prototype/index.prototype.js';
+            if (channel) url = '/' + channel + url;
+            const response = await fetch(url);
             const reader = response.body?.getReader();
             const values: Uint8Array[] = [];
             while (reader) {
