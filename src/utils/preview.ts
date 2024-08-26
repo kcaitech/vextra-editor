@@ -15,8 +15,8 @@ import {
 import { Preview, ScaleType } from "@/context/preview";
 import { PageXY } from "@/context/selection";
 import { Scout } from './scout';
-import { EventIndex } from '@/components/Display/PreviewControls/ControlsView.vue';
 import { XYsBounding } from './common';
+import { EventIndex } from "@/components/Display/PreviewControls/actions";
 
 export function open_preview(doc_id: string, context: Context, t: Function, artboardId?: string) {
     const page = context.selection.selectedPage;
@@ -117,7 +117,6 @@ keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) 
 }
 
 keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
-    // todo 缩放页面视图
     event.preventDefault();
     context.preview.notify(Preview.SCALE_CHANGE, false);
 }
@@ -294,8 +293,7 @@ export const viewBox = (m: Matrix, shape: ShapeView) => {
         matrix.computeCoord2(cur_frame.width, cur_frame.height),
         matrix.computeCoord2(0, cur_frame.height)
     ];
-    const box = XYsBounding(points);
-    return box;
+    return XYsBounding(points);
 }
 
 export const getFlowPathShapes = (context: Context, flows: Map<string, string[]>) => {

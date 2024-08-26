@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { initpal } from "@/components/common/initpal";
 import { message } from "@/utils/message";
 import { PageView } from "@kcdesign/data";
-import PreviewContent from "@/components/Preview/PreviewContent.vue";
+import PreviewContent from "@/components/Display/PreviewContent.vue";
 
 const context = shallowRef<Context | undefined>(undefined);
 const pageView = shallowRef<PageView | undefined>(undefined);
@@ -33,7 +33,7 @@ onBeforeMount(initContext);
 </script>
 <template>
     <div class="main" style="height: 100vh;">
-        <PreviewContent v-if="context && pageView" id="content" :context="context" :page="pageView"/>
+        <PreviewContent v-if="context && pageView" id="content" :context="context" :page="pageView" mode="display" :show-top="false"/>
     </div>
 </template>
 <style lang="scss">

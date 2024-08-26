@@ -39,7 +39,7 @@ import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
-import { UploadAssets } from "../../../kcdesign-data/src";
+import { UploadAssets } from "@kcdesign/data";
 
 export interface Media {
     name: string

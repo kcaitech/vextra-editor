@@ -12,10 +12,10 @@
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development vite build --mode development --watch",
-    "build-prototype": "cd ./src/components/Display && npm install && npm run build",
+    "dev": "cross-env NODE_ENV=development vite build & npm run build-proto --mode development --watch",
     "build-main": "vite build",
-    "build": "npm run build-prototype && npm run build-main",
+    "build-proto": "vite build --config ./vite.config-proto.js",
+    "build": "npm run build-main & npm run build-proto",
     "doc": "typedoc",
     "test": "jest",
     "test:watch": "jest --watch"

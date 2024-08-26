@@ -13,11 +13,11 @@ import {
     Repository,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "./PAL/browser/zip";
+import { Zip } from "@pal/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
-import { IContext } from "./openapi/context";
+import { IContext } from "@/openapi";
 
 export * from "./openapi";
 
@@ -68,23 +68,17 @@ async function _open(props: DocumentProps) {
 export async function openDocument(props: DocumentProps) {
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
-    // let loader: DataLoader | undefined
     try {
         const result = await _open(props);
         if (!result) return;
         cooprepo = result.cooprepo;
         data = result.data;
-        // loader = result.loader;
     } catch (e) {
         console.error(e)
         return;
     }
 
-    // if (props.coop) cooprepo.setNet(props.coop);
-    const context = new Context(data, cooprepo, props) as IContext;
-    // if (props.communication) context.communication = props.communication;
-    // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
-    return context;
+    return new Context(data, cooprepo, props) as IContext;
 }
 
 export const DocumentVue = _DocumentVue
