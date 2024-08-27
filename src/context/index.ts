@@ -182,6 +182,7 @@ export class Context extends WatchableObject implements IContext {
     get storage(): Map<string, string> {
         return this._storage;
     }
+
     private _sessionStorage: Map<string, string> = new Map();
     get sessionStorage(): Map<string, string> {
         return this._sessionStorage;
@@ -277,6 +278,7 @@ export class Context extends WatchableObject implements IContext {
     get props() {
         return this.m_props;
     }
+
     setReadonly(readonly: boolean) {
         this.m_readonly = readonly;
         this.notify(events.context_readonly_change, readonly)
@@ -385,5 +387,15 @@ export class Context extends WatchableObject implements IContext {
 
     get color() {
         return this.m_color;
+    }
+
+    private m_doc_info: { name: string } | undefined;
+
+    setDocumentInfo(info: { name: string }) {
+        this.m_doc_info = info;
+    }
+
+    get documentInfo(): { name: string } {
+        return this.m_doc_info || { name: '' };
     }
 }

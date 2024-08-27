@@ -20,7 +20,8 @@ export async function exportDocument(context: Context) {
     await packImages(IMAGES);
 
     const content = await MDD.generateAsync({ type: 'blob' });
-    downloadByLink(content, data.document_meta.name + '.mdd');
+    const name = context.documentInfo.name || data.document_meta.name;
+    downloadByLink(content, name + '.mdd');
 
     function packPages(folder: JSZip) {
         for (const page of data.pages) {
@@ -54,7 +55,7 @@ export async function importDocumentFromMDD(filePack: File, repo: Repository) {
     };
     const names = Object.keys(__files);
     const __doc: {
-        [p: string]: string | Uint8Array | ArrayBuffer
+        [p: string]: string | Uint8Array | ArrayBuffer;
     } = {};
     for (let name of names) {
         const file = __files[name];
@@ -65,13 +66,11 @@ export async function importDocumentFromMDD(filePack: File, repo: Repository) {
         if (type === "arraybuffer") {
             content = new Uint8Array(content as Uint8Array);
         }
-        if (name.startsWith('pages')) {
-            name = name.replace('.json', '');
-        }
+        if (name.startsWith('pages')) name = name.replace('.json', '');
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importMoss(__doc as { [p: string]: string | Uint8Array; }, repo);
+    return importMoss(filePack.name.replace(/.mdd/, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 
     function getFiles() {
         const reader = new FileReader();
