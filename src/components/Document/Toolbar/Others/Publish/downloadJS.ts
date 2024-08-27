@@ -2,10 +2,11 @@ import { Context } from "@/context";
 import { Document, exportExForm } from "@kcdesign/data";
 import JSZip from "jszip";
 import { readme, template } from "@/components/Document/Toolbar/Others/Publish/index.template";
+import { MossError } from "@/basic/error";
 
 export class MossPacker {
-    private m_context: Context;
-    private m_doc: Document;
+    private readonly m_context: Context;
+    private readonly m_doc: Document;
 
     constructor(context: Context) {
         this.m_context = context;
@@ -17,55 +18,50 @@ export class MossPacker {
         return name.replace(reg, '') + (suffix ? `.${suffix}` : '');
     }
 
-    async pack(config: any, commit: Function) {
+    async pack(config: any, commit: (status: 0 | 1, message: string) => void) {
         const doc = this.m_doc;
         const createName = this.createDocName;
+        const t = this.m_context.workspace.t.bind(this.m_context.workspace);
 
-        commit('导出文档...');
+        commit(1, t('publish.export_doc'));
         await __ease();
         const data = await exportExForm(doc)
             .catch((error) => {
-                throw error
+                console.error(error);
+                throw new MossError(t('publish.export_doc_error'));
             });
-        if (!data) throw new Error('invalid data');
-        try {
-            const zip = new JSZip();
-            const readmeBlob = generateReadme();
-            zip.file('README.md', readmeBlob);
 
-            const web = zip.folder('web')!;
+        if (!data) throw new MossError(t('publish.invalid_document'));
 
-            const html = generateIndexHTML(createName(data.document_meta.name));
-            web.file('index.html', html);
+        const web = new JSZip()!;
+        const readmeBlob = generateReadme();
+        web.file('README.md', readmeBlob);
 
-            commit('导出脚本...');
-            await __ease();
-            const loader = await generateIndexJS();
-            if (loader) web.file('index.js', loader);
-            // web.file('index.js', PROTOTYPE_JS_BLOB!)
+        const html = generateIndexHTML(createName(data.document_meta.name));
+        web.file('index.html', html);
 
-            const _static = web.folder('static')!;
-            const config = generateConfig();
-            _static.file('.config', config);
-            const doc = generateDoc();
-            _static.file('document-meta.json', doc);
-            generatePages(_static);
-            const images = _static.folder('images')!;
-            await generateImages(images, this.m_context);
+        commit(1, t('publish.export_script'));
+        await __ease();
+        const loader = await generateIndexJS();
+        if (loader) web.file('index.js', loader);
 
-            commit('打包...');
-            await __ease();
-            const content = await zip.generateAsync({ type: 'blob' });
+        const _static = web.folder('static')!;
+        const configBlob = generateConfig();
+        _static.file('.config', configBlob);
+        const docBlob = generateDoc();
+        _static.file('document-meta.json', docBlob);
+        generatePages(_static);
+        const images = _static.folder('images')!;
+        await generateImages(images, this.m_context);
 
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = createName(data.document_meta.name) + '.zip';
-            link.click();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            commit('');
-        }
+        commit(1, t('publish.packaging'));
+        await __ease();
+        const content = await web.generateAsync({ type: 'blob' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = createName(data.document_meta.name) + '.zip';
+        link.click();
 
         function generateReadme() {
             return readme;
@@ -77,10 +73,12 @@ export class MossPacker {
 
         async function generateIndexJS() {
             const channel = (window as any).APP_VERSION_CHANNEL;
-            let url = '/static/prototype/index.prototype.js';
+            let url = '/static/prototype/index.preview.prototype.js';
             if (channel) url = '/' + channel + url;
             const response = await fetch(url);
-            const reader = response.body?.getReader();
+            if (response.status === 404) throw new MossError(t('publish.packaging_script_err'));
+            else if (response.status !== 200 || !response.body) throw new MossError(t('publish.script_exception'));
+            const reader = response.body.getReader();
             const values: Uint8Array[] = [];
             while (reader) {
                 const r = await reader.read();
@@ -99,15 +97,15 @@ export class MossPacker {
         }
 
         function generatePages(folder: JSZip) {
-            data.pages.forEach(p => {
+            for (const p of data.pages) {
                 folder.file(p.id + '.json', new Blob([JSON.stringify(p)]));
-            });
+            }
         }
 
         async function generateImages(folder: JSZip, context: Context) {
-            commit('下载图片资源...');
-            await __ease();
             if (!data.media_names.length) return;
+            commit(1, t('publish.download_images'));
+            await __ease();
             const manager = context.data.mediasMgr;
             for (const ref of data.media_names) {
                 const media = await manager.get(ref);
@@ -117,12 +115,12 @@ export class MossPacker {
         }
 
         function __ease() {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 let timer: any = setTimeout(() => {
                     resolve(true);
                     clearTimeout(timer);
                     timer = null;
-                }, 1000 * Math.random());
+                }, 300 * Math.random());
             });
         }
     }

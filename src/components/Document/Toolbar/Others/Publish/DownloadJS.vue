@@ -5,6 +5,7 @@ import { BoardLoader, BoardMenuItem } from "@/components/Document/Toolbar/Others
 import { Context } from "@/context";
 import BoardMenu from "@/components/Document/Toolbar/Others/Publish/BoardMenu/BoardMenu.vue";
 import { message } from "@/utils/message";
+import { MossError } from "@/basic/error";
 
 const t = useI18n().t;
 
@@ -37,10 +38,13 @@ function init() {
 
 const timerSet = new Set<any>();
 
-function showToast(type: 0 | 1) {
+function showToast(type: 0 | 1, mes?: string) {
     toast.value.show = true;
     toast.value.type = type;
-    toast.value.content = type ? t('home.downloaded') : '下载失败';
+    toast.value.content = type
+        ? t('home.downloaded')
+        : (mes ?? props.context.workspace.t('publish.download_failed'));
+
     timerSet.add(setTimeout(() => {
         toast.value.show = false;
     }, 2000));
@@ -48,8 +52,12 @@ function showToast(type: 0 | 1) {
 
 const status = ref<string>();
 
-function updateStatus(__sts: string) {
-    status.value = __sts;
+function updateStatus(__status: 0 | 1, __sts: string) {
+    if (__status) {
+        status.value = __sts;
+    } else {
+        showToast(0, __sts);
+    }
 }
 
 async function download() {
@@ -70,9 +78,15 @@ async function download() {
         }
         return { pageId, boardId, backgroundColor };
     })();
-    await packer.pack(config, updateStatus);
-    showToast(1);
-    downloading.value = false;
+    packer.pack(config, updateStatus).then(() => {
+        showToast(1);
+    }).catch((e) => {
+        if (e instanceof MossError) showToast(0, e.message);
+        throw e;
+    }).finally(() => {
+        downloading.value = false;
+        status.value = '';
+    });
 }
 
 onMounted(init);
@@ -82,9 +96,7 @@ onUnmounted(() => {
         t = null;
     });
     timerSet.clear();
-    if (downloading.value) {
-        message('info', '下载被终止');
-    }
+    if (downloading.value) message('info', t('publish.download_failed'));
 })
 </script>
 <template>
@@ -136,8 +148,9 @@ onUnmounted(() => {
             position: 'absolute'
         }">
         </div>
-        <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : 'red'}">{{ toast.content }}</div>
-        <div v-if="status" style="position: absolute; bottom: 10px; right: 34px; color: grey;font-style: italic;font-size: 12px;">
+        <div v-if="toast.show" class="toast" :style="{color: toast.type ? '#fff' : '#F56C6C'}">{{ toast.content }}</div>
+        <div v-if="status"
+             style="position: absolute; bottom: 10px; right: 34px; color: grey;font-style: italic;font-size: 12px;">
             {{ status }}
         </div>
     </div>

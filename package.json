@@ -14,7 +14,7 @@
     "scripts": {
         "dev": "cross-env NODE_ENV=development vite build --mode development --watch",
         "build-main": "vite build",
-        "build-proto": "vite build --config ./vite.config-proto.js",
+        "build-proto": "vite build --config ./vite.config-proto.ts",
         "build": "npm run build-main & npm run build-proto",
         "doc": "typedoc",
         "test": "jest",
