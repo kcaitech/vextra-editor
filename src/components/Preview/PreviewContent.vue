@@ -400,6 +400,7 @@ const onMouseDown = (e: MouseEvent) => {
         if (preview.value && spacePressed.value) {
             preview.value.style.cursor = 'grabbing';
         }
+        closeSupernatant(e);
     }
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
@@ -502,6 +503,7 @@ const getCurLayerShape = (id?: string) => {
 }
 
 function onMouseUp(e: MouseEvent) {
+    e.stopPropagation()
     if (e.button !== 0) {
         return;
     }
@@ -523,7 +525,14 @@ function onMouseUp(e: MouseEvent) {
         if (preview.value) {
             preview.value.style.cursor = 'grab';
         }
-    } else if (isSuperposed.value) {
+    }
+    isDragging = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+}
+
+const closeSupernatant = (e: MouseEvent) => {
+    if (isSuperposed.value) {
         const h_shape = search(e);
         if (!h_shape) {
             const shape = target_shapes[target_shapes.length - 1] as ShapeView;
@@ -541,9 +550,6 @@ function onMouseUp(e: MouseEvent) {
             }
         }
     }
-    isDragging = false;
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
 }
 
 const isSpacePressed = () => {
@@ -932,36 +938,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
-              :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
-    <!-- 浮层和动画卡片 -->
-    <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-        <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
-                  :context="context" :shapes="target_shapes"/>
-    </div>
-    <!-- 实例切换动画 -->
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100" width="100" height="100">
-    </svg>
-    <div class="toggle" v-if="listLength">
-        <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+            :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
+        <!-- 浮层和动画卡片 -->
+        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
+            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
+                :context="context" :shapes="target_shapes" />
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"></svg-icon>
+        <!-- 实例切换动画 -->
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
+            viewBox="0 0 100 100" width="100" height="100">
+        </svg>
+        <div class="toggle" v-if="listLength">
+            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow"></svg-icon>
+            </div>
         </div>
+        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
+            @updateSearch="updateSearch">
+        </ControlsView>
+        <div class="overlay" v-if="is_overlay"></div>
+        <div v-if="cur_shape" class="preview_overlay"></div>
     </div>
-    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-    <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
-                  @updateSearch="updateSearch">
-    </ControlsView>
-    <div class="overlay" v-if="is_overlay"></div>
-    <div v-if="cur_shape" class="preview_overlay"></div>
-</div>
 </template>
 
 <style scoped lang="scss">
