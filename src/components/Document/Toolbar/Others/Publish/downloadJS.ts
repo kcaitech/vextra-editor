@@ -73,7 +73,7 @@ export class MossPacker {
 
         async function generateIndexJS() {
             const channel = (window as any).APP_VERSION_CHANNEL;
-            let url = '/static/prototype/index.preview.prototype.js';
+            let url = '/static/prototype/index.prototype.js';
             if (channel) url = '/' + channel + url;
             const response = await fetch(url);
             if (response.status === 404) throw new MossError(t('publish.packaging_script_err'));
