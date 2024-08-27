@@ -20,6 +20,6 @@ const exportDoc = () => {
 
 </script>
 <template>
-    <span @click.stop="exportDoc">{{ '导出文件' }}</span>
+    <span @click.stop="exportDoc">{{ t('io.export_doc') }}</span>
 </template>
 <style scoped lang="scss"></style>
