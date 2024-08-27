@@ -18,6 +18,7 @@ import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
 import { IContext } from "@/openapi";
+import { importDocumentFromMDD } from "@/IO";
 
 export * from "./openapi";
 
@@ -45,6 +46,9 @@ async function _open(props: DocumentProps) {
             cooprepo = new CoopRepository(data, repo)
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)
+            cooprepo = new CoopRepository(data, repo)
+        } else if (props.fmt === 'moss') {
+            data = await importDocumentFromMDD(props.file, repo);
             cooprepo = new CoopRepository(data, repo)
         }
     } else if (props.source === 'new') {

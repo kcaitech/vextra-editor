@@ -1,6 +1,7 @@
 import { Context } from "@/context";
-import { exportExForm } from "@kcdesign/data";
+import { exportExForm, Repository, importMoss } from "@kcdesign/data";
 import JSZip from "jszip";
+import { MossError } from "@/basic/error";
 
 export async function exportDocument(context: Context) {
     const __data = context.data;
@@ -18,7 +19,7 @@ export async function exportDocument(context: Context) {
     const IMAGES = MDD.folder('images')!;
     await packImages(IMAGES);
 
-    const content = await MDD.generateAsync({type: 'blob'});
+    const content = await MDD.generateAsync({ type: 'blob' });
     downloadByLink(content, data.document_meta.name + '.mdd');
 
     function packPages(folder: JSZip) {
@@ -45,4 +46,45 @@ export function downloadByLink(content: Blob, name: string) {
     link.download = name;
     link.click();
     URL.revokeObjectURL(link.href);
+}
+
+export async function importDocumentFromMDD(filePack: File, repo: Repository) {
+    const __files = await getFiles() as {
+        [p: string]: JSZip.JSZipObject
+    };
+    const names = Object.keys(__files);
+    const __doc: {
+        [p: string]: string | Uint8Array | ArrayBuffer
+    } = {};
+    for (let name of names) {
+        const file = __files[name];
+        if (file.dir) continue;
+        let type: 'string' | 'arraybuffer' = 'string';
+        if (name.startsWith('images')) type = 'arraybuffer';
+        let content: string | Uint8Array | ArrayBuffer = await file.async(type);
+        if (type === "arraybuffer") {
+            content = new Uint8Array(content as Uint8Array);
+        }
+        if (name.startsWith('pages')) {
+            name = name.replace('.json', '');
+        }
+        __doc[name.replace(/images\/|pages\//, '')] = content;
+    }
+
+    return importMoss(__doc as { [p: string]: string | Uint8Array; }, repo);
+
+    function getFiles() {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(filePack);
+        return new Promise((resolve, reject) => {
+            reader.onload = (event) => {
+                const buff = event.target!.result as ArrayBuffer;
+                if (!buff) reject(new MossError('无法获取文档内容'));
+                const zip = new JSZip();
+                zip.loadAsync(buff).then(res => {
+                    resolve(res.files)
+                });
+            }
+        });
+    }
 }
