@@ -4,6 +4,7 @@ import { Context } from '@/context';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import ExportVue from "./Export.vue"
 import ViewVue from "./View.vue"
+import ExportDocView from "./ExportDoc.vue"
 
 interface Props {
     context: Context,
@@ -48,7 +49,7 @@ function onMenuBlur(e: MouseEvent) {
 const plugins = props.context.pluginsMgr.search2('toolbar.home.menu');
 const comps: { component: any, params?: any }[] = []
 comps.push(...plugins.begin)
-comps.push({ component: ExportVue }, { component: ViewVue })
+comps.push({component: ExportDocView}, {component: ExportVue}, {component: ViewVue})
 comps.push(...plugins.end)
 
 function close() {
@@ -57,12 +58,12 @@ function close() {
 
 </script>
 <template>
-<div class="icon" @click="showMenu" ref="trigger">
-    <svg-icon icon-class="menu"></svg-icon>
-</div>
-<div ref="popover" class="popover-f" v-if="popoverVisible">
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>
-</div>
+    <div class="icon" @click="showMenu" ref="trigger">
+        <svg-icon icon-class="menu"></svg-icon>
+    </div>
+    <div ref="popover" class="popover-f" v-if="popoverVisible">
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" @close="close"/>
+    </div>
 </template>
 <style scoped lang="scss">
 .icon {
