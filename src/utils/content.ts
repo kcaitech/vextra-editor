@@ -40,7 +40,6 @@ import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
-import { importDocumentFromMDD } from "@/IO";
 
 export interface Media {
     name: string
