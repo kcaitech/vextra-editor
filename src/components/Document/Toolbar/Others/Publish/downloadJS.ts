@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Document, exportExForm } from "@kcdesign/data";
 import JSZip from "jszip";
-import { readme, template } from "@/components/Document/Toolbar/Others/Publish/index.template";
+import { readme, TEMPLATE_HTML } from "@/components/Document/Toolbar/Others/Publish/index.template";
 import { MossError } from "@/basic/error";
 
 export class MossPacker {
@@ -14,7 +14,7 @@ export class MossPacker {
     }
 
     createDocName(name: string, suffix?: string) {
-        const reg = new RegExp('(.sketch|.fig)$', 'img');
+        const reg = new RegExp('(.sketch|.fig|.mdd)$', 'img');
         return name.replace(reg, '') + (suffix ? `.${suffix}` : '');
     }
 
@@ -37,7 +37,9 @@ export class MossPacker {
         const readmeBlob = generateReadme();
         web.file('README.md', readmeBlob);
 
-        const html = generateIndexHTML(createName(data.document_meta.name));
+        const title = createName(this.m_context.documentInfo.name || data.document_meta.name);
+
+        const html = generateIndexHTML(createName(title));
         web.file('index.html', html);
 
         commit(1, t('publish.export_script'));
@@ -60,7 +62,7 @@ export class MossPacker {
 
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = createName(data.document_meta.name) + '.zip';
+        link.download = createName(title) + '.zip';
         link.click();
 
         function generateReadme() {
@@ -68,7 +70,21 @@ export class MossPacker {
         }
 
         function generateIndexHTML(title: string) {
-            return template.replace('<%title%>', title);
+            const search = window.location.search;
+            const id = search.match(/id=([^&\s]+)/)?.pop();
+            let __template = TEMPLATE_HTML;
+            if (id) {
+                const origin = window.location.origin;
+                const link = origin
+                    + '/prototype?'
+                    + `id=${id}`
+                    + `&page_id=${config.pageId.slice(0, 8)}`
+                    + `&frame_id=${config.boardId.slice(0, 8)}`;
+
+                __template = __template.replace('<%doc_link%>', link);
+            }
+
+            return __template.replace('<%title%>', title);
         }
 
         async function generateIndexJS() {

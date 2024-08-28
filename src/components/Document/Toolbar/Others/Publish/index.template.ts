@@ -1,4 +1,4 @@
-export const template = `
+export const TEMPLATE_HTML = `
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,6 +7,9 @@ export const template = `
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><%title%></title>
+    <script>
+        window.__moss_doc_link = '<%doc_link%>'
+    </script>
 </head>
 <body>
 <div id="app"></div>

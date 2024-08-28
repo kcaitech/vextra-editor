@@ -6,6 +6,7 @@ import { Context } from "@/context";
 import BoardMenu from "@/components/Document/Toolbar/Others/Publish/BoardMenu/BoardMenu.vue";
 import { message } from "@/utils/message";
 import { MossError } from "@/basic/error";
+import { MossPacker } from "@/components/Document/Toolbar/Others/Publish/downloadJS";
 
 const t = useI18n().t;
 
@@ -62,7 +63,6 @@ function updateStatus(__status: 0 | 1, __sts: string) {
 
 async function download() {
     downloading.value = true;
-    const MossPacker = (await import("@/components/Document/Toolbar/Others/Publish/downloadJS")).MossPacker;
     const packer = new MossPacker(props.context);
     const config = (() => {
         let pageId: string = '';
