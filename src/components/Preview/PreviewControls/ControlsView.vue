@@ -12,7 +12,6 @@ import { delayAction, ProtoAction } from './actions';
 interface Props {
     context: Context
     matrix: Matrix
-    v_matrix: Matrix
     reflush: number
 }
 

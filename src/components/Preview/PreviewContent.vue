@@ -504,6 +504,7 @@ const getCurLayerShape = (id?: string) => {
 }
 
 function onMouseUp(e: MouseEvent) {
+    e.stopPropagation()
     if (e.button !== 0) {
         return;
     }
@@ -526,9 +527,6 @@ function onMouseUp(e: MouseEvent) {
             preview.value.style.cursor = 'grab';
         }
     }
-    isDragging = false;
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
 }
 
 const isSpacePressed = () => {
@@ -966,8 +964,7 @@ onUnmounted(() => {
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
         <ControlsView :reflush="reflush" :context="context"
-            :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix" :v_matrix="viewUpdater.v_matrix"
-            @updateSearch="updateSearch">
+            :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix" @updateSearch="updateSearch">
         </ControlsView>
         <div class="overlay" v-if="is_overlay"></div>
         <div v-if="cur_shape" class="preview_overlay"></div>
