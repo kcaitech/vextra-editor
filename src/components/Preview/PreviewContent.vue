@@ -51,6 +51,7 @@ const is_swap_shape = ref(false);
 const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
+const reflush = ref(0);
 
 function page_watcher() {
     const selection = props.context.selection;
@@ -526,30 +527,6 @@ function onMouseUp(e: MouseEvent) {
             preview.value.style.cursor = 'grab';
         }
     }
-    isDragging = false;
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-}
-
-const closeSupernatant = (e: MouseEvent) => {
-    if (isSuperposed.value) {
-        const h_shape = search(e);
-        if (!h_shape) {
-            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
-            const end_action = props.context.preview.endAction;
-            const swap_end_action = props.context.preview.swapEndAction;
-            if (end_action.navigationType === PrototypeNavigationType.SWAP) {
-                const s = getCurLayerShape(swap_end_action.targetNodeID);
-                if (s && s.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
-                    props.context.preview.deleteEndAction();
-                }
-            } else {
-                if (shape.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
-                    props.context.preview.deleteEndAction();
-                }
-            }
-        }
-    }
 }
 
 const isSpacePressed = () => {
@@ -600,6 +577,27 @@ const onMouseMove_CV = (e: MouseEvent) => {
     }
 }
 
+const closeSupernatant = (e: MouseEvent) => {
+    if (isSuperposed.value) {
+        const h_shape = search2(e);
+        if (!h_shape) {
+            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
+            const end_action = props.context.preview.endAction;
+            const swap_end_action = props.context.preview.swapEndAction;
+            if (end_action.navigationType === PrototypeNavigationType.SWAP) {
+                const s = getCurLayerShape(swap_end_action.targetNodeID);
+                if (s && s.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            } else {
+                if (shape.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            }
+        }
+    }
+}
+
 function search(e: MouseEvent) {
     const shapes = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
@@ -620,6 +618,7 @@ function search(e: MouseEvent) {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
     const actions = hover_shape?.prototypeInterActions;
+    reflush.value++;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
         while (p && p.type !== ShapeType.Page) {
@@ -698,6 +697,7 @@ const getTargetShapes = () => {
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
+    if (event) search(event);
     if (actions.size === 0) return;
     const render_shapes: ShapeView[] = [];
     actions.forEach(action => {
@@ -785,6 +785,7 @@ const backTargetShape = (s?: string) => {
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
     const protoActions = Array.from(actions.values());
+    if (event) search(event);
     if (actions.size === 0) return;
     const render_shapes: ShapeView[] = [];
     protoActions.forEach((action, index) => {
@@ -962,8 +963,8 @@ onUnmounted(() => {
             </div>
         </div>
         <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-        <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
-            @updateSearch="updateSearch">
+        <ControlsView :reflush="reflush" :context="context"
+            :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix" @updateSearch="updateSearch">
         </ControlsView>
         <div class="overlay" v-if="is_overlay"></div>
         <div v-if="cur_shape" class="preview_overlay"></div>

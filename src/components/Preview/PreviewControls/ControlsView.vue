@@ -12,6 +12,7 @@ import { delayAction, ProtoAction } from './actions';
 interface Props {
     context: Context
     matrix: Matrix
+    reflush: number
 }
 
 interface PathView {
@@ -258,7 +259,7 @@ const moveOutAction = () => {
 }
 
 function createShapeTracing() {
-    const hoveredShape = props.context.selection.hoveredShape;
+    const hoveredShape = props.context.selection.hoveredShape;    
     tracing.value = false;
     if (!hoveredShape) {
         return;
@@ -309,6 +310,10 @@ const preview_watcher = (t: number) => {
         delayAction(props.context, props.matrix);
     }
 }
+
+watch(() => props.reflush, () => {
+    createShapeTracing();
+})
 
 onMounted(() => {
     props.context.selection.watch(selected_watcher);
