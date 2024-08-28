@@ -54,6 +54,7 @@ import TempBoard from "@/components/common/TempBoard.vue";
 import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
+import StaticShape from "@/components/Document/Content/StaticShape.vue";
 
 interface Props {
     context: Context
@@ -778,7 +779,8 @@ comps.push(...plugins.end);
     <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
     <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
     <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <!-- 页面调整，确保在ContentView顶层 -->
+    <StaticShape :shape="props.context.selection.selectedPage!.childs[0]" :context="props.context"/>
+    <!-- 页面调整控件，确保在ContentView顶层 -->
     <Space :context="props.context" :visible="spacePressed"/>
 </div>
 </template>
