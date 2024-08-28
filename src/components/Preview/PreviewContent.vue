@@ -51,6 +51,7 @@ const is_swap_shape = ref(false);
 const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
+const reflush = ref(0);
 
 function page_watcher() {
     const selection = props.context.selection;
@@ -400,6 +401,7 @@ const onMouseDown = (e: MouseEvent) => {
         if (preview.value && spacePressed.value) {
             preview.value.style.cursor = 'grabbing';
         }
+        closeSupernatant(e);
     }
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
@@ -523,23 +525,6 @@ function onMouseUp(e: MouseEvent) {
         if (preview.value) {
             preview.value.style.cursor = 'grab';
         }
-    } else if (isSuperposed.value) {
-        const h_shape = search(e);
-        if (!h_shape) {
-            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
-            const end_action = props.context.preview.endAction;
-            const swap_end_action = props.context.preview.swapEndAction;
-            if (end_action.navigationType === PrototypeNavigationType.SWAP) {
-                const s = getCurLayerShape(swap_end_action.targetNodeID);
-                if (s && s.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
-                    props.context.preview.deleteEndAction();
-                }
-            } else {
-                if (shape.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
-                    props.context.preview.deleteEndAction();
-                }
-            }
-        }
     }
     isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
@@ -594,6 +579,27 @@ const onMouseMove_CV = (e: MouseEvent) => {
     }
 }
 
+const closeSupernatant = (e: MouseEvent) => {
+    if (isSuperposed.value) {
+        const h_shape = search2(e);
+        if (!h_shape) {
+            const shape = target_shapes[target_shapes.length - 1] as ShapeView;
+            const end_action = props.context.preview.endAction;
+            const swap_end_action = props.context.preview.swapEndAction;
+            if (end_action.navigationType === PrototypeNavigationType.SWAP) {
+                const s = getCurLayerShape(swap_end_action.targetNodeID);
+                if (s && s.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            } else {
+                if (shape.overlayBackgroundInteraction === OverlayBackgroundInteraction.CLOSEONCLICKOUTSIDE) {
+                    props.context.preview.deleteEndAction();
+                }
+            }
+        }
+    }
+}
+
 function search(e: MouseEvent) {
     const shapes = props.context.selection.selectedShapes[0];
     const page = props.context.selection.selectedPage;
@@ -614,6 +620,7 @@ function search(e: MouseEvent) {
         hover_shape = finderShape(viewUpdater.v_matrix, scout, [shapes], xy);
     }
     const actions = hover_shape?.prototypeInterActions;
+    reflush.value++;
     if ((hover_shape && !actions) || (hover_shape && actions!.length === 0)) {
         let p = hover_shape.parent;
         while (p && p.type !== ShapeType.Page) {
@@ -692,6 +699,7 @@ const getTargetShapes = () => {
     isSuperposed.value = false;
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
+    if (event) search(event);
     if (actions.size === 0) return;
     const render_shapes: ShapeView[] = [];
     actions.forEach(action => {
@@ -779,6 +787,7 @@ const backTargetShape = (s?: string) => {
     is_swap_shape.value = false;
     props.context.preview.setSupernatantIsOpen(false);
     const protoActions = Array.from(actions.values());
+    if (event) search(event);
     if (actions.size === 0) return;
     const render_shapes: ShapeView[] = [];
     protoActions.forEach((action, index) => {
@@ -932,36 +941,37 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
-              :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
-    <!-- 浮层和动画卡片 -->
-    <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-        <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
-                  :context="context" :shapes="target_shapes"/>
-    </div>
-    <!-- 实例切换动画 -->
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100" width="100" height="100">
-    </svg>
-    <div class="toggle" v-if="listLength">
-        <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+            :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
+        <!-- 浮层和动画卡片 -->
+        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
+            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
+                :context="context" :shapes="target_shapes" />
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"></svg-icon>
+        <!-- 实例切换动画 -->
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
+            viewBox="0 0 100 100" width="100" height="100">
+        </svg>
+        <div class="toggle" v-if="listLength">
+            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow"></svg-icon>
+            </div>
         </div>
+        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
+        <ControlsView :reflush="reflush" :context="context"
+            :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix" :v_matrix="viewUpdater.v_matrix"
+            @updateSearch="updateSearch">
+        </ControlsView>
+        <div class="overlay" v-if="is_overlay"></div>
+        <div v-if="cur_shape" class="preview_overlay"></div>
     </div>
-    <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-    <ControlsView :context="context" :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix"
-                  @updateSearch="updateSearch">
-    </ControlsView>
-    <div class="overlay" v-if="is_overlay"></div>
-    <div v-if="cur_shape" class="preview_overlay"></div>
-</div>
 </template>
 
 <style scoped lang="scss">
