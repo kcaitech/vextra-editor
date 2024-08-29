@@ -31,7 +31,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
         let x = value;
         let dx = 0;
         const box = get_box(shape);
-
+        if ((parent as ArtboradView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dx = value - m.computeCoord2(box.x, 0).x;
@@ -55,7 +55,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
         let y = value;
         let dy = 0;
         const box = get_box(shape);
-
+        if ((parent as ArtboradView).autoLayout) continue;
         if (parent.type === ShapeType.Page) {
             const m = parent.matrix2Root();
             dy = value - m.computeCoord2(0, box.y).y;

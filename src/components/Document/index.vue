@@ -23,7 +23,7 @@ const props = defineProps<{ context: IContext }>()
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
-const rightWidth = ref(250);
+const rightWidth = ref(240);
 const Left = ref({ leftMin: 250, leftWidth: 250, leftMinWidth: 250 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
@@ -101,7 +101,7 @@ const showHiddenRight = () => {
         rightWidth.value = 0
         showRight.value = false
     } else {
-        rightWidth.value = 250
+        rightWidth.value = 240
         showRight.value = true
     }
 }
@@ -166,9 +166,9 @@ const not_perm_hidden_right = () => {
     if (readonly && !isLable.value) {
         rightWidth.value = 0
     } else if (isLable.value && readonly) {
-        rightWidth.value = 250
+        rightWidth.value = 240
     } else if (!isLable.value && !readonly && !showRight.value) {
-        rightWidth.value = 250
+        rightWidth.value = 240
     }
 }
 

@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-import { ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
+import { ArtboradView, ShapeType, ShapeView, SymbolRefView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -26,6 +26,7 @@ import { flattenShapes } from '@/utils/cutout';
 import ArtboardTemplate from "@/components/Document/Attribute/Artboard/ArtboardTemplate.vue";
 import { Action, Tool } from "@/context/tool";
 import BlurVue from "./Blur/index.vue"
+import AutoLayout from "./AutoLayout/index.vue"
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -100,6 +101,7 @@ const symbol_attribute = ref<boolean>(true);
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 const constraintShow = ref<boolean>(true);
+const autoLayout = ref<boolean>(false);
 
 const reflush_by_selection = ref<number>(0);
 const reflush_by_table_selection = ref<number>(0);
@@ -115,12 +117,16 @@ function _selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     symbol_attribute.value = false;
+    autoLayout.value = false;
 
     const selectedShapes = props.context.selection.selectedShapes;
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
+        if (shape.type === ShapeType.Artboard) {
+            autoLayout.value = true;
+        }
     }
 
     shapes.value = [];
@@ -144,6 +150,12 @@ function _selection_change() {
         if (!is_constrainted(shape)) {
             constraintShow.value = false;
         }
+    }
+    if (constraintShow.value) {
+        const isAuto = selectedShapes.some(s => {
+            return s.parent && (s.parent as ArtboradView).autoLayout;
+        });
+        if (isAuto) constraintShow.value = false;
     }
 
     reflush_by_selection.value++;
@@ -173,6 +185,10 @@ function _modify_constraint_show() {
     constraintShow.value = props.context.selection.selectedShapes.every(
         s => is_constrainted(s)
     );
+    const isAuto = props.context.selection.selectedShapes.some(s => {
+        return s.parent && (s.parent as ArtboradView).autoLayout;
+    });
+    if (isAuto) constraintShow.value = false;
 }
 
 const modify_constraint_show = throttle(_modify_constraint_show, 160, { leading: true });
@@ -324,6 +340,9 @@ onUnmounted(() => {
                     :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :trigger="reflush_trigger"></ShapeBaseAttr>
+                <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger :context="props.context"
+                    :shapes="shapes">
+                </AutoLayout>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
                     :selection-change="reflush_by_selection">
@@ -336,17 +355,17 @@ onUnmounted(() => {
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
-                      :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
-                      :context="props.context" :trigger="reflush_trigger"></Text>
+                    :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
+                    :context="props.context" :trigger="reflush_trigger"></Text>
                 <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger"
                     :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
-                        :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
+                    :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
-                        :context="props.context">
+                    :context="props.context">
                 </Shadow>
                 <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context"></BlurVue>
                 <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
