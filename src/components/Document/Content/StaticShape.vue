@@ -37,6 +37,7 @@ const assetsSrc = ref<string | undefined>(props.src);
 
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
 const pageSvg = ref<SVGSVGElement>();
+const viewBox = ref<string>('');
 
 function getViewBox() {
     const data = props.shape;
@@ -44,18 +45,26 @@ function getViewBox() {
     const f = data.frame;
     const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(i => m.computeCoord3(i));
     const box = XYsBounding(points);
-    console.log('__box__', box);
 
     const height = box.bottom - box.top;
     const width = box.right - box.left;
 
-    let left = 0;
-    let top = 0;
+    let left;
+    let top;
 
     if (height > width) {
         const delta = height - width;
-        const scale = height / 94;
+        const scale = height / 100;
+        top = box.top - scale * 2;
+        left = box.left - (delta / 2) - (scale * 2);
+    } else {
+        const delta = width - height;
+        const scale = width / 100;
+        top = box.top - (delta / 2) - (scale * 2);
+        left = box.left - scale * 2
     }
+
+    viewBox.value = `${left} ${top} ${width} ${height}`;
 }
 
 function mount() {
@@ -189,6 +198,6 @@ onUnmounted(unBind);
 <template>
 <div>
     <img v-if="assetsSrc" alt="static" :src="assetsSrc">
-    <svg v-else ref="pageSvg" :width="100" :height="100" viewBox="0 0 5000 5000"/>
+    <svg v-else ref="pageSvg" :width="100" :height="100" :viewBox="viewBox"/>
 </div>
 </template>

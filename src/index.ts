@@ -1,6 +1,7 @@
 import _DocumentVue from "./components/Document/index.vue"
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
 import _PreviewVue from "./components/Preview/index.vue"
+import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
     CoopRepository,
     createDocument,
@@ -88,3 +89,5 @@ export async function openDocument(props: DocumentProps) {
 export const DocumentVue = _DocumentVue
 export const MobileDocumentVue = _MobileDocumentVue
 export const PreviewVue = _PreviewVue
+
+export const StaticShape = _StaticShape
