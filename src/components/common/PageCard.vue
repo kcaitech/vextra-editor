@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeSize, ShapeType,
+    adapt2Shape, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from "@kcdesign/data";
