@@ -1,11 +1,33 @@
 import { Context } from "@/context";
 import { Preview } from "@/context/preview";
 import { getFrameList, viewBox } from "@/utils/preview";
-import { ArtboradView, Matrix, PrototypeActions, PrototypeConnectionType, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, ScrollDirection, sessionRefIdKey, ShapeType, ShapeView, SymbolRefView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
+import {
+    Matrix,
+    PrototypeActions,
+    PrototypeConnectionType,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    ScrollDirection,
+    sessionRefIdKey,
+    ShapeType,
+    ShapeView,
+    SymbolRefView
+} from '@kcdesign/data';
+
+export interface EventIndex {
+    click: number,
+    dblclick: number,
+    mousedown: number,
+    mouseup: number,
+    mouseenter: number,
+    hover: number
+}
 
 export class ProtoAction {
     private m_context: Context
     private m_shapes: ShapeView[] = [];
+
     constructor(context: Context) {
         this.m_context = context;
     }
@@ -34,6 +56,7 @@ export class ProtoAction {
         }
         if (id) this.m_context.preview.deleteDelaySetTimeout(id);
     }
+
     // 跳转页面
     actionSkipPage(action: PrototypeActions) {
         const shapeId = action.targetNodeID;
@@ -95,7 +118,7 @@ export class ProtoAction {
     artboardInScroll(action: PrototypeActions, matrix: Matrix) {
         const page = this.m_context.selection.selectedPage;
         if (!page || !action.targetNodeID) return;
-        const target_shape = page.getShape(action.targetNodeID);        
+        const target_shape = page.getShape(action.targetNodeID);
         if (!target_shape) return;
         const scroll_shape = this.scrollParent(target_shape);
         if (scroll_shape) {
@@ -136,6 +159,7 @@ export class ProtoAction {
         a.click();
         document.body.removeChild(a);
     }
+
     // 组件状态替换
     symbolStateSwitch(action: PrototypeActions, id?: string, shape?: ShapeView) {
         const down_shape = shape || this.m_context.selection.hoveredShape as SymbolRefView;
@@ -159,11 +183,13 @@ export class ProtoAction {
         }
         if (id) this.m_context.preview.deleteDelaySetTimeout(id);
     }
+
     // 打开浮层
     openDialog(action: PrototypeActions, matrix: Matrix) {
         this.m_context.preview.setInteractionAction(action);
         delayAction(this.m_context, matrix);
     }
+
     // 关闭浮层
     closeDialog() {
         const endAction = this.m_context.preview.endAction;
@@ -181,6 +207,7 @@ export class ProtoAction {
         this.closeDialog();
         this.openDialog(action, matrix);
     }
+
     getMapRefIdLS(key: string): Map<string, string> {
         let jsonString = sessionStorage.getItem(key);
         if (jsonString) {
@@ -189,6 +216,7 @@ export class ProtoAction {
         }
         return new Map();
     }
+
     saveMapRefIdLS(map: Map<string, string>, key: string) {
         let refIdArray = Array.from(map.entries());
         let jsonString = JSON.stringify(refIdArray);
@@ -228,7 +256,7 @@ export const delayAction = (context: Context, matrix: Matrix) => {
             shape = s;
         }
     }
-    if(!shape) return;
+    if (!shape) return;
     const protoActionFn = new ProtoAction(context);
     executeDelayActionShape(context, shape, protoActionFn, matrix);
 }

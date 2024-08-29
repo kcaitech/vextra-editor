@@ -1,19 +1,21 @@
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js'
+import { fileURLToPath, URL } from 'node:url';
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import dts from "vite-plugin-dts";
 import arraybuffer from "vite-plugin-arraybuffer";
 
-const PRODUCTION = process.env.NODE_ENV === 'production'
-console.log('config for ' + process.env.NODE_ENV)
+const PRODUCTION = process.env.NODE_ENV === 'production';
+console.log('config for ' + process.env.NODE_ENV);
 
 export default defineConfig({
-    define: {
-        global: 'window'
-    },
+    define: Object.entries({
+        global: 'window',
+    }).reduce((res, [key, value]) => {
+        res[key] = JSON.stringify(value);
+        return res;
+    }, {} as any),
     build: {
-        // assetsInlineLimit: 409600, // 400kb
         minify: PRODUCTION ? "terser" : false,
         terserOptions: {
             compress: {
@@ -27,7 +29,7 @@ export default defineConfig({
         lib: {
             entry: 'src/index.ts',
             name: 'kcdesign',
-            fileName: (format) => `index.${format}.js`,
+            fileName: (_) => `index.${_}.js`,
             formats: ['es'], // ['es', 'cjs']
         },
         sourcemap: !PRODUCTION,

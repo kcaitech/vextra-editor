@@ -15,6 +15,7 @@ import { IToolBox } from "./toolbox";
 // }
 export interface IEscStack {
     save(key: string, call: () => boolean): void;
+
     remove(key: string): void;
 }
 
@@ -26,9 +27,13 @@ export interface IContext extends IWatchable {
     get storage(): Map<string, string>;
 
     get data(): Document;
+
     get pluginsMgr(): IPluginsMgr;
+
     setNet(net: INet): void;
+
     get curAction(): string | undefined;
+
     setCurAction(uuid: string): void;
 
     hasPendingSyncCmd(): boolean;
@@ -37,13 +42,15 @@ export interface IContext extends IWatchable {
 
     registKeyHandler(keyCode: string, handler: (event: KeyboardEvent, context: IContext) => void): void,
 
-    // getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx }
-
     get workspace(): IWorkspace;
+
     get escstack(): IEscStack;
-    // setEscstack(stack: EscStack): void;
 
     get toolbox(): IToolBox;
 
     setReadonly(readonly: boolean): void;
+
+    setDocumentInfo(info: { name: string }): void;
+
+    get documentInfo(): { name: string };
 }

@@ -6,17 +6,14 @@ import {
     PrototypeActions,
     PrototypeNavigationType,
     PrototypeTransitionType,
-    Shape,
     ShapeView,
     makeShapeTransform2By1,
-    ShapeType,
     ArtboradView
-} from "@kcdesign/data";
+} from '@kcdesign/data';
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
-import { Menu } from "@/context/menu";
 import { Preview } from "@/context/preview";
 import { getFrameList, getPreviewMatrix, scrollAtrboard, viewBox } from "@/utils/preview";
 import { toStyle } from "@/utils/message";
@@ -43,19 +40,9 @@ export class ViewUpdater {
     private matrix: Matrix = new Matrix();
     private m_container: HTMLDivElement | undefined; // 整个黑盒子
 
-    private m_image_map: Map<string, string> = new Map();
-    private m_dirty_target: Map<string, Shape> = new Map();
-
-    private m_lazy_updater: DirtyCleaner;
-
     constructor(context: Context) {
         this.m_context = context;
 
-        this.m_lazy_updater = new DirtyCleaner(context, this.m_image_map, this.m_dirty_target);
-    }
-
-    get lazyLoader() {
-        return this.m_lazy_updater;
     }
 
     get v_matrix() {
@@ -1271,119 +1258,5 @@ export class ViewUpdater {
             }
         }
         return;
-    }
-}
-
-class DirtyCleaner {
-    private m_image_map: Map<string, string>; // todo 缓存，使列表流畅
-    private m_dirty_target: Map<string, Shape>;
-    private m_context: Context;
-
-    constructor(context: Context, store: Map<string, string>, dirty: Map<string, Shape>) {
-        this.m_context = context;
-        this.m_image_map = store;
-        this.m_dirty_target = dirty;
-    }
-
-    private timer: any = null;
-
-    private m_current_creating: string = '';
-    private m_loop: boolean = false;
-
-    changePage(targets: Shape[]) {
-        let needInit = false;
-        for (let i = 0; i < targets.length; i++) {
-            const t = targets[i];
-            if (!this.m_image_map.has(t.id)) {
-                needInit = true;
-                this.m_dirty_target.set(t.id, t);
-            }
-        }
-
-        if (needInit) {
-            clearTimeout(this.timer);
-            this.timer = null;
-            this.initStore();
-        }
-    }
-
-    initStore() {
-        const dirty = Array.from(this.m_dirty_target.keys());
-        const cd = dirty.pop();
-        if (!cd) {
-            console.log('finish init');
-            this.m_loop = false;
-            return;
-        }
-        const target = this.m_dirty_target.get(cd);
-        if (!target) {
-            return;
-        }
-
-        this.m_dirty_target.delete(this.m_current_creating);
-
-        this.m_current_creating = cd;
-
-        console.log('_target_', target.name, target);
-
-        this.m_context.menu.notify(Menu.WRITE_MEDIA_LAZY, target);
-
-        this.m_loop = true;
-    }
-
-    dataLoad(b64: string) {
-        if (!this.m_current_creating) {
-            this.m_loop = false;
-            return;
-        }
-
-        console.log('__dataLoad__', this.m_current_creating);
-
-        this.m_image_map.set(this.m_current_creating, b64);
-        const last = this.m_current_creating;
-        if (this.m_loop) {
-            this.initStore();
-        } else {
-            this.lazyAfter5s();
-        }
-        return last;
-    }
-
-    lazyAfter5s() {
-        const __lazy = this.lazyLong.bind(this);
-        clearTimeout(this.timer);
-        this.timer = setTimeout(() => {
-            __lazy();
-            clearTimeout(this.timer);
-            this.timer = null;
-        }, 5000);
-    }
-
-    lazyLong() {
-        const dirty = Array.from(this.m_dirty_target.keys());
-        const cd = dirty.pop();
-        if (!cd) {
-            this.lazyAfter5s();
-            console.log('no dirty');
-            return;
-        }
-        const target = this.m_dirty_target.get(cd);
-        if (!target) {
-            this.lazyAfter5s();
-            return;
-        }
-
-        // 获取成功
-        this.m_dirty_target.delete(this.m_current_creating);
-
-        this.m_current_creating = cd;
-
-        this.m_context.menu.notify(Menu.WRITE_MEDIA_LAZY, target);
-    }
-
-    uninstall() {
-        this.m_current_creating = '';
-        clearTimeout(this.timer);
-        this.timer = null;
     }
 }

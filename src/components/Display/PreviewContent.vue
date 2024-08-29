@@ -19,22 +19,22 @@ import { nextTick, onMounted, onUnmounted, reactive, ref, toRaw, watch } from 'v
 import { finderShape, getFrameList, getScrollShape, scrollAtrboard, selectShapes, viewBox } from '@/utils/preview';
 import PageCard from "./PreviewPageCard.vue";
 import MenuVue from './PreviewMenu.vue';
-import { ViewUpdater } from "@/components/Preview/viewUpdater";
+import { ViewUpdater } from "@/components/Display/viewUpdater";
 import { Selection } from '@/context/selection';
-import ControlsView from './PreviewControls/ControlsView.vue';
-
+import ControlsView from '@/components/Display/PreviewControls/ControlsView.vue';
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
-import { DomCtx } from '../Document/Content/vdom/domctx';
-import { initComsMap } from '../Document/Content/vdom/comsmap';
-import { SymbolDom } from '../Document/Content/vdom/symbol';
+import { DomCtx } from '@/components/Document/Content/vdom/domctx';
+import { initComsMap } from '@/components/Document/Content/vdom/comsmap';
+import { SymbolDom } from '@/components/Document/Content/vdom/symbol';
 import { is_mac } from '@/utils/common';
 
 const { t } = useI18n();
 const props = defineProps<{
-    context: Context
-    page: PageView
-    showTop: boolean
+    context: Context;
+    page: PageView;
+    showTop: boolean;
+    mode: 'preview' | 'display';
 }>();
 type PCard = InstanceType<typeof PageCard>
 const preview = ref<HTMLDivElement>();
@@ -52,6 +52,8 @@ const symRefAnimate = ref<SVGSVGElement>();
 const renderCard = ref(false);
 let event: MouseEvent;
 const reflush = ref(0);
+
+const previewMode = props.mode === 'preview';
 
 function page_watcher() {
     const selection = props.context.selection;
@@ -130,7 +132,7 @@ const togglePage = (p: number) => {
 const getEndElement = () => {
     let el: SVGSVGElement | undefined;
     if (target_shapes.length > 0) {
-        const els = document.querySelectorAll('.dailogCard');
+        const els = document.querySelectorAll('.dialogCard');
         el = els[els.length - 1] as SVGSVGElement;
     } else {
         el = pageCard.value!.pageSvg as SVGSVGElement
@@ -196,7 +198,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         curPage.value = index + 1;
     } else if (t === Preview.SUPERNATANT_CLOSR) {
         // 关闭浮层动作
-        const els = document.querySelectorAll('.dailogCard');
+        const els = document.querySelectorAll('.dialogCard');
         const action = s as PrototypeActions;
         viewUpdater.dissolveAnimate(action, els as any, 0);
         const end_shape = target_shapes[target_shapes.length - 1] as ShapeView;
@@ -259,7 +261,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
     }
 }
 
-const removeChildSymrefAnimate = () => {
+const removeChildSymRefAnimate = () => {
     if (!symRefAnimate.value) return;
     const els = symRefAnimate.value.childNodes;
     symRefAnimate.value.style['transition'] = '';
@@ -278,7 +280,7 @@ const selectionWatcher = (v: number | string) => {
         changePage();
         props.context.preview.setFromShapeAction(undefined);
     } else if (v === Selection.CHANGE_SHAPE) {
-        removeChildSymrefAnimate();
+        removeChildSymRefAnimate();
         props.context.preview.clearInnerTransform();
         const shapes = props.context.selection.selectedShapes;
         if (!shapes.length) {
@@ -295,19 +297,23 @@ const selectionWatcher = (v: number | string) => {
 }
 
 const initMatrix = () => {
-    const type = props.context.preview.scaleType;
-    if (type === ScaleType.FillScreen) {
-        viewUpdater.modifyTransformToFill();
-    } else if (type === ScaleType.FitScreen) {
-        viewUpdater.modifyTransformToFit();
-    } else if (type === ScaleType.FitWidth) {
-        viewUpdater.modifyTransformToFillByWidth();
-    } else if (type === ScaleType.Actual) {
-        viewUpdater.modifyTransform();
+    if (previewMode) {
+        const type = props.context.preview.scaleType;
+        if (type === ScaleType.FillScreen) {
+            viewUpdater.modifyTransformToFill();
+        } else if (type === ScaleType.FitScreen) {
+            viewUpdater.modifyTransformToFit();
+        } else if (type === ScaleType.FitWidth) {
+            viewUpdater.modifyTransformToFillByWidth();
+        } else if (type === ScaleType.Actual) {
+            viewUpdater.modifyTransform();
+        } else {
+            viewUpdater.modifyTransformKeepScale();
+        }
     } else {
-        viewUpdater.modifyTransformKeepScale();
+        viewUpdater.modifyTransformFixPrototype();
     }
-    // viewUpdater.modifyTransformFixPrototype();
+
     if (is_overlay.value && pageCard.value) {
         is_overlay.value = false;
     }
@@ -320,7 +326,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (!shape) return;
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
-        viewUpdater.scale(e);
+        previewMode && viewUpdater.scale(e);
     } else {
         let hover_shape = search2(e);
         hover_shape = getScrollShape(hover_shape);
@@ -518,7 +524,7 @@ function onMouseUp(e: MouseEvent) {
             const matrix = isSuperposed.value ? (end_matrix.value as Matrix) : viewUpdater.v_matrix;
             const shape = isSuperposed.value ? target_shapes.at(-1) : select_shape;
             if (!shape) return;
-            viewUpdater.getHotZone(e, matrix, shape as ShapeView);
+            previewMode && viewUpdater.getHotZone(e, matrix, shape as ShapeView);
         }
     }
     if (spacePressed.value) {
@@ -527,6 +533,10 @@ function onMouseUp(e: MouseEvent) {
             preview.value.style.cursor = 'grab';
         }
     }
+    isDragging = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+
 }
 
 const isSpacePressed = () => {
@@ -712,7 +722,7 @@ const getTargetShapes = () => {
     watch_shapes();
     nextTick(() => {
         const protoActions = Array.from(actions.values());
-        const els = document.querySelectorAll('.dailogCard');
+        const els = document.querySelectorAll('.dialogCard');
         for (let i = 0; i < protoActions.length; i++) {
             const action = protoActions[i];
             const shape = shapes.find(item => item.id === action.targetNodeID);
@@ -802,7 +812,7 @@ const backTargetShape = (s?: string) => {
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     watch_shapes();
     nextTick(() => {
-        const els = document.querySelectorAll('.dailogCard');
+        const els = document.querySelectorAll('.dialogCard');
         for (let i = 0; i < protoActions.length; i++) {
             const action = protoActions[i];
             const shape = target_shapes[i] as ShapeView;
@@ -858,7 +868,7 @@ const updateDialogMatrix = () => {
     const page = props.context.selection.selectedPage;
     const selectShape = props.context.selection.selectedShapes[0];
     if (!selectShape) return;
-    const els = document.querySelectorAll('.dailogCard');
+    const els = document.querySelectorAll('.dialogCard');
     const box = viewBox(viewUpdater.v_matrix, selectShape);
     const shapes = getFrameList(page!);
     const protoActions = Array.from(props.context.preview.interactionAction.values());
@@ -939,36 +949,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
-            :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
-        <!-- 浮层和动画卡片 -->
-        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-            <PageCard :key="item.id" class="dailogCard" ref="dailogCard" background-color="transparent" :data="item"
-                :context="context" :shapes="target_shapes" />
-        </div>
-        <!-- 实例切换动画 -->
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="symref_animate" preserveAspectRatio="xMinYMin meet"
-            viewBox="0 0 100 100" width="100" height="100">
-        </svg>
-        <div class="toggle" v-if="listLength">
-            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-                <svg-icon icon-class="left-arrow"></svg-icon>
-            </div>
-            <div class="page">{{ curPage }} / {{ listLength }}</div>
-            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-                <svg-icon icon-class="right-arrow"></svg-icon>
-            </div>
-        </div>
-        <MenuVue :context="context" :top="top" :left="left" v-if="isMenu" @close="closeMenu"></MenuVue>
-        <ControlsView :reflush="reflush" :context="context"
-            :matrix="isSuperposed ? (end_matrix as Matrix) : viewUpdater.v_matrix" @updateSearch="updateSearch">
-        </ControlsView>
-        <div class="overlay" v-if="is_overlay"></div>
-        <div v-if="cur_shape" class="preview_overlay"></div>
+<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+    <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+              :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
+    <!-- 浮层和动画卡片 -->
+    <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
+        <PageCard :key="item.id" class="dialogCard" ref="dialogCard" background-color="transparent" :data="item"
+                  :context="context" :shapes="target_shapes"/>
     </div>
+    <!-- 实例切换动画 -->
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
+         viewBox="0 0 100 100" width="100" height="100">
+    </svg>
+    <div class="toggle" v-if="listLength && previewMode">
+        <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+            <svg-icon icon-class="left-arrow"></svg-icon>
+        </div>
+        <div class="page">{{ curPage }} / {{ listLength }}</div>
+        <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
+            <svg-icon icon-class="right-arrow"/>
+        </div>
+    </div>
+    <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu"/>
+    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
+                  @updateSearch="updateSearch">
+    </ControlsView>
+    <div v-if="is_overlay" class="overlay"/>
+    <div v-if="cur_shape" class="preview_overlay"/>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -988,7 +998,7 @@ onUnmounted(() => {
         top: 0;
     }
 
-    .symref_animate {
+    .sym_ref_animate {
         transform-origin: top left;
         position: absolute;
         overflow: visible;

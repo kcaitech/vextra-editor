@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Preview, ScaleType } from '@/context/preview';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-import Key from '../common/Key.vue';
+import Key from '@/components/common/Key.vue';
 import { getFrameList } from '@/utils/preview';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n()
