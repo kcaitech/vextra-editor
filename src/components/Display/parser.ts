@@ -1,13 +1,15 @@
-import { CoopRepository, importRemote, Repository } from "@kcdesign/data";
+import { CoopRepository, importLocal, Repository } from "@kcdesign/data";
 import LCStorage from "./local";
 import { Context } from "@/context";
 
 export async function parserDocument() {
     const storage = new LCStorage();
     const repo = new Repository();
-    const { document, loader } = await importRemote(storage, '', '', '', repo);
+    const { document, loader } = await importLocal(storage, '', '', '', repo);
     const cooprepo = new CoopRepository(document, repo)
-    return new Context(document, cooprepo, { source: 'storage', storage } as any);
+    const context = new Context(document, cooprepo, { source: 'storage', storage } as any);
+    (window as any).__context = context;
+    return context;
 }
 
 interface Config {
@@ -17,30 +19,14 @@ interface Config {
 }
 
 export async function fetchConfig(): Promise<Config> {
-    const response = await fetch('/static/.config');
-    const stream = response.body;
-    if (!stream) throw new Error('null stream');
-    const reader = stream.getReader();
-
-    const values: Uint8Array[] = [];
-    let count = 0;
-    while (reader) {
-        const { value, done } = await reader.read();
-        if (value) {
-            values.push(value);
-            count += value.length;
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = './static/.config.js';
+        document.head.append(script);
+        script.onload = () => {
+            const __moss_config = JSON.parse(JSON.stringify((window as any).__moss_config));
+            script.remove();
+            resolve(__moss_config)
         }
-        if (done) break;
-    }
-    if (values.length) {
-        const units = new Uint8Array(count);
-        let index = 0;
-        for (const u of values) {
-            units.set(u, index);
-            index += u.length;
-        }
-        return JSON.parse(new TextDecoder().decode(units));
-    } else {
-        throw new Error('no values');
-    }
+    })
 }

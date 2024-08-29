@@ -1,42 +1,34 @@
 import { IStorage } from "@kcdesign/data";
 
 export default class LCStorage implements IStorage {
-    public get(uri: string): Promise<Uint8Array> {
-        const __slices = uri.split('/');
-        if (__slices.includes('medias')) {
-            uri = '/static/images/' + (__slices.pop() || '');
-        } else if (__slices.includes('pages')) {
-            uri = '/static/' + (__slices.pop() || '');
-        } else {
-            uri = '/static/' + (__slices.pop() || '');
-        }
+    private scriptMap: Map<string, Uint8Array> = new Map();
 
-        return new Promise((resolve, reject) => {
-            fetch(uri).then(async res => {
-                const stream = res.body;
-                if (!stream) throw new Error('null');
-                const reader = stream.getReader();
-                const values: Uint8Array[] = [];
-                let count = 0;
-                while (reader) {
-                    const { value, done } = await reader.read();
-                    if (value) {
-                        values.push(value);
-                        count += value.length;
+    public get(uri: string): Promise<Uint8Array> {
+        if (uri.startsWith('medias')) {
+            uri = './static/images/' + uri.slice('medias/'.length);
+            const encoder = new TextEncoder();
+            return Promise.resolve(encoder.encode(uri));
+        } else {
+            const target = this.scriptMap.get(uri);
+            if (!target) {
+                return new Promise((resolve) => {
+                    const script = document.createElement("script");
+                    script.src = './static/' + uri + '.js';
+                    document.head.append(script);
+                    script.onload = () => {
+                        const __moss_content = JSON.stringify((window as any).__moss_content_string);
+                        (window as any).__moss_content_string = undefined;
+                        script.remove();
+                        const encoder = new TextEncoder();
+                        const u8a = encoder.encode(__moss_content)
+                        this.scriptMap.set(uri, u8a);
+                        resolve(u8a);
                     }
-                    if (done) break;
-                }
-                if (values.length) {
-                    const units = new Uint8Array(count);
-                    let index = 0;
-                    for (const u of values) {
-                        units.set(u, index);
-                        index += u.length;
-                    }
-                    resolve(units);
-                } else reject('wrong value');
-            }).catch(reject);
-        });
+                })
+            } else {
+                return Promise.resolve(target);
+            }
+        }
     }
 
     public put(uri: string, data: Uint8Array, contentType?: string): Promise<void> {
