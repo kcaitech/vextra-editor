@@ -21,7 +21,7 @@ export async function exportDocument(context: Context) {
 
     const content = await MDD.generateAsync({ type: 'blob' });
     const name = context.documentInfo.name || data.document_meta.name;
-    downloadByLink(content, name + '.mdd');
+    downloadByLink(content, name + '.moss');
 
     function packPages(folder: JSZip) {
         for (const page of data.pages) {
@@ -70,7 +70,7 @@ export async function importDocumentFromMDD(filePack: File, repo: Repository) {
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importMoss(filePack.name.replace(/.mdd/, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    return importMoss(filePack.name.replace(/.moss/, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 
     function getFiles() {
         const reader = new FileReader();

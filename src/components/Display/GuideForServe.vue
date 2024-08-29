@@ -39,7 +39,7 @@ function home() {
                     执行指令后出现类似输出则静态文件服务器启动成功，您可以在浏览器中访问serve在终端给出的URL进行站点预览</p>
                 <div class="code" style="margin-left: 28px">
                     <p>> serve</p>
-                    <div style="border: 1px solid green; padding: 16px;margin-bottom: 24px; width: 400px">
+                    <div style="border: 2px solid green; padding: 16px;margin-bottom: 24px; width: 400px">
                         <p style="color:green;">Serving!</p>
                         <p><strong>- Local</strong> http://localhost:3000</p>
                         <p><strong>- Network</strong> http://---------:3000</p>
