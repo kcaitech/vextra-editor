@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 import {
+    ContactLineView,
     CurveMode,
     CurvePoint,
     Matrix,
@@ -186,7 +187,7 @@ export function modify_point_curve_mode(context: Context, index: number) {
     } else {
         target_curve_mode = CurveMode.Straight
     }
-    
+
     editor.modifyPointsCurveMode(selected, target_curve_mode);
 }
 
@@ -414,8 +415,8 @@ export function enter_path_edit_mode(context: Context) {
 
     const shape = selected[0];
 
-    if (!shape.pathType || shape.isVirtualShape) {
-        console.log('!shape.pathType || shape.isVirtualShape');
+    if (!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView) {
+        console.log('!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView');
         return;
     }
 

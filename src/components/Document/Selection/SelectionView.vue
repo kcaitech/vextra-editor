@@ -362,13 +362,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     const action = props.context.tool.action;
     const selection = props.context.selection;
 
-    if (!(action === Action.AutoV || action === Action.AutoK)) {
-        return;
-    }
-
-    if (e.button !== 0) {
-        return;
-    }
+    if (e.button !== 0 || action !== Action.AutoV) return;
 
     e.stopPropagation();
 
@@ -377,9 +371,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 
     const hoveredShape = selection.hoveredShape;
-    if (!hoveredShape) {
-        return;
-    }
+    if (!hoveredShape) return;
 
     if (e.shiftKey) {
         multi_select_shape(props.context, hoveredShape);
@@ -437,10 +429,7 @@ function page_watcher() {
 
 function remove_page_watcher() {
     const page = props.context.selection.selectedPage;
-
-    if (page) {
-        page.unwatch(shapesWatcher);
-    }
+    if (page) page.unwatch(shapesWatcher);
 }
 
 // hooks

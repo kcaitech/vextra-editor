@@ -134,18 +134,18 @@ function click() {
             <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
         <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
-              :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
+            :class="{ cursor: !props.disabled }">{{ ticon }}</span>
         <Tooltip v-if="props.tootip && props.disabled" :content="props.tootip" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-                   :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
+                :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-               :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click">
+            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2" @click="click">
         <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
-                      :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
+                :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
             <svg-icon icon-class="down" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
-                      @click="decrease"></svg-icon>
+                @click="decrease"></svg-icon>
         </div>
     </div>
 </template>
@@ -214,7 +214,7 @@ function click() {
         box-sizing: border-box;
         border-radius: 4px;
 
-        > svg {
+        >svg {
             cursor: pointer;
             width: 12px;
             height: 12px;
@@ -241,5 +241,9 @@ function click() {
 
 .actived {
     border: 1px solid #1878F5;
+}
+
+.cursor {
+    cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
 }
 </style>

@@ -44,9 +44,7 @@ export class TransformHandler {
 
     protected beforeTransform() {
         this.context.menu.menuMount(); // 关闭已打开的弹窗
-
         this.context.cursor.cursor_freeze(true); // 禁用光标自动变换
-
         this.workspace.setCtrl('controller'); // 将编辑器控制权交给控件
     }
 
@@ -58,7 +56,6 @@ export class TransformHandler {
 
     private __keydown = this.keydown.bind(this);
     private __keyup = this.keyup.bind(this);
-
 
     fulfil() {
         const context = this.context;
@@ -75,9 +72,7 @@ export class TransformHandler {
     updateCtrlView(rule: number) {
         this.context.nextTick(this.context.selection.selectedPage!, () => {
             this.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-            if (rule) {
-                this.context.tool.notify(Tool.RULE_RENDER);
-            }
+            if (rule) this.context.tool.notify(Tool.RULE_RENDER);
         })
     }
 }

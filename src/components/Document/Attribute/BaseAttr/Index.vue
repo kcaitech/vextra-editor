@@ -198,9 +198,7 @@ function changeW(value: string) {
         .toFixed(fix);
 
     const _w: number = Number.parseFloat(value);
-    if (isNaN(_w)) {
-        return;
-    }
+    if (isNaN(_w)) return;
 
     const shapes = props.context.selection.selectedShapes;
 
@@ -279,9 +277,7 @@ function changeR(value: string) {
 
     const newRotate: number = Number.parseFloat(value);
 
-    if (isNaN(newRotate)) {
-        return;
-    }
+    if (isNaN(newRotate)) return;
 
     const shapes = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage!;
@@ -477,9 +473,7 @@ function dragstart(e: MouseEvent) {
 function draggingX(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
 
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
@@ -505,9 +499,7 @@ function draggingY(e: MouseEvent) {
 function draggingW(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
 
-    if (!lockMouseHandler) {
-        return
-    }
+    if (!lockMouseHandler) return;
 
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('scaling');

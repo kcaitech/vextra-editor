@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Matrix, PageView, adapt2Shape } from '@kcdesign/data';
+import { Matrix, Page, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
-import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
 import { PageDom } from './vdom/page';
@@ -16,7 +15,8 @@ interface Props {
         data: PageView
         matrix: Matrix
         noCutout?: boolean,
-        closeLoading?: () => void,
+        onRenderDone?: () => void,
+        onContentVisible?: () => void,
         visibleRect?: { x: number, y: number, width: number, height: number }
     }
 }
@@ -24,7 +24,6 @@ interface Props {
 const props = defineProps<Props>();
 const matrixWithFrame = new Matrix();
 const matrixWithFrame_inverse = new Matrix();
-const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
@@ -32,11 +31,9 @@ const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
 const cutoutVisible = ref<boolean>(true);
-
-// const emit = defineEmits<{
-//     (e: 'closeLoading'): void;
-// }>();
-
+const transform = ref<string>('');
+const transformArr = ref<number[]>(new Matrix().toArray());
+const pageReady = ref<boolean>(false);
 const show_c = computed<boolean>(() => {
     return !props.params.noCutout && cutoutVisible.value;
 })
@@ -73,19 +70,45 @@ function page_watcher() {
     const innerFrame = props.params.data.frame;
 
     viewbox.value = `${innerFrame.x} ${innerFrame.y} ${width.value} ${height.value}`;
-
-    reflush.value++;
+    transform.value = matrixWithFrame.toString();
+    transformArr.value = matrixWithFrame.toArray();
     updateVisibleRect();
 }
 
 function updateVisibleRect() {
-    const rect = props.params.visibleRect; // rootview
+    const rect = props.params.visibleRect;
     if (!rect) return;
     const lt = matrixWithFrame_inverse.computeCoord(rect);
     const rb = matrixWithFrame_inverse.computeCoord(rect.x + rect.width, rect.y + rect.height); // root坐标系
     const page = props.params.data as PageDom;
     const innerFrame = page.frame;
-    page.optimizeClientVisibleNodes({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y })
+    page.updateVisibleRect({ x: lt.x + innerFrame.x, y: lt.y + innerFrame.y, width: rb.x - lt.x, height: rb.y - lt.y }, matrixWithFrame)
+}
+
+const prepareDom = (page: Page | PageView) => {
+    pageReady.value = false;
+    if (!pagesvg.value) return;
+    const dom = props.context.getPageDom(page);
+
+    dom.ctx.loop(window.requestAnimationFrame);
+
+    // clear pagesvg
+    const svg = pagesvg.value;
+    const childs = Array.from(svg.childNodes);
+    childs.forEach(c => svg.removeChild(c))
+
+    removeRenderidle = dom.dom.once("renderidle", () => {
+        if (pagesvg.value) { // 离屏更新，绘制好后再bind
+            dom.dom.bind(pagesvg.value);
+            dom.dom.asyncRender();
+            pageReady.value = true;
+        }
+        removeRenderidle = undefined;
+        if (props.params.onRenderDone) props.params.onRenderDone();
+    })
+    props.context.nextTick(props.params.data, () => {
+        if (props.params.onContentVisible) props.params.onContentVisible();
+    })
 }
 
 const stopWatchPage = watch(() => props.params.data, (value, old) => {
@@ -94,18 +117,17 @@ const stopWatchPage = watch(() => props.params.data, (value, old) => {
     pageViewRegister(true);
     page_watcher();
 
+    if (removeRenderidle) {
+        removeRenderidle.remove();
+        removeRenderidle = undefined;
+    }
     if (old) {
         const dom = props.context.getPageDom(old.data);
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
-    const dom = props.context.getPageDom(value.data);
-    if (dom && pagesvg.value) {
-        dom.dom.bind(pagesvg.value);
-        dom.dom.render();
-        dom.ctx.loop(window.requestAnimationFrame);
-    }
+    prepareDom(value.data);
 
     updateVisibleRect();
 })
@@ -142,21 +164,15 @@ function selection_watcher(...args: any[]) {
         const selectedShapes = props.context.selection.selectedShapes;
         const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
         const dom = props.context.getPageDom(props.params.data);
-        dom.ctx.updateFocusShape(focus ? adapt2Shape(focus) : undefined);
+        dom.ctx.updateFocusShape(focus);
     }
 }
 
+let removeRenderidle: {
+    remove: () => void;
+} | undefined;
 onMounted(() => {
-    const dom = props.context.getPageDom(props.params.data);
-    if (dom && pagesvg.value) {
-        dom.dom.bind(pagesvg.value);
-        dom.dom.render();
-        dom.ctx.loop(window.requestAnimationFrame);
-        props.context.nextTick(props.params.data, () => {
-            // emit('closeLoading');
-            if (props.params.closeLoading) props.params.closeLoading();
-        })
-    }
+    prepareDom(props.params.data);
 })
 
 onUnmounted(() => {
@@ -166,16 +182,20 @@ onUnmounted(() => {
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
+    if (removeRenderidle) {
+        removeRenderidle.remove();
+        removeRenderidle = undefined;
+    }
 })
 
 </script>
 
 <template>
-    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
-        :width="width" :height="height" :viewBox="viewbox"></svg>
-    <ShapeCutout v-if="show_c" :context="props.context" :data="params.data" :matrix="props.params.matrix"
-        :transform="matrixWithFrame.toArray()" />
-    <ShapeTitles v-if="show_t" :context="props.context" :data="params.data" />
+    <svg ref="pagesvg" :style="{ transform }" :data-area="rootId" :width="width" :height="height"
+        :viewBox="viewbox"></svg>
+    <ShapeCutout v-if="show_c && pageReady" :context="props.context" :data="params.data" :matrix="props.params.matrix"
+        :transform="transformArr" />
+    <ShapeTitles v-if="show_t && pageReady" :context="props.context" :data="params.data" />
 
 </template>
 

@@ -1,11 +1,34 @@
-import { ColVector3D, Matrix, Page, Shape, ShapeView, makeShapeTransform2By1 } from "@kcdesign/data";
+import {
+    ColVector3D,
+    Matrix,
+    Page,
+    OverlayPositionType,
+    PrototypeActions,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    Shape,
+    ShapeView,
+    makeShapeTransform2By1,
+    ShapeType,
+    ArtboradView
+} from "@kcdesign/data";
 import { Context } from "@/context";
 import PageCard from "@/components/common/PageCard.vue";
 import { debounce } from "lodash";
 import { is_mac, XYsBounding } from "@/utils/common";
 import { Menu } from "@/context/menu";
+import { Preview } from "@/context/preview";
+import { getFrameList, getPreviewMatrix, scrollAtrboard, viewBox } from "@/utils/preview";
+import { toStyle } from "@/utils/message";
 
 type PCard = InstanceType<typeof PageCard>;
+
+type Box = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number
+}
 
 /**
  * @description 播放视图渲染管理器
@@ -20,7 +43,7 @@ export class ViewUpdater {
     private matrix: Matrix = new Matrix();
     private m_container: HTMLDivElement | undefined; // 整个黑盒子
 
-    private m_image_map: Map<string, string> = new Map(); // todo 缓存，使列表流畅
+    private m_image_map: Map<string, string> = new Map();
     private m_dirty_target: Map<string, Shape> = new Map();
 
     private m_lazy_updater: DirtyCleaner;
@@ -48,11 +71,7 @@ export class ViewUpdater {
     }
 
     get currentPage() {
-        return this.m_current_page;
-    }
-
-    setCurrentPage(page: Page | undefined) {
-        this.m_current_page = page;
+        return this.m_context.selection.selectedPage;
     }
 
     // 停止监听播放对象内部元素(子孙元素)变化
@@ -101,11 +120,14 @@ export class ViewUpdater {
         svgEl.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`);
         svgEl.setAttribute('width', `${frame.width}`);
         svgEl.setAttribute('height', `${frame.height}`);
+        svgEl.style['transition'] = ''
         svgEl.style['transform'] = m.toString();
-
+        svgEl.style.zIndex = '0';
+        svgEl.style.opacity = '1';
         this.m_context.preview.setScale(this.getScale(m));
-
+        this.overlayBox();
         this.matrix.reset(m);
+        this.m_context.preview.notify(Preview.MATRIX_CHANGE);
     }
 
     private getCenterMatrix() {
@@ -140,7 +162,7 @@ export class ViewUpdater {
         const rootCX = root.width / 2;
         const rootCY = root.height / 2;
         transformMatrix.trans(rootCX - cx, rootCY - cy);
-        
+
         return transformMatrix;
     }
 
@@ -152,7 +174,7 @@ export class ViewUpdater {
             return;
         }
 
-        const frame = shape.frame;
+        const frame = shape._p_frame;
         const m = new Matrix(shape.matrix2Parent());
         m.trans(-frame.x, -frame.y);
 
@@ -305,6 +327,38 @@ export class ViewUpdater {
         this.setAttri(matrix);
     }
 
+    modifyTransformFixPrototype() {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+
+        if (!shape || !container || !this.m_page_card) {
+            return;
+        }
+        const box = this.getBoundingBox()!;
+        const boxWidth = box.width;
+
+        const root = container.getBoundingClientRect();
+        const rootWidth = root.width;
+        const rootHeight = root.height;
+
+        const ratio = boxWidth / rootWidth;
+
+        const max = 256;
+        const min = 0.02;
+        let scale = 1 / ratio;
+        if (scale < min) {
+            scale = min;
+        } else if (scale > max) {
+            scale = max;
+        }
+
+        const matrix = this.getCenterMatrix();
+        matrix.trans(-rootWidth / 2, -rootHeight / 2);
+        matrix.scale(scale);
+        matrix.trans(rootWidth / 2, rootHeight / 2);
+        matrix.trans(0, (box.height * scale - rootHeight) / 2);
+        this.setAttri(matrix);
+    }
     mount(container: HTMLDivElement, page: Page, current: ShapeView | undefined, pageCard: PCard | undefined) {
         this.m_container = container;
 
@@ -384,13 +438,13 @@ export class ViewUpdater {
     modifyTransform() {
         const shape = this.m_current_view;
         const container = this.m_container;
-        
+
         if (!shape || !container || !this.m_page_card) {
             return;
         }
 
         const matrix = this.getCenterMatrix();
-        
+
         this.setAttri(matrix);
     }
 
@@ -518,11 +572,11 @@ export class ViewUpdater {
             ColVector3D.FromXY(x, y + height)
         ]);
         const box = XYsBounding([lt, rt, rb, lb]);
-        
+
         return box;
     }
 
-    trans(e: WheelEvent) {
+    trans(e: WheelEvent, scroll?: { x: boolean, y: boolean }) {
         const MAX_STEP = 120;
 
         const shape = this.m_current_view;
@@ -564,11 +618,662 @@ export class ViewUpdater {
         }
         if (bottom <= root.height && stepy > 0) stepy = 0;
 
+        if (scroll) {
+            if (scroll.x) stepx = 0;
+            if (scroll.y) stepy = 0;
+        }
+
         this.matrix.trans(-stepx, -stepy);
 
         this.setAttri(this.matrix);
     }
+
+    artboardInTrans(el: SVGSVGElement) {
+        const shape = this.m_current_view;
+        const container = this.m_container;
+        if (!shape || !container || !this.m_page_card) {
+            return true;
+        }
+
+        const root = container.getBoundingClientRect();
+        let stepx = this.m_context.preview.artboardScrollOffset.x;
+        let stepy = this.m_context.preview.artboardScrollOffset.y;
+
+        const bound = this.getBoundingOnView()!;
+
+        const left = bound.left;
+        const top = bound.top;
+        const right = bound.right;
+        const bottom = bound.bottom;
+
+        if (left < 0) {
+            if (left > stepx) stepx = left;
+        }
+        if (left >= 0 && stepx < 0) stepx = 0;
+        if (top < 0) {
+            if (top > stepy) stepy = top;
+        }
+        if (top >= 0 && stepy < 0) stepy = 0;
+
+        if (right > root.width) {
+            if ((right - root.width) < stepx) stepx = right - root.width;
+        }
+        if (right <= root.width && stepx > 0) stepx = 0;
+        if (bottom > root.height) {
+            if ((bottom - root.height) < stepy) stepy = bottom - root.height;
+        }
+        if (bottom <= root.height && stepy > 0) stepy = 0;
+
+        this.matrix.trans(-stepx, -stepy);
+
+        el.style['transform'] = this.matrix.toString();
+        if (stepx === stepy && stepx === 0) {
+            return true;
+        }
+    }
+
+    overlayBox(s?: ShapeView) {
+        const shape = s || this.m_current_view;
+        if (!shape) {
+            return;
+        }
+
+        const over_el = document.querySelector('.preview_overlay') as HTMLDivElement;
+        if (over_el) {
+            const frame = shape.frame;
+            const _m = getPreviewMatrix(shape);
+            const matrix = new Matrix(this.v_matrix.clone());
+            _m.multiAtLeft(matrix);
+            const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => _m.computeCoord(p[0], p[1]));
+            const box = XYsBounding(points);
+            over_el.style.clipPath = `polygon(
+                0 0, 
+                100% 0, 
+                100% 100%, 
+                0 100%, 
+                0 ${box.top}px, 
+                ${box.left}px ${box.top}px, 
+                ${box.left}px ${box.bottom}px, 
+                ${box.right}px ${box.bottom}px, 
+                ${box.right}px ${box.top}px, 
+                100% ${box.top}px, 
+                0 ${box.top}px
+            )`
+        }
+    }
+
+    updateViewBox(context: Context, shape: ShapeView, type: PrototypeNavigationType | undefined, box: {
+        top: number,
+        bottom: number,
+        left: number,
+        right: number
+    }) {
+        const cur_shape = context.selection.selectedShapes[0];
+        if (!cur_shape) return;
+        const cur_frame = cur_shape._p_frame;
+        const m = new Matrix()
+        m.reset(this.v_matrix);
+        if (type === PrototypeNavigationType.OVERLAY || type === PrototypeNavigationType.SWAP || type === PrototypeNavigationType.NAVIGATE) {
+            let s: ShapeView | undefined = shape;
+            const frame = shape._p_frame;
+            const cur_box = viewBox(this.v_matrix, shape);
+            if (type === PrototypeNavigationType.SWAP) {
+                const before_action = context.preview.swapEndAction;
+                if (!before_action) return;
+                s = this.getCurLayerShape(context, before_action.targetNodeID);
+            }
+            if (!s) return;
+            const scale = this.v_matrix.m00;
+            const { left, right, top, bottom } = s.overlayPosition ? s.overlayPosition.margin : {
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0
+            }
+            m.trans((cur_frame.x - frame.x) * scale, (cur_frame.y - frame.y) * scale);
+            if (s.overlayPosition?.position === OverlayPositionType.CENTER || !s.overlayPosition) {
+                const c_x = (frame.width * scale) / 2;
+                const c_y = (frame.height * scale) / 2;
+                const v_center = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
+                m.trans(v_center.x - (box.left + c_x), v_center.y - (box.top + c_y));
+            } else if (s.overlayPosition.position === OverlayPositionType.TOPCENTER) {
+                const c_x = (frame.width * scale) / 2;
+                const v_centerx = (box.left + box.right) / 2
+                m.trans(v_centerx - (box.left + c_x), top);
+            } else if (s.overlayPosition.position === OverlayPositionType.TOPRIGHT) {
+                const r = (frame.width * scale) + box.left;
+                m.trans((box.right - r) - right, top);
+            } else if (s.overlayPosition.position === OverlayPositionType.CENTERLEFT) {
+                const c_y = (frame.height * scale) / 2;
+                const v_centery = (box.top + box.bottom) / 2
+                m.trans(left, v_centery - (box.top + c_y));
+            } else if (s.overlayPosition.position === OverlayPositionType.CENTERRIGHT) {
+                const c_y = (frame.height * scale) / 2;
+                const v_centery = (box.top + box.bottom) / 2
+                const r = (frame.width * scale) + box.left;
+                m.trans((box.right - r) - right, v_centery - (box.top + c_y));
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMCENTER) {
+                const c_x = (frame.width * scale) / 2;
+                const v_centerx = (box.left + box.right) / 2
+                const b = (frame.height * scale) + box.top;
+                m.trans(v_centerx - (box.left + c_x), (box.bottom - b) - bottom);
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMLEFT) {
+                const b = (frame.height * scale) + box.top;
+                m.trans(left, (box.bottom - b) - bottom);
+            } else if (s.overlayPosition.position === OverlayPositionType.BOTTOMRIGHT) {
+                const r = (frame.width * scale) + box.left;
+                const b = (frame.height * scale) + box.top;
+                m.trans((box.right - r) - right, (box.bottom - b) - bottom);
+            } else {
+                m.trans(left, top);
+            }
+        }
+        return m;
+    }
+
+    readyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
+        const m = new Matrix(matrix.clone());
+        if (!type) return m;
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape || !shape) return m;
+        const box = viewBox(this.v_matrix, select_shape);
+        const cur_box = viewBox(matrix, shape);
+        const animate_type = type.split('_');
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('FROM')) {
+            if (direction === 'RIGHT') {
+                const trans = box.right - cur_box.left;
+                m.trans(-trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = cur_box.right - box.left;
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = box.bottom - cur_box.top;
+                m.trans(0, -trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = cur_box.bottom - box.top;
+                m.trans(0, trans);
+            }
+        } else if (animate_type.includes('SLIDE') && animate_type.includes('OUT')) {
+            const w = (box.right - box.left) * 0.2;
+            const h = (box.bottom - box.top) * 0.2;
+            if (direction === 'RIGHT') {
+                const trans = (box.right - cur_box.right) - w;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = (cur_box.left - box.left) + w;
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = (box.bottom - cur_box.bottom) - h;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = (cur_box.top - box.top) + h;
+                m.trans(0, trans);
+            }
+        }
+        return m;
+    }
+
+    backReadyPosition(matrix: Matrix, shape: ShapeView, type: PrototypeTransitionType | undefined) {
+        const m = new Matrix(matrix.clone());
+        if (!type) return m;
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape || !shape) return m;
+        const box = viewBox(this.v_matrix, select_shape);
+        const cur_box = viewBox(matrix, shape);
+        const animate_type = type.split('_');
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('SLIDE') && animate_type.includes('FROM')) {
+            const w = (box.right - box.left) * 0.2;
+            const h = (box.bottom - box.top) * 0.2;
+            if (direction === 'RIGHT') {
+                const trans = (box.left - cur_box.left) + w;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = (box.right - cur_box.right) - w;
+                m.trans(trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = (box.top - cur_box.top) + h;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = (cur_box.bottom - box.bottom) - h;
+                m.trans(0, trans);
+            }
+        } else if (animate_type.includes('OUT') || animate_type.includes('PUSH')) {
+            if (direction === 'RIGHT') {
+                const trans = cur_box.right - box.left;
+                m.trans(trans, 0);
+            } else if (direction === 'LEFT') {
+                const trans = box.right - cur_box.left;
+                m.trans(-trans, 0);
+            } else if (direction === 'TOP') {
+                const trans = cur_box.bottom - box.top;
+                m.trans(0, trans);
+            } else if (direction === 'BOTTOM') {
+                const trans = box.bottom - cur_box.top;
+                m.trans(0, -trans);
+            }
+        }
+        return m;
+    }
+
+    getCurLayerShape(context: Context, id?: string) {
+        const page = context.selection.selectedPage;
+        const shapes = getFrameList(page!);
+        return shapes.find(item => item.id === id);
+    }
+
+    // 容器内滚动
+    scrollAnimate(el: SVGSVGElement, action: PrototypeActions) {
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration ?? 0.3;
+
+        el.style['transition'] = `all ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+    }
+
+    // 淡入淡出动画
+    dissolveAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined, value: number) {
+        if (action.transitionType !== PrototypeTransitionType.DISSOLVE || !els) return;
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration ?? 0.3;
+        els[els.length - 1].style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        els[els.length - 1].style.opacity = `${value}`;
+    }
+
+    // 移入动画
+    shiftInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        if (action.transitionType === PrototypeTransitionType.MOVEFROMLEFT ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMRIGHT ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMTOP ||
+            action.transitionType === PrototypeTransitionType.MOVEFROMBOTTOM) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        }
+    }
+
+    // pageSvg移出动作
+    slideAndshiftOutAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('OUT')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            pageSvg.style.zIndex = '9';
+            this.outAction(action);
+        }
+    }
+
+    // 滑入 推入动画
+    pushAndslideInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && (animateType.includes('SLIDE') && animateType.includes('OUT'))) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = (action.transitionDuration ?? 0.3) - 0.05;
+            els[els.length - 1].style['transition'] = `transform ${time > 0 ? time : 0.001}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+        } else if (animateType && (animateType.includes('SLIDE') || animateType.includes('PUSH'))) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+        }
+    }
+
+    // 滑入动画
+    pageSvgSlideAnimate(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape) return;
+        const box = viewBox(this.v_matrix, select_shape);
+        const m = new Matrix(this.v_matrix.clone());
+        if (action.transitionType === PrototypeTransitionType.SLIDEFROMBOTTOM ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMLEFT ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMRIGHT ||
+            action.transitionType === PrototypeTransitionType.SLIDEFROMTOP) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            const animate_type = action.transitionType.split('_');
+            const direction = animate_type.at(-1);
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                m.trans(w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(-w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
+            }
+            pageSvg.style['transform'] = m.toString();
+        }
+    }
+
+    // pageSvg推出动画
+    pageSvgPushAnimate(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape) return;
+        const box = viewBox(this.v_matrix, select_shape);
+        const m = new Matrix(this.v_matrix.clone());
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            const direction = animateType.at(-1);
+            const w = (box.right - box.left);
+            const h = (box.bottom - box.top);
+            if (direction === 'RIGHT') {
+                m.trans(w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(-w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -h);
+            }
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+
+    // 移除动画效果
+    removeAnimate(el: SVGSVGElement, isTrans?: boolean) {
+        if (el) {
+            el.addEventListener('transitionend', function () {
+                this.style['transition'] = ''
+            });
+        }
+        if (isTrans) {
+            el.style['transition'] = '';
+        }
+    }
+
+    // 移出动作
+    outAction(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape) return;
+        const box = viewBox(this.v_matrix, select_shape);
+        const animate_type = action.transitionType?.split('_');
+        if (!animate_type) return;
+        const m = new Matrix(this.v_matrix.clone());
+        const direction = animate_type.at(-1);
+        if (animate_type.includes('OUT')) {
+            const transx = (box.right - box.left);
+            const transy = (box.bottom - box.top);
+            if (direction === 'RIGHT') {
+                m.trans(transx, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(-transx, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, transy);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, -transy);
+            }
+        }
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        svgEl.style['transform'] = m.toString();
+    }
+
+    backSlideInAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        const animateType = action.transitionType?.split('_');
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape) return;
+        if (animateType && animateType.includes('SLIDE') && animateType.includes('FROM')) {
+            const box = viewBox(this.v_matrix, select_shape);
+            const m = new Matrix(this.v_matrix.clone());
+            const direction = animateType.at(-1);
+            const w = box.right - box.left;
+            const h = box.bottom - box.top;
+            if (direction === 'RIGHT') {
+                m.trans(-w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
+            }
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            svgEl.style.zIndex = '9';
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+
+    backSlideOutAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('OUT') && animateType.includes('SLIDE')) {
+            const select_shape = this.m_context.selection.selectedShapes[0];
+            if (!select_shape) return;
+            const box = viewBox(this.v_matrix, select_shape);
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+            const m = new Matrix(this.v_matrix.clone());
+            const direction = animateType.at(-1);
+            const w = (box.right - box.left) * 0.3;
+            const h = (box.bottom - box.top) * 0.3;
+            if (direction === 'RIGHT') {
+                m.trans(-w, 0);
+            } else if (direction === 'LEFT') {
+                m.trans(w, 0);
+            } else if (direction === 'TOP') {
+                m.trans(0, -h);
+            } else if (direction === 'BOTTOM') {
+                m.trans(0, h);
+            }
+            const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+            svgEl.style['transform'] = m.toString();
+        }
+    }
+
+    backDissolveAnimate(action: PrototypeActions, els: SVGSVGElement[]) {
+        if (action.transitionType !== PrototypeTransitionType.DISSOLVE) return;
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const time = action.transitionDuration ?? 0.3;
+        svgEl.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`;
+        svgEl.style.zIndex = '9';
+        svgEl.style.opacity = '0';
+        if (els.length > 1) {
+            for (let i = 0; i < els.length - 1; i++) {
+                const el = els[i];
+                el.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+                el.style.zIndex = '9';
+                el.style.opacity = `0`;
+            }
+        }
+    }
+
+    backOutAction(action: PrototypeActions) {
+        const select_shape = this.m_context.selection.selectedShapes[0];
+        if (!select_shape) return;
+        const box = viewBox(this.v_matrix, select_shape);
+        const animate_type = action.transitionType?.split('_');
+        if (!animate_type) return;
+        const m = new Matrix(this.v_matrix.clone());
+        const direction = animate_type.at(-1);
+        const w = box.right - box.left;
+        const h = box.bottom - box.top;
+        if (direction === 'RIGHT') {
+            m.trans(-w, 0);
+        } else if (direction === 'LEFT') {
+            m.trans(w, 0);
+        } else if (direction === 'TOP') {
+            m.trans(0, -h);
+        } else if (direction === 'BOTTOM') {
+            m.trans(0, h);
+        }
+        const svgEl = (this.m_page_card?.pageSvg as SVGSVGElement);
+        svgEl.style['transform'] = m.toString();
+    }
+
+    backShiftInAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && (animateType.includes('MOVE') && animateType.includes('FROM'))) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            pageSvg.style.zIndex = '9';
+            this.backOutAction(action);
+        }
+    }
+
+    backShiftOutAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('MOVE') && animateType.includes('OUT')) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        }
+    }
+
+    backPushInAnimate(action: PrototypeActions, els: SVGSVGElement[] | undefined) {
+        if (!els) return;
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            els[els.length - 1].style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+        }
+    }
+
+    backPushAnimate(action: PrototypeActions) {
+        const animateType = action.transitionType?.split('_');
+        if (animateType && animateType.includes('PUSH')) {
+            const pageSvg = this.pageCard?.pageSvg as SVGSVGElement;
+            if (!pageSvg) return;
+            const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+            const time = action.transitionDuration ?? 0.3;
+            pageSvg.style['transition'] = `transform ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
+            this.backOutAction(action);
+        }
+    }
+
+    getHotZone(e: MouseEvent, matrix: Matrix, shape: ShapeView) {
+        const view = this.m_container;
+        const boxs: Set<Box> = new Set();
+        if (!view) return;
+        this.hotZoneBox(e, matrix, shape, boxs);
+        const hover_shape = this.m_context.selection.hoveredShape;
+        if (hover_shape) return;
+        const hotBoxs = Array.from(boxs);
+        for (let i = 0; i < hotBoxs.length; i++) {
+            const box = hotBoxs[i];
+            const style = toStyle({
+                position: 'absolute',
+                top: box.top + 'px',
+                left: box.left + 'px',
+                width: box.right - box.left + 'px',
+                height: box.bottom - box.top + 'px',
+                'background-color': 'rgba(255, 0, 0, 0.3)',
+                'z-index': '999',
+                opacity: '1',
+                transition: 'opacity 0.3s cubic-bezier(0, 0, 1, 1) 0s'
+            });
+            const el = document.createElement('div');
+            el.setAttribute('style', style);
+            view.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 0);
+            setTimeout(() => {
+                view.removeChild(el);
+            }, 300);
+        }
+    }
+
+    hotZoneBox(e: MouseEvent, matrix: Matrix, shape: ShapeView, boxs: Set<Box>) {
+        const view = this.m_container!;
+        const viewbox = view.getBoundingClientRect();
+        const downX = e.clientX - viewbox.x;
+        const downY = e.clientY - viewbox.y;
+        if (shape.prototypeInterActions && shape.prototypeInterActions.length) {
+            const box = viewBox(matrix, shape);
+            if (downX < box.left || downX > box.right || downY < box.top || downY > box.bottom) {
+                boxs.add(box);
+            }
+        } else {
+            const children = shape.childs;
+            if (children.length) {
+                for (let i = 0; i < children.length; i++) {
+                    const c = children[i];
+                    this.hotZoneBox(e, matrix, c, boxs);
+                }
+            }
+        }
+    }
+
+    artboardInnerScroll(action: PrototypeActions, el: SVGSVGElement, shape: ShapeView) {
+        const is_inner = this.m_context.preview.innerScroll;
+        if (!is_inner) {
+            if (el && action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
+                this.scrollAnimate(el, action);
+            }
+            const isTrans = this.artboardInTrans(el);
+            // 移除动画
+            const time = action.transitionDuration ?? 0.3;
+            const timer = setTimeout(() => {
+                this.removeAnimate(el, isTrans);
+            }, time * 1000);
+            this.m_context.preview.addSetTimeout(timer);
+        } else {
+            const inner_shape = this.getScrollArtboard(shape, is_inner.id) as ArtboradView;
+            if (action.transitionType === PrototypeTransitionType.SCROLLANIMATE) {
+                const el = document.getElementById(`${inner_shape.id}`);
+                if (el) {
+                    this.scrollAnimate(el as any, action);
+                    // 移除动画
+                    const time = action.transitionDuration ?? 0.3;
+                    setTimeout(() => {
+                        el.style['transition'] = '';
+                    }, time * 1000);
+                }
+            }
+            const trans = (inner_shape as ArtboradView).innerTransform;
+            let stepx = this.m_context.preview.artboardScrollOffset.x - (trans?.translateX || 0);
+            let stepy = this.m_context.preview.artboardScrollOffset.y - (trans?.translateY || 0);
+            scrollAtrboard(inner_shape, { x: stepx, y: stepy });
+        }
+    }
+
+    getScrollArtboard(shape: ShapeView, scrollId: string): ShapeView | undefined {
+        if (shape.id === scrollId) {
+            return shape;
+        }
+        const children = shape.childs || [];
+        if (!children.length) {
+            return;
+        } else {
+            for (let i = 0; i < children.length; i++) {
+                const item = children[i];
+                const result = this.getScrollArtboard(item, scrollId);
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        return;
+    }
 }
+
 class DirtyCleaner {
     private m_image_map: Map<string, string>; // todo 缓存，使列表流畅
     private m_dirty_target: Map<string, Shape>;

@@ -393,6 +393,7 @@ export const preview: any = {
     fill_screen: '充满屏幕',
     fit_width: '适应宽度',
     fit_screen: '适应屏幕',
+    all: '全部画布'
 }
 
 attr[BorderPosition.Inner] = '内部';

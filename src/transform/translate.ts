@@ -15,7 +15,6 @@ import { paster_short } from "@/utils/clipboard";
 import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
-import { round2half } from "@/transform/line";
 import { Tool } from "@/context/tool";
 
 type BaseFrame4Trans = {
@@ -59,17 +58,16 @@ export class TranslateHandler extends TransformHandler {
         this.getFrames();
 
         this.beforeTransform();
-
-        // console.log('__TRANSLATE CONSTRUCTOR__');
     }
 
     beforeTransform() {
-        this.context.cursor.cursor_freeze(true);
         this.workspace.setCtrl('controller');
     }
 
     async createApiCaller() {
         if (this.context.readonly) return;
+        this.context.cursor.reset();
+        this.context.cursor.cursor_freeze(true);
         this.context.selection.unHoverShape();
 
         this.workspace.translating(true);

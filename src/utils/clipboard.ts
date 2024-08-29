@@ -29,21 +29,23 @@ import {
     TransformRaw,
     Transporter,
 } from '@kcdesign/data';
-import { Context } from '@/context';
-import { PageXY, XY } from '@/context/selection';
-import { getName, hidden_selection, Media, SVGReader, upload_image } from '@/utils/content';
-import { message } from './message';
-import { Action } from '@/context/tool';
-import { XYsBounding } from './common';
-import { compare_layer_3 } from './group_ungroup';
-import { v4 } from 'uuid';
-import { ElMessage } from 'element-plus';
-import { parse as SVGParse } from "@/svg_parser";
-import { WorkSpace } from "@/context/workspace";
-import { get_blur, get_borders, get_fills, get_shadows } from "@/utils/shape_style";
-import { exportBlur, exportBorder, exportFill, exportShadow } from '@kcdesign/data';
-import { flattenShapes } from "@/utils/cutout";
-import { getContextSetting, getMarkType, getRadiusForCopy, getText } from "@/utils/attri_setting";
+import {Context} from '@/context';
+import {PageXY, XY} from '@/context/selection';
+import {getName, hidden_selection, Media, SVGReader, upload_image} from '@/utils/content';
+import {message} from './message';
+import {Action} from '@/context/tool';
+import {XYsBounding} from './common';
+import {compare_layer_3} from './group_ungroup';
+import {v4} from 'uuid';
+import {ElMessage} from 'element-plus';
+import {parse as SVGParse} from "@/svg_parser";
+import {WorkSpace} from "@/context/workspace";
+import {get_blur, get_borders, get_fills, get_shadows} from "@/utils/shape_style";
+import {exportBlur, exportBorder, exportFill, exportShadow} from '@kcdesign/data';
+import {flattenShapes} from "@/utils/cutout";
+import {getContextSetting, getMarkType, getRadiusForCopy, getText} from "@/utils/attri_setting";
+import {ImageLoader} from "@/utils/imageLoader";
+import {SVGParseResult, UploadAssets} from "../../../kcdesign-data/src";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -128,7 +130,7 @@ export class Clipboard {
     }
 
     modify_cache(type: CacheType, data: any) {
-        this.cache = { type, data };
+        this.cache = {type, data};
     }
 
     write(event?: ClipboardEvent): boolean {
@@ -157,10 +159,10 @@ export class Clipboard {
         // 异步方案
         // @ts-ignore
         if (navigator.clipboard && navigator.clipboard.read) {
-            const text_html = new Blob([h || ''], { type: 'text/html' });
-            const text_plain = new Blob([plain_text], { type: 'text/plain' });
+            const text_html = new Blob([h || ''], {type: 'text/html'});
+            const text_plain = new Blob([plain_text], {type: 'text/plain'});
 
-            const content = [new ClipboardItem({ "text/plain": text_plain, 'text/html': text_html })];
+            const content = [new ClipboardItem({"text/plain": text_plain, 'text/html': text_html})];
 
             navigator.clipboard.write(content);
 
@@ -175,7 +177,7 @@ export class Clipboard {
         event.clipboardData.setData('text/html', h);
         event.preventDefault();
 
-        this.modify_cache('double', { 'text/plain': plain_text, 'text/html': h });
+        this.modify_cache('double', {'text/plain': plain_text, 'text/html': h});
 
         return true;
     }
@@ -209,7 +211,7 @@ export class Clipboard {
         }
 
         // 先导出将要写入的数据
-        const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
+        const {shapes: _shapes, ctx} = export_shape(shapes.map((s => adapt2Shape(s))));
         if (!_shapes) return false;
 
         for (let i = 0, len = _shapes.length; i < len; i++) {
@@ -234,8 +236,8 @@ export class Clipboard {
         // 转义修改好的数据并写入
         // @ts-ignore
         if (navigator.clipboard && navigator.clipboard.write) { // 支持异步接口
-            const blob = new Blob([h || ''], { type: 'text/html' });
-            const item: any = { 'text/html': blob };
+            const blob = new Blob([h || ''], {type: 'text/html'});
+            const item: any = {'text/html': blob};
 
             navigator.clipboard.write([new ClipboardItem(item)]); // 异步的复制让它自己慢慢复制去
 
@@ -283,8 +285,8 @@ export class Clipboard {
 
             // @ts-ignore
             if (!navigator.clipboard?.read) return false;
-            const html = new Blob([code || ''], { type: 'text/html' });
-            const content = [new ClipboardItem({ 'text/html': html })];
+            const html = new Blob([code || ''], {type: 'text/html'});
+            const content = [new ClipboardItem({'text/html': html})];
             navigator.clipboard.write(content);
             return true;
         } catch (e) {
@@ -322,7 +324,7 @@ export class Clipboard {
     writeBlob(blob: Blob) {
         try {
             if (navigator.clipboard && navigator.clipboard.write) {
-                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
                 return true;
             } else {
                 throw new Error('navigator.clipboard.write is not supported');
@@ -344,9 +346,9 @@ export class Clipboard {
                     ua[i] = bytes.charCodeAt(i)
                 }
 
-                const blob = new Blob([ab], { type: 'image/png' });
+                const blob = new Blob([ab], {type: 'image/png'});
 
-                navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
                 return true;
             } else {
                 throw new Error('navigator.clipboard.write is not supported');
@@ -497,7 +499,7 @@ export class Clipboard {
         if (image) {
             const file = image.getAsFile();
             const type = image.type;
-            this.modify_cache('image', { file, type });
+            this.modify_cache('image', {file, type});
             image_reader(this.context, file, type, t, xy);
         }
     }
@@ -572,7 +574,7 @@ export class Clipboard {
     paste_cache(t: Function, xy?: PageXY) {
         if (!this.cache) return false;
 
-        const { type, data } = this.cache;
+        const {type, data} = this.cache;
 
         if (type === 'inner-html') {
             handle_text_html_string(this.context, decode_html(data), xy);
@@ -590,7 +592,7 @@ export class Clipboard {
     paste_cache_for_text() {
         if (!this.cache) return;
 
-        const { data, type } = this.cache;
+        const {data, type} = this.cache;
 
         let html;
         if (type === 'inner-html') {
@@ -763,7 +765,7 @@ export class Clipboard {
 
         if (!this.cache) return '';
 
-        const { data, type } = this.cache;
+        const {data, type} = this.cache;
 
         if (type === 'plain-text') {
             return data as string;
@@ -826,7 +828,7 @@ export class Clipboard {
             throw new Error('no cache');
         }
 
-        const { type, data } = this.cache;
+        const {type, data} = this.cache;
 
         if (type !== 'inner-html') {
             throw new Error('wrong cache');
@@ -925,45 +927,6 @@ export function decode_html(html: string): string {
     return result;
 }
 
-export function after_import(context: Context, media: any) {
-    if (!media || !(media instanceof Object)) {
-        console.log('!media || !(media instanceof Object)');
-        return;
-    }
-    const values = Array.from(Object.keys(media) || []) as string[];
-
-    if (!values?.length) {
-        return;
-    }
-
-    let index = 0;
-    exe(index);
-
-    async function exe(index: number) {
-        const key = values[index];
-
-        if (!key) {
-            console.log('!key');
-            return;
-        }
-
-        const buff = media[key].buff;
-
-        if (!(buff instanceof Uint8Array)) {
-            console.log('!(buff instanceof Uint8Array)');
-            return;
-        }
-
-        await upload_image(context, key, buff);
-        index++;
-
-        if (index >= values.length) {
-            return;
-        }
-        exe(index);
-    }
-}
-
 /**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
@@ -1007,7 +970,7 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         shape.size.width = layout.contentWidth;
         shape.size.height = layout.contentHeight;
         const _f = shape.size;
-        const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
+        const _xy = adjust_content_xy(context, {width: _f.width, height: _f.height});
         const transform = new TransformRaw();
         transform.translateX = xy?.x || _xy.x;
         transform.translateY = xy?.y || _xy.y
@@ -1068,17 +1031,17 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
                     ? import_shape_from_clipboard(context.data, page_data, __source)
                     : import_shape_from_clipboard(context.data, page_data, __source, medias);
 
-                actions.push({ env: adapt2Shape(env) as GroupShape, shapes });
+                actions.push({env: adapt2Shape(env) as GroupShape, shapes});
             }
 
             const __res = editor.pasteShapes3(actions);
 
             if (__res) {
-                insert_result = { shapes: __res };
+                insert_result = {shapes: __res};
             }
         } else {
             const bounding = sourceBounding(source);
-            const insert_env = get_env_by_xy(context, { x: bounding.left, y: bounding.top });
+            const insert_env = get_env_by_xy(context, {x: bounding.left, y: bounding.top});
 
             fixToEnv(context, source, insert_env as GroupShapeView, originTransform);
 
@@ -1108,7 +1071,17 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
         });
 
         // 6. 上传图层内嵌的静态资源到服务端
-        after_import(context, medias);
+        if (insert_result && insert_result.shapes) {
+            const keys = Object.keys(medias);
+            const assets: UploadAssets[] = [];
+            for (const ref of keys) {
+                const buff = medias[ref]?.buff;
+                buff && assets.push({ref, buff});
+            }
+            const uploadPackages = insert_result.shapes.map(shape => ({shape, upload: assets}));
+            const loader = new ImageLoader(context);
+            loader.upload(uploadPackages);
+        }
     } else {
         console.log('handle_text_html_string:', context.workspace.t('clipboard.invalid_data'));
         return false;
@@ -1132,9 +1105,7 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
     }
 
     const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-    if (!is_shape) {
-        throw new Error('no shapes');
-    }
+    if (!is_shape) throw new Error('no shapes');
 
     const page = context.selection.selectedPage;
 
@@ -1142,16 +1113,23 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
     const source = JSON.parse(text_html.split(identity)[1]);
 
     const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
-    if (!shapes.length) {
-        throw new Error('invalid source');
-    }
-
-    after_import(context, source.media);
+    if (!shapes.length) throw new Error('invalid source');
 
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
     if (!r || !r.length) return;
+
+    // 上传静态资源
+    const keys = Object.keys(source.media);
+    const assets: UploadAssets[] = [];
+    for (const ref of keys) {
+        const buff = source.media[ref]?.buff;
+        buff && assets.push({ref, buff});
+    }
+    const uploadPackages = r.map(shape => ({shape, upload: assets}));
+    const loader = new ImageLoader(context);
+    loader.upload(uploadPackages);
 
     context.nextTick(page, () => {
         if (r) {
@@ -1190,26 +1168,29 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
     if (navigator.clipboard && navigator.clipboard.read) {
         const type = data.types[0];
         const val = await data.getType(type);
-        image_reader(context, val, type, t, _xy);
+        // image_reader(context, val, type, t, _xy);
+        const loader = new ImageLoader(context);
+        loader.insertImageByPackages([val] as unknown as FileList, _xy);
     } else {
-        const type = data[0].type;
+        // const type = data[0].type;
         const val = data[0].getAsFile();
-        image_reader(context, val, type, t, _xy);
+        // image_reader(context, val, type, t, _xy);
+        const loader = new ImageLoader(context);
+        loader.insertImageByPackages([val] as unknown as FileList, _xy);
     }
 }
 
 function image_reader(context: Context, val: any, contentType: string, t: Function, _xy?: PageXY) {
     if (contentType === "image/svg+xml") {
-        SVGReader(context, val, _xy);
-        return;
+        return SVGReader(context, val, _xy);
     }
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType, content: '' };
-    const frame: { width: number, height: number } = { width: 100, height: 100 };
+    const item: SystemClipboardItem = {type: ShapeType.Image, contentType, content: ''};
+    const frame: { width: number, height: number } = {width: 100, height: 100};
     const img = new Image();
     img.onload = function () {
         frame.width = img.width;
         frame.height = img.height;
-        const origin = { width: img.width, height: img.height }
+        const origin = {width: img.width, height: img.height}
         const fr = new FileReader();
         fr.onload = function (event) {
             const base64: any = event.target?.result;
@@ -1217,7 +1198,7 @@ function image_reader(context: Context, val: any, contentType: string, t: Functi
                 fr.onload = function (event) {
                     const buff = event.target?.result;
                     if (base64 && buff) {
-                        item.content = { name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64 };
+                        item.content = {name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64};
                         const content = item!.content as Media;
                         const __xy = adjust_content_xy(context, content.frame);
                         const xy: PageXY = _xy || __xy;
@@ -1257,7 +1238,7 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
             return handleSvgText(context, text, _xy);
         }
 
-        const frame: { width: number, height: number } = { width: 400, height: 100 };
+        const frame: { width: number, height: number } = {width: 400, height: 100};
         const __xy = adjust_content_xy(context, frame);
         const xy: PageXY = _xy || __xy;
         paster_text(context, xy, text);
@@ -1272,7 +1253,7 @@ function clipboard_text_plain2(context: Context, data: string, _xy?: PageXY) {
         return handleSvgText(context, data, _xy);
     }
 
-    const frame: { width: number, height: number } = { width: 400, height: 100 };
+    const frame: { width: number, height: number } = {width: 400, height: 100};
     const __xy = adjust_content_xy(context, frame);
     const xy: PageXY = _xy || __xy;
     paster_text(context, xy, data);
@@ -1285,18 +1266,17 @@ export function handleSvgText(context: Context, text: string, _xy?: PageXY) {
         const xy = _xy || adjust_content_xy(context, parseResult.shape.frame, false);
         parseResult.shape.transform.translateX = xy.x;
         parseResult.shape.transform.translateY = xy.y;
-
         const page = context.selection.selectedPage!;
         const editor = context.editor4Page(page);
+        const shape = editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
 
-        editor.insert(adapt2Shape(page) as GroupShape, page.childs.length, parseResult.shape);
-
-        if (parseResult.mediaResourceMgr) {
-            const container: any = {};
-            parseResult.mediaResourceMgr.forEach((v: any, k: string) => {
-                container[k] = v;
-            });
-            after_import(context, container);
+        if (parseResult.mediaResourceMgr && shape) {
+            const upload: UploadAssets[] = [];
+            parseResult.mediaResourceMgr.forEach((v, k) => {
+                upload.push({ref: k, buff: v.buff});
+            })
+            const loader = new ImageLoader(context);
+            loader.upload([{shape, upload}]);
         }
     }
 }
@@ -1330,7 +1310,7 @@ export function adjust_content_xy(context: Context, m: { width: number, height: 
     const __m = new Matrix(page.matrix2Root());
     __m.multiAtLeft(matrix);
     const page_center = __m.inverseCoord(root.center);
-    return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
+    return {x: page_center.x - m.width / 2, y: page_center.y - m.height / 2};
 }
 
 /**
@@ -1403,7 +1383,7 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
         for (let j = 0, len2 = childs.length; j < len2; j++) {
             if (s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
-                actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
+                actions.push({parent: adapt2Shape(p) as GroupShape, index: j + 1});
                 break;
             }
         }
@@ -1546,7 +1526,7 @@ function get_env_by_xy(context: Context, xy: XY) {
     return context.selection.selectedPage!;
 }
 
-function get_envs_from_selection(context: Context) {
+export function get_envs_from_selection(context: Context) {
     const shapes = context.selection.selectedShapes;
     const envs: GroupShapeView[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -1598,7 +1578,7 @@ function sourceBounding(source: Shape[]) {
             width = shape.size.width;
             height = shape.size.height;
         }
-        const { col0, col1, col2, col3 } = __transform.transform([
+        const {col0, col1, col2, col3} = __transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
             ColVector3D.FromXY(width, 0),
@@ -1612,7 +1592,7 @@ function sourceBounding(source: Shape[]) {
         if (box.bottom > bottom) bottom = box.bottom;
     }
 
-    return { left, top, right, bottom };
+    return {left, top, right, bottom};
 }
 
 function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
@@ -1636,7 +1616,7 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
             width = shape.size.width;
             height = shape.size.height;
         }
-        const { col0, col1, col2, col3 } = __transform.transform([
+        const {col0, col1, col2, col3} = __transform.transform([
             ColVector3D.FromXY(0, 0),
             ColVector3D.FromXY(width, height),
             ColVector3D.FromXY(width, 0),
@@ -1650,15 +1630,15 @@ function sourceOriginTransformBounding(source: Shape[], originTransform: any) {
         if (box.bottom > bottom) bottom = box.bottom;
     }
 
-    return { left, top, right, bottom };
+    return {left, top, right, bottom};
 }
 
 function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, originTransform: any) {
-    const { left, top, right, bottom } = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
+    const {left, top, right, bottom} = sourceBounding(source); // 目标选区在Root坐标系上的Bounding
 
     let clientMatrix = makeShapeTransform2By1(context.workspace.matrix); // Root到屏幕的转换矩阵
 
-    const { col0: clientLT, col1: clientRB } = clientMatrix.transform([
+    const {col0: clientLT, col1: clientRB} = clientMatrix.transform([
         ColVector3D.FromXY(left, top),
         ColVector3D.FromXY(right, bottom)
     ]); // 目标选区在屏幕上的左上角和右下角；
@@ -1685,8 +1665,8 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
             // console.log('将粘贴到ROOT下，但选区将溢出屏幕，尝试相对屏幕居中，并调整选区');
 
             // 检查是否需要调整视图缩放比例
-            const { width, height } = context.workspace.root;
-            const { col0, col1 } = clientMatrix.clone().getInverse().transform([
+            const {width, height} = context.workspace.root;
+            const {col0, col1} = clientMatrix.clone().getInverse().transform([
                 ColVector3D.FromXY(0, 0),
                 ColVector3D.FromXY(width, height)
             ]);
@@ -1731,7 +1711,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
         }
     } else { // 将粘贴在指定的容器下
         // console.log('计划在对等位将目标选区粘贴在目标容器中，若脱离则调整对应轴至居中');
-        const { x: envX, y: envY, width: envWidth, height: envHeight } = env.frame;
+        const {x: envX, y: envY, width: envWidth, height: envHeight} = env.frame;
 
         const env2root = env.transform2FromRoot;
         const {
@@ -1774,7 +1754,7 @@ function fixToEnv(context: Context, source: Shape[], env: GroupShapeView, origin
         }
     }
 
-    return { left, top };
+    return {left, top};
 }
 
 function fixToXY(context: Context, source: Shape[], xy: XY) {

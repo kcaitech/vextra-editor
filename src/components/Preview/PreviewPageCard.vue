@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    adapt2Shape, BasicArray, Border, Fill, Page, PageView, Shadow, Shape, ShapeSize, ShapeType,
+    adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
     ShapeView, Style,
     TransformRaw
 } from "@kcdesign/data";
@@ -9,12 +9,14 @@ import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { Context } from "@/context";
+import { Preview } from "@/context/preview";
 
 interface Props {
-    shapes: ShapeView[] | Shape[];
-    data: PageView;
+    shapes: ShapeView[];
+    data: ShapeView;
     backgroundColor: string;
     context: Context
+    selected?: boolean
 }
 
 const props = defineProps<Props>();
@@ -25,25 +27,16 @@ const emits = defineEmits<{
 
 const pageSvg = ref<SVGSVGElement>();
 
+
 let pageDom: { dom: PageDom, ctx: DomCtx } | undefined;
+
 function assemble() {
-    const length = props.context.selection.selectedShapes.length;
-    if (pageDom) {
-        pageDom?.dom.unbind();
-        if (!pageDom.dom.isDistroyed) {
-            pageDom.dom.destory();
-        }
-        pageDom = undefined;
-    }
+    disassemble();
 
-    let shapes: any[] = props.shapes;
+    let shapes: any = props.data;
 
-    if (!shapes.length) {
-        return;
-    }
-
-    if (shapes[0] instanceof ShapeView) {
-        shapes = shapes.map((s) => adapt2Shape(s as any));
+    if (shapes instanceof ShapeView) {
+        shapes = adapt2Shape(shapes as any);
     }
 
     const borders = new BasicArray<Border>();
@@ -57,7 +50,7 @@ function assemble() {
         ShapeType.Page,
         trans,
         style,
-        new BasicArray<Shape>(...shapes)
+        new BasicArray<Shape>(shapes)
     );
 
     page.isVisible = true;
@@ -68,35 +61,68 @@ function assemble() {
     const dom: PageDom = new PageDom(domCtx, { data: page });
 
     pageDom = { dom, ctx: domCtx };
-
     if (pageSvg.value) {
         pageDom.dom.bind(pageSvg.value);
         pageDom.dom.render();
         pageDom.ctx.loop(window.requestAnimationFrame);
-        const els = pageSvg.value.childNodes;
-        if (!length && els.length > 0) {
-            for (let index = 0; index < els.length; index++) {
-                const el = els[index];
-                pageSvg.value.removeChild(el);
-            }
+        if (pageDom.dom.childs && props.selected) {
+            props.context.selection.replaceSelectShape(pageDom.dom.childs[0]);
         }
+        replaceSupernatantShape(pageDom.dom.childs[0]);
+        setInnerTransform(pageDom.dom.childs);
         emits('start-loop');
+    }
+}
+
+const setInnerTransform = (shapes: ShapeView[]) => {
+    if (!shapes.length) return;
+
+    const innerTrans = props.context.preview.innerTransform;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape instanceof ArtboradView) {
+            const transform = innerTrans.get(shape.id) || new TransformRaw();
+            shape.initInnerTransform(transform);
+        }
+        const children = shape.childs || [];
+        if (shape.type === ShapeType.Table) {
+            continue;
+        }
+        setInnerTransform(children);
+    }
+}
+
+// 替换浮层shape
+const replaceSupernatantShape = (replace_s: ShapeView) => {
+    if (props.selected) return;
+    for (let i = 0; i < props.shapes.length; i++) {
+        const shape = props.shapes[i];
+        if (shape.id === props.data.id) {
+            props.shapes[i] = replace_s;
+        }
     }
 }
 
 function disassemble() {
     if (pageDom) {
+        pageDom.ctx.stopLoop();
         pageDom.dom.unbind();
         if (!pageDom.dom.isDistroyed) {
             pageDom?.dom.destory();
         }
+        pageDom = undefined;
     }
 }
 
 watch(() => props.shapes, () => {
-    props.shapes.length && assemble();
+    assemble();
 })
 
+const preview_watch = (t: number) => {
+    if (t === Preview.SWAP_REF_STAT) {
+        assemble();
+    }
+}
 
 function repaint() {
     assemble();
@@ -104,16 +130,22 @@ function repaint() {
 
 defineExpose({ pageSvg, repaint });
 
-onMounted(assemble);
-onUnmounted(disassemble);
+onMounted(() => {
+    assemble();
+    props.context.preview.watch(preview_watch);
+});
+onUnmounted(() => {
+    props.context.preview.unwatch(preview_watch);
+});
 </script>
 
 <template>
-    <svg ref="pageSvg" :style="{ 'background-color': backgroundColor }" />
+<svg ref="pageSvg" :style="{ 'background-color': backgroundColor }"/>
 </template>
 
 <style scoped lang="scss">
 svg {
+    position: absolute;
     transform-origin: top left;
 }
 </style>

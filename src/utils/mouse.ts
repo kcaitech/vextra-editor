@@ -256,7 +256,6 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
         } else {
             selection.selectShape(hoveredShape);
         }
-
         return;
     }
 
