@@ -21,7 +21,8 @@ export async function exportDocument(context: Context) {
 
     const content = await MDD.generateAsync({ type: 'blob' });
     const name = context.documentInfo.name || data.document_meta.name;
-    downloadByLink(content, name + '.moss');
+    const reg = new RegExp('(.sketch|.fig|.moss)$', 'img');
+    downloadByLink(content, name.replace(reg, '') + '.moss');
 
     function packPages(folder: JSZip) {
         for (const page of data.pages) {
