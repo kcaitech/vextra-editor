@@ -973,7 +973,7 @@ onUnmounted(() => {
         </div>
     </div>
     <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu"/>
-    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
+    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix" :reflush="reflush"
                   @updateSearch="updateSearch">
     </ControlsView>
     <div v-if="is_overlay" class="overlay"/>

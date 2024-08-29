@@ -13,7 +13,7 @@ import {
     sessionRefIdKey,
     ShapeView
 } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { delayAction, EventIndex, ProtoAction } from './actions';
 
 interface Props {
