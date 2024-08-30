@@ -9,6 +9,8 @@ import { getTransformCol } from '@/utils/content';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { getRadiusValue } from '../Points/common';
+import { CursorType } from '@/utils/cursor2';
+import { throttle } from 'lodash';
 
 type Box = {
     lt: Point,
@@ -45,7 +47,9 @@ const cursor_down = ref(false);
 const controls_line = ref<ControlsLine[]>([]);
 const paddingBox = ref<PaddingBox[]>([]);
 const matrix = reactive(new Matrix());
-let paddingIndex = -1;
+const cursor_hover = ref(false);
+const paddingIndex = ref(-1);
+const hover_cursor_switch = ref(false);
 let autoLayoutModifyHandler: AutoLayoutHandler | undefined = undefined;
 
 function update() {
@@ -58,6 +62,7 @@ const update_padding_position = () => {
 
 function getPaddingPosition() {
     controls_line.value = [];
+    paddingBox.value = [];
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length || shapes.length > 1) return;
     const shape = shapes[0] as ArtboradView;
@@ -94,15 +99,19 @@ function getPaddingPosition() {
     const b_padding: PaddingBox = { size: autoLayout.stackPaddingBottom, center: bottomLine.col1 }
     const l_padding: PaddingBox = { size: autoLayout.stackHorizontalPadding, center: leftLine.col1 }
     paddingBox.value.push(t_padding, r_padding, b_padding, l_padding);
+    if (paddingBox.value[paddingIndex.value]?.size === 0 && hover_cursor_switch.value) {
+        hover_cursor_switch.value = false;
+    } else if (paddingBox.value[paddingIndex.value]?.size !== 0 && !hover_cursor_switch.value) {
+        hover_cursor_switch.value = true;
+    }
 }
-
 let downClientXY: XY = { x: 0, y: 0 };
 let isDragging: boolean = false;
 const mousedown = (e: MouseEvent, index: number) => {
     e.stopPropagation();
     cursor_down.value = true;
-    emits('hoverPaddint', paddingIndex);
-    paddingIndex = index;
+    emits('hoverPaddint', paddingIndex.value);
+    paddingIndex.value = index;
     downClientXY.x = e.clientX;
     downClientXY.y = e.clientY;
     document.addEventListener('mousemove', mousemove);
@@ -111,7 +120,7 @@ const mousedown = (e: MouseEvent, index: number) => {
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
-    emits('hoverPaddint', paddingIndex);
+    emits('hoverPaddint', paddingIndex.value);
     if (isDragging) {
         if (!autoLayoutModifyHandler) {
             return
@@ -133,22 +142,20 @@ const updatePadding = (e: MouseEvent) => {
     if (!autoLayoutModifyHandler) return;
     const shape = props.context.selection.selectedShapes[0];
     const { width, height } = shape.frame;
-    if (paddingIndex === 2) {
-        const start = paddingBox.value[paddingIndex].center;
+    if (paddingIndex.value === 2) {
+        const start = paddingBox.value[paddingIndex.value].center;
         const end = getTransformCol(props.context, shape, width / 2, height / 2);
         const padding = getMoveLength(start, end, e, props.context) * (height / 2);
-        if (padding === 0) return;
         autoLayoutModifyHandler.executePadding((height - padding / 2) * 2, 'bottom');
     } else {
-        const start = paddingBox.value[paddingIndex].center;
+        const start = paddingBox.value[paddingIndex.value].center;
         const end = getTransformCol(props.context, shape, width / 2, height / 2);
-        const v = paddingIndex % 2 === 0 ? height / 2 : width / 2;
+        const v = paddingIndex.value % 2 === 0 ? height / 2 : width / 2;
         const padding = getMoveLength(start, end, e, props.context) * v;
-        if (padding === 0) return;
         let dir: PaddingDir = 'top';
-        if (paddingIndex === 1) {
+        if (paddingIndex.value === 1) {
             dir = 'right';
-        } else if (paddingIndex === 3) {
+        } else if (paddingIndex.value === 3) {
             dir = 'left';
         }
         autoLayoutModifyHandler.executePadding(padding, dir);
@@ -157,13 +164,19 @@ const updatePadding = (e: MouseEvent) => {
 
 function mouseup(e: MouseEvent) {
     e.stopPropagation();
-    updatePadding(e);
+    clear_status();
+}
+
+function clear_status() {
     cursor_down.value = false;
     autoLayoutModifyHandler?.fulfil();
     autoLayoutModifyHandler = undefined;
     isDragging = false;
-    paddingIndex = -1;
+    paddingIndex.value = -1;
     emits('hoverPaddint', -1);
+    if (!cursor_hover.value) {
+        props.context.cursor.reset();
+    }
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -211,11 +224,73 @@ const getMoveLength = (start: XY, end: XY, e: MouseEvent, context: Context) => {
 
 const mouseenter = (e: MouseEvent, index: number) => {
     emits('hoverPaddint', index);
+    paddingIndex.value = index;
+    cursor_point.value = props.context.workspace.getContentXY(e);
+    cursor_hover.value = true;
+    setCursor(index);
 }
 
 const mouseleave = (e: MouseEvent, index: number) => {
     emits('hoverPaddint', -1);
+    cursor_hover.value = false;
+    if (!cursor_down.value) {
+        paddingIndex.value = -1;
+        props.context.cursor.reset();
+    }
 }
+
+const mousemove2 = (e: MouseEvent, index: number) => {
+    cursor_point.value = props.context.workspace.getContentXY(e);
+    cursor_hover.value = true;
+    paddingIndex.value = index;
+}
+
+function setCursor(index: number) {
+    if (index < 0) return;
+    const cursor = props.context.cursor;
+    if (paddingBox.value[index].size === 0) {
+        let deg = controls_line.value[index].rotate;
+        if (index === 1) {
+            deg -= 90;
+        } else if (index === 2) {
+            deg -= 180;
+        } else if (index === 3) {
+            deg += 90;
+        }
+        cursor.setType(CursorType.AutoPadding, deg);
+    } else {
+        let deg = controls_line.value[index].rotate;
+        if (index === 1 || index === 3) {
+            deg += 90;
+        }
+        cursor.setType(CursorType.AutoSpace, deg);
+    }
+}
+function forceSetCursor(index: number) {
+    if (index < 0) return;
+    const cursor = props.context.cursor;
+    if (paddingBox.value[index].size === 0) {
+        let deg = controls_line.value[index].rotate;
+        if (index === 1) {
+            deg -= 90;
+        } else if (index === 2) {
+            deg -= 180;
+        } else if (index === 3) {
+            deg += 90;
+        }
+        cursor.setTypeForce(CursorType.AutoPadding, deg);
+    } else {
+        let deg = controls_line.value[index].rotate;
+        if (index === 1 || index === 3) {
+            deg += 90;
+        }
+        cursor.setTypeForce(CursorType.AutoSpace, deg);
+    }
+}
+
+watch(() => hover_cursor_switch.value, (v) => {
+    forceSetCursor(paddingIndex.value);
+})
 
 const watchedShapes = new Map();
 
@@ -250,15 +325,20 @@ const selectionWatcher = (t: number | string) => {
         watchShapes();
     }
 }
+function window_blur() {
+    clear_status();
+}
 onMounted(() => {
     update();
     watchShapes();
+    window.addEventListener('blur', window_blur);
     props.context.workspace.watch(workspaceWatcher);
     props.context.selection.watch(selectionWatcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
     props.context.selection.unwatch(selectionWatcher);
+    window.removeEventListener('blur', window_blur);
     watchedShapes.forEach((v, k) => {
         v.unwatch(update);
         watchedShapes.delete(k);
@@ -273,11 +353,17 @@ onUnmounted(() => {
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
             <path @mouseenter="(e) => mouseenter(e, index)" @mouseleave="(e) => mouseleave(e, index)"
-                @mousedown="(e) => mousedown(e, index)"
+                @mousedown="(e) => mousedown(e, index)" @mousemove="(e) => mousemove2(e, index)"
                 :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>
     </g>
+    <foreignObject v-if="paddingIndex > -1 && (cursor_down || cursor_hover)" :x="cursor_point.x + 10"
+        :y="cursor_point.y + 15" width="100px" height="28px">
+        <div class="percent_container">
+            <span>{{ fixedZero(paddingBox[paddingIndex].size) }} </span>
+        </div>
+    </foreignObject>
 </template>
 
 <style scoped lang="scss">
@@ -290,5 +376,23 @@ onUnmounted(() => {
     fill: rgb(214, 118, 234);
     stroke-width: 1px;
     stroke: white;
+}
+
+.percent_container {
+    position: absolute;
+    display: flex;
+    max-width: 100px;
+    font-size: 12px;
+    color: #ffffff;
+    box-sizing: border-box;
+
+    span {
+        padding: 4px;
+        border-radius: 4px;
+        background-color: #D13BCD;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 </style>

@@ -15,6 +15,7 @@ interface Props {
     context: Context
     shapes: ShapeView[]
     trigger: any[];
+    selectionChange: number;
 }
 
 const props = defineProps<Props>();
@@ -27,19 +28,6 @@ const horSizingMenu = ref(false);
 const verSizingMenu = ref(false);
 const unfold = ref(false);
 const reflush = ref(0);
-
-const isLayout = () => {
-    if (props.shapes.length > 1) {
-        isActive.value = true;
-    } else {
-        const shape = (props.shapes[0] as ArtboradView)
-        if (!shape.autoLayout) {
-            isActive.value = true;
-        } else {
-            isActive.value = false;
-        }
-    }
-}
 
 function autoLayout(): void {
     const selectShapes = props.context.selection.selectedShapes;
@@ -352,7 +340,25 @@ const selectionWatcher = (t: number | string) => {
     }
 }
 
+const isLayout = () => {
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length > 1) {
+        isActive.value = true;
+    } else {
+        const shape = (shapes[0] as ArtboradView)
+        if (!shape.autoLayout) {
+            isActive.value = true;
+        } else {
+            isActive.value = false;
+        }
+    }
+}
+
 const stop = watch(() => props.trigger, update); // 监听图层变化
+const stop2 = watch(() => props.selectionChange, () => {
+    isLayout();
+    updateData();
+}); // 监听选区变化
 onMounted(() => {
     isLayout();
     updateData();
@@ -360,6 +366,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     stop();
+    stop2();
     props.context.selection.unwatch(selectionWatcher);
     watchedShapes.forEach((v, k) => {
         v.unwatch(update);

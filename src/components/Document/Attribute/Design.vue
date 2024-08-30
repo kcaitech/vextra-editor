@@ -340,7 +340,7 @@ onUnmounted(() => {
                     :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :trigger="reflush_trigger"></ShapeBaseAttr>
-                <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger :context="props.context"
+                <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger :selection-change="reflush_by_selection" :context="props.context"
                     :shapes="shapes">
                 </AutoLayout>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>

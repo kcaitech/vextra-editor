@@ -19,6 +19,7 @@ import { string_by_sys } from "@/utils/common";
 import {
     adapt2Shape,
     Artboard,
+    ArtboradView,
     ShapeType,
     ShapeView,
     SymbolRefShape,
@@ -307,7 +308,7 @@ function dissolution_container() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
+        const shapes = editor.dissolution_artboard(artboards as ArtboradView[]);
         if (shapes) {
             const selectShapes = [...saveSelectShape, ...shapes]
             props.context.nextTick(page, () => {

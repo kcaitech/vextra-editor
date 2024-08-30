@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboradView, ColVector3D, Matrix, PaddingDir, ShapeView, StackSizing, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { getTransformCol } from '@/utils/content';
+import { fixedZero } from '@/utils/common';
+import { CursorType } from '@/utils/cursor2';
 
 type Box = {
     lt: Point,
@@ -29,6 +31,11 @@ interface Point {
     y: number
 }
 
+const emits = defineEmits<{
+    (e: 'hoverPaddint', index: number): void;
+}>();
+
+
 const props = defineProps<Props>();
 const verSpaceBox = ref<Box[]>([]);
 const verSpaceLine = ref<ControlsLine[]>([]);
@@ -37,6 +44,11 @@ const horSpaceLine = ref<ControlsLine[]>([]);
 const matrix = reactive(new Matrix());
 const verSpaceFill = ref(false);
 const horSpaceFill = ref(false);
+const cursor_point = ref<Point>({ x: 0, y: 0 });
+const cursor_down = ref(false);
+const cursor_hover = ref(false);
+const hor_space = ref<number | string>(0);
+const ver_space = ref<number | string>(0);
 let autoLayoutModifyHandler: AutoLayoutHandler | undefined = undefined;
 function update() {
     update_padding_position();
@@ -65,14 +77,18 @@ function getVerSpacePosition() {
     let verSpacing = autoLayout.stackCounterSpacing; //垂直间距
     let topPadding = autoLayout.stackVerticalPadding; //上边距
     let leftPadding = autoLayout.stackHorizontalPadding; //左边距
-    const shape_rows = layoutShapesOrder(shape.childs);
+    ver_space.value = verSpacing;
+    if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
+        ver_space.value = '自动'
+    }
+    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
     for (let i = 0; i < shape_rows.length - 1; i++) {
         const row = shape_rows[i];
-        const max_height = Math.max(...row.map(shape => shape._p_frame.height));
+        const max_height = Math.max(...row.map(shape => getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace).height));
         topPadding += max_height;
         if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
-            const cur_row_h = Math.max(...row.map(s => s._p_frame.y + s._p_frame.height));
-            const next_min_x = Math.min(...shape_rows[i + 1].map(s => s._p_frame.y));
+            const cur_row_h = Math.max(...row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y + getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height));
+            const next_min_x = Math.min(...shape_rows[i + 1].map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y));
             verSpacing = next_min_x - cur_row_h;
         }
         const verSpace = m.transform([
@@ -84,7 +100,8 @@ function getVerSpacePosition() {
         const hor_rotate = Math.atan2(verSpace.col1.y - verSpace.col0.y, verSpace.col1.x - verSpace.col0.x) * (180 / Math.PI);
         const ver: Box = { lt: verSpace.col0, rt: verSpace.col1, rb: verSpace.col2, lb: verSpace.col3 };
         verSpaceBox.value.push(ver);
-        const topLine = m.transform([ColVector3D.FromXY(x + (width / 2), topPadding + (verSpacing / 2))]);
+        const verWidth = width - autoLayout.stackPaddingRight - autoLayout.stackHorizontalPadding;
+        const topLine = m.transform([ColVector3D.FromXY(leftPadding + (verWidth / 2), topPadding + (verSpacing / 2))]);
         const ling: ControlsLine = { lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 }, rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 }, rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 }, lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 }, offset: topLine.col0, rotate: hor_rotate }
         verSpaceLine.value.push(ling);
         topPadding += verSpacing;
@@ -106,16 +123,20 @@ function getHorSpacePosition() {
     const clientTransform = makeShapeTransform2By1(matrix2);
     m.addTransform(clientTransform); //root到视图
     let topPadding = autoLayout.stackVerticalPadding; //上边距
-    const shape_rows = layoutShapesOrder(shape.childs);
+    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
     let verSpacing = autoLayout.stackCounterSpacing; //垂直间距
+    hor_space.value = autoLayout.stackSpacing;
+    if (autoLayout.stackHorizontalGapSizing === StackSizing.Auto) {
+        hor_space.value = '自动'
+    }
     for (let i = 0; i < shape_rows.length; i++) {
         let leftPadding = autoLayout.stackHorizontalPadding; //左边距
         const shape_row = shape_rows[i];
-        const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
+        const maxHeightInRow = Math.max(...shape_row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height));
         for (let j = 0; j < shape_row.length - 1; j++) {
             const shape = shape_row[j];
-            const frame = shape._p_frame;
-            const row_space = shape_row[j + 1]._p_frame.x - (frame.x + frame.width);
+            const frame = getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace);
+            const row_space = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace).x - (frame.x + frame.width);
             leftPadding += frame.width;
             const horSpace = m.transform([
                 ColVector3D.FromXY(leftPadding, topPadding),
@@ -132,12 +153,56 @@ function getHorSpacePosition() {
             leftPadding += row_space;
         }
         if (autoLayout.stackVerticalGapSizing === StackSizing.Auto && (i !== shape_rows.length - 1)) {
-            const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height))
-            const next_min_x = Math.min(...shape_rows[i + 1].map(s => s._p_frame.y));
+            const cur_row_h = Math.max(...shape_row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y + getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height))
+            const next_min_x = Math.min(...shape_rows[i + 1].map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y));
             verSpacing = next_min_x - cur_row_h;
         }
         topPadding += maxHeightInRow + verSpacing;
     }
+}
+
+const getIncludedBorderFrame = (shape: Shape, includedBorder?: boolean) => {
+    let f = shape.frame;
+    if (includedBorder) {
+        const borders = shape.getBorders();
+        let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
+        borders.forEach(b => {
+            if (b.isEnabled) {
+                if (b.position === BorderPosition.Outer) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                } else if (b.position === BorderPosition.Center) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
+                }
+            }
+        })
+        f.x -= maxleftborder;
+        f.y -= maxtopborder;
+        f.width += maxleftborder + maxrightborder;
+        f.height += maxtopborder + maxbottomborder;
+    }
+    const m = shape.transform;
+    if (shape.isNoTransform()) {
+        f.x = f.x + m.translateX, f.y = f.y + m.translateY
+    } else {
+        const corners = [
+            { x: f.x, y: f.y },
+            { x: f.x + f.width, y: f.y },
+            { x: f.x + f.width, y: f.y + f.height },
+            { x: f.x, y: f.y + f.height }]
+            .map((p) => m.computeCoord(p));
+        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+        f.x = minx, f.y = miny, f.width = maxx - minx, f.height = maxy - miny
+    }
+    return f;
 }
 
 let downClientXY: XY = { x: 0, y: 0 };
@@ -146,6 +211,7 @@ let downDir = '';
 const down_point = ref<Point>({ x: 0, y: 0 });
 const verMousedown = (e: MouseEvent, dir: PaddingDir) => {
     e.stopPropagation();
+    cursor_down.value = true;
     const shape = props.context.selection.selectedShapes[0];
     const { height } = shape.frame;
     downClientXY.x = e.clientX;
@@ -164,6 +230,7 @@ const verMousedown = (e: MouseEvent, dir: PaddingDir) => {
 
 const horMousedown = (e: MouseEvent, dir: PaddingDir) => {
     e.stopPropagation();
+    cursor_down.value = true;
     const shape = props.context.selection.selectedShapes[0];
     const { width } = shape.frame;
     downClientXY.x = e.clientX;
@@ -180,6 +247,7 @@ const horMousedown = (e: MouseEvent, dir: PaddingDir) => {
 
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
+    cursor_point.value = props.context.workspace.getContentXY(e);
     if (isDragging) {
         if (!autoLayoutModifyHandler) {
             return
@@ -221,11 +289,34 @@ function mousemove(e: MouseEvent) {
 
 function mouseup(e: MouseEvent) {
     e.stopPropagation();
+    clear_status();
+}
+
+
+function clear_status() {
     autoLayoutModifyHandler?.fulfil();
     autoLayoutModifyHandler = undefined;
     isDragging = false;
+    cursor_down.value = false;
+    downDir = '';
+    if (!cursor_hover.value) {
+        props.context.cursor.reset();
+    }
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
+}
+
+function setCursor(dir: 'ver' | 'hor') {
+    const cursor = props.context.cursor;
+
+    let deg = 0;
+    if (dir === 'hor') {
+        deg = horSpaceLine.value[0].rotate;
+    } else if (dir === 'ver') {
+        deg = verSpaceLine.value[0].rotate;
+    }
+
+    cursor.setType(CursorType.AutoSpace, deg);
 }
 
 const getMoveLength = (start: XY, end: XY, e: MouseEvent, context: Context) => {
@@ -268,10 +359,8 @@ const getMoveLength = (start: XY, end: XY, e: MouseEvent, context: Context) => {
     const percent1 = distanceFromStart / (lineLength / 2); // 交点所在百分比位置
     return percent1;
 }
-
-
-
 const verMouseenter = (e: MouseEvent) => {
+    emits('hoverPaddint', -1);
     verSpaceFill.value = true;
 }
 
@@ -279,7 +368,13 @@ const verMouseleave = (e: MouseEvent) => {
     verSpaceFill.value = false;
 }
 
+const verMousemove = (e: MouseEvent) => {
+    cursor_point.value = props.context.workspace.getContentXY(e);
+    cursor_hover.value = true;
+}
+
 const horMouseenter = (e: MouseEvent) => {
+    emits('hoverPaddint', -1);
     horSpaceFill.value = true;
 }
 
@@ -287,6 +382,20 @@ const horMouseleave = (e: MouseEvent) => {
     horSpaceFill.value = false;
 }
 
+const horMousemove = (e: MouseEvent) => {
+    cursor_point.value = props.context.workspace.getContentXY(e);
+    cursor_hover.value = true;
+}
+
+const Mouseenter = (e: MouseEvent, dir: 'ver' | 'hor') => {
+    cursor_point.value = props.context.workspace.getContentXY(e);
+    cursor_hover.value = true;
+    setCursor(dir);
+}
+const Mouseleave = (e: MouseEvent) => {
+    cursor_hover.value = false;
+    props.context.cursor.reset();
+}
 
 const watchedShapes = new Map();
 
@@ -321,15 +430,22 @@ const selectionWatcher = (t: number | string) => {
         watchShapes();
     }
 }
+
+function window_blur() {
+    clear_status();
+}
+
 onMounted(() => {
     update();
     watchShapes();
+    window.addEventListener('blur', window_blur);
     props.context.workspace.watch(workspaceWatcher);
     props.context.selection.watch(selectionWatcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
     props.context.selection.unwatch(selectionWatcher);
+    window.removeEventListener('blur', window_blur);
     watchedShapes.forEach((v, k) => {
         v.unwatch(update);
         watchedShapes.delete(k);
@@ -346,9 +462,10 @@ onUnmounted(() => {
     <g v-if="verSpaceBox.length" clip-path="url(#auto-layout-scape)" @mouseenter="verMouseenter"
         @mouseleave="verMouseleave">
         <path v-for="(box, index) in verSpaceBox" :key="index" class="padding-rect" ref="verSpace"
-            :class="{ spaceFill: verSpaceFill }"
+            :class="{ spaceFill: downDir === 'ver' || verSpaceFill }"
             :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-        <g v-for="(box, index) in verSpaceLine" :key="index">
+        <g v-for="(box, index) in verSpaceLine" :key="index" @mouseenter="(e) => Mouseenter(e, 'ver')"
+            @mouseleave="Mouseleave" @mousemove="verMousemove">
             <path class="padding-line"
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
@@ -360,9 +477,10 @@ onUnmounted(() => {
     <g v-if="horSpaceBox.length" clip-path="url(#auto-layout-scape)" @mouseenter="horMouseenter"
         @mouseleave="horMouseleave">
         <path v-for="(box, index) in horSpaceBox" :key="index" class="padding-rect" ref="horSpcae"
-            :class="{ spaceFill: horSpaceFill }"
+            :class="{ spaceFill: downDir === 'hor' || horSpaceFill }"
             :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-        <g v-for="(box, index) in horSpaceLine" :key="index">
+        <g v-for="(box, index) in horSpaceLine" :key="index" @mouseenter="(e) => Mouseenter(e, 'hor')"
+            @mouseleave="Mouseleave" @mousemove="horMousemove">
             <path class="padding-line"
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
@@ -371,6 +489,12 @@ onUnmounted(() => {
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>
     </g>
+    <foreignObject v-if="(cursor_down || cursor_hover)" :x="cursor_point.x + 10" :y="cursor_point.y + 15" width="100px"
+        height="28px">
+        <div class="percent_container">
+            <span>{{ fixedZero(downDir === 'ver' || verSpaceFill ? ver_space : hor_space) }} </span>
+        </div>
+    </foreignObject>
 </template>
 
 <style scoped lang="scss">
@@ -388,5 +512,23 @@ onUnmounted(() => {
 
 .spaceFill {
     fill: pink;
+}
+
+.percent_container {
+    position: absolute;
+    display: flex;
+    max-width: 100px;
+    font-size: 12px;
+    color: #ffffff;
+    box-sizing: border-box;
+
+    span {
+        padding: 4px;
+        border-radius: 4px;
+        background-color: #D13BCD;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 </style>
