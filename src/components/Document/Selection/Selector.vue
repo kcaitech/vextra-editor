@@ -25,6 +25,7 @@ const props = defineProps<Props>();
 const selectedShapes: Map<string, ShapeView> = new Map();
 
 function select() {
+    if (props.context.workspace.transforming) return;
     const { top, left, width, height } = props.params.frame;
 
     if (width === height && height === 0) return;
@@ -34,8 +35,8 @@ function select() {
     const m = new Matrix(props.context.workspace.matrix.inverse);
     m.multiAtLeft(page.matrix2Root().inverse);
 
-    const p1: XY = m.computeCoord2(left, top); // lt
-    const p3: XY = m.computeCoord2(left + width, top + height); // rb
+    const p1: XY = m.computeCoord2(left, top);
+    const p3: XY = m.computeCoord2(left + width, top + height);
     const rect = new ShapeFrame(p1.x, p1.y, p3.x - p1.x, p3.y - p1.y);
 
     let changed = false;
@@ -67,7 +68,6 @@ function reset(t?: number) {
     if (t === WorkSpace.SELECTING) selectedShapes.clear();
 }
 
-// hooks
 onMounted(() => {
     props.context.workspace.watch(reset);
     selectedShapes.clear();
