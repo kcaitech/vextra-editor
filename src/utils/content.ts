@@ -973,7 +973,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
     const container = (() => {
         for (const shape of shapes) {
             if (shape.isVirtualShape || !shape.isVisible || !(shape instanceof ArtboradView || shape instanceof SymbolView)) continue;
-            if (shape instanceof SymbolView && is_circular_ref2(adapt2Shape(shape), shape.id)) continue;
+            if ((shape instanceof SymbolView && (is_circular_ref2((symbol instanceof ShapeView) ? adapt2Shape(symbol) : symbol, shape.id) || shape.isSymbolUnionShape))) continue;
             if (isTarget(scout, shape, position)) return shape;
         }
         return page;
