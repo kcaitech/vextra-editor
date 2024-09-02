@@ -1,6 +1,14 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
-import { adapt2Shape, ArtboradView, AutoLayoutModify, GroupShape, GroupShapeView, PaddingDir, ShapeView, Transporter } from "@kcdesign/data";
+import {
+    adapt2Shape,
+    AutoLayoutModify,
+    GroupShape,
+    GroupShapeView,
+    PaddingDir,
+    ShapeView,
+    Transporter
+} from "@kcdesign/data";
 import { debounce } from "lodash";
 import { Tool } from "@/context/tool";
 import { compare_layer_3 } from "@/utils/group_ungroup";
@@ -23,6 +31,7 @@ export class AutoLayoutHandler extends TransformHandler {
         this.isTransApi = false;
         this.fixedPoint = downXY || { x: 0, y: 0 };
     }
+
     createTransApiCaller() {
         this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
         this.isTransApi = true;
@@ -36,6 +45,7 @@ export class AutoLayoutHandler extends TransformHandler {
     get transApi() {
         return this.isTransApi;
     }
+
     fulfil() {
         super.fulfil();
     }
@@ -55,7 +65,7 @@ export class AutoLayoutHandler extends TransformHandler {
 
     executeSpace(space: number, direction: PaddingDir) {
         if (this.shapes.length !== 1) return;
-        const shape = this.shapes[0] as ArtboradView;
+        const shape = this.shapes[0];
         if (!(shape instanceof GroupShapeView)) return;
         (this.asyncApiCaller as AutoLayoutModify).executeSpace(shape, space, direction);
     }
@@ -67,9 +77,7 @@ export class AutoLayoutHandler extends TransformHandler {
 
     private __migrate(targetXY: PageXY, tailCollect = true) {
         const t = this.asyncApiCaller as Transporter;
-        if (!t) {
-            return;
-        }
+        if (!t) return;
 
         const ctx = this.context;
 

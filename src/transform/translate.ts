@@ -1,11 +1,17 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
-    adapt2Shape, ColVector3D,
-    GroupShape, makeShapeTransform1By2, makeShapeTransform2By1,
+    adapt2Shape,
+    ArtboradView,
+    ColVector3D,
+    GroupShape, layoutShapesOrder,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1, Shape,
     ShapeType,
     ShapeView,
-    Transform, TransformRaw,
+    StackPositioning,
+    Transform,
+    TransformRaw,
     TranslateUnit,
     Transporter
 } from "@kcdesign/data";
@@ -16,6 +22,8 @@ import { debounce } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { Tool } from "@/context/tool";
+import { message } from "@/utils/message";
+import { isTarget } from "@/utils/scout";
 
 type BaseFrame4Trans = {
     originTransform: Transform
@@ -23,6 +31,7 @@ type BaseFrame4Trans = {
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];
+    shapesIdSet: Set<string>;
 
     livingPoint: XY;
     fixedPoint: XY;
@@ -43,11 +52,30 @@ export class TranslateHandler extends TransformHandler {
     shapesBackup: ShapeView[] = [];
     coping: boolean = false; // 数据拷贝中
 
+    mode: 'normal' | 'layout' | 'absolute' = "normal";
+
+    isKeySPress: boolean = false;
+
+    fulfilled: boolean = false;
+
+    autoLayoutShape: ShapeView | undefined;
+
+    /**
+     * check：down的时候校验移动模式: normal | layout
+     *  · normal
+     *      ---
+     *  · layout
+     *      · 如果选中的图层仅部分为Absolute图层，则把Absolute图层筛选出去；
+     *      · Absolute图层迁移到没有自动布局的元素需要取消Absolute状态；
+     *      · 移动过程监听当前环境的变化
+     *
+     *
+     */
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
 
         this.shapes = shapes;
-
+        this.shapesIdSet = new Set();
         this.livingPoint = this.workspace.getRootXY(event);
 
         this.fixedPoint = { ...this.livingPoint };
@@ -56,8 +84,28 @@ export class TranslateHandler extends TransformHandler {
         context.assist.set_trans_target(shapes);
 
         this.getFrames();
+    }
 
-        this.beforeTransform();
+    setMode() {
+        const shapes = this.shapes;
+        const parents = new Set<ShapeView>();
+        let allAbsolute = true;
+        for (const shape of shapes) {
+            parents.add(shape.parent!);
+            if (shape.stackPositioning !== StackPositioning.ABSOLUTE) allAbsolute = false;
+        }
+        if (parents.size > 1) {
+            this.mode = "normal";
+        } else {
+            const parent = shapes[0].parent as ArtboradView;
+            if (parent.autoLayout) {
+                this.autoLayoutShape = parent;
+                this.mode = allAbsolute ? "absolute" : "layout";
+                this.shapesIdSet = new Set(shapes.map(i => i.id));
+            } else {
+                this.mode = "normal";
+            }
+        }
     }
 
     beforeTransform() {
@@ -101,6 +149,8 @@ export class TranslateHandler extends TransformHandler {
         const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
+
+        this.setMode();
     }
 
     private getFrames() {
@@ -199,13 +249,13 @@ export class TranslateHandler extends TransformHandler {
     execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
         this.migrate();
-
         this.updateBoxByAssist();
-
         this.__execute();
     }
 
     private updateBoxByAssist() {
+        if (this.mode !== 'normal') return; // 自动布局下不需要参考线
+
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
 
@@ -408,84 +458,128 @@ export class TranslateHandler extends TransformHandler {
     private __execute() {
         if (this.coping || this.context.readonly) return;
 
-        const { x: originX, y: originY } = this.originSelectionBox;
-        const livingX = this.livingBox.x;
-        const livingY = this.livingBox.y;
-        const deltaX = livingX - originX;
-        const deltaY = livingY - originY;
+        if (this.mode !== "layout") {
+            const { x: originX, y: originY } = this.originSelectionBox;
+            const livingX = this.livingBox.x;
+            const livingY = this.livingBox.y;
+            const deltaX = livingX - originX;
+            const deltaY = livingY - originY;
 
-        const transformUnits: TranslateUnit[] = [];
-        const PIC = new Map<string, Transform>();
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
+            const transformUnits: TranslateUnit[] = [];
+            const PIC = new Map<string, Transform>();
+            for (let i = 0; i < this.shapes.length; i++) {
+                const shape = this.shapes[i];
 
-            const base = this.baseFrames4trans.get(shape.id);
-            if (!base) continue;
+                const base = this.baseFrames4trans.get(shape.id);
+                if (!base) continue;
 
-            const parent = shape.parent;
-            if (!parent) continue;
+                const parent = shape.parent;
+                if (!parent) continue;
 
-            let PI = PIC.get(parent.id);
-            if (!PI) {
-                const __p = parent.transform2FromRoot.getInverse();
+                let PI = PIC.get(parent.id);
+                if (!PI) {
+                    const __p = parent.transform2FromRoot.getInverse();
 
-                PIC.set(parent.id, __p);
-                PI = __p;
+                    PIC.set(parent.id, __p);
+                    PI = __p;
+                }
+
+                const __t = base.originTransform
+                    .clone()
+                    .translate(ColVector3D.FromXY(deltaX, deltaY))
+
+                if (this.alignPixel) {
+                    const decompose = __t.clone().decomposeTranslate();
+                    const intX = Math.round(decompose.x);
+                    const intY = Math.round(decompose.y);
+                    const offsetX = intX - decompose.x;
+                    const offsetY = intY - decompose.y;
+
+                    if (offsetX || offsetY) {
+                        __t.translate(ColVector3D.FromXY(offsetX, offsetY));
+                    }
+                }
+
+                __t.addTransform(PI);
+
+                const transform = makeShapeTransform1By2(__t) as TransformRaw;
+
+                transformUnits.push({ shape, transform });
             }
 
-            const __t = base.originTransform
-                .clone()
-                .translate(ColVector3D.FromXY(deltaX, deltaY))
+            (this.asyncApiCaller as Transporter).execute(transformUnits);
 
-            if (this.alignPixel) {
-                const decompose = __t.clone().decomposeTranslate();
-                const intX = Math.round(decompose.x);
-                const intY = Math.round(decompose.y);
-                const offsetX = intX - decompose.x;
-                const offsetY = intY - decompose.y;
+            const ctx = this.context;
 
-                if (offsetX || offsetY) {
-                    __t.translate(ColVector3D.FromXY(offsetX, offsetY));
+            ctx.nextTick(this.page, () => {
+                ctx.tool.notify(Tool.RULE_RENDER_SIM);
+                if (this.altStatus) ctx.selection.notify(Selection.PASSIVE_CONTOUR);
+            });
+        } else {
+            const living = this.livingPoint;
+            const shapes = this.shapes;
+            const env = this.autoLayoutShape as ArtboradView;
+            if (!this.shapesIdSet.size) this.shapesIdSet = new Set(shapes.map(i => i.id));
+            const shapesUnderCommonEnv: ShapeView[] = env.childs;
+            const __set = this.shapesIdSet;
+            const scout = this.context.selection.scout;
+            for (const shape of shapesUnderCommonEnv) {
+                if (__set.has(shape.id)) continue;
+                if (isTarget(scout, shape, living)) {
+                    const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
+                    const shape_row: Shape[] = shape_rows.flat();
+                    const alpha = shapes[0];
+                    const cur_index = shape_row.findIndex(item => item.id === alpha.id);
+                    const tar_index = shape_row.findIndex(item => item.id === shape.id);
+                    const targetXY = this.__getTargetFrame(adapt2Shape(shape));
+                    const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
+                    const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
+                    (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY);
+                    break;
                 }
             }
+            this.tips4absolutePosition();
 
-            __t.addTransform(PI);
+            const ctx = this.context;
 
-            const transform = makeShapeTransform1By2(__t) as TransformRaw;
-
-            transformUnits.push({ shape, transform });
-        }
-
-        (this.asyncApiCaller as Transporter).execute(transformUnits);
-
-        const ctx = this.context;
-
-        ctx.nextTick(this.page, () => {
-            ctx.tool.notify(Tool.RULE_RENDER_SIM);
-        });
-
-        if (this.altStatus) {
             ctx.nextTick(this.page, () => {
-                ctx.selection.notify(Selection.PASSIVE_CONTOUR);
-            })
+                // todo render dash 给虚线提示
+            });
         }
     }
 
-    private __migrate(tailCollect = true) {
-        // if (this.workspace.transforming && this.shapes.length > 50) return; @@@
-        const t = this.asyncApiCaller as Transporter;
-        if (!t) {
-            return;
+    __getTargetFrame = (shape: Shape) => {
+        let f = shape.frame;
+        const m = shape.transform;
+        if (shape.isNoTransform()) {
+            f.x = f.x + m.translateX;
+            f.y = f.y + m.translateY
+        } else {
+            const corners = [
+                { x: f.x, y: f.y },
+                { x: f.x + f.width, y: f.y },
+                { x: f.x + f.width, y: f.y + f.height },
+                { x: f.x, y: f.y + f.height }]
+                .map((p) => m.computeCoord(p));
+            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+            f.x = minx, f.y = miny, f.width = maxx - minx, f.height = maxy - miny
         }
+        return f;
+    }
+
+    private __migrate(tailCollect = true) {
+        const t = this.asyncApiCaller as Transporter;
+        if (!t) return;
 
         const ctx = this.context;
 
         const pe = this.livingPoint;
         const target_parent = ctx.selection.getEnvForMigrate(pe);
 
-        if (target_parent.id === t.current_env_id) {
-            return;
-        }
+        if (target_parent.id === t.current_env_id) return;
 
         const except = t.getExceptEnvs();
 
@@ -500,6 +594,8 @@ export class TranslateHandler extends TransformHandler {
         }
 
         ctx.nextTick(ctx.selection.selectedPage!, () => {
+            this.setMode();
+
             ctx.tool.notify(Tool.RULE_RENDER);
 
             if (tailCollect) {
@@ -508,12 +604,25 @@ export class TranslateHandler extends TransformHandler {
         })
     }
 
+    private shapesModifyStackPositioning(p: StackPositioning) {
+        if (this.mode === 'normal') return;
+        const shapes: ShapeView[] = [];
+        for (const shape of this.shapes) {
+            if (shape.stackPositioning !== p) shapes.push(shape);
+        }
+        if (shapes.length) (this.asyncApiCaller as Transporter).modifyShapesStackPosition(shapes, StackPositioning.ABSOLUTE);
+    }
+
+    private __tips4absolutePosition() {
+        if (!this.fulfilled) message('info', '移动过程中按下S可以使图层脱离自动布局', 5);
+    }
+
+    tips4absolutePosition = debounce(this.__tips4absolutePosition, 1000)
+
     migrateOnce = debounce(this.__migrate, 160);
 
     migrate() {
-        if (this.coping) {
-            return;
-        }
+        if (this.coping) return;
         this.migrateOnce();
     }
 
@@ -527,14 +636,12 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setLabelFixedGroup([]);
             this.context.selection.setShowInterval(false);
         }
-
         super.fulfil();
+        this.fulfilled = true;
     }
 
     protected keydown(event: KeyboardEvent) {
-        if (event.repeat) {
-            return;
-        }
+        if (event.repeat) return;
         if (event.shiftKey) {
             this.shiftStatus = true;
             this.passiveExecute();
@@ -549,6 +656,10 @@ export class TranslateHandler extends TransformHandler {
                 this.context.selection.notify(Selection.PASSIVE_CONTOUR);
             }
         }
+        if (event.code === 'KeyS') {
+            this.isKeySPress = true;
+            this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -561,6 +672,10 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setLabelLivingGroup([]);
             this.context.selection.setLabelFixedGroup([]);
             this.context.selection.setShowInterval(false);
+        }
+        if (event.code === 'KeyS') {
+            this.isKeySPress = false;
+            this.shapesModifyStackPositioning(StackPositioning.AUTO);
         }
     }
 }

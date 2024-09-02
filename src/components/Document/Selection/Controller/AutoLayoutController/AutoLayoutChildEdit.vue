@@ -1,23 +1,33 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
-import { adapt2Shape, ArtboradView, BorderPosition, ColVector3D, layoutShapesOrder, makeShapeTransform2By1, Matrix, Path, Shape, ShapeView, XYsBounding } from "@kcdesign/data";
+import {
+    adapt2Shape,
+    ArtboradView,
+    BorderPosition,
+    ColVector3D,
+    layoutShapesOrder,
+    makeShapeTransform2By1,
+    Matrix,
+    Path,
+    Shape,
+    ShapeView,
+    XYsBounding
+} from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { genRectPath } from "../../common";
 import { is_shape_in_selected } from "@/utils/scout";
 import { AutoLayoutHandler } from "@/transform/autoLayout";
-import { get_actions_frame_x } from "@/utils/attri_setting";
-
 
 export interface Point {
     x: number
     y: number
 }
+
 interface Props {
     context: Context
 }
-
 
 const props = defineProps<Props>();
 const dottedPaths = ref<{ path: string, shape: ShapeView | undefined }[]>([]);
@@ -60,7 +70,12 @@ function hoverDottedPaths() {
         const ps: { x: number, y: number }[] = getPoint(child, bordersTakeSpace);
         points.push(...ps);
         const b = XYsBounding(points);
-        const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+        const framePoint = [
+            { x: b.left, y: b.top },
+            { x: b.right, y: b.top },
+            { x: b.right, y: b.bottom },
+            { x: b.left, y: b.bottom }
+        ];
         const borPath = genRectPath(framePoint);
         dottedPaths.value.push({ path: borPath, shape: child });
     }
@@ -102,7 +117,12 @@ const getPoint = (shape: ShapeView, includedBorder?: boolean) => {
         ColVector3D.FromXY(f.x + f.width, f.y + f.height),
         ColVector3D.FromXY(f.x, f.y + f.height),
     ]);
-    const ps: { x: number, y: number }[] = [{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, { x: col3.x, y: col3.y }];
+    const ps: { x: number, y: number }[] = [
+        { x: col0.x, y: col0.y },
+        { x: col1.x, y: col1.y },
+        { x: col2.x, y: col2.y },
+        { x: col3.x, y: col3.y }
+    ];
     return ps;
 }
 
@@ -114,14 +134,23 @@ function selectDottedPaths() {
     const every = shapes.every(item => item.parent?.id === parent.id);
     if (!every) return;
     const points: { x: number, y: number }[] = [];
-    const matrix2 = new Matrix(props.context.workspace.matrix);
     const shape_root_m = parent.matrix2Root();
-    shape_root_m.multiAtLeft(matrix2);
+    shape_root_m.multiAtLeft(props.context.workspace.matrix);
     const f = parent.frame;
-    const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => shape_root_m.computeCoord(p.x, p.y));
+    const ps: { x: number, y: number }[] = [
+        { x: 0, y: 0 },
+        { x: f.width, y: 0 },
+        { x: f.width, y: f.height },
+        { x: 0, y: f.height }
+    ].map(p => shape_root_m.computeCoord(p.x, p.y));
     points.push(...ps);
     const b = XYsBounding(points);
-    const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+    const framePoint = [
+        { x: b.left, y: b.top },
+        { x: b.right, y: b.top },
+        { x: b.right, y: b.bottom },
+        { x: b.left, y: b.bottom }
+    ];
     const borPath = genRectPath(framePoint);
     dottedPaths.value.push({ path: borPath, shape: undefined });
     const bordersTakeSpace = (parent as ArtboradView).autoLayout?.bordersTakeSpace;
@@ -129,34 +158,33 @@ function selectDottedPaths() {
 }
 
 const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
-    const matrix2 = new Matrix(props.context.workspace.matrix);
     const points: { x: number, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const shape_root_m = shape.matrix2Root();
-        const m = makeShapeTransform2By1(shape_root_m.clone()).clone();
-        const clientTransform = makeShapeTransform2By1(matrix2);
-        m.addTransform(clientTransform); //root到视图
-        let { x, y, width, height } = { ...shape.frame };
+        const m = makeShapeTransform2By1(shape_root_m);
+        const clientTransform = makeShapeTransform2By1(props.context.workspace.matrix);
+        m.addTransform(clientTransform);
+        let { x, y, width, height } = shape.frame;
         if (includedBorder) {
             const borders = shape.getBorders();
             let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;
             borders.forEach(b => {
-                if (b.isEnabled) {
-                    if (b.position === BorderPosition.Outer) {
-                        maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
-                        maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
-                        maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
-                        maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
-                    } else if (b.position === BorderPosition.Center) {
-                        maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
-                        maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
-                        maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
-                        maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
-                    }
+                if (!b.isEnabled) return;
+                if (b.position === BorderPosition.Outer) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                } else if (b.position === BorderPosition.Center) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
                 }
             })
-            x -= maxleftborder; y -= maxtopborder;
+            x -= maxleftborder;
+            y -= maxtopborder;
             width += maxleftborder + maxrightborder;
             height += maxtopborder + maxbottomborder;
         }
@@ -166,13 +194,23 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
             ColVector3D.FromXY(x + width, y + height),
             ColVector3D.FromXY(x, y + height),
         ]);
-        const borPath = genRectPath([{ x: col0.x + 2, y: col0.y + 2 }, { x: col1.x - 2, y: col1.y + 2 }, { x: col2.x - 2, y: col2.y - 2 }, { x: col3.x + 2, y: col3.y - 2 }]);
+        const borPath = genRectPath([
+            { x: col0.x + 2, y: col0.y + 2 },
+            { x: col1.x - 2, y: col1.y + 2 },
+            { x: col2.x - 2, y: col2.y - 2 },
+            { x: col3.x + 2, y: col3.y - 2 }
+        ]);
         movePath.value.push(borPath);
         const ps: { x: number, y: number }[] = getPoint(shape, includedBorder);
         points.push(...ps);
     }
     const b = XYsBounding(points);
-    const framePoint = [{ x: b.left + 2, y: b.top + 2 }, { x: b.right - 2, y: b.top + 2 }, { x: b.right - 2, y: b.bottom - 2 }, { x: b.left + 2, y: b.bottom - 2 }];
+    const framePoint = [
+        { x: b.left + 2, y: b.top + 2 },
+        { x: b.right - 2, y: b.top + 2 },
+        { x: b.right - 2, y: b.bottom - 2 },
+        { x: b.left + 2, y: b.bottom - 2 }
+    ];
     multiplePath.value = genRectPath(framePoint);
 }
 
@@ -194,6 +232,7 @@ const mousedown = (e: MouseEvent) => {
     document.addEventListener('mouseup', mouseup);
 }
 let targetShape: ShapeView | undefined;
+
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     const transx = e.clientX - downClientXY.x;
@@ -204,28 +243,25 @@ function mousemove(e: MouseEvent) {
         if (!shapes.length) return;
         const parent = shapes[0].parent;
         if (!parent) return;
-        const p = props.context.workspace.getContentXY(e);
-        const matrix = props.context.workspace.matrix;
-        const m = new Matrix(matrix.inverse);
-        const xy = m.computeCoord(p);
+        const xy = props.context.workspace.getRootXY(e);
         const target = props.context.selection.getShapesByXY(xy, true, [parent, ...parent.childs]);
         if (target && target.id !== parent.id && targetShape?.id !== target.id) {
             const isTarget = shapes.find(item => item.id === target.id);
             if (!autoLayoutModifyHandler || isTarget) {
                 return
             }
-            if (!autoLayoutModifyHandler.asyncApiCaller || autoLayoutModifyHandler.transApi) {
-                autoLayoutModifyHandler.createApiCaller(downClientXY);
-            }
-            const shape_row: Shape[] = [];
-            const shape_rows = layoutShapesOrder(parent.childs.map(s => adapt2Shape(s)));
-            shape_rows.forEach(item => shape_row.push(...item));
-            const cur_index = shape_row.findIndex(item => item.id === shapes[0].id);
-            const tar_index = shape_row.findIndex(item => item.id === target.id);
-            const targetXY = getTargetFrame(target.data);
-            const transx = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
-            const transy = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
-            autoLayoutModifyHandler.executeSwap(parent, shapes, transx, transy);
+            // if (!autoLayoutModifyHandler.asyncApiCaller || autoLayoutModifyHandler.transApi) {
+            //     autoLayoutModifyHandler.createApiCaller(downClientXY);
+            // }
+            // const shape_row: Shape[] = [];
+            // const shape_rows = layoutShapesOrder(parent.childs.map(s => adapt2Shape(s)));
+            // shape_rows.forEach(item => shape_row.push(...item));
+            // const cur_index = shape_row.findIndex(item => item.id === shapes[0].id);
+            // const tar_index = shape_row.findIndex(item => item.id === target.id);
+            // const targetXY = getTargetFrame(target.data);
+            // const transx = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
+            // const transy = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
+            // autoLayoutModifyHandler.executeSwap(parent, shapes, transx, transy);
         }
         if (!target) {
 
@@ -235,27 +271,18 @@ function mousemove(e: MouseEvent) {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
             isDragging = true;
-            autoLayoutModifyHandler = new AutoLayoutHandler(props.context, e);
-            movePathStroke.value = true;
+            // autoLayoutModifyHandler = new AutoLayoutHandler(props.context, e);
+            // movePathStroke.value = true;
         }
     }
-}
-
-const migrate = () => {
-    if (!autoLayoutModifyHandler) {
-        return
-    }
-    if (!autoLayoutModifyHandler.asyncApiCaller || !autoLayoutModifyHandler.transApi) {
-        autoLayoutModifyHandler.createTransApiCaller();
-    }
-
 }
 
 const getTargetFrame = (shape: Shape) => {
     let f = shape.frame;
     const m = shape.transform;
     if (shape.isNoTransform()) {
-        f.x = f.x + m.translateX, f.y = f.y + m.translateY
+        f.x = f.x + m.translateX;
+        f.y = f.y + m.translateY
     } else {
         const corners = [
             { x: f.x, y: f.y },
@@ -286,8 +313,6 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', mouseup);
 }
 
-// hooks
-
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspace_watcher);
@@ -299,19 +324,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- 描边 -->
-    <svg v-if="dottedPaths.length" version="1.1" xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        preserveAspectRatio="xMinYMin meet" overflow="visible" width="100" height="100" viewBox="0 0 100 100"
-        style="transform: translate(0px, 0px); position: absolute;">
-        <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path" />
-        <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
-            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" @mousedown="(e) => mousedown(e)" />
-        <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
-            :class="{ 'move-path-fill': movePathStroke }"
-            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl"
-            @mousedown="(e) => mousedown(e)" />
-    </svg>
+<svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg"
+     preserveAspectRatio="xMinYMin meet" overflow="visible" width="100" height="100" viewBox="0 0 100 100"
+     style="transform: translate(0px, 0px); position: absolute;">
+    <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path"/>
+    <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
+          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" @mousedown="(e) => mousedown(e)"/>
+    <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
+          :class="{ 'move-path-fill': movePathStroke }"
+          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl"
+          @mousedown="(e) => mousedown(e)"/>
+</svg>
 </template>
 
 <style scoped lang="scss">
