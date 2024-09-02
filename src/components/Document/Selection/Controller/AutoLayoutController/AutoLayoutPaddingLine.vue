@@ -162,15 +162,12 @@ const updatePadding = (e: MouseEvent) => {
             const padding = getMoveLength(start, end, e, props.context) * (height / 2);
             autoLayoutModifyHandler.executePadding(padding, 'bottom');
         } else {
-            const start = getTransformCol(props.context, shape, width / 2, 0);
-            const distance1 = Math.sqrt(Math.pow(downXY.x - start.x, 2) + Math.pow(downXY.y - start.y, 2));
-            const distance2 = Math.sqrt(Math.pow(e.clientX - start.x, 2) + Math.pow(e.clientY - start.y, 2));
-            const scale = props.context.workspace.matrix.m00;
-            if (distance2 - distance1 > 0) {
-                autoLayoutModifyHandler.executePadding(autoInfo.stackPaddingBottom + (3 / scale), 'bottom');
-            } else if (distance2 - distance1 < 0) {
-                autoLayoutModifyHandler.executePadding(autoInfo.stackPaddingBottom - (3 / scale), 'bottom');
-            }
+            const { width, height } = shape.data.frame
+            const bottom = autoInfo.stackPaddingBottom;
+            const start = getTransformCol(props.context, shape, width / 2, height - bottom);
+            const end = getTransformCol(props.context, shape, width / 2, height);
+            const padding = getMoveLength(start, end, e, props.context);
+            autoLayoutModifyHandler.executePadding(padding * (bottom || 1), 'bottom');
         }
     } else {
         const start = paddingBox.value[paddingIndex.value].center.col1;
