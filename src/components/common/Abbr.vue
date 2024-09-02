@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { XYsBounding } from '@/utils/common';
-import { Matrix, ShapeView } from '@kcdesign/data';
+import { Artboard, Matrix, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 const props = defineProps<Props>();
 const path = ref<string>('');
 const is_image = ref(false);
+const is_auto_layout = ref(false);
 const flex_abbr = ref<boolean>(true);
 const icon_class = ref<string>('');
 
@@ -19,6 +20,7 @@ function updateIconClass() {
     const s = props.shape;
     if (s.data.mask) return icon_class.value = "layer-mask";
     if (s.isImageFill) return icon_class.value = "layer-image";
+    if(is_auto_layout.value) return icon_class.value = "layer-auto-box";
     else return icon_class.value = `layer-${s.type}`;
 }
 
@@ -26,7 +28,8 @@ function updateIconClass() {
 function getPath() {
     const shape = props.shape.data;
     is_image.value = shape.isImageFill && !shape.mask;
-    flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask;
+    is_auto_layout.value = !!(shape as Artboard).autoLayout;
+    flex_abbr.value = shape.isPathIcon && !is_image.value && !shape.mask && !is_auto_layout;
 
     if (!flex_abbr.value) return updateIconClass();
 
