@@ -124,7 +124,7 @@ function _selection_change() {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
-        if (shape.type === ShapeType.Artboard) {
+        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.type)) {
             autoLayout.value = true;
         }
     }
@@ -340,8 +340,8 @@ onUnmounted(() => {
                     :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :trigger="reflush_trigger"></ShapeBaseAttr>
-                <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger :selection-change="reflush_by_selection" :context="props.context"
-                    :shapes="shapes">
+                <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger
+                    :selection-change="reflush_by_selection" :context="props.context" :shapes="shapes">
                 </AutoLayout>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
