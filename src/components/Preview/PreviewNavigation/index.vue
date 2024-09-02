@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import PageList from "./PreviewPageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { PageView } from "@kcdesign/data";
+import { PageView } from '@kcdesign/data';
 import ShapeList from "./PreviewShapeList.vue";
 import { Navi } from "@/context/navigate";
 const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();

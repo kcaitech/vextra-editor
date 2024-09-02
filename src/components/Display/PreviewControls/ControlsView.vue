@@ -3,15 +3,23 @@ import { Context } from '@/context';
 import { Preview } from '@/context/preview';
 import { Selection, XY } from '@/context/selection';
 import { dbl_action } from '@/utils/mouse_interactive';
-import { eventPriority, getFrameList, getPreviewMatrix } from '@/utils/preview';
-import { Matrix, PathShapeView, PrototypeEvents, PrototypeNavigationType, PrototypeTransitionType, sessionRefIdKey, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
-import { delayAction, ProtoAction } from './actions';
-
+import { eventPriority, getPreviewMatrix } from '@/utils/preview';
+import {
+    Matrix,
+    PathShapeView,
+    PrototypeEvents,
+    PrototypeNavigationType,
+    PrototypeTransitionType,
+    sessionRefIdKey,
+    ShapeView
+} from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { delayAction, EventIndex, ProtoAction } from './actions';
 
 interface Props {
     context: Context
     matrix: Matrix
+    reflush: number
 }
 
 interface PathView {
@@ -19,15 +27,6 @@ interface PathView {
     viewBox: string,
     height: number,
     width: number
-}
-
-export interface EventIndex {
-    click: number,
-    dblclick: number,
-    mousedown: number,
-    mouseup: number,
-    mouseenter: number,
-    hover: number
 }
 
 const emit = defineEmits<{
@@ -239,7 +238,7 @@ const onMouseenter = () => {
 
 const moveOutAction = () => {
     const shape = props.context.preview.saveShape;
-    if(!shape) return;
+    if (!shape) return;
     const protoActions = shape!.prototypeInterActions;
     if (!protoActions) return;
     for (let i = 0; i < protoActions.length; i++) {
@@ -258,7 +257,7 @@ const moveOutAction = () => {
 }
 
 function createShapeTracing() {
-    const hoveredShape = props.context.selection.hoveredShape;
+    const hoveredShape = props.context.selection.hoveredShape;    
     tracing.value = false;
     if (!hoveredShape) {
         return;
@@ -310,6 +309,10 @@ const preview_watcher = (t: number) => {
     }
 }
 
+watch(() => props.reflush, () => {
+    createShapeTracing();
+})
+
 onMounted(() => {
     props.context.selection.watch(selected_watcher);
     props.context.preview.watch(preview_watcher);
@@ -321,17 +324,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        style="position: absolute; top: 0; left: 0">
-        <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="transparent"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-    </svg>
+<svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+     :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+     style="position: absolute; top: 0; left: 0">
+    <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
+          @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+    <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" stroke="transparent"
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+</svg>
 </template>
 
 <style scoped lang="scss"></style>
