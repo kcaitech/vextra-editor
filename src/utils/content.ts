@@ -39,7 +39,7 @@ import { compare_layer_3, sort_by_layer } from "@/utils/group_ungroup";
 import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
-import { UploadAssets } from "../../../kcdesign-data/src";
+import { UploadAssets } from "@kcdesign/data";
 
 export interface Media {
     name: string
@@ -433,7 +433,7 @@ export function is_drag(context: Context, e: MouseEvent, start: ClientXY, thresh
 export function drop(e: DragEvent, context: Context) {
     if (!permIsEdit(context) || context.tool.isLable) return;
     e.preventDefault();
-    const data = e?.dataTransfer?.files;
+    const data = e?.dataTransfer?.files as any;
     if (!data?.length || data[0]?.type.indexOf('image') < 0) return;
     const loader = new ImageLoader(context);
     loader.insertImageByPackages(data);

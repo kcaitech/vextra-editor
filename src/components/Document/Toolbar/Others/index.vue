@@ -1,27 +1,18 @@
 <script setup lang="ts">
-// import UserAvatar from './UserAvatar.vue';
-// import Share from './Share/Share.vue';
 import Scale from './Scale.vue';
-import {} from 'vue';
 import { Context } from '@/context';
-// import Collaborator from './Collaboration/Collaborator.vue';
 import LableToggle from './LableToggle.vue';
-import PublishEnter from './Publish/index.vue';
 
-interface Props {
+const props = defineProps<{
     context: Context
-}
-
-const props = defineProps<Props>();
+}>();
 
 const plugins = props.context.pluginsMgr.search2('toolbar.others');
 const comps: { component: any, params?: any }[] = []
 comps.push(...plugins.begin)
-// comps.push({ component: PublishEnter })
 comps.push({ component: LableToggle })
 comps.push({ component: Scale })
 comps.push(...plugins.end)
-
 </script>
 <template>
 <div class="others" @dblclick.stop>

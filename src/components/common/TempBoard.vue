@@ -101,7 +101,6 @@ function write() {
         }
         const writeResult = props.context.workspace.clipboard.writeBlob(blob);
         if (writeResult) {
-            console.log('你这个都打印了')
             message('info', t('clipboard.copyAsPNGSuccess'));
         } else {
             message('info', t('clipboard.copyAsPNGFailed'));

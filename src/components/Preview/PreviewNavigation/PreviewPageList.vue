@@ -4,7 +4,7 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PreviewPageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { Document, Page, PageListItem, PageView } from "@kcdesign/data";
+import { Document, Page, PageListItem, PageView } from '@kcdesign/data';
 import { Preview } from "@/context/preview";
 import { selectedShape, setWindowTitle } from "@/utils/preview";
 import { Selection } from "@/context/selection";

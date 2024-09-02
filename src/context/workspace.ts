@@ -4,12 +4,7 @@ import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 import { IWorkspace, WorkspaceEvents } from "@/openapi/workspace";
-
-// export enum Perm {
-//     isRead = 1, // 仅阅读
-//     isComment = 2, // 可评论
-//     isEdit = 3 // 可编辑
-// }
+import { is_mac } from "@/utils/common";
 
 export interface Root {
     init: boolean
@@ -34,8 +29,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static CHECKSTATUS = 5;
     static SELECTION_VIEW_UPDATE = 6;
     static PASTE_RIGHT = 7;
-    // static FREEZE = 8;
-    // static THAW = 9;
     static CLAC_ATTRI = 10;
     static HIDDEN_UI = 11;
     static INIT_DOC_NAME = 12;
@@ -68,7 +61,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_font_name_list: { zh: string[], en: string[] } = { zh: [], en: [] };
-    // private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
     private m_root: Root = {
@@ -82,29 +74,36 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         element: undefined,
         center: { x: 0, y: 0 }
     };
+    private m_client_sys: 'mac' | 'windows';
 
     constructor(context: Context) {
         super();
         this.context = context;
         this.m_clipboard = new Clipboard(context);
+        this.m_client_sys = is_mac() ? 'mac' : 'windows';
     }
+
     get curScale(): number {
         return this.matrix.m00;
     }
+
     translate(x: number, y: number): void {
         this.m_matrix.trans(x, y);
         this.notify(WorkSpace.MATRIX_TRANSFORMATION)
     }
+
     scale(ratio: number): void {
         this.m_matrix.scale(ratio, ratio);
         this.notify(WorkSpace.MATRIX_TRANSFORMATION)
     }
+
     doc2view(point: { x: number; y: number; }): { x: number; y: number; };
     doc2view(x: number, y: number): { x: number; y: number; };
     doc2view(x: number | { x: number, y: number }, y?: number): { x: number; y: number; } {
         if (typeof x === 'number') return this.m_matrix.computeCoord(x, y!);
         return this.m_matrix.computeCoord(x)
     }
+
     view2doc(point: { x: number; y: number; }): { x: number; y: number; };
     view2doc(x: number, y: number): { x: number; y: number; };
     view2doc(x: number | { x: number, y: number }, y?: number): { x: number; y: number; } {
@@ -113,6 +112,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     }
 
     private m_element: HTMLElement | undefined;
+
     get element(): HTMLElement | undefined {
         if (this.m_element) return this.m_element;
         const content: NodeListOf<HTMLElement> = document.querySelectorAll('#content');
@@ -133,9 +133,9 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return this.m_matrix;
     }
 
-    get root(): Root { //return contentView HTMLElement info
-        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构后会进行root数据更新)；
-        if (!root.init && this.element) { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
+    get root(): Root {
+        const root = this.m_root;
+        if (!root.init && this.element) {
             const { x, y, bottom, right } = this.element.getBoundingClientRect();
             root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
             root.x = x;
@@ -153,14 +153,10 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
     }
 
-    get pageView() {//return pageView HTMLElement
+    get pageView() {
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
         if (pageView) return pageView as Element;
     }
-
-    // get documentPerm() {
-    //     return this.m_document_perm;
-    // }
 
     get isPreToTranslating() {
         return this.m_pre_to_translating;
@@ -214,15 +210,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
     }
 
-    // setDocumentPerm(perm: number) {
-    //     this.m_document_perm = perm;
-    // }
-
     get clipboard() {
         return this.m_clipboard;
     }
 
-    private m_t: Function = () => { };
+    private m_t: Function = () => {
+    };
 
     t(content: string) {
         return this.m_t.call(this, content);
@@ -231,10 +224,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     init(t: Function) {
         this.m_t = t;
     }
-
-    // setFreezeStatus(isFreeze: boolean) {
-    //     this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
-    // }
 
     setSelectionViewUpdater(isWork: boolean) {
         this.m_should_selection_view_update = isWork;
@@ -313,7 +302,6 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return e.button === 0
             && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
-            // && this.m_document_perm === Perm.isEdit
             && !this.context.tool.isLable
             && !this.isEditing;
     }

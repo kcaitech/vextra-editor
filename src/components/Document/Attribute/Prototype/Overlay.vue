@@ -264,7 +264,6 @@ onMounted(() => {
         grid-template-columns: 1fr 1fr;
         gap: 4px;
         width: 100%;
-        height: 70px;
 
         .position {
             display: grid;

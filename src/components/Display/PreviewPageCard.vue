@@ -3,7 +3,7 @@ import {
     adapt2Shape, ArtboradView, BasicArray, Border, Fill, Page, Shadow, Shape, ShapeType,
     ShapeView, Style,
     TransformRaw
-} from "@kcdesign/data";
+} from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";

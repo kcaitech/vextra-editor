@@ -1,6 +1,7 @@
 import _DocumentVue from "./components/Document/index.vue"
 import _MobileDocumentVue from "./components/Mobile/Document.vue"
 import _PreviewVue from "./components/Preview/index.vue"
+import _StaticShape from "./components/Document/Content/StaticShape.vue"
 import {
     CoopRepository,
     createDocument,
@@ -13,11 +14,12 @@ import {
     Repository,
 } from '@kcdesign/data';
 import { LzDataLocal } from "./basic/lzdatalocal";
-import { Zip } from "./PAL/browser/zip";
+import { Zip } from "@pal/zip";
 import { Context } from "./context";
 import i18n from '@/i18n'
 import { DocumentProps } from "./openapi";
-import { IContext } from "./openapi/context";
+import { IContext } from "@/openapi";
+import { importDocumentFromMDD } from "@/IO";
 
 export * from "./openapi";
 
@@ -46,6 +48,9 @@ async function _open(props: DocumentProps) {
         } else if (props.fmt === 'fig') {
             data = await importFigma(props.file, repo)
             cooprepo = new CoopRepository(data, repo)
+        } else if (props.fmt === 'moss') {
+            data = await importDocumentFromMDD(props.file, repo);
+            cooprepo = new CoopRepository(data, repo)
         }
     } else if (props.source === 'new') {
         data = createDocument(t('system.new_file'), repo);
@@ -68,25 +73,21 @@ async function _open(props: DocumentProps) {
 export async function openDocument(props: DocumentProps) {
     let cooprepo: CoopRepository | undefined;
     let data: Document | undefined;
-    // let loader: DataLoader | undefined
     try {
         const result = await _open(props);
         if (!result) return;
         cooprepo = result.cooprepo;
         data = result.data;
-        // loader = result.loader;
     } catch (e) {
         console.error(e)
         return;
     }
 
-    // if (props.coop) cooprepo.setNet(props.coop);
-    const context = new Context(data, cooprepo, props) as IContext;
-    // if (props.communication) context.communication = props.communication;
-    // const app = props.isMobile ? Vue.createApp(MobileDocumentVue, { context }) : Vue.createApp(DocumentVue, { context });
-    return context;
+    return new Context(data, cooprepo, props) as IContext;
 }
 
 export const DocumentVue = _DocumentVue
 export const MobileDocumentVue = _MobileDocumentVue
 export const PreviewVue = _PreviewVue
+
+export const StaticShape = _StaticShape

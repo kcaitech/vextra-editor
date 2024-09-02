@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Preview, ScaleType } from '@/context/preview';
-import MenuVue from '../PreviewMenu.vue';
+import MenuVue from '@/components/Display/PreviewMenu.vue';
 import { useI18n } from 'vue-i18n';
 interface Props {
     context: Context
