@@ -110,6 +110,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     static LAYOUT_DOTTED_LINE = 21;
     static LAYOUT_DOTTED_LINE_MOVE = 22;
+    static UPDATE_LAYOUT_DOTTED_LINE = 23;
 
     // static CHANGE_TEXT_LITE = 16;
 

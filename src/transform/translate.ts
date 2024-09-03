@@ -60,7 +60,8 @@ export class TranslateHandler extends TransformHandler {
 
     autoLayoutShape: ShapeView | undefined;
 
-    ClientXY: XY;
+    clientXY: XY;
+    downXY: XY
 
     /**
      * check：down的时候校验移动模式: normal | layout
@@ -86,7 +87,8 @@ export class TranslateHandler extends TransformHandler {
         context.assist.set_collect_target(shapes);
         context.assist.set_trans_target(shapes);
 
-        this.ClientXY = { x: event.clientX, y: event.clientY };
+        this.clientXY = { x: event.clientX, y: event.clientY };
+        this.downXY = { x: event.clientX, y: event.clientY };
 
         this.getFrames();
     }
@@ -168,7 +170,7 @@ export class TranslateHandler extends TransformHandler {
         t.setCurrentEnv(except_envs[0] as any);
 
         this.setMode();
-        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.ClientXY);
+        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
 
     private getFrames() {
@@ -270,7 +272,7 @@ export class TranslateHandler extends TransformHandler {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
 
-        this.ClientXY = { x: event.clientX, y: event.clientY };
+        this.clientXY = { x: event.clientX, y: event.clientY };
 
         this.migrate();
         this.updateBoxByAssist();
@@ -541,7 +543,7 @@ export class TranslateHandler extends TransformHandler {
         if (this.mode !== "layout") {
             this.__linear_trans();
         } else {
-            this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.ClientXY);
+            this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.clientXY);
             this.swapLayoutShape();
         }
     }
@@ -630,6 +632,7 @@ export class TranslateHandler extends TransformHandler {
             if (this.isLayoutMode) {
                 // todo notify
                 ctx.assist.notify(Assist.CLEAR);
+                ctx.selection.notify(Selection.UPDATE_LAYOUT_DOTTED_LINE, this.downXY);
             }
 
             ctx.tool.notify(Tool.RULE_RENDER);
