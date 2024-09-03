@@ -111,6 +111,8 @@ const reflush_cells_trigger = ref<any[]>([]);
 
 const frame = ref<boolean>(false);
 
+const scaleMode = ref<boolean>(false);
+
 // 图层选区变化
 function _selection_change() {
     baseAttr.value = true;
@@ -286,6 +288,7 @@ function watch_cells() {
 function toolWatcher(t: number) {
     if (t === Tool.CHANGE_ACTION) {
         frame.value = props.context.tool.action === Action.AddFrame;
+        scaleMode.value = props.context.tool.action === Action.AutoK;
     }
 }
 
@@ -325,33 +328,36 @@ onUnmounted(() => {
                      :trigger="reflush_trigger"></Arrange>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                            :trigger="reflush_trigger"></ShapeBaseAttr>
-            <Scale/>
-            <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-            <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
-                                 :selection-change="reflush_by_selection">
-            </ResizingConstraints>
-            <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
-                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
-            </Opacity>
-            <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
-            </Module>
-            <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
-            </InstanceAttr>
-            <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
-                  :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
-                  :context="props.context" :trigger="reflush_trigger"></Text>
-            <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
-            </TableText>
-            <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
-                  :selection-change="reflush_by_selection" :trigger="reflush_trigger"
-                  :table-selection-change="reflush_by_table_selection" :cells-trigger="reflush_cells_trigger"></Fill>
-            <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
-                    :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
-            <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
-                    :context="props.context">
-            </Shadow>
-            <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context"></BlurVue>
-            <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
+            <Scale v-if="scaleMode" :context="props.context"/>
+            <div v-else>
+                <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
+                                     :selection-change="reflush_by_selection">
+                </ResizingConstraints>
+                <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
+                         :selection-change="reflush_by_selection" :trigger="reflush_trigger">
+                </Opacity>
+                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
+                </Module>
+                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
+                </InstanceAttr>
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
+                      :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
+                      :context="props.context" :trigger="reflush_trigger"></Text>
+                <TableText v-if="tableShapes.length" :shape="(tableShapes[0] as TableView)" :context="props.context">
+                </TableText>
+                <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"
+                      :selection-change="reflush_by_selection" :trigger="reflush_trigger"
+                      :table-selection-change="reflush_by_table_selection"
+                      :cells-trigger="reflush_cells_trigger"></Fill>
+                <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"
+                        :cells-trigger="reflush_cells_trigger" :trigger="reflush_trigger"></Border>
+                <Shadow v-if="WITH_SHADOW.includes(shapeType) && shadowLimit()" :shapes="shapes"
+                        :context="props.context">
+                </Shadow>
+                <BlurVue v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context"></BlurVue>
+                <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
+            </div>
         </div>
     </el-scrollbar>
     <artboard-template v-if="frame" :context="props.context"></artboard-template>

@@ -127,7 +127,7 @@ export class Tool extends WatchableObject {
 
     reset() {
         let exe_result: boolean = false;
-        if (this.m_current_action.startsWith('add')) {
+        if (this.m_current_action !== Action.AutoV) {
             exe_result = true;
         }
         this.m_current_action = Action.AutoV;

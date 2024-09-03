@@ -97,6 +97,23 @@ export function useLine(context: Context) {
 }
 
 /**
+ * @description 使用等比缩放工具
+ */
+export function useAutoK(context: Context) {
+    const tool = context.tool;
+    tool.setAction(Action.AutoK);
+    tool.notify(Tool.CHANGE_ACTION);
+
+    context.menu.menuMount();
+    context.notify(ContextEvents.action_change);
+
+    context.escstack.save('tool-action', () => {
+        context.cursor.reset();
+        return context.tool.reset();
+    });
+}
+
+/**
  * @description 使用箭头工具
  */
 export function useArrow(context: Context) {
