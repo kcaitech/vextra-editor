@@ -546,7 +546,7 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    __getTargetFrame = (shape: Shape) => {
+    private __getTargetFrame = (shape: Shape) => {
         let f = shape.frame;
         const m = shape.transform;
         if (shape.isNoTransform()) {
@@ -692,8 +692,8 @@ export class TranslateHandler extends TransformHandler {
             }
         }
         if (event.code === 'KeyS') {
-            this.isKeySPress = true;
-            this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
+            // this.isKeySPress = true;
+            // this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
         }
     }
 
@@ -709,8 +709,8 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setShowInterval(false);
         }
         if (event.code === 'KeyS') {
-            this.isKeySPress = false;
-            this.shapesModifyStackPositioning(StackPositioning.AUTO);
+            // this.isKeySPress = false;
+            // this.shapesModifyStackPositioning(StackPositioning.AUTO);
         }
     }
 }
