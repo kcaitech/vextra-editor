@@ -4,7 +4,7 @@ import {
     GroupShape,
     Matrix,
     ShapeView,
-    adapt2Shape
+    adapt2Shape, TransformRaw, ArtboradView
 } from "@kcdesign/data";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { debounce } from "lodash";
@@ -47,9 +47,7 @@ export function record_origin_env(shapes: ShapeView[]) {
         const shape = shapes[i];
         const parent = shape.parent;
 
-        if (!parent) {
-            continue;
-        }
+        if (!parent) continue;
 
         const data = adapt2Shape(parent);
 
