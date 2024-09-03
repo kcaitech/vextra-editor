@@ -548,7 +548,7 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    __getTargetFrame = (shape: Shape) => {
+    private __getTargetFrame = (shape: Shape) => {
         let f = shape.frame;
         const m = shape.transform;
         if (shape.isNoTransform()) {
@@ -630,7 +630,6 @@ export class TranslateHandler extends TransformHandler {
             if (oMode === 'layout') this.__linear_trans();
             if (this.isNormalMode) ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE);
             if (this.isLayoutMode) {
-                // todo notify
                 ctx.assist.notify(Assist.CLEAR);
                 ctx.selection.notify(Selection.UPDATE_LAYOUT_DOTTED_LINE, this.downXY);
             }
@@ -695,8 +694,8 @@ export class TranslateHandler extends TransformHandler {
             }
         }
         if (event.code === 'KeyS') {
-            this.isKeySPress = true;
-            this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
+            // this.isKeySPress = true;
+            // this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
         }
     }
 
@@ -712,8 +711,8 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setShowInterval(false);
         }
         if (event.code === 'KeyS') {
-            this.isKeySPress = false;
-            this.shapesModifyStackPositioning(StackPositioning.AUTO);
+            // this.isKeySPress = false;
+            // this.shapesModifyStackPositioning(StackPositioning.AUTO);
         }
     }
 }

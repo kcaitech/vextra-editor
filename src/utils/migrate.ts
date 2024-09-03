@@ -2,7 +2,6 @@ import { Context } from "@/context";
 import {
     AsyncTransfer,
     GroupShape,
-    Matrix,
     ShapeView,
     adapt2Shape
 } from "@kcdesign/data";
@@ -47,9 +46,7 @@ export function record_origin_env(shapes: ShapeView[]) {
         const shape = shapes[i];
         const parent = shape.parent;
 
-        if (!parent) {
-            continue;
-        }
+        if (!parent) continue;
 
         const data = adapt2Shape(parent);
 
