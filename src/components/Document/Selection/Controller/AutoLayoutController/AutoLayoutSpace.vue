@@ -84,8 +84,10 @@ function getVerSpacePosition() {
     const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
     for (let i = 0; i < shape_rows.length - 1; i++) {
         const row = shape_rows[i];
-        const max_height = Math.max(...row.map(shape => getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace).height));
-        topPadding += max_height;
+        topPadding = Math.max(...row.map(s => {
+            const frame = getIncludedBorderFrame(s, autoLayout.bordersTakeSpace)
+            return frame.y + frame.height;
+        }));
         if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
             const cur_row_h = Math.max(...row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y + getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height));
             const next_min_x = Math.min(...shape_rows[i + 1].map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y));
@@ -104,7 +106,6 @@ function getVerSpacePosition() {
         const topLine = m.transform([ColVector3D.FromXY(leftPadding + (verWidth / 2), topPadding + (verSpacing / 2))]);
         const ling: ControlsLine = { lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 }, rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 }, rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 }, lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 }, offset: topLine.col0, rotate: hor_rotate }
         verSpaceLine.value.push(ling);
-        topPadding += verSpacing;
     }
 }
 
@@ -124,7 +125,6 @@ function getHorSpacePosition() {
     m.addTransform(clientTransform); //root到视图
     let topPadding = autoLayout.stackVerticalPadding; //上边距
     const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
-    let verSpacing = autoLayout.stackCounterSpacing; //垂直间距
     hor_space.value = autoLayout.stackSpacing;
     if (autoLayout.stackHorizontalGapSizing === StackSizing.Auto) {
         hor_space.value = '自动'
@@ -132,12 +132,13 @@ function getHorSpacePosition() {
     for (let i = 0; i < shape_rows.length; i++) {
         let leftPadding = autoLayout.stackHorizontalPadding; //左边距
         const shape_row = shape_rows[i];
+        topPadding = Math.min(...shape_row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y));
         const maxHeightInRow = Math.max(...shape_row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height));
         for (let j = 0; j < shape_row.length - 1; j++) {
             const shape = shape_row[j];
             const frame = getIncludedBorderFrame(shape, autoLayout.bordersTakeSpace);
             const row_space = getIncludedBorderFrame(shape_row[j + 1], autoLayout.bordersTakeSpace).x - (frame.x + frame.width);
-            leftPadding += frame.width;
+            leftPadding = frame.x + frame.width;
             const horSpace = m.transform([
                 ColVector3D.FromXY(leftPadding, topPadding),
                 ColVector3D.FromXY(leftPadding + row_space, topPadding),
@@ -150,14 +151,7 @@ function getHorSpacePosition() {
             const spaceLine = m.transform([ColVector3D.FromXY(leftPadding + (row_space / 2), topPadding + (maxHeightInRow / 2))]);
             const ling: ControlsLine = { lt: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y - 1.5 }, rt: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y - 1.5 }, rb: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y + 1.5 }, lb: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y + 1.5 }, offset: spaceLine.col0, rotate: ver_rotate }
             horSpaceLine.value.push(ling);
-            leftPadding += row_space;
         }
-        if (autoLayout.stackVerticalGapSizing === StackSizing.Auto && (i !== shape_rows.length - 1)) {
-            const cur_row_h = Math.max(...shape_row.map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y + getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).height))
-            const next_min_x = Math.min(...shape_rows[i + 1].map(s => getIncludedBorderFrame(s, autoLayout.bordersTakeSpace).y));
-            verSpacing = next_min_x - cur_row_h;
-        }
-        topPadding += maxHeightInRow + verSpacing;
     }
 }
 
@@ -256,7 +250,7 @@ function mousemove(e: MouseEvent) {
             autoLayoutModifyHandler.createApiCaller();
         }
         const shape = props.context.selection.selectedShapes[0] as ArtboradView;
-        const { width, height } = shape.frame;
+        const { width, height } = shape.data.frame;
         const autoLayout = shape.autoLayout;
         if (!autoLayout) return;
         if (downDir === 'ver') {
