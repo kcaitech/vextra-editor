@@ -630,7 +630,6 @@ export class TranslateHandler extends TransformHandler {
             if (oMode === 'layout') this.__linear_trans();
             if (this.isNormalMode) ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE);
             if (this.isLayoutMode) {
-                // todo notify
                 ctx.assist.notify(Assist.CLEAR);
                 ctx.selection.notify(Selection.UPDATE_LAYOUT_DOTTED_LINE, this.downXY);
             }
