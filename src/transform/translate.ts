@@ -571,7 +571,7 @@ export class TranslateHandler extends TransformHandler {
             }
         }
 
-        this.tips4absolutePosition();
+        // this.tips4absolutePosition();
     }
 
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
