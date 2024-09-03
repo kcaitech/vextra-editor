@@ -2,9 +2,8 @@ import { Context } from "@/context";
 import {
     AsyncTransfer,
     GroupShape,
-    Matrix,
     ShapeView,
-    adapt2Shape, TransformRaw, ArtboradView
+    adapt2Shape
 } from "@kcdesign/data";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { debounce } from "lodash";
