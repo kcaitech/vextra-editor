@@ -124,6 +124,8 @@ const mousedown = (e: MouseEvent, index: number) => {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
+
+let layout_padding = { top: 0, right: 0, bottom: 0, left: 0 };
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
@@ -139,9 +141,16 @@ function mousemove(e: MouseEvent) {
         downXY.x = e.clientX;
         downXY.y = e.clientY;
     } else {
+        const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+        const autoLayout = shape.autoLayout;
+        if (!autoLayout) return;
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
             isDragging = true;
+            layout_padding.top = autoLayout.stackVerticalPadding;
+            layout_padding.left = autoLayout.stackHorizontalPadding;
+            layout_padding.right = autoLayout.stackPaddingRight;
+            layout_padding.bottom = autoLayout.stackPaddingBottom;
             downXY.x = e.clientX;
             downXY.y = e.clientY;
             autoLayoutModifyHandler = new AutoLayoutHandler(props.context, e);
@@ -153,35 +162,32 @@ const updatePadding = (e: MouseEvent) => {
     if (!autoLayoutModifyHandler || paddingIndex.value < 0) return;
     cursor_down.value = true;
     const shape = props.context.selection.selectedShapes[0];
-    const { width, height } = shape.frame;
     const autoInfo = (shape as ArtboradView).autoLayout!;
-    if (paddingIndex.value === 2) {
+    const matrix2Root = shape.matrix2Root();
+    const m = new Matrix(matrix2Root.inverse);
+    const downXy = m.computeCoord(downClientXY);
+    const moveXy = m.computeCoord2(e.clientX, e.clientY);
+    const scale = props.context.workspace.matrix.m00;
+    let dir: PaddingDir = 'top';
+    let padding = 0;
+    if (paddingIndex.value === 0) {
+        dir = 'top';
+        padding = (((moveXy.y - downXy.y) / scale) * 2) + layout_padding.top;
+    } else if (paddingIndex.value === 1) {
+        dir = 'right';
+        padding = (((downXy.x - moveXy.x) / scale) * 2) + layout_padding.right;
+    } else if (paddingIndex.value === 2) {
+        dir = 'bottom';
         if (autoInfo.stackCounterSizing === StackSizing.Fixed) {
-            const start = paddingBox.value[paddingIndex.value].center.col1;
-            const end = getTransformCol(props.context, shape, width / 2, height / 2);
-            const padding = getMoveLength(start, end, e, props.context) * (height / 2);
-            autoLayoutModifyHandler.executePadding(padding, 'bottom');
+            padding = (((downXy.y - moveXy.y) / scale) * 2) + layout_padding.bottom;
         } else {
-            const { width, height } = shape.data.frame
-            const bottom = autoInfo.stackPaddingBottom;
-            const start = getTransformCol(props.context, shape, width / 2, height - bottom);
-            const end = getTransformCol(props.context, shape, width / 2, height);
-            const padding = getMoveLength(start, end, e, props.context);
-            autoLayoutModifyHandler.executePadding(padding * (bottom || 1), 'bottom');
+            padding = (((moveXy.y - downXy.y) / scale) * 2) + layout_padding.bottom;
         }
-    } else {
-        const start = paddingBox.value[paddingIndex.value].center.col1;
-        const end = getTransformCol(props.context, shape, width / 2, height / 2);
-        const v = paddingIndex.value % 2 === 0 ? height / 2 : width / 2;
-        const padding = getMoveLength(start, end, e, props.context) * v;
-        let dir: PaddingDir = 'top';
-        if (paddingIndex.value === 1) {
-            dir = 'right';
-        } else if (paddingIndex.value === 3) {
-            dir = 'left';
-        }
-        autoLayoutModifyHandler.executePadding(padding, dir);
+    } else if (paddingIndex.value === 3) {
+        dir = 'left';
+        padding = (((moveXy.x - downXy.x) / scale) * 2) + layout_padding.left;
     }
+    autoLayoutModifyHandler.executePadding(padding, dir);
 }
 
 function mouseup(e: MouseEvent) {
@@ -201,50 +207,6 @@ function clear_status() {
     }
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
-}
-
-const getMoveLength = (start: XY, end: XY, e: MouseEvent, context: Context) => {
-    const point3 = context.workspace.getContentXY(e); //鼠标位置
-    if (start.x === end.x) {
-        // 如果线段是竖直的
-        const intersectionY = point3.y;
-        const lineLength = Math.abs(end.y - start.y); // 计算线段的长度（竖直线段的长度即为纵坐标的差的绝对值）
-        const distanceFromStart = Math.abs(intersectionY - start.y); // 交点到起点的距离（竖直线段的距离即为交点纵坐标与起点纵坐标的差的绝对值）
-        const distanceFromEnd = Math.abs(intersectionY - end.y); // 交点到终点的距离（竖直线段的距离即为交点纵坐标与终点纵坐标的差的绝对值）
-        const percent = distanceFromStart / (lineLength / 2);
-        if (!isFinite(percent)) return 1;
-        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-            return -percent;
-        }
-        return percent;
-    } else if (start.y === end.y) {
-        // 如果线段是水平的
-        const intersectionX = point3.x;
-        const lineLength = Math.abs(end.x - start.x);
-        const distanceFromStart = Math.abs(intersectionX - start.x);
-        const distanceFromEnd = Math.abs(intersectionX - end.x);
-        const percent1 = distanceFromStart / (lineLength / 2);
-        if (!isFinite(percent1)) return 1;
-        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-            return -percent1;
-        }
-        return percent1;
-    }
-    const slope = (end.y - start.y) / (end.x - start.x); // 起点和终点的斜率
-    const intercept = start.y - slope * start.x; //起点和终点的截距
-    const verSlope = -1 / slope; //起点和终点的垂线斜率
-    const verIntercept = point3.y - verSlope * point3.x; //垂线截距
-    const intersectionX = (verIntercept - intercept) / (slope - verSlope); //直线垂线的交点
-    const intersectionY = slope * intersectionX + intercept;
-    const lineLength = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-    const distanceFromStart = Math.sqrt(Math.pow(intersectionX - start.x, 2) + Math.pow(intersectionY - start.y, 2)); // 交点到起点的距离
-    const distanceFromEnd = Math.sqrt(Math.pow(intersectionX - end.x, 2) + Math.pow(intersectionY - end.y, 2)); // 交点到终点的距离
-    const percent1 = distanceFromStart / (lineLength / 2); // 交点所在百分比位置
-    if (!isFinite(percent1)) return 1;
-    if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-        return -percent1;
-    }
-    return percent1;
 }
 
 const mouseenter = (e: MouseEvent, index: number) => {
@@ -282,6 +244,11 @@ function setCursor(index: number) {
         } else if (index === 3) {
             deg += 90;
         }
+        const shape = props.context.selection.selectedShapes[0];
+        const autoInfo = (shape as ArtboradView).autoLayout!;
+        if (index === 2 && autoInfo.stackCounterSizing !== StackSizing.Fixed) {
+            deg = 0;
+        }
         cursor.setType(CursorType.AutoPadding, deg);
     } else {
         let deg = controls_line.value[index].rotate;
@@ -302,6 +269,11 @@ function forceSetCursor(index: number) {
             deg -= 180;
         } else if (index === 3) {
             deg += 90;
+        }
+        const shape = props.context.selection.selectedShapes[0];
+        const autoInfo = (shape as ArtboradView).autoLayout!;
+        if (index === 2 && autoInfo.stackCounterSizing !== StackSizing.Fixed) {
+            deg = 0;
         }
         cursor.setTypeForce(CursorType.AutoPadding, deg);
     } else {
@@ -377,8 +349,8 @@ onUnmounted(() => {
             <path class="padding-line"
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-            <path @mousedown="(e) => mousedown(e, index)" @mouseenter="(e) => mouseenter(e, index)" @mouseleave="(e) => mouseleave(e, index)"
-                 @mousemove="(e) => mousemove2(e, index)"
+            <path @mousedown="(e) => mousedown(e, index)" @mouseenter="(e) => mouseenter(e, index)"
+                @mouseleave="(e) => mouseleave(e, index)" @mousemove="(e) => mousemove2(e, index)"
                 :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>

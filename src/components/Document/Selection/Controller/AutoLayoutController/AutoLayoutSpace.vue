@@ -24,6 +24,7 @@ interface Props {
 interface ControlsLine extends Box {
     offset: Point,
     rotate: number,
+    index: number,
 }
 
 interface Point {
@@ -104,7 +105,13 @@ function getVerSpacePosition() {
         verSpaceBox.value.push(ver);
         const verWidth = width - autoLayout.stackPaddingRight - autoLayout.stackHorizontalPadding;
         const topLine = m.transform([ColVector3D.FromXY(leftPadding + (verWidth / 2), topPadding + (verSpacing / 2))]);
-        const ling: ControlsLine = { lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 }, rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 }, rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 }, lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 }, offset: topLine.col0, rotate: hor_rotate }
+        const ling: ControlsLine = {
+            lt: { x: topLine.col0.x - 7, y: topLine.col0.y - 1.5 },
+            rt: { x: topLine.col0.x + 7, y: topLine.col0.y - 1.5 },
+            rb: { x: topLine.col0.x + 7, y: topLine.col0.y + 1.5 },
+            lb: { x: topLine.col0.x - 7, y: topLine.col0.y + 1.5 },
+            offset: topLine.col0, rotate: hor_rotate, index: i
+        }
         verSpaceLine.value.push(ling);
     }
 }
@@ -149,7 +156,13 @@ function getHorSpacePosition() {
             horSpaceBox.value.push(hor);
             const ver_rotate = Math.atan2(horSpace.col3.y - horSpace.col0.y, horSpace.col3.x - horSpace.col0.x) * (180 / Math.PI);
             const spaceLine = m.transform([ColVector3D.FromXY(leftPadding + (row_space / 2), topPadding + (maxHeightInRow / 2))]);
-            const ling: ControlsLine = { lt: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y - 1.5 }, rt: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y - 1.5 }, rb: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y + 1.5 }, lb: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y + 1.5 }, offset: spaceLine.col0, rotate: ver_rotate }
+            const ling: ControlsLine = {
+                lt: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y - 1.5 },
+                rt: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y - 1.5 },
+                rb: { x: spaceLine.col0.x + 7, y: spaceLine.col0.y + 1.5 },
+                lb: { x: spaceLine.col0.x - 7, y: spaceLine.col0.y + 1.5 },
+                offset: spaceLine.col0, rotate: ver_rotate, index: j
+            }
             horSpaceLine.value.push(ling);
         }
     }
@@ -202,46 +215,39 @@ const getIncludedBorderFrame = (shape: Shape, includedBorder?: boolean) => {
 let downClientXY: XY = { x: 0, y: 0 };
 let isDragging: boolean = false;
 let downDir = '';
-const down_point = ref<Point>({ x: 0, y: 0 });
-const verMousedown = (e: MouseEvent, dir: PaddingDir) => {
+let moveIndex = 1;
+const verMousedown = (e: MouseEvent, dir: PaddingDir, index: number) => {
     e.stopPropagation();
     cursor_down.value = true;
-    const shape = props.context.selection.selectedShapes[0];
-    const { height } = shape.frame;
     downClientXY.x = e.clientX;
     downClientXY.y = e.clientY;
-    down_point.value = props.context.workspace.getContentXY(e);
     downDir = dir;
-    const start = getTransformCol(props.context, shape, 0, 0);
-    const end = getTransformCol(props.context, shape, 0, height);
-    const p = getMoveLength(start, end, e, props.context) * height;
-    down_point.value.y = p;
+    moveIndex = index;
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 
 
-
-const horMousedown = (e: MouseEvent, dir: PaddingDir) => {
+const horMousedown = (e: MouseEvent, dir: PaddingDir, index: number) => {
     e.stopPropagation();
     cursor_down.value = true;
-    const shape = props.context.selection.selectedShapes[0];
-    const { width } = shape.frame;
     downClientXY.x = e.clientX;
     downClientXY.y = e.clientY;
-    down_point.value = props.context.workspace.getContentXY(e);
     downDir = dir;
-    const start = getTransformCol(props.context, shape, 0, 0);
-    const end = getTransformCol(props.context, shape, width, 0);
-    const p = getMoveLength(start, end, e, props.context) * width;
-    down_point.value.x = p;
+    moveIndex = index;
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
+
+let counterSpacing = 0;
+let spacing = 0;
 
 function mousemove(e: MouseEvent) {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
+    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const autoLayout = shape.autoLayout;
+    if (!autoLayout) return;
     if (isDragging) {
         if (!autoLayoutModifyHandler) {
             return
@@ -249,34 +255,27 @@ function mousemove(e: MouseEvent) {
         if (!autoLayoutModifyHandler.asyncApiCaller) {
             autoLayoutModifyHandler.createApiCaller();
         }
-        const shape = props.context.selection.selectedShapes[0] as ArtboradView;
-        const { width, height } = shape.data.frame;
-        const autoLayout = shape.autoLayout;
-        if (!autoLayout) return;
+
+        const matrix2Root = shape.matrix2Root();
+        const m = new Matrix(matrix2Root.inverse);
+        const downXy = m.computeCoord(downClientXY);
+        const moveXy = m.computeCoord2(e.clientX, e.clientY);
         if (downDir === 'ver') {
-            const start = getTransformCol(props.context, shape, 0, 0);
-            const end = getTransformCol(props.context, shape, 0, height);
-            const p = getMoveLength(start, end, e, props.context) * height;
-            let length = p - down_point.value.y;
-            length += autoLayout.stackCounterSpacing;
-            if (length <= 0) length = 0;
-            autoLayoutModifyHandler.executeSpace(length, downDir);
-            down_point.value.y = p;
+            const scale = props.context.workspace.matrix.m00;
+            const length = ((moveXy.y - downXy.y) / scale) * 2;
+            autoLayoutModifyHandler.executeSpace((length / moveIndex) + counterSpacing, downDir);
         } else if (downDir === 'hor') {
-            const start = getTransformCol(props.context, shape, 0, 0);
-            const end = getTransformCol(props.context, shape, width, 0);
-            const p = getMoveLength(start, end, e, props.context) * width;
-            let length = p - down_point.value.x;
-            length += autoLayout.stackSpacing;
-            if (length <= 0) length = 0;
-            autoLayoutModifyHandler.executeSpace(length, downDir);
-            down_point.value.x = p;
+            const scale = props.context.workspace.matrix.m00;
+            const length = ((moveXy.x - downXy.x) / scale) * 2;
+            autoLayoutModifyHandler.executeSpace((length / moveIndex) + spacing, downDir);
         }
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
             isDragging = true;
             autoLayoutModifyHandler = new AutoLayoutHandler(props.context, e);
+            counterSpacing = autoLayout.stackCounterSpacing;
+            spacing = autoLayout.stackSpacing;
         }
     }
 }
@@ -313,46 +312,6 @@ function setCursor(dir: 'ver' | 'hor') {
     cursor.setType(CursorType.AutoSpace, deg);
 }
 
-const getMoveLength = (start: XY, end: XY, e: MouseEvent, context: Context) => {
-    const point3 = context.workspace.getContentXY(e); //鼠标位置
-    if (start.x === end.x) {
-        // 如果线段是竖直的
-        const intersectionY = point3.y;
-        const lineLength = Math.abs(end.y - start.y); // 计算线段的长度（竖直线段的长度即为纵坐标的差的绝对值）
-        const distanceFromStart = Math.abs(intersectionY - start.y); // 交点到起点的距离（竖直线段的距离即为交点纵坐标与起点纵坐标的差的绝对值）
-        const distanceFromEnd = Math.abs(intersectionY - end.y); // 交点到终点的距离（竖直线段的距离即为交点纵坐标与终点纵坐标的差的绝对值）
-        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-            return 0;
-        }
-        const percent = distanceFromStart / (lineLength / 2);
-        return percent;
-    } else if (start.y === end.y) {
-        // 如果线段是水平的
-        const intersectionX = point3.x;
-        const lineLength = Math.abs(end.x - start.x);
-        const distanceFromStart = Math.abs(intersectionX - start.x);
-        const distanceFromEnd = Math.abs(intersectionX - end.x);
-        if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-            return 0;
-        }
-        const percent1 = distanceFromStart / (lineLength / 2);
-        return percent1;
-    }
-    const slope = (end.y - start.y) / (end.x - start.x); // 起点和终点的斜率
-    const intercept = start.y - slope * start.x; //起点和终点的截距
-    const verSlope = -1 / slope; //起点和终点的垂线斜率
-    const verIntercept = point3.y - verSlope * point3.x; //垂线截距
-    const intersectionX = (verIntercept - intercept) / (slope - verSlope); //直线垂线的交点
-    const intersectionY = slope * intersectionX + intercept;
-    const lineLength = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-    const distanceFromStart = Math.sqrt(Math.pow(intersectionX - start.x, 2) + Math.pow(intersectionY - start.y, 2)); // 交点到起点的距离
-    const distanceFromEnd = Math.sqrt(Math.pow(intersectionX - end.x, 2) + Math.pow(intersectionY - end.y, 2)); // 交点到终点的距离
-    if ((distanceFromStart + distanceFromEnd) > lineLength && distanceFromStart < distanceFromEnd && distanceFromEnd > lineLength) {
-        return 0;
-    }
-    const percent1 = distanceFromStart / (lineLength / 2); // 交点所在百分比位置
-    return percent1;
-}
 const verMouseenter = (e: MouseEvent) => {
     emits('hoverPaddint', -1);
     verSpaceFill.value = true;
@@ -463,7 +422,7 @@ onUnmounted(() => {
             <path class="padding-line"
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-            <path @mousedown="(e) => verMousedown(e, 'ver')"
+            <path @mousedown="(e) => verMousedown(e, 'ver', box.index * 2 + 1)"
                 :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>
@@ -478,7 +437,7 @@ onUnmounted(() => {
             <path class="padding-line"
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-            <path @mousedown="(e) => horMousedown(e, 'hor')"
+            <path @mousedown="(e) => horMousedown(e, 'hor', box.index * 2 + 1)"
                 :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>
