@@ -15,7 +15,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -260,6 +260,20 @@ function contextMenuMount(e: MouseEvent) {
             if (_shapes.length === 1 && _shapes[0].mask) {
                 contextMenuItems.value.delete(MenuItemType.Mask);
                 contextMenuItems.value.add(MenuItemType.UnMask);
+            }
+            if (area !== MountedAreaType.Root) {
+                if (_shapes.length > 1) {
+                    contextMenuItems.value.add(MenuItemType.AutoLayout);
+                } else {
+                    const shape = _shapes[0] as ArtboradView;
+                    if (shape.autoLayout) {
+                        contextMenuItems.value.add(MenuItemType.UnAutoLayout);
+                    } else {
+                        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
+                            contextMenuItems.value.add(MenuItemType.AutoLayout);
+                        }
+                    }
+                }
             }
         }
     }
@@ -772,14 +786,14 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-     @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
-    <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <!-- 页面调整控件，确保在ContentView顶层 -->
-    <Space :context="props.context" :visible="spacePressed"/>
-</div>
+    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <!-- 页面调整控件，确保在ContentView顶层 -->
+        <Space :context="props.context" :visible="spacePressed" />
+    </div>
 </template>

@@ -6,6 +6,7 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import {
     adapt2Shape,
+    ArtboradView,
     PageView,
     Shape,
     ShapeDirList2 as ShapeDirList,
@@ -271,6 +272,18 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
                 contextMenuItems.value.add(MenuItemType.UnMask);
                 contextMenuItems.value.delete(MenuItemType.Mask);
             }
+
+            const s = selected[0] as ArtboradView;
+            if (s.autoLayout) {
+                contextMenuItems.value.add(MenuItemType.UnAutoLayout);
+            } else {
+                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(s.type)) {
+                    contextMenuItems.value.add(MenuItemType.AutoLayout);
+                }
+            }
+        }
+        if (selected.length > 1) {
+            contextMenuItems.value.add(MenuItemType.AutoLayout);
         }
         const types = selection_types(selected);
         if (types & 1) contextMenuItems.value.add(MenuItemType.UnGroup);
@@ -494,65 +507,65 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="shapelist-wrap" ref="shapeList">
-    <div class="header" @click.stop="reset_selection">
-        <div class="search" ref="search_wrap">
-            <div class="tool-container" @click="preto_search">
-                <svg-icon icon-class="search"></svg-icon>
+    <div class="shapelist-wrap" ref="shapeList">
+        <div class="header" @click.stop="reset_selection">
+            <div class="search" ref="search_wrap">
+                <div class="tool-container" @click="preto_search">
+                    <svg-icon icon-class="search"></svg-icon>
+                </div>
+                <div class="menu-f" @click="show_types">
+                    <svg-icon icon-class="down"></svg-icon>
+                </div>
+                <input ref="search_el" type="text" id="xpxp" v-model="keywords"
+                    :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
+                    @change="search" @input="inputing" @focus="input_focus">
+                <div @click="clear_text" class="close"
+                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
+                    <svg-icon icon-class="close-x"></svg-icon>
+                </div>
+                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
+                    :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                    Aa
+                </div>
             </div>
-            <div class="menu-f" @click="show_types">
-                <svg-icon icon-class="down"></svg-icon>
+            <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
+                </ShapeTypes>
             </div>
-            <input ref="search_el" type="text" id="xpxp" v-model="keywords"
-                   :placeholder="t('home.search_layer') + '…'" @blur="leave_search" @click.stop="preto_search"
-                   @change="search" @input="inputing" @focus="input_focus">
-            <div @click="clear_text" class="close"
-                 :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
-                <svg-icon icon-class="close-x"></svg-icon>
-            </div>
-            <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
-                 :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
-                Aa
-            </div>
-        </div>
-        <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types">
-            </ShapeTypes>
-        </div>
-        <div class="blocks" v-if="includes_type.length">
-            <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
-                 @click="(e) => update_types(item, false, e.shiftKey)">
-                <div class="block">
-                    <div class="content">{{ t(`shape.${item}`) }}</div>
-                    <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
-                        <svg-icon icon-class="close-x"></svg-icon>
+            <div class="blocks" v-if="includes_type.length">
+                <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
+                    @click="(e) => update_types(item, false, e.shiftKey)">
+                    <div class="block">
+                        <div class="content">{{ t(`shape.${item}`) }}</div>
+                        <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
+                            <svg-icon icon-class="close-x"></svg-icon>
+                        </div>
+                    </div>
+                </div>
+                <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
+                    <div class="block reset">
+                        <svg-icon icon-class="delete-type"></svg-icon>
                     </div>
                 </div>
             </div>
-            <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
-                <div class="block reset">
-                    <svg-icon icon-class="delete-type"></svg-icon>
-                </div>
-            </div>
+        </div>
+        <div class="body" ref="listBody" @mousedown="reset_selection">
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
+                :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
+            </SearchPanel>
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
+                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0"
+                :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
+                @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView"
+                @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
+                @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
+                @after-drag-2="after_drag">
+            </ListView>
+            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
+                :items="contextMenuItems">
+            </ContextMenu>
         </div>
     </div>
-    <div class="body" ref="listBody" @mousedown="reset_selection">
-        <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
-                     :shape-types="includes_type" :accurate="accurate" @item-mousedown="list_mousedown">
-        </SearchPanel>
-        <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
-                  :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0"
-                  :first-index="0" :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape"
-                  @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView"
-                  @rename="rename" @set-visible="modify_visible_status" @set-lock="modify_lock_status"
-                  @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                  @after-drag-2="after_drag">
-        </ListView>
-        <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop
-                     :items="contextMenuItems">
-        </ContextMenu>
-    </div>
-</div>
 </template>
 
 <style scoped lang="scss">
@@ -587,13 +600,13 @@ onUnmounted(() => {
             overflow: hidden;
             transition: 0.32s;
 
-            > .tool-container {
+            >.tool-container {
                 margin-right: 2px;
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
 
-                > svg {
+                >svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -610,7 +623,7 @@ onUnmounted(() => {
                 transition: 0.3s;
                 cursor: pointer;
 
-                > svg {
+                >svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -620,7 +633,7 @@ onUnmounted(() => {
                 transform: translateY(2px);
             }
 
-            > input {
+            >input {
                 width: calc(100% - 64px);
                 border: none;
                 outline: none;
@@ -633,7 +646,7 @@ onUnmounted(() => {
                 transition: 0.3s;
             }
 
-            > .close {
+            >.close {
                 flex-shrink: 0;
                 width: 14px;
                 height: 14px;
@@ -644,14 +657,14 @@ onUnmounted(() => {
                 justify-content: center;
                 transition: 0.15s;
 
-                > svg {
+                >svg {
                     color: rgb(111, 111, 111);
                     width: 10px;
                     height: 10px;
                 }
             }
 
-            > .accurate {
+            >.accurate {
                 flex-shrink: 0;
                 user-select: none;
                 height: 100%;
@@ -714,7 +727,7 @@ onUnmounted(() => {
                         justify-content: flex-end;
                         margin-left: auto;
 
-                        > svg {
+                        >svg {
                             width: 12px;
                             height: 14px;
                         }
@@ -731,7 +744,7 @@ onUnmounted(() => {
                     width: 14px;
                     color: #fff;
 
-                    > svg {
+                    >svg {
                         text-align: center;
                         height: 14px;
                     }
@@ -747,7 +760,7 @@ onUnmounted(() => {
         overflow: hidden;
         box-sizing: border-box;
 
-        > .container {
+        >.container {
             height: 100%;
         }
     }
