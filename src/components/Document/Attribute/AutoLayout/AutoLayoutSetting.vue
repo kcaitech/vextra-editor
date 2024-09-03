@@ -17,7 +17,7 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const popover = ref();
 const hoverBorderItem = ref(props.autoLayoutDate.bordersTakeSpace || false);
-const hoverStackItem = ref(props.autoLayoutDate.bordersTakeSpace || false);
+const hoverStackItem = ref(props.autoLayoutDate.stackReverseZIndex || false);
 const borderSelect = ref(false);
 const stackSelect = ref(false);
 
@@ -29,7 +29,7 @@ function showMenu() {
 const openBorderTakeMenu = () => {
     stackSelect.value = false;
     borderSelect.value = true;
-    hoverStackItem.value = props.autoLayoutDate.bordersTakeSpace || false;
+    hoverStackItem.value = props.autoLayoutDate.stackReverseZIndex || false;
     document.addEventListener('click', handleClick);
 }
 
@@ -49,7 +49,7 @@ const close = () => {
     stackSelect.value = false;
     borderSelect.value = false;
     hoverBorderItem.value = props.autoLayoutDate.bordersTakeSpace || false;
-    hoverStackItem.value = props.autoLayoutDate.bordersTakeSpace || false;
+    hoverStackItem.value = props.autoLayoutDate.stackReverseZIndex || false;
     document.removeEventListener('click', handleClick);
 }
 
@@ -125,24 +125,24 @@ onUnmounted(() => {
                     <div class="selected">
                         <div class="title">{{ t('autolayout.canvas_stack') }}</div>
                         <div class="auto-setting-options" @click.stop="openStackMenu">
-                            <span> {{ autoLayoutDate.stackReverseZIndex ? t('autolayout.reverse_stack')
+                            <span> {{ !autoLayoutDate.stackReverseZIndex ? t('autolayout.reverse_stack')
             : t('autolayout.stack') }}</span>
                             <div class="icon"><svg-icon icon-class="down"></svg-icon></div>
                             <div class="select_menu" v-if="stackSelect"
-                                :style="{ top: autoLayoutDate.stackReverseZIndex ? '-36px' : '-4px' }">
-                                <div class="item" :class="{ 'active-item': !hoverStackItem }"
-                                    @click.stop="changeStackZIndexItem(false)" @mouseenter="hoverStackItem = false">
-                                    <div class="icon">
-                                        <svg-icon v-if="!autoLayoutDate.stackReverseZIndex"
-                                            :icon-class="!hoverStackItem ? 'white-select' : 'page-select'"></svg-icon>
-                                    </div>
-                                    <div class="text">{{ t('autolayout.stack') }}</div>
-                                </div>
+                                :style="{ top: !autoLayoutDate.stackReverseZIndex ? '-36px' : '-4px' }">
                                 <div class="item" :class="{ 'active-item': hoverStackItem }"
                                     @click.stop="changeStackZIndexItem(true)" @mouseenter="hoverStackItem = true">
                                     <div class="icon">
                                         <svg-icon v-if="autoLayoutDate.stackReverseZIndex"
                                             :icon-class="hoverStackItem ? 'white-select' : 'page-select'"></svg-icon>
+                                    </div>
+                                    <div class="text">{{ t('autolayout.stack') }}</div>
+                                </div>
+                                <div class="item" :class="{ 'active-item': !hoverStackItem }"
+                                    @click.stop="changeStackZIndexItem(false)" @mouseenter="hoverStackItem = false">
+                                    <div class="icon">
+                                        <svg-icon v-if="!autoLayoutDate.stackReverseZIndex"
+                                            :icon-class="!hoverStackItem ? 'white-select' : 'page-select'"></svg-icon>
                                     </div>
                                     <div class="text">{{ t('autolayout.reverse_stack') }}</div>
                                 </div>
@@ -150,7 +150,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="preview">
-                        <div><svg-icon :icon-class="hoverStackItem ? 'reverse-stack' : 'pile-up'"></svg-icon></div>
+                        <div><svg-icon :icon-class="!hoverStackItem ? 'reverse-stack' : 'pile-up'"></svg-icon></div>
                     </div>
                 </div>
             </template>

@@ -21,7 +21,7 @@
         "test:watch": "jest --watch"
     },
     "dependencies": {
-        "@kcdesign/data": "1.0.75",
+        "@kcdesign/data": "file:../kcdesign-data",
         "element-plus": "2.3.0",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",

@@ -57,13 +57,10 @@ const deleteAutoLayout = () => {
 }
 
 const update = (args?: any[]) => {
-    if (args?.includes('autoLayout')) {
-        isLayout();
-        updateData();
-    }
+    isLayout();
 }
 
-const updateData = () => {
+const updateData = (args?: any[]) => {
     const selection = props.context.selection.selectedShapes;
     if (selection.length !== 1) return;
     const shape = selection[0] as ArtboradView;
@@ -351,8 +348,11 @@ const isLayout = () => {
         } else {
             isActive.value = false;
         }
-    }
+    } 0
 }
+watch(() => isActive.value, () => {
+    updateData();
+});
 
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, () => {
