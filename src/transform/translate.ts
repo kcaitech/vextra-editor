@@ -459,6 +459,7 @@ export class TranslateHandler extends TransformHandler {
 
         this.__execute();
     }
+
     private __execute() {
         if (this.coping || this.context.readonly) return;
 
