@@ -459,6 +459,7 @@ export class TranslateHandler extends TransformHandler {
 
         this.__execute();
     }
+
     private __execute() {
         if (this.coping || this.context.readonly) return;
 
@@ -571,7 +572,7 @@ export class TranslateHandler extends TransformHandler {
             }
         }
 
-        this.tips4absolutePosition();
+        // this.tips4absolutePosition();
     }
 
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
@@ -624,7 +625,6 @@ export class TranslateHandler extends TransformHandler {
     }
 
     tips4absolutePosition = debounce(this.__tips4absolutePosition, 1000)
-
 
     migrateOnce = debounce(this.__migrate, 160);
 
