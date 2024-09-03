@@ -70,6 +70,8 @@ export class TranslateHandler extends TransformHandler {
      *      · 如果选中的图层仅部分为Absolute图层，则把Absolute图层筛选出去；
      *      · Absolute图层迁移到没有自动布局的元素需要取消Absolute状态；
      *      · 移动过程监听当前环境的变化
+     *  · absolute
+     *      ·
      *
      *
      */
@@ -113,6 +115,18 @@ export class TranslateHandler extends TransformHandler {
 
     beforeTransform() {
         this.workspace.setCtrl('controller');
+    }
+
+    get isLayoutMode() {
+        return this.mode === "layout";
+    }
+
+    get isAbsoluteMode() {
+        return this.mode === "absolute";
+    }
+
+    get isNormalMode() {
+        return this.mode === "normal";
     }
 
     async createApiCaller() {
@@ -252,7 +266,12 @@ export class TranslateHandler extends TransformHandler {
 
     execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
+
+        this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
+        this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
+
         this.ClientXY = { x: event.clientX, y: event.clientY };
+
         this.migrate();
         this.updateBoxByAssist();
         this.__execute();
@@ -260,9 +279,6 @@ export class TranslateHandler extends TransformHandler {
 
     private updateBoxByAssist() {
         if (this.mode !== 'normal') return; // 自动布局下不需要参考线
-
-        this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
-        this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
 
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
@@ -460,66 +476,70 @@ export class TranslateHandler extends TransformHandler {
         this.__execute();
     }
 
+    private __linear_trans() {
+        const { x: originX, y: originY } = this.originSelectionBox;
+        const livingX = this.livingBox.x;
+        const livingY = this.livingBox.y;
+        const deltaX = livingX - originX;
+        const deltaY = livingY - originY;
+
+        const transformUnits: TranslateUnit[] = [];
+        const PIC = new Map<string, Transform>();
+        for (let i = 0; i < this.shapes.length; i++) {
+            const shape = this.shapes[i];
+
+            const base = this.baseFrames4trans.get(shape.id);
+            if (!base) continue;
+
+            const parent = shape.parent;
+            if (!parent) continue;
+
+            let PI = PIC.get(parent.id);
+            if (!PI) {
+                const __p = parent.transform2FromRoot.getInverse();
+
+                PIC.set(parent.id, __p);
+                PI = __p;
+            }
+
+            const __t = base.originTransform
+                .clone()
+                .translate(ColVector3D.FromXY(deltaX, deltaY))
+
+            if (this.alignPixel) {
+                const decompose = __t.clone().decomposeTranslate();
+                const intX = Math.round(decompose.x);
+                const intY = Math.round(decompose.y);
+                const offsetX = intX - decompose.x;
+                const offsetY = intY - decompose.y;
+
+                if (offsetX || offsetY) {
+                    __t.translate(ColVector3D.FromXY(offsetX, offsetY));
+                }
+            }
+
+            __t.addTransform(PI);
+
+            const transform = makeShapeTransform1By2(__t) as TransformRaw;
+
+            transformUnits.push({ shape, transform });
+        }
+
+        (this.asyncApiCaller as Transporter).execute(transformUnits);
+
+        const ctx = this.context;
+
+        ctx.nextTick(this.page, () => {
+            ctx.tool.notify(Tool.RULE_RENDER_SIM);
+            if (this.altStatus) ctx.selection.notify(Selection.PASSIVE_CONTOUR);
+        });
+    }
+
     private __execute() {
         if (this.coping || this.context.readonly) return;
 
         if (this.mode !== "layout") {
-            const { x: originX, y: originY } = this.originSelectionBox;
-            const livingX = this.livingBox.x;
-            const livingY = this.livingBox.y;
-            const deltaX = livingX - originX;
-            const deltaY = livingY - originY;
-
-            const transformUnits: TranslateUnit[] = [];
-            const PIC = new Map<string, Transform>();
-            for (let i = 0; i < this.shapes.length; i++) {
-                const shape = this.shapes[i];
-
-                const base = this.baseFrames4trans.get(shape.id);
-                if (!base) continue;
-
-                const parent = shape.parent;
-                if (!parent) continue;
-
-                let PI = PIC.get(parent.id);
-                if (!PI) {
-                    const __p = parent.transform2FromRoot.getInverse();
-
-                    PIC.set(parent.id, __p);
-                    PI = __p;
-                }
-
-                const __t = base.originTransform
-                    .clone()
-                    .translate(ColVector3D.FromXY(deltaX, deltaY))
-
-                if (this.alignPixel) {
-                    const decompose = __t.clone().decomposeTranslate();
-                    const intX = Math.round(decompose.x);
-                    const intY = Math.round(decompose.y);
-                    const offsetX = intX - decompose.x;
-                    const offsetY = intY - decompose.y;
-
-                    if (offsetX || offsetY) {
-                        __t.translate(ColVector3D.FromXY(offsetX, offsetY));
-                    }
-                }
-
-                __t.addTransform(PI);
-
-                const transform = makeShapeTransform1By2(__t) as TransformRaw;
-
-                transformUnits.push({ shape, transform });
-            }
-
-            (this.asyncApiCaller as Transporter).execute(transformUnits);
-
-            const ctx = this.context;
-
-            ctx.nextTick(this.page, () => {
-                ctx.tool.notify(Tool.RULE_RENDER_SIM);
-                if (this.altStatus) ctx.selection.notify(Selection.PASSIVE_CONTOUR);
-            });
+            this.__linear_trans();
         } else {
             this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.ClientXY);
             this.swapLayoutShape();
@@ -601,13 +621,20 @@ export class TranslateHandler extends TransformHandler {
         }
 
         ctx.nextTick(ctx.selection.selectedPage!, () => {
+            const oMode = this.mode;
+
             this.setMode();
+
+            if (oMode === 'layout') this.__linear_trans();
+            if (this.isNormalMode) ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE);
+            if (this.isLayoutMode) {
+                // todo notify
+                ctx.assist.notify(Assist.CLEAR);
+            }
 
             ctx.tool.notify(Tool.RULE_RENDER);
 
-            if (tailCollect) {
-                ctx.assist.set_collect_target(this.shapes, true);
-            }
+            if (tailCollect) ctx.assist.set_collect_target(this.shapes, true);
         })
     }
 
@@ -624,9 +651,9 @@ export class TranslateHandler extends TransformHandler {
         if (!this.fulfilled) message('info', '移动过程中按下S可以使图层脱离自动布局', 5);
     }
 
-    tips4absolutePosition = debounce(this.__tips4absolutePosition, 1000)
+    tips4absolutePosition = debounce(this.__tips4absolutePosition, 3000)
 
-    migrateOnce = debounce(this.__migrate, 160);
+    migrateOnce = debounce(this.__migrate, 80);
 
     migrate() {
         if (this.coping) return;
