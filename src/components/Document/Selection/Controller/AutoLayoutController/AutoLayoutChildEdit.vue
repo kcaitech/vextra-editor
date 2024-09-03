@@ -62,7 +62,17 @@ function selectionWatcher(t: string | number, params?: any) {
             const transy = params.y - downClientXY.y;
             moveTrans.value = { x: transx, y: transy }
         }
+    } else if (t === Selection.UPDATE_LAYOUT_DOTTED_LINE) {
+        if (params) {
+           updateDottedPath(params);
+        }
     }
+}
+
+const updateDottedPath = (downXY: XY) => {
+    getDottedPaths();
+    movePathStroke.value = true;
+    downClientXY = downXY;
 }
 
 function hoverDottedPaths() {
