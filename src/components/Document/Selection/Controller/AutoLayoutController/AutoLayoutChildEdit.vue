@@ -44,12 +44,29 @@ function workspace_watcher(t?: any) {
         getDottedPaths();
     }
 }
+let downClientXY: XY = { x: 0, y: 0 };
 
-function selectionWatcher(t: string | number) {
+function selectionWatcher(t: string | number, params?: any) {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
         getDottedPaths();
     } else if (t === Selection.CHANGE_SHAPE) {
         getDottedPaths();
+    } else if (t === Selection.LAYOUT_DOTTED_LINE) {
+        if (params) {
+            movePathStroke.value = true;
+            downClientXY = params;
+        } else {
+            movePathStroke.value = false;
+            moveTrans.value = { x: 0, y: 0 }
+            multiplePath.value = undefined;
+            getDottedPaths();
+        }
+    } else if (t === Selection.LAYOUT_DOTTED_LINE_MOVE) {
+        if (params) {
+            const transx = params.x - downClientXY.x;
+            const transy = params.y - downClientXY.y;
+            moveTrans.value = { x: transx, y: transy }
+        }
     }
 }
 
@@ -214,9 +231,6 @@ const getMovePath = (shapes: ShapeView[], includedBorder?: boolean) => {
     multiplePath.value = genRectPath(framePoint);
 }
 
-let downClientXY: XY = { x: 0, y: 0 };
-let isDragging: boolean = false;
-
 const getDottedPaths = () => {
     dottedPaths.value = [];
     movePath.value = [];
@@ -225,55 +239,21 @@ const getDottedPaths = () => {
     hoverDottedPaths();
 }
 const mousedown = (e: MouseEvent) => {
-    e.stopPropagation();
     downClientXY.x = e.clientX;
     downClientXY.y = e.clientY;
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
-let targetShape: ShapeView | undefined;
 
 function mousemove(e: MouseEvent) {
-    e.stopPropagation();
     const transx = e.clientX - downClientXY.x;
     const transy = e.clientY - downClientXY.y;
-    moveTrans.value = { x: transx, y: transy }
-    if (isDragging && movePathStroke.value) {
-        const shapes = props.context.selection.selectedShapes;
-        if (!shapes.length) return;
-        const parent = shapes[0].parent;
-        if (!parent) return;
-        const xy = props.context.workspace.getRootXY(e);
-        const target = props.context.selection.getShapesByXY(xy, true, [parent, ...parent.childs]);
-        if (target && target.id !== parent.id && targetShape?.id !== target.id) {
-            const isTarget = shapes.find(item => item.id === target.id);
-            if (!autoLayoutModifyHandler || isTarget) {
-                return
-            }
-            // if (!autoLayoutModifyHandler.asyncApiCaller || autoLayoutModifyHandler.transApi) {
-            //     autoLayoutModifyHandler.createApiCaller(downClientXY);
-            // }
-            // const shape_row: Shape[] = [];
-            // const shape_rows = layoutShapesOrder(parent.childs.map(s => adapt2Shape(s)));
-            // shape_rows.forEach(item => shape_row.push(...item));
-            // const cur_index = shape_row.findIndex(item => item.id === shapes[0].id);
-            // const tar_index = shape_row.findIndex(item => item.id === target.id);
-            // const targetXY = getTargetFrame(target.data);
-            // const transx = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
-            // const transy = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
-            // autoLayoutModifyHandler.executeSwap(parent, shapes, transx, transy);
-        }
-        if (!target) {
+    console.log(transx, transy);
 
-        }
-        targetShape = target;
-    } else {
-        const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
-        if (diff > 4) {
-            isDragging = true;
-            // autoLayoutModifyHandler = new AutoLayoutHandler(props.context, e);
-            // movePathStroke.value = true;
-        }
+    moveTrans.value = { x: transx, y: transy }
+    const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
+    if (diff > 4) {
+        movePathStroke.value = true;
     }
 }
 
@@ -300,10 +280,7 @@ const getTargetFrame = (shape: Shape) => {
 }
 
 function mouseup(e: MouseEvent) {
-    e.stopPropagation();
-    isDragging = false;
     movePathStroke.value = false;
-    targetShape = undefined;
     moveTrans.value = { x: 0, y: 0 }
     autoLayoutModifyHandler?.fulfil();
     autoLayoutModifyHandler = undefined;
@@ -324,17 +301,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-<svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg"
-     preserveAspectRatio="xMinYMin meet" overflow="visible" width="100" height="100" viewBox="0 0 100 100"
-     style="transform: translate(0px, 0px); position: absolute;">
-    <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path"/>
-    <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
-          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" @mousedown="(e) => mousedown(e)"/>
-    <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
-          :class="{ 'move-path-fill': movePathStroke }"
-          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl"
-          @mousedown="(e) => mousedown(e)"/>
-</svg>
+    <svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
+        overflow="visible" width="100" height="100" viewBox="0 0 100 100"
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path" />
+        <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
+            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" />
+        <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
+            :class="{ 'move-path-fill': movePathStroke }"
+            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl" />
+    </svg>
 </template>
 
 <style scoped lang="scss">

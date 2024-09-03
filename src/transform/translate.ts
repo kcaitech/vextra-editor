@@ -18,7 +18,7 @@ import {
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
-import { debounce } from "lodash";
+import { debounce, throttle } from "lodash";
 import { find_except_envs, record_origin_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { Tool } from "@/context/tool";
@@ -60,6 +60,8 @@ export class TranslateHandler extends TransformHandler {
 
     autoLayoutShape: ShapeView | undefined;
 
+    ClientXY: XY;
+
     /**
      * check：down的时候校验移动模式: normal | layout
      *  · normal
@@ -73,7 +75,6 @@ export class TranslateHandler extends TransformHandler {
      */
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
-
         this.shapes = shapes;
         this.shapesIdSet = new Set();
         this.livingPoint = this.workspace.getRootXY(event);
@@ -82,6 +83,8 @@ export class TranslateHandler extends TransformHandler {
 
         context.assist.set_collect_target(shapes);
         context.assist.set_trans_target(shapes);
+
+        this.ClientXY = { x: event.clientX, y: event.clientY };
 
         this.getFrames();
     }
@@ -151,6 +154,7 @@ export class TranslateHandler extends TransformHandler {
         t.setCurrentEnv(except_envs[0] as any);
 
         this.setMode();
+        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.ClientXY);
     }
 
     private getFrames() {
@@ -248,6 +252,7 @@ export class TranslateHandler extends TransformHandler {
 
     execute(event: MouseEvent) {
         this.livingPoint = this.workspace.getRootXY(event);
+        this.ClientXY = { x: event.clientX, y: event.clientY };
         this.migrate();
         this.updateBoxByAssist();
         this.__execute();
@@ -454,7 +459,6 @@ export class TranslateHandler extends TransformHandler {
 
         this.__execute();
     }
-
     private __execute() {
         if (this.coping || this.context.readonly) return;
 
@@ -516,35 +520,8 @@ export class TranslateHandler extends TransformHandler {
                 if (this.altStatus) ctx.selection.notify(Selection.PASSIVE_CONTOUR);
             });
         } else {
-            const living = this.livingPoint;
-            const shapes = this.shapes;
-            const env = this.autoLayoutShape as ArtboradView;
-            if (!this.shapesIdSet.size) this.shapesIdSet = new Set(shapes.map(i => i.id));
-            const shapesUnderCommonEnv: ShapeView[] = env.childs;
-            const __set = this.shapesIdSet;
-            const scout = this.context.selection.scout;
-            for (const shape of shapesUnderCommonEnv) {
-                if (__set.has(shape.id)) continue;
-                if (isTarget(scout, shape, living)) {
-                    const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
-                    const shape_row: Shape[] = shape_rows.flat();
-                    const alpha = shapes[0];
-                    const cur_index = shape_row.findIndex(item => item.id === alpha.id);
-                    const tar_index = shape_row.findIndex(item => item.id === shape.id);
-                    const targetXY = this.__getTargetFrame(adapt2Shape(shape));
-                    const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
-                    const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
-                    (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY);
-                    break;
-                }
-            }
-            this.tips4absolutePosition();
-
-            const ctx = this.context;
-
-            ctx.nextTick(this.page, () => {
-                // todo render dash 给虚线提示
-            });
+            this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.ClientXY);
+            this.swapLayoutShape();
         }
     }
 
@@ -569,6 +546,35 @@ export class TranslateHandler extends TransformHandler {
         }
         return f;
     }
+
+    private _swapLayoutShape() {
+        const living = this.livingPoint;
+        const shapes = this.shapes;
+        const env = this.autoLayoutShape as ArtboradView;
+        if (!this.shapesIdSet.size) this.shapesIdSet = new Set(shapes.map(i => i.id));
+        const shapesUnderCommonEnv: ShapeView[] = env.childs;
+        const __set = this.shapesIdSet;
+        const scout = this.context.selection.scout;
+        for (const shape of shapesUnderCommonEnv) {
+            if (__set.has(shape.id)) continue;
+            if (isTarget(scout, shape, living)) {
+                const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
+                const shape_row: Shape[] = shape_rows.flat();
+                const alpha = shapes[0];
+                const cur_index = shape_row.findIndex(item => item.id === alpha.id);
+                const tar_index = shape_row.findIndex(item => item.id === shape.id);
+                const targetXY = this.__getTargetFrame(adapt2Shape(shape));
+                const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
+                const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
+                (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY);
+                break;
+            }
+        }
+
+        this.tips4absolutePosition();
+    }
+
+    swapLayoutShape = throttle(this._swapLayoutShape, 160);
 
     private __migrate(tailCollect = true) {
         const t = this.asyncApiCaller as Transporter;
@@ -619,6 +625,7 @@ export class TranslateHandler extends TransformHandler {
 
     tips4absolutePosition = debounce(this.__tips4absolutePosition, 1000)
 
+
     migrateOnce = debounce(this.__migrate, 160);
 
     migrate() {
@@ -638,6 +645,7 @@ export class TranslateHandler extends TransformHandler {
         }
         super.fulfil();
         this.fulfilled = true;
+        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE);
     }
 
     protected keydown(event: KeyboardEvent) {

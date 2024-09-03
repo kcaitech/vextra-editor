@@ -108,6 +108,9 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     static PREVIEW_HOVER_CHANGE = 20;
 
+    static LAYOUT_DOTTED_LINE = 21;
+    static LAYOUT_DOTTED_LINE_MOVE = 22;
+
     // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
@@ -440,8 +443,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     hoverShape(shape: ShapeView) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
-            console.log(shape, 'shape');
-            
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
     }
