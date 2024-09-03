@@ -260,12 +260,11 @@ function mousemove(e: MouseEvent) {
         const m = new Matrix(matrix2Root.inverse);
         const downXy = m.computeCoord(downClientXY);
         const moveXy = m.computeCoord2(e.clientX, e.clientY);
+        const scale = props.context.workspace.matrix.m00;
         if (downDir === 'ver') {
-            const scale = props.context.workspace.matrix.m00;
             const length = ((moveXy.y - downXy.y) / scale) * 2;
             autoLayoutModifyHandler.executeSpace((length / moveIndex) + counterSpacing, downDir);
         } else if (downDir === 'hor') {
-            const scale = props.context.workspace.matrix.m00;
             const length = ((moveXy.x - downXy.x) / scale) * 2;
             autoLayoutModifyHandler.executeSpace((length / moveIndex) + spacing, downDir);
         }
