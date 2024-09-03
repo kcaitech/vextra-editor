@@ -19,7 +19,7 @@ import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
 import { paster_short } from "@/utils/clipboard";
 import { debounce, throttle } from "lodash";
-import { find_except_envs, record_origin_env } from "@/utils/migrate";
+import { find_except_envs, record_origin_env, record_origin_xy_env } from "@/utils/migrate";
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
@@ -165,6 +165,7 @@ export class TranslateHandler extends TransformHandler {
 
         const t = this.asyncApiCaller as Transporter;
         t.setEnv(record_origin_env(this.shapes));
+        t.setOriginXyEnv(record_origin_xy_env(this.shapes));
         const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
@@ -632,6 +633,7 @@ export class TranslateHandler extends TransformHandler {
             if (this.isLayoutMode) {
                 ctx.assist.notify(Assist.CLEAR);
                 ctx.selection.notify(Selection.UPDATE_LAYOUT_DOTTED_LINE, this.downXY);
+                ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.clientXY);
             }
 
             ctx.tool.notify(Tool.RULE_RENDER);

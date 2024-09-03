@@ -1,9 +1,10 @@
 import { Context } from "@/context";
 import {
+    ArtboradView,
     AsyncTransfer,
     GroupShape,
     ShapeView,
-    adapt2Shape
+    adapt2Shape,
 } from "@kcdesign/data";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { debounce } from "lodash";
@@ -72,6 +73,44 @@ export function record_origin_env(shapes: ShapeView[]) {
         })
     })
     return envs;
+}
+
+export function record_origin_xy_env(shapes: ShapeView[]) {
+    const envs = new Map<string, { xy: XY, shape: ShapeView }[]>();
+    const parents = getAutoLayoutShapes(shapes);
+    for (let i = 0, l = parents.length; i < l; i++) {
+        const parent = parents[i];
+        if (!parent.autoLayout) continue;
+        const childs = parent.childs;
+        const data = adapt2Shape(parent);
+        for (let index = 0; index < childs.length; index++) {
+            const child = childs[index];
+            const item = {
+                xy: { x: child.transform.translateX, y: child.transform.translateY },
+                shape: child
+            }
+            const arr = envs.get(data.id);
+            if (arr) {
+                arr.push(item);
+            } else {
+                envs.set(data.id, [item]);
+            }
+        }
+    }
+    return envs;
+}
+
+export const getAutoLayoutShapes = (shapes: ShapeView[]) => {
+    const parents: ArtboradView[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const parent = shape.parent;
+        if (parent && (parent as ArtboradView).autoLayout) {
+            const hasP = parents.some(item => item.id === parent.id);
+            if (!hasP) parents.push(parent as ArtboradView);
+        }
+    }
+    return parents;
 }
 
 export function find_except_envs(context: Context, shapes: ShapeView[], p: XY) {
