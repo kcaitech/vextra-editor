@@ -3,22 +3,18 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
 import {
-    adapt2Shape,
     ArtboradView,
     BorderPosition,
     ColVector3D,
-    layoutShapesOrder,
     makeShapeTransform2By1,
     Matrix,
     Path,
-    Shape,
     ShapeView,
     XYsBounding
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { genRectPath } from "../../common";
 import { is_shape_in_selected } from "@/utils/scout";
-import { AutoLayoutHandler } from "@/transform/autoLayout";
 
 export interface Point {
     x: number
@@ -34,7 +30,6 @@ const dottedPaths = ref<{ path: string, shape: ShapeView | undefined }[]>([]);
 const movePath = ref<string[]>([]);
 const moveTrans = ref<Point>({ x: 0, y: 0 })
 const movePathStroke = ref(false);
-let autoLayoutModifyHandler: AutoLayoutHandler | undefined = undefined;
 const multiplePath = ref<string>();
 
 function workspace_watcher(t?: any) {
@@ -237,57 +232,6 @@ const getDottedPaths = () => {
     multiplePath.value = undefined;
     selectDottedPaths();
     hoverDottedPaths();
-}
-const mousedown = (e: MouseEvent) => {
-    downClientXY.x = e.clientX;
-    downClientXY.y = e.clientY;
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-}
-
-function mousemove(e: MouseEvent) {
-    const transx = e.clientX - downClientXY.x;
-    const transy = e.clientY - downClientXY.y;
-    console.log(transx, transy);
-
-    moveTrans.value = { x: transx, y: transy }
-    const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
-    if (diff > 4) {
-        movePathStroke.value = true;
-    }
-}
-
-const getTargetFrame = (shape: Shape) => {
-    let f = shape.frame;
-    const m = shape.transform;
-    if (shape.isNoTransform()) {
-        f.x = f.x + m.translateX;
-        f.y = f.y + m.translateY
-    } else {
-        const corners = [
-            { x: f.x, y: f.y },
-            { x: f.x + f.width, y: f.y },
-            { x: f.x + f.width, y: f.y + f.height },
-            { x: f.x, y: f.y + f.height }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        f.x = minx, f.y = miny, f.width = maxx - minx, f.height = maxy - miny
-    }
-    return f;
-}
-
-function mouseup(e: MouseEvent) {
-    movePathStroke.value = false;
-    moveTrans.value = { x: 0, y: 0 }
-    autoLayoutModifyHandler?.fulfil();
-    autoLayoutModifyHandler = undefined;
-    multiplePath.value = undefined;
-    getDottedPaths();
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
 }
 
 onMounted(() => {
