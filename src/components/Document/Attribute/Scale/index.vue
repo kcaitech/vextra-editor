@@ -12,6 +12,7 @@ import { computeString } from "@/utils/content";
 import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import { LockMouse } from "@/transform/lockMouse";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const props = defineProps<{ context: Context }>();
 const t = useI18n().t;
@@ -229,7 +230,11 @@ function select(v: string) {
                         <svg-icon icon-class="down" style="width: 12px; height: 12px"/>
                     </div>
                     <div v-if="optionsVisible" ref="popover" class="popover">
-                        <div v-for="i in presetOptions" :key="i" class="option" @click="() => select(i)">{{ i }}</div>
+                        <div v-for="i in presetOptions" :key="i" class="option" @click="() => select(i)">
+                            <span>{{ i }}</span>
+                            <svg-icon v-if="(k+'x') ===i" icon-class="page-select"/>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -315,23 +320,35 @@ function select(v: string) {
     right: 0;
     width: 88px;
     height: fit-content;
-    background-color: var(--theme-color);
+    background-color: var(--theme-color-anti);
     border-radius: var(--default-radius);
     padding: 8px 0;
     box-sizing: border-box;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 
     .option {
         width: 100%;
-        color: var(--theme-color-anti);
+        color: var(--theme-color);
         height: 28px;
         display: flex;
         align-items: center;
         padding: 0 8px;
         box-sizing: border-box;
+        justify-content: space-between;
+
+        > svg {
+            width: 12px;
+            height: 12px;
+        }
     }
 
     .option:hover {
         background-color: var(--active-color);
+        color: var(--theme-color-anti);
+
+        > svg {
+            fill: var(--theme-color-anti);
+        }
     }
 }
 </style>
