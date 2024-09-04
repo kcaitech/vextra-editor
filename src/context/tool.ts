@@ -1,10 +1,10 @@
 import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 // import { Comment } from "./comment";
-import { CursorType } from "@/utils/cursor2";
 import { ReferLineSelection } from "@/components/Document/Rule/referLineSelection";
 import { XY } from "@/context/selection";
 import { ContextEvents } from "@/openapi";
+import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 
 const _uuid = '-E9BB37D8-8853-D650-4EF1-ACCF4E2D4BE5'
 
@@ -79,6 +79,7 @@ export class Tool extends WatchableObject {
     static HOVER_REFER_CHANGE = 16;
     static REFER_FOCUS_CHANGE = 17;
     static RULE_CLEAR = 18;
+    static SCALE_ANCHOR_CHANGE = 19;
     private m_current_action: string = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -228,5 +229,16 @@ export class Tool extends WatchableObject {
 
     get referFinder() {
         return this.m_refer_finer
+    }
+
+    private m_scale_anchor: AnchorType = AnchorType.Center;
+
+    setScaleAnchor(t: AnchorType) {
+        this.m_scale_anchor = t;
+        this.notify(Tool.SCALE_ANCHOR_CHANGE);
+    }
+
+    get scaleAnchor() {
+        return this.m_scale_anchor;
     }
 }
