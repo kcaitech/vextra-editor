@@ -100,10 +100,8 @@ function modifyFixed(transform: Transform, ratio: number, __box?: {
 
 function __change_size(ratio: number) {
     const box = __get_box();
-    const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
     const units: { shape: ShapeView, transform: Transform }[] = [];
     const selected = props.context.selection.selectedShapes;
-    const inverse = selectionTransform.getInverse();
 
     const cache = new Map<ShapeView, Transform>();
     for (const shape of selected) {
@@ -111,6 +109,9 @@ function __change_size(ratio: number) {
         if (cache.has(parent)) continue;
         cache.set(parent, parent.transform2FromRoot);
     }
+
+    const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
+    const inverse = selectionTransform.getInverse();
 
     for (const shape of selected) {
         const transform = shape.transform2.clone().addTransform(cache.get(shape.parent!)!);
@@ -133,7 +134,8 @@ function __change_size(ratio: number) {
     const params: {
         shape: ShapeView,
         transform: Transform,
-        size: { width: number, height: number }
+        size: { width: number, height: number },
+        decomposeScale: { x: number, y: number }
     }[] = [];
 
     for (const unit of units) {
@@ -147,7 +149,7 @@ function __change_size(ratio: number) {
 
         __t.clearScaleSize();
 
-        params.push({ shape, size, transform: __t });
+        params.push({ shape, size, transform: __t, decomposeScale: { x: scale.x, y: scale.y } });
     }
 
     const page = props.context.selection.selectedPage!;
