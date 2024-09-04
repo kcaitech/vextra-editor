@@ -11,6 +11,7 @@ import { AutoLayoutHandler } from '@/transform/autoLayout';
 import AutoLayoutAlign from './AutoLayoutAlign.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import AutoLayoutSetting from "./AutoLayoutSetting.vue"
+import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 
 interface Props {
     context: Context
@@ -39,7 +40,8 @@ function autoLayout(): void {
     const editor = props.context.editor4Page(page);
     const name = getName(ShapeType.Artboard, bro || [], t);
     if (props.shapes.length > 1) {
-        shapes = selectShapes;
+        shapes = filter_for_group1(selectShapes);
+        shapes = compare_layer_3(shapes);
     } else {
         shapes = selectShapes[0].childs;
     }
@@ -57,11 +59,11 @@ const deleteAutoLayout = () => {
     editor.deleteAutoLayout();
 }
 
-const update = (args?: any[]) => {
+const update = () => {
     isLayout();
 }
 
-const updateData = (args?: any[]) => {
+const updateData = () => {
     const selection = props.context.selection.selectedShapes;
     if (selection.length !== 1) return;
     const shape = selection[0] as ArtboradView;
@@ -75,7 +77,7 @@ const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection.selectedShapes[0];
-    if (selection && (selection as ArtboradView).autoLayout) {
+    if (selection) {
         needWatchShapes.set(selection.id, selection);
     }
     watchedShapes.forEach((v, k) => {
@@ -114,12 +116,17 @@ const changeVorSpace = (value: string) => {
         .parseFloat(computeString(value))
         .toFixed(2);
 
-    const space: number = Number.parseFloat(value);
+    let space: number = Number.parseFloat(value);
     if (isNaN(space)) return;
 
-    const shapes = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4Shape(shapes);
-    editor.modifyAutoLayoutSpace(Math.max(space, 0), 'ver');
+    const shape = props.context.selection.selectedShapes[0] as ArtboradView;
+    const editor = props.context.editor4Shape(shape);
+    const autoLayout = shape.autoLayout;
+    if (!autoLayout) return;
+    if (autoLayout.stackMode !== StackMode.Vertical && space < 0) {
+        space = 0;
+    }
+    editor.modifyAutoLayoutSpace(space, 'ver');
 }
 
 const changePadding = (value: string, dir: PaddingDir) => {
@@ -241,7 +248,10 @@ function draggingVerSpace(e: MouseEvent) {
     if (!autoLayout) return;
     let space = e.movementX;
     space += autoLayout.stackCounterSpacing;
-    autoLayoutModifyHandler.executeSpace(Math.max(space, 0), 'ver');
+    if (autoLayout.stackMode !== StackMode.Vertical && space < 0) {
+        space = 0;
+    }
+    autoLayoutModifyHandler.executeSpace(space, 'ver');
 }
 
 function draggingPadding(e: MouseEvent, dir: PaddingDir) {
@@ -363,6 +373,7 @@ const stop2 = watch(() => props.selectionChange, () => {
 onMounted(() => {
     isLayout();
     updateData();
+    watchShapes();
     props.context.selection.watch(selectionWatcher);
 });
 onUnmounted(() => {
@@ -390,25 +401,25 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="container-top" v-if="!isActive && autoLayoutDate">
             <div class="container-left">
-                <div class="layout-wrap">
-                    <Tooltip :content="t(`autolayout.ver`)">
-                        <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
-                            @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
+                <div class="layout-wrap" :reflush="reflush">
+                    <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
+                        @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
+                        <Tooltip :content="t(`autolayout.ver`)">
                             <svg-icon icon-class="ver-arrow"></svg-icon>
-                        </div>
-                    </Tooltip>
-                    <Tooltip :content="t(`autolayout.hor`)">
-                        <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
-                            :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
+                        </Tooltip>
+                    </div>
+                    <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
+                        :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
+                        <Tooltip :content="t(`autolayout.hor`)">
                             <svg-icon icon-class="hor-arrow"></svg-icon>
-                        </div>
-                    </Tooltip>
-                    <Tooltip :content="t(`autolayout.wrap`)">
-                        <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
-                            @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
+                        </Tooltip>
+                    </div>
+                    <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
+                        @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
+                        <Tooltip :content="t(`autolayout.wrap`)">
                             <svg-icon icon-class="wrap-arrow"></svg-icon>
-                        </div>
-                    </Tooltip>
+                        </Tooltip>
+                    </div>
                 </div>
                 <div class="hor" v-if="autoLayoutDate.stackMode !== StackMode.Vertical">
                     <AutoLayoutInput icon="hor-space" :isMenu="true" :show="horSpaceMenu" name="hor_gap"
@@ -431,7 +442,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="container-center">
-                <div class="layout-wrap">
+                <div class="layout-wrap" :reflush="reflush">
                     <AutoLayoutAlign :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
                     </AutoLayoutAlign>
                 </div>
@@ -485,14 +496,14 @@ onUnmounted(() => {
                     :icon="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'layout-auto' : 'layout-fixed'"
                     :name="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'hor_resizing' : 'hor_fixed'"
                     :isMenu="true" :show="horSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
-                    :value="autoLayoutDate.stackPrimarySizing ? t(`autolayout.${autoLayoutDate.stackPrimarySizing}`) : t(`autolayout.${StackSizing.Fixed}`)"
+                    :value="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? t(`autolayout.adapt`) : t(`autolayout.${StackSizing.Fixed}`)"
                     @changeItem="(v) => changeSizing(v, 'hor')" @shwoMenu="shwoHorSizingMenu">
                 </AutoLayoutInput>
                 <AutoLayoutInput
                     :icon="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'layout-ver-fixed' : 'layout-ver-auto'"
                     :name="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'ver_fixed' : 'ver_resizing'"
                     :isMenu="true" :show="verSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
-                    :value="autoLayoutDate.stackCounterSizing ? t(`autolayout.${autoLayoutDate.stackCounterSizing}`) : t(`autolayout.${StackSizing.Auto}`)"
+                    :value="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? t(`autolayout.${StackSizing.Fixed}`) : t(`autolayout.adapt`)"
                     @changeItem="(v) => changeSizing(v, 'ver')" @shwoMenu="shwoVerSizingMenu">
                 </AutoLayoutInput>
             </div>
@@ -557,15 +568,17 @@ onUnmounted(() => {
                 padding: 2px;
                 box-sizing: border-box;
 
-                >div {
+                div {
                     height: 28px;
                     width: 28px;
                     border-radius: 4px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    outline: none;
 
                     >svg {
+                        outline: none;
                         width: 14px;
                         height: 14px;
                     }
@@ -582,7 +595,7 @@ onUnmounted(() => {
             display: flex;
             justify-content: flex-end;
 
-            >div {
+            div {
                 width: 28px;
                 height: 28px;
                 border-radius: 6px;

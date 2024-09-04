@@ -1,33 +1,55 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import Tooltip from '@/components/common/Tooltip.vue';
+const { t } = useI18n();
 
 const props = defineProps<{
     align: string,
-    show: boolean
+    show: boolean,
+    name: string
 }>();
+
+interface Emits {
+    (e: "change"): void;
+}
+
+const emits = defineEmits<Emits>();
+
+const onClick = () => {
+    emits('change');
+}
 </script>
 
 <template>
-    <div class="box" :style="{ 'align-items': align }" :class="{ active: show }">
-        <div class="top"></div>
-        <div class="center"></div>
-        <div class="bottom"></div>
+    <div class="container" @click="onClick">
+        <Tooltip :content="t(`autolayout.${name}`)">
+            <div class="box" :style="{ 'align-items': align }" :class="{ active: show }">
+                <div class="top"></div>
+                <div class="center"></div>
+                <div class="bottom"></div>
+            </div>
+        </Tooltip>
     </div>
 </template>
 
 <style scoped lang="scss">
+.container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9;
+}
 .box {
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 2px;
     padding: 4px;
-    position: absolute;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    z-index: 9;
 
-    >div {
+    div {
         height: 4px;
         border-radius: 1px;
     }
@@ -43,10 +65,11 @@ const props = defineProps<{
     .bottom {
         width: 7px;
     }
+
     &:hover {
         background-color: #fff;
 
-        >div {
+        div {
             background-color: rgba(25, 137, 252, 0.4);
         }
     }
@@ -54,7 +77,8 @@ const props = defineProps<{
 
 .active {
     background-color: #fff;
-    >div {
+
+    div {
         background-color: #1989FC !important;
     }
 }

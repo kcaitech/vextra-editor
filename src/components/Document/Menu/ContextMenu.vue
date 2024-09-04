@@ -35,6 +35,7 @@ import { Navi } from "@/context/navigate";
 import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
+import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 
 interface Props {
     context: Context;
@@ -354,7 +355,8 @@ const autoLayout = () => {
     const editor = props.context.editor4Page(page);
     const name = getName(ShapeType.Artboard, bro || [], t);
     if (selectShapes.length > 1) {
-        shapes = selectShapes;
+        shapes = filter_for_group1(selectShapes);
+        shapes = compare_layer_3(shapes);
     } else {
         shapes = selectShapes[0].childs;
     }

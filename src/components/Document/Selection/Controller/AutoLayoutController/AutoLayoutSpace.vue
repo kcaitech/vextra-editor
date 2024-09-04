@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection, XY } from '@/context/selection';
-import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
+import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, PaddingDir, Shape, ShapeView, StackMode, StackSizing, adapt2Shape, getHorizontalAngle, layoutShapesOrder, makeShapeTransform2By1 } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
@@ -264,7 +264,11 @@ function mousemove(e: MouseEvent) {
         const scale = props.context.workspace.matrix.m00;
         if (downDir === 'ver') {
             const length = ((moveXy.y - downXy.y) / scale) * 2;
-            autoLayoutModifyHandler.executeSpace((length / moveIndex) + counterSpacing, downDir);
+            let value = (length / moveIndex) + counterSpacing;
+            if (autoLayout.stackMode !== StackMode.Vertical && value < 0) {
+                value = 0;
+            }
+            autoLayoutModifyHandler.executeSpace(value, downDir);
         } else if (downDir === 'hor') {
             const length = ((moveXy.x - downXy.x) / scale) * 2;
             autoLayoutModifyHandler.executeSpace((length / moveIndex) + spacing, downDir);
@@ -412,21 +416,6 @@ onUnmounted(() => {
             :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
             fill="transparent" clip-rule="evenodd" />
     </clipPath>
-    <g v-if="verSpaceBox.length" clip-path="url(#auto-layout-scape)" @mouseenter="verMouseenter"
-        @mouseleave="verMouseleave">
-        <path v-for="(box, index) in verSpaceBox" :key="index" class="padding-rect" ref="verSpace"
-            :class="{ spaceFill: downDir === 'ver' || verSpaceFill }"
-            :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-        <g v-for="(box, index) in verSpaceLine" :key="index" @mouseenter="(e) => Mouseenter(e, 'ver')"
-            @mouseleave="Mouseleave" @mousemove="verMousemove">
-            <path class="padding-line"
-                :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
-                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-            <path @mousedown="(e) => verMousedown(e, 'ver', box.index * 2 + 1)"
-                :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
-                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-        </g>
-    </g>
     <g v-if="horSpaceBox.length" clip-path="url(#auto-layout-scape)" @mouseenter="horMouseenter"
         @mouseleave="horMouseleave">
         <path v-for="(box, index) in horSpaceBox" :key="index" class="padding-rect" ref="horSpcae"
@@ -438,6 +427,21 @@ onUnmounted(() => {
                 :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
             <path @mousedown="(e) => horMousedown(e, 'hor', box.index * 2 + 1)"
+                :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
+                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
+        </g>
+    </g>
+    <g v-if="verSpaceBox.length" clip-path="url(#auto-layout-scape)" @mouseenter="verMouseenter"
+        @mouseleave="verMouseleave">
+        <path v-for="(box, index) in verSpaceBox" :key="index" class="padding-rect" ref="verSpace"
+            :class="{ spaceFill: downDir === 'ver' || verSpaceFill }"
+            :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
+        <g v-for="(box, index) in verSpaceLine" :key="index" @mouseenter="(e) => Mouseenter(e, 'ver')"
+            @mouseleave="Mouseleave" @mousemove="verMousemove">
+            <path class="padding-line"
+                :style="{ transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
+                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
+            <path @mousedown="(e) => verMousedown(e, 'ver', box.index * 2 + 1)"
                 :style="{ stroke: 'transparent', fill: 'transparent', 'stroke-width': '1px', transform: `translate(${box.offset.x}px, ${box.offset.y}px) rotate(${box.rotate}deg) scale(2) translate(${-box.offset.x}px, ${-box.offset.y}px)` }"
                 :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
         </g>

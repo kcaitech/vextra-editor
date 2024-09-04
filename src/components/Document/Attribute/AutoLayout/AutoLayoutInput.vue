@@ -169,12 +169,12 @@ onUnmounted(() => {
                 <div class="text">{{ item }}</div>
             </div>
             <div class="item" :class="{ hovered: hoverItem !== item }" @click="changeItem(StackSizing.Auto)"
-                @mouseenter="hoverItem = t(`autolayout.${StackSizing.Auto}`)">
+                @mouseenter="hoverItem = t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`)">
                 <div class="icon">
                     <svg-icon v-if="item !== value"
                         :icon-class="hoverItem !== item ? 'white-select' : 'page-select'"></svg-icon>
                 </div>
-                <div class="text">{{ t(`autolayout.${StackSizing.Auto}`) }}</div>
+                <div class="text">{{ t(`autolayout.${disabled ? 'adapt' : StackSizing.Auto}`) }}</div>
             </div>
         </div>
     </div>
@@ -191,9 +191,11 @@ onUnmounted(() => {
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
+
     .drag-icon {
         flex: 0 0 12px;
         height: 12px;
+
         >svg {
             width: 12px;
             height: 12px;

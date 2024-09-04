@@ -38,81 +38,87 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
 
 <template>
     <div class="ver-align-container">
-        <Tooltip :content="t(`autolayout.lc_align`)">
-            <div class="base" :class="{ active: position('left') }"
-                @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: start;">
-                        <div class="right"></div>
-                        <div class="left"></div>
+        <div class="base" :class="{ active: position('left') }"
+            @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
+            <Tooltip :content="t(`autolayout.lc_align`)">
+                <div class="base">
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: start;">
+                            <div class="right"></div>
+                            <div class="left"></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="c-ver ver-align" style="align-items: start;">
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: start;">
+                            <div class="left"></div>
+                            <div class="right"></div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="c-ver ver-align" style="align-items: start;">
-                        <div></div>
+            </Tooltip>
+        </div>
+        <div class="base" :class="{ active: position('center') }"
+            @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
+            <Tooltip :content="t(`autolayout.center_align`)">
+                <div class="base">
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px;">
+                            <div class="right"></div>
+                            <div class="left"></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="c-ver ver-align">
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px;">
+                            <div class="left"></div>
+                            <div class="right"></div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: start;">
-                        <div class="left"></div>
-                        <div class="right"></div>
+            </Tooltip>
+        </div>
+        <div class="base" :class="{ active: position('right') }"
+            @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
+            <Tooltip :content="t(`autolayout.rc_align`)">
+                <div class="base">
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: end;">
+                            <div class="right"></div>
+                            <div class="left"></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="c-ver ver-align" style="align-items: end;">
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <div class="dot"></div>
+                        <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: end;">
+                            <div class="left"></div>
+                            <div class="right"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t(`autolayout.center_align`)">
-            <div class="base" :class="{ active: position('center') }"
-                @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px;">
-                        <div class="right"></div>
-                        <div class="left"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="c-ver ver-align">
-                        <div></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px;">
-                        <div class="left"></div>
-                        <div class="right"></div>
-                    </div>
-                </div>
-            </div>
-        </Tooltip>
-        <Tooltip :content="t(`autolayout.rc_align`)">
-            <div class="base" :class="{ active: position('right') }"
-                @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: end;">
-                        <div class="right"></div>
-                        <div class="left"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="c-ver ver-align" style="align-items: end;">
-                        <div></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="dot"></div>
-                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: end;">
-                        <div class="left"></div>
-                        <div class="right"></div>
-                    </div>
-                </div>
-            </div>
-        </Tooltip>
+            </Tooltip>
+        </div>
     </div>
 </template>
 
@@ -130,7 +136,7 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
         height: 100%;
 
 
-        >div {
+        .box {
             position: relative;
             display: flex;
             height: 24px;
