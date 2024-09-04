@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { AutoLayout, StackAlign } from '@kcdesign/data';
 import { Context } from '@/context';
+import { useI18n } from "vue-i18n";
+import Tooltip from '@/components/common/Tooltip.vue';
+const { t } = useI18n();
 
 const props = defineProps<{
     autoLayoutDate: AutoLayout
@@ -35,75 +38,81 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
 
 <template>
     <div class="ver-align-container">
-        <div class="base" :class="{ active: position('left') }"
-            @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: start;">
-                    <div class="right"></div>
-                    <div class="left"></div>
+        <Tooltip :content="t(`autolayout.lc_align`)">
+            <div class="base" :class="{ active: position('left') }"
+                @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: start;">
+                        <div class="right"></div>
+                        <div class="left"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-ver ver-align" style="align-items: start;">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: start;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-ver ver-align" style="align-items: start;">
-                    <div></div>
+        </Tooltip>
+        <Tooltip :content="t(`autolayout.center_align`)">
+            <div class="base" :class="{ active: position('center') }"
+                @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px;">
+                        <div class="right"></div>
+                        <div class="left"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-ver ver-align">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: start;">
-                    <div class="left"></div>
-                    <div class="right"></div>
+        </Tooltip>
+        <Tooltip :content="t(`autolayout.rc_align`)">
+            <div class="base" :class="{ active: position('right') }"
+                @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: end;">
+                        <div class="right"></div>
+                        <div class="left"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-ver ver-align" style="align-items: end;">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: end;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="base" :class="{ active: position('center') }"
-            @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px;">
-                    <div class="right"></div>
-                    <div class="left"></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-ver ver-align">
-                    <div></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-        </div>
-        <div class="base" :class="{ active: position('right') }"
-            @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-top: 6px; padding-bottom: 2px; align-items: end;">
-                    <div class="right"></div>
-                    <div class="left"></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-ver ver-align" style="align-items: end;">
-                    <div></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="t-ver ver-align" style="padding-bottom: 6px; padding-top: 2px; align-items: end;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-        </div>
+        </Tooltip>
     </div>
 </template>
 

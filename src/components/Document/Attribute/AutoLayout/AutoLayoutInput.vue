@@ -2,10 +2,12 @@
 import { StackSizing } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
     icon: string;
     value: string | number;
+    name: string;
     item?: string | number;
     disabled?: boolean;
     draggable?: boolean;
@@ -146,14 +148,18 @@ onUnmounted(() => {
 
 <template>
     <div :class="{ 'md-number-input': true, active }" @wheel="wheel">
-        <svg-icon :icon-class="icon" :class="{ 'un-draggable': disabled || draggable }" @mousedown="down" />
+        <Tooltip :content="t(`autolayout.${name}`)">
+            <div class="drag-icon">
+                <svg-icon :icon-class="icon" :class="{ 'un-draggable': disabled || draggable }" @mousedown="down" />
+            </div>
+        </Tooltip>
         <input :disabled="disabled" :style="{ opacity: draggable ? '0.4' : '1' }" ref="inputEl" :value="value"
             @click="click" @change="change" @blur="blur" @focus="foucs" />
         <div class="layout-menu-svg" v-if="isMenu" @click.stop="showMenu">
             <svg-icon icon-class="down" />
         </div>
         <div class="auto-layout-options" :style="{ top: item === value ? '-4px' : '-36px' }"
-            v-if="isMenu && show && item">
+            v-if="isMenu && show && (typeof item !== 'undefined')">
             <div class="item" :class="{ hovered: hoverItem === item }" @click="changeItem(StackSizing.Fixed)"
                 @mouseenter="hoverItem = item">
                 <div class="icon">
@@ -185,12 +191,15 @@ onUnmounted(() => {
     box-sizing: border-box;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
-
-    >svg {
+    .drag-icon {
         flex: 0 0 12px;
         height: 12px;
-        display: block;
-        cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
+        >svg {
+            width: 12px;
+            height: 12px;
+            display: block;
+            cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
+        }
     }
 
     .un-draggable {
@@ -224,7 +233,7 @@ onUnmounted(() => {
 
     >input {
         flex: 1;
-        width: 100%;
+        width: 40px;
         border: none;
         font-size: var(--font-default-fontsize);
         outline: none;
@@ -233,6 +242,7 @@ onUnmounted(() => {
         font-family: var(--font-family);
         padding-left: 5px;
         display: block;
+        box-sizing: border-box;
         color: #000;
     }
 

@@ -5,6 +5,9 @@ import HorAlignBox from './HorAlignBox.vue';
 import VerAlignBox from './VerAlignBox.vue';
 import HorGapAuto from './HorGapAuto.vue';
 import VerGapAuto from './VerGapAuto.vue';
+import { useI18n } from "vue-i18n";
+import Tooltip from '@/components/common/Tooltip.vue';
+const { t } = useI18n();
 
 import { Context } from '@/context';
 
@@ -13,6 +16,7 @@ const props = defineProps<{
     context: Context
     reflush: number
 }>();
+
 
 type AlignPosition =
     'lt' |
@@ -68,137 +72,158 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
         :autoLayoutDate="autoLayoutDate" :context="context"></VerGapAuto>
     <div class="align-container" v-else>
         <div class="base">
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="start" @click="changeAlignMode(StackAlign.Min, StackAlign.Min)" :show="position('lt')">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Min)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="start" :show="position('lt')">
-                </HorAlignBox>
-                <VerAlignBox align="start"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    @click="changeAlignMode(StackAlign.Min, StackAlign.Min)" :show="position('lt')">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="center" :show="position('ct')" @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Center)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="start" :show="position('ct')">
-                </HorAlignBox>
-                <VerAlignBox align="center"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    @click="changeAlignMode(StackAlign.Min, StackAlign.Center)" :show="position('ct')">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="end" :show="position('rt')" @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Max)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="start" :show="position('rt')">
-                </HorAlignBox>
-                <VerAlignBox align="end"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('rt')" @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
-                </VerAlignBox>
-            </div>
+            <Tooltip :content="t(`autolayout.lt_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="start" @click="changeAlignMode(StackAlign.Min, StackAlign.Min)" :show="position('lt')">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Min)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="start" :show="position('lt')">
+                    </HorAlignBox>
+                    <VerAlignBox align="start"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        @click="changeAlignMode(StackAlign.Min, StackAlign.Min)" :show="position('lt')">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.ct_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="center" :show="position('ct')"
+                        @click="changeAlignMode(StackAlign.Min, StackAlign.Center)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Center)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="start" :show="position('ct')">
+                    </HorAlignBox>
+                    <VerAlignBox align="center"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        @click="changeAlignMode(StackAlign.Min, StackAlign.Center)" :show="position('ct')">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.rt_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="end" :show="position('rt')" @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Min, StackAlign.Max)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="start" :show="position('rt')">
+                    </HorAlignBox>
+                    <VerAlignBox align="end"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('rt')" @click="changeAlignMode(StackAlign.Min, StackAlign.Max)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
         </div>
         <div class="base">
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="start" :show="position('lc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Min)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="center" :show="position('lc')">
-                </HorAlignBox>
-                <VerAlignBox align="start"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('lc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="center" :show="position('cc')"
-                    @click="changeAlignMode(StackAlign.Center, StackAlign.Center)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Center)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="center" :show="position('cc')">
-                </HorAlignBox>
-                <VerAlignBox align="center"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('cc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Center)">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="end" :show="position('rc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Max)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Max)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="center" :show="position('rc')">
-                </HorAlignBox>
-                <VerAlignBox align="end"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('rc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Max)">
-                </VerAlignBox>
-            </div>
+            <Tooltip :content="t(`autolayout.lc_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="start" :show="position('lc')"
+                        @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Min)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="center" :show="position('lc')">
+                    </HorAlignBox>
+                    <VerAlignBox align="start"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('lc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.center_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="center" :show="position('cc')"
+                        @click="changeAlignMode(StackAlign.Center, StackAlign.Center)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Center)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="center" :show="position('cc')">
+                    </HorAlignBox>
+                    <VerAlignBox align="center"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('cc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Center)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.rc_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="end" :show="position('rc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Max)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Center, StackAlign.Max)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="center" :show="position('rc')">
+                    </HorAlignBox>
+                    <VerAlignBox align="end"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('rc')" @click="changeAlignMode(StackAlign.Center, StackAlign.Max)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
         </div>
         <div class="base">
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="start" :show="position('lb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Min)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="end" :show="position('lb')">
-                </HorAlignBox>
-                <VerAlignBox align="start"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('lb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="center" :show="position('cb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Center)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Center)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="end" :show="position('cb')">
-                </HorAlignBox>
-                <VerAlignBox align="center"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('cb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Center)">
-                </VerAlignBox>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    align="end" :show="position('rb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Max)">
-                </WrapAlignBox>
-                <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Max)"
-                    v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
-                    align="end" :show="position('rb')">
-                </HorAlignBox>
-                <VerAlignBox align="end"
-                    v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
-                    :show="position('rb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Max)">
-                </VerAlignBox>
-            </div>
+            <Tooltip :content="t(`autolayout.lb_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="start" :show="position('lb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Min)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="end" :show="position('lb')">
+                    </HorAlignBox>
+                    <VerAlignBox align="start"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('lb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.cb_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="center" :show="position('cb')"
+                        @click="changeAlignMode(StackAlign.Max, StackAlign.Center)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Center)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="end" :show="position('cb')">
+                    </HorAlignBox>
+                    <VerAlignBox align="center"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('cb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Center)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t(`autolayout.rb_align`)">
+                <div>
+                    <div class="dot"></div>
+                    <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
+                        align="end" :show="position('rb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Max)">
+                    </WrapAlignBox>
+                    <HorAlignBox @click="changeAlignMode(StackAlign.Max, StackAlign.Max)"
+                        v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
+                        align="end" :show="position('rb')">
+                    </HorAlignBox>
+                    <VerAlignBox align="end"
+                        v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
+                        :show="position('rb')" @click="changeAlignMode(StackAlign.Max, StackAlign.Max)">
+                    </VerAlignBox>
+                </div>
+            </Tooltip>
         </div>
     </div>
 </template>

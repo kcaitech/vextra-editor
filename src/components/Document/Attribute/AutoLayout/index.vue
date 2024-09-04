@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 import AutoLayoutInput from "./AutoLayoutInput.vue"
 import { AutoLayoutHandler } from '@/transform/autoLayout';
 import AutoLayoutAlign from './AutoLayoutAlign.vue';
+import Tooltip from '@/components/common/Tooltip.vue';
 import AutoLayoutSetting from "./AutoLayoutSetting.vue"
 
 interface Props {
@@ -390,21 +391,27 @@ onUnmounted(() => {
         <div class="container-top" v-if="!isActive && autoLayoutDate">
             <div class="container-left">
                 <div class="layout-wrap">
-                    <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
-                        @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
-                        <svg-icon icon-class="ver-arrow"></svg-icon>
-                    </div>
-                    <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
-                        :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
-                        <svg-icon icon-class="hor-arrow"></svg-icon>
-                    </div>
-                    <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
-                        @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
-                        <svg-icon icon-class="wrap-arrow"></svg-icon>
-                    </div>
+                    <Tooltip :content="t(`autolayout.ver`)">
+                        <div :class="{ active: autoLayoutDate.stackMode === StackMode.Vertical }"
+                            @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Vertical)">
+                            <svg-icon icon-class="ver-arrow"></svg-icon>
+                        </div>
+                    </Tooltip>
+                    <Tooltip :content="t(`autolayout.hor`)">
+                        <div @click="changeLayoutMode(StackWrap.NoWrap, StackMode.Horizontal)"
+                            :class="{ active: autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap }">
+                            <svg-icon icon-class="hor-arrow"></svg-icon>
+                        </div>
+                    </Tooltip>
+                    <Tooltip :content="t(`autolayout.wrap`)">
+                        <div :class="{ active: !autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap }"
+                            @click="changeLayoutMode(StackWrap.Wrap, StackMode.Horizontal)">
+                            <svg-icon icon-class="wrap-arrow"></svg-icon>
+                        </div>
+                    </Tooltip>
                 </div>
                 <div class="hor" v-if="autoLayoutDate.stackMode !== StackMode.Vertical">
-                    <AutoLayoutInput icon="hor-space" :isMenu="true" :show="horSpaceMenu"
+                    <AutoLayoutInput icon="hor-space" :isMenu="true" :show="horSpaceMenu" name="hor_gap"
                         :draggable="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackSpacing"
                         :value="autoLayoutDate.stackHorizontalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackSpacing"
@@ -414,7 +421,7 @@ onUnmounted(() => {
                 </div>
                 <div class="ver"
                     v-if="!autoLayoutDate.stackWrap || autoLayoutDate.stackMode === StackMode.Vertical || autoLayoutDate.stackWrap === StackWrap.Wrap">
-                    <AutoLayoutInput icon="ver-space" :isMenu="true" :show="verSpaceMenu"
+                    <AutoLayoutInput icon="ver-space" :isMenu="true" :show="verSpaceMenu" name="ver_gap"
                         :draggable="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto"
                         :item="autoLayoutDate.stackCounterSpacing"
                         :value="autoLayoutDate.stackVerticalGapSizing === StackSizing.Auto ? t(`autolayout.${StackSizing.Auto}`) : autoLayoutDate.stackCounterSpacing"
@@ -430,52 +437,60 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="container-right">
-                <div>
-                    <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
-                    </AutoLayoutSetting>
-                </div>
+                <Tooltip :content="t(`autolayout.settings`)">
+                    <div>
+                        <AutoLayoutSetting :reflush="reflush" :autoLayoutDate="autoLayoutDate" :context="context">
+                        </AutoLayoutSetting>
+                    </div>
+                </Tooltip>
             </div>
         </div>
         <div class="layout-padding" v-if="!isActive && autoLayoutDate">
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? 'left-padding' : 'hor-padding'"
+                    :name="unfold ? 'left_padding' : 'hor_padding'"
                     :value="unfold ? autoLayoutDate.stackHorizontalPadding : paddingValue(autoLayoutDate.stackHorizontalPadding, autoLayoutDate.stackPaddingRight)"
                     @change="(v) => changePadding(v, unfold ? 'left' : 'hor')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, unfold ? 'left' : 'hor')" @dragend="dragend">
                 </AutoLayoutInput>
                 <AutoLayoutInput v-if="unfold" icon="right-padding" :value="autoLayoutDate.stackPaddingRight"
-                    @change="(v) => changePadding(v, 'right')" @dragstart="dragstart"
+                    name="right_padding" @change="(v) => changePadding(v, 'right')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, 'right')" @dragend="dragend">
                 </AutoLayoutInput>
             </div>
             <div class="container-input">
                 <AutoLayoutInput :icon="unfold ? 'top-padding' : 'ver-padding'"
+                    :name="unfold ? 'top_padding' : 'ver_padding'"
                     :value="unfold ? autoLayoutDate.stackVerticalPadding : paddingValue(autoLayoutDate.stackVerticalPadding, autoLayoutDate.stackPaddingBottom)"
                     @change="(v) => changePadding(v, unfold ? 'top' : 'ver')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, unfold ? 'top' : 'ver')" @dragend="dragend">
                 </AutoLayoutInput>
                 <AutoLayoutInput v-if="unfold" icon="bottom-padding" :value="autoLayoutDate.stackPaddingBottom"
-                    @change="(v) => changePadding(v, 'bottom')" @dragstart="dragstart"
+                    name="bottom_padding" @change="(v) => changePadding(v, 'bottom')" @dragstart="dragstart"
                     @dragging="(e) => draggingPadding(e, 'bottom')" @dragend="dragend">
                 </AutoLayoutInput>
             </div>
             <div class="container-right">
-                <div :class="{ 'padding-active': unfold }" @click="unfold = !unfold">
-                    <svg-icon :icon-class="unfold ? 'white-padding-button' : 'border-all'"></svg-icon>
-                </div>
+                <Tooltip :content="t(`autolayout.${!unfold ? 'unfold' : 'fold'}`)">
+                    <div :class="{ 'padding-active': unfold }" @click="unfold = !unfold">
+                        <svg-icon :icon-class="unfold ? 'white-padding-button' : 'border-all'"></svg-icon>
+                    </div>
+                </Tooltip>
             </div>
         </div>
         <div class="layout-area-size" v-if="!isActive && autoLayoutDate">
-            <div class="title">布局区域大小：</div>
+            <div class="title">{{ t('autolayout.layout_area_size') }}</div>
             <div class="area-options">
                 <AutoLayoutInput
                     :icon="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'layout-auto' : 'layout-fixed'"
+                    :name="autoLayoutDate.stackPrimarySizing === StackSizing.Auto ? 'hor_resizing' : 'hor_fixed'"
                     :isMenu="true" :show="horSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
                     :value="autoLayoutDate.stackPrimarySizing ? t(`autolayout.${autoLayoutDate.stackPrimarySizing}`) : t(`autolayout.${StackSizing.Fixed}`)"
                     @changeItem="(v) => changeSizing(v, 'hor')" @shwoMenu="shwoHorSizingMenu">
                 </AutoLayoutInput>
                 <AutoLayoutInput
                     :icon="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'layout-ver-fixed' : 'layout-ver-auto'"
+                    :name="autoLayoutDate.stackCounterSizing === StackSizing.Fixed ? 'ver_fixed' : 'ver_resizing'"
                     :isMenu="true" :show="verSizingMenu" :disabled="true" :item="t(`autolayout.${StackSizing.Fixed}`)"
                     :value="autoLayoutDate.stackCounterSizing ? t(`autolayout.${autoLayoutDate.stackCounterSizing}`) : t(`autolayout.${StackSizing.Auto}`)"
                     @changeItem="(v) => changeSizing(v, 'ver')" @shwoMenu="shwoVerSizingMenu">

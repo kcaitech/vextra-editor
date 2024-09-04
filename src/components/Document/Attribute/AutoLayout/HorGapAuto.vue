@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { AutoLayout, StackAlign } from '@kcdesign/data';
 import { Context } from '@/context';
+import { useI18n } from "vue-i18n";
+import Tooltip from '@/components/common/Tooltip.vue';
+const { t } = useI18n();
 
 const props = defineProps<{
     autoLayoutDate: AutoLayout
@@ -35,74 +38,80 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
 
 <template>
     <div class="hor-align-container">
-        <div class="base" :class="{ active: position('top') }" @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
-            <div>
-                <div class="dot"></div>
-                <div class="l-hor align" style="padding-left: 6px; padding-right: 2px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
+        <Tooltip :content="t(`autolayout.top_align`)">
+            <div class="base" :class="{ active: position('top') }" @click="changeAlignMode(StackAlign.Min, StackAlign.Min)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="l-hor align" style="padding-left: 6px; padding-right: 2px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-hor align" style="justify-content: center;">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="r-hor align" style="padding-left: 2px; padding-right: 6px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-hor align" style="justify-content: center;">
-                    <div></div>
+        </Tooltip>
+        <Tooltip :content="t(`autolayout.center_align`)">
+            <div class="base" :class="{ active: position('center') }"
+                @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="l-hor align" style="align-items:center; padding-left: 6px; padding-right: 2px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-hor align" style="align-items:center; justify-content: center;">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="r-hor align" style="align-items:center; padding-left: 2px; padding-right: 6px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <div class="dot"></div>
-                <div class="r-hor align" style="padding-left: 2px; padding-right: 6px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
+        </Tooltip>
+        <Tooltip :content="t(`autolayout.bottom_align`)">
+            <div class="base" :class="{ active: position('bottom') }"
+                @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
+                <div>
+                    <div class="dot"></div>
+                    <div class="l-hor align" style="align-items:end; padding-left: 6px; padding-right: 2px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="c-hor align" style="align-items:end; justify-content: center;">
+                        <div></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="dot"></div>
+                    <div class="r-hor align" style="align-items:end; padding-left: 2px; padding-right: 6px;">
+                        <div class="left"></div>
+                        <div class="right"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="base" :class="{ active: position('center') }"
-            @click="changeAlignMode(StackAlign.Center, StackAlign.Min)">
-            <div>
-                <div class="dot"></div>
-                <div class="l-hor align" style="align-items:center; padding-left: 6px; padding-right: 2px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-hor align" style="align-items:center; justify-content: center;">
-                    <div></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="r-hor align" style="align-items:center; padding-left: 2px; padding-right: 6px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-        </div>
-        <div class="base" :class="{ active: position('bottom') }"
-            @click="changeAlignMode(StackAlign.Max, StackAlign.Min)">
-            <div>
-                <div class="dot"></div>
-                <div class="l-hor align" style="align-items:end; padding-left: 6px; padding-right: 2px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="c-hor align" style="align-items:end; justify-content: center;">
-                    <div></div>
-                </div>
-            </div>
-            <div>
-                <div class="dot"></div>
-                <div class="r-hor align" style="align-items:end; padding-left: 2px; padding-right: 6px;">
-                    <div class="left"></div>
-                    <div class="right"></div>
-                </div>
-            </div>
-        </div>
+        </Tooltip>
     </div>
 </template>
 

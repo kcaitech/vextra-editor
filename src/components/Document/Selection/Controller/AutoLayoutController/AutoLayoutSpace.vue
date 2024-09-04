@@ -5,9 +5,10 @@ import { ArtboradView, BorderPosition, ColVector3D, CtrlElementType, Matrix, Pad
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { AutoLayoutHandler } from '@/transform/autoLayout';
-import { getTransformCol } from '@/utils/content';
 import { fixedZero } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 type Box = {
     lt: Point,
@@ -80,7 +81,7 @@ function getVerSpacePosition() {
     let leftPadding = autoLayout.stackHorizontalPadding; //左边距
     ver_space.value = verSpacing;
     if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
-        ver_space.value = '自动'
+        ver_space.value = `${t('autolayout.auto')}`
     }
     const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
     for (let i = 0; i < shape_rows.length - 1; i++) {
@@ -134,7 +135,7 @@ function getHorSpacePosition() {
     const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
     hor_space.value = autoLayout.stackSpacing;
     if (autoLayout.stackHorizontalGapSizing === StackSizing.Auto) {
-        hor_space.value = '自动'
+        hor_space.value = `${t('autolayout.auto')}`;
     }
     for (let i = 0; i < shape_rows.length; i++) {
         let leftPadding = autoLayout.stackHorizontalPadding; //左边距
