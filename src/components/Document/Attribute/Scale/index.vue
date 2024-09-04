@@ -207,13 +207,7 @@ function select(v: string) {
 </script>
 <template>
 <div class="scale-panel">
-    <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true">
-        <template #tool>
-            <div class="close" @click="esc">
-                <svg-icon icon-class="add"/>
-            </div>
-        </template>
-    </TypeHeader>
+    <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
             <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW"
@@ -221,9 +215,9 @@ function select(v: string) {
             <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
-        <div style="display: flex; gap: 13px">
+        <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MdNumberInput icon="K" draggable :value="`${k}x`" @change="changeK"
+                <MdNumberInput icon="scale-simple" draggable :value="`${k}x`" @change="changeK"
                                @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">
@@ -234,11 +228,26 @@ function select(v: string) {
                             <span>{{ i }}</span>
                             <svg-icon v-if="(k+'x') ===i" icon-class="page-select"/>
                         </div>
-
                     </div>
                 </div>
             </div>
+        </div>
+        <div style="margin-bottom: 8px;">
             <ScaleAnchorBox v-model:value="anchorType"/>
+        </div>
+        <div
+            style="width: 189px; height: 32px;
+            background-color: var(--active-color);
+            color: var(--theme-color-anti);
+            display: flex;
+            font-size: 12px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: var(--default-radius)"
+            @click="esc"
+        >
+            {{ t('attr.exit_scale') }}
         </div>
     </div>
 </div>

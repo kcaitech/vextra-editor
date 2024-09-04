@@ -117,6 +117,7 @@ function wheel(event: WheelEvent) {
 <style scoped lang="scss">
 .md-number-input {
     display: flex;
+    gap: 6px;
     align-items: center;
 
     width: 88px;

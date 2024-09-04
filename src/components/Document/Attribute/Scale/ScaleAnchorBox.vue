@@ -1,26 +1,31 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { AnchorType } from "./index";
+import { useI18n } from "vue-i18n";
 
-const WIDTH = 88;
+const t = useI18n().t;
+
+const WIDTH = 72;
 const WIDTH_CSS = WIDTH + 'px';
-const HEIGHT = 80;
+const HEIGHT = 72
 const HEIGHT_CSS = HEIGHT + 'px';
-const types = ref<{ type: AnchorType, selected: boolean }[]>([
-    { type: AnchorType.LeftTop, selected: false },
-    { type: AnchorType.Top, selected: false },
-    { type: AnchorType.RightTop, selected: false },
-    { type: AnchorType.Left, selected: false },
-    { type: AnchorType.Center, selected: true },
-    { type: AnchorType.Right, selected: false },
-    { type: AnchorType.BottomLeft, selected: false },
-    { type: AnchorType.Bottom, selected: false },
-    { type: AnchorType.RightBottom, selected: false }
+const types = ref<{ type: AnchorType, selected: boolean, tips: string }[]>([
+    { type: AnchorType.LeftTop, selected: false, tips: t('attr.scale_from_lt') },
+    { type: AnchorType.Top, selected: false, tips: t('attr.scale_from_top') },
+    { type: AnchorType.RightTop, selected: false, tips: t('attr.scale_from_rt') },
+    { type: AnchorType.Left, selected: false, tips: t('attr.scale_from_left') },
+    { type: AnchorType.Center, selected: true, tips: t('attr.scale_from_center') },
+    { type: AnchorType.Right, selected: false, tips: t('attr.scale_from_right') },
+    { type: AnchorType.BottomLeft, selected: false, tips: t('attr.scale_from_lb') },
+    { type: AnchorType.Bottom, selected: false, tips: t('attr.scale_from_bottom') },
+    { type: AnchorType.RightBottom, selected: false, tips: t('attr.scale_from_rb') }
 ]);
 
 const emit = defineEmits<{
     (e: 'update:value', type: AnchorType): void;
 }>();
+
+const tips = ref<string>(t('attr.scale_from_center'));
 
 function setAnchor(t: AnchorType) {
     const __selected = types.value.find(i => i.selected);
@@ -29,17 +34,22 @@ function setAnchor(t: AnchorType) {
     if (target && !target.selected) {
         target.selected = true;
         emit('update:value', t);
+        tips.value = target.tips;
     }
 }
 
 </script>
 <template>
-<div :style="{width: WIDTH_CSS, height: HEIGHT_CSS}" class="scale-anchor-box">
-    <div v-for="t in types" :key="t.type" class="item" @click="() => setAnchor(t.type)">
-        <div style="width: 2px; height: 2px; border-radius: 50%; background-color: grey;position: absolute;"/>
-        <div :class="{content: true, 'selected-content': t.selected}"/>
+<div style="display: flex;gap: 4px; align-items: center;">
+    <div :style="{width: WIDTH_CSS, height: HEIGHT_CSS}" class="scale-anchor-box">
+        <div v-for="t in types" :key="t.type" class="item" @click="() => setAnchor(t.type)">
+            <div style="width: 3px; height: 3px; border-radius: 50%; background-color: #bfbfbf; position: absolute;"/>
+            <div :class="{content: true, 'selected-content': t.selected}"/>
+        </div>
     </div>
+    <span>{{ tips }}</span>
 </div>
+
 </template>
 <style scoped lang="scss">
 .scale-anchor-box {
@@ -49,6 +59,7 @@ function setAnchor(t: AnchorType) {
     gap: 2px;
     background-color: var(--input-background);
     border-radius: var(--default-radius);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 
     .item {
         display: flex;
@@ -58,8 +69,8 @@ function setAnchor(t: AnchorType) {
 
         .content {
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 10px;
+            height: 10px;
             border-radius: 2px;
             background-color: transparent;
         }
