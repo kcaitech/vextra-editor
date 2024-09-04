@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 import ScaleAnchorBox from "@/components/Document/Attribute/Scale/ScaleAnchorBox.vue";
 import { Context } from "@/context";
 import { useAuto } from "@/components/Document/Creator/execute";
-import { nextTick, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
 import { format_value as format } from "@/utils/common";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
@@ -13,22 +13,147 @@ import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
 import { LockMouse } from "@/transform/lockMouse";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { XY } from "@/context/selection";
+import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, selectionChange: number }>();
 const t = useI18n().t;
 const fix = 2;
 
 function esc() {
-    useAuto(props.context)
+    useAuto(props.context);
 }
 
-const w = ref<number | string>(0);
-const h = ref<number | string>(0);
+const w = ref<number>(0);
+const h = ref<number>(0);
 const k = ref<number>(1);
 const optionsVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 
-const presetOptions = ['0.25x', '0.5x', '0.75x', '1x', '2x', '3x', '4x', '10x'];
+const presetOptions = ['0.25x', '0.5x', '0.75x', '1x', '2x', '3x', '4x', '5x', '10x'];
+
+function __get_box() {
+    const selected = props.context.selection.selectedShapes;
+    const points: XY[] = [];
+    for (const shape of selected) {
+        const frame = shape.frame;
+        const transform = shape.transform2FromRoot;
+        const right = frame.x + frame.width;
+        const bottom = frame.y + frame.height;
+
+        const { col0, col1, col2, col3 } = transform.transform([
+            ColVector3D.FromXY(frame.x, frame.y),
+            ColVector3D.FromXY(right, frame.y),
+            ColVector3D.FromXY(right, bottom),
+            ColVector3D.FromXY(frame.x, bottom),
+        ]);
+        points.push(col0, col1, col2, col3);
+    }
+    return XYsBounding(points);
+}
+
+function getSize() {
+    const box = __get_box();
+    w.value = box.right - box.left;
+    h.value = box.bottom - box.top;
+}
+
+function modifyFixed(transform: Transform, ratio: number, __box?: {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number
+}) {
+    const box = __box ?? __get_box();
+    let x = box.left;
+    let y = box.top;
+    const width = box.right - box.left;
+    const height = box.bottom - box.top;
+
+    const fixedRatio = ratio - 1;
+
+    const __cur_anchor = anchorType.value;
+
+    if (__cur_anchor === AnchorType.Center) {
+        x -= (width * fixedRatio) / 2;
+        y -= (height * fixedRatio) / 2;
+    } else if (__cur_anchor === AnchorType.Top) {
+        x -= (width * fixedRatio) / 2;
+    } else if (__cur_anchor === AnchorType.RightTop) {
+        x -= width * fixedRatio;
+    } else if (__cur_anchor === AnchorType.Right) {
+        x -= width * fixedRatio;
+        y -= (height * fixedRatio) / 2
+    } else if (__cur_anchor === AnchorType.RightBottom) {
+        x -= width * fixedRatio;
+        y -= height * fixedRatio;
+    } else if (__cur_anchor === AnchorType.Bottom) {
+        x -= (width * fixedRatio) / 2;
+        y -= height * fixedRatio;
+    } else if (__cur_anchor === AnchorType.Left) {
+        y -= (height * fixedRatio) / 2;
+    } else if (__cur_anchor === AnchorType.BottomLeft) {
+        y -= height * fixedRatio;
+    }
+    transform.setTranslate(ColVector3D.FromXY(x, y));
+}
+
+function __change_size(ratio: number) {
+    const box = __get_box();
+    const selectionTransform = new Transform().setTranslate(ColVector3D.FromXY(box.left, box.top));
+    const units: { shape: ShapeView, transform: Transform }[] = [];
+    const selected = props.context.selection.selectedShapes;
+    const inverse = selectionTransform.getInverse();
+    for (const shape of selected) {
+        const transform = shape.transform2FromRoot.clone();
+        transform.addTransform(inverse);
+        units.push({ shape, transform });
+    }
+
+    selectionTransform.setScale(ColVector3D.FromXYZ(ratio, ratio, 1));
+
+    modifyFixed(selectionTransform, ratio, box);
+
+    const parentsTransform = new Map<ShapeView, Transform>();
+    for (const shape of selected) {
+        const parent = shape.parent!;
+        if (parentsTransform.has(parent)) continue;
+        const t = parent.transform2FromRoot.clone();
+        parentsTransform.set(parent, t.getInverse());
+    }
+
+    const params: {
+        shape: ShapeView,
+        transform: Transform,
+        size: { width: number, height: number }
+    }[] = [];
+
+    for (const unit of units) {
+        const { shape, transform } = unit;
+        const __t = transform.addTransform(selectionTransform).addTransform(parentsTransform.get(shape.parent!)!);
+        const scale = __t.decomposeScale();
+        const size = {
+            width: shape.size.width * Math.abs(scale.x),
+            height: shape.size.height * Math.abs(scale.y)
+        } as ShapeSize;
+
+        __t.clearScaleSize();
+
+        params.push({ shape, size, transform: __t });
+    }
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+
+    editor.uniformScale(params, ratio);
+
+    props.context.attr.notify(Attribute.FRAME_CHANGE);
+
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        props.context.tool.notify(Tool.RULE_RENDER_SIM);
+    });
+}
 
 function changeW(value: string) {
     value = Number
@@ -38,18 +163,9 @@ function changeW(value: string) {
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
 
-    const shapes = props.context.selection.selectedShapes;
+    k.value = Number((_w / w.value).toFixed(fix));
 
-    const page = props.context.selection.selectedPage!;
-
-    const editor = props.context.editor4Page(page);
-
-    editor.modifyShapesWidth(shapes, _w);
-    props.context.attr.notify(Attribute.FRAME_CHANGE);
-
-    props.context.nextTick(props.context.selection.selectedPage!, () => {
-        props.context.tool.notify(Tool.RULE_RENDER_SIM);
-    });
+    __change_size(k.value);
 }
 
 function changeH(value: string) {
@@ -61,19 +177,8 @@ function changeH(value: string) {
     if (isNaN(_h)) {
         return;
     }
-
-    const shapes = props.context.selection.selectedShapes;
-
-    const page = props.context.selection.selectedPage!;
-
-    const editor = props.context.editor4Page(page);
-
-    editor.modifyShapesHeight(shapes, _h);
-    props.context.attr.notify(Attribute.FRAME_CHANGE);
-
-    props.context.nextTick(props.context.selection.selectedPage!, () => {
-        props.context.tool.notify(Tool.RULE_RENDER_SIM);
-    });
+    k.value = Number((_h / h.value).toFixed(fix));
+    __change_size(k.value);
 }
 
 function changeK(value: string) {
@@ -84,6 +189,7 @@ function changeK(value: string) {
     const _k: number = Number.parseFloat(value);
     if (isNaN(_k)) return;
     k.value = _k;
+    __change_size(k.value);
 }
 
 function updatePosition(movementX: number, movementY: number) {
@@ -204,6 +310,12 @@ function select(v: string) {
     changeK(v);
     optionsVisible.value = false;
 }
+
+const stop = watch(() => props.selectionChange, getSize);
+onMounted(getSize);
+onUnmounted(() => {
+    stop();
+});
 </script>
 <template>
 <div class="scale-panel">
@@ -233,7 +345,7 @@ function select(v: string) {
             </div>
         </div>
         <div style="margin-bottom: 8px;">
-            <ScaleAnchorBox v-model:value="anchorType"/>
+            <ScaleAnchorBox v-model:type="anchorType"/>
         </div>
         <div
             style="width: 189px; height: 32px;
@@ -334,6 +446,7 @@ function select(v: string) {
     padding: 8px 0;
     box-sizing: border-box;
     box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1;
 
     .option {
         width: 100%;

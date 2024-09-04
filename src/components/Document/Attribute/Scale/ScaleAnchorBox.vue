@@ -22,7 +22,7 @@ const types = ref<{ type: AnchorType, selected: boolean, tips: string }[]>([
 ]);
 
 const emit = defineEmits<{
-    (e: 'update:value', type: AnchorType): void;
+    (e: 'update:type', type: AnchorType): void;
 }>();
 
 const tips = ref<string>(t('attr.scale_from_center'));
@@ -33,7 +33,7 @@ function setAnchor(t: AnchorType) {
     if (__selected) __selected.selected = false;
     if (target && !target.selected) {
         target.selected = true;
-        emit('update:value', t);
+        emit('update:type', t);
         tips.value = target.tips;
     }
 }

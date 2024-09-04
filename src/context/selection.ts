@@ -440,8 +440,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     hoverShape(shape: ShapeView) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
-            console.log(shape, 'shape');
-            
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
     }
