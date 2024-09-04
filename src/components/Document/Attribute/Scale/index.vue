@@ -158,10 +158,9 @@ function __change_size(ratio: number) {
 
     editor.uniformScale(params, ratio);
 
-    props.context.attr.notify(Attribute.FRAME_CHANGE);
-
     props.context.nextTick(props.context.selection.selectedPage!, () => {
         props.context.tool.notify(Tool.RULE_RENDER_SIM);
+        props.context.attr.notify(Attribute.FRAME_CHANGE);
     });
 }
 
@@ -321,10 +320,18 @@ function select(v: string) {
     optionsVisible.value = false;
 }
 
+function attrWatcher(t: any) {
+    if (t === Attribute.FRAME_CHANGE) getSize();
+}
+
 const stop = watch(() => props.selectionChange, getSize);
-onMounted(getSize);
+onMounted(() => {
+    getSize();
+    props.context.attr.watch(attrWatcher);
+});
 onUnmounted(() => {
     stop();
+    props.context.attr.unwatch(attrWatcher);
 });
 </script>
 <template>
