@@ -104,8 +104,16 @@ function __change_size(ratio: number) {
     const units: { shape: ShapeView, transform: Transform }[] = [];
     const selected = props.context.selection.selectedShapes;
     const inverse = selectionTransform.getInverse();
+
+    const cache = new Map<ShapeView, Transform>();
     for (const shape of selected) {
-        const transform = shape.transform2FromRoot.clone();
+        const parent = shape.parent!;
+        if (cache.has(parent)) continue;
+        cache.set(parent, parent.transform2FromRoot);
+    }
+
+    for (const shape of selected) {
+        const transform = shape.transform2.clone().addTransform(cache.get(shape.parent!)!);
         transform.addTransform(inverse);
         units.push({ shape, transform });
     }
