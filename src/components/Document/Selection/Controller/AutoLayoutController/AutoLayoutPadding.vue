@@ -86,9 +86,7 @@ function getPaddingPosition() {
 
 const mouseenter = (e: MouseEvent, index: number) => {
     const el = paddingRect.value[index];
-    if (el) {
-        el.style.fill = 'pink';
-    }
+    if (el) el.style.fill = 'pink';
 }
 
 const mouseleave = (e: MouseEvent, index: number) => {
