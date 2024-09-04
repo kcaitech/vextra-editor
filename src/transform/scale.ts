@@ -250,9 +250,7 @@ export class ScaleHandler extends TransformHandler {
     private livingPointAlignByAssist() {
         const len = this.shapes.length;
 
-        if (!len) {
-            return;
-        }
+        if (!len) return;
 
         const cet = this.ctrlElementType;
 
@@ -441,7 +439,7 @@ export class ScaleHandler extends TransformHandler {
 
                     ltPointForSelection.x += dx;
                     rbPointForSelection.x -= dx;
-                }  else if (CET === CtrlElementType.RectLT) {
+                } else if (CET === CtrlElementType.RectLT) {
                     const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
                     ltPointForSelection.y = selectionHeight - afterHeight;
                 }
