@@ -94,6 +94,7 @@ function selection_watcher(t: number | string) {
 function workspace_watcher(t: number) {
     if (t === WorkSpace.TRANSLATING) {
         selection_hidden.value = props.context.workspace.isTranslating;
+        autoLayoutShow.value = false;
     }
 }
 
@@ -119,6 +120,9 @@ function windowBlur() {
 const autoLayoutShow = ref(false);
 
 const mouseleave = () => {
+    if (props.context.workspace.transforming) {
+        return;
+    }
     autoLayoutShow.value = false;
 }
 

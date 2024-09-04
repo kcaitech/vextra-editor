@@ -98,6 +98,7 @@ function selection_watcher(t: number | string) {
 function workspace_watcher(t: number, some: any) {
     if (t === WorkSpace.TRANSLATING) {
         selection_hidden.value = props.context.workspace.isTranslating;
+        autoLayoutShow.value = false;
     } else if (t === WorkSpace.PATH_EDIT_MODE) {
         selection_hidden.value = props.context.workspace.is_path_edit_mode;
     }
@@ -137,6 +138,9 @@ const mouseenter = () => {
 
 const mouseleave = () => {
     is_enter.value = false;
+    if (props.context.workspace.transforming) {
+        return;
+    }
     autoLayoutShow.value = false;
 }
 

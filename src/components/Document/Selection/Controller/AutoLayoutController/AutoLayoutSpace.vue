@@ -318,6 +318,9 @@ function setCursor(dir: 'ver' | 'hor') {
 
 const verMouseenter = (e: MouseEvent) => {
     emits('hoverPaddint', -1);
+    if (props.context.workspace.transforming) {
+        return;
+    }
     verSpaceFill.value = true;
 }
 
@@ -332,6 +335,9 @@ const verMousemove = (e: MouseEvent) => {
 
 const horMouseenter = (e: MouseEvent) => {
     emits('hoverPaddint', -1);
+    if (props.context.workspace.transforming) {
+        return;
+    }
     horSpaceFill.value = true;
 }
 
