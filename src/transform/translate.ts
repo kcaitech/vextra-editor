@@ -130,6 +130,7 @@ export class TranslateHandler extends TransformHandler {
         this.fromMode = __mode;
         this.mode = __mode;
         if (__mode === "layout") this.setAnimations(Array.from(parents.values()) as GroupShapeView[]);
+        else if (__mode === "normal") this.clearAnimation();
     }
 
     beforeTransform() {
