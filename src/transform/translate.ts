@@ -95,13 +95,14 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private setAnimations(layoutEnvs: GroupShapeView[]) {
-        const __set = this.shapesIdSet;
-        for (const env of layoutEnvs) {
+        for (const env of layoutEnvs)
             for (const child of env.childs) {
-                if (__set.has(child.id)) continue;
-                (child as ShapeDom).el?.classList.add('transition-200');
+                const el = (child as ShapeDom).el;
+                if (el) {
+                    el.classList.add('transition-200');
+                    this.elementsWithAnimation.add(el)
+                }
             }
-        }
     }
 
     setMode() {
@@ -112,19 +113,23 @@ export class TranslateHandler extends TransformHandler {
             parents.add(shape.parent!);
             if (shape.stackPositioning !== StackPositioning.ABSOLUTE) allAbsolute = false;
         }
-        this.fromMode = this.mode;
 
+        let __mode: TranslateMode;
         if (parents.size > 1) {
-            this.mode = "normal";
+            __mode = "normal";
         } else {
             const parent = shapes[0].parent as ArtboradView;
             if (parent.autoLayout) {
                 this.autoLayoutShape = parent;
-                this.mode = allAbsolute ? "absolute" : "layout";
+                __mode = allAbsolute ? "absolute" : "layout";
             } else {
-                this.mode = "normal";
+                __mode = "normal";
             }
         }
+
+        this.fromMode = __mode;
+        this.mode = __mode;
+        if (__mode === "layout") this.setAnimations(Array.from(parents.values()) as GroupShapeView[]);
     }
 
     beforeTransform() {
