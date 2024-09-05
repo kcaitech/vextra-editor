@@ -2,11 +2,14 @@ import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
     adapt2Shape,
+    layoutShapesOrder,
+    makeShapeTransform1By2,
+    makeShapeTransform2By1,
+    Shape,
     ArtboradView,
     ColVector3D,
-    GroupShape, layoutShapesOrder,
-    makeShapeTransform1By2,
-    makeShapeTransform2By1, Shape,
+    GroupShape,
+    GroupShapeView,
     ShapeType,
     ShapeView,
     StackPositioning,
@@ -24,14 +27,16 @@ import { compare_layer_3 } from "@/utils/group_ungroup";
 import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
+import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 
-type BaseFrame4Trans = {
-    originTransform: Transform
-}
+type BaseFrame4Trans = { originTransform: Transform };
+
+type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert';
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];
     shapesIdSet: Set<string>;
+    shapesBackup: ShapeView[] = [];
 
     livingPoint: XY;
     fixedPoint: XY;
@@ -40,42 +45,28 @@ export class TranslateHandler extends TransformHandler {
     boxOffsetLivingPointX: number = 0;
     boxOffsetLivingPointY: number = 0;
 
-    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 }; // 影子盒子
+    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
 
     baseFrames4trans: Map<string, BaseFrame4Trans> = new Map();
 
     offsetX: number = 0;
     offsetY: number = 0;
 
-    shapesSet: Set<string> = new Set();
+    coping: boolean = false;
 
-    shapesBackup: ShapeView[] = [];
-    coping: boolean = false; // 数据拷贝中
-
-    mode: 'normal' | 'layout' | 'absolute' = "normal";
+    fromMode: TranslateMode = "normal";
+    mode: TranslateMode = "normal";
 
     isKeySPress: boolean = false;
-
     fulfilled: boolean = false;
 
     autoLayoutShape: ShapeView | undefined;
 
     clientXY: XY;
-    downXY: XY
+    downXY: XY;
 
-    /**
-     * check：down的时候校验移动模式: normal | layout
-     *  · normal
-     *      ---
-     *  · layout
-     *      · 如果选中的图层仅部分为Absolute图层，则把Absolute图层筛选出去；
-     *      · Absolute图层迁移到没有自动布局的元素需要取消Absolute状态；
-     *      · 移动过程监听当前环境的变化
-     *  · absolute
-     *      ·
-     *
-     *
-     */
+    elementsWithAnimation: Set<Element> = new Set<Element>();
+
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
         this.shapes = shapes;
@@ -93,6 +84,27 @@ export class TranslateHandler extends TransformHandler {
         this.getFrames();
     }
 
+    private clearAnimation() {
+        this.elementsWithAnimation.forEach(element => element.classList.remove('transition-200'));
+        this.elementsWithAnimation.clear();
+    }
+
+    private setAnimation(el: Element) {
+        el.classList.add('transition-200');
+        this.elementsWithAnimation.add(el);
+    }
+
+    private setAnimations(layoutEnvs: GroupShapeView[]) {
+        for (const env of layoutEnvs)
+            for (const child of env.childs) {
+                const el = (child as ShapeDom).el;
+                if (el) {
+                    el.classList.add('transition-200');
+                    this.elementsWithAnimation.add(el)
+                }
+            }
+    }
+
     setMode() {
         const shapes = this.shapes;
         const parents = new Set<ShapeView>();
@@ -101,18 +113,25 @@ export class TranslateHandler extends TransformHandler {
             parents.add(shape.parent!);
             if (shape.stackPositioning !== StackPositioning.ABSOLUTE) allAbsolute = false;
         }
+
+        let __mode: TranslateMode;
         if (parents.size > 1) {
-            this.mode = "normal";
+            __mode = "normal";
         } else {
             const parent = shapes[0].parent as ArtboradView;
             if (parent.autoLayout) {
                 this.autoLayoutShape = parent;
-                this.mode = allAbsolute ? "absolute" : "layout";
-                this.shapesIdSet = new Set(shapes.map(i => i.id));
+                __mode = allAbsolute ? "absolute" : "layout";
             } else {
-                this.mode = "normal";
+                __mode = "normal";
             }
         }
+
+        this.fromMode = this.mode;
+        this.mode = __mode;
+
+        if (__mode === "layout") this.setAnimations(Array.from(parents.values()) as GroupShapeView[]);
+        else if (__mode === "normal") this.clearAnimation();
     }
 
     beforeTransform() {
@@ -181,18 +200,20 @@ export class TranslateHandler extends TransformHandler {
         let top = Infinity;
         let bottom = -Infinity;
 
-        this.shapesSet.clear();
+        const __set = this.shapesIdSet;
+        __set.clear();
+        const bases = this.baseFrames4trans;
 
         for (let i = 0; i < this.shapes.length; i++) {
             const shape = this.shapes[i];
+            __set.add(shape.id)
+
             const parent = shape.parent!;
             if (!parent) continue;
             const { x, y, width, height } = shape.frame;
             if (!matrixParent2rootCache.has(parent.id)) {
                 matrixParent2rootCache.set(parent.id, parent.transform2FromRoot)
             }
-
-            this.shapesSet.add(shape.id)
 
             const m = makeShapeTransform2By1(shape.transform).clone();
             m.addTransform(matrixParent2rootCache.get(parent.id)!);
@@ -204,40 +225,21 @@ export class TranslateHandler extends TransformHandler {
                 ColVector3D.FromXY(x, y + height),
             ])
 
-            this.baseFrames4trans.set(shape.id, {
-                originTransform: m
-            });
+            bases.set(shape.id, { originTransform: m });
 
-            if (LT.x < left) {
-                left = LT.x;
-            }
-            if (LT.x > right) {
-                right = LT.x;
-            }
-            if (LT.y < top) {
-                top = LT.y;
-            }
-            if (LT.y > bottom) {
-                bottom = LT.y;
-            }
+            if (LT.x < left) left = LT.x;
+            if (LT.x > right) right = LT.x;
+            if (LT.y < top) top = LT.y;
+            if (LT.y > bottom) bottom = LT.y;
 
             const points = [RT, RB, LB];
 
             for (let i = 0; i < 3; i++) {
                 const p = points[i];
-
-                if (p.x < left) {
-                    left = p.x;
-                }
-                if (p.x > right) {
-                    right = p.x;
-                }
-                if (p.y < top) {
-                    top = p.y;
-                }
-                if (p.y > bottom) {
-                    bottom = p.y;
-                }
+                if (p.x < left) left = p.x;
+                if (p.x > right) right = p.x;
+                if (p.y < top) top = p.y;
+                if (p.y > bottom) bottom = p.y;
             }
         }
 
@@ -250,7 +252,7 @@ export class TranslateHandler extends TransformHandler {
             height: bottom - top,
         };
 
-        if (this.alignPixel) { // 给影子数据取整
+        if (this.alignPixel) {
             box.x = Math.round(box.x);
             box.y = Math.round(box.y);
             box.right = Math.round(box.right);
@@ -267,22 +269,21 @@ export class TranslateHandler extends TransformHandler {
         this.boxOffsetLivingPointY = this.livingPoint.y - top;
     }
 
-    execute(event: MouseEvent) {
-        this.livingPoint = this.workspace.getRootXY(event);
 
+    __updateLiving(event: MouseEvent) {
+        this.livingPoint = this.workspace.getRootXY(event);
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
+    }
 
+    execute(event: MouseEvent) {
+        this.__updateLiving(event);
         this.clientXY = { x: event.clientX, y: event.clientY };
-
         this.migrate();
-        this.updateBoxByAssist();
         this.__execute();
     }
 
     private updateBoxByAssist() {
-        if (this.mode !== 'normal') return; // 自动布局下不需要参考线
-
         if (this.shiftStatus) {
             const dx = Math.abs(this.livingPoint.x - this.fixedPoint.x);
             const dy = Math.abs(this.livingPoint.y - this.fixedPoint.y);
@@ -470,16 +471,16 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private passiveExecute() {
-        if (!this.asyncApiCaller) {
-            return;
-        }
-
-        this.updateBoxByAssist();
-
+        if (!this.asyncApiCaller) return;
         this.__execute();
     }
 
+    /**
+     * @description 线性迁移
+     */
     private __linear_trans() {
+        this.updateBoxByAssist();
+
         const { x: originX, y: originY } = this.originSelectionBox;
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
@@ -516,9 +517,7 @@ export class TranslateHandler extends TransformHandler {
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
 
-                if (offsetX || offsetY) {
-                    __t.translate(ColVector3D.FromXY(offsetX, offsetY));
-                }
+                if (offsetX || offsetY) __t.translate(ColVector3D.FromXY(offsetX, offsetY));
             }
 
             __t.addTransform(PI);
@@ -538,14 +537,20 @@ export class TranslateHandler extends TransformHandler {
         });
     }
 
+    /**
+     * @description 自动布局下换位
+     */
+    private __swap() {
+        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.clientXY);
+        this.swapLayoutShape();
+    }
+
     private __execute() {
         if (this.coping || this.context.readonly) return;
-
-        if (this.mode !== "layout") {
+        if (this.mode === 'normal') {
             this.__linear_trans();
-        } else {
-            this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, this.clientXY);
-            this.swapLayoutShape();
+        } else if (this.mode === 'layout') {
+            this.__swap();
         }
     }
 
@@ -566,7 +571,10 @@ export class TranslateHandler extends TransformHandler {
             const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
             const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
             const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            f.x = minx, f.y = miny, f.width = maxx - minx, f.height = maxy - miny
+            f.x = minx;
+            f.y = miny;
+            f.width = maxx - minx;
+            f.height = maxy - miny;
         }
         return f;
     }
@@ -602,8 +610,6 @@ export class TranslateHandler extends TransformHandler {
                 break;
             }
         }
-
-        // this.tips4absolutePosition();
     }
 
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
@@ -685,6 +691,7 @@ export class TranslateHandler extends TransformHandler {
         super.fulfil();
         this.fulfilled = true;
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE);
+        this.clearAnimation();
     }
 
     protected keydown(event: KeyboardEvent) {
