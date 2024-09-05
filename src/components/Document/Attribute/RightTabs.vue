@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { Action, Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
 import PageAttr from "@/components/Document/Attribute/PageAttr.vue";
-import { FontAvailable, fontNameListEn, fontNameListZh } from "./Text/FontNameList";
+import { FontAvailable, fontNameListEn, fontNameListZh, isSupportFontFamily } from "./Text/FontNameList";
 const { t } = useI18n();
 
 interface Props {
@@ -100,8 +100,10 @@ const stopMouseDown = (e: MouseEvent) => {
 }
 async function getFontNameList(fontName: string[], lang: string) {
     try {
-        const results = await Promise.all(fontName.map(name => FontAvailable(name)));
+        // const results = await Promise.all(fontName.map(name => FontAvailable(name)));
+        const results = await Promise.all(fontName.map(name => isSupportFontFamily(name)));
         if (lang === 'zh') {
+            // const zh = fontName.filter((name, index) => results[index].length > 0);
             const zh = fontName.filter((name, index) => results[index].length > 0);
             props.context.workspace.setFontNameListZh(zh)
         } else {
