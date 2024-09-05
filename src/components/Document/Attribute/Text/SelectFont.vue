@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Context } from '@/context';
-import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList } from './FontNameList'
+import { fontNameListEn, fontNameListZh, FontAvailable, fontWeightList, isSupportFontFamily } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
@@ -91,7 +91,7 @@ const getAllTextFontName = async () => {
         const pageFont = props.context.selection.selectedPage?.data.getUsedFontNames()
         if (pageFont) {
             const font = (Array.from(pageFont) as string[])
-            const result = await Promise.all(font.map(name => FontAvailable(name).length > 0));
+            const result = await Promise.all(font.map(name => isSupportFontFamily(name).length > 0));
             const usedSuccess = font.filter((name, index) => result[index]);
             fontList.used.success.push(...usedSuccess)
             const usedFailurel = font.filter((name, index) => {

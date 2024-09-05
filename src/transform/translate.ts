@@ -579,18 +579,26 @@ export class TranslateHandler extends TransformHandler {
         const shapesUnderCommonEnv: ShapeView[] = env.childs;
         const __set = this.shapesIdSet;
         const scout = this.context.selection.scout;
+        const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
+        const shape_row: Shape[] = shape_rows.flat();
+        const sort: Map<string, number> = new Map();
+        for (let i = 0; i < shapes.length; i++) {
+            const s = shapes[i];
+            const index = shape_row.findIndex(item => s.id === item.id);
+            if (index !== -1) {
+                sort.set(s.id, index);
+            }
+        }
         for (const shape of shapesUnderCommonEnv) {
             if (__set.has(shape.id)) continue;
             if (isTarget(scout, shape, living)) {
-                const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
-                const shape_row: Shape[] = shape_rows.flat();
                 const alpha = shapes[0];
                 const cur_index = shape_row.findIndex(item => item.id === alpha.id);
                 const tar_index = shape_row.findIndex(item => item.id === shape.id);
                 const targetXY = this.__getTargetFrame(adapt2Shape(shape));
                 const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
                 const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
-                (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY);
+                (this.asyncApiCaller as Transporter).swap(env, shapes, transX, transY, sort);
                 break;
             }
         }

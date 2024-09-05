@@ -33,6 +33,67 @@ export const fontNameListEn = [
     'Source Han Sans CN', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
     'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
 ]
+const fontWeight = [
+    { key: "Regular", weight: 400, value: '' },
+    { key: "Bold", weight: 700, value: '' },
+    { key: "Black", weight: 900, value: '' },
+    { key: "Medium", weight: 500, value: '' },
+    { key: "SemiBold", weight: 600, value: '' },
+    { key: "ExtraBold", weight: 800, value: '' },
+    { key: "Light", weight: 300, value: '' },
+    { key: "ExtraLight", weight: 200, value: '' },
+    { key: "Thin", weight: 100, value: '' },
+]
+export const isSupportFontFamily = function (font: string) {
+    if (typeof font != "string") {
+        return [];
+    }
+    //基础字体
+    const h = "Arial";
+
+    const text = "abcdefgSTUVWXYZ12345!@#$%^&*(中文字体";
+    const d = 100;
+    const a = 100, i = 100;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if(!context) return [];
+    canvas.width = a;
+    canvas.height = i;
+    context.textAlign = "center";
+    context.fillStyle = "black";
+    context.textBaseline = "middle";
+    const g = function (j: string, w: number | string) {
+        context.clearRect(0, 0, a, i);
+        //        字体是传入的j,或者是默认的h
+        context.font = w + ' ' + d + "px " + j + ", " + h;
+        context.fillText(text, a / 2, i / 2);
+        //        获取所有的canvas图片信息
+        const k = context.getImageData(0, 0, a, i).data;
+        //        k调用数组的 filter方法,筛选符合条件的。改变原数组。
+        return [].slice.call(k).filter(function (l) {
+            return l != 0
+        });
+    };
+
+    let result: any = [];
+    if (g(h, 'normal').join("") !== g(font, 'normal').join("")) {
+        for (let i = 0; i < fontWeight.length; i++) {
+            const weight = fontWeight[i].weight;
+            const r = g(font, weight).join("");
+            fontWeight[i].value = r;
+        }
+
+        const r = fontWeight.reduce((dict, item) => {
+            const key = item.value;
+            if (!dict[key]) {
+                dict[key] = item;
+            }
+            return dict;
+        }, {} as any);
+        result = Object.values(r);
+    }
+    return result;
+};
 
 export function FontAvailable(fontName: string) {
     const canvas = document.createElement('canvas');
