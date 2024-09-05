@@ -280,7 +280,7 @@ onUnmounted(() => {
 }
 
 .dotted-move {
-    fill: transparent;
+    fill: none;
     stroke-width: 1px;
     stroke: transparent;
     stroke-dasharray: 2, 2;

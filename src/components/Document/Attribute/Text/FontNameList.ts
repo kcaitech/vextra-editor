@@ -1,6 +1,6 @@
 export const fontNameListZh = [
     'PingFang SC', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
-    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI','Microsoft YaHei UI',
+    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI', 'Microsoft YaHei UI',
     'MingLiU', 'MingLiU_HKSCS', 'PMingLiU', 'STFangsong', 'STHeiti', 'STKaiti', '黑体-简',
     'STSong', '仿宋', '冬青黑体简体中文', '凌慧体-简', '华文中宋', '华文仿宋', '华文新魏',
     '华文楷体', '华文琥珀', '华文行楷', '华文隶书', '娃娃体-简', '圆体-简', '宋体', '等线',
@@ -56,7 +56,7 @@ export const isSupportFontFamily = function (font: string) {
     const a = 100, i = 100;
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d", { willReadFrequently: true });
-    if(!context) return [];
+    if (!context) return [];
     canvas.width = a;
     canvas.height = i;
     context.textAlign = "center";
@@ -69,7 +69,6 @@ export const isSupportFontFamily = function (font: string) {
         context.fillText(text, a / 2, i / 2);
         //        获取所有的canvas图片信息
         const k = context.getImageData(0, 0, a, i).data;
-        //        k调用数组的 filter方法,筛选符合条件的。改变原数组。
         return [].slice.call(k).filter(function (l) {
             return l != 0
         });
@@ -77,20 +76,7 @@ export const isSupportFontFamily = function (font: string) {
 
     let result: any = [];
     if (g(h, 'normal').join("") !== g(font, 'normal').join("")) {
-        for (let i = 0; i < fontWeight.length; i++) {
-            const weight = fontWeight[i].weight;
-            const r = g(font, weight).join("");
-            fontWeight[i].value = r;
-        }
-
-        const r = fontWeight.reduce((dict, item) => {
-            const key = item.value;
-            if (!dict[key]) {
-                dict[key] = item;
-            }
-            return dict;
-        }, {} as any);
-        result = Object.values(r);
+        result = [font];
     }
     return result;
 };
@@ -179,33 +165,47 @@ export const fontWeightConvert = (weight: number | undefined, italic: boolean) =
 
 export function fontWeightList(fontName: string, italic: boolean) {
     const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
     const fontWeight = [
-        { key: "Regular", weight: 400, value: 0, italic: false },
-        { key: "Bold", weight: 700, value: 0, italic: false },
-        { key: "Light", weight: 300, value: 0, italic: false },
-        { key: "ExtraLight", weight: 200, value: 0, italic: false },
-        { key: "Black", weight: 900, value: 0, italic: false },
-        { key: "Thin", weight: 100, value: 0, italic: false },
-        { key: "Medium", weight: 500, value: 0, italic: false },
-        { key: "SemiBold", weight: 600, value: 0, italic: false },
-        { key: "ExtraBold", weight: 800, value: 0, italic: false },
+        { key: "Regular", weight: 400, value: '', italic: false },
+        { key: "Bold", weight: 700, value: '', italic: false },
+        { key: "Light", weight: 300, value: '', italic: false },
+        { key: "ExtraLight", weight: 200, value: '', italic: false },
+        { key: "Black", weight: 900, value: '', italic: false },
+        { key: "Thin", weight: 100, value: '', italic: false },
+        { key: "Medium", weight: 500, value: '', italic: false },
+        { key: "SemiBold", weight: 600, value: '', italic: false },
+        { key: "ExtraBold", weight: 800, value: '', italic: false },
     ]
     const fontItalic = [
-        { key: "Italic", weight: 400, value: 0, italic: true },
-        { key: "Bold Italic", weight: 700, value: 0, italic: true },
-        { key: "Black Italic", weight: 900, value: 0, italic: true },
+        { key: "Italic", weight: 400, value: '', italic: true },
+        { key: "Bold Italic", weight: 700, value: '', italic: true },
+        { key: "Black Italic", weight: 900, value: '', italic: true },
     ]
     if (!context) return;
-    const text = 'abcdefghijklmnopqrSTUVWXYZ0123456789!@#$%^&*(中文字体';
-    context.font = '72px' + fontName + ', monospace';
-    const newSize = context.measureText(text).width;
+    const text = 'abcdefgSTUVWXYZ12345!@#$%^&*(中文字体';
+    //基础字体
+    const d = 100;
+    const a = 100, i = 100;
+    canvas.width = a;
+    canvas.height = i;
+    context.textAlign = "center";
+    context.fillStyle = "black";
+    context.textBaseline = "middle";
+    const g = function (j: string, w: number | string) {
+        context.clearRect(0, 0, a, i);
+        context.font = w + ' ' + d + "px " + j + ", monospace";
+        context.fillText(text, a / 2, i / 2);
+        const k = context.getImageData(0, 0, a, i).data;
+        return [].slice.call(k).filter(function (l) {
+            return l != 0
+        });
+    };
     let result: any = [];
     for (let i = 0; i < fontWeight.length; i++) {
         const weight = fontWeight[i].weight;
-        context.font = `${weight} 72px ${fontName}, monospace`;
-        const newSizeWeight = context.measureText(text).width;
-        fontWeight[i].value = newSizeWeight;
+        const r = g(fontName, weight).join("");
+        fontWeight[i].value = r;
     }
     const r = fontWeight.reduce((dict, item) => {
         const key = item.value;
@@ -215,6 +215,7 @@ export function fontWeightList(fontName: string, italic: boolean) {
         return dict;
     }, {} as any);
     result = Object.values(r);
+
     result.sort((a: any, b: any) => {
         if (a.weight > b.weight) {
             return 1;
@@ -225,15 +226,13 @@ export function fontWeightList(fontName: string, italic: boolean) {
         }
     })
     if (italic) {
-        context.font = `Italic 72px ${fontName}, monospace`;
-        const newSize2 = context.measureText(text).width;
-        if (newSize !== newSize2) {
+        if (g(fontName, 'normal').join("") !== g(fontName, 'Italic').join("")) {
             for (let i = 0; i < fontItalic.length; i++) {
                 const style = fontItalic[i].key;
-                context.font = `${style} 72px ${fontName}, monospace`;
-                const newSizeWeight = context.measureText(text).width;
-                fontItalic[i].value = newSizeWeight;
+                const r = g(fontName, style).join("");
+                fontItalic[i].value = r;
             }
+
             const r = fontItalic.reduce((dict, item) => {
                 const key = item.value;
                 if (!dict[key]) {
