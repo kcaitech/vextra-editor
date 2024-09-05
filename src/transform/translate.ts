@@ -105,7 +105,7 @@ export class TranslateHandler extends TransformHandler {
             }
     }
 
-    setMode() {
+    setMode(emitter: 'alt' | 'back' | 'migrate' | 'init') {
         const shapes = this.shapes;
         const parents = new Set<ShapeView>();
         let allAbsolute = true;
@@ -128,6 +128,9 @@ export class TranslateHandler extends TransformHandler {
         }
 
         this.fromMode = this.mode;
+
+        if (__mode === 'layout' && (emitter === "alt" || emitter === "migrate")) __mode = "insert";
+
         this.mode = __mode;
 
         if (__mode === "layout") this.setAnimations(Array.from(parents.values()) as GroupShapeView[]);
@@ -161,7 +164,9 @@ export class TranslateHandler extends TransformHandler {
 
         this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
 
+        let emitter: any = "init";
         if (this.altStatus) {
+            emitter = "alt";
             this.coping = true;
             this.shapesBackup = this.shapes.map(s => s);
             this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
@@ -189,7 +194,7 @@ export class TranslateHandler extends TransformHandler {
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
 
-        this.setMode();
+        this.setMode(emitter);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
 
@@ -620,21 +625,22 @@ export class TranslateHandler extends TransformHandler {
         const except = t.getExceptEnvs();
 
         const o_env = except.find(v => v.id === target_parent.id);
-
+        let emitter: any;
         if (o_env) {
             t.backToStartEnv(o_env.data, ctx.workspace.t('compos.dlt'));
+            emitter = "back";
         } else {
             const tp = adapt2Shape(target_parent) as GroupShape;
             const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
             t.migrate(tp, _shapes, ctx.workspace.t('compos.dlt'));
+            emitter = "migrate";
         }
-
         ctx.nextTick(ctx.selection.selectedPage!, () => {
-            const oMode = this.mode;
+            this.setMode(emitter);
 
-            this.setMode();
+            const fromMode = this.fromMode;
+            if (fromMode === "layout" || fromMode === "insert") this.__linear_trans();
 
-            if (oMode === 'layout') this.__linear_trans();
             if (this.isNormalMode) ctx.selection.notify(Selection.LAYOUT_DOTTED_LINE);
             if (this.isLayoutMode) {
                 ctx.assist.notify(Assist.CLEAR);
