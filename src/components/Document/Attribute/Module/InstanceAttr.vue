@@ -69,7 +69,7 @@ const untie = () => {
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
+    const shapes = editor.extractSymbol(props.shapes);
     if (!shapes) return;
     props.context.nextTick(page, () => {
         const select = shapes.reduce((pre, cur) => {

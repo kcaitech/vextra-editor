@@ -124,7 +124,7 @@ function _selection_change() {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
         shapeType.value = shape.type;
-        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.type)) {
+        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
             autoLayout.value = true;
         }
     }
@@ -340,6 +340,10 @@ onUnmounted(() => {
                     :trigger="reflush_trigger"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :trigger="reflush_trigger"></ShapeBaseAttr>
+                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
+                </Module>
+                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
+                </InstanceAttr>
                 <AutoLayout v-if="autoLayout || shapes.length > 1" :trigger=reflush_trigger
                     :selection-change="reflush_by_selection" :context="props.context" :shapes="shapes">
                 </AutoLayout>
@@ -350,10 +354,6 @@ onUnmounted(() => {
                 <Opacity v-if="!WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
                     :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
-                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes">
-                </Module>
-                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
-                </InstanceAttr>
                 <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
                     :selection-change="reflush_by_selection" :textShapes="((textShapes) as TextShapeView[])"
                     :context="props.context" :trigger="reflush_trigger"></Text>
