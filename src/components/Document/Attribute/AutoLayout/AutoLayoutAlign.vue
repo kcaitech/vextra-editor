@@ -152,14 +152,14 @@ const changeAlignMode = (primary: StackAlign, counter: StackAlign) => {
             <div>
                 <div class="dot"></div>
                 <WrapAlignBox v-if="(!autoLayoutDate.stackWrap || autoLayoutDate.stackWrap === StackWrap.Wrap)"
-                    name="center_align" align="end" :show="position('rc')"
+                    name="rc_align" align="end" :show="position('rc')"
                     @change="changeAlignMode(StackAlign.Center, StackAlign.Max)">
                 </WrapAlignBox>
-                <HorAlignBox @change="changeAlignMode(StackAlign.Center, StackAlign.Max)" name="center_align"
+                <HorAlignBox @change="changeAlignMode(StackAlign.Center, StackAlign.Max)" name="rc_align"
                     v-if="(autoLayoutDate.stackMode === StackMode.Horizontal && autoLayoutDate.stackWrap === StackWrap.NoWrap)"
                     align="center" :show="position('rc')">
                 </HorAlignBox>
-                <VerAlignBox align="end" name="center_align"
+                <VerAlignBox align="end" name="rc_align"
                     v-if="autoLayoutDate.stackVerticalGapSizing !== StackSizing.Auto && (autoLayoutDate.stackMode === StackMode.Vertical)"
                     :show="position('rc')" @change="changeAlignMode(StackAlign.Center, StackAlign.Max)">
                 </VerAlignBox>
