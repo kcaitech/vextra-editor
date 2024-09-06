@@ -600,6 +600,7 @@ function timeSlicingTask(fontList: string[], lang: string) {
                 const results: string[] = isSupportFontFamily(fontList[i]);
                 if (lang === 'zh' && results.length > 0) {
                     props.context.workspace.setFontNameListZh(results[0]);
+                    props.context.workspace.setFontNameListLocal(results);
                 } else if (lang === 'en' && results.length > 0) {
                     props.context.workspace.setFontNameListEn(results[0]);
                 }

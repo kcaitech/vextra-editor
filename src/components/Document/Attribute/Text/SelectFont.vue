@@ -203,11 +203,11 @@ onMounted(() => {
         <div class="font-scroll">
             <el-scrollbar v-if="searchFont.trim().length === 0">
                 <!-- 列表中已使用字体 -->
-                <div class="text_title">
+                <div class="text_title" @click="unfoldFontName(1)">
                     <span class="font-title">{{ t('attr.used_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(1)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.used.success" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
@@ -235,11 +235,11 @@ onMounted(() => {
                 <!-- 本地字体 -->
                 <div v-if="fontList.local.length">
                     <div class="line"></div>
-                    <div class="text_title">
+                    <div class="text_title" @click="unfoldFontName(4)">
                         <span class="font-title">{{ t('attr.local_font') }}</span>
                         <span class="title_svg"
                             :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                                icon-class="down" @click="unfoldFontName(2)"></svg-icon></span>
+                                icon-class="down"></svg-icon></span>
                     </div>
                     <div class="item" v-for="item in fontList.local" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
@@ -263,11 +263,11 @@ onMounted(() => {
                 </div>
                 <div class="line"></div>
                 <!-- 列表中文字体 -->
-                <div class="text_title">
+                <div class="text_title" @click="unfoldFontName(2)">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(2)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.ch" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
@@ -278,11 +278,11 @@ onMounted(() => {
                 </div>
                 <div class="line"></div>
                 <!-- 列表英文字体 -->
-                <div class="text_title">
+                <div class="text_title" @click="unfoldFontName(3)">
                     <span class="font-title">{{ t('attr.english_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(3)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.en" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
@@ -293,12 +293,12 @@ onMounted(() => {
                 </div>
             </el-scrollbar>
             <el-scrollbar v-else>
-                <div class="text_title"
+                <div class="text_title" @click="unfoldFontName(1)"
                     v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
                     <span class="font-title">{{ t('attr.used_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(1)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <!-- 已使用的字体 -->
                 <template v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
@@ -325,11 +325,11 @@ onMounted(() => {
                 </div>
 
                 <!-- 检索的本地字体 -->
-                <div class="text_title" v-if="filterFontList.local.length !== 0">
+                <div class="text_title" v-if="filterFontList.local.length !== 0" @click="unfoldFontName(4)">
                     <span class="font-title">{{ t('attr.local_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(4)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <template v-if="filterFontList.local.length !== 0">
                     <div class="item" v-for="item in filterFontList.local" :key="item"
@@ -342,11 +342,11 @@ onMounted(() => {
                 </template>
 
                 <!-- 中文字体 -->
-                <div class="text_title" v-if="filterFontList.ch.length !== 0">
+                <div class="text_title" v-if="filterFontList.ch.length !== 0" @click="unfoldFontName(2)">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldZh ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(2)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <template v-if="filterFontList.ch.length !== 0">
                     <div class="item" v-for="item in filterFontList.ch" :key="item"
@@ -357,11 +357,11 @@ onMounted(() => {
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
-                <div class="text_title" v-if="filterFontList.en.length !== 0">
+                <div class="text_title" v-if="filterFontList.en.length !== 0" @click="unfoldFontName(3)">
                     <span class="font-title">{{ t('attr.english_font') }}</span>
                     <span class="title_svg"
                         :style="{ transform: !isUnfoldEn ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
-                            icon-class="down" @click="unfoldFontName(3)"></svg-icon></span>
+                            icon-class="down"></svg-icon></span>
                 </div>
                 <template v-if="filterFontList.en.length !== 0">
                     <div class="item" v-for="item in filterFontList.en" :key="item"
@@ -456,7 +456,7 @@ onMounted(() => {
             border-style: solid;
             border-color: #fff;
             box-sizing: border-box;
-            background-color: #EBEBEB;
+            background-color: #f0f0f0;
         }
 
         .item {
