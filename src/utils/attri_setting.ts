@@ -24,7 +24,7 @@ export function get_actions_constrainer_proportions(shapes: ShapeView[], value: 
 }
 
 export function get_actions_frame_x(shapes: ShapeView[], value: number) {
-    const actions: { target: Shape, x: number }[] = [];
+    const actions: { target: ShapeView, x: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent!;
@@ -41,14 +41,14 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
 
         x = shape.transform.translateX + dx;
 
-        actions.push({ target: adapt2Shape(shape), x });
+        actions.push({ target: shape, x });
     }
 
     return actions;
 }
 
 export function get_actions_frame_y(shapes: ShapeView[], value: number) {
-    const actions: { target: Shape, y: number }[] = [];
+    const actions: { target: ShapeView, y: number }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const parent = shape.parent!;
@@ -65,7 +65,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
 
         y = shape.transform.translateY + dy;
 
-        actions.push({ target: adapt2Shape(shape), y });
+        actions.push({ target: shape, y });
     }
 
     return actions;

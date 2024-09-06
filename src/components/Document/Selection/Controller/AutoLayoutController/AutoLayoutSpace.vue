@@ -83,7 +83,7 @@ function getVerSpacePosition() {
     if (autoLayout.stackVerticalGapSizing === StackSizing.Auto) {
         ver_space.value = `${t('autolayout.auto')}`
     }
-    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
+    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)), !!autoLayout.bordersTakeSpace);
     for (let i = 0; i < shape_rows.length - 1; i++) {
         const row = shape_rows[i];
         topPadding = Math.max(...row.map(s => {
@@ -132,7 +132,7 @@ function getHorSpacePosition() {
     const clientTransform = makeShapeTransform2By1(matrix2);
     m.addTransform(clientTransform); //root到视图
     let topPadding = autoLayout.stackVerticalPadding; //上边距
-    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)));
+    const shape_rows = layoutShapesOrder(shape.childs.map(s => adapt2Shape(s)), !!autoLayout.bordersTakeSpace);
     hor_space.value = autoLayout.stackSpacing;
     if (autoLayout.stackHorizontalGapSizing === StackSizing.Auto) {
         hor_space.value = `${t('autolayout.auto')}`;

@@ -592,7 +592,7 @@ export class TranslateHandler extends TransformHandler {
         const shapesUnderCommonEnv: ShapeView[] = env.childs;
         const __set = this.shapesIdSet;
         const scout = this.context.selection.scout;
-        const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)));
+        const shape_rows = layoutShapesOrder(shapesUnderCommonEnv.map(s => adapt2Shape(s)), !!env.autoLayout?.bordersTakeSpace);
         const shape_row: Shape[] = shape_rows.flat();
         const sort: Map<string, number> = new Map();
         for (let i = 0; i < shapes.length; i++) {
