@@ -20,7 +20,7 @@ import FontWeightSelected from './FontWeightSelected.vue';
 import { fontWeightConvert } from './FontNameList';
 import { TextSelectionLite } from '@/context/textselectionlite';
 import { Attribute } from '@/context/atrribute';
-import { is_mac } from "@/utils/common";
+import { format_value, is_mac } from "@/utils/common";
 
 interface Props {
     context: Context
@@ -1130,7 +1130,7 @@ onUnmounted(() => {
                 </FontWeightSelected>
                 <div class="text-size jointly-text" style="padding-right: 0;">
                     <div class="size_input">
-                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                        <input type="text" :value="format_value(fonstSize)" ref="textSize" class="input" @change="setTextSize"
                             @focus="selectSizeValue" @input="handleSize" @blur="setTextSize"
                             @click="(e) => click(e, is_size_select)">
                         <div class="down" @click="onShowSize">
@@ -1154,7 +1154,7 @@ onUnmounted(() => {
                     <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                         <svg-icon icon-class="word-space"></svg-icon>
                     </div>
-                    <input type="text" v-model="rowHeight" ref="lineHeight" class="input" @change="setRowHeight"
+                    <input type="text" :value="format_value(rowHeight)" ref="lineHeight" class="input" @change="setRowHeight"
                         :placeholder="row_height" @input="handleSize" @click="(e) => click(e, is_row_height_select)"
                         @blur="is_row_height_select = false">
                 </div>
@@ -1162,7 +1162,7 @@ onUnmounted(() => {
                     <div @mousedown="(e) => onMouseDown(e, 'char-space')">
                         <svg-icon icon-class="row-height"></svg-icon>
                     </div>
-                    <input type="text" v-model="wordSpace" ref="charSpacing" class="input" @change="setWordSpace"
+                    <input type="text" :value="format_value(wordSpace)" ref="charSpacing" class="input" @change="setWordSpace"
                         @input="handleSize" @click="(e) => click(e, is_char_space_select)"
                         @blur="is_char_space_select = false">
                 </div>

@@ -7,6 +7,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
+import { format_value } from "@/utils/common";
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -290,7 +291,7 @@ onUnmounted(() => {
             <span>{{ t('attr.paragraph_space') }}</span>
             <div :class="{ actived: isActived3 }"
               style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
-              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
+              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" :value="format_value(paragraphSpace)"
                 class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
             </div>
           </div>

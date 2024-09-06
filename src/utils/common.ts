@@ -466,7 +466,7 @@ export function isInt(num: number, fix = 2) {
 }
 
 export function format_value(val: number | string, fix = 2) {
-    if (typeof val === 'string') {
+    if (typeof val === 'string' || val === undefined) {
         return val;
     }
 
