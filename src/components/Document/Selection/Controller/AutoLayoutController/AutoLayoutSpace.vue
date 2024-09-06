@@ -8,6 +8,7 @@ import { AutoLayoutHandler } from '@/transform/autoLayout';
 import { fixedZero } from '@/utils/common';
 import { CursorType } from '@/utils/cursor2';
 import { useI18n } from "vue-i18n";
+import { getShapeFrame } from '@/utils/content';
 const { t } = useI18n();
 
 type Box = {
@@ -170,7 +171,7 @@ function getHorSpacePosition() {
 }
 
 const getIncludedBorderFrame = (shape: Shape, includedBorder?: boolean) => {
-    let f = shape.frame;
+    let f = getShapeFrame(shape);
     if (includedBorder) {
         const borders = shape.getBorders();
         let maxtopborder = 0, maxleftborder = 0, maxrightborder = 0, maxbottomborder = 0;

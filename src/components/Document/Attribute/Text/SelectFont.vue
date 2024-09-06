@@ -7,6 +7,7 @@ import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { watch } from 'vue';
+import { throttle } from 'lodash';
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void;
@@ -24,6 +25,8 @@ type FontName = {
         success: string[],
         failurel: string[]
     },
+    local: string[],
+    failure_local: string[],
     ch: string[],
     en: string[]
 }
@@ -33,6 +36,8 @@ const fontList = reactive<FontName>({
         success: [],
         failurel: []
     },
+    local: [],
+    failure_local: [],
     ch: [],
     en: []
 })
@@ -42,6 +47,8 @@ const filterFontList = reactive<FontName>({
         success: [],
         failurel: []
     },
+    local: [],
+    failure_local: [],
     ch: [],
     en: []
 })
@@ -55,6 +62,19 @@ const selectFont = (font: string) => {
     emit('setFont', font);
 }
 
+const selectLocalFont = (font: string) => {
+    const results = fontWeightList(font, true);
+    const weight = results.filter((item: any) => item.key === props.fontWeight);
+    const f = fontList.local.find(i => i === font);
+    if (!f) {
+        // todo
+    }
+    if (weight.length === 0) {
+        emit('setFontWeight', 400, false);
+    }
+    emit('setFont', font);
+}
+
 const escapeRegExp = (text: string) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
@@ -62,20 +82,37 @@ const onSearchFont = () => {
     const pattern = new RegExp(escapeRegExp(searchFont.value), 'i');
     const chList = fontList.ch.filter(item => pattern.test(item))
     const enList = fontList.en.filter(item => pattern.test(item))
+    const localList = fontList.local.filter(item => pattern.test(item))
     const usedSuccess = fontList.used.success.filter(item => pattern.test(item))
     const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item))
     filterFontList.ch = []
     filterFontList.en = []
+    filterFontList.local = []
     filterFontList.used.success = []
     filterFontList.used.failurel = []
     filterFontList.ch.push(...chList)
     filterFontList.en.push(...enList)
+    filterFontList.local.push(...localList)
     filterFontList.used.success.push(...usedSuccess)
     filterFontList.used.failurel.push(...usedFailureL)
     filterFontList.ch = Array.from(new Set(filterFontList.ch));
     filterFontList.en = Array.from(new Set(filterFontList.en));
     filterFontList.used.success = Array.from(new Set(filterFontList.used.success));
     filterFontList.used.failurel = Array.from(new Set(filterFontList.used.failurel));
+    _findLocalText();
+}
+
+const _findLocalText = throttle(findLocalText, 300);
+
+async function findLocalText() {
+    try {
+        const results: string[] = await Promise.resolve(isSupportFontFamily(searchFont.value));
+        if (results.length) {
+            filterFontList.local = Array.from(new Set(...filterFontList.local, results));
+        }
+    } catch (err) {
+        console.error('Error checking font availability:', err);
+    }
 }
 
 function highlightText(text: string) {
@@ -105,9 +142,11 @@ const getAllTextFontName = async () => {
         console.error('Error checking font availability:', error);
     }
 }
+
 const isUnfoldUsed = ref(true)
 const isUnfoldZh = ref(true)
 const isUnfoldEn = ref(true)
+const isUnfoldLocal = ref(true)
 const unfoldFontName = (num: number) => {
     if (num === 1) {
         isUnfoldUsed.value = !isUnfoldUsed.value
@@ -115,13 +154,15 @@ const unfoldFontName = (num: number) => {
         isUnfoldZh.value = !isUnfoldZh.value
     } else if (num === 3) {
         isUnfoldEn.value = !isUnfoldEn.value
+    } else if (num === 4) {
+        isUnfoldLocal.value = !isUnfoldLocal.value
     }
 }
 
 const get_top_posi = () => {
     if (font_context.value) {
         const p_container = props.fontNameEl?.getBoundingClientRect()
-        if(p_container) {
+        if (p_container) {
             const body_h = document.body.clientHeight;
             const { y, height } = font_context.value.getBoundingClientRect();
             font_context.value.style.top = p_container.y + 'px';
@@ -158,6 +199,7 @@ onMounted(() => {
         </div>
         <div class="font-scroll">
             <el-scrollbar v-if="searchFont.trim().length === 0">
+                <!-- 列表中已使用字体 -->
                 <div class="text_title">
                     <span class="font-title">{{ t('attr.used_font') }}</span>
                     <span class="title_svg"
@@ -167,7 +209,6 @@ onMounted(() => {
                 <div class="item" v-for="item in fontList.used.success" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                     <svg-icon icon-class="page-select"
                         :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
@@ -175,7 +216,6 @@ onMounted(() => {
                 <div class="item failurel" v-for="item in fontList.used.failurel" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                     <svg-icon icon-class="page-select"
                         :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
@@ -189,7 +229,37 @@ onMounted(() => {
                     v-if="fontList.used.success.length === 0 && fontList.used.failurel.length === 0">
                     <div class="none-font">{{ t('attr.no_font_is_currently_in_use') }}</div>
                 </div>
+                <!-- 本地字体 -->
+                <div v-if="fontList.local.length">
+                    <div class="line"></div>
+                    <div class="text_title">
+                        <span class="font-title">{{ t('attr.local_font') }}</span>
+                        <span class="title_svg"
+                            :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
+                                icon-class="down" @click="unfoldFontName(2)"></svg-icon></span>
+                    </div>
+                    <div class="item" v-for="item in fontList.local" :key="item"
+                        :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
+                        @click="selectFont(item)">
+                        <svg-icon icon-class="page-select"
+                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
+                        <span> {{ item }}</span>
+                    </div>
+                    <div class="item failurel" v-for="item in fontList.failure_local" :key="item"
+                        :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
+                        @click="selectFont(item)">
+                        <svg-icon icon-class="page-select"
+                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
+                        <span> {{ item }}</span>
+                        <Tooltip :content="`${t('attr.font_missing')}`">
+                            <el-icon>
+                                <InfoFilled />
+                            </el-icon>
+                        </Tooltip>
+                    </div>
+                </div>
                 <div class="line"></div>
+                <!-- 列表中文字体 -->
                 <div class="text_title">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
                     <span class="title_svg"
@@ -199,12 +269,12 @@ onMounted(() => {
                 <div class="item" v-for="item in fontList.ch" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                     <svg-icon icon-class="page-select"
                         :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
                 </div>
                 <div class="line"></div>
+                <!-- 列表英文字体 -->
                 <div class="text_title">
                     <span class="font-title">{{ t('attr.english_font') }}</span>
                     <span class="title_svg"
@@ -214,7 +284,6 @@ onMounted(() => {
                 <div class="item" v-for="item in fontList.en" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                     <svg-icon icon-class="page-select"
                         :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
@@ -228,6 +297,7 @@ onMounted(() => {
                         :style="{ transform: !isUnfoldUsed ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
                             icon-class="down" @click="unfoldFontName(1)"></svg-icon></span>
                 </div>
+                <!-- 已使用的字体 -->
                 <template v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
                     <div class="item" v-for="item in filterFontList.used.success" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
@@ -238,10 +308,10 @@ onMounted(() => {
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
+                <!-- 已使用字体，无效 -->
                 <div class="item failurel" v-for="item in filterFontList.used.failurel" :key="item"
                     :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                     <svg-icon icon-class="page-select"
                         :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span v-html="highlightText(item)"></span>
@@ -251,6 +321,25 @@ onMounted(() => {
                         </el-icon>
                     </Tooltip>
                 </div>
+
+                <!-- 检索的本地字体 -->
+                <div class="text_title" v-if="filterFontList.local.length !== 0">
+                    <span class="font-title">{{ t('attr.local_font') }}</span>
+                    <span class="title_svg"
+                        :style="{ transform: !isUnfoldLocal ? `rotate(-90deg)` : `rotate(0deg)` }"><svg-icon
+                            icon-class="down" @click="unfoldFontName(4)"></svg-icon></span>
+                </div>
+                <template v-if="filterFontList.local.length !== 0">
+                    <div class="item" v-for="item in filterFontList.local" :key="item"
+                        :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
+                        @click="selectLocalFont(item)">
+                        <svg-icon icon-class="page-select"
+                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
+                        <span v-html="highlightText(item)"></span>
+                    </div>
+                </template>
+
+                <!-- 中文字体 -->
                 <div class="text_title" v-if="filterFontList.ch.length !== 0">
                     <span class="font-title">{{ t('attr.chinese_font') }}</span>
                     <span class="title_svg"
@@ -261,7 +350,6 @@ onMounted(() => {
                     <div class="item" v-for="item in filterFontList.ch" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                         <svg-icon icon-class="page-select"
                             :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
@@ -277,14 +365,13 @@ onMounted(() => {
                     <div class="item" v-for="item in filterFontList.en" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                         <svg-icon icon-class="page-select"
                             :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
                 <div class="item-none" style="height: 40px;"
-                    v-if="filterFontList.en.length === 0 && filterFontList.ch.length === 0">
+                    v-if="filterFontList.en.length === 0 && filterFontList.ch.length === 0 && filterFontList.local.length === 0">
                     <div class="none-font">{{ t('attr.find_the_fonts') }}</div>
                 </div>
             </el-scrollbar>
