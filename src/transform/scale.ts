@@ -652,7 +652,7 @@ export class ScaleHandler extends TransformHandler {
                 const dy = (selectionHeight - afterHeight) / 2;
                 ltPointForSelection.y += dy;
                 rbPointForSelection.y -= dy;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Left);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Right);
             }
         }
 
@@ -669,14 +669,13 @@ export class ScaleHandler extends TransformHandler {
             if (CET === CtrlElementType.RectTop) {
                 const afterWidth = Math.abs(ltPointForSelection.y - rbPointForSelection.y) * ratio;
                 const dx = (selectionWidth - afterWidth) / 2;
-
                 ltPointForSelection.x += dx;
                 rbPointForSelection.x -= dx;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Top);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Bottom);
             } else if (CET === CtrlElementType.RectLT) {
                 const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
                 ltPointForSelection.y = selectionHeight - afterHeight;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.LeftTop);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.RightBottom);
             }
         }
 
@@ -695,11 +694,11 @@ export class ScaleHandler extends TransformHandler {
                 const dy = (selectionHeight - afterHeight) / 2;
                 ltPointForSelection.y += dy;
                 rbPointForSelection.y -= dy;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Right);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Left);
             } else if (CET === CtrlElementType.RectRT) {
                 const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
                 ltPointForSelection.y = selectionHeight - afterHeight;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.RightTop);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.BottomLeft);
             }
         }
 
@@ -718,12 +717,16 @@ export class ScaleHandler extends TransformHandler {
                 const dx = (selectionWidth - afterWidth) / 2;
                 ltPointForSelection.x += dx;
                 rbPointForSelection.x -= dx;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Bottom);
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.Top);
             } else {
                 const afterHeight = Math.abs(ltPointForSelection.x - rbPointForSelection.x) / ratio;
                 const dy = selectionHeight - afterHeight;
                 rbPointForSelection.y = selectionHeight - dy;
-                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.BottomLeft);
+            }
+            if (CET === CtrlElementType.RectLB) {
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.RightTop);
+            } else if (CET === CtrlElementType.RectRB) {
+                attri.notify(Attribute.ANCHOR_CHANGE, AnchorType.LeftTop);
             }
         }
 

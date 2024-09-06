@@ -6,15 +6,15 @@ import { Context } from "@/context";
 import { useAuto } from "@/components/Document/Creator/execute";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
-import { format_value, format_value as format } from "@/utils/common";
+import { format_value as format } from "@/utils/common";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { computeString } from "@/utils/content";
 import { Attribute } from "@/context/atrribute";
 import { Tool } from "@/context/tool";
-import { LockMouse } from "@/transform/lockMouse";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
 import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
+import { ScaleUniformer } from "@/transform/scaleUniform";
 
 const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
 const t = useI18n().t;
@@ -213,17 +213,16 @@ function updatePosition(movementX: number, movementY: number) {
 const tel = ref<boolean>(false);
 const telX = ref<number>(0);
 const telY = ref<number>(0);
-let lockMouseHandler: LockMouse | undefined = undefined;
+let scaleUniformer: ScaleUniformer | undefined = undefined;
+let currentValue = 0;
+let baseValue = 0;
 
 async function modifyTelDown(e: MouseEvent) {
     tel.value = true;
     telX.value = e.clientX;
     telY.value = e.clientY;
     const el = e.target as HTMLElement
-    if (!document.pointerLockElement) {
-        await el.requestPointerLock({ unadjustedMovement: true });
-    }
-    lockMouseHandler = new LockMouse(props.context, e);
+    if (!document.pointerLockElement) await el.requestPointerLock({ unadjustedMovement: true });
     document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
 
@@ -233,53 +232,56 @@ function dragstart(e: MouseEvent) {
 
 function draggingW(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-
-    if (!lockMouseHandler) return;
-
-    if (!lockMouseHandler.asyncApiCaller) {
-        lockMouseHandler.createApiCaller('scaling');
+    if (!scaleUniformer) {
+        baseValue = w.value;
+        currentValue = w.value;
+        scaleUniformer = new ScaleUniformer(props.context, anchorType.value);
+        scaleUniformer.createApiCaller();
     }
-
-    lockMouseHandler.executeW(e.movementX);
+    currentValue += e.movementX;
+    scaleUniformer.execute(currentValue / baseValue);
+    k.value = currentValue / baseValue;
 }
 
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-
-    if (!lockMouseHandler) return;
-
-    if (!lockMouseHandler.asyncApiCaller) {
-        lockMouseHandler.createApiCaller('scaling');
+    if (!scaleUniformer) {
+        baseValue = h.value;
+        currentValue = h.value;
+        scaleUniformer = new ScaleUniformer(props.context, anchorType.value);
+        scaleUniformer.createApiCaller();
     }
-
-    lockMouseHandler.executeH(e.movementX);
+    currentValue += e.movementX;
+    scaleUniformer.execute(currentValue / baseValue);
+    k.value = currentValue / baseValue;
 }
 
 function draggingK(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
-
-    if (!lockMouseHandler) {
-        return
+    if (!scaleUniformer) {
+        baseValue = k.value;
+        currentValue = k.value;
+        scaleUniformer = new ScaleUniformer(props.context, anchorType.value);
+        scaleUniformer.createApiCaller();
     }
-
-    if (!lockMouseHandler.asyncApiCaller) {
-        lockMouseHandler.createApiCaller('scaling');
-    }
-
-    lockMouseHandler.executeH(e.movementX);
+    currentValue += e.movementX / 100;
+    scaleUniformer.execute(currentValue / baseValue);
+    k.value = currentValue / baseValue;
 }
 
 function dragend2() {
     modifyTelUp();
+    scaleUniformer?.fulfil();
+    scaleUniformer = undefined;
     props.context.attr.notify(Attribute.FRAME_CHANGE);
+    props.context.nextTick(props.context.selection.selectedPage!, () => {
+        k.value = currentValue / baseValue;
+    });
 }
 
 function modifyTelUp() {
     tel.value = false;
     document.exitPointerLock();
-
-    lockMouseHandler?.fulfil();
-    lockMouseHandler = undefined;
     document.removeEventListener("pointerlockchange", pointerLockChange, false);
 }
 
@@ -341,15 +343,15 @@ onUnmounted(() => {
     <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
-            <MdNumberInput icon="W" :value="format(w)" @change="changeW"
+            <MdNumberInput icon="W" :value="format(w)" @change="changeW" draggable
                            @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"/>
-            <MdNumberInput icon="H" :value="format(h)" @change="changeH"
+            <MdNumberInput icon="H" :value="format(h)" @change="changeH" draggable
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
         <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MdNumberInput icon="scale-simple" :value="`${format_value(k)}x`" @change="changeK"
-                               @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
+                <MdNumberInput icon="scale-simple" :value="`${format(k)}x`" @change="changeK"
+                               draggable @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">
                         <svg-icon icon-class="down" style="width: 12px; height: 12px"/>

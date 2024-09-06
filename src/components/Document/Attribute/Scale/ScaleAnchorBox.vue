@@ -42,7 +42,7 @@ function setAnchor(t: AnchorType) {
 }
 
 function attrWatcher(t: any, type: any) {
-    if (t === Attribute.ANCHOR_CHANGE && type) setAnchor(type);
+    if (t === Attribute.ANCHOR_CHANGE && type !== undefined) setAnchor(type);
 }
 
 onMounted(() => {
