@@ -791,7 +791,7 @@ export class TranslateHandler extends TransformHandler {
         const env = this.preInsertLayout!;
         const children = env.childs;
         const layout = (env as ArtboradView).autoLayout!;
-        const shape_rows = layoutShapesOrder(children.map(s => adapt2Shape(s)));
+        const shape_rows = layoutShapesOrder(children.map(s => adapt2Shape(s)), !!layout.bordersTakeSpace);
         const rows: {
             grids: {
                 start: number;
