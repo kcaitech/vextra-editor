@@ -6,6 +6,7 @@ import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { ScaleHandler } from '@/transform/scale';
 import { CursorType } from "@/utils/cursor2";
+import { Action } from "@/context/tool";
 
 interface Props {
     context: Context
@@ -127,14 +128,16 @@ function clear_status() {
 }
 
 function setCursor(t: CtrlElementType) {
+    const action = props.context.tool.action;
+    const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
     if (t === CtrlElementType.RectTop) {
-        props.context.cursor.setType(CursorType.Scale, 90);
+        props.context.cursor.setType(type, 90);
     } else if (t === CtrlElementType.RectRight) {
-        props.context.cursor.setType(CursorType.Scale, 0);
+        props.context.cursor.setType(type, 0);
     } else if (t === CtrlElementType.RectBottom) {
-        props.context.cursor.setType(CursorType.Scale, 90);
+        props.context.cursor.setType(type, 90);
     } else if (t === CtrlElementType.RectLeft) {
-        props.context.cursor.setType(CursorType.Scale, 0);
+        props.context.cursor.setType(type, 0);
     }
 }
 

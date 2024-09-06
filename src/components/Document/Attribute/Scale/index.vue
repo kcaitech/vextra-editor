@@ -6,7 +6,7 @@ import { Context } from "@/context";
 import { useAuto } from "@/components/Document/Creator/execute";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { AnchorType } from "@/components/Document/Attribute/Scale/index";
-import { format_value as format } from "@/utils/common";
+import { format_value, format_value as format } from "@/utils/common";
 import MdNumberInput from "@/components/common/MdNumberInput.vue";
 import { computeString } from "@/utils/content";
 import { Attribute } from "@/context/atrribute";
@@ -16,7 +16,7 @@ import SvgIcon from "@/components/common/SvgIcon.vue";
 import { XY } from "@/context/selection";
 import { ColVector3D, ShapeSize, ShapeView, Transform, XYsBounding } from "@kcdesign/data";
 
-const props = defineProps<{ context: Context, selectionChange: number }>();
+const props = defineProps<{ context: Context, selectionChange: number, shapeChange: any }>();
 const t = useI18n().t;
 const fix = 2;
 
@@ -172,7 +172,7 @@ function changeW(value: string) {
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
 
-    k.value = Number((_w / w.value).toFixed(fix));
+    k.value = _w / w.value;
 
     __change_size(k.value);
 }
@@ -186,19 +186,19 @@ function changeH(value: string) {
     if (isNaN(_h)) {
         return;
     }
-    k.value = Number((_h / h.value).toFixed(fix));
+    k.value = _h / h.value;
     __change_size(k.value);
 }
 
 function changeK(value: string) {
     value = value.replace(/x$/, '');
     value = Number
-        .parseFloat(computeString(value))
-        .toFixed(fix);
+        .parseFloat(computeString(value)).toString();
     const _k: number = Number.parseFloat(value);
     if (isNaN(_k)) return;
+    const scale = _k / k.value;
     k.value = _k;
-    __change_size(k.value);
+    __change_size(scale);
 }
 
 function updatePosition(movementX: number, movementY: number) {
@@ -320,17 +320,19 @@ function select(v: string) {
     optionsVisible.value = false;
 }
 
-function attrWatcher(t: any) {
+function attrWatcher(t: any, type: any) {
     if (t === Attribute.FRAME_CHANGE) getSize();
 }
 
 const stop = watch(() => props.selectionChange, getSize);
+const stop2 = watch(() => props.shapeChange, getSize);
 onMounted(() => {
     getSize();
     props.context.attr.watch(attrWatcher);
 });
 onUnmounted(() => {
     stop();
+    stop2();
     props.context.attr.unwatch(attrWatcher);
 });
 </script>
@@ -339,14 +341,14 @@ onUnmounted(() => {
     <TypeHeader :title="t('attr.scale')" class="mt-24" :active="true"/>
     <div class="content">
         <div class="tr">
-            <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW"
+            <MdNumberInput icon="W" :value="format(w)" @change="changeW"
                            @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"/>
-            <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
+            <MdNumberInput icon="H" :value="format(h)" @change="changeH"
                            @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2"/>
         </div>
         <div style="display: flex; gap: 13px;margin-bottom: 8px;">
             <div style="position: relative">
-                <MdNumberInput icon="scale-simple" draggable :value="`${k}x`" @change="changeK"
+                <MdNumberInput icon="scale-simple" :value="`${format_value(k)}x`" @change="changeK"
                                @dragstart="dragstart" @dragging="draggingK" @dragend="dragend2"/>
                 <div class="options" id="scale-popover-0903">
                     <div class="trigger" @click.stop="emitTrigger">
@@ -362,7 +364,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div style="margin-bottom: 8px;">
-            <ScaleAnchorBox v-model:type="anchorType"/>
+            <ScaleAnchorBox v-model:type="anchorType" :context="props.context"/>
         </div>
         <div
             style="width: 189px; height: 32px;

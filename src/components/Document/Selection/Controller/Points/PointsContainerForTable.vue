@@ -138,7 +138,7 @@ function down(e: MouseEvent) {
     if (e.button !== 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
         return;
     }
-    if (!(action == Action.AutoV)) {
+    if (!(action === Action.AutoV)) {
         return;
     }
     if (forbidden_to_modify_frame(props.shape)) {
@@ -243,8 +243,10 @@ function setCursor() {
     const assistRB = new Transform()
         .setRotateZ(theta3)
         .setTranslate(col0);
+    const action = props.context.tool.action;
+    const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
 
-    props.context.cursor.setType(CursorType.Scale, assistRB.decomposeEuler().z * 180 / Math.PI);
+    props.context.cursor.setType(type, assistRB.decomposeEuler().z * 180 / Math.PI);
 }
 
 watch(() => props.shape, (value, old) => {

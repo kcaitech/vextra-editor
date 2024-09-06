@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { AnchorType } from "./index";
 import { useI18n } from "vue-i18n";
+import { Context } from "@/context";
+import { Attribute } from "@/context/atrribute";
 
 const t = useI18n().t;
 
@@ -24,6 +26,7 @@ const types = ref<{ type: AnchorType, selected: boolean, tips: string }[]>([
 const emit = defineEmits<{
     (e: 'update:type', type: AnchorType): void;
 }>();
+const props = defineProps<{ context: Context }>();
 
 const tips = ref<string>(t('attr.scale_from_center'));
 
@@ -38,6 +41,16 @@ function setAnchor(t: AnchorType) {
     }
 }
 
+function attrWatcher(t: any, type: any) {
+    if (t === Attribute.ANCHOR_CHANGE && type) setAnchor(type);
+}
+
+onMounted(() => {
+    props.context.attr.watch(attrWatcher);
+});
+onUnmounted(() => {
+    props.context.attr.unwatch(attrWatcher);
+});
 </script>
 <template>
 <div style="display: flex;gap: 4px; align-items: center;">

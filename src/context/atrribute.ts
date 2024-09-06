@@ -10,6 +10,7 @@ export class Attribute extends WatchableObject {
     static ADD_SIZE_CHANGE = 3;
     static MINUS_SIZE_CHANGE = 4;
     static FRAME_CHANGE = 5;
+    static ANCHOR_CHANGE = 6;
 
     constructor() {
         super();

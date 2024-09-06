@@ -328,7 +328,7 @@ onUnmounted(() => {
                      :trigger="reflush_trigger"></Arrange>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                            :trigger="reflush_trigger"></ShapeBaseAttr>
-            <Scale v-if="scaleMode" :context="props.context" :selection-change="reflush_by_selection"/>
+            <Scale v-if="scaleMode" :context="props.context" :selection-change="reflush_by_selection" :shape-change="reflush_trigger"/>
             <div v-else>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
@@ -360,7 +360,7 @@ onUnmounted(() => {
             </div>
         </div>
     </el-scrollbar>
-    <artboard-template v-if="frame" :context="props.context"></artboard-template>
+    <artboard-template v-if="frame" :context="props.context"/>
 </section>
 </template>
 
