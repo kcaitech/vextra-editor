@@ -392,6 +392,10 @@ onUnmounted(() => {
         </div>
     </div>
 </div>
+<teleport to="body">
+    <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+    </div>
+</teleport>
 </template>
 <style lang="scss" scoped>
 .scale-panel {
