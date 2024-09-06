@@ -17,6 +17,7 @@ import { multi_select_shape } from "@/utils/listview";
 import { is_symbol_class } from "@/utils/controllerFn";
 import gapAssist from "@/components/Document/Assist/gapAssist.vue";
 import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
+import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
 
 export interface Point {
     x: number
@@ -456,33 +457,33 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- 描边 -->
-    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-        <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
-            stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
-        </path>
-    </svg>
+<!-- 描边 -->
+<svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+     :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+     style="transform: translate(0px, 0px); position: absolute;">
+    <path :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="context.selection.hoverStroke"
+          @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+    <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
+          stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    </path>
+</svg>
 
-    <!-- 控制 -->
-    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
-        :shape="context.selection.selectedShapes[0]" :theme="theme">
-    </component>
+<!-- 控制 -->
+<component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+           :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.params.matrix"
+           :shape="context.selection.selectedShapes[0]" :theme="theme">
+</component>
 
-    <AutoLayoutChildEdit :context="props.context"></AutoLayoutChildEdit>
-
-    <!-- 辅助 -->
-    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <gapAssist :context="props.context"></gapAssist>
-    <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
-        :update-trigger="updateTrigger"></LableLine>
-    <!-- 选中大小 -->
-    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
+<AutoLayoutChildEdit :context="props.context"/>
+<InsertBar :context="props.context"/>
+<!-- 辅助 -->
+<Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+<gapAssist :context="props.context"></gapAssist>
+<!-- 标注线 -->
+<LableLine v-if="isLableLine" :context="props.context" :matrix="props.params.matrix"
+           :update-trigger="updateTrigger"></LableLine>
+<!-- 选中大小 -->
+<ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

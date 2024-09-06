@@ -39,9 +39,12 @@ function workspace_watcher(t?: any) {
         getDottedPaths();
     }
 }
+
 let downClientXY: XY = { x: 0, y: 0 };
 
-function selectionWatcher(t: string | number, params?: any) {
+const insertPath = ref<string>();
+
+function selectionWatcher(t: any, params?: any) {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
         getDottedPaths();
     } else if (t === Selection.CHANGE_SHAPE) {
@@ -64,7 +67,7 @@ function selectionWatcher(t: string | number, params?: any) {
         }
     } else if (t === Selection.UPDATE_LAYOUT_DOTTED_LINE) {
         if (params) {
-           updateDottedPath(params);
+            updateDottedPath(params);
         }
     }
 }
@@ -255,16 +258,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
-        overflow="visible" width="100" height="100" viewBox="0 0 100 100"
-        style="transform: translate(0px, 0px); position: absolute;">
-        <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path" />
-        <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
-            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" />
-        <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
-            :class="{ 'move-path-fill': movePathStroke }"
-            :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl" />
-    </svg>
+<svg v-if="dottedPaths.length" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet"
+     overflow="visible" width="100" height="100" viewBox="0 0 100 100"
+     style="transform: translate(0px, 0px); position: absolute;">
+    <path v-for="(path, index) in dottedPaths" :key="index" class="dotted-rect" :d="path.path"/>
+    <path v-if="multiplePath && movePath.length > 1" class="dotted-move" :d="multiplePath"
+          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }"/>
+    <path v-if="movePath.length" v-for="(path, index) in movePath" :key="index" class="dotted-move" :d="path"
+          :class="{ 'move-path-fill': movePathStroke }"
+          :style="{ transform: `translate(${moveTrans.x}px, ${moveTrans.y}px)` }" ref="movePathEl"/>
+    <path v-if="insertPath" stroke="black" stroke-width="4" :d="insertPath"/>
+</svg>
 </template>
 
 <style scoped lang="scss">

@@ -16,7 +16,8 @@ import {
     Transform,
     TransformRaw,
     TranslateUnit,
-    Transporter
+    Transporter, AutoLayout,
+    BorderPosition, ShapeFrame
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -29,9 +30,68 @@ import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 
-type BaseFrame4Trans = { originTransform: Transform };
+type BaseFrame4Trans = {
+    originTransform: Transform
+};
 
 type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert';
+
+interface LayoutForInsert {
+    row: {
+        grids: {
+            start: number;
+            end: number;
+            anchor: XY;
+            shape: Shape;
+        }[];
+        start: number;
+        end: number;
+    }[];
+    shape: ShapeView;
+    layout: AutoLayout;
+}
+
+function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
+    let frame = { ...shape.frame };
+    if (includedBorder) {
+        const borders = shape.getBorders();
+        let maxtopborder = 0;
+        let maxleftborder = 0;
+        let maxrightborder = 0;
+        let maxbottomborder = 0;
+        borders.forEach(b => {
+            if (b.isEnabled) {
+                if (b.position === BorderPosition.Outer) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                } else if (b.position === BorderPosition.Center) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
+                }
+            }
+        })
+        frame.x -= maxleftborder;
+        frame.y -= maxtopborder;
+        frame.width += maxleftborder + maxrightborder;
+        frame.height += maxtopborder + maxbottomborder;
+    }
+    const m = shape.transform;
+    const corners = [
+        { x: frame.x, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y },
+        { x: frame.x + frame.width, y: frame.y + frame.height },
+        { x: frame.x, y: frame.y + frame.height }]
+        .map((p) => m.computeCoord(p));
+    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];
@@ -66,6 +126,9 @@ export class TranslateHandler extends TransformHandler {
     downXY: XY;
 
     elementsWithAnimation: Set<Element> = new Set<Element>();
+
+    preInsertLayout: ArtboradView | undefined;
+    layoutForInsert: LayoutForInsert | undefined;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
@@ -105,7 +168,7 @@ export class TranslateHandler extends TransformHandler {
             }
     }
 
-    setMode(emitter: 'alt' | 'back' | 'migrate' | 'init') {
+    setMode() {
         const shapes = this.shapes;
         const parents = new Set<ShapeView>();
         let allAbsolute = true;
@@ -128,9 +191,6 @@ export class TranslateHandler extends TransformHandler {
         }
 
         this.fromMode = this.mode;
-
-        if (__mode === 'layout' && (emitter === "alt" || emitter === "migrate")) __mode = "insert";
-
         this.mode = __mode;
 
         if (__mode === "layout") this.setAnimations(Array.from(parents.values()) as GroupShapeView[]);
@@ -164,9 +224,7 @@ export class TranslateHandler extends TransformHandler {
 
         this.asyncApiCaller = new Transporter(this.context.coopRepo, this.context.data, this.page, this.shapes);
 
-        let emitter: any = "init";
         if (this.altStatus) {
-            emitter = "alt";
             this.coping = true;
             this.shapesBackup = this.shapes.map(s => s);
             this.shapes = await paster_short(this.context, this.shapes, this.asyncApiCaller as Transporter);
@@ -194,7 +252,7 @@ export class TranslateHandler extends TransformHandler {
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
 
-        this.setMode(emitter);
+        this.setMode();
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
 
@@ -480,12 +538,7 @@ export class TranslateHandler extends TransformHandler {
         this.__execute();
     }
 
-    /**
-     * @description 线性迁移
-     */
-    private __linear_trans() {
-        this.updateBoxByAssist();
-
+    private __trans() {
         const { x: originX, y: originY } = this.originSelectionBox;
         const livingX = this.livingBox.x;
         const livingY = this.livingBox.y;
@@ -535,11 +588,18 @@ export class TranslateHandler extends TransformHandler {
         (this.asyncApiCaller as Transporter).execute(transformUnits);
 
         const ctx = this.context;
-
         ctx.nextTick(this.page, () => {
             ctx.tool.notify(Tool.RULE_RENDER_SIM);
             if (this.altStatus) ctx.selection.notify(Selection.PASSIVE_CONTOUR);
         });
+    }
+
+    /**
+     * @description 线性迁移
+     */
+    private __linear_trans() {
+        this.updateBoxByAssist();
+        this.__trans()
     }
 
     /**
@@ -550,12 +610,46 @@ export class TranslateHandler extends TransformHandler {
         this.swapLayoutShape();
     }
 
+    private __last_hover_grid_id = ''
+
+    /**
+     * @description 线性迁移
+     */
+    private ___pre_insert() {
+        this.__trans();
+        const layoutEnv = this.preInsertLayout;
+        if (!layoutEnv) return;
+        const ctx = this.context;
+        const living = this.livingPoint;
+        const xy = layoutEnv.transform2FromRoot.getInverse().transform(ColVector3D.FromXY(living.x, living.y)).col0;
+        const layoutGrid = this.layoutForInsert;
+        if (!layoutGrid) return;
+        for (let i = 0; i < layoutGrid.row.length; i++) {
+            const row = layoutGrid.row[i];
+            const grids = row.grids;
+            if (xy.y < row.start || xy.y >= row.end) continue;
+            for (let j = 0; j < grids.length; j++) {
+                const grid = grids[j];
+                if (xy.x > grid.start && xy.x < grid.end) {
+                    if (this.__last_hover_grid_id !== grid.shape.id) {
+                        ctx.selection.notify(Selection.PRE_INSERT, { shape: grid.shape, layout: layoutEnv.autoLayout, env: layoutEnv, isEnd: j === grids.length -1 });
+                    }
+                    this.__last_hover_grid_id = grid.shape.id;
+                    break;
+                }
+            }
+        }
+
+    }
+
     private __execute() {
         if (this.coping || this.context.readonly) return;
         if (this.mode === 'normal') {
             this.__linear_trans();
         } else if (this.mode === 'layout') {
             this.__swap();
+        } else if (this.mode === 'insert') {
+            this.___pre_insert();
         }
     }
 
@@ -628,23 +722,37 @@ export class TranslateHandler extends TransformHandler {
         const pe = this.livingPoint;
         const target_parent = ctx.selection.getEnvForMigrate(pe);
 
+        if (this.mode === "insert" && !(target_parent as ArtboradView).autoLayout) {
+            this.fromMode = this.mode;
+            this.mode = "normal";
+            ctx.selection.notify(Selection.PRE_INSERT);
+        }
+
         if (target_parent.id === t.current_env_id) return;
 
         const except = t.getExceptEnvs();
 
         const o_env = except.find(v => v.id === target_parent.id);
-        let emitter: any;
         if (o_env) {
             t.backToStartEnv(o_env.data, ctx.workspace.t('compos.dlt'));
-            emitter = "back";
         } else {
+            if ((target_parent as ArtboradView).autoLayout) {
+                ctx.assist.notify(Assist.CLEAR);
+                this.fromMode = this.mode;
+                this.mode = "insert";
+                if (target_parent.id !== this.preInsertLayout?.id) {
+                    this.preInsertLayout = target_parent as ArtboradView;
+                    this.getLayoutGridForInsert();
+                }
+                return;
+            }
             const tp = adapt2Shape(target_parent) as GroupShape;
             const _shapes = compare_layer_3(this.shapes, -1).map((s) => adapt2Shape(s));
             t.migrate(tp, _shapes, ctx.workspace.t('compos.dlt'));
-            emitter = "migrate";
         }
+
         ctx.nextTick(ctx.selection.selectedPage!, () => {
-            this.setMode(emitter);
+            this.setMode();
 
             const fromMode = this.fromMode;
             if (fromMode === "layout" || fromMode === "insert") this.__linear_trans();
@@ -679,6 +787,58 @@ export class TranslateHandler extends TransformHandler {
 
     migrateOnce = debounce(this.__migrate, 80);
 
+    getLayoutGridForInsert() {
+        const env = this.preInsertLayout!;
+        const children = env.childs;
+        const layout = (env as ArtboradView).autoLayout!;
+        const shape_rows = layoutShapesOrder(children.map(s => adapt2Shape(s)));
+        const rows: {
+            grids: {
+                start: number;
+                end: number;
+                anchor: XY;
+                shape: Shape;
+            }[];
+            start: number;
+            end: number;
+        }[] = [];
+        let lastRowEnd = 0;
+        for (const row of shape_rows) {
+            let height = 0;
+            let lastEnd: number = 0;
+
+            const grids: {
+                start: number;
+                end: number;
+                anchor: XY;
+                shape: Shape;
+            }[] = [];
+
+            for (const shape of row) {
+                const box = boundingBox(shape, layout!.bordersTakeSpace);
+                if (box.height > height) height = box.height;
+                let __start = lastEnd;
+                let __end = box.x + (box.width / 2);
+                lastEnd = __end;
+                const grid = { start: __start, end: __end, anchor: { x: 0, y: 0 }, shape };
+                grids.push(grid);
+            }
+            grids.push({ start: lastEnd, end: Infinity, anchor: { x: 0, y: 0 }, shape: row[row.length - 1] });
+            let start = lastRowEnd;
+            let end = lastRowEnd + height + (layout!.stackCounterSpacing) / 2;
+            if (!lastRowEnd) end += layout!.stackVerticalPadding;
+            lastRowEnd = end;
+            rows.push({ grids, start, end })
+        }
+        rows[rows.length - 1].end = Infinity;
+        rows.forEach(row => {
+            row.grids.forEach((grid, index) => {
+
+            });
+        })
+        this.layoutForInsert = { shape: env, row: rows, layout };
+    }
+
     migrate() {
         if (this.coping) return;
         this.migrateOnce();
@@ -694,6 +854,10 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setLabelFixedGroup([]);
             this.context.selection.setShowInterval(false);
         }
+        if (this.mode === "insert") {
+            this.context.selection.notify(Selection.PRE_INSERT);
+        }
+
         super.fulfil();
         this.fulfilled = true;
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE);
