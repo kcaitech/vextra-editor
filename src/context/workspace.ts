@@ -60,7 +60,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_font_name_list: { zh: Set<string>, en: Set<string> } = { zh: new Set(), en: new Set() };
+    private m_font_name_list: { zh: Set<string>, en: Set<string>, local: Set<string>, failure_local: Set<string> } = { zh: new Set(), en: new Set(), local: new Set(), failure_local: new Set()};
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
     private m_root: Root = {
@@ -321,6 +321,13 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     setFontNameListEn(en: string) {
         this.m_font_name_list.en.add(en);
+    }
+
+    setFontNameListLocal(local: string[]) {
+        local.forEach(v => this.m_font_name_list.local.add(v));
+    }
+    setFontNameListFailureLocal(local: string[]) {
+        local.forEach(v => this.m_font_name_list.failure_local.add(v));
     }
 
     get fontNameList() {

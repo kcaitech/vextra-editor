@@ -67,7 +67,8 @@ const selectLocalFont = (font: string) => {
     const weight = results.filter((item: any) => item.key === props.fontWeight);
     const f = fontList.local.find(i => i === font);
     if (!f) {
-        // todo
+        fontList.local.push(font);
+        props.context.workspace.setFontNameListLocal([font]);
     }
     if (weight.length === 0) {
         emit('setFontWeight', 400, false);
@@ -176,9 +177,11 @@ const get_top_posi = () => {
 }
 watch(() => props.showFont, (v) => {
     if (v) {
-        const { zh, en } = props.context.workspace.fontNameList;
+        const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
         fontList.ch = [...zh];
         fontList.en = [...en];
+        fontList.local = [...local];
+        fontList.failure_local = [...failure_local];
         nextTick(() => {
             get_top_posi();
         })
@@ -302,7 +305,6 @@ onMounted(() => {
                     <div class="item" v-for="item in filterFontList.used.success" :key="item"
                         :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
                         <svg-icon icon-class="page-select"
                             :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
