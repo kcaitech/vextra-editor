@@ -172,6 +172,10 @@
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
+                <div class="interaction-bezier-drag" style="width: 200px;height: 200px;margin: 0 auto">
+                    <canvas id="sbezier"></canvas>
+                </div>
+                <button @click.stop="dragcanvas([-1, 1, 2, 0])">初始化</button>
             </div>
             <div v-else class="tips">
                 <span>{{ t('prototype.interaction') }}</span>
@@ -816,7 +820,7 @@ const getText = (actions: PrototypeActions) => {
         }
         a(shape!, actions.targetNodeID!)
         return targetnmae.value
-    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) { 
+    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
         const page = props.context.selection.selectedPage
         if (!page) return
         const a = search(page, actions.targetNodeID)
@@ -1354,6 +1358,233 @@ function update_by_shapes(...args: any[]) {
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
     reflush.value++;
+}
+
+interface Position {
+    x: number
+    y: number
+}
+
+const dragcanvas = (arr = [0.1, 1, 0.5, -1]) => {
+    const canvas = document.getElementById("sbezier") as HTMLCanvasElement;
+    const ctx = canvas?.getContext("2d");
+    const cp1 = ref<Position>({ x: arr[0] / 0.01 + 50, y: 150 - arr[1] / 0.01 })
+    const cp2 = ref<Position>({ x: arr[2] / 0.01 + 50, y: 150 - arr[3] / 0.01 })
+    const dragA = ref<boolean>(false)
+    const dragB = ref<boolean>(false)
+    const dragLineA = ref<boolean>(false)
+    const dragLineB = ref<boolean>(false)
+    const lineA = ref<Path2D>()
+    const lineB = ref<Path2D>()
+    const pointA = ref<Path2D>()
+    const pointB = ref<Path2D>()
+    let minX = 50
+    let maxX = 150
+    let minY = 50
+    let maxY = 150
+
+    let drag = false;
+    let width = 200; // Canvas的目标显示宽度
+    let height = 200; // Canvas的目标显示高度
+
+    if (window.devicePixelRatio && window.devicePixelRatio > 1) {
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
+    } else {
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+
+    const drawXY = () => {
+
+        //x轴
+        ctx?.beginPath();
+        ctx!.strokeStyle = '#c8c8c8';
+        ctx?.moveTo(minX, maxY); // 将笔移到左下角
+        ctx?.lineTo(maxX, maxY); // 连线到顶角
+        ctx?.closePath(); // 连线到左下角
+        ctx?.stroke();
+
+        //y轴
+        ctx?.beginPath();
+        ctx?.moveTo(minX, maxY); // 将笔移到左下角
+        ctx?.lineTo(minX, minY); // 连线到顶角
+        ctx?.closePath(); // 连线到左下角
+        ctx?.stroke();
+
+        //斜线
+        ctx?.beginPath();
+        ctx?.moveTo(minX, maxY); // 将笔移到左下角
+        ctx?.lineTo(maxX, minY); // 连线到顶角
+        ctx?.closePath(); // 连线到左下角
+        ctx?.stroke();
+
+        ctx?.setLineDash([8, 4]);
+
+        // 偏移量20 虚线
+        ctx?.beginPath();
+        ctx!.lineDashOffset = 20;
+        ctx?.moveTo(minX, minY);
+        ctx?.lineTo(maxX, minY);
+        ctx?.moveTo(maxX, minY);
+        ctx?.lineTo(maxX, maxY);
+        ctx?.stroke()
+
+        ctx?.setLineDash([]);
+
+        // 起始点和结束点
+        ctx?.beginPath();
+        ctx?.arc(minX, maxY, 3, 0, 2 * Math.PI); // 起始点
+        ctx?.arc(maxX, minY, 3, 0, 2 * Math.PI); // 结束点
+        ctx?.fill();
+
+    }
+
+    const drawbezier = (cp1: Position, cp2: Position) => {
+        // 三次贝塞尔曲线
+        ctx?.beginPath();
+        ctx!.strokeStyle = 'black';
+        ctx?.moveTo(50, 150);
+        ctx?.bezierCurveTo(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y, cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y, 150, 50);
+        ctx?.stroke();
+
+        //起始点与控点A的连接线
+        lineA.value = new Path2D()
+        lineA.value.moveTo(50, 150);
+        lineA.value.lineTo(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y)
+        ctx?.stroke(lineA.value);
+
+        //结束点与控点B的连接线
+        lineB.value = new Path2D()
+        lineB.value.moveTo(150, 50);
+        lineB.value.lineTo(cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y)
+        ctx?.stroke(lineB.value);
+
+        // 控制点 A
+        pointA.value = new Path2D()
+        pointA.value.arc(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y, 5, 0, 2 * Math.PI)
+        ctx!.fillStyle = (dragA.value || dragLineA.value) ? 'blue' : 'black';
+        ctx!.strokeStyle = (dragA.value || dragLineA.value) ? '#fff' : 'transparent';
+        ctx!.lineWidth = (dragA.value || dragLineA.value) ? 2 : 0;
+        if (dragA.value || dragLineA.value) ctx?.stroke(pointA.value);
+        ctx?.fill(pointA.value);
+
+
+        // 控制点 B
+        pointB.value = new Path2D()
+        pointB.value.arc(cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y, 5, 0, 2 * Math.PI)
+        ctx!.fillStyle = (dragB.value || dragLineB.value) ? 'blue' : 'black';
+        ctx!.strokeStyle = (dragB.value || dragLineB.value) ? '#fff' : 'transparent';
+        ctx!.lineWidth = (dragB.value || dragLineB.value) ? 2 : 0;
+        if (dragB.value || dragLineB.value) ctx?.stroke(pointB.value);
+        ctx?.fill(pointB.value);
+    }
+    drawXY()
+    drawbezier(cp1.value, cp2.value)
+
+
+    document.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        const rect = canvas.getBoundingClientRect();
+        const canvasX = Math.round(e.clientX - rect.left) * (canvas.width / rect.width);
+        const canvasY = Math.round(e.clientY - rect.top) * (canvas.height / rect.height);
+
+        ctx!.lineWidth = 6;
+
+        const isInsideA = ctx!.isPointInPath(pointA.value!, canvasX, canvasY);
+        const isInsideB = ctx!.isPointInPath(pointB.value!, canvasX, canvasY);
+        const isInsidelineA = ctx!.isPointInStroke(lineA.value!, canvasX, canvasY)
+        const isInsidelineB = ctx!.isPointInStroke(lineB.value!, canvasX, canvasY)
+
+        let arr = [isInsideA, isInsideB, isInsidelineA, isInsidelineB]
+
+        for (let index = 0; index < arr.length; index++) {
+            if (arr[index]) {
+                if (index === 0) {
+                    drag = true
+                    dragA.value = true
+                    break
+                }
+                if (index === 1) {
+                    drag = true
+                    dragB.value = true
+                    break
+                }
+                if (index === 2) {
+                    drag = true
+                    dragLineA.value = true
+                    break
+                }
+                if (index === 3) {
+                    drag = true
+                    dragLineB.value = true
+                    break
+                }
+            }
+        }
+
+        ctx!.lineWidth = 1;
+        ctx?.reset()
+        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
+        drawXY()
+        drawbezier(cp1.value, cp2.value)
+        document.addEventListener('mousemove', move)
+        document.addEventListener('mouseup', up)
+    });
+
+    const move = (e: MouseEvent) => {
+        e.stopPropagation()
+        if (!drag) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.round(e.clientX - rect.left);
+        const y = Math.round(e.clientY - rect.top);
+
+        //保存控制点A和B
+        if (dragA.value) {
+            cp1.value.x = x < 50 ? 50 : x < 150 ? x : 150;
+            cp1.value.y = y;
+        }
+        if (dragB.value) {
+            cp2.value.x = x < 50 ? 50 : x < 150 ? x : 150;
+            cp2.value.y = y;
+        }
+
+        if (dragLineA.value) {
+            cp1.value.x = (cp1.value.x + e.movementX) < 50 ? 50 : (cp1.value.x + e.movementX) < 150 ? (cp1.value.x + e.movementX) : 150;
+            cp1.value.y = cp1.value.y + e.movementY
+        }
+
+        if (dragLineB.value) {
+            cp2.value.x = (cp2.value.x + e.movementX) < 50 ? 50 : (cp2.value.x + e.movementX) < 150 ? (cp2.value.x + e.movementX) : 150;
+            cp2.value.y = cp2.value.y + e.movementY
+        }
+
+        ctx?.reset();
+        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        drawXY()
+        drawbezier(cp1.value, cp2.value)
+    }
+
+    const up = (e: MouseEvent) => {
+        if (!drag) return;
+        canvas.removeEventListener('mousemove', move)
+        drag = dragA.value = dragB.value = dragLineA.value = dragLineB.value = false
+
+        ctx?.reset();
+        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        drawXY()
+        drawbezier(cp1.value, cp2.value)
+
+        console.log((cp1.value.x - 50) * 0.01, (150 - cp1.value.y) * 0.01, (cp2.value.x - 50) * 0.01, (150 - cp2.value.y) * 0.01);
+    }
+
+
 }
 
 onMounted(() => {
