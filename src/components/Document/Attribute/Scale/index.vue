@@ -29,7 +29,7 @@ const h = ref<number>(0);
 const k = ref<number>(1);
 const optionsVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-
+let __base_width = 0;
 const presetOptions = ['0.25x', '0.5x', '0.75x', '1x', '2x', '3x', '4x', '5x', '10x'];
 
 function __get_box() {
@@ -171,9 +171,8 @@ function changeW(value: string) {
 
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
-
+    if (_w / w.value < 0.02) return;
     k.value = _w / w.value;
-
     __change_size(k.value);
 }
 
@@ -186,6 +185,7 @@ function changeH(value: string) {
     if (isNaN(_h)) {
         return;
     }
+    if (_h / h.value < 0.02) return;
     k.value = _h / h.value;
     __change_size(k.value);
 }
@@ -197,6 +197,7 @@ function changeK(value: string) {
     const _k: number = Number.parseFloat(value);
     if (isNaN(_k)) return;
     const scale = _k / k.value;
+    if (_k < 0.02) return;
     k.value = _k;
     __change_size(scale);
 }
@@ -239,8 +240,9 @@ function draggingW(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    scaleUniformer.execute(currentValue / baseValue);
     k.value = currentValue / baseValue;
+    if (k.value < 0.02) return;
+    scaleUniformer.execute(currentValue / baseValue);
 }
 
 function draggingH(e: MouseEvent) {
@@ -252,8 +254,9 @@ function draggingH(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    scaleUniformer.execute(currentValue / baseValue);
     k.value = currentValue / baseValue;
+    if (k.value < 0.02) return;
+    scaleUniformer.execute(currentValue / baseValue);
 }
 
 function draggingK(e: MouseEvent) {
@@ -265,8 +268,9 @@ function draggingK(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX / 100;
-    scaleUniformer.execute(currentValue / baseValue);
     k.value = currentValue / baseValue;
+    if (k.value < 0.02) return;
+    scaleUniformer.execute(currentValue / baseValue);
 }
 
 function dragend2() {
@@ -327,9 +331,13 @@ function attrWatcher(t: any, type: any) {
 }
 
 const stop = watch(() => props.selectionChange, getSize);
-const stop2 = watch(() => props.shapeChange, getSize);
+const stop2 = watch(() => props.shapeChange, () => {
+    getSize();
+    k.value = w.value / __base_width;
+});
 onMounted(() => {
     getSize();
+    __base_width = w.value;
     props.context.attr.watch(attrWatcher);
 });
 onUnmounted(() => {
