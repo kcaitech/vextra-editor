@@ -320,6 +320,7 @@ function select(v: string) {
 function initBase() {
     getSize();
     __base_width = w.value;
+    k.value = 1;
 }
 
 const stop = watch(() => props.selectionChange, initBase);
