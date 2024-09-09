@@ -35,7 +35,6 @@ export class TransformHandler {
         }
 
         this.alignPixel = context.user.isPixelAlignMent;
-
         this.beforeTransform();
 
         document.addEventListener('keydown', this.__keydown);

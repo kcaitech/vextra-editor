@@ -477,7 +477,8 @@ export function format_value(val: number | string, fix = 2) {
     return fixedZero(val);
 }
 
-export const fixedZero = (value: number) => {
+export const fixedZero = (value: number | string) => {
+    if (typeof value === 'string') return value;
     value = Math.round(value * 100) / 100;
     if (Number.isInteger(value)) {
         return value.toFixed(0); // 返回整数形式

@@ -8,6 +8,7 @@ import { useI18n } from "vue-i18n";
 import {
     adapt_page, flattenSelection,
     get_shape_within_document,
+    getName,
     lower_layer, outlineSelection,
     select_all,
     shape_track,
@@ -19,6 +20,7 @@ import { string_by_sys } from "@/utils/common";
 import {
     adapt2Shape,
     Artboard,
+    ArtboradView,
     ShapeType,
     ShapeView,
     SymbolRefShape,
@@ -33,6 +35,7 @@ import { Navi } from "@/context/navigate";
 import Layers from './Layers.vue';
 import TableMenu from './TableMenu/TableMenu.vue';
 import { useMask } from "@/components/Document/Creator/execute";
+import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
 
 interface Props {
     context: Context;
@@ -307,7 +310,7 @@ function dissolution_container() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
+        const shapes = editor.dissolution_artboard(artboards as ArtboradView[]);
         if (shapes) {
             const selectShapes = [...saveSelectShape, ...shapes]
             props.context.nextTick(page, () => {
@@ -343,13 +346,43 @@ function component() {
     emits('close');
 }
 
+const autoLayout = () => {
+    const selectShapes = props.context.selection.selectedShapes;
+    let shapes
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const bro = Array.from(page.shapes.values());
+    const editor = props.context.editor4Page(page);
+    const name = getName(ShapeType.Artboard, bro || [], t);
+    if (selectShapes.length > 1) {
+        shapes = filter_for_group1(selectShapes);
+        shapes = compare_layer_3(shapes);
+    } else {
+        shapes = selectShapes[0].childs;
+    }
+    if (selectShapes.length > 1) {
+        editor.create_autolayout_artboard(shapes, name);
+    } else {
+        const editor = props.context.editor4Shape(selectShapes[0]);
+        editor.addAutoLayout();
+    }
+    emits('close');
+}
+
+const unAutoLayout = () => {
+    const selectShapes = props.context.selection.selectedShapes;
+    const editor = props.context.editor4Shape(selectShapes[0]);
+    editor.deleteAutoLayout();
+    emits('close');
+}
+
 function instance() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     const ref_shapes = selection.selectedShapes;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(ref_shapes.map(s => adapt2Shape(s)) as SymbolRefShape[]);
+        const shapes = editor.extractSymbol(ref_shapes as SymbolRefView[]);
         if (shapes) {
             props.context.nextTick(page, () => {
                 const select = shapes.reduce((pre, cur) => {
@@ -466,219 +499,219 @@ onUnmounted(() => {
 })
 </script>
 <template>
-<div ref="menu"
-     class="__context-menu"
-     :style="{ width: `${width || 196}px` }"
-     @mousedown.stop
-     @mousemove.stop
-     @click.stop
->
-    <div class="header"/>
-    <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
-         @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
-        <span>{{ t('system.select_layer') }}</span>
-        <svg-icon icon-class="down"/>
-        <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
-             :style="{ 'max-height': layersHeight + 'px' }">
-            <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
-        </div>
-    </div>
-    <div v-if="items.has(MenuItemType.Layers)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.All)" class="menu-item" @click="all">
-        <span>{{ t('system.select_all') }}</span>
-        <Key code="Ctrl A"/>
-    </div>
-    <div v-if="items.has(MenuItemType.Copy)" class="menu-item" @click="copy">
-        <span>{{ t('system.copy') }}</span>
-        <Key code="Ctrl C"/>
-    </div>
-    <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
-         @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
-        <span>{{ t('system.copyAs') }}</span>
-        <svg-icon icon-class="down"/>
-        <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
-            <div class="sub-item" @click="copyAsPNG">
-                <span>{{ t('clipboard.copyAsPNG') }}</span>
-                <Key code="Shift Ctrl C"/>
-            </div>
-            <div class="sub-item" @click="copyProperties">
-                <span>{{ t('clipboard.copyStyle') }}</span>
-                <Key code="Ctrl Alt C"/>
-            </div>
-            <div class="sub-item" @click="pasteProperties">
-                <span>{{ t('clipboard.pasteStyle') }}</span>
-                <Key code="Ctrl Alt V"/>
+    <div ref="menu" class="__context-menu" :style="{ width: `${width || 196}px` }" @mousedown.stop @mousemove.stop
+        @click.stop>
+        <div class="header" />
+        <div v-if="items.has(MenuItemType.Layers)" class="menu-item"
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.Layers)" @mouseleave="closeLayerSubMenu">
+            <span>{{ t('system.select_layer') }}</span>
+            <svg-icon icon-class="down" />
+            <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.Layers"
+                :style="{ 'max-height': layersHeight + 'px' }">
+                <Layers @close="emits('close')" :layers="props.layers" :context="props.context"></Layers>
             </div>
         </div>
+        <div v-if="items.has(MenuItemType.Layers)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.All)" class="menu-item" @click="all">
+            <span>{{ t('system.select_all') }}</span>
+            <Key code="Ctrl A" />
+        </div>
+        <div v-if="items.has(MenuItemType.Copy)" class="menu-item" @click="copy">
+            <span>{{ t('system.copy') }}</span>
+            <Key code="Ctrl C" />
+        </div>
+        <div v-if="items.has(MenuItemType.CopyAs)" class="menu-item"
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, MenuItemType.CopyAs)" @mouseleave="closeLayerSubMenu">
+            <span>{{ t('system.copyAs') }}</span>
+            <svg-icon icon-class="down" />
+            <div class="layers_menu" ref="layersMenu" v-if="showLayer === MenuItemType.CopyAs">
+                <div class="sub-item" @click="copyAsPNG">
+                    <span>{{ t('clipboard.copyAsPNG') }}</span>
+                    <Key code="Shift Ctrl C" />
+                </div>
+                <div class="sub-item" @click="copyProperties">
+                    <span>{{ t('clipboard.copyStyle') }}</span>
+                    <Key code="Ctrl Alt C" />
+                </div>
+                <div class="sub-item" @click="pasteProperties">
+                    <span>{{ t('clipboard.pasteStyle') }}</span>
+                    <Key code="Ctrl Alt V" />
+                </div>
+            </div>
+        </div>
+        <div v-if="items.has(MenuItemType.Cut)" class="menu-item" @click="cut">
+            <span>{{ t('system.cut') }}</span>
+            <Key code="Ctrl X" />
+        </div>
+        <div v-if="items.has(MenuItemType.Paste)" class="menu-item" @click="paste">
+            <span>{{ t('system.paste') }}</span>
+            <Key code="Ctrl V" />
+        </div>
+        <div v-if="items.has(MenuItemType.OnlyText)" class="menu-item" @click="paste_text">
+            <span>{{ t('system.only_text') }}</span>
+            <Key code="Ctrl Alt V" />
+        </div>
+        <div v-if="items.has(MenuItemType.PasteHere)" class="menu-item" @click="pasteHere" @mouseenter="hereEnter"
+            @mouseleave="hereOut">
+            <span>{{ t('system.paste_here') }}</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Replace)" class="menu-item" @click="_replace">
+            <span>{{ t('system.replace') }}</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Half)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Half)" @click="(e: MouseEvent) => half(e)" class="menu-item">
+            <span>50%</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Hundred)" @click="(e: MouseEvent) => hundred(e)" class="menu-item">
+            <span>100%</span>
+            <Key code="Ctrl 0" />
+        </div>
+        <div v-if="items.has(MenuItemType.Double)" @click="(e: MouseEvent) => double(e)" class="menu-item">
+            <span>200%</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Canvas)" @click="canvas" class="menu-item">
+            <span>{{ t('system.fit_canvas') }}</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Cursor)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Cursor)" @click="_cursor" class="menu-item">
+            <span>{{ t('system.show_many_cursor') }}</span>
+            <svg v-if="cursor" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
+                viewBox="0 0 15 10.833333969116211"
+                style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
+                <path
+                    d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
+                    fill-rule="evenodd" fill="inherit" fill-opacity="1" />
+            </svg>
+        </div>
+        <div v-if="items.has(MenuItemType.Cutout)" @click="_cutout" class="menu-item">
+            <span>{{ t('system.show_cutout') }}</span>
+            <svg v-if="cutout" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
+                viewBox="0 0 15 10.833333969116211"
+                style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
+                <path
+                    d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
+                    fill-rule="evenodd" fill="inherit" fill-opacity="1" />
+            </svg>
+        </div>
+        <div v-if="items.has(MenuItemType.Rule)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Rule)" @click="ruler" class="menu-item">
+            <span>{{ t('system.show_ruler') }}</span>
+            <svg class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
+                viewBox="0 0 15 10.833333969116211"
+                style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
+                <path
+                    d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
+                    fill-rule="evenodd" fill="inherit" fill-opacity="1" />
+            </svg>
+        </div>
+        <div v-if="items.has(MenuItemType.Pixel)" @click="pixel" class="menu-item">
+            <span>{{ t('system.show_pixel_network') }}</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Title)" @click="toggle_title" class="menu-item">
+            <span>{{ t('system.artboart_title_visible') }}</span>
+            <svg v-if="title" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
+                viewBox="0 0 15 10.833333969116211"
+                style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
+                <path
+                    d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
+                    fill-rule="evenodd" fill="inherit" fill-opacity="1" />
+            </svg>
+        </div>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
+            <span>{{ t('system.hide_operation_interface') }}</span>
+            <Key code="Ctrl(Shift) \"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Forward)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Forward)" @click="forward" class="menu-item">
+            <span>{{ t('system.bring_forward') }}</span>
+            <Key code="Ctrl ]"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Back)" @click="back" class="menu-item">
+            <span>{{ t('system.send_backward') }}</span>
+            <Key code="Ctrl ["></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Top)" @click="top" class="menu-item">
+            <span>{{ t('system.bring_to_top') }}</span>
+            <Key code="["></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Bottom)" @click="bottom" class="menu-item">
+            <span>{{ t('system.send_to_bottom') }}</span>
+            <Key code="]"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Groups)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Groups)" @click="groups" class="menu-item">
+            <span>{{ t('system.creating_groups') }}</span>
+            <Key code="Ctrl G"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Container)" @click="container" class="menu-item">
+            <span>{{ t('system.create_container') }}</span>
+            <Key code="Ctrl Alt G"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Flatten)" @click="flatten" class="menu-item">
+            <span>{{ t('bool.cohere') }}</span>
+            <Key code="Ctrl E"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Outline)" @click="outline" class="menu-item">
+            <span>{{ t('system.outline') }}</span>
+            <Key code="Ctrl Alt O"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
+            <span>{{ t('system.set_mask') }}</span>
+            <Key code="Ctrl Alt M"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.UnGroup)" @click="unGroup" class="menu-item">
+            <span>{{ t('system.un_group') }}</span>
+            <Key code="Shift Ctrl G"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Dissolution)" @click="dissolution_container" class="menu-item">
+            <span>{{ t('system.dissolution') }}</span>
+            <Key code="Shift Ctrl G"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.UnMask)" @click="mask" class="menu-item">
+            <span>{{ t('system.remove_mask') }}</span>
+            <Key code="Ctrl Alt M"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Component) || items.has(MenuItemType.UnAutoLayout) || items.has(MenuItemType.AutoLayout)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="autoLayout" class="menu-item">
+            <span>{{ t('autolayout.remove_auto_layout') }}</span>
+            <Key code="Shift Alt A"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.AutoLayout)" @click="unAutoLayout" class="menu-item">
+            <span>{{ t('autolayout.add_auto_layout') }}</span>
+            <Key code="Shift A"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
+            <span>{{ t('system.create_component') }}</span>
+            <Key code="Ctrl Alt K"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Instance)" @click="instance" class="menu-item">
+            <span>{{ t('system.unbind_instance') }}</span>
+            <Key code="Ctrl Alt B"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.EditComps)" @click="editComps" class="menu-item">
+            <span>{{ t('system.edit_component') }}</span>
+        </div>
+        <div v-if="items.has(MenuItemType.Visible)"
+            style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
+        <div v-if="items.has(MenuItemType.Visible)" @click="visible" class="menu-item">
+            <span>{{ t('system.visible') }}</span>
+            <Key code="Shift Ctrl H"></Key>
+        </div>
+        <div v-if="items.has(MenuItemType.Lock)" @click="lock" class="menu-item">
+            <span>{{ t('system.Lock') }}</span>
+            <Key code="Shift Ctrl L"></Key>
+        </div>
+        <TableMenu :context="context" :items="items" @close="emits('close')"></TableMenu>
+        <div class="bottom" />
     </div>
-    <div v-if="items.has(MenuItemType.Cut)" class="menu-item" @click="cut">
-        <span>{{ t('system.cut') }}</span>
-        <Key code="Ctrl X"/>
-    </div>
-    <div v-if="items.has(MenuItemType.Paste)" class="menu-item" @click="paste">
-        <span>{{ t('system.paste') }}</span>
-        <Key code="Ctrl V"/>
-    </div>
-    <div v-if="items.has(MenuItemType.OnlyText)" class="menu-item" @click="paste_text">
-        <span>{{ t('system.only_text') }}</span>
-        <Key code="Ctrl Alt V"/>
-    </div>
-    <div v-if="items.has(MenuItemType.PasteHere)" class="menu-item"
-         @click="pasteHere"
-         @mouseenter="hereEnter"
-         @mouseleave="hereOut"
-    >
-        <span>{{ t('system.paste_here') }}</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Replace)" class="menu-item" @click="_replace">
-        <span>{{ t('system.replace') }}</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Half)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Half)" @click="(e: MouseEvent) => half(e)" class="menu-item">
-        <span>50%</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Hundred)" @click="(e: MouseEvent) => hundred(e)" class="menu-item">
-        <span>100%</span>
-        <Key code="Ctrl 0"/>
-    </div>
-    <div v-if="items.has(MenuItemType.Double)" @click="(e: MouseEvent) => double(e)" class="menu-item">
-        <span>200%</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Canvas)" @click="canvas" class="menu-item">
-        <span>{{ t('system.fit_canvas') }}</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Cursor)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Cursor)" @click="_cursor" class="menu-item">
-        <span>{{ t('system.show_many_cursor') }}</span>
-        <svg v-if="cursor" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
-             viewBox="0 0 15 10.833333969116211"
-             style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
-            <path
-                d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
-                fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
-        </svg>
-    </div>
-    <div v-if="items.has(MenuItemType.Cutout)" @click="_cutout" class="menu-item">
-        <span>{{ t('system.show_cutout') }}</span>
-        <svg v-if="cutout" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
-             viewBox="0 0 15 10.833333969116211"
-             style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
-            <path
-                d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
-                fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
-        </svg>
-    </div>
-    <div v-if="items.has(MenuItemType.Rule)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Rule)" @click="ruler" class="menu-item">
-        <span>{{ t('system.show_ruler') }}</span>
-        <svg class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
-             viewBox="0 0 15 10.833333969116211"
-             style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
-            <path
-                d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
-                fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
-        </svg>
-    </div>
-    <div v-if="items.has(MenuItemType.Pixel)" @click="pixel" class="menu-item">
-        <span>{{ t('system.show_pixel_network') }}</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Title)" @click="toggle_title" class="menu-item">
-        <span>{{ t('system.artboart_title_visible') }}</span>
-        <svg v-if="title" class="check" xmlns="http://www.w3.org/2000/svg" width="9" height="6"
-             viewBox="0 0 15 10.833333969116211"
-             style="position: absolute; top: 50%; left:10px; transform: translateY(-50%)">
-            <path
-                d="M14.7559,0.244078C15.0813,0.569514,15.0813,1.09715,14.7559,1.42259C14.7559,1.42259,5.58926,10.5893,5.58926,10.5893C5.26382,10.9147,4.73618,10.9147,4.41074,10.5893C4.41074,10.5893,0.244077,6.42259,0.244077,6.42259C-0.0813592,6.09715,-0.0813592,5.56952,0.244077,5.24408C0.569514,4.91864,1.09715,4.91864,1.42259,5.24408C1.42259,5.24408,5,8.8215,5,8.8215C5,8.8215,13.5774,0.244078,13.5774,0.244078C13.9028,-0.0813593,14.4305,-0.0813593,14.7559,0.244078C14.7559,0.244078,14.7559,0.244078,14.7559,0.244078Z"
-                fill-rule="evenodd" fill="inherit" fill-opacity="1"/>
-        </svg>
-    </div>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <div v-if="items.has(MenuItemType.Operation)" @click="operation" class="menu-item">
-        <span>{{ t('system.hide_operation_interface') }}</span>
-        <Key code="Ctrl(Shift) \"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Forward)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Forward)" @click="forward" class="menu-item">
-        <span>{{ t('system.bring_forward') }}</span>
-        <Key code="Ctrl ]"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Back)" @click="back" class="menu-item">
-        <span>{{ t('system.send_backward') }}</span>
-        <Key code="Ctrl ["></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Top)" @click="top" class="menu-item">
-        <span>{{ t('system.bring_to_top') }}</span>
-        <Key code="["></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Bottom)" @click="bottom" class="menu-item">
-        <span>{{ t('system.send_to_bottom') }}</span>
-        <Key code="]"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Groups)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Groups)" @click="groups" class="menu-item">
-        <span>{{ t('system.creating_groups') }}</span>
-        <Key code="Ctrl G"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Container)" @click="container" class="menu-item">
-        <span>{{ t('system.create_container') }}</span>
-        <Key code="Ctrl Alt G"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Flatten)" @click="flatten" class="menu-item">
-        <span>{{ t('bool.cohere') }}</span>
-        <Key code="Ctrl E"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Outline)" @click="outline" class="menu-item">
-        <span>{{ t('system.outline') }}</span>
-        <Key code="Ctrl Alt O"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Mask)" @click="mask" class="menu-item">
-        <span>{{ t('system.set_mask') }}</span>
-        <Key code="Ctrl Alt M"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.UnGroup)" @click="unGroup" class="menu-item">
-        <span>{{ t('system.un_group') }}</span>
-        <Key code="Shift Ctrl G"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Dissolution)" @click="dissolution_container" class="menu-item">
-        <span>{{ t('system.dissolution') }}</span>
-        <Key code="Shift Ctrl G"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.UnMask)" @click="mask" class="menu-item">
-        <span>{{ t('system.remove_mask') }}</span>
-        <Key code="Ctrl Alt M"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Component)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
-        <span>{{ t('system.create_component') }}</span>
-        <Key code="Ctrl Alt K"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Instance)" @click="instance" class="menu-item">
-        <span>{{ t('system.unbind_instance') }}</span>
-        <Key code="Ctrl Alt B"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.EditComps)" @click="editComps" class="menu-item">
-        <span>{{ t('system.edit_component') }}</span>
-    </div>
-    <div v-if="items.has(MenuItemType.Visible)"
-         style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0"/>
-    <div v-if="items.has(MenuItemType.Visible)" @click="visible" class="menu-item">
-        <span>{{ t('system.visible') }}</span>
-        <Key code="Shift Ctrl H"></Key>
-    </div>
-    <div v-if="items.has(MenuItemType.Lock)" @click="lock" class="menu-item">
-        <span>{{ t('system.Lock') }}</span>
-        <Key code="Shift Ctrl L"></Key>
-    </div>
-    <TableMenu :context="context" :items="items" @close="emits('close')"></TableMenu>
-    <div class="bottom"/>
-</div>
 </template>
 <style scoped lang="scss">
 .__context-menu {
@@ -694,12 +727,12 @@ onUnmounted(() => {
 
     cursor: auto !important;
 
-    > .header {
+    >.header {
         width: 100%;
         height: 6px;
     }
 
-    > .menu-item {
+    >.menu-item {
         position: relative;
 
         width: 100%;
@@ -722,7 +755,7 @@ onUnmounted(() => {
             fill: #000;
         }
 
-        > svg {
+        >svg {
             width: 9px;
             height: 9px;
 
@@ -765,7 +798,7 @@ onUnmounted(() => {
     }
 
 
-    > .menu-item:hover {
+    >.menu-item:hover {
         background-color: var(--active-color);
         color: #FFF;
 
@@ -773,13 +806,13 @@ onUnmounted(() => {
             fill: #FFF;
         }
 
-        > svg {
+        >svg {
             fill: #fff;
             transform: rotate(0deg);
         }
     }
 
-    > .bottom {
+    >.bottom {
         width: 100%;
         height: 6px;
     }

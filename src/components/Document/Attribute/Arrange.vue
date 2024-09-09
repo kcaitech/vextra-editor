@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView } from '@kcdesign/data';
 import { PositonAdjust } from "@kcdesign/data";
 import { onMounted, onUnmounted, watch } from 'vue';
 import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution, is_container } from '@/utils/arrange';
@@ -183,7 +183,9 @@ function _modify_model_disable() {
             model_enable.o = true;
             model_enable.hv = true;
         }
-
+        if((first as ArtboradView).autoLayout || (first_p as ArtboradView).autoLayout) {
+            reset_model();
+        }
         return;
     }
     model_enable.o = true;

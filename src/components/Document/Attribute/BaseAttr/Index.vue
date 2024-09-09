@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -144,6 +144,7 @@ function _update_view() {
     } else {
         check_model_state();
     }
+    autoLayoutDisable();
 }
 
 const update_view = debounce(_update_view, 200, { leading: true });
@@ -412,6 +413,14 @@ function all_disable() {
     model_disable_state.radius = true;
     model_disable_state.counts = true;
     model_disable_state.innerAngle = true;
+}
+
+const autoLayoutDisable = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const every = shapes.every(item => item.parent && (item.parent as ArtboradView).autoLayout);
+    if (every) {
+        model_disable_state.x = true, model_disable_state.y = true;
+    }
 }
 
 const tel = ref<boolean>(false);

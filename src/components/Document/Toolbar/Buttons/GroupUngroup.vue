@@ -3,6 +3,7 @@ import { Selection } from '@/context/selection';
 import {
     adapt2Shape,
     Artboard,
+    ArtboradView,
     BoolOp,
     BoolShapeView,
     GroupShape,
@@ -103,10 +104,10 @@ const groupClick = (alt?: boolean) => {
     let newshape: Shape | false;
     if (alt) {
         const name = getName(ShapeType.Artboard, bro || [], t);
-        newshape = editor.create_artboard(shapes.map(s => adapt2Shape(s)), name);
+        newshape = editor.create_artboard(shapes, name);
     } else {
         const name = getName(ShapeType.Group, bro || [], t);
-        newshape = editor.group(shapes.map(s => adapt2Shape(s)), name);
+        newshape = editor.group(shapes, name);
     }
     if (newshape) {
         props.context.nextTick(page, () => {
@@ -136,11 +137,11 @@ const ungroupClick = () => {
 
     const editor = props.context.editor4Page(page);
     if (artboards.length) {
-        const a = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
+        const a = editor.dissolution_artboard(artboards as ArtboradView[]);
         if (a) others.push(...a);
     }
     if (groups.length) {
-        const g = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
+        const g = editor.ungroup(groups as GroupShapeView[]);
         if (g) others.push(...g);
     }
     if (others.length) {
