@@ -237,8 +237,9 @@ function draggingW(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    if (k.value < 0.02) return;
-    scaleUniformer.execute(currentValue / baseValue);
+    const ratio = currentValue / baseValue;
+    if (ratio <= 0.02) return;
+    scaleUniformer.execute(ratio);
 }
 
 function draggingH(e: MouseEvent) {
@@ -250,8 +251,9 @@ function draggingH(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    if (k.value < 0.02) return;
-    scaleUniformer.execute(currentValue / baseValue);
+    const ratio = currentValue / baseValue;
+    if (ratio <= 0.02) return;
+    scaleUniformer.execute(ratio);
 }
 
 function draggingK(e: MouseEvent) {
@@ -263,8 +265,9 @@ function draggingK(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX / 100;
-    if (k.value < 0.02) return;
-    scaleUniformer.execute(currentValue / baseValue);
+    const ratio = currentValue / baseValue;
+    if (ratio <= 0.02) return;
+    scaleUniformer.execute(ratio);
 }
 
 function dragend2() {
