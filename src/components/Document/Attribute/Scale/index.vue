@@ -456,7 +456,7 @@ onUnmounted(() => {
     }
 
     .trigger:hover {
-        background-color: var(--grey-dark);
+        background-color: rgb(235, 235, 235);
     }
 }
 

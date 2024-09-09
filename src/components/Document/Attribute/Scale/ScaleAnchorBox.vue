@@ -70,7 +70,7 @@ onUnmounted(() => {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     gap: 2px;
-    background-color: var(--input-background);
+    background-color: var(--theme-color-anti);
     border-radius: var(--default-radius);
     border: 1px solid rgba(0, 0, 0, 0.08);
 
