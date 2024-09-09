@@ -12,6 +12,7 @@ import {
     ShapeView
 } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 
 export function get_parent_points(context: Context, range?: Map<number, number[]>) {
     const path_shape = context.selection.pathshape;
@@ -419,7 +420,7 @@ export function enter_path_edit_mode(context: Context) {
         console.log('!shape.pathType || shape.isVirtualShape || shape instanceof ContactLineView');
         return;
     }
-
+    context.tool.setAction(Action.AutoV);
     context.workspace.setPathEditMode(true); // --开启对象编辑
     context.escstack.save('path-edit', exist_edit_mode);
 
