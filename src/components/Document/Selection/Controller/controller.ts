@@ -53,9 +53,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1) {
-            return;
-        }
+        if (selected.length !== 1) return;
 
         const shape = selected[0];
 
@@ -67,9 +65,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        if (context.tool.isLable) {
-            return;
-        }
+        if (context.tool.isLable) return;
 
         if (shape.pathType) {
             if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
