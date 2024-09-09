@@ -756,8 +756,6 @@ export class ScaleHandler extends TransformHandler {
         this.shapeTransformListInSelection.forEach((transform, i) => {
             const shape = shapes[i];
 
-            const isRef = shape instanceof SymbolRefView;
-
             const t = transform.clone()
                 .addTransform(transformForSelection)
                 .addTransform(inverseCache.get(shape.parent!)!);
@@ -770,14 +768,13 @@ export class ScaleHandler extends TransformHandler {
                 height: oSize.height * Math.abs(scale.y)
             } as ShapeSize;
 
-            if (!isRef) t.clearScaleSize();
 
             const __scale = {
                 x: Math.abs(scale.x),
                 y: Math.abs(scale.y)
             };
 
-            units.push({ shape, size: isRef ? oSize : size, transform: t, decomposeScale: __scale });
+            units.push({ shape, size, transform: t, decomposeScale: __scale });
         });
 
         (this.asyncApiCaller as Scaler).executeUniform(units, sizeForSelection.width / this.selectionSize.width * (__scale.x > 0 ? 1 : -1));
