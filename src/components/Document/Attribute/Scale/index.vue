@@ -172,8 +172,7 @@ function changeW(value: string) {
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
     if (_w / w.value < 0.02) return;
-    k.value = _w / w.value;
-    __change_size(k.value);
+    __change_size(_w / w.value);
 }
 
 function changeH(value: string) {
@@ -186,8 +185,7 @@ function changeH(value: string) {
         return;
     }
     if (_h / h.value < 0.02) return;
-    k.value = _h / h.value;
-    __change_size(k.value);
+    __change_size(_h / h.value);
 }
 
 function changeK(value: string) {
@@ -197,8 +195,7 @@ function changeK(value: string) {
     const _k: number = Number.parseFloat(value);
     if (isNaN(_k)) return;
     const scale = _k / k.value;
-    if (_k < 0.02) return;
-    k.value = _k;
+    if (scale < 0.02) return;
     __change_size(scale);
 }
 
@@ -240,7 +237,6 @@ function draggingW(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    k.value = currentValue / baseValue;
     if (k.value < 0.02) return;
     scaleUniformer.execute(currentValue / baseValue);
 }
@@ -254,7 +250,6 @@ function draggingH(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX;
-    k.value = currentValue / baseValue;
     if (k.value < 0.02) return;
     scaleUniformer.execute(currentValue / baseValue);
 }
@@ -268,7 +263,6 @@ function draggingK(e: MouseEvent) {
         scaleUniformer.createApiCaller();
     }
     currentValue += e.movementX / 100;
-    k.value = currentValue / baseValue;
     if (k.value < 0.02) return;
     scaleUniformer.execute(currentValue / baseValue);
 }
@@ -278,9 +272,6 @@ function dragend2() {
     scaleUniformer?.fulfil();
     scaleUniformer = undefined;
     props.context.attr.notify(Attribute.FRAME_CHANGE);
-    props.context.nextTick(props.context.selection.selectedPage!, () => {
-        k.value = currentValue / baseValue;
-    });
 }
 
 function modifyTelUp() {
@@ -326,24 +317,20 @@ function select(v: string) {
     optionsVisible.value = false;
 }
 
-function attrWatcher(t: any, type: any) {
-    if (t === Attribute.FRAME_CHANGE) getSize();
+function initBase() {
+    getSize();
+    __base_width = w.value;
 }
 
-const stop = watch(() => props.selectionChange, getSize);
+const stop = watch(() => props.selectionChange, initBase);
 const stop2 = watch(() => props.shapeChange, () => {
     getSize();
     k.value = w.value / __base_width;
 });
-onMounted(() => {
-    getSize();
-    __base_width = w.value;
-    props.context.attr.watch(attrWatcher);
-});
+onMounted(initBase);
 onUnmounted(() => {
     stop();
     stop2();
-    props.context.attr.unwatch(attrWatcher);
 });
 </script>
 <template>
@@ -505,5 +492,16 @@ onUnmounted(() => {
             fill: var(--theme-color-anti);
         }
     }
+}
+
+.point {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-image: url("@/assets/cursor/scale.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px;
+    z-index: 10000;
 }
 </style>
