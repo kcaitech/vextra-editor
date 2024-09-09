@@ -33,17 +33,7 @@ export const fontNameListEn = [
     'Source Han Sans CN', 'STIXGeneral', 'SukhumvitSet', 'SuperClarendon', 'Symbol', 'Tamil MN', 'Tamil Sangam MN', 'Telugu MN', 'Telugu Sangam MN', 'Thonburi', 'Trattatello', 'Trebuchet MS', 'Webdings', 'Wingdings 2', 'Wingdings 3', 'Wingdings', 'ZapfDingbats',
     'ヒラギノ明朝 ProN', "Hiragino Maru Gothic Pro W4"
 ]
-const fontWeight = [
-    { key: "Regular", weight: 400, value: '' },
-    { key: "Bold", weight: 700, value: '' },
-    { key: "Black", weight: 900, value: '' },
-    { key: "Medium", weight: 500, value: '' },
-    { key: "SemiBold", weight: 600, value: '' },
-    { key: "ExtraBold", weight: 800, value: '' },
-    { key: "Light", weight: 300, value: '' },
-    { key: "ExtraLight", weight: 200, value: '' },
-    { key: "Thin", weight: 100, value: '' },
-]
+
 export const isSupportFontFamily = function (font: string) {
     if (typeof font != "string") {
         return [];

@@ -340,6 +340,15 @@ onMounted(() => {
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
+                <template v-if="filterFontList.failure_local.length !== 0">
+                    <div class="item" v-for="item in filterFontList.failure_local" :key="item"
+                        :style="{ fontFamily: item, height: isUnfoldLocal ? '32px' : '0px', transition: '0.2s' }"
+                        @click="selectLocalFont(item)">
+                        <svg-icon icon-class="page-select"
+                            :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
+                        <span v-html="highlightText(item)"></span>
+                    </div>
+                </template>
 
                 <!-- 中文字体 -->
                 <div class="text_title" v-if="filterFontList.ch.length !== 0" @click="unfoldFontName(2)">
