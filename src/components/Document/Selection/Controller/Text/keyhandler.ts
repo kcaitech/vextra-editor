@@ -2,10 +2,10 @@ import { Context } from "@/context";
 import { TextShapeView, TableCellView } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
-import { TextSelectionLite } from "@/context/textselectionlite";
 import { Attribute } from "@/context/atrribute";
 
 const keydelays = 15;
+
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
     let timerId: number = 0;
     return function (...args: any[]) {
@@ -92,8 +92,7 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const locate = shape.locateText(x, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
-    }
-    else {
+    } else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false);
         else selection.setCursor(locate.index, locate.before);
     }
@@ -111,8 +110,7 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const locate = shape.locateText(x, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
-    }
-    else {
+    } else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false);
         else selection.setCursor(locate.index, locate.before);
     }
@@ -144,14 +142,12 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
                     selection.setCursor(index, preChar !== '\n');
                 }
             }
-        }
-        else if (editor.deleteText(start - 1, 1)) {
+        } else if (editor.deleteText(start - 1, 1)) {
             const index = start - 1;
             const preChar = shapetext.charAt(index - 1);
             selection.setCursor(index, preChar !== '\n');
         }
-    }
-    else {
+    } else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
             const index = Math.min(start, end);
             const preChar = shapetext.charAt(index - 1);
@@ -168,8 +164,7 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextSh
         if (editor.deleteText(start, 1)) {
             selection.setCursor(start, false);
         }
-    }
-    else {
+    } else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
             selection.setCursor(Math.min(start, end), false);
         }
@@ -194,50 +189,27 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeVi
 
 function copy(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
     context.menu.menuMount();
-    // if (e.ctrlKey || e.metaKey) {
-    //     e.preventDefault();
-    //     const selection = context.textSelection;
-    //     const start = selection.cursorStart;
-    //     const end = selection.cursorEnd;
-    //     if (start === end) return;
-    //     const s = Math.min(start, end);
-    //     const len = Math.abs(start - end)
-    //     const text = shapetext.getTextWithFormat(s, len);
-    //     context.workspace.clipboard.write2(e as unknown as ClipboardEvent, text);
-    //     context.menu.menuMount();
-    // }
 }
+
 async function cut(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
         context.workspace.notify(WorkSpace.DELETE_LINE);
     }
     context.menu.menuMount();
-    // if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-    //     e.preventDefault();
-    //     const selection = context.textSelection;
-    //     const start = selection.cursorStart;
-    //     const end = selection.cursorEnd;
-    //     if (start === end) return;
-    //     const text = shapetext.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-    //     const copy_result = await context.workspace.clipboard.write(text);
-    //     if (copy_result) {
-    //         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-    //             selection.setCursor(Math.min(start, end), false);
-    //         }
-    //     }
-    //     context.menu.menuMount();
-    // } else if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
-    //     context.workspace.notify(WorkSpace.DELETE_LINE);
-    // }
 }
-function paster(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
-    // if (e.ctrlKey || e.metaKey) {
-    //     e.preventDefault(); // 阻止input的粘贴事件
-    //     paster_inner_shape(context, editor, e.altKey);
-    //     context.menu.menuMount();
-    // }
-    context.menu.menuMount();
+
+function paster(e: KeyboardEvent, context: Context) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.altKey) {
+            context.workspace.clipboard.paste_for_no_format_text();
+        } else {
+            context.workspace.clipboard.paste_text();
+        }
+        context.menu.menuMount();
+    }
 }
+
 function select_all(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
@@ -248,6 +220,7 @@ function select_all(e: KeyboardEvent, context: Context, shape: TextShapeView | T
         context.menu.menuMount();
     }
 }
+
 function undo_redo(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) {
     const { ctrlKey, metaKey, shiftKey } = e;
     if (ctrlKey || metaKey) {
@@ -313,8 +286,7 @@ const home = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCe
     const locate = shape.locateText(-Number.MAX_SAFE_INTEGER, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
-    }
-    else {
+    } else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false);
         else selection.setCursor(locate.index, locate.before);
     }
@@ -333,8 +305,7 @@ const end = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCel
     const locate = shape.locateText(Number.MAX_SAFE_INTEGER, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
-    }
-    else {
+    } else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false);
         else selection.setCursor(locate.index, locate.before);
     }
@@ -381,12 +352,8 @@ handler['>'] = period;
 
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
-    if (editor.isInComposingInput()) {
-        return;
-    }
+    if (editor.isInComposingInput()) return;
     const key = e.key.toLowerCase();
     const h = handler[key];
-    if (h) {
-        h(e, context, shape, editor);
-    }
+    if (h) h(e, context, shape, editor);
 }

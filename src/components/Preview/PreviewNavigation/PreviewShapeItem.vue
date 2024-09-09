@@ -5,6 +5,7 @@ import { Context } from "@/context";
 import { get_name } from "@/utils/shapelist";
 import { useI18n } from 'vue-i18n';
 import ShapeCard from "./PreviewShapeCard.vue";
+import StaticShape from "@/components/Document/Content/StaticShape.vue";
 
 export interface ItemData {
     id: string
@@ -40,16 +41,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div ref="shapeItem"
-        :class="{ container: true, selected: props.data.selected, hovered: hovered && !props.data.selected }"
-        @click="selectShape">
-        <div class="container-svg zero-symbol">
-            <ShapeCard :shape="props.data.shape()"/>
-        </div>
-        <div class="text">
-            <div class="txt">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
-        </div>
+<div ref="shapeItem"
+     :class="{ container: true, selected: props.data.selected, hovered: hovered && !props.data.selected }"
+     @click="selectShape">
+    <div class="container-svg zero-symbol">
+        <StaticShape :shape="data.shape()" :context="data.context"/>
     </div>
+    <div class="text">
+        <div class="txt">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
+    </div>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -63,19 +64,19 @@ onUnmounted(() => {
     box-sizing: border-box;
 
 
-    >.container-svg {
+    > .container-svg {
         width: 38px;
         height: 38px;
         display: flex;
         justify-content: center;
         align-items: center;
         margin-right: 5px;
-        border: 1px solid rgba(0,0,0,0.25);
+        border: 1px solid rgba(0, 0, 0, 0.25);
         border-radius: 2px;
         box-sizing: border-box;
     }
 
-    >.text {
+    > .text {
         flex: 1;
         line-height: 30px;
         font-size: var(--font-default-fontsize);
@@ -90,7 +91,7 @@ onUnmounted(() => {
         color: var(--left-navi-font-color);
         background-color: transparent;
 
-        >.txt {
+        > .txt {
             width: 100%;
             height: 30px;
             line-height: 30px;
