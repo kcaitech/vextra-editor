@@ -45,6 +45,7 @@ interface LayoutOptions {
     s_length: boolean
     s_counts: boolean
     s_inner_angle: boolean
+    s_tidy_up: boolean
 }
 
 interface ModelState {
@@ -72,7 +73,7 @@ const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false });
+const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false, s_tidy_up: false });
 const model_disable_state: ModelState = reactive({
     x: false,
     y: false,
@@ -85,7 +86,7 @@ const model_disable_state: ModelState = reactive({
     counts: false,
     innerAngle: false
 });
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_options;
+let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_tidy_up } = layout_options;
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -619,6 +620,12 @@ function selection_change() {
     update_view();
     calc_attri();
     textBehaviour();
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length > 1) {
+        s_tidy_up = true;
+    } else {
+        s_tidy_up = false;
+    }
 }
 
 const attr_watcher = (t: number) => {
@@ -669,73 +676,82 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="table">
-    <div class="tr">
-        <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
-                       @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
-        <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
-                       @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
-        <div v-if="s_adapt" class="adapt" @click="adapt">
-            <Tooltip :content="t('attr.adapt')">
-                <svg-icon icon-class="adapt" style="outline: none;"/>
-            </Tooltip>
+    <div class="table">
+        <div class="tr">
+            <MdNumberInput icon="X" draggable :value="format(x)" :disabled="model_disable_state.x" @change="changeX"
+                @dragstart="dragstart" @dragging="draggingX" @dragend="dragend" @wheel="wheelX"></MdNumberInput>
+            <MdNumberInput icon="Y" draggable :value="format(y)" @change="changeY" :disabled="model_disable_state.y"
+                @dragstart="dragstart" @dragging="draggingY" @dragend="dragend"></MdNumberInput>
+            <div v-if="s_adapt" class="adapt" @click="adapt">
+                <Tooltip :content="t('attr.adapt')">
+                    <svg-icon icon-class="adapt" style="outline: none;" />
+                </Tooltip>
+            </div>
+            <div v-else style="width: 32px;height: 32px;"></div>
         </div>
-        <div v-else style="width: 32px;height: 32px;"></div>
-    </div>
-    <div class="tr">
-        <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
-                       @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
-        <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
-                       :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH"
-                       @dragend="dragend2">
-        </MdNumberInput>
-        <Tooltip :content="t('attr.constrainProportions')">
-            <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
-            </div>
-            <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
-                <svg-icon icon-class="lock-open"></svg-icon>
-            </div>
-        </Tooltip>
-    </div>
-    <div class="tr">
-        <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
-                       :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
-                       @dragend="dragend"></MdNumberInput>
-        <div class="flip-wrapper">
-            <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
-                <div
-                    :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
-                    @click="fliph">
-                    <svg-icon icon-class="fliph"></svg-icon>
+        <div class="tr">
+            <MdNumberInput icon="W" draggable :value="format(w)" @change="changeW" :disabled="model_disable_state.width"
+                @dragstart="dragstart" @dragging="draggingW" @dragend="dragend2"></MdNumberInput>
+            <MdNumberInput icon="H" draggable :value="format(h)" @change="changeH"
+                :disabled="model_disable_state.height" @dragstart="dragstart" @dragging="draggingH" @dragend="dragend2">
+            </MdNumberInput>
+            <Tooltip :content="t('attr.constrainProportions')">
+                <div v-if="!s_length" class="lock" @click="lockToggle" :class="{ 'active': isLock }">
+                    <svg-icon :icon-class="isLock ? 'lock' : 'lock-open'" :class="{ 'active': isLock }"></svg-icon>
                 </div>
-            </Tooltip>
-            <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
-                <div
-                    :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
-                    @click="flipv">
-                    <svg-icon icon-class="flipv"></svg-icon>
+                <div v-else class="lock" style="background-color: #F4F5F5;opacity: 0.4; pointer-events: none">
+                    <svg-icon icon-class="lock-open"></svg-icon>
                 </div>
             </Tooltip>
         </div>
-        <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+        <div class="tr">
+            <MdNumberInput icon="angle" draggable :value="formatRotate(rotate)" @change="changeR"
+                :disabled="model_disable_state.rotation" @dragstart="dragstart" @dragging="draggingRotate"
+                @dragend="dragend"></MdNumberInput>
+            <div class="flip-wrapper">
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_h')}\u00a0\u00a0Shift H`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                        @click="fliph">
+                        <svg-icon icon-class="fliph"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip v-if="s_flip" :content="`${t('attr.flip_v')}\u00a0\u00a0Shift V`" :offset="15">
+                    <div :class="{ flip: !model_disable_state.flipVertical, 'flip-disable': model_disable_state.flipVertical }"
+                        @click="flipv">
+                        <svg-icon icon-class="flipv"></svg-icon>
+                    </div>
+                </Tooltip>
+            </div>
+            <div style="width: 32px;height: 32px;margin-left: 7px"></div>
+        </div>
+        <div class="tr" v-if="s_counts">
+            <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
+                @dragend="dragend"></MdNumberInput>
+            <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
+                :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
+                :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
+                @dragend="dragend"></MdNumberInput>
+            <div style="width: 32px;height: 32px;"></div>
+        </div>
+        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+        <div class="tr" v-if="s_tidy_up">
+            <MdNumberInput icon="angle-count" :value="''" :draggable="true" @change="changeCounts" :tidy_disabled="true"
+                @dragstart="dragstart" @dragging="draggingCounts" @dragend="dragend"></MdNumberInput>
+            <MdNumberInput icon="inner-angle" :value="''" :draggable="false" @change="changeInnerAngle"
+                :tidy_disabled="false" @dragstart="dragstart" @dragging="draggingInnerAngle" @dragend="dragend">
+            </MdNumberInput>
+            <div class="adapt">
+                <Tooltip :content="t('attr.tidy_up')">
+                    <svg-icon icon-class="tidy-up" style="outline: none;" />
+                </Tooltip>
+            </div>
+        </div>
     </div>
-    <div class="tr" v-if="s_counts">
-        <MdNumberInput icon="angle-count" draggable :value="format(counts)" @change="changeCounts"
-                       :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingCounts"
-                       @dragend="dragend"></MdNumberInput>
-        <MdNumberInput v-if="s_inner_angle" icon="inner-angle" draggable
-                       :value="innerAngle === mixed ? mixed : format(innerAngle) + '%'" @change="changeInnerAngle"
-                       :disabled="model_disable_state.counts" @dragstart="dragstart" @dragging="draggingInnerAngle"
-                       @dragend="dragend"></MdNumberInput>
-        <div style="width: 32px;height: 32px;"></div>
-    </div>
-    <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
-</div>
-<teleport to="body">
-    <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
-    </div>
-</teleport>
+    <teleport to="body">
+        <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
+        </div>
+    </teleport>
 </template>
 
 <style scoped lang="scss">
@@ -764,7 +780,7 @@ onUnmounted(() => {
         margin-bottom: 8px;
 
 
-        > .icontext {
+        >.icontext {
             background-color: var(--input-background);
         }
 
@@ -787,13 +803,13 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }
@@ -819,7 +835,7 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 width: 14px;
                 height: 14px;
@@ -836,7 +852,7 @@ onUnmounted(() => {
             height: 32px;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 width: 12px;
                 height: 12px;
             }
@@ -861,7 +877,7 @@ onUnmounted(() => {
                 padding: 9px 14px;
                 box-sizing: border-box;
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 14px;
                     height: 14px;
@@ -882,7 +898,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     color: var(--coco-grey);
                     width: 40%;
                     height: 40%;
@@ -907,14 +923,14 @@ onUnmounted(() => {
             border: 1px solid #F0F0F0;
             padding: 9px;
 
-            > svg {
+            >svg {
                 transition: 0.3s;
                 color: #808080;
                 width: 14px;
                 height: 14px;
             }
 
-            > svg.active {
+            >svg.active {
                 color: #FFFFFF;
             }
         }

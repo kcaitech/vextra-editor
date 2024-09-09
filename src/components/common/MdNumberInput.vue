@@ -7,6 +7,7 @@ interface Props {
 
     disabled?: boolean; // 是否禁用
     draggable?: boolean; // 是否可拖拽修改值
+    tidy_disabled?: boolean;
 }
 
 interface Emits {
@@ -110,7 +111,7 @@ function wheel(event: WheelEvent) {
 <template>
     <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
+        <input :disabled="!tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
     </div>
 </template>
 
