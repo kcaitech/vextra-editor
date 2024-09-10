@@ -761,13 +761,13 @@ export class ScaleHandler extends TransformHandler {
                 .addTransform(inverseCache.get(shape.parent!)!);
 
             const scale = t.decomposeScale();
-
             const oSize = sizes[i] as ShapeSize;
             const size = {
                 width: oSize.width * Math.abs(scale.x),
                 height: oSize.height * Math.abs(scale.y)
             } as ShapeSize;
 
+            t.clearScaleSize();
 
             const __scale = {
                 x: Math.abs(scale.x),
