@@ -55,6 +55,7 @@ import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import StaticShape from "@/components/Document/Content/StaticShape.vue";
+import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 
 interface Props {
     context: Context
@@ -605,6 +606,9 @@ onMounted(() => {
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
+    timeSlicingTask(props.context, fontNameListZh, 'zh');
+    timeSlicingTask(props.context, fontNameListEn, 'en');
+    screenFontList(props.context);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
