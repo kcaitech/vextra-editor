@@ -40,6 +40,7 @@ import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
+import { isSupportFontFamily } from "@/components/Document/Attribute/Text/FontNameList";
 
 export interface Media {
     name: string

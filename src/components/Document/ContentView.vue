@@ -31,7 +31,7 @@ import {
     is_drag,
     root_scale,
     root_trans,
-    selectShapes
+    selectShapes,
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -55,7 +55,7 @@ import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import StaticShape from "@/components/Document/Content/StaticShape.vue";
-import { fontNameListEn, fontNameListZh, isSupportFontFamily } from './Attribute/Text/FontNameList';
+import { fontNameListEn, fontNameListZh, isSupportFontFamily, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 
 interface Props {
     context: Context
@@ -591,31 +591,6 @@ onBeforeMount(() => {
     props.context.user.updateUserConfig();
 });
 
-function timeSlicingTask(fontList: string[], lang: string) {
-    let index = 0;
-    function executeBatch() {
-        const end = Math.min(index + 10, fontList.length);
-        for (let i = index; i < end; i++) {
-            try {
-                const results: string[] = isSupportFontFamily(fontList[i]);
-                if (lang === 'zh' && results.length > 0) {
-                    props.context.workspace.setFontNameListZh(results[0]);
-                    // props.context.workspace.setFontNameListLocal(results);
-                } else if (lang === 'en' && results.length > 0) {
-                    props.context.workspace.setFontNameListEn(results[0]);
-                }
-            } catch (error) {
-                console.error('Error checking font availability:', error);
-            }
-        }
-        index = end;
-        if (index < fontList.length) {
-            requestAnimationFrame(executeBatch); // 利用 requestAnimationFrame 分帧执行任务
-        }
-    }
-    executeBatch();
-}
-
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -646,8 +621,9 @@ onMounted(() => {
 
     const f = props.page.data.backgroundColor;
     if (f) background_color.value = color2string(f);
-    timeSlicingTask(fontNameListZh, 'zh');
-    timeSlicingTask(fontNameListEn, 'en');
+    timeSlicingTask(props.context, fontNameListZh, 'zh');
+    timeSlicingTask(props.context, fontNameListEn, 'en');
+    screenFontList(props.context);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();

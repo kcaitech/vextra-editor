@@ -8,6 +8,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { watch } from 'vue';
 import { throttle } from 'lodash';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void;
@@ -67,8 +68,11 @@ const selectLocalFont = (font: string) => {
     const weight = results.filter((item: any) => item.key === props.fontWeight);
     const f = fontList.local.find(i => i === font);
     if (!f) {
+        const saveList = [...props.context.workspace.userLocalFontList, font];
+        props.context.workspace.setUserLocalFontList(saveList);
+        props.context.workspace.notify(WorkSpace.FONTLISR_ALL, JSON.stringify(saveList));
         fontList.local.push(font);
-        props.context.workspace.setFontNameListLocal([font]);
+        props.context.workspace.setFontNameListLocal(font);
     }
     if (weight.length === 0) {
         emit('setFontWeight', 400, false);
@@ -81,21 +85,21 @@ const escapeRegExp = (text: string) => {
 }
 const onSearchFont = () => {
     const pattern = new RegExp(escapeRegExp(searchFont.value), 'i');
-    const chList = fontList.ch.filter(item => pattern.test(item))
-    const enList = fontList.en.filter(item => pattern.test(item))
-    const localList = fontList.local.filter(item => pattern.test(item))
-    const usedSuccess = fontList.used.success.filter(item => pattern.test(item))
-    const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item))
-    filterFontList.ch = []
-    filterFontList.en = []
-    filterFontList.local = []
-    filterFontList.used.success = []
-    filterFontList.used.failurel = []
-    filterFontList.ch.push(...chList)
-    filterFontList.en.push(...enList)
-    filterFontList.local.push(...localList)
-    filterFontList.used.success.push(...usedSuccess)
-    filterFontList.used.failurel.push(...usedFailureL)
+    const chList = fontList.ch.filter(item => pattern.test(item));
+    const enList = fontList.en.filter(item => pattern.test(item));
+    const localList = fontList.local.filter(item => pattern.test(item));
+    const usedSuccess = fontList.used.success.filter(item => pattern.test(item));
+    const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item));;
+    filterFontList.ch = [];
+    filterFontList.en = [];
+    filterFontList.local = [];
+    filterFontList.used.success = [];
+    filterFontList.used.failurel = [];
+    filterFontList.ch.push(...chList);
+    filterFontList.en.push(...enList);
+    filterFontList.local.push(...localList);
+    filterFontList.used.success.push(...usedSuccess);
+    filterFontList.used.failurel.push(...usedFailureL);
     filterFontList.ch = Array.from(new Set(filterFontList.ch));
     filterFontList.en = Array.from(new Set(filterFontList.en));
     filterFontList.used.success = Array.from(new Set(filterFontList.used.success));
@@ -106,6 +110,9 @@ const onSearchFont = () => {
 const _findLocalText = throttle(findLocalText, 300);
 
 async function findLocalText() {
+    const chfont = filterFontList.ch.find(f => f === searchFont.value);
+    const enfont = filterFontList.en.find(f => f === searchFont.value);
+    if (chfont || enfont) return;
     try {
         const results: string[] = await Promise.resolve(isSupportFontFamily(searchFont.value));
         if (results.length) {

@@ -111,6 +111,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static LAYOUT_DOTTED_LINE = 21;
     static LAYOUT_DOTTED_LINE_MOVE = 22;
     static UPDATE_LAYOUT_DOTTED_LINE = 23;
+    static NEED_TIDY_UP = 25;
 
     static PRE_INSERT = 24;
 
@@ -141,7 +142,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     private m_label_fixed_group: ShapeView[] = [];
     private m_label_living_group: ShapeView[] = [];
-    private userSelectionList: DocSelectionData[] = []
+    private userSelectionList: DocSelectionData[] = [];
+    private tidy_up: boolean = true;
 
     private m_hover_stroke: number = 14;
 
@@ -845,5 +847,14 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     previewHoverShape(shape: ShapeView) {
         this.m_hoverShape = shape;
         this.notify(Selection.PREVIEW_HOVER_CHANGE);
+    }
+
+    whetherTidyUp(v: boolean) {
+        this.tidy_up = v;
+        this.notify(Selection.NEED_TIDY_UP);
+    }
+
+    get isTidyUp() {
+        return this.tidy_up;
     }
 }

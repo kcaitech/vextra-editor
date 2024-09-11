@@ -31,6 +31,7 @@ import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
+import { getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
 
 interface Props {
     context: Context
@@ -73,6 +74,9 @@ const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
+const needTidyUp = ref(true);
+const horSpace = ref<number | string>('');
+const verSpace = ref<number | string>('');
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false, s_tidy_up: false });
 const model_disable_state: ModelState = reactive({
     x: false,
@@ -100,6 +104,7 @@ function _calc_attri() {
     rotate.value = get_shapes_rotation(selected, mixed);
     counts.value = get_shapes_angle_counts(selected, mixed);
     innerAngle.value = get_shapes_inner_angle(selected, mixed);
+    whetherTidyUp();
 }
 
 const calc_attri = throttle(_calc_attri, 60, { trailing: true });
@@ -625,6 +630,19 @@ function wheelX(event: WheelEvent) {
     // updateHdl();
 }
 
+const tidyUp = () => {
+    const selected = props.context.selection.selectedShapes;
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const frame = layoutSpacing(shapes);
+    horSpace.value = frame.hor;
+    verSpace.value = frame.ver;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver);
+}
+
 function selection_change() {
     update_view();
     calc_attri();
@@ -636,6 +654,21 @@ function selection_change() {
         s_tidy_up = false;
     }
 }
+
+const _whetherTidyUp = () => {
+    const { tidyup, hor, ver } = whetherNeedTidyUp(props.context);
+    if (!tidyup) {
+        horSpace.value = hor;
+        verSpace.value = ver;
+    } else {
+        horSpace.value = '';
+        verSpace.value = '';
+    }
+    needTidyUp.value = tidyup;
+    props.context.selection.whetherTidyUp(tidyup);
+}
+
+const whetherTidyUp = debounce(_whetherTidyUp, 200);
 
 const attr_watcher = (t: number) => {
     if (t === Attribute.HOR_HILP) {
@@ -745,12 +778,14 @@ onUnmounted(() => {
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
         <div class="tr" v-if="s_tidy_up">
-            <MdNumberInput icon="angle-count" :value="''" :draggable="true" @change="changeCounts" :tidy_disabled="true"
-                @dragstart="dragstart" @dragging="draggingCounts" @dragend="dragend"></MdNumberInput>
-            <MdNumberInput icon="inner-angle" :value="''" :draggable="false" @change="changeInnerAngle"
-                :tidy_disabled="false" @dragstart="dragstart" @dragging="draggingInnerAngle" @dragend="dragend">
+            <MdNumberInput icon="hor-space2" :value="horSpace" :draggable="!needTidyUp" @change="changeCounts"
+                :tidy_disabled="!needTidyUp" @dragstart="dragstart" @dragging="draggingCounts" @dragend="dragend">
             </MdNumberInput>
-            <div class="adapt">
+            <MdNumberInput icon="ver-space2" :value="verSpace" :draggable="!needTidyUp" @change="changeInnerAngle"
+                :tidy_disabled="!needTidyUp" @dragstart="dragstart" @dragging="draggingInnerAngle" @dragend="dragend">
+            </MdNumberInput>
+            <div class="adapt" @click="tidyUp" :style="{ opacity: needTidyUp ? '1' : '0.4' }"
+                :class="{ 'tidy-up-disable': !needTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
                 </Tooltip>
@@ -964,5 +999,11 @@ onUnmounted(() => {
     background-position: center;
     background-size: 32px;
     z-index: 10000;
+}
+
+.tidy-up-disable {
+    &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
 }
 </style>
