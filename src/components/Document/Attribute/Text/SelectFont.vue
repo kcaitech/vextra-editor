@@ -116,7 +116,8 @@ async function findLocalText() {
     try {
         const results: string[] = await Promise.resolve(isSupportFontFamily(searchFont.value));
         if (results.length) {
-            filterFontList.local = Array.from(new Set(...filterFontList.local, results));
+            filterFontList.local.push(...results);
+            filterFontList.local = Array.from(new Set(filterFontList.local));
         }
     } catch (err) {
         console.error('Error checking font availability:', err);
