@@ -90,7 +90,7 @@ const onShowFont = () => {
         return achieve;
     })
 
-    document.addEventListener('click', onShowFontBlur);
+    document.addEventListener('mousedown', onShowFontBlur);
 }
 
 const onShowFontBlur = (e: Event) => {
@@ -99,7 +99,7 @@ const onShowFontBlur = (e: Event) => {
             showFont.value = false;
             props.context.workspace.focusText()
             clearTimeout(timer)
-            document.removeEventListener('click', onShowFontBlur);
+            document.removeEventListener('mousedown', onShowFontBlur);
         }, 10)
     }
 }

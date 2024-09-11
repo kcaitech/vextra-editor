@@ -184,6 +184,7 @@ const get_top_posi = () => {
 }
 watch(() => props.showFont, (v) => {
     if (v) {
+        searchFont.value = '';
         const { zh, en, local, failure_local } = props.context.workspace.fontNameList;
         fontList.ch = [...zh];
         fontList.en = [...en];
