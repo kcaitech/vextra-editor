@@ -203,7 +203,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="font-container" ref="font_context" v-if="showFont">
+    <div class="font-container" ref="font_context" v-if="showFont" @mousedown.stop>
         <div class="search">
             <svg-icon icon-class="search"></svg-icon>
             <input type="text" v-model="searchFont" :placeholder="t('attr.search_for_fonts')" @input="onSearchFont">
