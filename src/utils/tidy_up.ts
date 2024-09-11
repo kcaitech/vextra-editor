@@ -12,7 +12,7 @@ export function tidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
             const frame = shape._p_frame;
             const min_frame = minShape._p_frame;
             if (verBase) {
-                if(frame.x < min_frame.x) {
+                if (frame.x < min_frame.x) {
                     return shape;
                 } else if (frame.x === min_frame.x) {
                     return frame.y <= min_frame.y ? shape : minShape;
@@ -111,16 +111,16 @@ export const whetherNeedTidyUp = (context: Context) => {
     const { width, height } = getSelectedWidthHeight(context, selected);
     const shape_rows = tidyUpShapesOrder(selected, height > width);
     const { ver, hor } = layoutSpacing(shape_rows);
-
-    const frast_frame = shape_rows[0][0]._p_frame;
-    let leftTrans = frast_frame.x; //水平起点
-    let topTrans = frast_frame.y; //垂直起点
+    const minX =  Math.min(...shape_rows[0].map(s => s._p_frame.x));
+    const minY =  Math.min(...shape_rows[0].map(s => s._p_frame.y));
+    let leftTrans = minX; //水平起点
+    let topTrans = minY; //垂直起点
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         // 更新当前行的最大高度
         const maxHeightInRow = Math.max(...shape_row.map(s => s._p_frame.height));
-        for (let i = 0; i < shape_row.length; i++) {
-            const shape = shape_row[i];
+        for (let j = 0; j < shape_row.length; j++) {
+            const shape = shape_row[j];
             const frame = shape._p_frame;
             const parent = shape.parent!;
             let transx = 0;
@@ -136,10 +136,11 @@ export const whetherNeedTidyUp = (context: Context) => {
                 transx = leftTrans - frame.x;
                 transy = topTrans + verticalOffset - frame.y;
             }
+
             if (transx !== 0 || transy !== 0) return { tidyup: true, hor, ver, shapes: shape_rows };
             leftTrans += frame.width + hor;
         }
-        leftTrans = frast_frame.x; // 重置为左边距
+        leftTrans = minX; // 重置为左边距
         topTrans += maxHeightInRow + ver; // 换行，增加 y 坐标
     }
     return { tidyup: false, hor, ver, shapes: shape_rows };
