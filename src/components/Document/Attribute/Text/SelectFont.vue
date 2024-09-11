@@ -88,20 +88,25 @@ const onSearchFont = () => {
     const chList = fontList.ch.filter(item => pattern.test(item));
     const enList = fontList.en.filter(item => pattern.test(item));
     const localList = fontList.local.filter(item => pattern.test(item));
+    const failureLocalList = fontList.failure_local.filter(item => pattern.test(item));
     const usedSuccess = fontList.used.success.filter(item => pattern.test(item));
     const usedFailureL = fontList.used.failurel.filter(item => pattern.test(item));;
     filterFontList.ch = [];
     filterFontList.en = [];
     filterFontList.local = [];
+    filterFontList.failure_local = [];
     filterFontList.used.success = [];
     filterFontList.used.failurel = [];
     filterFontList.ch.push(...chList);
     filterFontList.en.push(...enList);
     filterFontList.local.push(...localList);
+    filterFontList.failure_local.push(...failureLocalList);
     filterFontList.used.success.push(...usedSuccess);
     filterFontList.used.failurel.push(...usedFailureL);
     filterFontList.ch = Array.from(new Set(filterFontList.ch));
     filterFontList.en = Array.from(new Set(filterFontList.en));
+    filterFontList.local = Array.from(new Set(filterFontList.en));
+    filterFontList.failure_local = Array.from(new Set(filterFontList.en));
     filterFontList.used.success = Array.from(new Set(filterFontList.used.success));
     filterFontList.used.failurel = Array.from(new Set(filterFontList.used.failurel));
     _findLocalText();
@@ -116,7 +121,8 @@ async function findLocalText() {
     try {
         const results: string[] = await Promise.resolve(isSupportFontFamily(searchFont.value));
         if (results.length) {
-            filterFontList.local = Array.from(new Set(...filterFontList.local, results));
+            filterFontList.local.push(...results);
+            filterFontList.local = Array.from(new Set(filterFontList.local));
         }
     } catch (err) {
         console.error('Error checking font availability:', err);
