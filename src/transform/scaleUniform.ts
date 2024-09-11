@@ -15,6 +15,17 @@ type Box = {
 
 type BaseFrames = Map<string, Box>;
 
+/**
+ * @description 涉及到等比缩放的属性
+ * transform
+ * size
+ * 圆角
+ * 文字：字号、行高、字间距、段落间距
+ * 边框粗细
+ * 阴影offsetX、offsetY、blur、spread
+ * 高斯模糊半径
+ * 背景模糊半径
+ */
 export class ScaleUniformer extends TransformHandler {
     private readonly shapes: ShapeView[];
     private readonly anchorType: AnchorType;
@@ -36,7 +47,7 @@ export class ScaleUniformer extends TransformHandler {
         height: number
     }[] = [];
 
-    constructor(context: Context,  anchorType: AnchorType) {
+    constructor(context: Context, anchorType: AnchorType) {
         super(context);
         this.shapes = context.selection.selectedShapes;
         this.anchorType = anchorType;

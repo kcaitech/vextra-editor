@@ -1,14 +1,8 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
-    ColVector3D,
-    CtrlElementType,
-    Matrix,
-    Scaler,
-    ShapeSize,
-    ShapeView, SymbolRefView,
-    Transform,
-    UniformScaleUnit
+    ColVector3D, CtrlElementType, Matrix,
+    Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";

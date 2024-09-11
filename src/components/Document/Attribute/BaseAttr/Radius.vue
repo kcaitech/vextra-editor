@@ -3,14 +3,8 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import {
-    CutoutShape,
-    CutoutShapeView,
-    PathShapeView,
-    RadiusType,
-    ShapeType,
-    ShapeView,
-    SymbolView,
-    TableView, TextShapeView
+    CutoutShapeView, PathShapeView, RadiusType,
+    ShapeType, ShapeView, SymbolView, TableView, TextShapeView
 } from '@kcdesign/data';
 import { get_indexes2 } from '@/utils/attri_setting';
 import { hidden_selection } from "@/utils/content";
@@ -95,9 +89,7 @@ function update() {
 }
 
 function selection_watcher(t: Number | string) {
-    if (t !== Selection.CHANGE_SHAPE) {
-        return;
-    }
+    if (t !== Selection.CHANGE_SHAPE) return;
     update();
     watch_shapes();
 }
@@ -136,23 +128,17 @@ function get_radius_for_shape(shape: ShapeView) {
 
             const points = s?.segments[0]?.points;
 
-            if (!points?.length) {
-                return 0;
-            }
+            if (!points?.length) return 0;
 
             let _r = points[0].radius || s.fixedRadius || 0;
 
             for (let i = 1, l = points.length; i < l; i++) {
-                if ((points[i].radius || s.fixedRadius || 0) !== _r) {
-                    return mixed;
-                }
+                if ((points[i].radius || s.fixedRadius || 0) !== _r) return mixed;
             }
             return _r;
         } else {
             const cornerRadius = (shape as SymbolView).cornerRadius;
-            if (!cornerRadius) {
-                return 0;
-            }
+            if (!cornerRadius) return 0;
             if (cornerRadius.lt === cornerRadius.rt
                 && cornerRadius.rt === cornerRadius.rb
                 && cornerRadius.rb === cornerRadius.lb) {
@@ -165,9 +151,7 @@ function get_radius_for_shape(shape: ShapeView) {
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;
         const segments = s.segments;
-        if (!segments.length) {
-            return 0;
-        }
+        if (!segments.length) return 0;
         const firstPoint = segments[0].points[0];
         if (!firstPoint) {
             return 0;
@@ -182,9 +166,7 @@ function get_radius_for_shape(shape: ShapeView) {
             if (!points?.length) continue;
 
             for (let j = 0; j < points.length; j++) {
-                if ((points[j].radius || s.fixedRadius || 0) !== _r) {
-                    return mixed;
-                }
+                if ((points[j].radius || s.fixedRadius || 0) !== _r) return mixed;
             }
         }
 
@@ -227,9 +209,7 @@ function get_rect_shape_all_value(shape: ShapeView) {
     if (shape instanceof PathShapeView) {
         const s = shape as PathShapeView;
         const points = s?.segments[0]?.points;
-        if (!points?.length) {
-            return rs;
-        }
+        if (!points?.length) return rs;
         rs.lt = points[0]?.radius || s.fixedRadius || 0;
         rs.rt = points[1]?.radius || s.fixedRadius || 0;
         rs.rb = points[2]?.radius || s.fixedRadius || 0;
@@ -241,6 +221,20 @@ function get_rect_shape_all_value(shape: ShapeView) {
             rs.rt = cornerRadius.rt;
             rs.rb = cornerRadius.rb;
             rs.lb = cornerRadius.lb;
+        }
+    }
+    if (shape.isVirtualShape) {
+        let parent = shape.parent;
+        while (parent) {
+            const scale = parent.scale;
+            if (scale) {
+                rs.lt *= scale;
+                rs.rt *= scale;
+                rs.rb *= scale;
+                rs.lb *= scale;
+            }
+            if (!parent.isVirtualShape) break;
+            parent = parent.parent;
         }
     }
     return rs;
