@@ -12,9 +12,15 @@ export function tidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
             const frame = shape._p_frame;
             const min_frame = minShape._p_frame;
             if (verBase) {
-                return frame.x < min_frame.x ? shape : minShape;
+                if(frame.x < min_frame.x) {
+                    return shape;
+                } else if (frame.x === min_frame.x) {
+                    return frame.y <= min_frame.y ? shape : minShape;
+                } else {
+                    return minShape;
+                }
             } else {
-                return frame.y < min_frame.y ? shape : minShape;
+                return frame.y <= min_frame.y ? shape : minShape;
             }
         });
         // 将与基准图形相交的图形放入当前行
@@ -130,11 +136,11 @@ export const whetherNeedTidyUp = (context: Context) => {
                 transx = leftTrans - frame.x;
                 transy = topTrans + verticalOffset - frame.y;
             }
-            if (transx !== 0 || transy !== 0) return { tidyup: true, hor, ver };
+            if (transx !== 0 || transy !== 0) return { tidyup: true, hor, ver, shapes: shape_rows };
             leftTrans += frame.width + hor;
         }
         leftTrans = frast_frame.x; // 重置为左边距
         topTrans += maxHeightInRow + ver; // 换行，增加 y 坐标
     }
-    return { tidyup: false, hor, ver };
+    return { tidyup: false, hor, ver, shapes: shape_rows };
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ArtboradView, ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -74,7 +74,8 @@ const innerAngle = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const fix = 2;
 const mixed = t('attr.mixed');
-const needTidyUp = ref(true);
+const horTidyUp = ref(true);
+const verTidyUp = ref(true);
 const horSpace = ref<number | string>('');
 const verSpace = ref<number | string>('');
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false, s_tidy_up: false });
@@ -576,6 +577,34 @@ function draggingInnerAngle(e: MouseEvent) {
     lockMouseHandler.executeInnerAngle(e.movementX / 1000);
 }
 
+
+function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
+    updatePosition(e.movementX, e.movementY);
+
+    if (!lockMouseHandler) return;
+
+    if (!lockMouseHandler.asyncApiCaller) {
+        lockMouseHandler.createApiCaller('translating');
+    }
+    const selected = props.context.selection.selectedShapes;
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const frame = layoutSpacing(shapes);
+
+    let hor = frame.hor;
+    let ver = frame.ver;
+    if (dir === 'hor') {
+        hor += e.movementX;
+    } else {
+        ver += e.movementX;
+    }
+    horSpace.value = hor;
+    verSpace.value = ver;
+    disalbeTidyup(shapes);
+    lockMouseHandler.executeTidyup(shapes, hor, ver);
+}
+
 function dragend() {
     modifyTelUp();
 }
@@ -643,6 +672,38 @@ const tidyUp = () => {
     editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver);
 }
 
+const changeHorTidyup = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const hor: number = Number.parseFloat(value);
+    if (isNaN(hor)) return;
+    const selected = props.context.selection.selectedShapes;
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    disalbeTidyup(shapes);
+    editor.tidyUpShapesLayout(shapes, hor, typeof verSpace.value === 'number' ? verSpace.value : 0);
+}
+const changeVerTidyup = (value: string) => {
+    value = Number
+        .parseFloat(computeString(value))
+        .toFixed(fix);
+
+    const ver: number = Number.parseFloat(value);
+    if (isNaN(ver)) return;
+    const selected = props.context.selection.selectedShapes;
+    const { width, height } = getSelectedWidthHeight(props.context, selected);
+    const shapes = tidyUpShapesOrder(selected, height > width);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
+    disalbeTidyup(shapes);
+    editor.tidyUpShapesLayout(shapes, hor, ver);
+}
+
 function selection_change() {
     update_view();
     calc_attri();
@@ -656,7 +717,7 @@ function selection_change() {
 }
 
 const _whetherTidyUp = () => {
-    const { tidyup, hor, ver } = whetherNeedTidyUp(props.context);
+    const { tidyup, hor, ver, shapes } = whetherNeedTidyUp(props.context);
     if (!tidyup) {
         horSpace.value = hor;
         verSpace.value = ver;
@@ -664,8 +725,23 @@ const _whetherTidyUp = () => {
         horSpace.value = '';
         verSpace.value = '';
     }
-    needTidyUp.value = tidyup;
+    verTidyUp.value = tidyup;
+    horTidyUp.value = tidyup;
+    disalbeTidyup(shapes);
     props.context.selection.whetherTidyUp(tidyup);
+}
+
+const disalbeTidyup = (shapes: ShapeView[][]) => {
+    if (shapes.length === 1) {
+        verTidyUp.value = true;
+        verSpace.value = '';
+    } else {
+        const v = shapes.every(s => s.length === 1);
+        if (v) {
+            horTidyUp.value = true;
+            horSpace.value = '';
+        }
+    }
 }
 
 const whetherTidyUp = debounce(_whetherTidyUp, 200);
@@ -777,15 +853,18 @@ onUnmounted(() => {
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+        <!-- todo 整理和自动布局有冲突 -->
         <div class="tr" v-if="s_tidy_up">
-            <MdNumberInput icon="hor-space2" :value="horSpace" :draggable="!needTidyUp" @change="changeCounts"
-                :tidy_disabled="!needTidyUp" @dragstart="dragstart" @dragging="draggingCounts" @dragend="dragend">
+            <MdNumberInput icon="hor-space2" :value="horSpace" :draggable="!horTidyUp" @change="changeHorTidyup"
+                :tidy_disabled="!horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+                @dragend="dragend">
             </MdNumberInput>
-            <MdNumberInput icon="ver-space2" :value="verSpace" :draggable="!needTidyUp" @change="changeInnerAngle"
-                :tidy_disabled="!needTidyUp" @dragstart="dragstart" @dragging="draggingInnerAngle" @dragend="dragend">
+            <MdNumberInput icon="ver-space2" :value="verSpace" :draggable="!verTidyUp" @change="changeVerTidyup"
+                :tidy_disabled="!verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+                @dragend="dragend">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: needTidyUp ? '1' : '0.4' }"
-                :class="{ 'tidy-up-disable': !needTidyUp }">
+            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? '1' : '0.4' }"
+                :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
                 </Tooltip>

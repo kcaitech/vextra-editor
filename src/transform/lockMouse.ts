@@ -79,4 +79,8 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
     }
 
+    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number) {
+        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver);
+    }
+
 }
