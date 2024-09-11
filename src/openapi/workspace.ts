@@ -2,6 +2,7 @@ import { IWatchable, Matrix } from "@kcdesign/data";
 
 export namespace WorkspaceEvents {
     export const transform_change = 'transform_change'
+    export const add_local_font = 'add_local_font'
 }
 
 export interface IWorkspace extends IWatchable {
@@ -42,4 +43,5 @@ export interface IWorkspace extends IWatchable {
         x: number;
         y: number;
     };
+    setUserLocalFontList(list: string[]): void;
 }

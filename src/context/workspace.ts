@@ -44,6 +44,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static NEW_ENV_MATRIX_CHANGE = 22;
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
+    static FONTLISR_ALL = WorkspaceEvents.add_local_font;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -60,9 +61,10 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_font_name_list: { zh: string[], en: string[] } = { zh: [], en: [] };
+    private m_font_name_list: { zh: Set<string>, en: Set<string>, local: Set<string>, failure_local: Set<string> } = { zh: new Set(), en: new Set(), local: new Set(), failure_local: new Set() };
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
+    private m_origin_fontList: string[] = [];
     private m_root: Root = {
         init: false,
         x: 250,
@@ -315,15 +317,29 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return m.computeCoord2(e.clientX - this.root.x, e.clientY - this.root.y);
     }
 
-    setFontNameListZh(zh: string[]) {
-        this.m_font_name_list.zh = zh;
+    setFontNameListZh(zh: string) {
+        this.m_font_name_list.zh.add(zh);
     }
 
-    setFontNameListEn(en: string[]) {
-        this.m_font_name_list.en = en;
+    setFontNameListEn(en: string) {
+        this.m_font_name_list.en.add(en);
+    }
+
+    setFontNameListLocal(local: string) {
+        this.m_font_name_list.local.add(local);
+    }
+    setFontNameListFailureLocal(local: string) {
+        this.m_font_name_list.failure_local.add(local);
     }
 
     get fontNameList() {
         return this.m_font_name_list;
+    }
+
+    setUserLocalFontList(list: string[]) {
+        this.m_origin_fontList = list;
+    }
+    get userLocalFontList() {
+        return this.m_origin_fontList;
     }
 }
