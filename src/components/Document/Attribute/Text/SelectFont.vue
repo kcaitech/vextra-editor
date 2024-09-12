@@ -454,7 +454,7 @@ onMounted(() => {
             align-items: center;
 
             .title_svg {
-                margin-right: 8px;
+                margin-right: 10px;
 
                 >svg {
                     width: 12px;
@@ -485,12 +485,15 @@ onMounted(() => {
         .item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             height: 25px;
-            padding: 0 10px;
+            padding-left: 10px;
+            padding-right: 4px;
             margin: 0;
             overflow: hidden;
 
             >span {
+                flex: 1;
                 display: block;
                 width: 130px;
                 overflow: hidden;
