@@ -223,20 +223,20 @@ function get_rect_shape_all_value(shape: ShapeView) {
             rs.lb = cornerRadius.lb;
         }
     }
-    if (shape.isVirtualShape) {
-        let parent = shape.parent;
-        while (parent) {
-            const scale = parent.scale;
-            if (scale) {
-                rs.lt *= scale;
-                rs.rt *= scale;
-                rs.rb *= scale;
-                rs.lb *= scale;
-            }
-            if (!parent.isVirtualShape) break;
-            parent = parent.parent;
-        }
-    }
+    // if (shape.isVirtualShape) {
+    //     let parent = shape.parent;
+    //     while (parent) {
+    //         const scale = parent.scale;
+    //         if (scale) {
+    //             rs.lt *= scale;
+    //             rs.rt *= scale;
+    //             rs.rb *= scale;
+    //             rs.lb *= scale;
+    //         }
+    //         if (!parent.isVirtualShape) break;
+    //         parent = parent.parent;
+    //     }
+    // }
     return rs;
 }
 

@@ -434,17 +434,18 @@ function dragEnd() {
 }
 
 function extend(base: number) {
-    const view = props.shapes[0];
-
-    if (view.isVirtualShape) {
-        let parent = view.parent;
-        while (parent) {
-            if (parent.scale) base *= parent.scale;
-            parent = parent.parent;
-        }
-    }
-
     return Number(format_value(base));
+    // const view = props.shapes[0];
+    //
+    // if (view.isVirtualShape) {
+    //     let parent = view.parent;
+    //     while (parent) {
+    //         if (parent.scale) base *= parent.scale;
+    //         parent = parent.parent;
+    //     }
+    // }
+    //
+    // return Number(format_value(base));
 }
 </script>
 

@@ -33,14 +33,14 @@ export const getSideThickness = (side: BorderSideSetting, view?: ShapeView): num
         }
     })();
 
-    if (typeof t === "number" && view) {
-        let parent: any = view;
-        while (parent) {
-            let scale = parent.scale;
-            if (scale && scale !== 1) t *= scale;
-            parent = parent.parent;
-        }
-    }
+    // if (typeof t === "number" && view) {
+    //     let parent: any = view;
+    //     while (parent) {
+    //         let scale = parent.scale;
+    //         if (scale && scale !== 1) t *= scale;
+    //         parent = parent.parent;
+    //     }
+    // }
 
     return t;
 }

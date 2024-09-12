@@ -218,7 +218,7 @@ const changeTextSize = (size: number) => {
         editor.setTextFontSizeMulti((shapes.value as TextShapeView[]), size);
     }
     const textAttr = props.context.textSelection.getTextAttr;
-    textAttr.fontSize = size;
+    textAttr.fontSize = format_value(size) as number;
     props.context.textSelection.setTextAttr(textAttr);
 }
 //设置字体
@@ -368,14 +368,14 @@ const _textFormat = () => {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
-        rowHeight.value = format.minimumLineHeight || 0
-        wordSpace.value = format.kerning || 0
+        rowHeight.value = format_value(format.minimumLineHeight || 0)
+        wordSpace.value = format_value(format.kerning || 0)
         highlightIsMulti.value = format.highlightIsMulti
         selectLevel.value = format.alignment || 'left'
         selectVertical.value = format.verAlign || 'top'
         selectText.value = format.textBehaviour || 'flexible'
         fontName.value = format.fontName || DefaultFontName
-        fonstSize.value = format.fontSize || 14
+        fonstSize.value = format_value(format.fontSize || 14) as number
         textColor.value = format.color
         highlight.value = format.highlight
         fillType.value = format.fillType || FillType.SolidColor
@@ -443,15 +443,15 @@ const _textFormat = () => {
                 format[key] = `unlikeness`;
             }
         }
-        rowHeight.value = format.minimumLineHeight || 0;
+        rowHeight.value = format_value(format.minimumLineHeight || 0) as number;
         colorIsMulti.value = format.colorIsMulti;
         highlightIsMulti.value = format.highlightIsMulti;
         selectLevel.value = format.alignment || 'left';
-        wordSpace.value = format.kerning || 0;
+        wordSpace.value = format_value(format.kerning || 0);
         selectVertical.value = format.verAlign || 'top';
         selectText.value = format.textBehaviour;
         fontName.value = format.fontName || DefaultFontName;
-        fonstSize.value = format.fontSize || 14;
+        fonstSize.value = format_value(format.fontSize || 14) as number
         highlight.value = format.highlight;
         textColor.value = format.color;
         isBold.value = format.weight;
@@ -1147,7 +1147,7 @@ onUnmounted(() => {
             </FontWeightSelected>
             <div class="text-size jointly-text" style="padding-right: 0;">
                 <div class="size_input">
-                    <input type="text" :value="format_value(fonstSize)" ref="textSize" class="input"
+                    <input type="text" v-model="fonstSize" ref="textSize" class="input"
                            @change="setTextSize"
                            @focus="selectSizeValue" @input="handleSize" @blur="setTextSize"
                            @click="(e) => click(e, is_size_select)">
@@ -1172,7 +1172,7 @@ onUnmounted(() => {
                 <div @mousedown="(e) => onMouseDown(e, 'row-height')">
                     <svg-icon icon-class="word-space"></svg-icon>
                 </div>
-                <input type="text" :value="format_value(rowHeight)" ref="lineHeight" class="input"
+                <input type="text" v-model="rowHeight" ref="lineHeight" class="input"
                        @change="setRowHeight"
                        :placeholder="row_height" @input="handleSize" @click="(e) => click(e, is_row_height_select)"
                        @blur="is_row_height_select = false">
@@ -1181,7 +1181,7 @@ onUnmounted(() => {
                 <div @mousedown="(e) => onMouseDown(e, 'char-space')">
                     <svg-icon icon-class="row-height"></svg-icon>
                 </div>
-                <input type="text" :value="format_value(wordSpace)" ref="charSpacing" class="input"
+                <input type="text" v-model="wordSpace" ref="charSpacing" class="input"
                        @change="setWordSpace"
                        @input="handleSize" @click="(e) => click(e, is_char_space_select)"
                        @blur="is_char_space_select = false">
