@@ -105,8 +105,8 @@ const onSearchFont = () => {
     filterFontList.used.failurel.push(...usedFailureL);
     filterFontList.ch = Array.from(new Set(filterFontList.ch));
     filterFontList.en = Array.from(new Set(filterFontList.en));
-    filterFontList.local = Array.from(new Set(filterFontList.en));
-    filterFontList.failure_local = Array.from(new Set(filterFontList.en));
+    filterFontList.local = Array.from(new Set(filterFontList.local));
+    filterFontList.failure_local = Array.from(new Set(filterFontList.failure_local));
     filterFontList.used.success = Array.from(new Set(filterFontList.used.success));
     filterFontList.used.failurel = Array.from(new Set(filterFontList.used.failurel));
     _findLocalText();
