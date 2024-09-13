@@ -114,7 +114,7 @@
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
                                         <div class="container"
-                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!)">
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
                                             <div ref="ela" class="containerA" :style="tara ?? qsa">
                                                 A</div>
                                             <div ref="elb" class="containerB" :style="tarb ?? qsb">
@@ -159,6 +159,10 @@
                                                 :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
                                         </div>
                                     </div>
+                                    <CustomBezier
+                                        v-if="action.actions.easingType === PrototypeEasingType.CUSTOMCUBIC && action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
+                                        :bezier="action.actions.easingFunction" :trigger="reflush_trigger"
+                                        @setBezier="setProtoTypeEasingFunction($event, action.id)"></CustomBezier>
                                 </div>
                             </div>
                         </div>
@@ -172,10 +176,6 @@
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
-                <div class="interaction-bezier-drag" style="width: 200px;height: 200px;margin: 0 auto">
-                    <canvas id="sbezier"></canvas>
-                </div>
-                <button @click.stop="dragcanvas([-1, 1, 2, 0])">初始化</button>
             </div>
             <div v-else class="tips">
                 <span>{{ t('prototype.interaction') }}</span>
@@ -199,6 +199,7 @@ import Origin from "./Prototype/Origin.vue";
 import Overlay, { Type as T, Margin as M } from "./Prototype/Overlay.vue";
 import Status, { Data as D } from "./Prototype/Status.vue";
 import Target from "./Prototype/Target.vue";
+import CustomBezier from "./Prototype/CustomBezier.vue"
 import {
     PrototypeStartingPoint,
     ArtboradView,
@@ -212,15 +213,14 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     ScrollDirection,
-    OverlayPosition,
-    OverlayMargin
+    PrototypeEasingBezier
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { get_var_for_ref, states_tag_values_sort } from '@/utils/symbol';
 import { flattenShapes } from '@/utils/cutout';
 import { hover } from '@/utils/listview';
-
+// import { PrototypeEasingBezier } from '@kcdesign/data/dist/types/data';
 
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',
@@ -339,7 +339,8 @@ const effect: SelectSource[] = genOptions([
     [PrototypeEasingType.INOUTCUBIC, t('prototype.curve_easeinout')],
     [PrototypeEasingType.INBACKCUBIC, t('prototype.curve_easeinback')],
     [PrototypeEasingType.OUTBACKCUBIC, t('prototype.curve_easeoutback')],
-    [PrototypeEasingType.INOUTBACKCUBIC, t('prototype.curve_easeinoutback')]
+    [PrototypeEasingType.INOUTBACKCUBIC, t('prototype.curve_easeinoutback')],
+    [PrototypeEasingType.CUSTOMCUBIC, '自定义']
 ])
 
 const easingFn = new Map([
@@ -350,7 +351,9 @@ const easingFn = new Map([
     [PrototypeEasingType.INBACKCUBIC, [0.3, -0.05, 0.7, -0.5]],
     [PrototypeEasingType.OUTBACKCUBIC, [0.45, 1.45, 0.8, 1]],
     [PrototypeEasingType.INOUTBACKCUBIC, [0.7, -0.4, 0.4, 1.4]],
-])
+    [PrototypeEasingType.CUSTOMCUBIC, [0, 0, 1, 1]]
+]);
+
 
 
 const animations = new Map([
@@ -395,7 +398,9 @@ let timer: any;
 
 
 let timer3: any
-const addstyle = () => {
+
+
+const _addstyle = () => {
     if (timer3) clearTimeout(timer3)
     timer3 = setTimeout(() => {
         console.log('添加');
@@ -409,6 +414,8 @@ const addstyle = () => {
 
 }
 
+const addstyle = debounce(_addstyle, 200)
+
 const change = () => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
@@ -420,22 +427,24 @@ const change = () => {
     console.log('jinting');
 }
 
-const delstyle = () => {
+const _delstyle = () => {
     if (timer3) return
     console.log('移除');
-
     (ela.value![0] as HTMLDivElement).removeEventListener("transitionend", change);
     (elb.value![0] as HTMLDivElement).removeEventListener("transitionend", change)
     tarb.value = null
     tara.value = null
 }
 
-const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
+const delstyle = debounce(_delstyle, 200)
+
+const test2 = (type: string, easingType: PrototypeEasingType, time: number, esfn: PrototypeEasingBezier | undefined) => {
     qsa.value = null
     qsb.value = null
     mba.value = null
     mbb.value = null
-    const FN = easingFn.get(easingType ?? "LINEAR")!
+    const bezier = [esfn?.x1, esfn?.y1, esfn?.x2, esfn?.y2]
+    const FN = easingType !== PrototypeEasingType.CUSTOMCUBIC ? easingFn.get(easingType ?? "LINEAR")! : bezier
     const T = time ?? 0.3
     const Bezier = `all ${T}s cubic-bezier(${FN.join()}) 0s`
     const W = 54
@@ -1127,8 +1136,24 @@ const setProtoTypeEasingType = (data: SelectItem, id: string) => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const value = data.value as PrototypeEasingType;
-    const esfn = easingFn.get(value) as BasicArray<number>;
-    e.setPrototypeActionEasingType(shape as ShapeView, id, value, esfn)
+    const esfn = easingFn.get(value)
+    if (!esfn) return;
+    const bezier = new PrototypeEasingBezier(esfn[0], esfn[1], esfn[2], esfn[3])
+    e.setPrototypeActionEasingType(shape as ShapeView, id, value, bezier)
+    updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
+}
+
+//自定义贝塞尔曲线
+const setProtoTypeEasingFunction = (val: PrototypeEasingBezier, id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeActionEasingFunction(shape, id, val)
     updateData()
     delstyle()
     nextTick(() => {
@@ -1358,233 +1383,6 @@ function update_by_shapes(...args: any[]) {
     reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
     reflush.value++;
-}
-
-interface Position {
-    x: number
-    y: number
-}
-
-const dragcanvas = (arr = [0.1, 1, 0.5, -1]) => {
-    const canvas = document.getElementById("sbezier") as HTMLCanvasElement;
-    const ctx = canvas?.getContext("2d");
-    const cp1 = ref<Position>({ x: arr[0] / 0.01 + 50, y: 150 - arr[1] / 0.01 })
-    const cp2 = ref<Position>({ x: arr[2] / 0.01 + 50, y: 150 - arr[3] / 0.01 })
-    const dragA = ref<boolean>(false)
-    const dragB = ref<boolean>(false)
-    const dragLineA = ref<boolean>(false)
-    const dragLineB = ref<boolean>(false)
-    const lineA = ref<Path2D>()
-    const lineB = ref<Path2D>()
-    const pointA = ref<Path2D>()
-    const pointB = ref<Path2D>()
-    let minX = 50
-    let maxX = 150
-    let minY = 50
-    let maxY = 150
-
-    let drag = false;
-    let width = 200; // Canvas的目标显示宽度
-    let height = 200; // Canvas的目标显示高度
-
-    if (window.devicePixelRatio && window.devicePixelRatio > 1) {
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        canvas.width = width * window.devicePixelRatio;
-        canvas.height = height * window.devicePixelRatio;
-        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
-    } else {
-        canvas.width = width;
-        canvas.height = height;
-    }
-
-
-    const drawXY = () => {
-
-        //x轴
-        ctx?.beginPath();
-        ctx!.strokeStyle = '#c8c8c8';
-        ctx?.moveTo(minX, maxY); // 将笔移到左下角
-        ctx?.lineTo(maxX, maxY); // 连线到顶角
-        ctx?.closePath(); // 连线到左下角
-        ctx?.stroke();
-
-        //y轴
-        ctx?.beginPath();
-        ctx?.moveTo(minX, maxY); // 将笔移到左下角
-        ctx?.lineTo(minX, minY); // 连线到顶角
-        ctx?.closePath(); // 连线到左下角
-        ctx?.stroke();
-
-        //斜线
-        ctx?.beginPath();
-        ctx?.moveTo(minX, maxY); // 将笔移到左下角
-        ctx?.lineTo(maxX, minY); // 连线到顶角
-        ctx?.closePath(); // 连线到左下角
-        ctx?.stroke();
-
-        ctx?.setLineDash([8, 4]);
-
-        // 偏移量20 虚线
-        ctx?.beginPath();
-        ctx!.lineDashOffset = 20;
-        ctx?.moveTo(minX, minY);
-        ctx?.lineTo(maxX, minY);
-        ctx?.moveTo(maxX, minY);
-        ctx?.lineTo(maxX, maxY);
-        ctx?.stroke()
-
-        ctx?.setLineDash([]);
-
-        // 起始点和结束点
-        ctx?.beginPath();
-        ctx?.arc(minX, maxY, 3, 0, 2 * Math.PI); // 起始点
-        ctx?.arc(maxX, minY, 3, 0, 2 * Math.PI); // 结束点
-        ctx?.fill();
-
-    }
-
-    const drawbezier = (cp1: Position, cp2: Position) => {
-        // 三次贝塞尔曲线
-        ctx?.beginPath();
-        ctx!.strokeStyle = 'black';
-        ctx?.moveTo(50, 150);
-        ctx?.bezierCurveTo(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y, cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y, 150, 50);
-        ctx?.stroke();
-
-        //起始点与控点A的连接线
-        lineA.value = new Path2D()
-        lineA.value.moveTo(50, 150);
-        lineA.value.lineTo(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y)
-        ctx?.stroke(lineA.value);
-
-        //结束点与控点B的连接线
-        lineB.value = new Path2D()
-        lineB.value.moveTo(150, 50);
-        lineB.value.lineTo(cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y)
-        ctx?.stroke(lineB.value);
-
-        // 控制点 A
-        pointA.value = new Path2D()
-        pointA.value.arc(cp1.x < 50 ? 50 : cp1.x < 150 ? cp1.x : 150, cp1.y, 5, 0, 2 * Math.PI)
-        ctx!.fillStyle = (dragA.value || dragLineA.value) ? 'blue' : 'black';
-        ctx!.strokeStyle = (dragA.value || dragLineA.value) ? '#fff' : 'transparent';
-        ctx!.lineWidth = (dragA.value || dragLineA.value) ? 2 : 0;
-        if (dragA.value || dragLineA.value) ctx?.stroke(pointA.value);
-        ctx?.fill(pointA.value);
-
-
-        // 控制点 B
-        pointB.value = new Path2D()
-        pointB.value.arc(cp2.x < 50 ? 50 : cp2.x < 150 ? cp2.x : 150, cp2.y, 5, 0, 2 * Math.PI)
-        ctx!.fillStyle = (dragB.value || dragLineB.value) ? 'blue' : 'black';
-        ctx!.strokeStyle = (dragB.value || dragLineB.value) ? '#fff' : 'transparent';
-        ctx!.lineWidth = (dragB.value || dragLineB.value) ? 2 : 0;
-        if (dragB.value || dragLineB.value) ctx?.stroke(pointB.value);
-        ctx?.fill(pointB.value);
-    }
-    drawXY()
-    drawbezier(cp1.value, cp2.value)
-
-
-    document.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        const rect = canvas.getBoundingClientRect();
-        const canvasX = Math.round(e.clientX - rect.left) * (canvas.width / rect.width);
-        const canvasY = Math.round(e.clientY - rect.top) * (canvas.height / rect.height);
-
-        ctx!.lineWidth = 6;
-
-        const isInsideA = ctx!.isPointInPath(pointA.value!, canvasX, canvasY);
-        const isInsideB = ctx!.isPointInPath(pointB.value!, canvasX, canvasY);
-        const isInsidelineA = ctx!.isPointInStroke(lineA.value!, canvasX, canvasY)
-        const isInsidelineB = ctx!.isPointInStroke(lineB.value!, canvasX, canvasY)
-
-        let arr = [isInsideA, isInsideB, isInsidelineA, isInsidelineB]
-
-        for (let index = 0; index < arr.length; index++) {
-            if (arr[index]) {
-                if (index === 0) {
-                    drag = true
-                    dragA.value = true
-                    break
-                }
-                if (index === 1) {
-                    drag = true
-                    dragB.value = true
-                    break
-                }
-                if (index === 2) {
-                    drag = true
-                    dragLineA.value = true
-                    break
-                }
-                if (index === 3) {
-                    drag = true
-                    dragLineB.value = true
-                    break
-                }
-            }
-        }
-
-        ctx!.lineWidth = 1;
-        ctx?.reset()
-        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
-        drawXY()
-        drawbezier(cp1.value, cp2.value)
-        document.addEventListener('mousemove', move)
-        document.addEventListener('mouseup', up)
-    });
-
-    const move = (e: MouseEvent) => {
-        e.stopPropagation()
-        if (!drag) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.round(e.clientX - rect.left);
-        const y = Math.round(e.clientY - rect.top);
-
-        //保存控制点A和B
-        if (dragA.value) {
-            cp1.value.x = x < 50 ? 50 : x < 150 ? x : 150;
-            cp1.value.y = y;
-        }
-        if (dragB.value) {
-            cp2.value.x = x < 50 ? 50 : x < 150 ? x : 150;
-            cp2.value.y = y;
-        }
-
-        if (dragLineA.value) {
-            cp1.value.x = (cp1.value.x + e.movementX) < 50 ? 50 : (cp1.value.x + e.movementX) < 150 ? (cp1.value.x + e.movementX) : 150;
-            cp1.value.y = cp1.value.y + e.movementY
-        }
-
-        if (dragLineB.value) {
-            cp2.value.x = (cp2.value.x + e.movementX) < 50 ? 50 : (cp2.value.x + e.movementX) < 150 ? (cp2.value.x + e.movementX) : 150;
-            cp2.value.y = cp2.value.y + e.movementY
-        }
-
-        ctx?.reset();
-        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-        drawXY()
-        drawbezier(cp1.value, cp2.value)
-    }
-
-    const up = (e: MouseEvent) => {
-        if (!drag) return;
-        canvas.removeEventListener('mousemove', move)
-        drag = dragA.value = dragB.value = dragLineA.value = dragLineB.value = false
-
-        ctx?.reset();
-        ctx?.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-        drawXY()
-        drawbezier(cp1.value, cp2.value)
-
-        console.log((cp1.value.x - 50) * 0.01, (150 - cp1.value.y) * 0.01, (cp2.value.x - 50) * 0.01, (150 - cp2.value.y) * 0.01);
-    }
-
-
 }
 
 onMounted(() => {
@@ -2103,6 +1901,7 @@ onUnmounted(() => {
                     }
 
                 }
+
             }
         }
     }
