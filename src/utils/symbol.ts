@@ -977,13 +977,14 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
 }
 
 /**
- * @description 检查symbol与symbol2之间是否存在循环引用
- * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若存在则存在循环
+ * @description 检查set与symbol之间是否存在循环引用
+ * symbol不可以包含set
+ * 若用set建一棵树，这颗树上不可以存在一条以symbol为形的枝叶，若存在则存在循环
  */
-export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
-        shape: symbol2,
-        ref: symbol.id
+export function is_circular_ref2(set: Shape, symbol: string): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(set), {
+        shape: symbol,
+        ref: set.id
     }];
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');

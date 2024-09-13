@@ -31,7 +31,7 @@ export class TranslateHandler extends TransformHandler {
     boxOffsetLivingPointX: number = 0;
     boxOffsetLivingPointY: number = 0;
 
-    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 }; // 影子盒子
+    livingBox: FrameLike = { x: 0, y: 0, right: 0, bottom: 0, height: 0, width: 0 };
 
     baseFrames4trans: Map<string, BaseFrame4Trans> = new Map();
 
@@ -42,6 +42,8 @@ export class TranslateHandler extends TransformHandler {
 
     shapesBackup: ShapeView[] = [];
     coping: boolean = false; // 数据拷贝中
+
+    noMigrate: boolean = false;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
@@ -472,20 +474,17 @@ export class TranslateHandler extends TransformHandler {
     }
 
     private __migrate(tailCollect = true) {
-        // if (this.workspace.transforming && this.shapes.length > 50) return; @@@
+        if (this.noMigrate) return;
+
         const t = this.asyncApiCaller as Transporter;
-        if (!t) {
-            return;
-        }
+        if (!t) return;
 
         const ctx = this.context;
 
         const pe = this.livingPoint;
         const target_parent = ctx.selection.getEnvForMigrate(pe);
 
-        if (target_parent.id === t.current_env_id) {
-            return;
-        }
+        if (target_parent.id === t.current_env_id) return;
 
         const except = t.getExceptEnvs();
 
@@ -532,9 +531,7 @@ export class TranslateHandler extends TransformHandler {
     }
 
     protected keydown(event: KeyboardEvent) {
-        if (event.repeat) {
-            return;
-        }
+        if (event.repeat) return;
         if (event.shiftKey) {
             this.shiftStatus = true;
             this.passiveExecute();
@@ -549,6 +546,9 @@ export class TranslateHandler extends TransformHandler {
                 this.context.selection.notify(Selection.PASSIVE_CONTOUR);
             }
         }
+        if (event.code === 'Space') {
+            this.noMigrate = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -561,6 +561,9 @@ export class TranslateHandler extends TransformHandler {
             this.context.selection.setLabelLivingGroup([]);
             this.context.selection.setLabelFixedGroup([]);
             this.context.selection.setShowInterval(false);
+        }
+        if (event.code === "Space") {
+            this.noMigrate = false;
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY, Selection, XY } from "@/context/selection";
 import {
-    adapt2Shape,
+    adapt2Shape, ArtboradView,
     AsyncCreator,
     Color,
     ColVector3D,
@@ -19,7 +19,7 @@ import {
     ShapeView,
     SymbolRefShape,
     SymbolRefView,
-    SymbolShape,
+    SymbolShape, SymbolView,
     TableView,
     TextAttr,
     TextShape
@@ -31,7 +31,7 @@ import { searchCommentShape as finder } from '@/utils/comment'
 import { adjust_content_xy } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
-import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
+import { is_circular_ref2, is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 import { TableSelection } from "@/context/tableselection";
 import * as parse_svg from "@/svg_parser";
@@ -40,6 +40,7 @@ import { Navi } from "@/context/navigate";
 import { v4 } from "uuid";
 import { ImageLoader } from "@/utils/imageLoader";
 import { UploadAssets } from "@kcdesign/data";
+import { isTarget } from "@/utils/scout";
 
 export interface Media {
     name: string
@@ -964,34 +965,35 @@ export function is_content(context: Context, e: MouseEvent) {
 
 export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView | Shape) {
     const state = symbol;
-    const selection = context.selection, workspace = context.workspace;
+    const selection = context.selection;
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
     const page = selection.selectedPage!;
-    if (page) {
-        const m = new Matrix(page.matrix2Root().inverse);
-        position = m.computeCoord3(position);
-        const editor = context.editor4Page(page);
-        const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
-        frame.x = position.x - state.frame.width / 2;
-        frame.y = position.y - state.frame.height / 2;
-        const childs = page.childs;
-        let id = symbol.id;
-        let name = symbol.name;
-        let count = 1;
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const item = childs[i];
-            if ((item as SymbolRefView)?.refId === id) count++;
-        }
-        let ref: Shape | false = editor.refSymbol(context.data, `${name} ${count}`, frame, id);
-        ref = editor.insert(page.data, shapes.length, ref, true);
 
-        if (ref) {
-            context.nextTick(page, () => {
-                const s = ref && page.getShape(ref.id);
-                s && selection.selectShape(s);
-            })
+    const scout = context.selection.scout;
+    const container = (() => {
+        for (const shape of shapes) {
+            if (shape.isVirtualShape || !shape.isVisible || !(shape instanceof ArtboradView || shape instanceof SymbolView)) continue;
+            if ((shape instanceof SymbolView && (is_circular_ref2((symbol instanceof ShapeView) ? adapt2Shape(symbol) : symbol, shape.id) || shape.isSymbolUnionShape))) continue;
+            if (isTarget(scout, shape, position)) return shape;
         }
+        return page;
+    })();
+    const m = new Matrix(container.matrix2Root().inverse);
+    position = m.computeCoord3(position);
+    const editor = context.editor4Page(page);
+    const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
+    frame.x = position.x - state.frame.width / 2;
+    frame.y = position.y - state.frame.height / 2;
+    const childs = container.childs;
+    let id = symbol.id;
+    let name = symbol.name;
+    let count = 1;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        if ((item as SymbolRefView)?.refId === id) count++;
     }
+    let ref: Shape | false = editor.refSymbol(context.data, `${name} ${count}`, frame, id);
+    editor.insert(adapt2Shape(container) as GroupShape, childs.length, ref, true);
 }
 
 const MAX = 25600;

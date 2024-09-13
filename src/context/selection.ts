@@ -17,7 +17,6 @@ import {
     TableCellType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
-import { Page } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import {
@@ -28,21 +27,13 @@ import {
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
-import { scout, Scout } from "@/utils/scout";
+import { Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { v4 } from "uuid";
-// import { router } from "@/router";
 import { ISelection, SelectionEvents } from "@/openapi/selection";
 import { skipUserSelectShapes } from "@/utils/content";
 import { DocSelectionData } from "./user";
 import { initpal } from "@/components/common/initpal";
-
-interface Saved {
-    page: Page | undefined,
-    shapes: Shape[],
-    cursorStart: number,
-    cursorEnd: number
-}
 
 export interface XY {
     x: number,
@@ -84,7 +75,6 @@ export const enum SelectionTheme {
 }
 
 export class Selection extends WatchableObject implements ISave4Restore, ISelection {
-
     static CHANGE_PAGE = SelectionEvents.page_change;
     static CHANGE_SHAPE = SelectionEvents.shape_change;
     static CHANGE_SHAPE_HOVER = SelectionEvents.shape_hover_change;
@@ -92,12 +82,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static CHANGE_TEXT = SelectionEvents.text_change;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
-    // static CHANGE_COMMENT = 8;
-    // static SOLVE_MENU_STATUS = 9;
-    // static COMMENT_CHANGE_PAGE = 10;
-    // static SKIP_COMMENT = 11;
-    // static PAGE_SORT = 12;
-    // static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
     static SELECTION_HIDDEN = 16;
@@ -108,23 +92,13 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     static PREVIEW_HOVER_CHANGE = 20;
 
-    // static CHANGE_TEXT_LITE = 16;
-
     private m_selectPage?: PageView;
     private m_selectShapes: ShapeView[] = [];
-    // private m_selectPreviewShape: Shape | undefined;
     private m_hoverShape?: ShapeView;
     private m_document: Document;
-    // private m_scout: Scout | undefined;
     private m_tableselection: TableSelection;
     private m_textselection: TextSelectionLite;
-
-    // private m_comment_id: string = '';
-    // private m_comment_status: boolean = false;
     private m_comment_page_id: string | undefined;
-    // private m_select_comment: boolean = false;
-    // private m_comment_page_sort: boolean = false;
-    // private m_comment_about_me: boolean = false;
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_selected_sym_ref_menber: ShapeView | undefined;
     private m_selected_sym_ref_bros: ShapeView[] = [];
@@ -146,7 +120,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.m_textselection = new TextSelectionLite(this); // 文字选区
         this.m_tableselection = new TableSelection(context, () => {
             this.m_textselection.reset();
-        }); // 表格选区
+        });
     }
 
     get scout(): Scout {
@@ -157,34 +131,9 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         // this.m_scout = scout(context);
     }
 
-    // get artboarts() {
-    //     const abs = Array.from(this.m_artboart_list.values());
-    //     return abs;
-    // }
-
-    // get commentId() {
-    //     return this.m_comment_id;
-    // }
-
-    // get commentStatus() { //评论列表是否显示解决
-    //     return this.m_comment_status;
-    // }
-
     get commentPageId() {
         return this.m_comment_page_id;
     }
-
-    // get isSelectComment() {
-    //     return this.m_select_comment;
-    // }
-
-    // get commentPageSort() { //评论是否按页面排序
-    //     return this.m_comment_page_sort;
-    // }
-
-    // get commentAboutMe() { //评论显示关于我的
-    //     return this.m_comment_about_me;
-    // }
 
     get tableSelection() {
         return this.m_tableselection;
@@ -207,33 +156,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             return this.tableSelection.editingCell;
         }
     }
-
-    // selectCommentPage(id: string) {
-    //     this.m_comment_page_id = id
-    //     this.notify(Selection.COMMENT_CHANGE_PAGE)
-    // }
-
-    // setCommentSelect(s: boolean) {
-    //     this.m_select_comment = s
-    //     if (!s) {
-    //         this.notify(Selection.SKIP_COMMENT)
-    //     }
-    // }
-
-    // commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态
-    //     this.m_comment_status = status
-    //     this.notify(Selection.SOLVE_MENU_STATUS)
-    // }
-
-    // setPageSort(status: boolean) {
-    //     this.m_comment_page_sort = status
-    //     this.notify(Selection.PAGE_SORT)
-    // }
-
-    // setCommentAboutMe(status: boolean) {
-    //     this.m_comment_about_me = status
-    //     this.notify(Selection.ABOUT_ME)
-    // }
 
     async selectPage(p: PageView | string | undefined) {
         if (typeof p === 'string') {
@@ -280,11 +202,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.notify(Selection.PAGE_RENAME);
     }
 
-    // selectComment(id: string) {
-    //     this.m_comment_id = id
-    //     this.notify(Selection.CHANGE_COMMENT);
-    // }
-
     get selectedPage(): PageView | undefined {
         return this.m_selectPage;
     }
@@ -306,9 +223,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         return result;
     }
 
-    // private m_count = 0;
-    // private m_total = 0;
-
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
@@ -317,19 +231,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
      * @returns 符合检索条件的图形
      */
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: ShapeView[]): ShapeView | undefined {
-        // const s = Date.now();
         let shape: ShapeView | undefined;
         const page = this.m_selectPage!;
         const childs: ShapeView[] = scope || page.childs;
-        // shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
-        // this.m_count++;
-        // this.m_total += Date.now() - s;
-        // if (this.m_count > 100) {
-        //     console.log('computing: ', this.m_total / 100);
-        //     this.m_count = 0;
-        //     this.m_total = 0;
-        // }
         return shape;
     }
 
@@ -369,22 +274,13 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     selectShape(shape?: ShapeView) {
         if (!shape) {
             this.resetSelectShapes();
-            // if (this.m_selectPreviewShape) {
-            //     this.m_selectPreviewShape = undefined;
-            //     this.notify(Selection.CHANGE_SHAPE);
-            // }
         } else {
             this.m_selectShapes.length = 0;
-            // shape instanceof ShapeView ? this.m_selectShapes.push(shape) : this.m_selectPreviewShape = shape;
             this.m_selectShapes.push(shape);
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
-
-    // get selectedPvShape(): Shape | undefined {
-    //     return this.m_selectPreviewShape;
-    // }
 
     unSelectShape(shape: ShapeView) {
         const index = this.m_selectShapes.findIndex((s: ShapeView) => s.id === shape.id);
@@ -440,8 +336,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     hoverShape(shape: ShapeView) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
-            console.log(shape, 'shape');
-            
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
     }
@@ -498,7 +392,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     }
 
     save(): SelectionState {
-        // throw new Error("Method not implemented.");
         const state: SelectionState = {
             shapes: []
         }
@@ -585,9 +478,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
 
     restore(state: SelectionState): void {
         if (!this.selectedPage) return;
-        // throw new Error("Method not implemented.");
-        // text
-        // shape
         const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView);
         if (shapes.findIndex((s) => s === undefined) >= 0) {
             this.m_context.nextTick(this.selectedPage, () => {
@@ -717,13 +607,6 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
             return (this.selectedShapes[0]) as ShapeView;
         }
     }
-
-    // get pathshapeview() {
-    //     const selected = this.selectedShapes;
-    //     if (selected.length === 1 && selected[0] instanceof PathShapeView) {
-    //         return (this.selectedShapes[0]) as PathShapeView;
-    //     }
-    // }
 
     get symbolshape() {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
