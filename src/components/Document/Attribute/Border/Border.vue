@@ -1,7 +1,20 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { BasicArray, AsyncBorderThickness, GradientType, ShapeType, ShapeView, Stop, TableCellView, CornerType, BorderSideSetting, SideType, PathShapeView, TableView } from '@kcdesign/data';
+import {
+    BasicArray,
+    AsyncBorderThickness,
+    GradientType,
+    ShapeType,
+    ShapeView,
+    Stop,
+    TableCellView,
+    CornerType,
+    BorderSideSetting,
+    SideType,
+    PathShapeView,
+    TableView
+} from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -30,7 +43,7 @@ import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { getShapesForStyle } from '@/utils/style';
-import { genOptions } from '@/utils/common';
+import { format_value, genOptions } from '@/utils/common';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import {
     get_actions_border_thickness,
@@ -859,11 +872,11 @@ const thickness_value = (index: number, idx: number) => {
             const shape = shapes[i];
             const borders = shape.getBorders();
             if (!borders.length) return 0;
-            result.push(getSideThickness(borders[index].sideSetting));
+            result.push(getSideThickness(borders[index].sideSetting, shape));
         }
         const unique = new Set(result);
         if (unique.size === 1 && !unique.has(false)) {
-            return Number(result[0]);
+            return format_value(Number(result[0]));
         } else {
             return t('attr.mixed')
         }
@@ -887,92 +900,86 @@ const strokeClick = (e: Event) => {
 </script>
 
 <template>
-    <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
-            <template #tool>
-                <div class="add" @click.stop="addBorder">
-                    <svg-icon icon-class="add"></svg-icon>
+<div class="border-panel">
+    <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
+        <template #tool>
+            <div class="add" @click.stop="addBorder">
+                <svg-icon icon-class="add"></svg-icon>
+            </div>
+        </template>
+    </TypeHeader>
+    <div class="tips-wrap" v-if="mixed">
+        <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+    </div>
+    <div class="tips-wrap" v-if="mixed_cell">
+        <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
+    </div>
+    <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
+        <div class="border" v-for="(b, idx) in borders" :key="b.id">
+            <div class="top">
+                <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                    <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
-            </template>
-        </TypeHeader>
-        <div class="tips-wrap" v-if="mixed">
-            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
-        </div>
-        <div class="tips-wrap" v-if="mixed_cell">
-            <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
-        </div>
-        <div class="borders-container" v-else-if="!mixed && !mixed_cell && borders.length">
-            <div class="border" v-for="(b, idx) in borders" :key="b.id">
-                <div class="top">
-                    <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
-                        <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
-                    </div>
-                    <div class="color">
-                        <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
-                            :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
-                            @change="(c: Color) => getColorFromPicker(c, idx)"
-                            @gradient-reverse="() => gradient_reverse(idx)"
-                            :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
-                            @gradient-rotate="() => gradient_rotate(idx)"
-                            @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
-                            @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
-                            @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                            @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
-                        <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
-                            :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
-                            :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                            @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
-                            @input="colorInput($event)" />
-                        <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
-                            v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
-                                t(`color.${b.border.gradient.gradientType}`)
-                            }}</span>
-                        <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
-                            style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
-                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
-                            @focus="selectAlpha" @input="alphaInput" />
-                    </div>
-                    <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1">
-                    </BorderDetail> -->
-                    <!--                <div class="extra-action">-->
-                    <div class="delete" @click="deleteBorder(idx)">
-                        <svg-icon icon-class="delete"></svg-icon>
-                    </div>
+                <div class="color">
+                    <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
+                                 :locat="{ index: borders.length - idx - 1, type: 'borders' }" :op="b.border.isEnabled"
+                                 @change="(c: Color) => getColorFromPicker(c, idx)"
+                                 @gradient-reverse="() => gradient_reverse(idx)"
+                                 :gradient="isGradient() ? b.border.gradient : undefined" :fillType="b.border.fillType"
+                                 @gradient-rotate="() => gradient_rotate(idx)"
+                                 @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
+                                 @gradient-type="(type, fill_type) => togger_gradient_type(idx, type, fill_type)"
+                                 @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                                 @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"/>
+                    <input ref="colorBorder" class="colorBorder" :class="{ showop: !b.border.isEnabled }"
+                           :spellcheck="false" v-if="b.border.fillType !== FillType.Gradient || !isGradient()"
+                           :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                           @click="colorClick" @blur="is_color_select = false" @focus="selectColor($event)"
+                           @input="colorInput($event)"/>
+                    <span class="colorBorder" :class="{ showop: !b.border.isEnabled }" style="line-height: 14px;"
+                          v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient && isGradient()">{{
+                            t(`color.${b.border.gradient.gradientType}`)
+                        }}</span>
+                    <input ref="alphaBorder" :class="{ showop: !b.border.isEnabled }" class="alphaBorder"
+                           style="text-align: center;" :value="filterAlpha(b.border) + '%'" @click="alphaClick"
+                           @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
+                           @focus="selectAlpha" @input="alphaInput"/>
                 </div>
-                <div class="bottom">
-                    <!-- 边框位置 -->
-                    <div style=" flex: calc(50% - 20px);"
-                        :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
-                        <Select class="select" :context="props.context" :shapes="props.shapes"
+                <div class="delete" @click="deleteBorder(idx)">
+                    <svg-icon icon-class="delete"></svg-icon>
+                </div>
+            </div>
+            <div class="bottom">
+                <div style=" flex: calc(50% - 20px);"
+                     :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
+                    <Select class="select" :context="props.context" :shapes="props.shapes"
                             :source="positonOptionsSource"
                             :selected="positonOptionsSource.find(i => i.data.value === b.border.position)?.data"
                             @select="positionSelect" :index="borders.length - idx - 1"></Select>
-                    </div>
-                    <div class="thickness-container" style=" flex: calc(50% - 20px);"
-                        :class="{ actived: isActived === idx }">
-                        <svg-icon icon-class="thickness"
-                            :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
-                            @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
-                        <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
-                            @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
-                            @click="strokeClick" @focus="selectBorderThicknes($event, idx)">
-                    </div>
-                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1" :reflush_side="reflush_side">
-                    </BorderDetail>
                 </div>
-
+                <div class="thickness-container" style=" flex: calc(50% - 20px);"
+                     :class="{ actived: isActived === idx }">
+                    <svg-icon icon-class="thickness"
+                              :class="{ cursor_pointer: typeof thickness_value(borders.length - idx - 1, idx) === 'string' }"
+                              @mousedown.stop="onMouseDown($event, idx)"></svg-icon>
+                    <input ref="borderThickness" type="text" :value="thickness_value(borders.length - idx - 1, idx)"
+                           @change="setThickness($event, borders.length - idx - 1)" @blur="strokeBlur"
+                           @click="strokeClick" @focus="selectBorderThicknes($event, idx)">
+                </div>
+                <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
+                              :index="borders.length - idx - 1" :reflush_side="reflush_side">
+                </BorderDetail>
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
-            :trigger="props.trigger" :reflush_apex="reflush_apex">
-        </Apex>
     </div>
-    <teleport to="body">
-        <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
-        </div>
-    </teleport>
+    <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"
+          :trigger="props.trigger" :reflush_apex="reflush_apex">
+    </Apex>
+</div>
+<teleport to="body">
+    <div v-if="showpoint" class="point" :style="{ top: (pointY! - 10.5) + 'px', left: (pointX! - 10) + 'px' }">
+    </div>
+</teleport>
 </template>
 
 <style scoped lang="scss">
@@ -1036,7 +1043,7 @@ const strokeClick = (e: Event) => {
         box-sizing: border-box;
         border-radius: var(--default-radius);
 
-        >svg {
+        > svg {
             width: 16px;
             height: 16px;
         }
@@ -1089,7 +1096,7 @@ const strokeClick = (e: Event) => {
                     border-radius: 4px;
                     margin-right: 5px;
 
-                    >svg {
+                    > svg {
                         width: 60%;
                         height: 60%;
                     }
@@ -1141,7 +1148,7 @@ const strokeClick = (e: Event) => {
                         box-sizing: border-box;
                     }
 
-                    input+input {
+                    input + input {
                         width: 45px;
                     }
 
@@ -1164,15 +1171,14 @@ const strokeClick = (e: Event) => {
                     transition: 0.2s;
                     border-radius: var(--default-radius);
 
-                    >svg {
+                    > svg {
                         width: 16px;
                         height: 16px;
                     }
                 }
 
                 .delete:hover {
-                    background-color: #F5F5F5;
-                    ;
+                    background-color: #F5F5F5;;
                 }
 
                 //}
@@ -1186,7 +1192,7 @@ const strokeClick = (e: Event) => {
                 gap: 6px;
                 margin-left: 19px;
 
-                >.select {
+                > .select {
                     height: 100%;
                     width: 100px;
                 }
@@ -1203,7 +1209,7 @@ const strokeClick = (e: Event) => {
                     gap: 8px;
                     overflow: hidden;
 
-                    >svg {
+                    > svg {
                         cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto !important;
                         flex: 0 0 16px;
                         height: 16px;
@@ -1213,7 +1219,7 @@ const strokeClick = (e: Event) => {
                         cursor: default !important;
                     }
 
-                    >input {
+                    > input {
                         outline: none;
                         border: none;
                         padding: 0;

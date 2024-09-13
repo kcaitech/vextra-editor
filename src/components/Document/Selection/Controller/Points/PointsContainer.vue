@@ -19,6 +19,7 @@ import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 import { CursorType } from "@/utils/cursor2";
 import { cursorAngle } from "@/components/Document/Selection/common";
+import { Action } from "@/context/tool";
 
 interface Props {
     context: Context;
@@ -261,9 +262,9 @@ function point_mouseup(event: MouseEvent) {
 
 function setCursor(t: CtrlElementType, active = false) {
     const cursor = props.context.cursor;
-
+    const action = props.context.tool.action;
     // type
-    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
+    const type = t.endsWith('rotate') ? CursorType.Rotate : action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
 
     // rotate
     let deg = 0;

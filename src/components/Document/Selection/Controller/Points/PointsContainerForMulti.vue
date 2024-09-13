@@ -10,6 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { ScaleHandler } from '@/transform/scale';
 import { RotateHandler } from '@/transform/rotate';
 import { CursorType } from "@/utils/cursor2";
+import { Action } from "@/context/tool";
 
 interface Props {
     context: Context
@@ -142,7 +143,8 @@ function setCursor(t: CtrlElementType) {
     } else if (t === CtrlElementType.RectLBR) {
         deg = deg + 135;
     }
-    const type = t.endsWith('rotate') ? CursorType.Rotate : CursorType.Scale;
+    const action = props.context.tool.action;
+    const type = t.endsWith('rotate') ? CursorType.Rotate : action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
 
     cursor.setType(type, deg);
 }

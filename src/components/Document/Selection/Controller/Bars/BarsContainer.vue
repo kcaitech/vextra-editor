@@ -14,6 +14,7 @@ import { dbl_action } from "@/utils/mouse_interactive";
 import { startEdit } from "@/transform/pathEdit";
 import { CursorType } from "@/utils/cursor2";
 import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 
 interface Props {
     context: Context
@@ -166,8 +167,9 @@ function setCursor(t: CtrlElementType) {
     } else if (t === CtrlElementType.RectLeft) {
         deg += getHorizontalAngle(apex[3], apex[0]);
     }
-
-    cursor.setType(CursorType.Scale, deg);
+    const action = props.context.tool.action;
+    const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
+    cursor.setType(type, deg);
 }
 
 function bar_mouseenter(type: CtrlElementType) {

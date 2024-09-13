@@ -276,7 +276,6 @@ onUnmounted(() => {
 });
 onBeforeUnmount(() => {
     if (props.shape.text.length === 1) {
-        console.log('---哈哈')
         clear_null_shape(props.shape);
     }
 });

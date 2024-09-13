@@ -246,7 +246,7 @@ const previewWatcher = (t: number | string, s?: any, action_s?: any) => {
         const view = new SymbolDom(domCtx, { data: sym });
         view.layout();
         view.render();
-        const bezier = action.easingFunction ? action.easingFunction : [0, 0, 1, 1];
+        const bezier = action.easingFunction ? [action.easingFunction.x1,action.easingFunction.y1,action.easingFunction.x2,action.easingFunction.y2] : [0, 0, 1, 1];
         const time = action.transitionDuration ?? 0.3;
         symRefAnimate.value.style['transition'] = `opacity ${time}s cubic-bezier(${bezier[0]}, ${bezier[1]}, ${bezier[2]}, ${bezier[3]}) 0s`
         symRefAnimate.value.style['transform'] = m.toString();
@@ -949,36 +949,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-<div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
-    <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
-              :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true"/>
-    <!-- 浮层和动画卡片 -->
-    <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
-        <PageCard :key="item.id" class="dialogCard" ref="dialogCard" background-color="transparent" :data="item"
-                  :context="context" :shapes="target_shapes"/>
-    </div>
-    <!-- 实例切换动画 -->
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100" width="100" height="100">
-    </svg>
-    <div class="toggle" v-if="listLength && previewMode">
-        <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
-            <svg-icon icon-class="left-arrow"></svg-icon>
+    <div class="preview_container" ref="preview" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mouseenter="onMouseEnter" @mouseleave="onMouseLeave" @mousemove="onMouseMove_CV">
+        <PageCard v-if="cur_shape.length" class="pageCard" ref="pageCard" background-color="transparent"
+            :context="context" :data="cur_shape[0]" :shapes="cur_shape" @start-loop="startLoop" :selected="true" />
+        <!-- 浮层和动画卡片 -->
+        <div v-if="renderCard" ref="viewBoxDialog" id="proto_overflow" v-for="item in target_shapes">
+            <PageCard :key="item.id" class="dialogCard" ref="dialogCard" background-color="transparent" :data="item"
+                :context="context" :shapes="target_shapes" />
         </div>
-        <div class="page">{{ curPage }} / {{ listLength }}</div>
-        <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
-            <svg-icon icon-class="right-arrow"/>
+        <!-- 实例切换动画 -->
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ref="symRefAnimate"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" class="sym_ref_animate" preserveAspectRatio="xMinYMin meet"
+            viewBox="0 0 100 100" width="100" height="100">
+        </svg>
+        <div class="toggle" v-if="listLength && previewMode">
+            <div class="last" @click.stop="togglePage(-1)" @mouseup.stop :class="{ disable: curPage === 1 }">
+                <svg-icon icon-class="left-arrow"></svg-icon>
+            </div>
+            <div class="page">{{ curPage }} / {{ listLength }}</div>
+            <div class="next" @click.stop="togglePage(1)" @mouseup.stop :class="{ disable: listLength === curPage }">
+                <svg-icon icon-class="right-arrow" />
+            </div>
         </div>
+        <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu" />
+        <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix"
+            :reflush="reflush" @updateSearch="updateSearch">
+        </ControlsView>
+        <div v-if="is_overlay" class="overlay" />
+        <div v-if="cur_shape" class="preview_overlay" />
     </div>
-    <MenuVue v-if="isMenu && previewMode" :context="context" :top="top" :left="left" @close="closeMenu"/>
-    <ControlsView :context="context" :matrix="isSuperposed ? end_matrix as Matrix : viewUpdater.v_matrix" :reflush="reflush"
-                  @updateSearch="updateSearch">
-    </ControlsView>
-    <div v-if="is_overlay" class="overlay"/>
-    <div v-if="cur_shape" class="preview_overlay"/>
-</div>
 </template>
 
 <style scoped lang="scss">

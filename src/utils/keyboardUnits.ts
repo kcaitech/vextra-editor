@@ -28,13 +28,13 @@ import { hexToX } from "@/components/common/ColorPicker/utils";
 import { Color } from "@kcdesign/data";
 import { Attribute } from "@/context/atrribute";
 import {
-    useArrow, useAuto, useContact, useCutout,
+    useArrow, useAuto, useAutoK, useContact, useCutout,
     useEllipse,
     useFrame,
     useImage,
     useLine, useMask, usePen,
     useRect,
-    useText
+    useText,
 } from "@/components/Document/Creator/execute";
 
 // todo 键盘事件的权限处理
@@ -260,6 +260,7 @@ keydownHandler['KeyK'] = function (event: KeyboardEvent, context: Context) {
         component(context); // 创建组件
         return;
     }
+    useAutoK(context);
 }
 
 keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
