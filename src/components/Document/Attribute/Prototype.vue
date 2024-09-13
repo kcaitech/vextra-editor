@@ -114,7 +114,7 @@
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
                                         <div class="container"
-                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!)">
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
                                             <div ref="ela" class="containerA" :style="tara ?? qsa">
                                                 A</div>
                                             <div ref="elb" class="containerB" :style="tarb ?? qsb">
@@ -159,6 +159,10 @@
                                                 :value="action.actions.transitionDuration ? action.actions.transitionDuration * 1000 + 'ms' : '300ms'">
                                         </div>
                                     </div>
+                                    <CustomBezier
+                                        v-if="action.actions.easingType === PrototypeEasingType.CUSTOMCUBIC && action.actions.transitionType !== PrototypeTransitionType.INSTANTTRANSITION"
+                                        :bezier="action.actions.easingFunction" :trigger="reflush_trigger"
+                                        @setBezier="setProtoTypeEasingFunction($event, action.id)"></CustomBezier>
                                 </div>
                             </div>
                         </div>
@@ -195,6 +199,7 @@ import Origin from "./Prototype/Origin.vue";
 import Overlay, { Type as T, Margin as M } from "./Prototype/Overlay.vue";
 import Status, { Data as D } from "./Prototype/Status.vue";
 import Target from "./Prototype/Target.vue";
+import CustomBezier from "./Prototype/CustomBezier.vue"
 import {
     PrototypeStartingPoint,
     ArtboradView,
@@ -208,15 +213,14 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     ScrollDirection,
-    OverlayPosition,
-    OverlayMargin
+    PrototypeEasingBezier
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { get_var_for_ref, states_tag_values_sort } from '@/utils/symbol';
 import { flattenShapes } from '@/utils/cutout';
 import { hover } from '@/utils/listview';
-
+// import { PrototypeEasingBezier } from '@kcdesign/data/dist/types/data';
 
 enum Animation {
     INSTANT = 'INSTANT_TRANSITION',
@@ -335,7 +339,8 @@ const effect: SelectSource[] = genOptions([
     [PrototypeEasingType.INOUTCUBIC, t('prototype.curve_easeinout')],
     [PrototypeEasingType.INBACKCUBIC, t('prototype.curve_easeinback')],
     [PrototypeEasingType.OUTBACKCUBIC, t('prototype.curve_easeoutback')],
-    [PrototypeEasingType.INOUTBACKCUBIC, t('prototype.curve_easeinoutback')]
+    [PrototypeEasingType.INOUTBACKCUBIC, t('prototype.curve_easeinoutback')],
+    [PrototypeEasingType.CUSTOMCUBIC, '自定义']
 ])
 
 const easingFn = new Map([
@@ -346,7 +351,9 @@ const easingFn = new Map([
     [PrototypeEasingType.INBACKCUBIC, [0.3, -0.05, 0.7, -0.5]],
     [PrototypeEasingType.OUTBACKCUBIC, [0.45, 1.45, 0.8, 1]],
     [PrototypeEasingType.INOUTBACKCUBIC, [0.7, -0.4, 0.4, 1.4]],
-])
+    [PrototypeEasingType.CUSTOMCUBIC, [0, 0, 1, 1]]
+]);
+
 
 
 const animations = new Map([
@@ -391,7 +398,9 @@ let timer: any;
 
 
 let timer3: any
-const addstyle = () => {
+
+
+const _addstyle = () => {
     if (timer3) clearTimeout(timer3)
     timer3 = setTimeout(() => {
         console.log('添加');
@@ -405,6 +414,8 @@ const addstyle = () => {
 
 }
 
+const addstyle = debounce(_addstyle, 200)
+
 const change = () => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
@@ -416,22 +427,24 @@ const change = () => {
     console.log('jinting');
 }
 
-const delstyle = () => {
+const _delstyle = () => {
     if (timer3) return
     console.log('移除');
-
     (ela.value![0] as HTMLDivElement).removeEventListener("transitionend", change);
     (elb.value![0] as HTMLDivElement).removeEventListener("transitionend", change)
     tarb.value = null
     tara.value = null
 }
 
-const test2 = (type: string, easingType: PrototypeEasingType, time: number) => {
+const delstyle = debounce(_delstyle, 200)
+
+const test2 = (type: string, easingType: PrototypeEasingType, time: number, esfn: PrototypeEasingBezier | undefined) => {
     qsa.value = null
     qsb.value = null
     mba.value = null
     mbb.value = null
-    const FN = easingFn.get(easingType ?? "LINEAR")!
+    const bezier = [esfn?.x1, esfn?.y1, esfn?.x2, esfn?.y2]
+    const FN = easingType !== PrototypeEasingType.CUSTOMCUBIC ? easingFn.get(easingType ?? "LINEAR")! : bezier
     const T = time ?? 0.3
     const Bezier = `all ${T}s cubic-bezier(${FN.join()}) 0s`
     const W = 54
@@ -816,7 +829,7 @@ const getText = (actions: PrototypeActions) => {
         }
         a(shape!, actions.targetNodeID!)
         return targetnmae.value
-    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) { 
+    } else if (actions.connectionType === PrototypeConnectionType.INTERNALNODE && actions.navigationType === PrototypeNavigationType.SWAPSTATE) {
         const page = props.context.selection.selectedPage
         if (!page) return
         const a = search(page, actions.targetNodeID)
@@ -1123,8 +1136,24 @@ const setProtoTypeEasingType = (data: SelectItem, id: string) => {
     const shape = props.context.selection.selectedShapes[0];
     if (!shape) return;
     const value = data.value as PrototypeEasingType;
-    const esfn = easingFn.get(value) as BasicArray<number>;
-    e.setPrototypeActionEasingType(shape as ShapeView, id, value, esfn)
+    const esfn = easingFn.get(value)
+    if (!esfn) return;
+    const bezier = new PrototypeEasingBezier(esfn[0], esfn[1], esfn[2], esfn[3])
+    e.setPrototypeActionEasingType(shape as ShapeView, id, value, bezier)
+    updateData()
+    delstyle()
+    nextTick(() => {
+        addstyle()
+    })
+}
+
+//自定义贝塞尔曲线
+const setProtoTypeEasingFunction = (val: PrototypeEasingBezier, id: string) => {
+    const page = props.context.selection.selectedPage!;
+    const e = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    e.setPrototypeActionEasingFunction(shape, id, val)
     updateData()
     delstyle()
     nextTick(() => {
@@ -1872,6 +1901,7 @@ onUnmounted(() => {
                     }
 
                 }
+
             }
         }
     }
