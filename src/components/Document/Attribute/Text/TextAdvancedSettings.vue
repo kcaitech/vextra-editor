@@ -178,7 +178,7 @@ const textFormat = () => {
     } else {
       format = props.textShape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
-    paragraphSpace.value = format.paraSpacing || 0
+    paragraphSpace.value = format_value(format.paraSpacing || 0);
     selectCase.value = format.transform
     isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
     isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
@@ -218,7 +218,7 @@ const textFormat = () => {
         format[key] = `unlikeness`;
       }
     }
-    paragraphSpace.value = format.paraSpacing || 0;
+    paragraphSpace.value = format_value(format.paraSpacing || 0) as number;
     selectCase.value = format.transform;
     isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
     isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
@@ -291,7 +291,7 @@ onUnmounted(() => {
             <span>{{ t('attr.paragraph_space') }}</span>
             <div :class="{ actived: isActived3 }"
               style="width: 98px;height: 32px;border-radius: 6px;box-sizing: border-box">
-              <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" :value="format_value(paragraphSpace)"
+                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace"
                 class="input" @change="setParagraphSpace" style="width: 100%;height: 100%" @click="click">
             </div>
           </div>

@@ -433,6 +433,20 @@ function dragEnd() {
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
+function extend(base: number) {
+    return Number(format_value(base));
+    // const view = props.shapes[0];
+    //
+    // if (view.isVirtualShape) {
+    //     let parent = view.parent;
+    //     while (parent) {
+    //         if (parent.scale) base *= parent.scale;
+    //         parent = parent.parent;
+    //     }
+    // }
+    //
+    // return Number(format_value(base));
+}
 </script>
 
 <template>
@@ -448,23 +462,23 @@ function dragEnd() {
             <div class="options-container">
                 <div class="setting">
                     <div class="name-title">{{ t('shadow.position') }}</div>
-                    <ShadowInput ticon="X" :shadow-v="format_value(shadow.offsetX)as number" :reflush="reflush"
+                    <ShadowInput ticon="X" :shadow-v="extend(shadow.offsetX)" :reflush="reflush"
                                  @on-change="setOffsetX"
                                  @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
                     </ShadowInput>
-                    <ShadowInput ticon="Y" :shadow-v="format_value(shadow.offsetY)as number" @on-change="setOffsetY"
+                    <ShadowInput ticon="Y" :shadow-v="extend(shadow.offsetY)" @on-change="setOffsetY"
                                  :reflush="reflush"
                                  @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
                     </ShadowInput>
                 </div>
                 <div class="setting">
                     <div class="name-title">{{ t('shadow.effect') }}</div>
-                    <ShadowInput ticon="B" :shadow-v="format_value(shadow.blurRadius)as number"
+                    <ShadowInput ticon="B" :shadow-v="extend(shadow.blurRadius)"
                                  @on-change="setBlurRadius"
                                  :tootip="`${t('shadow.blur')}`" :reflush="reflush" @dragstart="dragStart"
                                  @dragging="draggingB" @dragend="dragEnd">
                     </ShadowInput>
-                    <ShadowInput ticon="S" :shadow-v="format_value(shadow.spread)as number" @on-change="setSpread"
+                    <ShadowInput ticon="S" :shadow-v="extend(shadow.spread)" @on-change="setSpread"
                                  :disabled="disabled"
                                  :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart" @dragging="draggingS"
                                  @dragend="dragEnd">

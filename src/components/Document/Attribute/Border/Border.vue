@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import {
     BasicArray,
@@ -872,7 +872,7 @@ const thickness_value = (index: number, idx: number) => {
             const shape = shapes[i];
             const borders = shape.getBorders();
             if (!borders.length) return 0;
-            result.push(getSideThickness(borders[index].sideSetting));
+            result.push(getSideThickness(borders[index].sideSetting, shape));
         }
         const unique = new Set(result);
         if (unique.size === 1 && !unique.has(false)) {
@@ -945,16 +945,11 @@ const strokeClick = (e: Event) => {
                            @blur="is_alpha_select = false" @change="e => onAlphaChange(b.border, idx)"
                            @focus="selectAlpha" @input="alphaInput"/>
                 </div>
-                <!-- <BorderDetail v-if="show_apex" :context="props.context" :shapes="props.shapes" :border="b.border"
-                    :index="borders.length - idx - 1">
-                </BorderDetail> -->
-                <!--                <div class="extra-action">-->
                 <div class="delete" @click="deleteBorder(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
             <div class="bottom">
-                <!-- 边框位置 -->
                 <div style=" flex: calc(50% - 20px);"
                      :style="{ pointerEvents: [ShapeType.Table, ShapeType.Line].includes(props.shapes[0].type) ? 'none' : 'auto' }">
                     <Select class="select" :context="props.context" :shapes="props.shapes"
@@ -975,7 +970,6 @@ const strokeClick = (e: Event) => {
                               :index="borders.length - idx - 1" :reflush_side="reflush_side">
                 </BorderDetail>
             </div>
-
         </div>
     </div>
     <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view"

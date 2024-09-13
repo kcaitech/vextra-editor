@@ -1,14 +1,8 @@
 import { Context } from "@/context";
 import { FrameLike, TransformHandler } from "./handler";
 import {
-    ColVector3D,
-    CtrlElementType,
-    Matrix,
-    Scaler,
-    ShapeSize,
-    ShapeView,
-    Transform,
-    UniformScaleUnit
+    ColVector3D, CtrlElementType, Matrix,
+    Scaler, ShapeSize, ShapeView, Transform, UniformScaleUnit
 } from "@kcdesign/data";
 import { XY } from "@/context/selection";
 import { Action } from "@/context/tool";
@@ -761,7 +755,6 @@ export class ScaleHandler extends TransformHandler {
                 .addTransform(inverseCache.get(shape.parent!)!);
 
             const scale = t.decomposeScale();
-
             const oSize = sizes[i] as ShapeSize;
             const size = {
                 width: oSize.width * Math.abs(scale.x),

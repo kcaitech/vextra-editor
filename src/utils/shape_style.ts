@@ -1,12 +1,37 @@
 import {
-    Color, Fill, Shape, Border, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction,
-    BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle, Shadow,
-    ShadowReplaceAction, ShadowAddAction, ShadowDeleteAction, ShadowEnableAction, ShadowPositionAction,
-    ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction,
-    ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
-    ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
-    ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient, BasicArray, MarkerType, CornerType, SideType, BorderSideSetting,
+    Color,
+    Fill,
+    Shape,
+    Border,
+    BorderPosition,
+    BorderStyle,
+    Shadow,
+    ShadowPosition,
+    ExportFormat,
+    ExportFormatReplaceAction,
+    ExportFormatAddAction,
+    ExportFileFormat,
+    ExportFormatNameingScheme,
+    ExportFormatDeleteAction,
+    ExportFormatScaleAction,
+    ExportFormatNameAction,
+    ExportFormatPerfixAction,
+    ExportFormatFileFormatAction,
+    ShapeType,
+    ShapeView,
+    adapt2Shape,
+    BatchAction,
+    BatchAction2,
+    BatchAction3,
+    BatchAction4,
+    BatchAction5,
+    FillType,
+    cloneGradient,
+    Gradient,
+    BasicArray,
+    MarkerType,
+    CornerType,
+    SideType,
     Blur,
     BlurType,
     Point2D,
@@ -15,23 +40,27 @@ import {
     PatternTransform
 } from "@kcdesign/data";
 import { v4 } from "uuid";
-import { flattenShapes } from "./cutout";
+
 interface FillItem {
     id: number,
     fill: Fill
 }
+
 interface BorderItem {
     id: number,
     border: Border
 }
+
 interface ShadowItem {
     id: number,
     shadow: Shadow
 }
+
 interface FormatItems {
     id: number,
     format: ExportFormat
 }
+
 // fills
 export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
     const fills: FillItem[] = [];
@@ -117,6 +146,7 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     }
     return actions;
 }
+
 export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'fills' | 'borders') {
     const actions: BatchAction4[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
@@ -124,6 +154,7 @@ export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'f
     }
     return actions;
 }
+
 export function get_aciton_gradient_stop(shapes: ShapeView[], index: number, value: any, type: 'fills' | 'borders') {
     const actions: BatchAction5[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
@@ -140,6 +171,7 @@ export function get_actions_fill_color(shapes: ShapeView[], index: number, color
     }
     return actions;
 }
+
 export function get_actions_fill_unify(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     let fills: Fill[] = [];
@@ -181,6 +213,7 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
     }
     return actions;
 }
+
 export function get_actions_fill_enabled(shapes: ShapeView[], index: number, value: boolean) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -189,6 +222,7 @@ export function get_actions_fill_enabled(shapes: ShapeView[], index: number, val
     }
     return actions;
 }
+
 export function get_actions_filltype(shapes: ShapeView[], index: number, value: FillType) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -197,6 +231,7 @@ export function get_actions_filltype(shapes: ShapeView[], index: number, value: 
     }
     return actions;
 }
+
 export function get_actions_image_scale_mode(shapes: ShapeView[], index: number, value: ImageScaleMode) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -205,6 +240,7 @@ export function get_actions_image_scale_mode(shapes: ShapeView[], index: number,
     }
     return actions;
 }
+
 export function get_actions_image_ref(shapes: ShapeView[], index: number, value: any) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -213,6 +249,7 @@ export function get_actions_image_ref(shapes: ShapeView[], index: number, value:
     }
     return actions;
 }
+
 export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
     const actions: BatchAction3[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -286,6 +323,7 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
     }
     return borders;
 }
+
 export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -296,6 +334,7 @@ export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
     }
     return actions;
 }
+
 export function get_actions_border_color(shapes: ShapeView[], index: number, color: Color) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -304,6 +343,7 @@ export function get_actions_border_color(shapes: ShapeView[], index: number, col
     }
     return actions;
 }
+
 export function get_actions_border_unify(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     let borders: Border[] = [];
@@ -329,6 +369,7 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
     }
     return actions;
 }
+
 export function get_actions_border_enabled(shapes: ShapeView[], index: number, value: boolean) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -337,6 +378,7 @@ export function get_actions_border_enabled(shapes: ShapeView[], index: number, v
     }
     return actions;
 }
+
 export function get_actions_border_delete(shapes: ShapeView[], index: number) {
     const actions: BatchAction3[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -345,6 +387,7 @@ export function get_actions_border_delete(shapes: ShapeView[], index: number) {
     }
     return actions;
 }
+
 export function get_actions_border_thickness(shapes: ShapeView[], index: number, thickness: number) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -353,6 +396,7 @@ export function get_actions_border_thickness(shapes: ShapeView[], index: number,
     }
     return actions;
 }
+
 export function get_actions_border_position(shapes: ShapeView[], index: number, position: BorderPosition) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -361,6 +405,7 @@ export function get_actions_border_position(shapes: ShapeView[], index: number, 
     }
     return actions;
 }
+
 export function get_actions_border_style(shapes: ShapeView[], index: number, style: 'dash' | 'solid') {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -398,6 +443,7 @@ export function get_actions_border_endpoint(shapes: ShapeView[], type: MarkerTyp
     }
     return actions;
 }
+
 export function get_actions_border_exchange(shapes: ShapeView[]) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -418,10 +464,10 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
         shadows.push(s);
         const str = [
             shadow.isEnabled,
-            shadow.blurRadius,
-            shadow.spread,
-            shadow.offsetX,
-            shadow.offsetY,
+            extend(shadow.blurRadius, shape),
+            extend(shadow.spread, shape),
+            extend(shadow.offsetX, shape),
+            extend(shadow.offsetY, shape),
             shadow.position,
             shadow.color.red,
             shadow.color.green,
@@ -440,10 +486,10 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
             const shadow = s_bs[j];
             const str = [
                 shadow.isEnabled,
-                shadow.blurRadius,
-                shadow.spread,
-                shadow.offsetX,
-                shadow.offsetY,
+                extend(shadow.blurRadius, shape),
+                extend(shadow.spread, shape),
+                extend(shadow.offsetX, shape),
+                extend(shadow.offsetY, shape),
                 shadow.position,
                 shadow.color.red,
                 shadow.color.green,
@@ -453,6 +499,17 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
         }
     }
     return shadows;
+
+    function extend(base: number, view: ShapeView) {
+        // if (view.isVirtualShape) {
+        //     let parent = view.parent;
+        //     while (parent) {
+        //         if (parent.uniformScale) base *= parent.uniformScale;
+        //         parent = parent.parent;
+        //     }
+        // }
+        return base;
+    }
 }
 
 export function get_actions_shadow_unify(shapes: ShapeView[]) {
@@ -541,6 +598,7 @@ export function get_actions_shadow_spread(shapes: ShapeView[], index: number, sp
     }
     return actions;
 }
+
 export function get_actions_shadow_offsetx(shapes: ShapeView[], index: number, offsetx: number) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -549,6 +607,7 @@ export function get_actions_shadow_offsetx(shapes: ShapeView[], index: number, o
     }
     return actions;
 }
+
 export function get_actions_shadow_offsety(shapes: ShapeView[], index: number, offsety: number) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -669,6 +728,7 @@ export function get_actions_export_format_name(shapes: ShapeView[], index: numbe
     }
     return actions;
 }
+
 export function get_actions_export_format_perfix(shapes: ShapeView[], index: number, perfix: ExportFormatNameingScheme) {
     const actions: ExportFormatPerfixAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -676,6 +736,7 @@ export function get_actions_export_format_perfix(shapes: ShapeView[], index: num
     }
     return actions;
 }
+
 export function get_actions_export_format_file_format(shapes: ShapeView[], index: number, fileFormat: ExportFileFormat) {
     const actions: ExportFormatFileFormatAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -683,7 +744,6 @@ export function get_actions_export_format_file_format(shapes: ShapeView[], index
     }
     return actions;
 }
-
 
 
 export function get_borders_corner(shapes: ShapeView[], index: number): false | CornerType {
@@ -724,7 +784,7 @@ export function get_borders_side(shapes: ShapeView[], index: number): false | Si
 
 export function get_blur(shapes: ShapeView[]): Blur | undefined | 'mixed' {
     const has_blur_shapes = shapes.filter(shape => shape.blur);
-    if(has_blur_shapes.length === 0) return undefined;
+    if (has_blur_shapes.length === 0) return undefined;
     if (has_blur_shapes.length !== shapes.length) return 'mixed';
     const shape = has_blur_shapes[0];
 
@@ -769,6 +829,7 @@ export function get_actions_blur_unify(shapes: ShapeView[]) {
     }
     return actions;
 }
+
 export function get_actions_blur_enabled(shapes: ShapeView[], value: boolean) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {

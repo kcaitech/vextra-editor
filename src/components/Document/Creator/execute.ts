@@ -56,6 +56,7 @@ export function useAuto(context: Context) {
  * @description 使用容器工具
  */
 export function useFrame(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddFrame);
     tool.notify(Tool.CHANGE_ACTION);
@@ -67,6 +68,7 @@ export function useFrame(context: Context) {
  * @description 使用矩形工具
  */
 export function useRect(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddRect);
     tool.notify(Tool.CHANGE_ACTION);
@@ -78,6 +80,7 @@ export function useRect(context: Context) {
  * @description 使用圆形工具
  */
 export function useEllipse(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddEllipse);
     tool.notify(Tool.CHANGE_ACTION);
@@ -89,6 +92,7 @@ export function useEllipse(context: Context) {
  * @description 使用直线工具
  */
 export function useLine(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddLine);
     tool.notify(Tool.CHANGE_ACTION);
@@ -100,6 +104,7 @@ export function useLine(context: Context) {
  * @description 使用等比缩放工具
  */
 export function useAutoK(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AutoK);
     tool.notify(Tool.CHANGE_ACTION);
@@ -117,6 +122,7 @@ export function useAutoK(context: Context) {
  * @description 使用箭头工具
  */
 export function useArrow(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddArrow);
     tool.notify(Tool.CHANGE_ACTION);
@@ -128,6 +134,7 @@ export function useArrow(context: Context) {
  * @description 使用多边形工具
  */
 export function usePolygon(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.Polygon);
     tool.notify(Tool.CHANGE_ACTION);
@@ -139,6 +146,7 @@ export function usePolygon(context: Context) {
  * @description 使用星形工具
  */
 export function useStar(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.Star);
     tool.notify(Tool.CHANGE_ACTION);
@@ -163,6 +171,7 @@ export function usePen(context: Context) {
  * @description 使用文本工具
  */
 export function useText(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddText);
     tool.notify(Tool.CHANGE_ACTION);
@@ -174,6 +183,7 @@ export function useText(context: Context) {
  * @description 使用切图工具
  */
 export function useCutout(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddCutout);
     tool.notify(Tool.CHANGE_ACTION);
@@ -192,6 +202,7 @@ export function useMask(context: Context) {
  * @description 使用连接线工具
  */
 export function useContact(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     const tool = context.tool;
     tool.setAction(Action.AddContact);
     tool.notify(Tool.CHANGE_ACTION);
@@ -203,10 +214,12 @@ export function useContact(context: Context) {
  * @description 使用图片工具
  */
 export function useImage(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     context.tool.notify(Tool.SELECT_IMAGE);
 }
 
 export function useComment(context: Context) {
+    if (context.workspace.is_path_edit_mode) return;
     context.cursor.setType(CursorType.Comment, 0);
     context.escstack.save('tool-action', () => {
         context.cursor.reset();
