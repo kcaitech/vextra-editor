@@ -1,0 +1,121 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref, watch } from "vue";
+import { Context } from "@/context";
+import { OvalData, OvalOptions, sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+
+const props = defineProps<{ context: Context; trigger: any[] }>();
+const form = ref<HTMLFormElement>();
+
+const options = reactive<OvalOptions>({
+    start: 0,
+    sweep: 100,
+    ratio: 0
+});
+
+const ovalData = new OvalData(props.context, options);
+
+function changeStartOnce(event: Event) {
+    const target = event.target as HTMLInputElement;
+    let value: number = sortValue(target.value);
+    if (isNaN(value)) return;
+    if (value < -180) value = -180;
+    else if (value > 180) value = 180;
+    target.blur();
+}
+
+function changeSweepOnce(event: Event) {
+    const target = event.target as HTMLInputElement;
+    let value: number = sortValue(target.value);
+    if (isNaN(value)) return;
+    if (value < -100) value = -100;
+    else if (value > 100) value = 100;
+    target.blur();
+}
+
+function changeRatioOnce(event: Event) {
+    const target = event.target as HTMLInputElement;
+    let value: number = sortValue(target.value);
+    if (isNaN(value)) return;
+    if (value < 0) value = 0;
+    else if (value > 100) value = 100;
+    target.blur();
+}
+
+onMounted(() => {
+    if (form.value) {
+        form.value.addEventListener('focus', (event: Event) => {
+            (event.target as HTMLInputElement).select();
+            ovalData.stashSelection();
+        }, true);
+    }
+});
+watch(() => props.trigger, ovalData.update);
+</script>
+<template>
+<form ref="form" class="oval-arc-options-wrapper">
+    <div class="start">
+        <svg-icon icon-class="oval-start"/>
+        <input type="text" :value="`${options.start}°`" @change="changeStartOnce"/>
+    </div>
+    <div class="sweep">
+        <input type="text" :value="`${options.sweep}%`" @change="changeSweepOnce"/>
+    </div>
+    <div class="ratio">
+        <input type="text" :value="`${options.ratio}%`" @change="changeRatioOnce"/>
+    </div>
+</form>
+</template>
+<style lang="scss" scoped>
+.oval-arc-options-wrapper {
+    height: 32px;
+    width: 189px;
+    border-radius: var(--default-radius);
+    overflow: hidden;
+    display: flex;
+    gap: 1px;
+
+    input {
+        outline: none;
+        border: none;
+        width: 100%;
+        background: transparent;
+        font-size: var(--font-default-fontsize);
+    }
+
+    > div {
+        background-color: var(--input-background);
+        height: 100%;
+        padding: 0 8px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+    }
+
+    > .start {
+        flex: 1;
+        gap: 8px;
+
+        svg {
+            flex: 0 0 15px;
+            width: 15px;
+            height: 15px;
+            fill: rgb(128, 128, 128);
+        }
+
+        input {
+            flex: 1;
+        }
+    }
+
+    > .sweep {
+        flex: 0 0 56px;
+        width: 56px;
+
+    }
+
+    > .ratio {
+        flex: 0 0 56px;
+        width: 56px;
+    }
+}
+</style>

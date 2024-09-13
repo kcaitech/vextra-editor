@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, onUnmounted } from 'vue'
-import { ShapeType, TextBehaviour, TextShapeView, adapt2Shape } from '@kcdesign/data';
+import { ShapeType, TextBehaviour, TextShapeView } from '@kcdesign/data';
 import { debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -20,7 +20,7 @@ import {
     showCounts,
     showInnerAngle,
     get_shapes_inner_angle,
-    get_actions_inner_angle
+    get_actions_inner_angle, showOvalOptions
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
@@ -31,6 +31,7 @@ import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
+import Oval from "@/components/Document/Attribute/BaseAttr/Oval.vue";
 
 interface Props {
     context: Context
@@ -370,6 +371,7 @@ function layout() {
     }
     s_counts = showCounts(selected);
     s_inner_angle = showInnerAngle(selected);
+    s_oval = showOvalOptions(selected);
 }
 
 function reset_layout() {
@@ -379,6 +381,7 @@ function reset_layout() {
     s_length = false;
     s_counts = false;
     s_inner_angle = false;
+    s_oval = false;
 }
 
 function check_model_state() {
@@ -518,7 +521,6 @@ function draggingW(e: MouseEvent) {
 
     lockMouseHandler.executeW(e.movementX);
 }
-
 
 function draggingH(e: MouseEvent) {
     updatePosition(e.movementX, e.movementY);
@@ -750,7 +752,8 @@ onUnmounted(() => {
                        @dragend="dragend"></MdNumberInput>
         <div style="width: 32px;height: 32px;"></div>
     </div>
-    <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
+    <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"/>
+    <Oval v-if="s_oval" :context="context" :trigger="trigger"/>
 </div>
 <teleport to="body">
     <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
