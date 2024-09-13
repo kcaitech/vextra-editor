@@ -501,13 +501,13 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
     return shadows;
 
     function extend(base: number, view: ShapeView) {
-        if (view.isVirtualShape) {
-            let parent = view.parent;
-            while (parent) {
-                if (parent.uniformScale) base *= parent.uniformScale;
-                parent = parent.parent;
-            }
-        }
+        // if (view.isVirtualShape) {
+        //     let parent = view.parent;
+        //     while (parent) {
+        //         if (parent.uniformScale) base *= parent.uniformScale;
+        //         parent = parent.parent;
+        //     }
+        // }
         return base;
     }
 }
