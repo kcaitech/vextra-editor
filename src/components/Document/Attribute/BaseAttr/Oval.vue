@@ -93,12 +93,12 @@ watch(() => props.trigger, ovalData.update);
 
     > .start {
         flex: 1;
-        gap: 8px;
+        gap: 6px;
 
         svg {
-            flex: 0 0 15px;
-            width: 15px;
-            height: 15px;
+            flex: 0 0 12px;
+            width: 12px;
+            height: 12px;
             fill: rgb(128, 128, 128);
         }
 
