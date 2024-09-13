@@ -504,7 +504,7 @@ export function get_shadows(shapes: ShapeView[]): ShadowItem[] | 'mixed' {
         if (view.isVirtualShape) {
             let parent = view.parent;
             while (parent) {
-                if (parent.scale) base *= parent.scale;
+                if (parent.uniformScale) base *= parent.uniformScale;
                 parent = parent.parent;
             }
         }
