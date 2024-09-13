@@ -120,7 +120,8 @@ async function findLocalText() {
     if (chfont || enfont) return;
     try {
         const results: string[] = await Promise.resolve(isSupportFontFamily(searchFont.value));
-        if (results.length) {
+        const lowerCaseFonts = filterFontList.local.map(v => v.toLowerCase());
+        if (results.length > 0 && !lowerCaseFonts.includes(searchFont.value.toLowerCase())) {
             filterFontList.local.push(...results);
             filterFontList.local = Array.from(new Set(filterFontList.local));
         }
