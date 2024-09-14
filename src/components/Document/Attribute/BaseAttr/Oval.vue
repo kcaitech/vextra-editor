@@ -48,6 +48,7 @@ onMounted(() => {
             ovalData.stashSelection();
         }, true);
     }
+    ovalData.__update();
 });
 watch(() => props.trigger, ovalData.update);
 </script>
