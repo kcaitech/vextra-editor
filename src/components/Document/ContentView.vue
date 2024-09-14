@@ -475,6 +475,8 @@ function workspace_watcher(type?: number | string, param?: string | MouseEvent |
         if (props.context.tool.action !== Action.AddContact) {
             creatorMode.value = false;
         }
+    } else if (type === WorkSpace.LOCAL_FONT_LIST_UPDATE) {
+        screenFontList(props.context);
     }
 }
 
@@ -591,7 +593,6 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
-    screenFontList(props.context);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -760,14 +761,14 @@ comps.push(...plugins.end);
 
 </script>
 <template>
-<div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
-     :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
-     @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-     @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
-    <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params"/>
-    <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
-    <Rule :context="props.context" :page="(props.page as PageView)"/>
-    <!-- 页面调整控件，确保在ContentView顶层 -->
-    <Space :context="props.context" :visible="spacePressed"/>
-</div>
+    <div ref="root" :class="cursor" :data-area="rootId" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ 'background-color': background_color }" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop.prevent="(e: DragEvent) => { drop(e, props.context) }" @dragover.prevent>
+        <component v-for="c in comps" :is=c.component :context="props.context" :params="c.params" />
+        <ImageMode v-if="image_tile_mode" :context="props.context" :matrix="matrix"></ImageMode>
+        <Rule :context="props.context" :page="(props.page as PageView)" />
+        <!-- 页面调整控件，确保在ContentView顶层 -->
+        <Space :context="props.context" :visible="spacePressed" />
+    </div>
 </template>

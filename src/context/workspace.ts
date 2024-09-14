@@ -45,6 +45,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static TABLE_TEXT_GRADIENT_UPDATE = 23;
     static ROOT_UPDATE = 24;
     static FONTLISR_ALL = WorkspaceEvents.add_local_font;
+    static LOCAL_FONT_LIST_UPDATE = 25;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -338,6 +339,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     setUserLocalFontList(list: string[]) {
         this.m_origin_fontList = list;
+        this.notify(WorkSpace.LOCAL_FONT_LIST_UPDATE);
     }
     get userLocalFontList() {
         return this.m_origin_fontList;
