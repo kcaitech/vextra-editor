@@ -19,7 +19,7 @@ export default defineConfig({
         minify: PRODUCTION ? "terser" : false,
         terserOptions: {
             compress: {
-                drop_console: PRODUCTION,
+                // drop_console: PRODUCTION,
                 drop_debugger: PRODUCTION,
             },
             format: {
