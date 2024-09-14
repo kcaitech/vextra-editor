@@ -45,7 +45,7 @@ onUnmounted(() => {
      :class="{ container: true, selected: props.data.selected, hovered: hovered && !props.data.selected }"
      @click="selectShape">
     <div class="container-svg zero-symbol">
-        <StaticShape :shape="data.shape()" :context="data.context"/>
+        <ShapeCard :shape="data.shape()"/>
     </div>
     <div class="text">
         <div class="txt">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
