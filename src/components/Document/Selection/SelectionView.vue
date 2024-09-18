@@ -18,7 +18,7 @@ import { is_symbol_class } from "@/utils/controllerFn";
 import gapAssist from "@/components/Document/Assist/gapAssist.vue";
 import AutoLayoutChildEdit from "./Controller/AutoLayoutController/AutoLayoutChildEdit.vue"
 import InsertBar from "@/components/Document/Selection/Controller/InsertBar.vue";
-import TidyUpButton from './TidyUpButton.vue';
+import TidyUpOutline from "./TidyUpOutline.vue";
 
 export interface Point {
     x: number
@@ -60,7 +60,6 @@ const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
 const theme = ref<SelectionTheme>(SelectionTheme.Normal);
 const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normal);
 const updateTrigger = ref<number>(0);
-const tidyUpShow = ref(false);
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -208,14 +207,13 @@ function createShapeTracing() {
  */
 function createController() {
     // const s = Date.now();
+    props.context.selection.selectTidyUpShape();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
-    tidyUpShow.value = false;
     if (!selection.length) {
         controller.value = false;
         return;
     }
 
-    if (selection.length > 1) tidyUpShow.value = true;
     modify_controller_frame(selection);
     modify_controller_type(selection);
     modify_rotate(selection);
@@ -474,6 +472,7 @@ onUnmounted(() => {
             stroke-width="1.5" @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
+    <TidyUpOutline :context="props.context" :controller-frame="controllerFrame"></TidyUpOutline>
 
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
@@ -491,6 +490,4 @@ onUnmounted(() => {
         :update-trigger="updateTrigger"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
-    <TidyUpButton v-if="tidyUpShow" :context="props.context" :controller-frame="controllerFrame">
-    </TidyUpButton>
 </template>

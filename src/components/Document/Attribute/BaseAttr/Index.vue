@@ -32,6 +32,7 @@ import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
 import { getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
+import { WorkSpace } from '@/context/workspace';
 
 interface Props {
     context: Context
@@ -105,7 +106,6 @@ function _calc_attri() {
     rotate.value = get_shapes_rotation(selected, mixed);
     counts.value = get_shapes_angle_counts(selected, mixed);
     innerAngle.value = get_shapes_inner_angle(selected, mixed);
-    whetherTidyUp();
 }
 
 const calc_attri = throttle(_calc_attri, 60, { trailing: true });
@@ -587,22 +587,22 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
         lockMouseHandler.createApiCaller('translating');
     }
     const selected = props.context.selection.selectedShapes;
-    const { width, height } = getSelectedWidthHeight(props.context, selected);
+    const d = props.context.selection.isTidyUpDir;
+    const shapes = tidyUpShapesOrder(selected, d);
 
-    const shapes = tidyUpShapesOrder(selected, height > width);
-    const frame = layoutSpacing(shapes);
+    const frame = layoutSpacing(shapes, d);
 
     let hor = frame.hor;
     let ver = frame.ver;
     if (dir === 'hor') {
         hor += e.movementX;
+        horSpace.value = hor;
     } else {
         ver += e.movementX;
+        verSpace.value = ver;
     }
-    horSpace.value = hor;
-    verSpace.value = ver;
-    disalbeTidyup(shapes);
-    lockMouseHandler.executeTidyup(shapes, hor, ver);
+    disalbeTidyup(shapes, d);
+    lockMouseHandler.executeTidyup(shapes, hor, ver, d);
 }
 
 function dragend() {
@@ -664,12 +664,12 @@ const tidyUp = () => {
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
     const shapes = tidyUpShapesOrder(selected, height > width);
-    const frame = layoutSpacing(shapes);
+    const frame = layoutSpacing(shapes, height > width);
     horSpace.value = frame.hor;
     verSpace.value = frame.ver;
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver);
+    editor.tidyUpShapesLayout(shapes, frame.hor, frame.ver, height > width);
 }
 
 const changeHorTidyup = (value: string) => {
@@ -680,12 +680,13 @@ const changeHorTidyup = (value: string) => {
     const hor: number = Number.parseFloat(value);
     if (isNaN(hor)) return;
     const selected = props.context.selection.selectedShapes;
-    const { width, height } = getSelectedWidthHeight(props.context, selected);
-    const shapes = tidyUpShapesOrder(selected, height > width);
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = tidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    disalbeTidyup(shapes);
-    editor.tidyUpShapesLayout(shapes, hor, typeof verSpace.value === 'number' ? verSpace.value : 0);
+    disalbeTidyup(shapes, dir);
+    horSpace.value = hor;
+    editor.tidyUpShapesLayout(shapes, hor, typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
 }
 const changeVerTidyup = (value: string) => {
     value = Number
@@ -695,13 +696,14 @@ const changeVerTidyup = (value: string) => {
     const ver: number = Number.parseFloat(value);
     if (isNaN(ver)) return;
     const selected = props.context.selection.selectedShapes;
-    const { width, height } = getSelectedWidthHeight(props.context, selected);
-    const shapes = tidyUpShapesOrder(selected, height > width);
+    const dir = props.context.selection.isTidyUpDir;
+    const shapes = tidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
-    disalbeTidyup(shapes);
-    editor.tidyUpShapesLayout(shapes, hor, ver);
+    disalbeTidyup(shapes, dir);
+    verSpace.value = ver;
+    editor.tidyUpShapesLayout(shapes, hor, ver, dir);
 }
 
 function selection_change() {
@@ -714,10 +716,20 @@ function selection_change() {
     } else {
         s_tidy_up = false;
     }
+    whetherTidyUp();
 }
 
 const _whetherTidyUp = () => {
-    const { tidyup, hor, ver, shapes } = whetherNeedTidyUp(props.context);
+    if (props.context.workspace.isTranslating) return;
+    const Info = whetherNeedTidyUp(props.context);
+    if (!Info) {
+        props.context.selection.whetherTidyUp(true, false);
+        s_tidy_up = false;
+        return;
+    }
+    const { tidyup, hor, ver, shapes, dir } = Info;
+    console.log(Info, 'Info');
+
     if (!tidyup) {
         horSpace.value = hor;
         verSpace.value = ver;
@@ -727,24 +739,37 @@ const _whetherTidyUp = () => {
     }
     verTidyUp.value = tidyup;
     horTidyUp.value = tidyup;
-    disalbeTidyup(shapes);
-    props.context.selection.whetherTidyUp(tidyup);
+    disalbeTidyup(shapes, dir);
+    props.context.selection.whetherTidyUp(tidyup, dir);
 }
 
-const disalbeTidyup = (shapes: ShapeView[][]) => {
-    if (shapes.length === 1) {
-        verTidyUp.value = true;
-        verSpace.value = '';
-    } else {
-        const v = shapes.every(s => s.length === 1);
-        if (v) {
+const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
+    if (d) {
+        if (shapes.length === 1) {
             horTidyUp.value = true;
             horSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                verTidyUp.value = true;
+                verSpace.value = '';
+            }
+        }
+    } else {
+        if (shapes.length === 1) {
+            verTidyUp.value = true;
+            verSpace.value = '';
+        } else {
+            const v = shapes.every(s => s.length === 1);
+            if (v) {
+                horTidyUp.value = true;
+                horSpace.value = '';
+            }
         }
     }
 }
 
-const whetherTidyUp = debounce(_whetherTidyUp, 200);
+const whetherTidyUp = debounce(_whetherTidyUp, 250);
 
 const attr_watcher = (t: number) => {
     if (t === Attribute.HOR_HILP) {
@@ -776,6 +801,7 @@ const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
         calc_attri();
+        whetherTidyUp();
     }
     if (v.includes('textBehaviour')) {
         textBehaviour();
@@ -853,14 +879,13 @@ onUnmounted(() => {
             <div style="width: 32px;height: 32px;"></div>
         </div>
         <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
-        <!-- todo 整理和自动布局有冲突 -->
         <div class="tr" v-if="s_tidy_up">
-            <MdNumberInput icon="hor-space2" :value="horSpace" :draggable="!horTidyUp" @change="changeHorTidyup"
-                :tidy_disabled="!horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
+            <MdNumberInput icon="hor-space2" :value="format(horSpace)" :draggable="!horTidyUp" @change="changeHorTidyup"
+                :tidy_disabled="horTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'hor')"
                 @dragend="dragend">
             </MdNumberInput>
-            <MdNumberInput icon="ver-space2" :value="verSpace" :draggable="!verTidyUp" @change="changeVerTidyup"
-                :tidy_disabled="!verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
+            <MdNumberInput icon="ver-space2" :value="format(verSpace)" :draggable="!verTidyUp" @change="changeVerTidyup"
+                :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend">
             </MdNumberInput>
             <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? '1' : '0.4' }"

@@ -112,6 +112,7 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     static LAYOUT_DOTTED_LINE_MOVE = 22;
     static UPDATE_LAYOUT_DOTTED_LINE = 23;
     static NEED_TIDY_UP = 25;
+    static CHANGE_TIDY_UP_SHAPE = 25;
 
     static PRE_INSERT = 24;
 
@@ -144,6 +145,8 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     private m_label_living_group: ShapeView[] = [];
     private userSelectionList: DocSelectionData[] = [];
     private tidy_up: boolean = true;
+    private tidy_up_dir: boolean = false; //false 水平， true垂直
+    private m_tidyup_selectShapes: ShapeView[] = [];
 
     private m_hover_stroke: number = 14;
 
@@ -849,12 +852,29 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
         this.notify(Selection.PREVIEW_HOVER_CHANGE);
     }
 
-    whetherTidyUp(v: boolean) {
+    whetherTidyUp(v: boolean, dir: boolean) {
         this.tidy_up = v;
+        this.tidy_up_dir = dir;
         this.notify(Selection.NEED_TIDY_UP);
     }
 
     get isTidyUp() {
         return this.tidy_up;
+    }
+    get isTidyUpDir() {
+        return this.tidy_up_dir;
+    }
+
+    selectTidyUpShape(shapes?: ShapeView[]) {
+        if (!shapes) {
+            this.m_tidyup_selectShapes.length = 0;
+        } else {
+            this.m_tidyup_selectShapes.length = 0;
+            this.m_tidyup_selectShapes.push(...shapes);
+        }
+        this.notify(Selection.CHANGE_TIDY_UP_SHAPE);
+    }
+    get selectedTidyUpShapes(): ShapeView[] {
+        return this.m_tidyup_selectShapes;
     }
 }

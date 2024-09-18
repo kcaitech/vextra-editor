@@ -12,13 +12,15 @@ export class LockMouse extends TransformHandler {
         this.shapes = shapes || context.selection.selectedShapes;
     }
 
-    createApiCaller(transType: 'scaling' | 'translating' | 'rotating') {
+    createApiCaller(transType?: 'scaling' | 'translating' | 'rotating') {
         this.asyncApiCaller = new LockMouseHandler(this.context.coopRepo, this.context.data, this.page);
-        this.workspace[transType](true);
-        this.workspace.setSelectionViewUpdater(false);
-
-        this.transType = transType;
-        this.workspace.translating(true); // 借用一下translating的特性
+        if(transType) {
+            this.workspace[transType](true);
+            this.workspace.setSelectionViewUpdater(false);
+    
+            this.transType = transType;
+            this.workspace.translating(true); // 借用一下translating的特性
+        }
     }
 
     fulfil() {
@@ -79,8 +81,8 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeShadowS(this.shapes, idx, s);
     }
 
-    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number) {
-        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver);
+    executeTidyup(shapes_rows: ShapeView[][], hor: number, ver: number, dir: boolean) {
+        (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir);
     }
 
 }

@@ -111,7 +111,7 @@ function wheel(event: WheelEvent) {
 <template>
     <div :class="{ 'md-number-input': true, disabled, active }" @wheel="wheel">
         <svg-icon :icon-class="icon" :class="{ 'un-draggable': !draggable || disabled }" @mousedown="down" />
-        <input :disabled="!tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
+        <input :disabled="tidy_disabled" ref="inputEl" :value="value" @click="click" @change="change" @blur="blur" @focus="foucs" />
     </div>
 </template>
 

@@ -1528,7 +1528,6 @@ onUnmounted(() => {
             .interval {
                 flex: 1;
                 height: 32px;
-                padding-right: 6px;
 
                 >div {
                     display: flex;
