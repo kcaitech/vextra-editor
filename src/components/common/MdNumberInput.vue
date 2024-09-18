@@ -5,8 +5,8 @@ interface Props {
     icon: string;
     value: string | number;
 
-    disabled?: boolean; // 是否禁用
-    draggable?: boolean; // 是否可拖拽修改值
+    disabled?: boolean;
+    draggable?: boolean;
     tidy_disabled?: boolean;
 }
 
@@ -118,6 +118,7 @@ function wheel(event: WheelEvent) {
 <style scoped lang="scss">
 .md-number-input {
     display: flex;
+    gap: 6px;
     align-items: center;
 
     width: 88px;
@@ -127,7 +128,7 @@ function wheel(event: WheelEvent) {
     background-color: var(--input-background);
     border-radius: var(--default-radius);
 
-    >svg {
+    > svg {
         flex: 0 0 12px;
         height: 12px;
         display: block;
@@ -139,7 +140,7 @@ function wheel(event: WheelEvent) {
         cursor: auto;
     }
 
-    >input {
+    > input {
         flex: 1;
         width: 100%;
         border: none;

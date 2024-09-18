@@ -130,6 +130,8 @@ export class TranslateHandler extends TransformHandler {
     preInsertLayout: ArtboradView | undefined;
     layoutForInsert: LayoutForInsert | undefined;
 
+    noMigrate: boolean = false;
+
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
         this.shapes = shapes;
@@ -714,6 +716,8 @@ export class TranslateHandler extends TransformHandler {
     swapLayoutShape = throttle(this._swapLayoutShape, 160);
 
     private __migrate(tailCollect = true) {
+        if (this.noMigrate) return;
+
         const t = this.asyncApiCaller as Transporter;
         if (!t) return;
 
@@ -727,6 +731,7 @@ export class TranslateHandler extends TransformHandler {
             this.mode = "normal";
             ctx.selection.notify(Selection.PRE_INSERT);
         }
+        if (target_parent.id === t.current_env_id) return;
 
         if (target_parent.id === t.current_env_id) return;
 
@@ -884,6 +889,9 @@ export class TranslateHandler extends TransformHandler {
             // this.isKeySPress = true;
             // this.shapesModifyStackPositioning(StackPositioning.ABSOLUTE);
         }
+        if (event.code === 'Space') {
+            this.noMigrate = true;
+        }
     }
 
     protected keyup(event: KeyboardEvent) {
@@ -900,6 +908,9 @@ export class TranslateHandler extends TransformHandler {
         if (event.code === 'KeyS') {
             // this.isKeySPress = false;
             // this.shapesModifyStackPositioning(StackPositioning.AUTO);
+        }
+        if (event.code === "Space") {
+            this.noMigrate = false;
         }
     }
 }

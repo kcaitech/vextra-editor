@@ -15,6 +15,7 @@ import { WorkSpace } from "@/context/workspace";
 import { ScaleHandler } from "@/transform/scale";
 import { cursorAngle } from "@/components/Document/Selection/common";
 import { CursorType } from "@/utils/cursor2";
+import { Action } from "@/context/tool";
 
 interface Props {
     context: Context
@@ -132,18 +133,19 @@ function setCursor(t: CtrlElementType) {
     ]);
 
     const { col0, col1 } = cols;
-
+    const action = props.context.tool.action;
+    const type = action === Action.AutoK ? CursorType.ScaleK : CursorType.Scale;
     if (t === CtrlElementType.RectRight) {
         const assistR = new Transform()
             .setRotateZ(thetaR)
             .setTranslate(col0);
 
-        props.context.cursor.setType(CursorType.Scale, assistR.decomposeEuler().z * 180 / Math.PI);
+        props.context.cursor.setType(type, assistR.decomposeEuler().z * 180 / Math.PI);
     } else {
         const assistB = new Transform()
             .setRotateZ(thetaB)
             .setTranslate(col1);
-        props.context.cursor.setType(CursorType.Scale, assistB.decomposeEuler().z * 180 / Math.PI);
+        props.context.cursor.setType(type, assistB.decomposeEuler().z * 180 / Math.PI);
     }
 }
 

@@ -1,6 +1,7 @@
 import { TransformHandler } from "@/transform/handler";
 import { Context } from "@/context";
 import { LockMouseHandler, ShapeView } from "@kcdesign/data";
+import { UniformScaleUnit } from "../../../kcdesign-data/src";
 
 export class LockMouse extends TransformHandler {
     private transType: 'scaling' | 'translating' | 'rotating' = 'translating';
@@ -85,4 +86,7 @@ export class LockMouse extends TransformHandler {
         (this.asyncApiCaller as LockMouseHandler).executeTidyup(shapes_rows, hor, ver, dir);
     }
 
+    executeUniformScale(units: UniformScaleUnit[], ratio: number) {
+
+    }
 }

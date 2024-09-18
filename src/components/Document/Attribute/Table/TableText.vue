@@ -69,6 +69,12 @@ const onShowFont = () => {
     props.context.workspace.focusText()
     if (showFont.value) return showFont.value = false
     showFont.value = true
+    props.context.escstack.save('onShowFont', () => {
+        const achieve = showFont.value;
+        showFont.value = false;
+        return achieve;
+    })
+
     document.addEventListener('mousedown', onShowFontBlur);
 }
 

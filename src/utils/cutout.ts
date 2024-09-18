@@ -236,7 +236,6 @@ const getMaxMinPoints = (shapes: ShapeView[], s?: ShapeView) => {
     return bounds_points;
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
-    // if ((window as any).__context.workspace.transforming && (window as any).__context.selection.selectedShapes.length > 50) return shapes; @@@
     return shapes.reduce((result: any, item: ShapeView) => {
         if (item.type === ShapeType.Group) {
             const childs = (item).childs as ShapeView[];

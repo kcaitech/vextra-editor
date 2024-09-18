@@ -19,6 +19,7 @@ import {
 import { hidden_selection } from '@/utils/content';
 import { Menu } from "@/context/menu";
 import { LockMouse } from "@/transform/lockMouse";
+import { format_value } from "@/utils/common";
 
 const { t } = useI18n();
 
@@ -432,6 +433,20 @@ function dragEnd() {
     document.removeEventListener('pointerlockchange', pointerLockChange, false);
 }
 
+function extend(base: number) {
+    return Number(format_value(base));
+    // const view = props.shapes[0];
+    //
+    // if (view.isVirtualShape) {
+    //     let parent = view.parent;
+    //     while (parent) {
+    //         if (parent.scale) base *= parent.scale;
+    //         parent = parent.parent;
+    //     }
+    // }
+    //
+    // return Number(format_value(base));
+}
 </script>
 
 <template>
@@ -447,20 +462,24 @@ function dragEnd() {
             <div class="options-container">
                 <div class="setting">
                     <div class="name-title">{{ t('shadow.position') }}</div>
-                    <ShadowInput ticon="X" :shadow-v="shadow.offsetX" :reflush="reflush" @on-change="setOffsetX"
+                    <ShadowInput ticon="X" :shadow-v="extend(shadow.offsetX)" :reflush="reflush"
+                                 @on-change="setOffsetX"
                                  @dragstart="dragStart" @dragging="draggingX" @dragend="dragEnd">
                     </ShadowInput>
-                    <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush"
+                    <ShadowInput ticon="Y" :shadow-v="extend(shadow.offsetY)" @on-change="setOffsetY"
+                                 :reflush="reflush"
                                  @dragstart="dragStart" @dragging="draggingY" @dragend="dragEnd">
                     </ShadowInput>
                 </div>
                 <div class="setting">
                     <div class="name-title">{{ t('shadow.effect') }}</div>
-                    <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
+                    <ShadowInput ticon="B" :shadow-v="extend(shadow.blurRadius)"
+                                 @on-change="setBlurRadius"
                                  :tootip="`${t('shadow.blur')}`" :reflush="reflush" @dragstart="dragStart"
                                  @dragging="draggingB" @dragend="dragEnd">
                     </ShadowInput>
-                    <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disabled"
+                    <ShadowInput ticon="S" :shadow-v="extend(shadow.spread)" @on-change="setSpread"
+                                 :disabled="disabled"
                                  :tootip="spare_tip" :reflush="reflush" @dragstart="dragStart" @dragging="draggingS"
                                  @dragend="dragEnd">
                     </ShadowInput>

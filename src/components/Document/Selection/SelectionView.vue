@@ -365,7 +365,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     const action = props.context.tool.action;
     const selection = props.context.selection;
 
-    if (e.button !== 0 || action !== Action.AutoV) return;
+    if (e.button !== 0 || (action !== Action.AutoV && action !== Action.AutoK)) return;
 
     e.stopPropagation();
 

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import {
-    computed,
-    getCurrentInstance,
-    h,
-    nextTick,
-    onBeforeMount,
-    onMounted,
-    onUnmounted,
-    reactive,
-    ref,
-    watch
+    computed, getCurrentInstance, h, nextTick,
+    onBeforeMount, onMounted, onUnmounted, reactive,
+    ref, watch
 } from 'vue';
 import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
@@ -55,7 +48,7 @@ import Space from "@/components/Document/Space/index.vue";
 import Placement from "@/components/Document/Menu/Placement.vue";
 import ImageMode from '@/components/Document/Selection/Controller/ImageEdit/ImageMode.vue';
 import StaticShape from "@/components/Document/Content/StaticShape.vue";
-import { fontNameListEn, fontNameListZh, isSupportFontFamily, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
+import { fontNameListEn, fontNameListZh, screenFontList, timeSlicingTask } from './Attribute/Text/FontNameList';
 
 interface Props {
     context: Context
@@ -68,20 +61,20 @@ const emit = defineEmits<{
 }>();
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-const { t } = useI18n();
+const t = useI18n().t;
 const props = defineProps<Props>();
 const workspace = computed(() => props.context.workspace);
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
-const dragActiveDis = 4; // 拖动 4px 后开始触发移动
+const dragActiveDis = 4;
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
-const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
-const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
-const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
+const mousedownOnClientXY: ClientXY = { x: 0, y: 0 };
+const mousedownOnPageXY: PageXY = { x: 0, y: 0 };
+const mouseOnClient: ClientXYRaw = { x: 0, y: 0 };
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const selector_mount = ref<boolean>(false);
@@ -312,7 +305,7 @@ function select(e: MouseEvent) {
     }
 }
 
-function createSelector(e: MouseEvent) { // 创建一个selector框选器
+function createSelector(e: MouseEvent) {
     const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
@@ -346,13 +339,12 @@ function onMouseDown(e: MouseEvent) {
         firstTime = false;
     }
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    if (e.button === 0) { // 左键按下
+    if (e.button === 0) {
         const action = props.context.tool.action;
         if (action === Action.AddTable) return;
-        setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
+        setMousedownXY(e);
         isMouseLeftPress = true;
         wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
-        // 取消参考线选区
         props.context.tool.referSelection.resetSelected();
 
         document.addEventListener("mousemove", onMouseMove);
@@ -367,10 +359,7 @@ function onMouseDown(e: MouseEvent) {
 let timer: any = null;
 
 function onMouseMove(e: MouseEvent) {
-    if (workspace.value.controller !== 'page') {
-        return;
-    }
-
+    if (workspace.value.controller !== 'page') return;
     if (isDragging && wheel) {
         wheel.moving(e);
         clearInterval(timer);
@@ -388,14 +377,15 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 
 function onMouseMove_CV(e: MouseEvent) {
-    if (workspace.value.controller === 'page' && !spacePressed.value) {
+    const w = workspace.value;
+    if (!spacePressed.value && w.controller === 'page' && !w.transforming) {
         const action = props.context.tool.action;
         if (e.buttons === 1) {
-            if (action === Action.AutoV && isMouseLeftPress) {
+            if ((action === Action.AutoV || action === Action.AutoK) && isMouseLeftPress) {
                 select(e);
             }
         } else if (e.buttons === 0) {
-            if (action === Action.AutoV) {
+            if (action === Action.AutoV || action === Action.AutoK) {
                 search(e); // 图形检索(hover)
             }
         }
@@ -406,13 +396,8 @@ function onMouseMove_CV(e: MouseEvent) {
 function onMouseUp(e: MouseEvent) {
     if (e.button !== 0) return;
     isMouseLeftPress = false;
-    selectEnd();
-    if (selector_mount.value) {
-        selectEnd();
-    }
-    if (wheel) {
-        wheel = wheel.remove();
-    }
+    if (selector_mount.value) selectEnd();
+    if (wheel) wheel = wheel.remove();
     isDragging = false;
     clearInterval(timer);
     timer = null;
@@ -425,9 +410,7 @@ function onMouseLeave() {
 }
 
 function selectEnd() {
-    if (!props.context.workspace.select) {
-        return;
-    }
+    if (!props.context.workspace.select) return;
     props.context.workspace.selecting(false);
     props.context.cursor.cursor_freeze(false);
     selectorFrame.top = 0;
@@ -506,6 +489,8 @@ function workspace_watcher(type?: number | string, param?: string | MouseEvent |
         if (props.context.tool.action !== Action.AddContact) {
             creatorMode.value = false;
         }
+    } else if (type === WorkSpace.LOCAL_FONT_LIST_UPDATE) {
+        screenFontList(props.context);
     }
 }
 
@@ -623,7 +608,6 @@ onMounted(() => {
     if (f) background_color.value = color2string(f);
     timeSlicingTask(props.context, fontNameListZh, 'zh');
     timeSlicingTask(props.context, fontNameListEn, 'en');
-    screenFontList(props.context);
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -644,6 +628,7 @@ onUnmounted(() => {
     window.removeEventListener('blur', windowBlur);
     window.removeEventListener('focus', windowFocus);
     stopWatch();
+    clearInterval(timer);
 })
 
 const comps: { component: any, params?: any }[] = [];
