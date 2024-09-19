@@ -17,7 +17,8 @@ import {
     TransformRaw,
     TranslateUnit,
     Transporter, AutoLayout,
-    BorderPosition, ShapeFrame
+    BorderPosition, ShapeFrame,
+    Matrix
 } from "@kcdesign/data";
 import { Selection, XY } from "@/context/selection";
 import { Assist } from "@/context/assist";
@@ -29,12 +30,14 @@ import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
+import { getShapesColsMapPosition, getShapesRowsMapPosition, layoutSpacing, tidyUpShapesOrder } from "@/utils/tidy_up";
+import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 type BaseFrame4Trans = {
     originTransform: Transform
 };
 
-type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert';
+type TranslateMode = 'normal' | 'layout' | 'absolute' | 'insert' | 'tidyUp';
 
 interface LayoutForInsert {
     row: {
@@ -95,6 +98,7 @@ function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
 
 export class TranslateHandler extends TransformHandler {
     shapes: ShapeView[];
+    shapes2: ShapeView[]; // 整理拖动时的图形
     shapesIdSet: Set<string>;
     shapesBackup: ShapeView[] = [];
 
@@ -132,20 +136,28 @@ export class TranslateHandler extends TransformHandler {
 
     noMigrate: boolean = false;
 
-    constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
+    m_shapes_map_points: XY[][] = [];
+    m_shape_rows: ShapeView[][] = [];
+    cur_at_index: { row: number, col: number } = { row: -1, col: -1 }
+    m_dir: boolean = false; // 整理水平方向
+    tidy_up_space: { hor: number, ver: number } = { hor: 0, ver: 0 }
+    outline_frame: XY;
+    tidy_up_start: { x: number, y: number } = { x: 0, y: 0 };
+    m_adjusted_shape_rows: ShapeView[][] = [];
+    constructor(context: Context, event: MouseEvent, shapes: ShapeView[], shapes2?: ShapeView[]) {
         super(context, event);
         this.shapes = shapes;
+        this.shapes2 = shapes2 || shapes;
         this.shapesIdSet = new Set();
         this.livingPoint = this.workspace.getRootXY(event);
-
         this.fixedPoint = { ...this.livingPoint };
-
+        this.outline_frame = { x: this.shapes2[0]._p_frame.x, y: this.shapes2[0]._p_frame.y };
         context.assist.set_collect_target(shapes);
         context.assist.set_trans_target(shapes);
 
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.downXY = { x: event.clientX, y: event.clientY };
-
+        this.m_dir = context.selection.isTidyUpDir;
         this.getFrames();
     }
 
@@ -170,7 +182,12 @@ export class TranslateHandler extends TransformHandler {
             }
     }
 
-    setMode() {
+    setMode(m?: TranslateMode) {
+        if (m) {
+            this.mode = m;
+            this.getOrderShapes();
+            return;
+        }
         const shapes = this.shapes;
         const parents = new Set<ShapeView>();
         let allAbsolute = true;
@@ -215,7 +232,7 @@ export class TranslateHandler extends TransformHandler {
         return this.mode === "normal";
     }
 
-    async createApiCaller() {
+    async createApiCaller(mode?: 'tidyUp') {
         if (this.context.readonly) return;
         this.context.cursor.reset();
         this.context.cursor.cursor_freeze(true);
@@ -253,8 +270,7 @@ export class TranslateHandler extends TransformHandler {
         const except_envs = find_except_envs(this.context, this.shapes, this.fixedPoint);
         t.setExceptEnvs(except_envs);
         t.setCurrentEnv(except_envs[0] as any);
-
-        this.setMode();
+        this.setMode(mode);
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
 
@@ -346,6 +362,9 @@ export class TranslateHandler extends TransformHandler {
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.migrate();
         this.__execute();
+        if (this.mode === 'tidyUp') {
+            this.getMouseAtShapeIndex(event);
+        }
     }
 
     private updateBoxByAssist() {
@@ -549,8 +568,8 @@ export class TranslateHandler extends TransformHandler {
 
         const transformUnits: TranslateUnit[] = [];
         const PIC = new Map<string, Transform>();
-        for (let i = 0; i < this.shapes.length; i++) {
-            const shape = this.shapes[i];
+        for (let i = 0; i < this.shapes2.length; i++) {
+            const shape = this.shapes2[i];
 
             const base = this.baseFrames4trans.get(shape.id);
             if (!base) continue;
@@ -565,7 +584,6 @@ export class TranslateHandler extends TransformHandler {
                 PIC.set(parent.id, __p);
                 PI = __p;
             }
-
             const __t = base.originTransform
                 .clone()
                 .translate(ColVector3D.FromXY(deltaX, deltaY))
@@ -576,7 +594,6 @@ export class TranslateHandler extends TransformHandler {
                 const intY = Math.round(decompose.y);
                 const offsetX = intX - decompose.x;
                 const offsetY = intY - decompose.y;
-
                 if (offsetX || offsetY) __t.translate(ColVector3D.FromXY(offsetX, offsetY));
             }
 
@@ -634,7 +651,7 @@ export class TranslateHandler extends TransformHandler {
                 const grid = grids[j];
                 if (xy.x > grid.start && xy.x < grid.end) {
                     if (this.__last_hover_grid_id !== grid.shape.id) {
-                        ctx.selection.notify(Selection.PRE_INSERT, { shape: grid.shape, layout: layoutEnv.autoLayout, env: layoutEnv, isEnd: j === grids.length -1 });
+                        ctx.selection.notify(Selection.PRE_INSERT, { shape: grid.shape, layout: layoutEnv.autoLayout, env: layoutEnv, isEnd: j === grids.length - 1 });
                     }
                     this.__last_hover_grid_id = grid.shape.id;
                     break;
@@ -652,6 +669,8 @@ export class TranslateHandler extends TransformHandler {
             this.__swap();
         } else if (this.mode === 'insert') {
             this.___pre_insert();
+        } else if (this.mode === 'tidyUp') {
+            this.__trans();
         }
     }
 
@@ -844,8 +863,126 @@ export class TranslateHandler extends TransformHandler {
         this.layoutForInsert = { shape: env, row: rows, layout };
     }
 
+    getMouseAtShapeIndex(e: MouseEvent) {
+        const xy = this.context.workspace.getContentXY(e);
+        for (let i = 0; i < this.m_shapes_map_points.length; i++) {
+            const points = this.m_shapes_map_points[i];
+            let exit = false;
+            for (let j = 0; j < points.length; j++) {
+                const point = points[j];
+                if (xy.x < point.x && xy.y < point.y) {
+                    if ((this.cur_at_index.row !== i || this.cur_at_index.col !== j) && this.cur_at_index.row !== -1) {
+                        this.tidyUpAdjustShape(i, j, false);
+                    }
+                    this.cur_at_index = { row: i, col: j }
+                    exit = true;
+                    break;
+                } else {
+                    if (this.m_dir) {
+                        if (xy.y > points[points.length - 1].y && xy.x < point.x) {
+                            if ((this.cur_at_index.row !== i || this.cur_at_index.col !== points.length) && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true);
+                            }
+                            this.cur_at_index = { row: i, col: points.length }
+                            exit = true;
+                            break;
+                        }
+                    } else {
+                        if (xy.x > points[points.length - 1].x && xy.y < point.y) {
+                            if ((this.cur_at_index.row !== i || this.cur_at_index.col !== points.length) && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true);
+                            }
+                            this.cur_at_index = { row: i, col: points.length }
+                            exit = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (exit) break;
+        }
+    }
+
+    tidyUpAdjustShape(_i: number, _j: number, end: boolean) {
+        console.log(_i, _j);
+        const shape_rows: ShapeView[][] = [...this.m_shape_rows];
+        const targetShape = shape_rows[_i][_j];
+        for (let i = 0; i < shape_rows.length; i++) {
+            const row = shape_rows[i];
+            const index = row.findIndex(s => s.id === this.shapes2[0].id);
+            if (index !== -1) {
+                shape_rows[i].splice(index, 1);
+                break;
+            }
+        }
+        if (!shape_rows[_i]) {
+            shape_rows[_i] = [];
+        }
+        if (end) {
+            shape_rows[_i].push(...this.shapes2);
+        } else {
+            shape_rows[_i].splice(_j, 0, ...this.shapes2);
+        }
+        console.log(shape_rows, targetShape, 'shape_rows');
+        if (targetShape) {
+            const frame = targetShape._p_frame;
+            (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
+        } else {
+            const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
+            if (!tarShape) return;
+            const frame = tarShape._p_frame;
+            (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
+        }
+        this.m_adjusted_shape_rows = shape_rows;
+        (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+    }
+
+    getTidyUpOutileFrame(_i: number, _j: number) {
+        const shapes = this.m_shape_rows[_i];
+        if (_j === shapes.length) {
+
+        } else {
+            const matrix = new Matrix();
+            const matrix2 = new Matrix(this.context.workspace.matrix);
+            matrix.reset(matrix2);
+            const shape_root_m = this.shapes2[0].matrix2Root();
+            const x = this.shapes2[0]._p_frame.x - shapes[_j]._p_frame.x;
+            const y = this.shapes2[0]._p_frame.y - shapes[_j]._p_frame.y;
+            shape_root_m.trans(-x, -y);
+            const m = makeShapeTransform2By1(shape_root_m).clone();
+            const clientTransform = makeShapeTransform2By1(matrix2);
+            m.addTransform(clientTransform); //root到视图
+            const { width, height } = this.shapes2[0].size;
+            const { col0, col1, col2, col3 } = m.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(0, height)
+            ]);
+            const lt = { x: col0.x, y: col0.y }
+            const rt = { x: col1.x, y: col1.y }
+            const rb = { x: col2.x, y: col2.y }
+            const lb = { x: col3.x, y: col3.y }
+            const point = [lt, rt, rb, lb];
+            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+        }
+    }
+
+    getOrderShapes() {
+        const shape_rows = tidyUpShapesOrder(this.shapes, this.m_dir);
+        this.m_shape_rows = shape_rows;
+        const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
+        const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
+        this.tidy_up_start = { x: minX, y: minY }
+        this.tidy_up_space = layoutSpacing(shape_rows, this.m_dir);
+        if (this.m_dir) {
+            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space);
+        } else {
+            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space);
+        }
+    }
     migrate() {
-        if (this.coping) return;
+        if (this.coping || this.mode === 'tidyUp') return;
         this.migrateOnce();
     }
 
@@ -853,7 +990,6 @@ export class TranslateHandler extends TransformHandler {
         this.__migrate(false);
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
-
         if (this.altStatus) {
             this.context.selection.setLabelLivingGroup([]);
             this.context.selection.setLabelFixedGroup([]);
@@ -862,7 +998,9 @@ export class TranslateHandler extends TransformHandler {
         if (this.mode === "insert") {
             this.context.selection.notify(Selection.PRE_INSERT);
         }
-
+        if (!this.context.selection.isTidyUp) {
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
+        }
         super.fulfil();
         this.fulfilled = true;
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE);

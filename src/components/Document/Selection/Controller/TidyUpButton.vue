@@ -10,7 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { CursorType } from '@/utils/cursor2';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
-import { TidyUpHandle } from '@/transform/tidyUp';
+import { TranslateHandler } from '@/transform/translate';
 interface Props {
     context: Context
     controllerFrame: Point[];
@@ -384,7 +384,7 @@ function mouseleave() {
     verSpaceFill.value = false;
     props.context.cursor.reset();
 }
-let tidyUpHandleHandler: TidyUpHandle | undefined = undefined;
+let transporter: TranslateHandler | undefined = undefined;
 let isDrag = false;
 let saveShape: ShapeView;
 let isShift = false;
@@ -400,10 +400,13 @@ const selectedMove = (e: MouseEvent) => {
     e.stopPropagation();
     cursor_point.value = props.context.workspace.getContentXY(e);
     if (isDrag) {
-        if (!tidyUpHandleHandler) {
+        if (!transporter) {
             return
         }
-        tidyUpHandleHandler.getShapeAtIndex(e);
+        if (!transporter.asyncApiCaller) {
+            transporter.createApiCaller('tidyUp');
+        }
+        transporter.execute(e);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
@@ -418,8 +421,9 @@ const selectedMove = (e: MouseEvent) => {
                     props.context.selection.selectTidyUpShape([saveShape]);
                 }
             }
-            const dir = props.context.selection.isTidyUpDir;
-            tidyUpHandleHandler = new TidyUpHandle(props.context, e, dir);
+            const shapes = props.context.selection.selectedTidyUpShapes;
+            const selected = props.context.selection.selectedShapes;
+            transporter = new TranslateHandler(props.context, e, selected, [...shapes]);
         }
     }
 }
@@ -431,7 +435,8 @@ const selectedUp = (e: MouseEvent) => {
     } else {
         selectedShapes.value = [saveShape];
     }
-    tidyUpHandleHandler = undefined;
+    transporter?.fulfil();
+    transporter = undefined;
     document.removeEventListener('mousemove', selectedMove);
     document.removeEventListener('mouseup', selectedUp);
 }

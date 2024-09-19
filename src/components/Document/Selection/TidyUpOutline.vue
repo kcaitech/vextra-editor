@@ -10,47 +10,18 @@ interface Props {
     controllerFrame: Point[];
 }
 
-type Box = {
-    lt: Point,
-    rt: Point,
-    rb: Point,
-    lb: Point
-}
-
 const props = defineProps<Props>();
-const outlines = ref<Box[]>([]);
+const outline = ref<Point[]>([]);
 
-const getOutlines = () => {
-    outlines.value = [];
+const getOutlines = (point?: Point[]) => {
+    outline.value = [];
     const shapes = props.context.selection.selectedTidyUpShapes;
-    if (!shapes.length) return;
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        const matrix = new Matrix();
-        const matrix2 = new Matrix(props.context.workspace.matrix);
-        matrix.reset(matrix2);
-        const shape_root_m = shape.matrix2Root();
-        const m = makeShapeTransform2By1(shape_root_m).clone();
-        const clientTransform = makeShapeTransform2By1(matrix2);
-        m.addTransform(clientTransform); //root到视图
-        const { width, height } = shape.size;
-        const { col0, col1, col2, col3 } = m.transform([
-            ColVector3D.FromXY(0, 0),
-            ColVector3D.FromXY(width, 0),
-            ColVector3D.FromXY(width, height),
-            ColVector3D.FromXY(0, height)
-        ]);
-        const lt = { x: col0.x, y: col0.y }
-        const rt = { x: col1.x, y: col1.y }
-        const rb = { x: col2.x, y: col2.y }
-        const lb = { x: col3.x, y: col3.y }
-        const box = { lt, rt, rb, lb }
-        outlines.value.push(box);
-    }
+    if (!shapes.length || !point) return;
+    outline.value = point;
 }
-function selection_watcher(t: number | string) {
+function selection_watcher(t: number | string, params?: any) {
     if (t === Selection.CHANGE_TIDY_UP_SHAPE) {
-        getOutlines();
+        getOutlines(params);
     }
 }
 
@@ -62,12 +33,12 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg v-if="outlines.length" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    <svg v-if="outline.length" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
         viewBox="0 0 100 100" width="100" height="100" overflow="visible">
         <path
-            :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
-            fill="transparent"></path>
+            :d="`M ${outline[0].x} ${outline[0].y} L ${outline[1].x} ${outline[1].y} L ${outline[2].x} ${outline[2].y} L ${outline[3].x} ${outline[3].y} Z`"
+            fill="transparent" stroke="#1878F5" stroke-width="1"></path>
     </svg>
 </template>
 <style lang='scss' scoped>
