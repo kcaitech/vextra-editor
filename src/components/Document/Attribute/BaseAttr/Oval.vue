@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref, watch } from "vue";
 import { Context } from "@/context";
 import { OvalData, OvalOptions, sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
+import { hidden_selection } from "@/utils/content";
 
 const props = defineProps<{ context: Context; trigger: any[] }>();
 const form = ref<HTMLFormElement>();
@@ -24,40 +25,33 @@ function changeStartOnce(event: Event) {
     const editor = props.context.editor4Page(page);
     const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
     editor.modifyShapesStartingAngle(props.context.selection.selectedShapes, __target);
+    hidden_selection(props.context);
     target.blur();
 }
 
 function changeSweepOnce(event: Event) {
     const target = event.target as HTMLInputElement;
-
     let value: number = sortValue(target.value);
-
     if (isNaN(value)) return;
-
     if (value < -100) value = -100;
     else if (value > 100) value = 100;
-
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     editor.modifyShapesSweep(props.context.selection.selectedShapes, value);
-
+    hidden_selection(props.context);
     target.blur();
 }
 
 function changeRatioOnce(event: Event) {
     const target = event.target as HTMLInputElement;
-
     let value: number = sortValue(target.value);
-
     if (isNaN(value)) return;
-
     if (value < 0) value = 0;
     else if (value > 100) value = 100;
-
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     editor.modifyShapesRadius(props.context.selection.selectedShapes, value / 100);
-
+    hidden_selection(props.context);
     target.blur();
 }
 
