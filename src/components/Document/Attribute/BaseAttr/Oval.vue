@@ -20,24 +20,44 @@ function changeStartOnce(event: Event) {
     if (isNaN(value)) return;
     if (value < -180) value = -180;
     else if (value > 180) value = 180;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
+    editor.modifyShapesStartingAngle(props.context.selection.selectedShapes, __target);
     target.blur();
 }
 
 function changeSweepOnce(event: Event) {
     const target = event.target as HTMLInputElement;
+
     let value: number = sortValue(target.value);
+
     if (isNaN(value)) return;
+
     if (value < -100) value = -100;
     else if (value > 100) value = 100;
+
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyShapesSweep(props.context.selection.selectedShapes, value);
+
     target.blur();
 }
 
 function changeRatioOnce(event: Event) {
     const target = event.target as HTMLInputElement;
+
     let value: number = sortValue(target.value);
+
     if (isNaN(value)) return;
+
     if (value < 0) value = 0;
     else if (value > 100) value = 100;
+
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    editor.modifyShapesRadius(props.context.selection.selectedShapes, value / 100);
+
     target.blur();
 }
 
@@ -50,7 +70,7 @@ onMounted(() => {
     }
     ovalData.__update();
 });
-watch(() => props.trigger, ovalData.update);
+watch(() => props.trigger, ovalData.update.bind(ovalData));
 </script>
 <template>
 <form ref="form" class="oval-arc-options-wrapper">
