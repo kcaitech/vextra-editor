@@ -159,6 +159,7 @@ export class TranslateHandler extends TransformHandler {
         this.downXY = { x: event.clientX, y: event.clientY };
         this.m_dir = context.selection.isTidyUpDir;
         this.getFrames();
+        this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE);
     }
 
     private clearAnimation() {
@@ -925,47 +926,85 @@ export class TranslateHandler extends TransformHandler {
         }
         console.log(shape_rows, targetShape, 'shape_rows');
         if (targetShape) {
+            this.getTidyUpOutileFrame(targetShape, _i, _j);
             const frame = targetShape._p_frame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
         } else {
             const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
             if (!tarShape) return;
+            this.getTidyUpOutileFrame(tarShape, _i, _j, shape_rows);
             const frame = tarShape._p_frame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
         }
-        this.m_adjusted_shape_rows = shape_rows;
         (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
+        this.m_adjusted_shape_rows = shape_rows;
     }
 
-    getTidyUpOutileFrame(_i: number, _j: number) {
-        const shapes = this.m_shape_rows[_i];
-        if (_j === shapes.length) {
-
+    getTidyUpOutileFrame(targetShape: ShapeView, _i: number, _j: number, shape_rows?: ShapeView[][]) {
+        const parent = this.shapes2[0].parent;
+        if (!parent) return;
+        const matrix = new Matrix();
+        const matrix2 = new Matrix(this.context.workspace.matrix);
+        matrix.reset(matrix2);
+        const shape_root_m = parent.matrix2Root();
+        const m = makeShapeTransform2By1(shape_root_m).clone();
+        const clientTransform = makeShapeTransform2By1(matrix2);
+        m.addTransform(clientTransform); //root到视图
+        const { x, y, width, height } = this.shapes2[0]._p_frame;
+        const { col0, col1, col2, col3 } = m.transform([
+            ColVector3D.FromXY(x, y),
+            ColVector3D.FromXY(x + width, y),
+            ColVector3D.FromXY(x + width, y + height),
+            ColVector3D.FromXY(x, y + height)
+        ]);
+        const tar_frame = targetShape._p_frame;
+        let tarXY = { x: 0, y: 0 }
+        if (!shape_rows) {
+            const { x, y } = m.transform([
+                ColVector3D.FromXY(tar_frame.x, tar_frame.y),
+            ]).col0;
+            tarXY.x = x, tarXY.y = y;
         } else {
-            const matrix = new Matrix();
-            const matrix2 = new Matrix(this.context.workspace.matrix);
-            matrix.reset(matrix2);
-            const shape_root_m = this.shapes2[0].matrix2Root();
-            const x = this.shapes2[0]._p_frame.x - shapes[_j]._p_frame.x;
-            const y = this.shapes2[0]._p_frame.y - shapes[_j]._p_frame.y;
-            shape_root_m.trans(-x, -y);
-            const m = makeShapeTransform2By1(shape_root_m).clone();
-            const clientTransform = makeShapeTransform2By1(matrix2);
-            m.addTransform(clientTransform); //root到视图
-            const { width, height } = this.shapes2[0].size;
-            const { col0, col1, col2, col3 } = m.transform([
-                ColVector3D.FromXY(0, 0),
-                ColVector3D.FromXY(width, 0),
-                ColVector3D.FromXY(width, height),
-                ColVector3D.FromXY(0, height)
-            ]);
-            const lt = { x: col0.x, y: col0.y }
-            const rt = { x: col1.x, y: col1.y }
-            const rb = { x: col2.x, y: col2.y }
-            const lb = { x: col3.x, y: col3.y }
-            const point = [lt, rt, rb, lb];
-            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+            if (_j === 1) {
+                if (this.m_dir) {
+                    const transx = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.width + s._p_frame.x + this.tidy_up_space.hor)) : this.tidy_up_start.x;
+                    const { x, y } = m.transform([
+                        ColVector3D.FromXY(transx, this.tidy_up_start.y),
+                    ]).col0;
+                    tarXY.x = x, tarXY.y = y;
+                } else {
+                    const transy = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.height + s._p_frame.y + this.tidy_up_space.ver)) : this.tidy_up_start.y;
+                    const { x, y } = m.transform([
+                        ColVector3D.FromXY(this.tidy_up_start.x, transy),
+                    ]).col0;
+                    tarXY.x = x, tarXY.y = y;
+                }
+            } else {
+                if (this.m_dir) {
+                    const transx = tar_frame.x + ((tar_frame.width - this.shapes2[0]._p_frame.width) / 2);
+                    const transy = tar_frame.y + tar_frame.height + this.tidy_up_space.ver;
+                    const { x, y } = m.transform([
+                        ColVector3D.FromXY(transx, transy),
+                    ]).col0;
+                    tarXY.x = x, tarXY.y = y;
+                } else {
+                    const transx = tar_frame.x + tar_frame.width + this.tidy_up_space.hor;
+                    const transy = tar_frame.y + ((tar_frame.height - this.shapes2[0]._p_frame.height) / 2);
+                    const { x, y } = m.transform([
+                        ColVector3D.FromXY(transx, transy),
+                    ]).col0;
+                    tarXY.x = x, tarXY.y = y;
+                }
+            }
         }
+        const diffx = col0.x - tarXY.x;
+        const diffy = col0.y - tarXY.y;
+        const lt = { x: col0.x - diffx, y: col0.y - diffy }
+        const rt = { x: col1.x - diffx, y: col1.y - diffy }
+        const rb = { x: col2.x - diffx, y: col2.y - diffy }
+        const lb = { x: col3.x - diffx, y: col3.y - diffy }
+        const point = [lt, rt, rb, lb];
+        this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
     }
 
     getOrderShapes() {
@@ -998,7 +1037,7 @@ export class TranslateHandler extends TransformHandler {
         if (this.mode === "insert") {
             this.context.selection.notify(Selection.PRE_INSERT);
         }
-        if (!this.context.selection.isTidyUp) {
+        if (!this.context.selection.isTidyUp && this.asyncApiCaller) {
             (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
         }
         super.fulfil();

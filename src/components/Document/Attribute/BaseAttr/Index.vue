@@ -720,7 +720,7 @@ function selection_change() {
 }
 
 const _whetherTidyUp = () => {
-    if (props.context.workspace.isTranslating) return;
+    if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false);
@@ -797,6 +797,12 @@ const textBehaviour = () => {
     }
 }
 
+const workspace_watcher = (t: string | number) => {
+    if (t === WorkSpace.SCALING || t === WorkSpace.ROTATING) {
+        whetherTidyUp();
+    }
+}
+
 const stop1 = watch(() => props.selectionChange, selection_change);
 const stop3 = watch(() => props.trigger, v => {
     if (v.includes('layout')) {
@@ -811,9 +817,11 @@ const stop3 = watch(() => props.trigger, v => {
 onMounted(() => {
     selection_change();
     props.context.attr.watch(attr_watcher);
+    props.context.workspace.watch(workspace_watcher);
 });
 onUnmounted(() => {
     props.context.attr.unwatch(attr_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
     stop1();
     stop3();
 })

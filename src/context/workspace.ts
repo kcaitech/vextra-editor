@@ -46,6 +46,8 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     static ROOT_UPDATE = 24;
     static FONTLISR_ALL = WorkspaceEvents.add_local_font;
     static LOCAL_FONT_LIST_UPDATE = 25;
+    static SCALING = 26;
+    static ROTATING = 27;
 
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -181,6 +183,14 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
         return this.m_translating;
     }
 
+    get isScaling() {
+        return this.m_scaling;
+    }
+
+    get isRotating() {
+        return this.m_rotating;
+    }
+
     get controller() {
         return this.m_controller;
     }
@@ -275,10 +285,12 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
 
     scaling(v: boolean) {
         this.m_scaling = v;
+        this.notify(WorkSpace.SCALING);
     }
 
     rotating(v: boolean) {
         this.m_rotating = v;
+        this.notify(WorkSpace.ROTATING);
     }
 
     translating(v: boolean) {

@@ -16,8 +16,33 @@ const outline = ref<Point[]>([]);
 const getOutlines = (point?: Point[]) => {
     outline.value = [];
     const shapes = props.context.selection.selectedTidyUpShapes;
-    if (!shapes.length || !point) return;
-    outline.value = point;
+    if (!shapes.length) return;
+    if (!point) {
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            const matrix = new Matrix();
+            const matrix2 = new Matrix(props.context.workspace.matrix);
+            matrix.reset(matrix2);
+            const shape_root_m = shape.matrix2Root();
+            const m = makeShapeTransform2By1(shape_root_m).clone();
+            const clientTransform = makeShapeTransform2By1(matrix2);
+            m.addTransform(clientTransform); //root到视图
+            const { width, height } = shape.size;
+            const { col0, col1, col2, col3 } = m.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(0, height)
+            ]);
+            const lt = { x: col0.x, y: col0.y }
+            const rt = { x: col1.x, y: col1.y }
+            const rb = { x: col2.x, y: col2.y }
+            const lb = { x: col3.x, y: col3.y }
+            outline.value.push(lt, rt, rb, lb);
+        }
+    } else {
+        outline.value = point;
+    }
 }
 function selection_watcher(t: number | string, params?: any) {
     if (t === Selection.CHANGE_TIDY_UP_SHAPE) {

@@ -94,33 +94,35 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     const selected = props.context.selection.selectedShapes;
     const dir = props.context.selection.isTidyUpDir;
     const { width: s_width, box } = getSelectedWidthHeight(props.context, selected);
+    const parent = shapes[0][0].parent;
+    if (!parent) return;
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(props.context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
     if (dir) {
         for (let i = 0; i < shapes.length; i++) {
             const shape_row = shapes[i];
             for (let j = 0; j < shape_row.length - 1; j++) {
                 const shape = shape_row[j];
-                const matrix = new Matrix();
-                const matrix2 = new Matrix(props.context.workspace.matrix);
-                matrix.reset(matrix2);
-                const shape_root_m = shape.matrix2Root();
-                const m = makeShapeTransform2By1(shape_root_m).clone();
-                const clientTransform = makeShapeTransform2By1(matrix2);
-                m.addTransform(clientTransform); //root到视图
                 const { x, y, width, height } = shape._p_frame;
                 const clo_space = shape_row[j + 1]._p_frame.y - (y + height);
                 tidyUpVerSpace.value = clo_space;
                 const horSpace = m.transform([
-                    ColVector3D.FromXY(0, height),
-                    ColVector3D.FromXY(width, height),
-                    ColVector3D.FromXY(width, height + clo_space),
-                    ColVector3D.FromXY(0, height + clo_space)
+                    ColVector3D.FromXY(x, y + height),
+                    ColVector3D.FromXY(x + width, y + height),
+                    ColVector3D.FromXY(x + width, y + height + clo_space),
+                    ColVector3D.FromXY(x, y + height + clo_space)
                 ]);
                 const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
                 verSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
-                    ColVector3D.FromXY(width / 2, height + (clo_space / 2)),
+                    ColVector3D.FromXY(x + width / 2, y + height + (clo_space / 2)),
                 ]);
                 const rotate = Math.atan2(spaceLine.col1.y - spaceLine.col0.y, spaceLine.col1.x - spaceLine.col0.x) * (180 / Math.PI);
                 const ling: ControlsLine = {
@@ -142,17 +144,10 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
             tidyUpVerSpace.value = col_space;
             const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
             if (!maxh_shape) continue;
-            const matrix = new Matrix();
-            const matrix2 = new Matrix(props.context.workspace.matrix);
-            matrix.reset(matrix2);
-            const shape_root_m = maxh_shape.matrix2Root();
-            const m = makeShapeTransform2By1(shape_root_m).clone();
-            const clientTransform = makeShapeTransform2By1(matrix2);
-            m.addTransform(clientTransform); //root到视图
             const { x, y, width, height } = maxh_shape._p_frame;
             const verSpace = m.transform([
-                ColVector3D.FromXY(0, height),
-                ColVector3D.FromXY(0, height + col_space),
+                ColVector3D.FromXY(x, y + height),
+                ColVector3D.FromXY(x, y + height + col_space),
             ]);
             const ver: Box = {
                 lt: { x: box.left, y: verSpace.col0.y },
@@ -164,7 +159,7 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
             const { col0, col1, col2 } = m.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(x + width, y),
-                ColVector3D.FromXY(0, height + (col_space / 2)),
+                ColVector3D.FromXY(x, y + height + (col_space / 2)),
             ]);
             const rotate = Math.atan2(col1.y - col0.y, col1.x - col0.x) * (180 / Math.PI);
             const centerx = (box.right + box.left) / 2;
@@ -183,6 +178,15 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
     const selected = props.context.selection.selectedShapes;
     const dir = props.context.selection.isTidyUpDir;
     const { height: s_height, box } = getSelectedWidthHeight(props.context, selected);
+    const parent = shapes[0][0].parent;
+    if (!parent) return;
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(props.context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
     if (dir) {
         // 垂直调整
         for (let i = 0; i < shapes.length - 1; i++) {
@@ -193,17 +197,10 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             tidyUpHorSpace.value = row_space;
             const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
             if (!maxw_shape) continue;
-            const matrix = new Matrix();
-            const matrix2 = new Matrix(props.context.workspace.matrix);
-            matrix.reset(matrix2);
-            const shape_root_m = maxw_shape.matrix2Root();
-            const m = makeShapeTransform2By1(shape_root_m).clone();
-            const clientTransform = makeShapeTransform2By1(matrix2);
-            m.addTransform(clientTransform); //root到视图
             const { x, y, width, height } = maxw_shape._p_frame;
             const horSpace = m.transform([
-                ColVector3D.FromXY(width, 0),
-                ColVector3D.FromXY(width + row_space, 0),
+                ColVector3D.FromXY(x + width, y),
+                ColVector3D.FromXY(x + width + row_space, y),
             ]);
             const hor: Box = {
                 lt: { x: horSpace.col0.x, y: box.top },
@@ -215,7 +212,7 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             const { col0, col1, col2 } = m.transform([
                 ColVector3D.FromXY(x, y),
                 ColVector3D.FromXY(x + width, y),
-                ColVector3D.FromXY(width + (row_space / 2), 0),
+                ColVector3D.FromXY(x + width + (row_space / 2), y),
             ]);
             const rotate = Math.atan2(col1.y - col0.y, col1.x - col0.x) * (180 / Math.PI);
             const centery = (box.bottom + box.top) / 2;
@@ -233,28 +230,21 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             const shape_row = shapes[i];
             for (let j = 0; j < shape_row.length - 1; j++) {
                 const shape = shape_row[j];
-                const matrix = new Matrix();
-                const matrix2 = new Matrix(props.context.workspace.matrix);
-                matrix.reset(matrix2);
-                const shape_root_m = shape.matrix2Root();
-                const m = makeShapeTransform2By1(shape_root_m).clone();
-                const clientTransform = makeShapeTransform2By1(matrix2);
-                m.addTransform(clientTransform); //root到视图
                 const { x, y, width, height } = shape._p_frame;
                 const row_space = shape_row[j + 1]._p_frame.x - (x + width);
                 tidyUpHorSpace.value = row_space;
                 const horSpace = m.transform([
-                    ColVector3D.FromXY(width, 0),
-                    ColVector3D.FromXY(width + row_space, 0),
-                    ColVector3D.FromXY(width + row_space, 0 + height),
-                    ColVector3D.FromXY(width, 0 + height)
+                    ColVector3D.FromXY(x + width, y),
+                    ColVector3D.FromXY(x + width + row_space, y),
+                    ColVector3D.FromXY(x + width + row_space, y + height),
+                    ColVector3D.FromXY(x + width, y + height)
                 ]);
                 const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
                 horSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
                     ColVector3D.FromXY(x + width, y),
-                    ColVector3D.FromXY(width + (row_space / 2), height / 2),
+                    ColVector3D.FromXY(x + width + (row_space / 2), y + (height / 2)),
                 ]);
                 const rotate = Math.atan2(spaceLine.col1.y - spaceLine.col0.y, spaceLine.col1.x - spaceLine.col0.x) * (180 / Math.PI);
                 const ling: ControlsLine = {
@@ -280,7 +270,7 @@ const clear = () => {
 
 const update = () => {
     clear();
-    if (isTidyUp.value) return;
+    if (isTidyUp.value || props.context.workspace.isScaling) return;
     tidyUpDot();
     tidyUpLine();
 }
