@@ -127,12 +127,7 @@ export class ArcFreeModifier {
     }
 
     private __radian_of_target(rad: number) {
-        const target = this.__target;
-        if (target) {
-            return rad;
-        } else {
-            return rad - Math.PI * 2;
-        }
+        return this.__target ? rad : rad - Math.PI * 2;
     }
 
     modifyEnd(event: MouseEvent) {
