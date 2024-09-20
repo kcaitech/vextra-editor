@@ -680,14 +680,14 @@ onUnmounted(() => {
         </div>
         <div v-if="items.has(MenuItemType.Component) || items.has(MenuItemType.UnAutoLayout) || items.has(MenuItemType.AutoLayout)"
             style="width: 100%; height: 1px; border-bottom: 1px solid #efefef; margin: 3px 0" />
-        <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="autoLayout" class="menu-item">
+        <!-- <div v-if="items.has(MenuItemType.UnAutoLayout)" @click="autoLayout" class="menu-item">
             <span>{{ t('autolayout.remove_auto_layout') }}</span>
             <Key code="Shift Alt A"></Key>
         </div>
         <div v-if="items.has(MenuItemType.AutoLayout)" @click="unAutoLayout" class="menu-item">
             <span>{{ t('autolayout.add_auto_layout') }}</span>
             <Key code="Shift A"></Key>
-        </div>
+        </div> -->
         <div v-if="items.has(MenuItemType.Component)" @click="component" class="menu-item">
             <span>{{ t('system.create_component') }}</span>
             <Key code="Ctrl Alt K"></Key>
