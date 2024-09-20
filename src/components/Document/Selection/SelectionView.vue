@@ -207,7 +207,6 @@ function createShapeTracing() {
  */
 function createController() {
     // const s = Date.now();
-    props.context.selection.selectTidyUpShape();
     const selection: ShapeView[] = props.context.selection.selectedShapes;
     if (!selection.length) {
         controller.value = false;

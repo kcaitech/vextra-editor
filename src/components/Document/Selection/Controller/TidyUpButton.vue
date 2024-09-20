@@ -429,6 +429,7 @@ const selectedUp = (e: MouseEvent) => {
     // }
     transporter?.fulfil();
     transporter = undefined;
+    props.context.selection.selectTidyUpShape();
     document.removeEventListener('mousemove', selectedMove);
     document.removeEventListener('mouseup', selectedUp);
 }

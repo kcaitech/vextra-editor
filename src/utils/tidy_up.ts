@@ -405,8 +405,8 @@ export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[
                     ColVector3D.FromXY(transx, startY + height)
                 ]);
 
-                const point = [col0, col1, col2, col3];
-                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+                const point = [{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, { x: col3.x, y: col3.y }];
+                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, { x: transx, y: startY, width, height });
                 return;
             }
             startY += height + Math.max(space.ver, -minHeight);
@@ -447,8 +447,8 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
                     ColVector3D.FromXY(startX + width, transy + height),
                     ColVector3D.FromXY(startX, transy + height)
                 ]);
-                const point = [col0, col1, col2, col3];
-                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+                const point = [{ x: col0.x, y: col0.y }, { x: col1.x, y: col1.y }, { x: col2.x, y: col2.y }, { x: col3.x, y: col3.y }];
+                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, { x: startX, y: transy, width, height });
                 return;
             }
             startX += width + Math.max(space.hor, -minWidth);

@@ -731,8 +731,6 @@ const _whetherTidyUp = () => {
         return;
     }
     const { tidyup, hor, ver, shapes, dir } = Info;
-    console.log(Info, 'Info');
-
     if (!tidyup) {
         horSpace.value = hor;
         verSpace.value = ver;
