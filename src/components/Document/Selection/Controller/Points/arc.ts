@@ -70,11 +70,82 @@ export class ArcFreeModifier {
         (this.asyncApiCaller as OvalModifier).modifyStart(__start, [oval]);
     }
 
-    modifyEnd(event: MouseEvent) {
+    private __last: number | undefined;
+    private __target: 0 | 1 = 1; // 0 是逆时针，1 是顺时针
+    private __base_sweep: number | undefined;
+
+    private get baseSweep() {
+        if (this.__base_sweep === undefined) {
+            const round = Math.PI * 2;
+            const oval = this.m_oval;
+            const end = oval.endingAngle ?? round;
+            const start = oval.startingAngle ?? 0;
+            this.__base_sweep = (end - start) / round;
+        }
+        return this.__base_sweep;
+    }
+
+    private get currentSweep() {
+        const round = Math.PI * 2;
         const oval = this.m_oval;
+        const end = oval.endingAngle ?? round;
+        const start = oval.startingAngle ?? 0;
+        return (end - start) / round
+    }
+
+    private __update_target(rad: number) {
+        const round = Math.PI * 2;
+        let last = this.__last;
+        if (last === undefined) {
+            const sweep = this.baseSweep;
+            if (sweep === 1) {
+                if (rad > round * 0.75) {
+                    this.__target = 1;
+                } else {
+                    this.__target = 0;
+                }
+            } else if (sweep === 0) {
+                if (rad > round * 0.75) {
+                    this.__target = 0;
+                } else {
+                    this.__target = 1;
+                }
+            } else {
+                this.__target = sweep < 0 ? 0 : 1;
+            }
+        } else {
+            if ((0 <= rad && rad < Math.PI / 2) && (Math.PI * 1.5 < last && last <= Math.PI * 2)) {
+                const currentSweep = this.currentSweep;
+                this.__target = currentSweep > 0.5 ? 0 : 1;
+            } else if ((0 <= last && last < Math.PI / 2) && (Math.PI * 1.5 < rad && rad <= Math.PI * 2)) {
+                const currentSweep = Math.abs(this.currentSweep);
+                this.__target = currentSweep > 0.5 ? 1 : 0;
+            }
+        }
+
+        this.__last = rad;
+    }
+
+    private __radian_of_target(rad: number) {
+        const target = this.__target;
+        if (target) {
+            return rad;
+        } else {
+            return rad - Math.PI * 2;
+        }
+    }
+
+    modifyEnd(event: MouseEvent) {
+        const round = Math.PI * 2;
+
+        const oval = this.m_oval;
+
+        const start = oval.startingAngle ?? 0;
 
         let xy = this.context.workspace.getContentXY(event);
         let matrix = new Matrix();
+
+        start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
@@ -83,9 +154,13 @@ export class ArcFreeModifier {
         xy = matrix.computeCoord3(xy);
 
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
-        if (__end < 0) __end = Math.PI * 2 + __end;
+        if (__end < 0) __end = round + __end;
+        if (__end === 0) __end = round;
 
-        // (this.asyncApiCaller as OvalModifier).modifyEnd(__end, [oval]);
+        this.__update_target(__end);
+        __end = this.__radian_of_target(__end);
+
+        (this.asyncApiCaller as OvalModifier).modifyEnd(__end + start, [oval]);
     }
 
     modifyRadius(event: MouseEvent) {
