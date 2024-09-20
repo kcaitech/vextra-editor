@@ -140,11 +140,11 @@ export class TranslateHandler extends TransformHandler {
     m_shape_rows: ShapeView[][] = [];
     cur_at_index: { row: number, col: number } = { row: -1, col: -1 }
     m_dir: boolean = false; // 整理水平方向
-    tidy_up_space: { hor: number, ver: number } = { hor: 0, ver: 0 }
-    tidy_up_start: { x: number, y: number } = { x: 0, y: 0 };
-    m_adjusted_shape_rows: ShapeView[][] = [];
-    outline_frame: { x: number, y: number, height: number, width: number } = { x: 0, y: 0, height: 0, width: 0 };
-    outline_index: { i: number, j: number } = { i: -1, j: -1 }
+    tidy_up_space: { hor: number, ver: number } = { hor: 0, ver: 0 } // 整理图形之间的间距
+    tidy_up_start: { x: number, y: number } = { x: 0, y: 0 }; //整理开始的左上角位置
+    m_adjusted_shape_rows: ShapeView[][] = []; // 拖动完成后用来最后一次整理的图形数据
+    outline_frame: { x: number, y: number, height: number, width: number } = { x: 0, y: 0, height: 0, width: 0 }; // 拖动图形的root位置
+    outline_index: { i: number, j: number } = { i: -1, j: -1 }// 拖动图形的下标
     moveClientXY: XY;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[], shapes2?: ShapeView[]) {
@@ -897,7 +897,7 @@ export class TranslateHandler extends TransformHandler {
         })
         this.layoutForInsert = { shape: env, row: rows, layout };
     }
-
+    // 获取鼠标所在图形下标位置
     _getMouseAtShapeIndex(e: MouseEvent) {
         const xy = this.context.workspace.getContentXY(e);
         for (let i = 0; i < this.m_shapes_map_points.length; i++) {
@@ -939,7 +939,7 @@ export class TranslateHandler extends TransformHandler {
             if (exit) break;
         }
     }
-
+    // 根据下标位置来调整图形所在位置
     tidyUpAdjustShape(_i: number, _j: number, end: boolean) {
         const shape_rows: ShapeView[][] = [...this.m_shape_rows];
         const targetShape = shape_rows[_i][_j];
@@ -980,7 +980,7 @@ export class TranslateHandler extends TransformHandler {
         this.__trans();
         this.m_adjusted_shape_rows = shape_rows;
     }
-
+    // 画出拖动图形所在整理后的位置描边
     getTidyUpOutileFrame(shape_rows: ShapeView[][]) {
         if (this.m_dir) {
             getVerShapeOutlineFrame(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start, this.shapes2[0].id);
@@ -988,7 +988,7 @@ export class TranslateHandler extends TransformHandler {
             getHorShapeOutlineFrame(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start, this.shapes2[0].id)
         }
     }
-
+    // 将选中的图形进行排序规定图形所在的区域位置
     getOrderShapes() {
         const shape_rows = tidyUpShapesOrder(this.shapes, this.m_dir);
         this.m_shape_rows = shape_rows;
@@ -1019,7 +1019,7 @@ export class TranslateHandler extends TransformHandler {
         if (this.coping || this.mode === 'tidyUp') return;
         this.migrateOnce();
     }
-
+    // 拖动结束后进行一次整理
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
             (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
