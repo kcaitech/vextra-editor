@@ -713,13 +713,16 @@ function selection_change() {
     const selected = props.context.selection.selectedShapes;
     if (selected.length > 1) {
         s_tidy_up = true;
+        whetherTidyUp();
     } else {
         s_tidy_up = false;
+        props.context.selection.whetherTidyUp(false, false);
     }
-    whetherTidyUp();
 }
 
 const _whetherTidyUp = () => {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length <= 1) return;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
     if (!Info) {

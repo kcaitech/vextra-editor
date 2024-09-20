@@ -64,18 +64,20 @@ const hover_mousemove = (e: MouseEvent) => {
 
 const tidyUpDot = () => {
     const shapes = props.context.selection.selectedShapes;
+    const parent = shapes[0].parent;
+    if (!parent) return;
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(props.context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const matrix = new Matrix();
-        const matrix2 = new Matrix(props.context.workspace.matrix);
-        matrix.reset(matrix2);
-        const shape_root_m = shape.matrix2Root();
-        const m = makeShapeTransform2By1(shape_root_m).clone();
-        const clientTransform = makeShapeTransform2By1(matrix2);
-        m.addTransform(clientTransform); //root到视图
-        const { x, y, width, height } = shape.frame;
+        const { x, y, width, height } = shape._p_frame;
         const { col0, col1, col2 } = m.transform([
-            ColVector3D.FromXY((x + width) / 2, (y + height) / 2),
+            ColVector3D.FromXY(x + (width / 2), y + (height / 2)),
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY((x + width), (y + height)),
         ]);
@@ -270,14 +272,13 @@ const clear = () => {
 
 const update = () => {
     clear();
-    if (isTidyUp.value || props.context.workspace.isScaling) return;
+    if (isTidyUp.value || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     tidyUpDot();
     tidyUpLine();
 }
 
 const tidyUpControl = () => {
     isTidyUp.value = props.context.selection.isTidyUp;
-
     update();
 }
 let lockMouseHandler: LockMouse | undefined = undefined;
@@ -401,16 +402,17 @@ const selectedMove = (e: MouseEvent) => {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
             isDrag = true;
-            if (selectedShapes.value.length === 0) {
-                props.context.selection.selectTidyUpShape([saveShape]);
-            } else {
-                const is_multiple = selectedShapes.value.find(s => s.id === saveShape.id);
-                if (is_multiple) {
-                    props.context.selection.selectTidyUpShape(selectedShapes.value as ShapeView[]);
-                } else {
-                    props.context.selection.selectTidyUpShape([saveShape]);
-                }
-            }
+            props.context.selection.selectTidyUpShape([saveShape]);
+            // if (selectedShapes.value.length === 0) {
+            //     props.context.selection.selectTidyUpShape([saveShape]);
+            // } else {
+            //     const is_multiple = selectedShapes.value.find(s => s.id === saveShape.id);
+            //     if (is_multiple) {
+            //         props.context.selection.selectTidyUpShape(selectedShapes.value as ShapeView[]);
+            //     } else {
+            //         props.context.selection.selectTidyUpShape([saveShape]);
+            //     }
+            // }
             const shapes = props.context.selection.selectedTidyUpShapes;
             const selected = props.context.selection.selectedShapes;
             transporter = new TranslateHandler(props.context, e, selected, [...shapes]);
@@ -420,11 +422,11 @@ const selectedMove = (e: MouseEvent) => {
 
 const selectedUp = (e: MouseEvent) => {
     isDrag = false;
-    if (isShift && e.shiftKey) {
-        selectedShapes.value.push(saveShape);
-    } else {
-        selectedShapes.value = [saveShape];
-    }
+    // if (isShift && e.shiftKey) {
+    //     selectedShapes.value.push(saveShape);
+    // } else {
+    //     selectedShapes.value = [saveShape];
+    // }
     transporter?.fulfil();
     transporter = undefined;
     document.removeEventListener('mousemove', selectedMove);
@@ -484,6 +486,7 @@ function window_blur() {
 }
 
 onMounted(() => {
+    tidyUpControl();
     window.addEventListener('blur', window_blur);
     props.context.selection.watch(selectedWatcher);
     props.context.workspace.watch(workspaceWatcher);

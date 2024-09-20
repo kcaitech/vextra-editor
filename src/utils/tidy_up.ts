@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, PageView, ShapeType, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
-import { XY } from "@/context/selection";
+import { Selection, XY } from "@/context/selection";
 import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 export function tidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
@@ -292,7 +292,7 @@ export const getFrame = (shape: ShapeView) => {
 }
 
 
-export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }): XY[][] {
+export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }): XY[][] {
     const shapes_rows_point_map = [];
     const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width)))) - 1;
     const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height)))) - 1;
@@ -307,29 +307,32 @@ export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView
     const m = makeShapeTransform2By1(shape_root_m).clone();
     const clientTransform = makeShapeTransform2By1(matrix2);
     m.addTransform(clientTransform); //root到视图
+    let startY = startXY.y;
+    let startX = startXY.x;
     for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const row = [];
-        const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height));
-        const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
-        if (!maxh_shape) continue;
+        const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));
         const grid_point_y = m.transform([
-            ColVector3D.FromXY(0, maxh_shape._p_frame.y + maxh_shape._p_frame.height + (Math.max(space.ver, -minHeight) / 2)),
+            ColVector3D.FromXY(0, startY + maxHeight + (Math.max(space.ver, -minHeight) / 2)),
         ]).col0.y;
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
-            const { x, width } = shape._p_frame;
+            const { width } = shape._p_frame;
             const grid_point_x = m.transform([
-                ColVector3D.FromXY(x + width + (Math.max(space.hor, -minWidth) / 2), 0),
+                ColVector3D.FromXY(startX + width + (Math.max(space.hor, -minWidth) / 2), 0),
             ]).col0.x;
-            const point = { x: grid_point_x, y: grid_point_y }
+            const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
             row.push(point);
+            startX += width + Math.max(space.hor, -minWidth);
         }
+        startY += maxHeight + Math.max(space.ver, -minHeight);
+        startX = startXY.x;
         shapes_rows_point_map.push(row);
     }
     return shapes_rows_point_map;
 }
-export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }): XY[][] {
+export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }): XY[][] {
     const shapes_cols_point_map = [];
     const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width)))) - 1;
     const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height)))) - 1;
@@ -344,25 +347,113 @@ export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView
     const m = makeShapeTransform2By1(shape_root_m).clone();
     const clientTransform = makeShapeTransform2By1(matrix2);
     m.addTransform(clientTransform); //root到视图
-    for (let i = 0; i < shape_rows.length - 1; i++) {
+    let startY = startXY.y;
+    let startX = startXY.x;
+    for (let i = 0; i < shape_rows.length; i++) {
         const shape_row = shape_rows[i];
         const col = [];
-        const cur_col_w = Math.max(...shape_row.map(s => s._p_frame.x + s._p_frame.width));
-        const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
-        if (!maxw_shape) continue;
+        const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
         const grid_point_x = m.transform([
-            ColVector3D.FromXY(maxw_shape._p_frame.x + maxw_shape._p_frame.width + (Math.max(space.hor, -minWidth) / 2), 0),
+            ColVector3D.FromXY(startX + maxWidth + (Math.max(space.hor, -minWidth) / 2), 0),
         ]).col0.x;
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
-            const { y, height } = shape._p_frame;
+            const { height } = shape._p_frame;
             const grid_point_y = m.transform([
-                ColVector3D.FromXY(0, y + height + (Math.max(space.ver, -minHeight) / 2)),
+                ColVector3D.FromXY(0, startY + height + (Math.max(space.ver, -minHeight) / 2)),
             ]).col0.y;
-            const point = { x: grid_point_x, y: grid_point_y }
+            const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
             col.push(point);
+            startY += height + Math.max(space.ver, -minHeight);
         }
         shapes_cols_point_map.push(col);
+        startX += maxWidth + Math.max(space.hor, -minWidth);
+        startY = startXY.y;
     }
     return shapes_cols_point_map;
+}
+
+export function getVerShapeOutlineFrame(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }, target: string) {
+    const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width)))) - 1;
+    const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height)))) - 1;
+    const rows = shape_rows.find(rows => rows.length > 0);
+    if (!rows) return [];
+    const parent = rows[0]?.parent;
+    if (!parent) return [];
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
+    let startY = startXY.y;
+    let startX = startXY.x;
+    for (let i = 0; i < shape_rows.length; i++) {
+        const shape_row = shape_rows[i];
+        const maxWidth = Math.max(...shape_row.map(s => s._p_frame.width));
+        for (let j = 0; j < shape_row.length; j++) {
+            const shape = shape_row[j];
+            const { width, height } = shape._p_frame;
+            const horizontalOffset = (maxWidth - width) / 2;
+            const transx = startX + horizontalOffset;
+            if (shape.id === target) {
+                const { col0, col1, col2, col3 } = m.transform([
+                    ColVector3D.FromXY(transx, startY),
+                    ColVector3D.FromXY(transx + width, startY),
+                    ColVector3D.FromXY(transx + width, startY + height),
+                    ColVector3D.FromXY(transx, startY + height)
+                ]);
+
+                const point = [col0, col1, col2, col3];
+                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+                return;
+            }
+            startY += height + Math.max(space.ver, -minHeight);
+        }
+        startX += maxWidth + Math.max(space.hor, -minWidth);
+        startY = startXY.y;
+    }
+}
+
+export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[][], space: { hor: number, ver: number }, startXY: { x: number, y: number }, target: string) {
+    const minWidth = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.width)))) - 1;
+    const minHeight = Math.min(...shape_rows.map(row => Math.min(...row.map(s => s._p_frame.height)))) - 1;
+    const rows = shape_rows.find(rows => rows.length > 0);
+    if (!rows) return [];
+    const parent = rows[0]?.parent;
+    if (!parent) return [];
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
+    let startY = startXY.y;
+    let startX = startXY.x;
+    for (let i = 0; i < shape_rows.length; i++) {
+        const shape_row = shape_rows[i];
+        const maxHeight = Math.max(...shape_row.map(s => s._p_frame.height));
+        for (let j = 0; j < shape_row.length; j++) {
+            const shape = shape_row[j];
+            const { width, height } = shape._p_frame;
+            const verticalOffset = (maxHeight - height) / 2;
+            const transy = startY + verticalOffset;
+            if (shape.id === target) {
+                const { col0, col1, col2, col3 } = m.transform([
+                    ColVector3D.FromXY(startX, transy),
+                    ColVector3D.FromXY(startX + width, transy),
+                    ColVector3D.FromXY(startX + width, transy + height),
+                    ColVector3D.FromXY(startX, transy + height)
+                ]);
+                const point = [col0, col1, col2, col3];
+                context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+                return;
+            }
+            startX += width + Math.max(space.hor, -minWidth);
+        }
+        startY += maxHeight + Math.max(space.ver, -minHeight);
+        startX = startXY.x;
+    }
 }

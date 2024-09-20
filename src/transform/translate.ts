@@ -141,9 +141,12 @@ export class TranslateHandler extends TransformHandler {
     cur_at_index: { row: number, col: number } = { row: -1, col: -1 }
     m_dir: boolean = false; // 整理水平方向
     tidy_up_space: { hor: number, ver: number } = { hor: 0, ver: 0 }
-    outline_frame: XY;
     tidy_up_start: { x: number, y: number } = { x: 0, y: 0 };
     m_adjusted_shape_rows: ShapeView[][] = [];
+    outline_frame: { x: number, y: number, height: number, width: number } = { x: 0, y: 0, height: 0, width: 0 };
+    outline_index: { i: number, j: number } = { i: -1, j: -1 }
+    moveClientXY: XY;
+
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[], shapes2?: ShapeView[]) {
         super(context, event);
         this.shapes = shapes;
@@ -151,15 +154,14 @@ export class TranslateHandler extends TransformHandler {
         this.shapesIdSet = new Set();
         this.livingPoint = this.workspace.getRootXY(event);
         this.fixedPoint = { ...this.livingPoint };
-        this.outline_frame = { x: this.shapes2[0]._p_frame.x, y: this.shapes2[0]._p_frame.y };
         context.assist.set_collect_target(shapes);
         context.assist.set_trans_target(shapes);
 
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.downXY = { x: event.clientX, y: event.clientY };
+        this.moveClientXY = { x: event.clientX, y: event.clientY };
         this.m_dir = context.selection.isTidyUpDir;
         this.getFrames();
-        this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE);
     }
 
     private clearAnimation() {
@@ -186,6 +188,7 @@ export class TranslateHandler extends TransformHandler {
     setMode(m?: TranslateMode) {
         if (m) {
             this.mode = m;
+            this.getOutlineFrame();
             this.getOrderShapes();
             return;
         }
@@ -275,6 +278,35 @@ export class TranslateHandler extends TransformHandler {
         this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE, this.downXY);
     }
 
+    getOutlineFrame() {
+        const shapes = this.context.selection.selectedTidyUpShapes;
+        if (!shapes.length) return;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            const matrix = new Matrix();
+            const matrix2 = new Matrix(this.context.workspace.matrix);
+            matrix.reset(matrix2);
+            const shape_root_m = shape.matrix2Root();
+            const m = makeShapeTransform2By1(shape_root_m).clone();
+            const clientTransform = makeShapeTransform2By1(matrix2);
+            m.addTransform(clientTransform); //root到视图
+            const { width, height } = shape.size;
+            const { col0, col1, col2, col3 } = m.transform([
+                ColVector3D.FromXY(0, 0),
+                ColVector3D.FromXY(width, 0),
+                ColVector3D.FromXY(width, height),
+                ColVector3D.FromXY(0, height)
+            ]);
+            const lt = { x: col0.x, y: col0.y }
+            const rt = { x: col1.x, y: col1.y }
+            const rb = { x: col2.x, y: col2.y }
+            const lb = { x: col3.x, y: col3.y }
+            const point = [lt, rt, rb, lb];
+            this.outline_frame = { ...shape._p_frame };
+            this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
+        }
+    }
+
     private getFrames() {
         const matrixParent2rootCache = new Map<string, Transform>();
         let left = Infinity;
@@ -357,14 +389,15 @@ export class TranslateHandler extends TransformHandler {
         this.livingBox.x = this.livingPoint.x - this.boxOffsetLivingPointX;
         this.livingBox.y = this.livingPoint.y - this.boxOffsetLivingPointY;
     }
-
     execute(event: MouseEvent) {
         this.__updateLiving(event);
         this.clientXY = { x: event.clientX, y: event.clientY };
         this.migrate();
         this.__execute();
-        if (this.mode === 'tidyUp') {
+        const diff = Math.hypot(event.clientX - this.moveClientXY.x, event.clientY - this.moveClientXY.y);
+        if (this.mode === 'tidyUp' && diff > 8) {
             this.getMouseAtShapeIndex(event);
+            this.moveClientXY = { x: event.clientX, y: event.clientY }
         }
     }
 
@@ -811,6 +844,7 @@ export class TranslateHandler extends TransformHandler {
     tips4absolutePosition = debounce(this.__tips4absolutePosition, 3000)
 
     migrateOnce = debounce(this.__migrate, 80);
+    getMouseAtShapeIndex = throttle(this._getMouseAtShapeIndex, 160);
 
     getLayoutGridForInsert() {
         const env = this.preInsertLayout!;
@@ -864,7 +898,7 @@ export class TranslateHandler extends TransformHandler {
         this.layoutForInsert = { shape: env, row: rows, layout };
     }
 
-    getMouseAtShapeIndex(e: MouseEvent) {
+    _getMouseAtShapeIndex(e: MouseEvent) {
         const xy = this.context.workspace.getContentXY(e);
         for (let i = 0; i < this.m_shapes_map_points.length; i++) {
             const points = this.m_shapes_map_points[i];
@@ -873,7 +907,9 @@ export class TranslateHandler extends TransformHandler {
                 const point = points[j];
                 if (xy.x < point.x && xy.y < point.y) {
                     if ((this.cur_at_index.row !== i || this.cur_at_index.col !== j) && this.cur_at_index.row !== -1) {
-                        this.tidyUpAdjustShape(i, j, false);
+                        if (i !== this.outline_index.i || j !== this.outline_index.j) {
+                            this.tidyUpAdjustShape(i, j, false, this.cur_at_index.row, this.cur_at_index.col);
+                        }
                     }
                     this.cur_at_index = { row: i, col: j }
                     exit = true;
@@ -881,8 +917,8 @@ export class TranslateHandler extends TransformHandler {
                 } else {
                     if (this.m_dir) {
                         if (xy.y > points[points.length - 1].y && xy.x < point.x) {
-                            if ((this.cur_at_index.row !== i || this.cur_at_index.col !== points.length) && this.cur_at_index.row !== -1) {
-                                this.tidyUpAdjustShape(i, points.length, true);
+                            if (this.cur_at_index.row !== i && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true, this.cur_at_index.row, this.cur_at_index.col);
                             }
                             this.cur_at_index = { row: i, col: points.length }
                             exit = true;
@@ -890,8 +926,8 @@ export class TranslateHandler extends TransformHandler {
                         }
                     } else {
                         if (xy.x > points[points.length - 1].x && xy.y < point.y) {
-                            if ((this.cur_at_index.row !== i || this.cur_at_index.col !== points.length) && this.cur_at_index.row !== -1) {
-                                this.tidyUpAdjustShape(i, points.length, true);
+                            if (this.cur_at_index.row !== i && this.cur_at_index.row !== -1) {
+                                this.tidyUpAdjustShape(i, points.length, true, this.cur_at_index.row, this.cur_at_index.col);
                             }
                             this.cur_at_index = { row: i, col: points.length }
                             exit = true;
@@ -904,10 +940,10 @@ export class TranslateHandler extends TransformHandler {
         }
     }
 
-    tidyUpAdjustShape(_i: number, _j: number, end: boolean) {
-        console.log(_i, _j);
+    tidyUpAdjustShape(_i: number, _j: number, end: boolean, o_i: number, o_j: number) {
         const shape_rows: ShapeView[][] = [...this.m_shape_rows];
         const targetShape = shape_rows[_i][_j];
+        this.outline_index = { i: _i, j: _j }
         for (let i = 0; i < shape_rows.length; i++) {
             const row = shape_rows[i];
             const index = row.findIndex(s => s.id === this.shapes2[0].id);
@@ -924,86 +960,109 @@ export class TranslateHandler extends TransformHandler {
         } else {
             shape_rows[_i].splice(_j, 0, ...this.shapes2);
         }
-        console.log(shape_rows, targetShape, 'shape_rows');
         if (targetShape) {
-            this.getTidyUpOutileFrame(targetShape, _i, _j);
             const frame = targetShape._p_frame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x, frame.y);
+            this.getTidyUpOutileFrame(targetShape, _i, _j, shape_rows, true, o_i, o_j);
         } else {
             const tarShape = shape_rows[_i][Math.max(_j - 1, 0)];
             if (!tarShape) return;
-            this.getTidyUpOutileFrame(tarShape, _i, _j, shape_rows);
+            this.getTidyUpOutileFrame(tarShape, _i, _j, shape_rows, false, o_i, o_j);
             const frame = tarShape._p_frame;
             (this.asyncApiCaller as Transporter).tidy_swap(this.shapes2[0], frame.x + 1, frame.y + 1);
+        }
+        if (this.m_dir) {
+            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
+        } else {
+            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         }
         (this.asyncApiCaller as Transporter).tidyUpShapesLayout(shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
         this.m_adjusted_shape_rows = shape_rows;
     }
 
-    getTidyUpOutileFrame(targetShape: ShapeView, _i: number, _j: number, shape_rows?: ShapeView[][]) {
+    getTidyUpOutileFrame(targetShape: ShapeView, _i: number, _j: number, shape_rows: ShapeView[][], isTarget: boolean, o_i: number, o_j: number) {
         const parent = this.shapes2[0].parent;
         if (!parent) return;
         const matrix = new Matrix();
+        console.log(shape_rows, 'shape_rows');
+        
         const matrix2 = new Matrix(this.context.workspace.matrix);
         matrix.reset(matrix2);
         const shape_root_m = parent.matrix2Root();
+        const { x, y, width, height } = this.outline_frame;
+        const tar_frame = targetShape._p_frame;
+        if (isTarget) {
+            if (this.m_dir) {
+                if (_j === 0) {
+                    const maxW = Math.max(...shape_rows[_i].filter(s => s.id !== this.shapes2[0].id).map(s => s._p_frame.width))
+                    const transx = (tar_frame.x + (tar_frame.width / 2)) - (this.outline_frame.x + (this.outline_frame.width / 2)) - ((maxW - this.outline_frame.width) / 2);
+                    const transy = this.tidy_up_start.y - this.outline_frame.y;
+                    shape_root_m.trans(transx, transy);
+                } else {
+                    if (o_i === _i && o_j === _j - 1) {
+                        const transy = (tar_frame.y + (tar_frame.height / 2)) - (this.outline_frame.y + (this.outline_frame.height / 2)) + ((tar_frame.height - this.outline_frame.height) / 2);
+                        const transx = (tar_frame.x + (tar_frame.width / 2)) - (this.outline_frame.x + (this.outline_frame.width / 2));
+                        shape_root_m.trans(transx, transy);
+                    } else {
+                        const frame = shape_rows[_i][_j - 1]._p_frame;
+                        const transx = (tar_frame.x + (tar_frame.width / 2)) - (this.outline_frame.x + (this.outline_frame.width / 2));
+                        const transy = frame.y + frame.height + this.tidy_up_space.ver - this.outline_frame.y;
+                        shape_root_m.trans(transx, transy);
+                    }
+                }
+            } else {
+                if (_j === 0) {
+                    const maxH = Math.max(...shape_rows[_i].filter(s => s.id !== this.shapes2[0].id).map(s => s._p_frame.height))
+                    const transy = (tar_frame.y + (tar_frame.height / 2)) - (this.outline_frame.y + (this.outline_frame.height / 2)) - ((maxH - this.outline_frame.height) / 2);
+                    const transx = this.tidy_up_start.x - this.outline_frame.x;
+                    shape_root_m.trans(transx, transy);
+                } else {
+                    if (o_i === _i && o_j === _j - 1) {
+                        const transy = (tar_frame.y + (tar_frame.height / 2)) - (this.outline_frame.y + (this.outline_frame.height / 2));
+                        const transx = (tar_frame.x + (tar_frame.width / 2)) - (this.outline_frame.x + (this.outline_frame.width / 2)) + ((tar_frame.width - this.outline_frame.width) / 2);
+                        shape_root_m.trans(transx, transy);
+                    } else {
+                        const frame = shape_rows[_i][_j - 1]._p_frame;
+                        const transy = (tar_frame.y + (tar_frame.height / 2)) - (this.outline_frame.y + (this.outline_frame.height / 2));
+                        const transx = frame.x + frame.width + this.tidy_up_space.hor - this.outline_frame.x;
+                        shape_root_m.trans(transx, transy);
+                    }
+                }
+            }
+        } else {
+            if (_j === 0) {
+                if (this.m_dir) {
+                    const transx = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.width + s._p_frame.x + this.tidy_up_space.hor)) - this.outline_frame.x : this.tidy_up_start.x - this.outline_frame.x;
+                    const transy = this.tidy_up_start.y - this.outline_frame.y;
+                    shape_root_m.trans(transx, transy);
+                } else {
+                    const transy = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.height + s._p_frame.y + this.tidy_up_space.ver)) - this.outline_frame.y : this.tidy_up_start.y - this.outline_frame.y;
+                    const transx = this.tidy_up_start.x - this.outline_frame.x;
+                    shape_root_m.trans(transx, transy);
+                }
+            } else {
+                if (this.m_dir) {
+                    const transx = (tar_frame.x + (tar_frame.width / 2)) - (this.outline_frame.x + (this.outline_frame.width / 2));
+                    const transy = tar_frame.y + tar_frame.height + this.tidy_up_space.ver - this.outline_frame.y;
+                    shape_root_m.trans(transx, transy);
+                } else {
+                    const transx = tar_frame.x + tar_frame.width + this.tidy_up_space.hor - this.outline_frame.x;
+                    const transy = (tar_frame.y + (tar_frame.height / 2)) - (this.outline_frame.y + (this.outline_frame.height / 2));
+                    shape_root_m.trans(transx, transy);
+                }
+            }
+        }
         const m = makeShapeTransform2By1(shape_root_m).clone();
         const clientTransform = makeShapeTransform2By1(matrix2);
         m.addTransform(clientTransform); //root到视图
-        const { x, y, width, height } = this.shapes2[0]._p_frame;
         const { col0, col1, col2, col3 } = m.transform([
             ColVector3D.FromXY(x, y),
             ColVector3D.FromXY(x + width, y),
             ColVector3D.FromXY(x + width, y + height),
             ColVector3D.FromXY(x, y + height)
         ]);
-        const tar_frame = targetShape._p_frame;
-        let tarXY = { x: 0, y: 0 }
-        if (!shape_rows) {
-            const { x, y } = m.transform([
-                ColVector3D.FromXY(tar_frame.x, tar_frame.y),
-            ]).col0;
-            tarXY.x = x, tarXY.y = y;
-        } else {
-            if (_j === 1) {
-                if (this.m_dir) {
-                    const transx = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.width + s._p_frame.x + this.tidy_up_space.hor)) : this.tidy_up_start.x;
-                    const { x, y } = m.transform([
-                        ColVector3D.FromXY(transx, this.tidy_up_start.y),
-                    ]).col0;
-                    tarXY.x = x, tarXY.y = y;
-                } else {
-                    const transy = _i > 0 ? Math.max(...shape_rows[_i - 1].map(s => s._p_frame.height + s._p_frame.y + this.tidy_up_space.ver)) : this.tidy_up_start.y;
-                    const { x, y } = m.transform([
-                        ColVector3D.FromXY(this.tidy_up_start.x, transy),
-                    ]).col0;
-                    tarXY.x = x, tarXY.y = y;
-                }
-            } else {
-                if (this.m_dir) {
-                    const transx = tar_frame.x + ((tar_frame.width - this.shapes2[0]._p_frame.width) / 2);
-                    const transy = tar_frame.y + tar_frame.height + this.tidy_up_space.ver;
-                    const { x, y } = m.transform([
-                        ColVector3D.FromXY(transx, transy),
-                    ]).col0;
-                    tarXY.x = x, tarXY.y = y;
-                } else {
-                    const transx = tar_frame.x + tar_frame.width + this.tidy_up_space.hor;
-                    const transy = tar_frame.y + ((tar_frame.height - this.shapes2[0]._p_frame.height) / 2);
-                    const { x, y } = m.transform([
-                        ColVector3D.FromXY(transx, transy),
-                    ]).col0;
-                    tarXY.x = x, tarXY.y = y;
-                }
-            }
-        }
-        const diffx = col0.x - tarXY.x;
-        const diffy = col0.y - tarXY.y;
-        const lt = { x: col0.x - diffx, y: col0.y - diffy }
-        const rt = { x: col1.x - diffx, y: col1.y - diffy }
-        const rb = { x: col2.x - diffx, y: col2.y - diffy }
-        const lb = { x: col3.x - diffx, y: col3.y - diffy }
-        const point = [lt, rt, rb, lb];
+
+        const point = [col0, col1, col2, col3];
         this.context.selection.notify(Selection.CHANGE_TIDY_UP_SHAPE, point);
     }
 
@@ -1014,10 +1073,23 @@ export class TranslateHandler extends TransformHandler {
         const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));
         this.tidy_up_start = { x: minX, y: minY }
         this.tidy_up_space = layoutSpacing(shape_rows, this.m_dir);
+        for (let i = 0; i < shape_rows.length; i++) {
+            const row = shape_rows[i];
+            let exit = false;
+            for (let j = 0; j < row.length; j++) {
+                const s = row[j];
+                if (s.id === this.shapes2[0].id) {
+                    this.outline_index = { i, j }
+                    exit = true;
+                    break;
+                }
+            }
+            if (exit) break;
+        }
         if (this.m_dir) {
-            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space);
+            this.m_shapes_map_points = getShapesColsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         } else {
-            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space);
+            this.m_shapes_map_points = getShapesRowsMapPosition(this.context, shape_rows, this.tidy_up_space, this.tidy_up_start);
         }
     }
     migrate() {
@@ -1025,7 +1097,14 @@ export class TranslateHandler extends TransformHandler {
         this.migrateOnce();
     }
 
+    _tidyUp() {
+        if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
+        }
+    }
+
     fulfil() {
+        // this._tidyUp();
         this.__migrate(false);
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
@@ -1036,9 +1115,6 @@ export class TranslateHandler extends TransformHandler {
         }
         if (this.mode === "insert") {
             this.context.selection.notify(Selection.PRE_INSERT);
-        }
-        if (!this.context.selection.isTidyUp && this.asyncApiCaller) {
-            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
         }
         super.fulfil();
         this.fulfilled = true;
