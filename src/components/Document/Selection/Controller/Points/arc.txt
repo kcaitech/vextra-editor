@@ -1,0 +1,44 @@
+数据结构：
+· 只在OvalShape下存三个值：startingAngle、endingAngle、innerRadius
+    其中startingAngle的取值为[0,2PI)，endingAngle则为(-2PI, 4PI)，innerRadius的取值为[0,1];
+    这三个值将决定OvalShape的路径，并可以作为组件变量；
+
+· 读取值：
+    不用拆开编组元素读
+    start: 取自startAngle;   (-180°, 180°]
+    sweep: 圆的覆盖率, 取自(endingAngle - startingAngle) / (Math.PI * 2);   [-100%, 100%]
+    ratio: 内圆半径与外圆半径的比例，取自innerRadius;      [0, 100%]
+
+· 修改值：
+    start: [1, 0.5] 为起点，顺时针为正，逆时针为负，负数取值【360 + start】，得到的start还需要 % 180 * Math.PI，最后赋值给startingAngle，
+        需要注意的是，每次修改start，还需要根据sweep的当前值计算一个新值赋给endingAngle；
+    sweep: 根据当前的startingAngle值计算一个新的值赋给endingAngle，endingAngle = startingAngle + Math.PI * 2 * sweep，
+        所以字读取多个图层的sweep时，即便sweep相等，也可能因为不同的startingAngle存在多个endingAngle；
+    ratio: 将ratio % 100 赋给 innerRadius；
+
+    这三个值的修改，都将会引起OvalShape路径的修改，因此需要函数来实现 startingAngle、endingAngle、innerRadius => segments;
+
+· 路径计算器OvalPathParser
+    用于实现startingAngle、endingAngle、innerRadius => segments；
+
+控制点的读值
+· 起点位置：(1 - innerRadius + 1) / 2 * trans.startingAngle，如果sweep为[100|0]则不需要起点;
+· 终点位置：(1 - innerRadius + 1) / 2 * trans.endingAngle;
+· 内径点位置: innerRadius * trans.(endingAngle - startingAngle)，如果sweep为100则不需要内径点;
+
+
+记录一个终点target，每次移动判断是否经过了0点，在经过0的时候切换终点：
+sweep === 1：
+    start：0;
+    end：2PI;
+    end逆时针旋转，此时终点为 2PI，end 变化趋势为  2PI -> 0; sweep的变化趋势为1 -> 0;
+    end顺时针旋转，此时终点为-2PI，end 变化趋势为 -2PI -> 0; sweep的变化趋势为1 -> 0;
+
+sweep === 0：
+    start：0;
+    end：0;
+    end逆时针旋转，此时终点为-2PI，end 变化趋势为 0 -> -2PI; sweep的变化趋势为0 -> 1;
+    end顺时针旋转，此时终点为 2PI，end 变化趋势为 0 ->  2PI; sweep的变化趋势为0 -> 1;
+
+当target为 2PI时，end的值为[0,  2PI], 与动态计算值映射关系为1 -> 1;
+当target为-2PI时，end的值为[0, -2PI], 与动态计算值映射关系为1 -> 1 - Round;
