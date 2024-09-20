@@ -132,34 +132,62 @@ export class ArcFreeModifier {
 
     modifyEnd(event: MouseEvent) {
         const round = Math.PI * 2;
-
         const oval = this.m_oval;
-
         const start = oval.startingAngle ?? 0;
-
         let xy = this.context.workspace.getContentXY(event);
-        let matrix = new Matrix();
 
+        let matrix = new Matrix();
         start && matrix.rotate(start, 0.5, 0.5);
         matrix.scale(oval.frame.width, oval.frame.height);
         matrix.multiAtLeft(oval.matrix2Root());
         matrix.multiAtLeft(this.context.workspace.matrix);
         matrix = new Matrix(matrix.inverse);
-
         xy = matrix.computeCoord3(xy);
 
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
         if (__end < 0) __end = round + __end;
         if (__end === 0) __end = round;
-
         this.__update_target(__end);
         __end = this.__radian_of_target(__end);
-
         (this.asyncApiCaller as OvalModifier).modifyEnd(__end + start, [oval]);
     }
 
     modifyRadius(event: MouseEvent) {
+        const round = Math.PI * 2;
+        const oval = this.m_oval;
 
+        const start = oval.startingAngle ?? 0;
+        let xy = this.context.workspace.getContentXY(event);
+
+        let matrix = new Matrix();
+        start && matrix.rotate(start, 0.5, 0.5);
+        matrix.scale(oval.frame.width, oval.frame.height);
+        matrix.multiAtLeft(oval.matrix2Root());
+        matrix.multiAtLeft(this.context.workspace.matrix);
+        matrix = new Matrix(matrix.inverse);
+        xy = matrix.computeCoord3(xy);
+
+        const innerRadius = Math.min(Math.hypot(xy.x - 0.5, xy.y - 0.5) / 0.5, 1);
+
+        (this.asyncApiCaller as OvalModifier).modifyRadius(innerRadius, [oval]);
+
+        let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
+        if (__end < 0) __end = round + __end;
+        if (__end === 0) __end = round;
+
+        const sweep = this.currentSweep;
+        const end = (this.m_oval.endingAngle ?? round) - start;
+
+        let needSwap: boolean;
+        if (sweep < 0) {
+            needSwap = __end < end + round;
+        } else if (sweep > 0) {
+            needSwap = __end > end;
+        } else {
+            needSwap = __end !== 0;
+        }
+
+        if (needSwap) (this.asyncApiCaller as OvalModifier).swapGap(oval);
     }
 
     fulfil() {

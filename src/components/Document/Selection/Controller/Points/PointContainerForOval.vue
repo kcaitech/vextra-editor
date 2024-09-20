@@ -170,6 +170,36 @@ function endUp(e: MouseEvent) {
     document.removeEventListener('mouseup', endUp);
 }
 
+function radiusDown(e: MouseEvent) {
+    e.stopPropagation();
+
+    __down_xy = e;
+    __down = true;
+
+    arcModifier = new ArcFreeModifier(props.context, props.shape, ArcKey.Start, start, end, radius, active);
+
+    document.addEventListener('mousemove', radiusMove);
+    document.addEventListener('mouseup', radiusUp);
+}
+
+function radiusMove(e: MouseEvent) {
+    if (__drag) {
+        arcModifier?.modifyRadius(e);
+    } else if (Math.hypot(e.x - __down_xy.x, e.y - __down_xy.y)) {
+        __drag = true;
+        arcModifier?.createApiCaller();
+    }
+}
+
+function radiusUp(e: MouseEvent) {
+    arcModifier?.fulfil();
+    arcModifier = undefined;
+    __down = false;
+    __drag = false;
+    document.removeEventListener('mousemove', radiusMove);
+    document.removeEventListener('mouseup', radiusUp);
+}
+
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);
@@ -206,7 +236,8 @@ onUnmounted(() => {
         <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
                  stroke-width="1"/>
     </g>
-    <g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`">
+    <g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`"
+       @mousedown="radiusDown">
         <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
         <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
         <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
