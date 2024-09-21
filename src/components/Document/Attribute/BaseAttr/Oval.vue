@@ -67,18 +67,18 @@ onMounted(() => {
 watch(() => props.trigger, ovalData.update.bind(ovalData));
 </script>
 <template>
-<form ref="form" class="oval-arc-options-wrapper">
-    <div class="start">
-        <svg-icon icon-class="oval-start"/>
-        <input type="text" :value="`${options.start}°`" @change="changeStartOnce"/>
-    </div>
-    <div class="sweep">
-        <input type="text" :value="`${options.sweep}%`" @change="changeSweepOnce"/>
-    </div>
-    <div class="ratio">
-        <input type="text" :value="`${options.ratio}%`" @change="changeRatioOnce"/>
-    </div>
-</form>
+    <form ref="form" class="oval-arc-options-wrapper">
+        <div class="start">
+            <svg-icon icon-class="oval-start"/>
+            <input type="text" :value="`${options.start}°`" @change="changeStartOnce"/>
+        </div>
+        <div class="sweep">
+            <input type="text" :value="`${options.sweep}%`" @change="changeSweepOnce"/>
+        </div>
+        <div class="ratio">
+            <input type="text" :value="`${options.ratio}%`" @change="changeRatioOnce"/>
+        </div>
+    </form>
 </template>
 <style lang="scss" scoped>
 .oval-arc-options-wrapper {
@@ -100,7 +100,7 @@ watch(() => props.trigger, ovalData.update.bind(ovalData));
     > div {
         background-color: var(--input-background);
         height: 100%;
-        padding: 0 8px;
+        padding: 0 0 0 8px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
