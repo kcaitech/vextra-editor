@@ -3,9 +3,16 @@ import { onMounted, reactive, ref, watch } from "vue";
 import { Context } from "@/context";
 import { OvalData, OvalOptions, sortValue } from "@/components/Document/Attribute/BaseAttr/oval";
 import { hidden_selection } from "@/utils/content";
+import { LinearApi } from "@kcdesign/data"
+import Tooltip from "@/components/common/Tooltip.vue";
+import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
+import { LockMouse } from "@/transform/lockMouse";
 
 const props = defineProps<{ context: Context; trigger: any[] }>();
 const form = ref<HTMLFormElement>();
+
+const locker = new LockedPointer();
+let lockApi: LockMouse | undefined = undefined;
 
 const options = reactive<OvalOptions>({
     start: 0,
@@ -14,6 +21,7 @@ const options = reactive<OvalOptions>({
 });
 
 const ovalData = new OvalData(props.context, options);
+const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
 
 function changeStartOnce(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -55,13 +63,57 @@ function changeRatioOnce(event: Event) {
     target.blur();
 }
 
-onMounted(() => {
-    if (form.value) {
-        form.value.addEventListener('focus', (event: Event) => {
-            (event.target as HTMLInputElement).select();
-            ovalData.stashSelection();
-        }, true);
+function keydownStart(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        if (value < -180) value = -180;
+        else if (value > 180) value = 180;
+        const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyStartingAngle(shapes, __target);
+
+        target.select();
+
+        event.preventDefault();
     }
+}
+
+function __downStart(event: MouseEvent) {
+    event.stopPropagation();
+
+    const shapes = props.context.selection.selectedShapes;
+
+    locker.start(event, (e: MouseEvent) => {
+        if (!lockApi) {
+            lockApi = new LockMouse(props.context, event);
+            lockApi.createApiCaller("translating");
+        }
+
+        lockApi?.modifyStartingAngleBy(shapes, (e.movementX / 360) * Math.PI * 2);
+    }, () => {
+        lockApi?.fulfil();
+        lockApi = undefined;
+    });
+}
+
+function downStart(event: MouseEvent) {
+    if (!event.altKey) return;
+    event.preventDefault();
+    (event.target as HTMLInputElement)?.select();
+
+    __downStart(event);
+}
+
+onMounted(() => {
+    form.value && form.value.addEventListener('focus', (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.select && typeof target.select === 'function') target.select();
+
+        ovalData.stashSelection();
+    }, true);
+
     ovalData.__update();
 });
 watch(() => props.trigger, ovalData.update.bind(ovalData));
@@ -69,8 +121,11 @@ watch(() => props.trigger, ovalData.update.bind(ovalData));
 <template>
     <form ref="form" class="oval-arc-options-wrapper">
         <div class="start">
-            <svg-icon icon-class="oval-start"/>
-            <input type="text" :value="`${options.start}°`" @change="changeStartOnce"/>
+            <Tooltip content="开始">
+                <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
+            </Tooltip>
+            <input type="text" :value="`${options.start}°`"
+                   @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
         </div>
         <div class="sweep">
             <input type="text" :value="`${options.sweep}%`" @change="changeSweepOnce"/>
@@ -115,6 +170,8 @@ watch(() => props.trigger, ovalData.update.bind(ovalData));
             width: 12px;
             height: 12px;
             fill: rgb(128, 128, 128);
+            cursor: -webkit-image-set(url("@/assets/cursor/scale.png") 1.5x) 14 14, auto;
+            outline: none;
         }
 
         input {

@@ -83,4 +83,8 @@ export class LockMouse extends TransformHandler {
     executeUniformScale(units: UniformScaleUnit[], ratio: number) {
 
     }
+
+    modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
+        (this.asyncApiCaller as LockMouseHandler).modifyStartingAngleBy(shapes, delta);
+    }
 }

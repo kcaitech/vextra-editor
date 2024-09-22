@@ -25,6 +25,10 @@ export class OvalData {
         this.m_selected = context.selection.selectedShapes;
     }
 
+    stash() {
+        return this.m_selected;
+    }
+
     stashSelection(selected?: ShapeView[]) {
         this.m_selected = [...(selected || this.m_context.selection.selectedShapes)];
     }
