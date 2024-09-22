@@ -64,8 +64,16 @@ export class ArcFreeModifier {
 
         xy = matrix.computeCoord3(xy);
 
+        const round = Math.PI * 2;
+        const quarter = Math.PI / 4;
         let __start = Math.atan2(xy.y - 0.5, xy.x - 0.5);
-        if (__start < 0) __start = Math.PI * 2 + __start;
+        if (__start < 0) __start = round + __start;
+
+        const __lip = round / 360 * 5;
+        const __slice = __start % quarter;
+
+        if (__slice < __lip) __start -= __slice;
+        else if (__slice > quarter - __lip) __start = __start - __slice + quarter;
 
         (this.asyncApiCaller as OvalModifier).modifyStart(__start, [oval]);
     }
@@ -147,8 +155,16 @@ export class ArcFreeModifier {
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
         if (__end < 0) __end = round + __end;
         if (__end === 0) __end = round;
+
+        const quarter = Math.PI / 4;
+        const __lip = round / 360 * 5;
+        const __slice = __end % quarter;
+        if (__slice < __lip) __end -= __slice;
+        else if (__slice > quarter - __lip) __end = __end - __slice + quarter;
+
         this.__update_target(__end);
         __end = this.__radian_of_target(__end);
+
         (this.asyncApiCaller as OvalModifier).modifyEnd(__end + start, [oval]);
     }
 
@@ -167,10 +183,6 @@ export class ArcFreeModifier {
         matrix = new Matrix(matrix.inverse);
         xy = matrix.computeCoord3(xy);
 
-        const innerRadius = Math.min(Math.hypot(xy.x - 0.5, xy.y - 0.5) / 0.5, 1);
-
-        (this.asyncApiCaller as OvalModifier).modifyRadius(innerRadius, [oval]);
-
         let __end = Math.atan2(xy.y - 0.5, xy.x - 0.5);
         if (__end < 0) __end = round + __end;
         if (__end === 0) __end = round;
@@ -188,6 +200,10 @@ export class ArcFreeModifier {
         }
 
         if (needSwap) (this.asyncApiCaller as OvalModifier).swapGap(oval);
+
+        let innerRadius = Math.min(Math.hypot(xy.x - 0.5, xy.y - 0.5) / 0.5, 1);
+        if (innerRadius < 0.05) innerRadius = 0;
+        (this.asyncApiCaller as OvalModifier).modifyRadius(innerRadius, [oval]);
     }
 
     fulfil() {
