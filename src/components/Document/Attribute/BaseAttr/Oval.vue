@@ -7,6 +7,9 @@ import { LinearApi } from "@kcdesign/data"
 import Tooltip from "@/components/common/Tooltip.vue";
 import { LockedPointer } from "@/components/Document/Attribute/LockedPointer/lockedpointer";
 import { LockMouse } from "@/transform/lockMouse";
+import { useI18n } from "vue-i18n";
+
+const t = useI18n().t;
 
 const props = defineProps<{ context: Context; trigger: any[] }>();
 const form = ref<HTMLFormElement>();
@@ -14,11 +17,7 @@ const form = ref<HTMLFormElement>();
 const locker = new LockedPointer();
 let lockApi: LockMouse | undefined = undefined;
 
-const options = reactive<OvalOptions>({
-    start: 0,
-    sweep: 100,
-    ratio: 0
-});
+const options = reactive<OvalOptions>({start: 0, sweep: 100, ratio: 0});
 
 const ovalData = new OvalData(props.context, options);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
@@ -27,8 +26,7 @@ function changeStartOnce(event: Event) {
     const target = event.target as HTMLInputElement;
     let value: number = sortValue(target.value);
     if (isNaN(value)) return;
-    if (value < -180) value = -180;
-    else if (value > 180) value = 180;
+    value = Math.max(-180, Math.min(180, value));
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
@@ -41,8 +39,7 @@ function changeSweepOnce(event: Event) {
     const target = event.target as HTMLInputElement;
     let value: number = sortValue(target.value);
     if (isNaN(value)) return;
-    if (value < -100) value = -100;
-    else if (value > 100) value = 100;
+    value = Math.max(-100, Math.min(100, value));
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     editor.modifyShapesSweep(props.context.selection.selectedShapes, value);
@@ -54,8 +51,7 @@ function changeRatioOnce(event: Event) {
     const target = event.target as HTMLInputElement;
     let value: number = sortValue(target.value);
     if (isNaN(value)) return;
-    if (value < 0) value = 0;
-    else if (value > 100) value = 100;
+    value = Math.max(0, Math.min(100, value));
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     editor.modifyShapesRadius(props.context.selection.selectedShapes, value / 100);
@@ -68,30 +64,49 @@ function keydownStart(event: KeyboardEvent) {
         const target = event.target as HTMLInputElement;
         let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
         if (isNaN(value)) return;
-        if (value < -180) value = -180;
-        else if (value > 180) value = 180;
+        value = Math.max(-180, Math.min(180, value));
         const __target = (360 + value) % 360 / 360 * (Math.PI * 2);
         const shapes = props.context.selection.selectedShapes;
         linearApi.modifyStartingAngle(shapes, __target);
-
         target.select();
+        event.preventDefault();
+    }
+}
 
+function keydownSweep(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = Math.max(-100, Math.min(100, value));
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifySweep(shapes, value / 100 * Math.PI * 2);
+        target.select();
+        event.preventDefault();
+    }
+}
+
+function keydownInnerRadius(event: KeyboardEvent) {
+    if (event.code === 'ArrowUp' || event.code === "ArrowDown") {
+        const target = event.target as HTMLInputElement;
+        let value: number = sortValue(target.value) + (event.code === 'ArrowUp' ? 1 : -1);
+        if (isNaN(value)) return;
+        value = Math.max(0, Math.min(100, value));
+        const shapes = props.context.selection.selectedShapes;
+        linearApi.modifyInnerRadius(shapes, value / 100);
+        target.select();
         event.preventDefault();
     }
 }
 
 function __downStart(event: MouseEvent) {
-    event.stopPropagation();
-
     const shapes = props.context.selection.selectedShapes;
-
     locker.start(event, (e: MouseEvent) => {
         if (!lockApi) {
             lockApi = new LockMouse(props.context, event);
             lockApi.createApiCaller("translating");
         }
-
-        lockApi?.modifyStartingAngleBy(shapes, (e.movementX / 360) * Math.PI * 2);
+        lockApi.modifyStartingAngleBy(shapes, (e.movementX / 360) * Math.PI * 2);
     }, () => {
         lockApi?.fulfil();
         lockApi = undefined;
@@ -102,18 +117,49 @@ function downStart(event: MouseEvent) {
     if (!event.altKey) return;
     event.preventDefault();
     (event.target as HTMLInputElement)?.select();
-
     __downStart(event);
+}
+
+function downEnd(event: MouseEvent) {
+    if (!event.altKey) return;
+    event.preventDefault();
+    (event.target as HTMLInputElement)?.select();
+    const shapes = props.context.selection.selectedShapes;
+    locker.start(event, (e: MouseEvent) => {
+        if (!lockApi) {
+            lockApi = new LockMouse(props.context, event);
+            lockApi.createApiCaller("translating");
+        }
+        lockApi.modifySweepBy(shapes, (e.movementX / 1000) * Math.PI * 2);
+    }, () => {
+        lockApi?.fulfil();
+        lockApi = undefined;
+    });
+}
+
+function downInnerRadius(event: MouseEvent) {
+    if (!event.altKey) return;
+    event.preventDefault();
+    (event.target as HTMLInputElement)?.select();
+    const shapes = props.context.selection.selectedShapes;
+    locker.start(event, (e: MouseEvent) => {
+        if (!lockApi) {
+            lockApi = new LockMouse(props.context, event);
+            lockApi.createApiCaller("translating");
+        }
+        lockApi.modifyInnerRadiusBy(shapes, e.movementX / 1000);
+    }, () => {
+        lockApi?.fulfil();
+        lockApi = undefined;
+    });
 }
 
 onMounted(() => {
     form.value && form.value.addEventListener('focus', (event: Event) => {
         const target = event.target as HTMLInputElement;
         if (target.select && typeof target.select === 'function') target.select();
-
         ovalData.stashSelection();
     }, true);
-
     ovalData.__update();
 });
 watch(() => props.trigger, ovalData.update.bind(ovalData));
@@ -121,17 +167,19 @@ watch(() => props.trigger, ovalData.update.bind(ovalData));
 <template>
     <form ref="form" class="oval-arc-options-wrapper">
         <div class="start">
-            <Tooltip content="开始">
+            <Tooltip :content="t('attr.startingAngle')">
                 <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
             </Tooltip>
             <input type="text" :value="`${options.start}°`"
                    @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
         </div>
         <div class="sweep">
-            <input type="text" :value="`${options.sweep}%`" @change="changeSweepOnce"/>
+            <input type="text" :value="`${options.sweep}%`"
+                   @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
         </div>
         <div class="ratio">
-            <input type="text" :value="`${options.ratio}%`" @change="changeRatioOnce"/>
+            <input type="text" :value="`${options.ratio}%`"
+                   @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
         </div>
     </form>
 </template>
@@ -179,15 +227,10 @@ watch(() => props.trigger, ovalData.update.bind(ovalData));
         }
     }
 
-    > .sweep {
+    > .sweep, .ratio {
         flex: 0 0 56px;
         width: 56px;
 
-    }
-
-    > .ratio {
-        flex: 0 0 56px;
-        width: 56px;
     }
 }
 </style>
