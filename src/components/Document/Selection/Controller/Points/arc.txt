@@ -1,6 +1,6 @@
 数据结构：
 · 只在OvalShape下存三个值：startingAngle、endingAngle、innerRadius
-    其中startingAngle的取值为[0,2PI)，endingAngle则为(-2PI, 4PI)，innerRadius的取值为[0,1];
+    其中startingAngle的取值为[0,2PI)，endingAngle则为[-2PI, 4PI)，innerRadius的取值为[0,1];
     这三个值将决定OvalShape的路径，并可以作为组件变量；
 
 · 读取值：
