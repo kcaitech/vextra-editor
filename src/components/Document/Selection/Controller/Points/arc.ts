@@ -75,6 +75,8 @@ export class ArcFreeModifier {
         if (__slice < __lip) __start -= __slice;
         else if (__slice > quarter - __lip) __start = __start - __slice + quarter;
 
+        __start %= round;
+
         (this.asyncApiCaller as OvalModifier).modifyStart(__start, [oval]);
     }
 

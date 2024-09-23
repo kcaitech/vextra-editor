@@ -18,6 +18,7 @@ export class OvalData {
     private readonly m_context: Context;
 
     private m_selected: ShapeView[];
+    private m_disabled: boolean = false;
 
     constructor(context: Context, options: OvalOptions) {
         this.m_context = context;
@@ -33,8 +34,8 @@ export class OvalData {
         this.m_selected = [...(selected || this.m_context.selection.selectedShapes)];
     }
 
-    update(trigger: any[]) {
-        if (trigger.includes('pathsegs')) this.__update();
+    update(trigger: any[] | number) {
+        if (typeof trigger === "number" || (trigger.includes('pathsegs') || trigger.includes('endingAngle') || trigger.includes('innerRadius'))) this.__update();
     }
 
     fix(value: number) {
@@ -55,6 +56,7 @@ export class OvalData {
         const fix = this.fix.bind(this);
 
         for (const oval of selected) {
+            if (oval.isVirtualShape) this.m_disabled = true;
             if (!(oval instanceof PathShapeView) || oval.haveEdit) continue;
 
             const start = oval.startingAngle ?? 0;
@@ -95,5 +97,7 @@ export class OvalData {
         } else {
             options.ratio = fix((Array.from(RATIO.values()).pop() || 0) * 100);
         }
+
+        return this.m_disabled;
     }
 }

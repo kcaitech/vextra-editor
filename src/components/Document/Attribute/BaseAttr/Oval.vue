@@ -11,13 +11,13 @@ import { useI18n } from "vue-i18n";
 
 const t = useI18n().t;
 
-const props = defineProps<{ context: Context; trigger: any[] }>();
+const props = defineProps<{ context: Context; trigger: any[]; selectionChange: number; }>();
 const form = ref<HTMLFormElement>();
 
 const locker = new LockedPointer();
 let lockApi: LockMouse | undefined = undefined;
 
-const options = reactive<OvalOptions>({start: 0, sweep: 100, ratio: 0});
+const options = reactive<OvalOptions>({ start: 0, sweep: 100, ratio: 0 });
 
 const ovalData = new OvalData(props.context, options);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
@@ -154,6 +154,9 @@ function downInnerRadius(event: MouseEvent) {
     });
 }
 
+watch(() => props.selectionChange, ovalData.update.bind(ovalData));
+watch(() => props.trigger, ovalData.update.bind(ovalData));
+
 onMounted(() => {
     form.value && form.value.addEventListener('focus', (event: Event) => {
         const target = event.target as HTMLInputElement;
@@ -162,26 +165,25 @@ onMounted(() => {
     }, true);
     ovalData.__update();
 });
-watch(() => props.trigger, ovalData.update.bind(ovalData));
 </script>
 <template>
-    <form ref="form" class="oval-arc-options-wrapper">
-        <div class="start">
-            <Tooltip :content="t('attr.startingAngle')">
-                <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
-            </Tooltip>
-            <input type="text" :value="`${options.start}°`"
-                   @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
-        </div>
-        <div class="sweep">
-            <input type="text" :value="`${options.sweep}%`"
-                   @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
-        </div>
-        <div class="ratio">
-            <input type="text" :value="`${options.ratio}%`"
-                   @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
-        </div>
-    </form>
+<form ref="form" class="oval-arc-options-wrapper">
+    <div class="start">
+        <Tooltip :content="t('attr.startingAngle')">
+            <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
+        </Tooltip>
+        <input type="text" :value="`${options.start}°`"
+               @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
+    </div>
+    <div class="sweep">
+        <input type="text" :value="`${options.sweep}%`"
+               @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
+    </div>
+    <div class="ratio">
+        <input type="text" :value="`${options.ratio}%`"
+               @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
+    </div>
+</form>
 </template>
 <style lang="scss" scoped>
 .oval-arc-options-wrapper {

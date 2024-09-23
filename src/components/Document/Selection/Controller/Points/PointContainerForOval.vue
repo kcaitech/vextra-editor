@@ -303,7 +303,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <g>
+    <g v-if="pointVisible">
         <g v-if="start.visible" :style="`transform: translate(${start.x - 4}px, ${start.y - 4}px);`"
            @mousedown="startDown" @mouseenter="startEnter" @mouseleave="__leave">
             <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>

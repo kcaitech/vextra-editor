@@ -753,7 +753,7 @@ onUnmounted(() => {
         <div style="width: 32px;height: 32px;"></div>
     </div>
     <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"/>
-    <Oval v-if="s_oval" :context="context" :trigger="trigger"/>
+    <Oval v-if="s_oval" :context="context" :trigger="trigger" :selection-change="selectionChange"/>
 </div>
 <teleport to="body">
     <div v-if="tel" class="point" :style="{ top: `${telY - 10}px`, left: `${telX - 10.5}px` }">
