@@ -17,7 +17,7 @@ const form = ref<HTMLFormElement>();
 const locker = new LockedPointer();
 let lockApi: LockMouse | undefined = undefined;
 
-const options = reactive<OvalOptions>({ start: 0, sweep: 100, ratio: 0 });
+const options = reactive<OvalOptions>({ start: 0, sweep: 100, ratio: 0, disabled: false });
 
 const ovalData = new OvalData(props.context, options);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
@@ -167,7 +167,7 @@ onMounted(() => {
 });
 </script>
 <template>
-<form ref="form" class="oval-arc-options-wrapper">
+<form ref="form" :class="{'oval-arc-options-wrapper': true, disabled: options.disabled}">
     <div class="start">
         <Tooltip :content="t('attr.startingAngle')">
             <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
@@ -176,16 +176,25 @@ onMounted(() => {
                @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
     </div>
     <div class="sweep">
-        <input type="text" :value="`${options.sweep}%`"
-               @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
+        <Tooltip :content="t('attr.sweep')">
+            <input type="text" :value="`${options.sweep}%`"
+                   @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
+        </Tooltip>
     </div>
     <div class="ratio">
-        <input type="text" :value="`${options.ratio}%`"
-               @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
+        <Tooltip :content="t('attr.ratio')">
+            <input type="text" :value="`${options.ratio}%`"
+                   @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
+        </Tooltip>
     </div>
 </form>
 </template>
 <style lang="scss" scoped>
+.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
 .oval-arc-options-wrapper {
     height: 32px;
     width: 189px;

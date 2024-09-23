@@ -19,12 +19,12 @@ const props = defineProps<Props>();
 
 const t = useI18n().t;
 
-const start = reactive<{ visible: boolean, x: number, y: number }>({visible: true, x: 0, y: 0});
-const end = reactive<{ visible: boolean, x: number, y: number }>({visible: true, x: 0, y: 0});
+const start = reactive<{ visible: boolean, x: number, y: number }>({ visible: true, x: 0, y: 0 });
+const end = reactive<{ visible: boolean, x: number, y: number }>({ visible: true, x: 0, y: 0 });
 
-const radius = reactive<{ visible: boolean, x: number, y: number }>({visible: true, x: 0, y: 0});
+const radius = reactive<{ visible: boolean, x: number, y: number }>({ visible: true, x: 0, y: 0 });
 
-const active = reactive<{ key: string, value: string }>({key: '', value: '0°'});
+const active = reactive<{ key: string, value: string }>({ key: '', value: '0°' });
 
 function update() {
     const context = props.context;
@@ -57,14 +57,8 @@ function update() {
         end.visible = true;
         end.x = __end.x;
         end.y = __end.y;
-
-        radius.visible = true;
-        const __radius = M.computeCoord2(0.5, 0.5);
-        radius.x = __radius.x;
-        radius.y = __radius.y;
     } else if (sweep === 1) {
         start.visible = false;
-        radius.visible = false;
 
         const matrix = new Matrix();
         matrix.rotate(e, 0.5, 0.5);
@@ -98,19 +92,19 @@ function update() {
         start.visible = true;
         start.x = __start.x;
         start.y = __start.y;
-
-        radius.visible = true;
-        const matrix3 = new Matrix();
-        matrix3.rotate((e + s) / 2, 0.5, 0.5);
-        matrix3.multiAtLeft(M);
-        const __radius = matrix3.computeCoord2(r / 2 + 0.5, 0.5);
-        radius.x = __radius.x;
-        radius.y = __radius.y;
     }
+
+    radius.visible = true;
+    const matrix3 = new Matrix();
+    matrix3.rotate((e + s) / 2, 0.5, 0.5);
+    matrix3.multiAtLeft(M);
+    const __radius = matrix3.computeCoord2(r / 2 + 0.5, 0.5);
+    radius.x = __radius.x;
+    radius.y = __radius.y;
 }
 
 let arcModifier: ArcFreeModifier | undefined;
-let __down_xy = {x: 0, y: 0};
+let __down_xy = { x: 0, y: 0 };
 let __drag = false;
 let __down = false;
 
@@ -242,7 +236,7 @@ function radiusUp(e: MouseEvent) {
 }
 
 const tips = ref<boolean>(false);
-const tipsPosition = reactive<{ x: number, y: number }>({x: 0, y: 0});
+const tipsPosition = reactive<{ x: number, y: number }>({ x: 0, y: 0 });
 let leave = true;
 
 function startEnter() {
@@ -303,35 +297,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <g v-if="pointVisible">
-        <g v-if="start.visible" :style="`transform: translate(${start.x - 4}px, ${start.y - 4}px);`"
-           @mousedown="startDown" @mouseenter="startEnter" @mouseleave="__leave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                     stroke-width="1"/>
-            <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
-        </g>
-        <g v-if="end.visible" :style="`transform: translate(${end.x - 4}px, ${end.y - 4}px);`"
-           @mousedown="endDown" @mouseenter="sweepEnter" @mouseleave="__leave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                     stroke-width="1"/>
-        </g>
-        <g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`"
-           @mousedown="radiusDown" @mouseenter="ratioEnter" @mouseleave="__leave">
-            <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
-            <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
-                     stroke-width="1"/>
-        </g>
-        <foreignObject v-if="tips" :x="tipsPosition.x + 15" :y="tipsPosition.y- 15" width="120px" height="28px">
-            <div class="percent_container">
-                <span>{{ `${active.key} ${active.value}` }}</span>
-            </div>
-        </foreignObject>
+<g v-if="pointVisible">
+    <g v-if="start.visible" :style="`transform: translate(${start.x - 4}px, ${start.y - 4}px);`"
+       @mousedown="startDown" @mouseenter="startEnter" @mouseleave="__leave">
+        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                 stroke-width="1"/>
+        <ellipse cx="4" cy="4" rx="1.5" ry="1.5" fill="#1878F5" fill-opacity="1"/>
     </g>
+    <g v-if="end.visible" :style="`transform: translate(${end.x - 4}px, ${end.y - 4}px);`"
+       @mousedown="endDown" @mouseenter="sweepEnter" @mouseleave="__leave">
+        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                 stroke-width="1"/>
+    </g>
+    <g v-if="radius.visible" :style="`transform: translate(${radius.x - 4}px, ${radius.y - 4}px);`"
+       @mousedown="radiusDown" @mouseenter="ratioEnter" @mouseleave="__leave">
+        <ellipse cx="4" cy="4" rx="5" ry="5" fill="transparent" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill="#FFFFFF" fill-opacity="1"/>
+        <ellipse cx="4" cy="4" rx="4" ry="4" fill-opacity="0" stroke-opacity="1" stroke="#1878F5" fill="none"
+                 stroke-width="1"/>
+    </g>
+    <foreignObject v-if="tips" :x="tipsPosition.x + 15" :y="tipsPosition.y- 15" width="120px" height="28px">
+        <div class="percent_container">
+            <span>{{ `${active.key} ${active.value}` }}</span>
+        </div>
+    </foreignObject>
+</g>
 </template>
 
 <style scoped lang="scss">

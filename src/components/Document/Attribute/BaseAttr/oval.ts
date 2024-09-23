@@ -5,6 +5,7 @@ export interface OvalOptions {
     start: number | string;
     sweep: number | string;
     ratio: number | string;
+    disabled: boolean;
 }
 
 export function sortValue(value: string) {
@@ -55,8 +56,10 @@ export class OvalData {
 
         const fix = this.fix.bind(this);
 
+        const options = this.m_options;
+
         for (const oval of selected) {
-            if (oval.isVirtualShape) this.m_disabled = true;
+            if (oval.isVirtualShape) options.disabled = true;
             if (!(oval instanceof PathShapeView) || oval.haveEdit) continue;
 
             const start = oval.startingAngle ?? 0;
@@ -70,7 +73,6 @@ export class OvalData {
             RATIO.add(ratio);
         }
 
-        const options = this.m_options;
         let __start;
         if (START.size > 1) {
             __start = OvalData.MIXED;
