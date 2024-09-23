@@ -176,6 +176,12 @@
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
+                <div v-if="is_scroll_behavior" class="overflow-roll">
+                    <div class="text">{{ t('prototype.fixed_behavior') }}</div>
+                    <Select class="select" :source="fixedBehavior"
+                        :selected="scroll_behavior_value"
+                        @select=scrollBehavior></Select>
+                </div>
             </div>
             <div v-else class="tips">
                 <span>{{ t('prototype.interaction') }}</span>
@@ -213,6 +219,7 @@ import {
     OverlayBackgroundAppearance,
     OverlayBackgroundType,
     ScrollDirection,
+    ScrollBehavior,
     PrototypeEasingBezier
 } from '@kcdesign/data';
 import { v4 } from 'uuid';
@@ -269,6 +276,11 @@ const overflowRoll: SelectSource[] = genOptions([
     [ScrollDirection.HORIZONTAL, t('prototype.flow_h')],
     [ScrollDirection.VERTICAL, t('prototype.flow_v')],
     [ScrollDirection.BOTH, t('prototype.flow_b')]
+])
+const fixedBehavior: SelectSource[] = genOptions([
+    [ScrollBehavior.SCROLLS, t('prototype.scroll_with_parent')],
+    [ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME, t('prototype.fixed')],
+    [ScrollBehavior.STICKYSCROLLS, t('prototype.sticky_fixed')],
 ])
 
 const trigger: SelectSource[] = genOptions([
@@ -1170,6 +1182,15 @@ const scrollDirection = (data: SelectItem) => {
     updateData()
 }
 
+const scrollBehavior = (data: SelectItem) => {
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedShapes;
+    editor.setScrollBehavior(shapes, data.value as ScrollBehavior);
+    scroll_behavior_value.value = data;
+}
+
 const test = new Set()
 for (let i of Object.values(PrototypeEvents)) {
     test.add(i)
@@ -1181,7 +1202,6 @@ const createAction = () => {
     const page = props.context.selection.selectedPage!;
     const e = props.context.editor4Page(page);
     const shape = props.context.selection.selectedShapes[0];
-
 
     if (!shape) return;
 
@@ -1293,14 +1313,17 @@ const showhandel = (id: string) => {
         showaction.value = !showaction.value
     }
 }
-
+const is_scroll_behavior = ref(false);
+const scroll_behavior_value = ref<SelectItem>({ value: ScrollBehavior.SCROLLS, content: t('prototype.scroll_with_parent') });
 const isProtoType = ref(new Map())
 //更新原型数据
 function updateData() {
     const shapes = props.context.selection.selectedShapes;
     isProtoType.value.clear()
+    is_scroll_behavior.value = false;
     hasStatus.value = false
     if (shapes.length !== 1) return
+    scroll_behavior();
     const shape = shapes[0]
     const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef]
     if (types.includes(shape.type)) {
@@ -1342,7 +1365,27 @@ function updateData() {
     showtargerlist.value = false
 }
 
-
+const scroll_behavior = () => {
+    const shapes = props.context.selection.selectedShapes;
+    const types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
+    const every = shapes.every(s => s.parent && types.includes(s.parent.type));
+    is_scroll_behavior.value = every;
+    if (every) {
+        const behavior = shapes[0].scrollBehavior || ScrollBehavior.SCROLLS;
+        const result = shapes.every(s => (s.scrollBehavior || ScrollBehavior.SCROLLS) === behavior);
+        if (result) {
+            const scrollBehaviorMap = new Map([
+                [ScrollBehavior.SCROLLS, t('prototype.scroll_with_parent')],
+                [ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME, t('prototype.fixed')],
+                [ScrollBehavior.STICKYSCROLLS, t('prototype.sticky_fixed')],
+            ]);
+            const content = scrollBehaviorMap.get(behavior) || t('prototype.scroll_with_parent');
+            scroll_behavior_value.value = { value: behavior, content };
+        } else {
+            scroll_behavior_value.value = { value: t('attr.mixed'), content: t('attr.mixed') };
+        }
+    }
+}
 
 // 图层选区变化
 function _selection_change() {
