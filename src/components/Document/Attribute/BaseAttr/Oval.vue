@@ -154,7 +154,10 @@ function downInnerRadius(event: MouseEvent) {
     });
 }
 
-watch(() => props.selectionChange, ovalData.update.bind(ovalData));
+watch(() => props.selectionChange, (val) => {
+    ovalData.stashSelection();
+    ovalData.update(val);
+});
 watch(() => props.trigger, ovalData.update.bind(ovalData));
 
 onMounted(() => {
@@ -172,21 +175,22 @@ onMounted(() => {
         <Tooltip :content="t('attr.startingAngle')">
             <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
         </Tooltip>
-        <input type="text" :value="`${options.start}°`"
+        <input type="text" :value="options.start"
                @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
     </div>
-    <div class="sweep">
-        <Tooltip :content="t('attr.sweep')">
-            <input type="text" :value="`${options.sweep}%`"
+    <Tooltip :content="t('attr.sweep')">
+        <div class="sweep">
+            <input type="text" :value="options.sweep"
                    @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
-        </Tooltip>
-    </div>
-    <div class="ratio">
-        <Tooltip :content="t('attr.ratio')">
-            <input type="text" :value="`${options.ratio}%`"
+        </div>
+    </Tooltip>
+    <el-tooltip class="box-item" effect="dark" :content="t('attr.ratio')" placement="bottom"
+                :show-after="500" :offset="10" :hide-after="0">
+        <div class="ratio">
+            <input type="text" :value="options.ratio" class="ratio"
                    @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
-        </Tooltip>
-    </div>
+        </div>
+    </el-tooltip>
 </form>
 </template>
 <style lang="scss" scoped>
@@ -238,10 +242,10 @@ onMounted(() => {
         }
     }
 
-    > .sweep, .ratio {
+    .sweep, .ratio {
+        position: relative;
         flex: 0 0 56px;
         width: 56px;
-
     }
 }
 </style>

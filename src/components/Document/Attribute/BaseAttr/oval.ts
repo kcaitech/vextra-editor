@@ -83,7 +83,7 @@ export class OvalData {
         if (SWEEP.size > 1) {
             options.sweep = OvalData.MIXED;
         } else {
-            options.sweep = fix((Array.from(SWEEP.values()).pop() || 0) * 100);
+            options.sweep = fix((Array.from(SWEEP.values()).pop() || 0) * 100) + '%';
         }
 
         if (typeof __start === "string") {
@@ -91,13 +91,13 @@ export class OvalData {
         } else {
             __start = 360 * (__start / (Math.PI * 2));
             if (__start > 180) __start -= 360;
-            options.start = fix(__start);
+            options.start = fix(__start) + '°';
         }
 
         if (RATIO.size > 1) {
             options.ratio = OvalData.MIXED;
         } else {
-            options.ratio = fix((Array.from(RATIO.values()).pop() || 0) * 100);
+            options.ratio = fix((Array.from(RATIO.values()).pop() || 0) * 100) + '%';
         }
 
         return this.m_disabled;
