@@ -443,6 +443,7 @@ function updatePosition(movementX: number, movementY: number) {
     telY.value = telY.value < 0 ? clientHeight : (telY.value > clientHeight ? 0 : telY.value);
 }
 
+let orderShapes: ShapeView[][] = [];
 async function modifyTelDown(e: MouseEvent) {
     tel.value = true;
     telX.value = e.clientX;
@@ -453,6 +454,9 @@ async function modifyTelDown(e: MouseEvent) {
             unadjustedMovement: true,
         });
     }
+    const selected = props.context.selection.selectedShapes;
+    const d = props.context.selection.isTidyUpDir;
+    orderShapes = tidyUpShapesOrder(selected, d);
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
@@ -586,11 +590,9 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
     if (!lockMouseHandler.asyncApiCaller) {
         lockMouseHandler.createApiCaller('translating');
     }
-    const selected = props.context.selection.selectedShapes;
-    const d = props.context.selection.isTidyUpDir;
-    const shapes = tidyUpShapesOrder(selected, d);
 
-    const frame = layoutSpacing(shapes, d);
+    const d = props.context.selection.isTidyUpDir;
+    const frame = layoutSpacing(orderShapes, d);
 
     let hor = frame.hor;
     let ver = frame.ver;
@@ -601,8 +603,9 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
         ver += e.movementX;
         verSpace.value = ver;
     }
-    disalbeTidyup(shapes, d);
-    lockMouseHandler.executeTidyup(shapes, hor, ver, d);
+    
+    disalbeTidyup(orderShapes, d);
+    lockMouseHandler.executeTidyup(orderShapes, hor, ver, d);
 }
 
 function dragend() {
@@ -716,7 +719,7 @@ function selection_change() {
         whetherTidyUp();
     } else {
         s_tidy_up = false;
-        props.context.selection.whetherTidyUp(false, false);
+        props.context.selection.whetherTidyUp(true, false);
     }
 }
 
@@ -772,11 +775,18 @@ const disalbeTidyup = (shapes: ShapeView[][], d: boolean) => {
 
 const whetherTidyUp = debounce(_whetherTidyUp, 250);
 
-const attr_watcher = (t: number) => {
+const attr_watcher = (t: number, params: any) => {
     if (t === Attribute.HOR_HILP) {
         fliph();
     } else if (t === Attribute.VER_HILP) {
         flipv();
+    } else if (t === Attribute.TIDY_UP_SPACE_CHANGE) {
+        if (typeof horSpace.value === 'number') {
+            horSpace.value = params.hor;
+        }
+        if (typeof verSpace.value === 'number') {
+            verSpace.value = params.ver;
+        }
     }
 }
 

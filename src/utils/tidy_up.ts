@@ -80,6 +80,7 @@ export function layoutSpacing(shape_rows: ShapeView[][], dir: boolean) {
     let verSpacingCount = 0; // 记录垂直间距的总数
     // 垂直方向
     if (dir) {
+        let totalWidth = 0;
         shape_rows.forEach((row, rowIndex) => {
             row.forEach((shape, index) => {
                 let spacing = 0;
@@ -90,18 +91,16 @@ export function layoutSpacing(shape_rows: ShapeView[][], dir: boolean) {
                     verSpacingCount += 1; // 增加垂直间距计数
                 }
             });
-            if (rowIndex > 0) {
-                // 计算当前列与上一列之间的水平间距
-                const previousRow = shape_rows[rowIndex - 1];
-                const minXOfCurrentRow = Math.min(...row.map(shape => shape._p_frame.x));
-                const maxXOfPreviousRow = Math.max(...previousRow.map(shape => shape._p_frame.x + shape._p_frame.width));
-                const horSpacing = minXOfCurrentRow - maxXOfPreviousRow;
-
-                totalHorSpacing += horSpacing; // 累加水平间距
-                horSpacingCount += 1; // 增加水平间距计数
-            }
+            const maxOfCurrentRowW = Math.max(...row.map(shape => shape._p_frame.width));
+            totalWidth += maxOfCurrentRowW;
+            horSpacingCount += 1; // 增加水平间距计数
         });
+        const minx = Math.min(...shape_rows[0].map(shape => shape._p_frame.x));
+        const minw = Math.max(...shape_rows[shape_rows.length - 1].map(shape => shape._p_frame.x + shape._p_frame.width));
+        horSpacingCount -= 1;
+        totalHorSpacing = ((minw - minx) - totalWidth);
     } else {
+        let totalHeight = 0;
         shape_rows.forEach((row, rowIndex) => {
             row.forEach((shape, index) => {
                 let spacing = 0;
@@ -112,24 +111,20 @@ export function layoutSpacing(shape_rows: ShapeView[][], dir: boolean) {
                     horSpacingCount += 1; // 增加水平间距计数
                 }
             });
-            if (rowIndex > 0) {
-                // 计算当前行与上一行之间的垂直间距
-                const previousRow = shape_rows[rowIndex - 1];
-                const minYOfCurrentRow = Math.min(...row.map(shape => shape._p_frame.y));
-                const maxYOfPreviousRow = Math.max(...previousRow.map(shape => shape._p_frame.y + shape._p_frame.height));
-                const verSpacing = minYOfCurrentRow - maxYOfPreviousRow;
-
-                totalVerSpacing += verSpacing; // 累加垂直间距
-                verSpacingCount += 1; // 增加垂直间距计数
-            }
+            const maxOfPreviousRowH = Math.max(...row.map(shape => shape._p_frame.height));
+            totalHeight += maxOfPreviousRowH;
+            verSpacingCount += 1; // 增加垂直间距计数
         });
+        const miny = Math.min(...shape_rows[0].map(shape => shape._p_frame.y));
+        const minh = Math.max(...shape_rows[shape_rows.length - 1].map(shape => shape._p_frame.y + shape._p_frame.height));
+        verSpacingCount -= 1;
+        totalVerSpacing = (minh - miny - totalHeight);
     }
     // 计算平均水平间距并向下取整
     const averageHorSpacing = horSpacingCount > 0 ? totalHorSpacing / horSpacingCount : 0;
 
     // 计算平均垂直间距并向下取整
-    let averageVerSpacing = verSpacingCount > 0 ? totalVerSpacing / verSpacingCount : 0;
-    averageVerSpacing = averageVerSpacing > 0 ? averageVerSpacing : 0;
+    const averageVerSpacing = verSpacingCount > 0 ? totalVerSpacing / verSpacingCount : 0;
     return { hor: averageHorSpacing, ver: averageVerSpacing }
 }
 
@@ -154,26 +149,26 @@ export const getSelectedWidthHeight = (context: Context, shapes: ShapeView[]) =>
 export const whetherNeedTidyUp = (context: Context) => {
     const selected = context.selection.selectedShapes;
     if (hiddenTidyUp(selected)) return;
-    const shape_rows = tidyUpShapesOrder(selected, true);
-    const shape_rows2 = tidyUpShapesOrder(selected, false);
-    const space = layoutSpacing(shape_rows, true);
-    const space2 = layoutSpacing(shape_rows2, false);
-    const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
-    if (!verInfo.tidyup) {
-        return verInfo;
+    const { width, height } = getSelectedWidthHeight(context, selected);
+    if (height > width) {
+        const shape_rows = tidyUpShapesOrder(selected, true);
+        const space = layoutSpacing(shape_rows, true);
+        const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
+        if (!verInfo.tidyup) {
+            return verInfo;
+        }
+        const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
+        if (!horInfo.tidyup) {
+            return horInfo;
+        }
     } else {
+        const shape_rows2 = tidyUpShapesOrder(selected, false);
+        const space2 = layoutSpacing(shape_rows2, false);
+        const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
+        if (!horInfo2.tidyup) return horInfo2;
         const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
         if (!verInfo2.tidyup) return verInfo2;
     }
-
-    const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
-    if (!horInfo.tidyup) {
-        return horInfo;
-    } else {
-        const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
-        if (!horInfo2.tidyup) return horInfo2;
-    }
-    return horInfo;
 }
 
 export const hiddenTidyUp = (shapes: ShapeView[]) => {

@@ -740,8 +740,10 @@ export class Selection extends WatchableObject implements ISave4Restore, ISelect
     }
 
     whetherTidyUp(v: boolean, dir: boolean) {
-        this.tidy_up = v;
-        this.tidy_up_dir = dir;
+        if(v !== this.tidy_up) {
+            this.tidy_up = v;
+            this.tidy_up_dir = dir;
+        }
         this.notify(Selection.NEED_TIDY_UP);
     }
 

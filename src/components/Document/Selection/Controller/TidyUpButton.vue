@@ -11,6 +11,7 @@ import { CursorType } from '@/utils/cursor2';
 import { LockMouse } from '@/transform/lockMouse';
 import { throttle } from 'lodash';
 import { TranslateHandler } from '@/transform/translate';
+import { Attribute } from '@/context/atrribute';
 interface Props {
     context: Context
     controllerFrame: Point[];
@@ -64,6 +65,7 @@ const hover_mousemove = (e: MouseEvent) => {
 
 const tidyUpDot = () => {
     const shapes = props.context.selection.selectedShapes;
+    if (shapes.length <= 1) return;
     const parent = shapes[0].parent;
     if (!parent) return;
     const matrix = new Matrix();
@@ -87,6 +89,7 @@ const tidyUpDot = () => {
 
 const tidyUpLine = () => {
     const selected = props.context.selection.selectedShapes;
+    if (selected.length <= 1) return;
     const dir = props.context.selection.isTidyUpDir;
     const shape_rows = tidyUpShapesOrder(selected, dir);
     tidyUpHorSpacing(shape_rows);
@@ -332,7 +335,7 @@ const mousemove = (e: MouseEvent) => {
             const value = ((moveXy.y - downXy.y) / scale) * 2;
             ver = Math.floor((value / moveIndex)) + verSpacing;
         }
-
+        props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
         lockMouseHandler.executeTidyup(shapes_rows, hor, ver, dir);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
