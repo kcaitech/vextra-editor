@@ -382,7 +382,7 @@ const _textFormat = () => {
             format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
         } else {
             format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }console.log('1', format)
+        }
         colorIsMulti.value = format.colorIsMulti
         rowHeight.value = format.autoLineHeight ? 'auto' : format_value(format.minimumLineHeight || 0)
         wordSpace.value = format_value(format.kerning || 0)
@@ -423,7 +423,7 @@ const _textFormat = () => {
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
             formats.push(format)
         }
-        console.log('2', format)
+
         const referenceKeys = Object.keys(formats[0]);
         for (const key of referenceKeys) {
             const referenceValue = formats[0][key];
