@@ -35,7 +35,7 @@ import { DBL_CLICK } from "@/const";
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
     let timer: any;
-    const duration: number = DBL_CLICK; // 双击判定时长 ms
+    const duration: number = DBL_CLICK;
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
@@ -52,28 +52,21 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1) {
-            return;
-        }
+        if (selected.length !== 1) return;
 
         const shape = selected[0];
 
         if (is_layers_tree_unit(shape)) {
             const target = selection_penetrate(selection.scout!, shape, startPositionOnPage);
-            if (target) {
-                selection.selectShape(target);
-            }
+            if (target) selection.selectShape(target);
             return;
         }
 
-        if (context.tool.isLable) {
-            return;
-        }
+        if (context.tool.isLable) return;
 
         if (shape.pathType) {
             if (forbidden_to_modify_frame(shape) || !permIsEdit(context) || shape instanceof ContactLineView) return;
-
-            workspace.setPathEditMode(true); // --开启对象编辑
+            workspace.setPathEditMode(true);
             context.escstack.save('path-edit', exist_edit_mode);
         }
     }
@@ -238,25 +231,19 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     async function mousemove(e: MouseEvent) {
-        if (e.buttons !== 1) {
-            return;
-        }
+        if (e.buttons !== 1) return;
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
             transporter?.execute(e);
         } else if (check_drag_action(startPosition, mousePosition)) {
-            if (asyncTransfer || isDragging) {
-                return;
-            }
+            if (asyncTransfer || isDragging) return;
 
             shapes = modify_shapes(context, shapes);
 
             shapes = shapes_organize(shapes);
 
-            if (!shapes.length) {
-                return;
-            }
+            if (!shapes.length) return;
 
             transporter?.createApiCaller();
 
@@ -416,11 +403,7 @@ export function useController(context: Context) {
     const { t } = useI18n();
 
     const ctrl = useControllerCustom(context, t);
-    onMounted(() => {
-        ctrl.init();
-    })
-    onUnmounted(() => {
-        ctrl.dispose();
-    })
+    onMounted(ctrl.init);
+    onUnmounted(ctrl.dispose);
     return ctrl;
 }

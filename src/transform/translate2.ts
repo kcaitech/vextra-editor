@@ -2,6 +2,7 @@ import { TransformHandler } from "@/transform/handler";
 import { ArtboradView, Matrix, Shape, ShapeView, Transform, TransformRaw, Transporter } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
+import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -76,6 +77,7 @@ class Aligner {
 class ShapesManager {
     private readonly bases: Map<string, TranslateBaseItem>;
     private __shapes: ShapeView[];
+    private __shapes_set: Set<string>;
     private transport: Translate2;
     private __coping: boolean;
     private context: Context;
@@ -103,7 +105,7 @@ class ShapesManager {
         }
 
         // 如果多选图层中既包含了自动布局内的图层，也包含了其他自由图层，则将选区过滤为自由图层选区
-        let isMixed = false;
+        let isMixedSel = false;
         const __is_under_auto_layout = (view: ShapeView) => {
             let parent = view.parent;
             while (parent) {
@@ -116,10 +118,10 @@ class ShapesManager {
             const last = __is_under_auto_layout(shapes[i - 1]);
             const current = __is_under_auto_layout(shapes[i]);
 
-            isMixed = last + current === 0;
-            if (isMixed) break;
+            isMixedSel = last + current === 0;
+            if (isMixedSel) break;
         }
-        if (isMixed) {
+        if (isMixedSel) {
             const __shapes = [];
             for (const view of shapes) {
                 if (__is_under_auto_layout(view) > 0) continue;
@@ -129,6 +131,8 @@ class ShapesManager {
             context.selection.rangeSelectShape(shapes);
             transport.mode = TranslateMode.Linear;
         }
+
+        // 如果选中的图层全为自动布局内容，且父亲元素存在差异
 
         const map = new Map<string, TranslateBaseItem>();
         for (const view of shapes) {
@@ -140,6 +144,7 @@ class ShapesManager {
         this.__coping = false;
         this.context = context;
         this.__shapes = shapes;
+        this.__shapes_set = new Set(shapes.map(i => i.id));
         this.transport = transport;
     }
 
@@ -151,15 +156,30 @@ class ShapesManager {
         return this.__shapes;
     }
 
+    set shapes(shapeViews) {
+        this.__shapes = [...shapeViews];
+        this.__shapes_set = new Set(shapeViews.map(i => i.id));
+    }
+
+    get baseShapes() {
+        const shapes: ShapeView[] = [];
+        this.bases.forEach(i => shapes.push(i.view));
+        return shapes;
+    }
+
+    get shapeIdsSet() {
+        return this.__shapes_set;
+    }
+
     drawn(reset = true) {
         this.__coping = true;
         let results: Shape[] | undefined;
         if (reset) {
             const transforms: TransformRaw[] = [];
             this.bases.forEach(i => transforms.push(i.transform));
-            results = this.transport.api!.drawn(this.__shapes, transforms)!;
+            results = this.transport.api!.drawn(this.shapes, transforms)!;
         } else {
-            results = this.transport.api!.drawn(this.__shapes)!;
+            results = this.transport.api!.drawn(this.shapes)!;
         }
 
         const page = this.context.selection.selectedPage!;
@@ -169,22 +189,18 @@ class ShapesManager {
                 const v = page.shapes.get(s.id);
                 if (v) selects.push(v);
             })
-            this.__shapes = [...selects];
-            this.context.selection.rangeSelectShape(this.__shapes);
+            this.shapes = selects;
+            this.context.selection.rangeSelectShape(this.shapes);
             this.__coping = false;
         });
     }
 
-    get baseShapes() {
-        const shapes: ShapeView[] = [];
-        this.bases.forEach(i => shapes.push(i.view));
-        return shapes;
-    }
-
     revert() {
-        const shapes = this.__shapes;
+        const shapes = this.shapes;
         const baseShapes = this.baseShapes;
         this.transport.api!.revert(shapes, baseShapes);
+        this.shapes = baseShapes;
+        this.context.selection.rangeSelectShape(this.shapes);
     }
 }
 
@@ -192,6 +208,27 @@ class ShapesManager {
  * @description 图层样式管理器
  */
 class StyleManager {
+    private transport: Translate2;
+    private context: Context;
+
+    constructor(transport: Translate2, context: Context) {
+        this.transport = transport;
+        this.context = context;
+    }
+
+    private __elements_with_slide: Set<Element> = new Set<Element>();
+
+    clearSlide() {
+        this.__elements_with_slide.forEach(element => element.classList.remove('transition-200'));
+        this.__elements_with_slide.clear();
+    }
+
+    private __slidify_shape(shape: ShapeView) {
+        const el = (shape as ShapeDom).el;
+        if (!el) return;
+        el.classList.add('transition-200');
+        this.__elements_with_slide.add(el);
+    }
 
 }
 
@@ -203,13 +240,13 @@ class AutoLayoutRenderer {
 }
 
 export class Translate2 extends TransformHandler {
-    private living: XY;
-    private coping: boolean = false;
     private shapeManager: ShapesManager;
+    living: XY;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
         this.living = this.workspace.getRootXY(event);
+
         this.shapeManager = new ShapesManager(this, context, shapes);
     }
 
@@ -227,10 +264,6 @@ export class Translate2 extends TransformHandler {
 
     get api() {
         return this.__api;
-    }
-
-    private clone() {
-        this.coping = true;
     }
 
     private swapSel() {
@@ -292,6 +325,4 @@ export class Translate2 extends TransformHandler {
         this.living = this.workspace.getRootXY(event);
         this.__execute();
     }
-
-
 }
