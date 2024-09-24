@@ -1,5 +1,5 @@
 import { TransformHandler } from "@/transform/handler";
-import { Matrix, ShapeView, Transform, Transporter } from "@kcdesign/data";
+import { ArtboradView, Matrix, Shape, ShapeView, Transform, TransformRaw, Transporter } from "@kcdesign/data";
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 
@@ -10,7 +10,7 @@ enum TranslateMode {
 }
 
 interface TranslateBaseItem {
-    transform: Transform;
+    transform: TransformRaw;
     view: ShapeView;
 }
 
@@ -73,8 +73,118 @@ class Aligner {
 /**
  * @description 处理Alt操作
  */
-class CMachine {
-    constructor(shapes: ShapeView[]) {
+class ShapesManager {
+    private readonly bases: Map<string, TranslateBaseItem>;
+    private __shapes: ShapeView[];
+    private transport: Translate2;
+    private __coping: boolean;
+    private context: Context;
+
+    constructor(transport: Translate2, context: Context, shapes: ShapeView[]) {
+        // 如果多选图层中包含了虚拟图层，需要把虚拟图层冒泡的其最近实体上，并将该实体替换到选区
+        const __real_view = (view: ShapeView) => {
+            while (view.parent) {
+                view = view.parent;
+                if (!view.isVirtualShape) break;
+            }
+            return view;
+        }
+        for (const view of shapes) {
+            let needSortSel = false;
+            const __shapes = new Set<ShapeView>();
+            if (view.isVirtualShape) {
+                __shapes.add(__real_view(view));
+                needSortSel = true;
+            } else __shapes.add(view);
+            if (needSortSel) {
+                shapes = Array.from(__shapes.values());
+                context.selection.rangeSelectShape(shapes);
+            }
+        }
+
+        // 如果多选图层中既包含了自动布局内的图层，也包含了其他自由图层，则将选区过滤为自由图层选区
+        let isMixed = false;
+        const __is_under_auto_layout = (view: ShapeView) => {
+            let parent = view.parent;
+            while (parent) {
+                if ((parent as ArtboradView)?.autoLayout) return 1;
+                parent = parent.parent;
+            }
+            return -1;
+        }
+        for (let i = 1; i < shapes.length; i++) {
+            const last = __is_under_auto_layout(shapes[i - 1]);
+            const current = __is_under_auto_layout(shapes[i]);
+
+            isMixed = last + current === 0;
+            if (isMixed) break;
+        }
+        if (isMixed) {
+            const __shapes = [];
+            for (const view of shapes) {
+                if (__is_under_auto_layout(view) > 0) continue;
+                __shapes.push(view);
+            }
+            shapes = [...__shapes];
+            context.selection.rangeSelectShape(shapes);
+            transport.mode = TranslateMode.Linear;
+        }
+
+        const map = new Map<string, TranslateBaseItem>();
+        for (const view of shapes) {
+            const transform = view.transform.clone();
+            map.set(view.id, { view, transform });
+        }
+
+        this.bases = map;
+        this.__coping = false;
+        this.context = context;
+        this.__shapes = shapes;
+        this.transport = transport;
+    }
+
+    get coping() {
+        return this.__coping;
+    }
+
+    get shapes() {
+        return this.__shapes;
+    }
+
+    drawn(reset = true) {
+        this.__coping = true;
+        let results: Shape[] | undefined;
+        if (reset) {
+            const transforms: TransformRaw[] = [];
+            this.bases.forEach(i => transforms.push(i.transform));
+            results = this.transport.api!.drawn(this.__shapes, transforms)!;
+        } else {
+            results = this.transport.api!.drawn(this.__shapes)!;
+        }
+
+        const page = this.context.selection.selectedPage!;
+        this.context.nextTick(page, () => {
+            const selects: ShapeView[] = [];
+            results.forEach((s) => {
+                const v = page.shapes.get(s.id);
+                if (v) selects.push(v);
+            })
+            this.__shapes = [...selects];
+            this.context.selection.rangeSelectShape(this.__shapes);
+            this.__coping = false;
+        });
+    }
+
+    get baseShapes() {
+        const shapes: ShapeView[] = [];
+        this.bases.forEach(i => shapes.push(i.view));
+        return shapes;
+    }
+
+    revert() {
+        const shapes = this.__shapes;
+        const baseShapes = this.baseShapes;
+        this.transport.api!.revert(shapes, baseShapes);
     }
 }
 
@@ -93,32 +203,30 @@ class AutoLayoutRenderer {
 }
 
 export class Translate2 extends TransformHandler {
-    // private readonly base: Map<string, TranslateBaseItem>;
-    private shapes: ShapeView[];
     private living: XY;
-
-    private api: Transporter | undefined;
-
-    private mode: TranslateMode = TranslateMode.Linear;
     private coping: boolean = false;
+    private shapeManager: ShapesManager;
 
     constructor(context: Context, event: MouseEvent, shapes: ShapeView[]) {
         super(context, event);
-        this.shapes = shapes;
         this.living = this.workspace.getRootXY(event);
+        this.shapeManager = new ShapesManager(this, context, shapes);
     }
 
-    private init() {
-        const cache: Map<string, Matrix> = new Map();
+    private __mode: TranslateMode = TranslateMode.Linear;
 
-        let left = Infinity;
-        let right = -Infinity;
-        let top = Infinity;
-        let bottom = -Infinity;
+    set mode(m: TranslateMode) {
+        this.__mode = m;
+    }
 
-        for (const shape of this.shapes) {
+    get mode() {
+        return this.__mode;
+    }
 
-        }
+    private __api: Transporter | undefined;
+
+    get api() {
+        return this.__api;
     }
 
     private clone() {
@@ -135,7 +243,6 @@ export class Translate2 extends TransformHandler {
         this.__execute();
     }
 
-
     private __linear() {
     }
 
@@ -146,7 +253,7 @@ export class Translate2 extends TransformHandler {
     }
 
     private __execute() {
-        switch (this.mode) {
+        switch (this.__mode) {
             case TranslateMode.Linear:
                 return this.__linear();
             case TranslateMode.Prev:
@@ -185,4 +292,6 @@ export class Translate2 extends TransformHandler {
         this.living = this.workspace.getRootXY(event);
         this.__execute();
     }
+
+
 }
