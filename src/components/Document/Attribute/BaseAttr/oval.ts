@@ -13,7 +13,7 @@ export function sortValue(value: string) {
 }
 
 export class OvalData {
-    static MIXED = 'mixed';
+    private mixed: string;
 
     private readonly m_options: OvalOptions;
     private readonly m_context: Context;
@@ -25,6 +25,7 @@ export class OvalData {
         this.m_context = context;
         this.m_options = options;
         this.m_selected = context.selection.selectedShapes;
+        this.mixed = context.workspace.t('attr.mixed');
     }
 
     stash() {
@@ -75,19 +76,19 @@ export class OvalData {
 
         let __start;
         if (START.size > 1) {
-            __start = OvalData.MIXED;
+            __start = this.mixed;
         } else {
             __start = Array.from(START.values()).pop() || 0;
         }
 
         if (SWEEP.size > 1) {
-            options.sweep = OvalData.MIXED;
+            options.sweep = this.mixed;
         } else {
             options.sweep = fix((Array.from(SWEEP.values()).pop() || 0) * 100) + '%';
         }
 
         if (typeof __start === "string") {
-            options.start = OvalData.MIXED;
+            options.start = this.mixed;
         } else {
             __start = 360 * (__start / (Math.PI * 2));
             if (__start > 180) __start -= 360;
@@ -95,7 +96,7 @@ export class OvalData {
         }
 
         if (RATIO.size > 1) {
-            options.ratio = OvalData.MIXED;
+            options.ratio = this.mixed;
         } else {
             options.ratio = fix((Array.from(RATIO.values()).pop() || 0) * 100) + '%';
         }

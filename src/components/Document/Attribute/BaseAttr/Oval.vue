@@ -256,11 +256,13 @@ onMounted(() => {
         outline: none;
         border: none;
         width: 100%;
+        height: 100%;
         background: transparent;
         font-size: var(--font-default-fontsize);
+        padding: 0;
     }
 
-    > div, input {
+    > div {
         background-color: var(--input-background);
         height: 100%;
         padding: 0 0 0 8px;
