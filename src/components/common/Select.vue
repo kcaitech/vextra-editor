@@ -164,12 +164,12 @@ function render() {
                 arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve')]
             }
             if (props.action === PrototypeNavigationType.SCROLLTO) {
-                source.value = source.value.filter(i => [t('prototype.animation_instant'), t('prototype.animation_animate')].includes(i.data.content));
-                arr.value = [t('prototype.animation_instant'), t('prototype.animation_animate')]
+                source.value = source.value.filter(i => [t('prototype.animation_instant'), t('prototype.animation_animate'), t('prototype.animation_smart')].includes(i.data.content));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_animate'), t('prototype.animation_smart')]
             }
             if (props.action === PrototypeNavigationType.NAVIGATE) {
                 source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
-                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein'), t('prototype.animation_moveout'), t('prototype.animation_slidein'), t('prototype.animation_slideout'), t('prototype.animation_push')]
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein'), t('prototype.animation_moveout'), t('prototype.animation_slidein'), t('prototype.animation_slideout'), t('prototype.animation_push') , t('prototype.animation_smart')]
             }
         }
         const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);
@@ -229,8 +229,8 @@ onMounted(() => {
                 <div v-for="(c, idx) in source" class="item-default" :style="c.data.type === PrototypeNavigationType.SWAPSTATE ? {
             pointerEvents: props.status ? 'auto' : 'none',
             opacity: props.status ? 1 : 0.4,
-            borderTop:'1px solid #EBEBEB',
-            borderBottom:'1px solid #EBEBEB',
+            borderTop: '1px solid #EBEBEB',
+            borderBottom: '1px solid #EBEBEB',
         } : c.data.content === '延迟' ? {
             pointerEvents: props.iscontainer ? 'auto' : 'none',
             opacity: props.iscontainer ? 1 : 0.4

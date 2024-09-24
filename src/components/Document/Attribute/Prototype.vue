@@ -100,6 +100,14 @@
                                             :value="action.actions.connectionURL"
                                             @change="setPrototypeActionURL(action.id)">
                                     </div>
+                                    <div class="link_select">
+                                        <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
+                                            @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
+                                            <svg-icon v-if="action.actions.openUrlInNewTab"
+                                                icon-class="select"></svg-icon>
+                                        </div>
+                                        <span>{{ t('prototype.open_in_new_tab') }}</span>
+                                    </div>
                                 </div>
                                 <Overlay
                                     v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
@@ -178,8 +186,7 @@
                 </div>
                 <div v-if="is_scroll_behavior" class="overflow-roll">
                     <div class="text">{{ t('prototype.fixed_behavior') }}</div>
-                    <Select class="select" :source="fixedBehavior"
-                        :selected="scroll_behavior_value"
+                    <Select class="select" :source="fixedBehavior" :selected="scroll_behavior_value"
                         @select=scrollBehavior></Select>
                 </div>
             </div>
@@ -237,7 +244,8 @@ enum Animation {
     MOVE = 'MOVE',
     MOVEOUT = 'MOVE_OUT',
     PUSH = 'PUSH',
-    SCROLL = 'SCROLL_ANIMATE'
+    SCROLL = 'SCROLL_ANIMATE',
+    SMART = 'SMART_ANIMATR'
 }
 
 type Prototypestart = {
@@ -341,7 +349,8 @@ const animation: SelectSource[] = genOptions([
     [Animation.MOVE, t('prototype.animation_movein')],
     [Animation.MOVEOUT, t('prototype.animation_moveout')],
     [Animation.PUSH, t('prototype.animation_push')],
-    [Animation.SCROLL, t('prototype.animation_animate')]
+    [Animation.SCROLL, t('prototype.animation_animate')],
+    [Animation.SMART, t('prototype.animation_smart')],
 ])
 
 const effect: SelectSource[] = genOptions([
@@ -391,7 +400,8 @@ const animations = new Map([
     [PrototypeTransitionType.PUSHFROMRIGHT, t('prototype.animation_push')],
     [PrototypeTransitionType.PUSHFROMTOP, t('prototype.animation_push')],
     [PrototypeTransitionType.PUSHFROMBOTTOM, t('prototype.animation_push')],
-    [PrototypeTransitionType.SCROLLANIMATE, t('prototype.animation_animate')]
+    [PrototypeTransitionType.SCROLLANIMATE, t('prototype.animation_animate')],
+    [PrototypeTransitionType.SMARTANIMATE, t('prototype.animation_smart')]
 ])
 
 const qsa = ref<StyleValue | null>()
@@ -1054,6 +1064,14 @@ const setPrototypeActionURL = (id: string) => {
     updateData()
 }
 
+const changeLinkSelect = (id: string, value: boolean) => {
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) return;
+    editor.setPrototypeIsOpenNewTab(shape as ShapeView, id, value);
+}
+
 //设置目标
 const selectTargetNode = (targetid: string, id: string) => {
     const page = props.context.selection.selectedPage!;
@@ -1232,7 +1250,7 @@ const createAction = () => {
 
     if (!event.value) return
     const Event = new PrototypeEvent(event.value)
-    const Action = new PrototypeActions(PrototypeConnectionType.NONE)
+    const Action = new PrototypeActions(PrototypeConnectionType.NONE, true);
     Action.transitionType = PrototypeTransitionType.INSTANTTRANSITION
     let id = v4()
     e.insertPrototypeAction(shape, new PrototypeInterAction(new BasicArray<number>(), id, Event, Action));
@@ -1803,6 +1821,13 @@ onUnmounted(() => {
                         }
                     }
                 }
+
+                .link_select {
+                    display: flex;
+                    height: 32px;
+                    align-items: center;
+                    justify-content: flex-end;
+                }
             }
 
             .set-animation {
@@ -1948,5 +1973,35 @@ onUnmounted(() => {
             }
         }
     }
+}
+
+.visibility_select {
+    flex: 0 0 14px;
+    height: 14px;
+    width: 14px;
+    background-color: var(--active-color);
+    box-sizing: border-box;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    margin-right: 5px;
+
+    >svg {
+        width: 60%;
+        height: 60%;
+    }
+}
+
+.hidden_select {
+    flex: 0 0 14px;
+    height: 14px;
+    width: 14px;
+    background: #FFFFFF;
+    border-radius: 4px;
+    border: 1px solid #EBEBEB;
+    box-sizing: border-box;
+    margin-right: 5px;
 }
 </style>
