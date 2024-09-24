@@ -17,7 +17,7 @@ const form = ref<HTMLFormElement>();
 const locker = new LockedPointer();
 let lockApi: LockMouse | undefined = undefined;
 
-const options = reactive<OvalOptions>({ start: 0, sweep: 100, ratio: 0, disabled: false });
+const options = reactive<OvalOptions>({start: 0, sweep: 100, ratio: 0, disabled: false});
 
 const ovalData = new OvalData(props.context, options);
 const linearApi = new LinearApi(props.context.coopRepo, props.context.data, props.context.selection.selectedPage!)
@@ -48,6 +48,7 @@ function changeSweepOnce(event: Event) {
 }
 
 function changeRatioOnce(event: Event) {
+    console.log('--change--');
     const target = event.target as HTMLInputElement;
     let value: number = sortValue(target.value);
     if (isNaN(value)) return;
@@ -154,6 +155,40 @@ function downInnerRadius(event: MouseEvent) {
     });
 }
 
+const ratioTips = ref<boolean>(false);
+let t1: any;
+
+function __enter_ratio() {
+    t1 = setTimeout(() => {
+        ratioTips.value = true;
+        clearTimeout(t1);
+        t1 = null;
+    }, 1000)
+}
+
+function __leave_ratio() {
+    ratioTips.value = false;
+    t1 && clearTimeout(t1);
+    t1 = null;
+}
+
+const sweepTips = ref<boolean>(false);
+let t2: any;
+
+function __enter_sweep() {
+    t2 = setTimeout(() => {
+        sweepTips.value = true;
+        clearTimeout(t2);
+        t2 = null;
+    }, 1000)
+}
+
+function __leave_sweep() {
+    sweepTips.value = false;
+    t2 && clearTimeout(t2);
+    t2 = null;
+}
+
 watch(() => props.selectionChange, (val) => {
     ovalData.stashSelection();
     ovalData.update(val);
@@ -165,33 +200,44 @@ onMounted(() => {
         const target = event.target as HTMLInputElement;
         if (target.select && typeof target.select === 'function') target.select();
         ovalData.stashSelection();
+        ratioTips.value = false;
+        sweepTips.value = false;
+        if (t2) {
+            clearTimeout(t2);
+            t2 = null;
+        }
+        if (t1) {
+            clearTimeout(t1);
+            t1 = null;
+        }
     }, true);
     ovalData.__update();
 });
 </script>
 <template>
-<form ref="form" :class="{'oval-arc-options-wrapper': true, disabled: options.disabled}">
-    <div class="start">
-        <Tooltip :content="t('attr.startingAngle')">
-            <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
-        </Tooltip>
-        <input type="text" :value="options.start"
-               @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
-    </div>
-    <Tooltip :content="t('attr.sweep')">
-        <div class="sweep">
+    <form ref="form" :class="{'oval-arc-options-wrapper': true, disabled: options.disabled}">
+        <div class="start">
+            <Tooltip :content="t('attr.startingAngle')">
+                <svg-icon icon-class="oval-start" @mousedown="__downStart"/>
+            </Tooltip>
+            <input type="text" :value="options.start"
+                   @change="changeStartOnce" @keydown="keydownStart" @mousedown="downStart"/>
+        </div>
+        <div class="sweep" @mouseenter="__enter_sweep" @mouseleave="__leave_sweep">
             <input type="text" :value="options.sweep"
                    @change="changeSweepOnce" @keydown="keydownSweep" @mousedown="downEnd"/>
+            <div class="tips" :style="{opacity: sweepTips ? 1 : 0}">
+                <div class="content">{{ t('attr.sweep') }}</div>
+            </div>
         </div>
-    </Tooltip>
-    <el-tooltip class="box-item" effect="dark" :content="t('attr.ratio')" placement="bottom"
-                :show-after="500" :offset="10" :hide-after="0">
-        <div class="ratio">
-            <input type="text" :value="options.ratio" class="ratio"
+        <div class="ratio" @mouseenter="__enter_ratio" @mouseleave="__leave_ratio">
+            <input type="text" :value="options.ratio"
                    @change="changeRatioOnce" @keydown="keydownInnerRadius" @mousedown="downInnerRadius"/>
+            <div class="tips" :style="{opacity: ratioTips ? 1 : 0}">
+                <div class="content">{{ t('attr.ratio') }}</div>
+            </div>
         </div>
-    </el-tooltip>
-</form>
+    </form>
 </template>
 <style lang="scss" scoped>
 .disabled {
@@ -203,7 +249,6 @@ onMounted(() => {
     height: 32px;
     width: 189px;
     border-radius: var(--default-radius);
-    overflow: hidden;
     display: flex;
     gap: 1px;
 
@@ -215,7 +260,7 @@ onMounted(() => {
         font-size: var(--font-default-fontsize);
     }
 
-    > div {
+    > div, input {
         background-color: var(--input-background);
         height: 100%;
         padding: 0 0 0 8px;
@@ -227,6 +272,7 @@ onMounted(() => {
     > .start {
         flex: 1;
         gap: 6px;
+        border-radius: var(--default-radius) 0 0 var(--default-radius);
 
         svg {
             flex: 0 0 12px;
@@ -242,10 +288,45 @@ onMounted(() => {
         }
     }
 
-    .sweep, .ratio {
+    .sweep {
         position: relative;
         flex: 0 0 56px;
         width: 56px;
+    }
+
+    .ratio {
+        position: relative;
+        flex: 0 0 56px;
+        width: 56px;
+        border-radius: 0 var(--default-radius) var(--default-radius) 0;
+
+        input {
+            border-radius: 0 var(--default-radius) var(--default-radius) 0;
+        }
+    }
+
+    .tips {
+        pointer-events: none;
+        position: absolute;
+        top: 36px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: 0.2s;
+        font-size: 12px;
+
+        .content {
+            white-space: nowrap;
+            width: fit-content;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            background-color: #3f3f3f;
+            color: #ffffff;
+        }
     }
 }
 </style>
