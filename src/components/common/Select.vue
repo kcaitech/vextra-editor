@@ -63,6 +63,8 @@ const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 
 function toggle() {
+    console.log(props.source, arr.value);
+    
     optionsContainerVisible.value = !optionsContainerVisible.value;
     if (!optionsContainerVisible.value) {
         return;
@@ -149,6 +151,8 @@ function select(data: SelectItem) {
 
 function render() {
     curHoverValueIndex.value = -1
+    console.log(props.source, props.action, props.selected);
+    
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
@@ -161,15 +165,15 @@ function render() {
             }
             if (props.action === PrototypeNavigationType.SWAPSTATE) {
                 source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
-                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve')]
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_smart')]
             }
             if (props.action === PrototypeNavigationType.SCROLLTO) {
-                source.value = source.value.filter(i => [t('prototype.animation_instant'), t('prototype.animation_animate'), t('prototype.animation_smart')].includes(i.data.content));
-                arr.value = [t('prototype.animation_instant'), t('prototype.animation_animate'), t('prototype.animation_smart')]
+                source.value = source.value.filter(i => [t('prototype.animation_instant'), t('prototype.animation_animate')].includes(i.data.content));
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_animate')]
             }
             if (props.action === PrototypeNavigationType.NAVIGATE) {
                 source.value = source.value.filter(i => i.data.content !== t('prototype.animation_animate'));
-                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein'), t('prototype.animation_moveout'), t('prototype.animation_slidein'), t('prototype.animation_slideout'), t('prototype.animation_push') , t('prototype.animation_smart')]
+                arr.value = [t('prototype.animation_instant'), t('prototype.animation_dissolve'), t('prototype.animation_movein'), t('prototype.animation_moveout'), t('prototype.animation_slidein'), t('prototype.animation_slideout'), t('prototype.animation_push'), t('prototype.animation_smart')]
             }
         }
         const index = source.value.findIndex(i => i.data.value === props.selected!.value && i.data.type === props.selected!.type);

@@ -100,14 +100,14 @@
                                             :value="action.actions.connectionURL"
                                             @change="setPrototypeActionURL(action.id)">
                                     </div>
-                                    <div class="link_select">
-                                        <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
-                                            @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
-                                            <svg-icon v-if="action.actions.openUrlInNewTab"
-                                                icon-class="select"></svg-icon>
-                                        </div>
-                                        <span>{{ t('prototype.open_in_new_tab') }}</span>
+                                </div>
+                                <div class="link_select"
+                                    v-if="action.actions.connectionType === PrototypeConnectionType.URL">
+                                    <div :class="action.actions.openUrlInNewTab ? 'visibility_select' : 'hidden_select'"
+                                        @click="changeLinkSelect(action.id, !action.actions.openUrlInNewTab)">
+                                        <svg-icon v-if="action.actions.openUrlInNewTab" icon-class="select"></svg-icon>
                                     </div>
+                                    <span>{{ t('prototype.open_in_new_tab') }}</span>
                                 </div>
                                 <Overlay
                                     v-if="action.actions.navigationType === PrototypeNavigationType.OVERLAY && action.actions.targetNodeID"
@@ -116,17 +116,28 @@
                                     @interaction="setOverlayBackgroundInteraction($event, action.actions.targetNodeID)"
                                     @position="setOverlayPositionType($event, action.actions.targetNodeID)"
                                     @margin="setOverlayPositionMargin($event, action.actions.targetNodeID)"></Overlay>
-                                <div class="set-animation" v-if="action.actions.connectionType === 'INTERNAL_NODE'">
+                                <div class="set-animation"
+                                    v-if="action.actions.connectionType === PrototypeConnectionType.INTERNALNODE">
                                     <span>{{ t('prototype.animation_set') }}</span>
                                     <div class="wrapper">
                                         <div class="mask" @mouseenter.stop="addstyle" @mouseleave.stop="delstyle">
                                         </div>
                                         <div class="container"
+                                            v-if="action.actions.transitionType !== PrototypeTransitionType.SMARTANIMATE"
                                             :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
                                             <div ref="ela" class="containerA" :style="tara ?? qsa">
                                                 A</div>
                                             <div ref="elb" class="containerB" :style="tarb ?? qsb">
                                                 B</div>
+                                            <div class="containerC"></div>
+                                        </div>
+                                        <div class="container" v-else
+                                            :value="test2(action.actions.transitionType!, action.actions.easingType!, action.actions.transitionDuration!, action.actions.easingFunction)">
+                                            <div ref="ela" class="containerSmartA" :style="tara ?? qsa"></div>
+                                            <div ref="elb" class="containerSmartB" :style="tarb ?? qsb">
+                                                <div></div>
+                                                <div style="top: 18px;"></div>
+                                            </div>
                                             <div class="containerC"></div>
                                         </div>
                                     </div>
@@ -174,18 +185,17 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div v-else class="default">{{ t('prototype.interaction_tips') }}</div>
                 </div>
-                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll">
+                <div v-if="isProtoType.get('shape').isContainer" class="overflow-roll" style="padding-bottom: 0">
                     <div class="text">{{ t('prototype.overflow') }}</div>
                     <Select class="select" :source="overflowRoll"
                         :selected="overflowRoll.find(i => i.data.value === scroll)?.data"
                         @select=scrollDirection></Select>
                 </div>
                 <div v-if="is_scroll_behavior" class="overflow-roll">
-                    <div class="text">{{ t('prototype.fixed_behavior') }}</div>
+                    <div class="text">{{ t('prototype.scroll_behavior') }}</div>
                     <Select class="select" :source="fixedBehavior" :selected="scroll_behavior_value"
                         @select=scrollBehavior></Select>
                 </div>
@@ -245,7 +255,7 @@ enum Animation {
     MOVEOUT = 'MOVE_OUT',
     PUSH = 'PUSH',
     SCROLL = 'SCROLL_ANIMATE',
-    SMART = 'SMART_ANIMATR'
+    SMART = 'SMART_ANIMATE'
 }
 
 type Prototypestart = {
@@ -782,7 +792,24 @@ const test2 = (type: string, easingType: PrototypeEasingType, time: number, esfn
             }
         }
     }
-
+    if (animations.get(type as PrototypeTransitionType) === t('prototype.animation_smart')) {
+        qsa.value = {
+            transition: '',
+        }
+        mba.value = {
+            transition: Bezier,
+            height: '22px',
+            background: '#507afc'
+        }
+        qsb.value = {
+            transition: '',
+            top: '0'
+        }
+        mbb.value = {
+            transition: Bezier,
+            top: '12px'
+        }
+    }
 }
 
 const checkConflict = (event: PrototypeEvents, id: string) => {
@@ -1822,12 +1849,13 @@ onUnmounted(() => {
                     }
                 }
 
-                .link_select {
-                    display: flex;
-                    height: 32px;
-                    align-items: center;
-                    justify-content: flex-end;
-                }
+            }
+
+            .link_select {
+                display: flex;
+                align-items: center;
+                margin-top: -2px;
+                height: 20px;
             }
 
             .set-animation {
@@ -1901,6 +1929,32 @@ onUnmounted(() => {
                             box-sizing: border-box;
                             background-color: transparent;
                             z-index: 3;
+                        }
+
+                        .containerSmartA {
+                            position: absolute;
+                            top: 7px;
+                            width: 42px;
+                            height: 10px;
+                            border-radius: 2px;
+                            box-sizing: border-box;
+                            border: 1px solid rgba(0, 0, 0, 0.75);
+                        }
+
+                        .containerSmartB {
+                            position: relative;
+                            width: 42px;
+                            height: 30px;
+
+                            >div {
+                                position: absolute;
+                                top: 4px;
+                                width: 42px;
+                                height: 10px;
+                                border-radius: 2px;
+                                box-sizing: border-box;
+                                border: 1px solid rgba(0, 0, 0, 0.75);
+                            }
                         }
                     }
                 }
