@@ -667,6 +667,7 @@ function wheelX(event: WheelEvent) {
 }
 
 const tidyUp = () => {
+    if(!props.context.selection.isTidyUp) return;
     const selected = props.context.selection.selectedShapes;
     const { width, height } = getSelectedWidthHeight(props.context, selected);
 
@@ -730,15 +731,13 @@ function selection_change() {
 }
 
 const _whetherTidyUp = () => {
-    if(props.context.workspace.tidyUpIsTrans) return;
+    if (props.context.workspace.tidyUpIsTrans) return;
     const selected = props.context.selection.selectedShapes;
     s_tidy_up.value = false;
     if (selected.length <= 1) return;
     s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
-    console.log(Info, 'info');
-    
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false);
         return;
@@ -917,7 +916,7 @@ onUnmounted(() => {
                 :tidy_disabled="verTidyUp" @dragstart="dragstart" @dragging="(e) => draggingTidyup(e, 'ver')"
                 @dragend="dragend">
             </MdNumberInput>
-            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? '1' : '0.4' }"
+            <div class="adapt" @click="tidyUp" :style="{ opacity: verTidyUp || horTidyUp ? '0.4' : '1' }"
                 :class="{ 'tidy-up-disable': !verTidyUp || !horTidyUp }">
                 <Tooltip :content="t('attr.tidy_up')">
                     <svg-icon icon-class="tidy-up" style="outline: none;" />
