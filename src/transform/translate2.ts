@@ -1,8 +1,9 @@
 import { TransformHandler } from "@/transform/handler";
 import {
-    ArtboradView, ColVector3D, makeShapeTransform1By2,
+    adapt2Shape,
+    ArtboradView, BorderPosition, ColVector3D, layoutShapesOrder, makeShapeTransform1By2,
     Matrix,
-    Shape, ShapeType,
+    Shape, ShapeFrame, ShapeType,
     ShapeView,
     Transform,
     TransformRaw,
@@ -14,6 +15,7 @@ import { Selection, XY } from "@/context/selection";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Tool } from "@/context/tool";
 import { Assist } from "@/context/assist";
+import { e } from "vite/dist/node/types.d-aGj9QkWt";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -76,7 +78,7 @@ class SelModel {
 
         const box = this.__box(transport.selManager.shapes);
         this.originSelBox = box;
-        this.livingSelBox = { ...box };
+        this.livingSelBox = {...box};
         const living = transport.living;
         this.offsetX = living.x - box.x;
         this.offsetY = living.y - box.y;
@@ -101,8 +103,11 @@ class SelModel {
 
             const matrix = shape.matrix2Parent();
             matrix.multiAtLeft(p2r);
-            const { x, y, width, height } = shape.frame;
-            const points = [{ x, y }, { x: x + width, y }, { x: x + width, y: y + height }, { x, y: y + height }].map(i => matrix.computeCoord3(i));
+            const {x, y, width, height} = shape.frame;
+            const points = [{x, y}, {x: x + width, y}, {x: x + width, y: y + height}, {
+                x,
+                y: y + height
+            }].map(i => matrix.computeCoord3(i));
 
             for (const point of points) {
                 if (point.x < left) left = point.x;
@@ -207,21 +212,21 @@ class SelModel {
                 {
                     x: l,
                     pre: [
-                        { x: l, y: t },
-                        { x: l, y: b }
+                        {x: l, y: t},
+                        {x: l, y: b}
                     ]
                 },
                 {
                     x: r,
                     pre: [
-                        { x: r, y: t },
-                        { x: r, y: b }
+                        {x: r, y: t},
+                        {x: r, y: b}
                     ]
                 },
                 {
                     x: cx,
                     pre: [
-                        { x: cx, y: cy }
+                        {x: cx, y: cy}
                     ]
                 }
             ]
@@ -263,22 +268,22 @@ class SelModel {
                 {
                     y: t,
                     pre: [
-                        { x: l, y: t },
-                        { x: r, y: t }
+                        {x: l, y: t},
+                        {x: r, y: t}
                     ]
                 },
                 {
                     y: b,
                     pre: [
-                        { x: l, y: b },
-                        { x: r, y: b }
+                        {x: l, y: b},
+                        {x: r, y: b}
 
                     ]
                 },
                 {
                     y: cy,
                     pre: [
-                        { x: cx, y: cy }
+                        {x: cx, y: cy}
                     ]
                 }
             ]
@@ -387,7 +392,7 @@ class SelManager {
             }
             const transform = view.transform2.clone();
             transform.addTransform(p2r);
-            map.set(view.id, { view, transform, transformRaw: view.transform.clone() });
+            map.set(view.id, {view, transform, transformRaw: view.transform.clone()});
         }
 
         this.bases = map;
@@ -550,12 +555,123 @@ export class TranslateByKeyboard {
 
 }
 
+function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
+    let frame = {...shape.frame};
+    if (includedBorder) {
+        const borders = shape.getBorders();
+        let maxtopborder = 0;
+        let maxleftborder = 0;
+        let maxrightborder = 0;
+        let maxbottomborder = 0;
+        borders.forEach(b => {
+            if (b.isEnabled) {
+                if (b.position === BorderPosition.Outer) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom, maxbottomborder);
+                } else if (b.position === BorderPosition.Center) {
+                    maxtopborder = Math.max(b.sideSetting.thicknessTop / 2, maxtopborder);
+                    maxleftborder = Math.max(b.sideSetting.thicknessLeft / 2, maxleftborder);
+                    maxrightborder = Math.max(b.sideSetting.thicknessRight / 2, maxrightborder);
+                    maxbottomborder = Math.max(b.sideSetting.thicknessBottom / 2, maxbottomborder);
+                }
+            }
+        })
+        frame.x -= maxleftborder;
+        frame.y -= maxtopborder;
+        frame.width += maxleftborder + maxrightborder;
+        frame.height += maxtopborder + maxbottomborder;
+    }
+    const m = shape.transform;
+    const corners = [
+        {x: frame.x, y: frame.y},
+        {x: frame.x + frame.width, y: frame.y},
+        {x: frame.x + frame.width, y: frame.y + frame.height},
+        {x: frame.x, y: frame.y + frame.height}]
+        .map((p) => m.computeCoord(p));
+    const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+    const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+    const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+    const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+    return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
+
+interface Grid {
+    view: ShapeView;
+    position: 'before' | 'after';
+    start: number;
+    end: number;
+}
+
+interface Row {
+    grids: Grid[];
+    start: number;
+    end: number;
+}
+
 class Inserter {
     translate: Translate2;
     context: Context;
+
+    layoutEnv: ArtboradView | undefined;
+
     constructor(translate: Translate2, context: Context) {
         this.translate = translate;
         this.context = context;
+    }
+
+    rows: Row[] = [];
+
+    draw() {
+        const env = this.layoutEnv!;
+        const layout = env.autoLayout!;
+        const views = env.childs;
+        const viewsMap = new Map<string, ShapeView>(views.map(i => ([i.id, i])));
+        const __rows = layoutShapesOrder(views.map(s => adapt2Shape(s)), !!layout.bordersTakeSpace);
+        const rows: Row[] = [];
+        let lastRowEnd = 0;
+        for (let r = 0; r < __rows.length; r++) {
+            const row = __rows[r];
+
+            let height = 0;
+            let lastEnd: number = 0;
+
+            const grids: Grid[] = [];
+
+            for (let i = 0; i < row.length; i++) {
+                const shape = row[i];
+                const box = boundingBox(shape, layout!.bordersTakeSpace);
+                if (box.height > height) height = box.height;
+                let __start = lastEnd;
+                let __end = box.x + (box.width / 2);
+                lastEnd = __end;
+                const grid: Grid = {
+                    start: __start,
+                    end: __end,
+                    view: viewsMap.get(shape.id)!,
+                    position: 'before'
+                };
+                grids.push(grid);
+            }
+
+            const last = grids[grids.length - 1];
+            grids.push({
+                start: last.end,
+                end: Infinity,
+                view: last.view,
+                position: 'after'
+            });
+
+            let start = lastRowEnd;
+            let end = lastRowEnd + height + (layout!.stackCounterSpacing) / 2;
+            if (!lastRowEnd) end += layout!.stackVerticalPadding;
+            lastRowEnd = end;
+
+            rows.push({grids, start, end});
+        }
+        rows[rows.length - 1].end = Infinity;
+        this.rows = rows;
     }
 }
 
@@ -563,6 +679,7 @@ export class Translate2 extends TransformHandler {
     readonly selManager: SelManager;
     readonly selModel: SelModel;
     readonly style: StyleManager;
+    readonly inserter: Inserter;
 
     mode: TranslateMode;
     living: XY;
@@ -574,6 +691,7 @@ export class Translate2 extends TransformHandler {
         this.selManager = new SelManager(this, context, shapes);
         this.selModel = new SelModel(this, context, event);
         this.style = new StyleManager(this, context);
+        this.inserter = new Inserter(this, context);
 
         // 根据选区类型初始化mode，初始化过程中，只可能产生两种mode
         const views = this.selManager.shapes;
@@ -605,8 +723,8 @@ export class Translate2 extends TransformHandler {
 
         model.fix();
 
-        const { x, y } = model.originSelBox;
-        const { x: tx, y: ty } = model.livingSelBox;
+        const {x, y} = model.originSelBox;
+        const {x: tx, y: ty} = model.livingSelBox;
         const deltaX = tx - x;
         const deltaY = ty - y;
 
@@ -636,7 +754,7 @@ export class Translate2 extends TransformHandler {
 
             __t.addTransform(PI);
             const transform = makeShapeTransform1By2(__t) as TransformRaw;
-            transformUnits.push({ shape, transform });
+            transformUnits.push({shape, transform});
         }
 
         this.api!.execute(transformUnits);
