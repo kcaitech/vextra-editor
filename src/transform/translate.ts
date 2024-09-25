@@ -692,9 +692,7 @@ export class TranslateHandler extends TransformHandler {
         for (let i = 0; i < shapes.length; i++) {
             const s = shapes[i];
             const index = shape_row.findIndex(item => s.id === item.id);
-            if (index !== -1) {
-                sort.set(s.id, index);
-            }
+            if (index !== -1) sort.set(s.id, index);
         }
         for (const shape of shapesUnderCommonEnv) {
             if (__set.has(shape.id)) continue;

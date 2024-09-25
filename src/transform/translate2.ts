@@ -540,7 +540,7 @@ function tips4keyboard(context: Context) {
     button.style.border = '1px solid #595959';
     button.style.borderRadius = '4px';
     button.style.backgroundColor = '#8C8C8C';
-    
+
 }
 
 /**
@@ -548,6 +548,15 @@ function tips4keyboard(context: Context) {
  */
 export class TranslateByKeyboard {
 
+}
+
+class Inserter {
+    translate: Translate2;
+    context: Context;
+    constructor(translate: Translate2, context: Context) {
+        this.translate = translate;
+        this.context = context;
+    }
 }
 
 export class Translate2 extends TransformHandler {
