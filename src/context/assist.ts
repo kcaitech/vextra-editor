@@ -93,6 +93,7 @@ export class Assist extends WatchableObject {
     setSpaceAdsorbX(xs: number[]) {
         this.m_space_adsorb_x = xs;
     }
+
     setSpaceAdsorbY(ys: number[]) {
         this.m_space_adsorb_y = ys;
     }
@@ -216,10 +217,7 @@ export class Assist extends WatchableObject {
             }
             this.m_collect_target = env;
         }
-
-        if (collect_immediate) {
-            this.collect();
-        }
+        collect_immediate && this.collect();
     }
 
     set_collect_target_direct(target: ShapeView, needBubble: boolean, collect_immediate = false) {
@@ -845,6 +843,7 @@ export class Assist extends WatchableObject {
         this.m_except.clear();
         this.notify(Assist.CLEAR);
     }
+
     // 水平相交的图形
     horIntersect(top: number, bottom: number, p_id: string) {
         let result: ShapeView[] = [];
@@ -867,6 +866,7 @@ export class Assist extends WatchableObject {
         }
         return result;
     }
+
     // 垂直相交的图形
     verIntersect(left: number, right: number, p_id: string) {
         let result: ShapeView[] = [];

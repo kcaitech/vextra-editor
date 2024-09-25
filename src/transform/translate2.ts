@@ -311,6 +311,13 @@ class SelModel {
 
         if (assistXWork || assistYWork) assist.notify(Assist.MULTI_LINE_ASSIST);
     }
+
+    collect() {
+        const views = this.transport.selManager.shapes;
+
+        this.context.assist.set_collect_target(views);
+        this.context.assist.set_trans_target(views);
+    }
 }
 
 /**
@@ -327,6 +334,8 @@ class SelManager {
     fixed: boolean;
 
     constructor(transport: Translate2, context: Context, shapes: ShapeView[]) {
+        this.fixed = false;
+
         // 如果多选图层中包含了虚拟图层，需要把虚拟图层冒泡的其最近实体上，并将该实体替换到选区
         const __real_view = (view: ShapeView) => {
             while (view.parent) {
@@ -342,16 +351,19 @@ class SelManager {
                 __shapes.add(__real_view(view));
                 needSortSel = true;
             } else __shapes.add(view);
+
             if (needSortSel) {
-                shapes = Array.from(__shapes.values());
-                context.selection.rangeSelectShape(shapes);
+                // shapes = Array.from(__shapes.values());
+                // context.selection.rangeSelectShape(shapes);
+                // 选区内存在虚拟图层，固定选区
+                this.fixed = true;
+                break;
             }
         }
 
         // 如果选区内既有自动布局的图层，也有自由图层，或者选区内存在多个不同自动布局容器下的图层则固定住选区，被固定的选区无法拖动
         const parents = new Set<ShapeView>();
         for (const view of shapes) parents.add(view.parent!);
-        this.fixed = false;
         if (parents.size > 1) {
             parents.forEach(g => {
                 if ((g as ArtboradView).autoLayout) this.fixed = true;
@@ -498,6 +510,7 @@ export class Translate2 extends TransformHandler {
 
         // 根据选区类型初始化mode，初始化过程中，只可能产生两种mode
         const views = this.selManager.shapes;
+
         this.mode = TranslateMode.Linear;
         for (const view of views) {
             if ((view.parent as ArtboradView).autoLayout) {
@@ -505,6 +518,8 @@ export class Translate2 extends TransformHandler {
                 break;
             }
         }
+
+        if (this.mode === TranslateMode.Linear) this.selModel.collect();
     }
 
     private __api: Transporter | undefined;
@@ -621,8 +636,11 @@ export class Translate2 extends TransformHandler {
     }
 
     fulfil() {
+        this.api?.commit();
+
         this.workspace.translating(false);
         this.workspace.setSelectionViewUpdater(true);
+
         super.fulfil();
     }
 }

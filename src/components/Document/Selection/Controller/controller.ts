@@ -31,6 +31,7 @@ import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 import { TranslateHandler } from '@/transform/translate';
 import { permIsEdit } from "@/utils/permission";
 import { DBL_CLICK } from "@/const";
+import { Translate2 } from "@/transform/translate2";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -49,6 +50,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
     let transporter: TranslateHandler | undefined = undefined;
+    let translate2: Translate2 | undefined = undefined;
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
@@ -235,7 +237,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
         if (isDragging) {
-            transporter?.execute(e);
+            // transporter?.execute(e);
+            translate2?.execute(e);
         } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) return;
 
@@ -245,7 +248,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             if (!shapes.length) return;
 
-            transporter?.createApiCaller();
+            // transporter?.createApiCaller();
+            translate2?.connect();
 
             isDragging = true;
         }
@@ -260,8 +264,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             shapes_picker(e, context, startPositionOnPage);
         }
 
-        transporter?.fulfil();
-        transporter = undefined;
+        // transporter?.fulfil();
+        // transporter = undefined;
+
+        translate2?.fulfil();
+        translate2 = undefined;
 
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
@@ -280,7 +287,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function pre_to_translate(e: MouseEvent) {
         document.addEventListener('mouseup', mouseup);
         if (!context.workspace.can_translate(e)) return;
-        transporter = new TranslateHandler(context, e, selection.selectedShapes);
+        // transporter = new TranslateHandler(context, e, selection.selectedShapes);
+        translate2 = new Translate2(context, e, selection.selectedShapes);
         document.addEventListener('mousemove', mousemove);
         shapes = selection.selectedShapes;
     }
