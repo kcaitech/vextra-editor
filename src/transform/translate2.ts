@@ -512,6 +512,37 @@ class AutoLayoutRenderer {
 
 }
 
+function tips4keyboard(context: Context) {
+    const view = context.selection.selectedShapes[0];
+    const parent = view.parent!;
+    const box = parent.boundingBox();
+    const matrix = parent.parent!.matrix2Root();
+    matrix.multiAtLeft(context.workspace.matrix);
+    const width = 320;
+    const height = 240;
+
+    const xy = matrix.computeCoord3(box);
+
+    const container = document.createElement('div');
+    container.classList.add('help-tips-windows');
+
+    container.style.left = Math.max(20, xy.x - width - 20) + 'px';
+    container.style.top = Math.max(20, xy.y) + 'px';
+
+    const span = document.createElement('span');
+    span.innerText = '除了使用鼠标拖拽之外，使用键盘中的方向键，也可以很方便的调整图层布局哦！';
+    container.append(span);
+
+    const board = document.createElement('div');
+    const button = document.createElement('div');
+    button.style.width = '40px';
+    button.style.height = '40px';
+    button.style.border = '1px solid #595959';
+    button.style.borderRadius = '4px';
+    button.style.backgroundColor = '#8C8C8C';
+    
+}
+
 /**
  * @description 处理键盘方向键产生的移动
  */
