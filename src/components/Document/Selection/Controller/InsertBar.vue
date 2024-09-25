@@ -4,6 +4,10 @@ import { Context } from "@/context";
 import { Selection, XY } from "@/context/selection";
 import { AutoLayout, BorderPosition, Shape, ShapeFrame, ShapeView, StackMode } from "@kcdesign/data";
 
+const props = defineProps<{
+    context: Context
+}>();
+
 function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     let frame = { ...shape.frame };
     if (includedBorder) {
@@ -46,9 +50,6 @@ function boundingBox(shape: Shape, includedBorder?: boolean): ShapeFrame {
     return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
 }
 
-const props = defineProps<{
-    context: Context
-}>();
 const insertPath = ref<string>();
 
 function selectionWatcher(t: any, params?: any) {
