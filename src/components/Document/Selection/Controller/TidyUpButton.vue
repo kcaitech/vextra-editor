@@ -43,7 +43,7 @@ const cursor_point = ref<Point>({ x: 0, y: 0 });
 const cursor_down = ref(false);
 const tidyUpHorSpace = ref(0);
 const tidyUpVerSpace = ref(0);
-const selectedShapes = ref<ShapeView[]>([]);
+const selectedShapes = ref<ShapeView[][]>([]);
 const need_reset_cursor_after_transform = ref(true);
 const tidyUp = () => {
     const selected = props.context.selection.selectedShapes;
@@ -97,8 +97,8 @@ const tidyUpLine = () => {
     const shape_rows = checkTidyUpShapesOrder(selected, dir);
     tidyUpHorSpacing(shape_rows);
     tidyUpVerSpacing(shape_rows);
-    const end_shape = shape_rows[shape_rows.length - 1][shape_rows[shape_rows.length - 1].length - 1];
-    watchShapes(end_shape);
+    const end_shapes = shape_rows.map(row => row[row.length - 1]);
+    watchShapes(end_shapes);
 }
 const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     const selected = props.context.selection.selectedShapes;
@@ -213,7 +213,7 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             ]);
             const hor: Box = {
                 lt: { x: horSpace.col0.x, y: box.top },
-                width: horSpace.col2.x - horSpace.col1.y,
+                width: horSpace.col1.x - horSpace.col0.x,
                 height: box.bottom - box.top,
             };
             horSpaceBox.value.push(hor);
@@ -312,6 +312,7 @@ const mousedown = (e: MouseEvent, dir: 'ver' | 'hor', index: number) => {
     const selected = props.context.selection.selectedShapes;
     const d = props.context.selection.isTidyUpDir;
     shapes_rows = checkTidyUpShapesOrder(selected, d);
+    selectedShapes.value = [...shapes_rows];
     minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
     minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     props.context.workspace.setTidyUpIsTrans(true);
@@ -351,7 +352,8 @@ const mousemove = (e: MouseEvent) => {
         tidyUpHorSpace.value = hor;
         tidyUpVerSpace.value = ver;
         props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
-        lockMouseHandler.executeTidyup(shapes_rows, hor, ver, dir);
+        selectedShapes.value = [...shapes_rows];
+        lockMouseHandler.executeTidyup([...shapes_rows], hor, ver, dir);
     } else {
         const diff = Math.hypot(e.clientX - downClientXY.x, e.clientY - downClientXY.y);
         if (diff > 4) {
@@ -370,6 +372,7 @@ const mouseup = (e: MouseEvent) => {
 function clear_status() {
     isDragging.value = false;
     cursor_down.value = false;
+    selectedShapes.value = [];
     props.context.workspace.setTidyUpIsTrans(false);
     lockMouseHandler?.fulfil();
     lockMouseHandler = undefined;
@@ -383,9 +386,11 @@ function clear_status() {
 
 
 const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
+    const shapes = selectedShapes.value.length ? selectedShapes.value : shapes_rows;
+    if(!shapes.length) return;
     const selected = props.context.selection.selectedShapes;
     const { box } = getSelectedWidthHeight(props.context, selected);
-    const parent = shapes_rows[0][0].parent;
+    const parent = shapes[0][0].parent;
     if (!parent) return;
     const matrix = new Matrix();
     const matrix2 = new Matrix(props.context.workspace.matrix);
@@ -396,8 +401,8 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
     m.addTransform(clientTransform); //root到视图
     if (dir) {
         if (downDir === 'hor') {
-            for (let i = 0; i < shapes_rows.length - 1; i++) {
-                const shape_row = shapes_rows[i];
+            for (let i = 0; i < shapes.length - 1; i++) {
+                const shape_row = shapes[i];
                 const cur_col_w = Math.max(...shape_row.map(s => s._p_frame.x + s._p_frame.width));
                 const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
                 if (!maxw_shape) continue;
@@ -408,15 +413,15 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                 ]);
                 const horBox: Box = {
                     lt: { x: horSpace.col0.x, y: box.top },
-                    width: horSpace.col2.x - horSpace.col1.y,
+                    width: horSpace.col1.x - horSpace.col0.x,
                     height: box.bottom - box.top,
                 };
                 horSpaceBox.value[i] = horBox;
             }
         } else {
             let index = 0;
-            for (let i = 0; i < shapes_rows.length; i++) {
-                const shape_row = shapes_rows[i];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape_row = shapes[i];
                 for (let j = 0; j < shape_row.length - 1; j++) {
                     const shape = shape_row[j];
                     const { x, y, width, height } = shape._p_frame;
@@ -435,8 +440,8 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
     } else {
         if (downDir === 'hor') {
             let index = 0;
-            for (let i = 0; i < shapes_rows.length; i++) {
-                const shape_row = shapes_rows[i];
+            for (let i = 0; i < shapes.length; i++) {
+                const shape_row = shapes[i];
                 for (let j = 0; j < shape_row.length - 1; j++) {
                     const shape = shape_row[j];
                     const { x, y, width, height } = shape._p_frame;
@@ -452,8 +457,8 @@ const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
                 }
             }
         } else {
-            for (let i = 0; i < shapes_rows.length - 1; i++) {
-                const shape_row = shapes_rows[i];
+            for (let i = 0; i < shapes.length - 1; i++) {
+                const shape_row = shapes[i];
                 const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height));
                 const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
                 if (!maxh_shape) continue;
@@ -561,10 +566,12 @@ const workspaceWatcher = (t: number | string) => {
 
 const watchedShapes = new Map();
 
-function watchShapes(shape: ShapeView) { // 监听相关shape的变化
+function watchShapes(shapes: ShapeView[]) { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    if (shape) {
-        needWatchShapes.set(shape.id, shape);
+    if (shapes.length) {
+        shapes.forEach(v => {
+            needWatchShapes.set(v.id, v);
+        })
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
@@ -670,7 +677,7 @@ onUnmounted(() => {
             </div>
         </foreignObject>
 
-        <foreignObject v-if="(cursor_down || !need_reset_cursor_after_transform)" :x="cursor_point.x + 10"
+        <foreignObject v-if="!isTidyUp && (cursor_down || !need_reset_cursor_after_transform)" :x="cursor_point.x + 10"
             :y="cursor_point.y + 10" width="100px" height="28px">
             <div class="percent_container">
                 <span>{{ fixedZero(downDir === 'ver' || verSpaceFill ? tidyUpVerSpace : tidyUpHorSpace) }} </span>
