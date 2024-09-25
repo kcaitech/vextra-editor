@@ -11,7 +11,7 @@ export class Attribute extends WatchableObject {
     static MINUS_SIZE_CHANGE = 4;
     static FRAME_CHANGE = 5;
     static ANCHOR_CHANGE = 6;
-
+    static TIDY_UP_SPACE_CHANGE = 7;
     constructor() {
         super();
     }

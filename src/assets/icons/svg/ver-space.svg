@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml" data-v-46cf0610="" data-v-a9142392="" width="12"
+    height="12" viewBox="10 10 12 12" version="1.1" preserveAspectRatio="xMinYMin meet"
+    overflow="visible" style="background-color: transparent;">
+    <g style="transform:matrix(1,0,0,1,10,10);">
+        <g clip-path="url(#clippath-artboard-4780)">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+                overflow="hidden" width="12" height="12" viewBox="0 0 12 12">
+                <clipPath id="clippath-artboard-4780">
+                    <path d="M 0 0 l 12 0 l 0 12 l -12 0 z" clip-rule="evenodd" />
+                </clipPath>
+                <g style="transform:matrix(1,0,0,1,1,0.5);">
+                    <path
+                        d="M 0 0.05591805921466334 L 0 1.9999999999999727 L 9.999999999999995 1.9999999999999727 L 10 -2.761679773755077e-14"
+                        fill="none" stroke="rgb(140,140,140)" stroke-linejoin="miter"
+                        stroke-width="1.2" opacity="1" />
+                </g>
+                <g
+                    style="transform:matrix(1,-1.1102230246251565e-16,-1.1102230246251565e-16,-1,1,11.5);">
+                    <path
+                        d="M 0 0.05591805921466334 L 0 1.9999999999999727 L 9.999999999999995 1.9999999999999727 L 10 -2.761679773755077e-14"
+                        fill="none" stroke="rgb(140,140,140)" stroke-linejoin="miter"
+                        stroke-width="1.2" opacity="1" />
+                </g>
+                <g style="transform:matrix(1,0,0,1,4.000000000089585,6);">
+                    <path
+                        d="M -4.7597351725097434e-14 -7.993605777301127e-15 L 3.9999999998208167 0.000037862202873384376"
+                        fill="none" stroke="rgb(140,140,140)" stroke-linejoin="miter"
+                        stroke-width="1.2" opacity="1" />
+                </g>
+            </svg>
+        </g>
+    </g>
+</svg>

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, ShapeType, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
@@ -12,6 +12,9 @@ import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
 import AddState from "./Symbol/AddState.vue";
 import { SymbolType } from "@/utils/symbol";
+import AutoLayoutPadding from "./AutoLayoutController/AutoLayoutPadding.vue";
+import AutoLayoutPaddingLine from "./AutoLayoutController/AutoLayoutPaddingLine.vue";
+import AutoLayoutSpace from "./AutoLayoutController/AutoLayoutSpace.vue";
 
 interface Props {
     context: Context
@@ -91,6 +94,7 @@ function selection_watcher(t: number | string) {
 function workspace_watcher(t: number) {
     if (t === WorkSpace.TRANSLATING) {
         selection_hidden.value = props.context.workspace.isTranslating;
+        autoLayoutShow.value = false;
     }
 }
 
@@ -111,6 +115,24 @@ function mouseup() {
 function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
+}
+
+const autoLayoutShow = ref(false);
+
+const mouseleave = () => {
+    if (props.context.workspace.transforming) {
+        return;
+    }
+    autoLayoutShow.value = false;
+}
+
+const move = () => {
+    autoLayoutShow.value = true;
+}
+
+const paddintIndex = ref(-1);
+const hoverPaddintIndex = (index: number) => {
+    paddintIndex.value = index;
 }
 
 function modify_symbol_type() {
@@ -163,40 +185,28 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg"
-         xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-         data-area="controller"
-         preserveAspectRatio="xMinYMin meet"
-         viewBox="0 0 100 100"
-         width="100"
-         height="100"
-         :class="{ hidden: selection_hidden }"
-         overflow="visible"
-         @mousedown="mousedown"
-    >
-        <BarsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :shape="props.shape"
-            :c-frame="props.controllerFrame"
-            :theme="theme"
-        />
-        <PointsContainer
-            v-if="partVisible"
-            :context="props.context"
-            :shape="props.shape"
-            :axle="axle"
-            :c-frame="props.controllerFrame"
-            :theme="theme"
-        />
-        <AddState
-            v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union"
-            :context="props.context"
-            :shape="props.shape"
-            :c-frame="props.controllerFrame"
-            :symbol-type="symbol_type"
-        />
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" data-area="controller" preserveAspectRatio="xMinYMin meet"
+        viewBox="0 0 100 100" width="100" height="100" :class="{ hidden: selection_hidden }" overflow="visible"
+        @mousedown="mousedown" @mouseleave="mouseleave" @mousemove="move">
+        <path
+            :d="`M ${controllerFrame[0].x} ${controllerFrame[0].y} L ${controllerFrame[1].x} ${controllerFrame[1].y} L ${controllerFrame[2].x} ${controllerFrame[2].y} L ${controllerFrame[3].x} ${controllerFrame[3].y} Z`"
+            fill="transparent" />
+        <AutoLayoutPadding v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+            :paddintIndex="paddintIndex"></AutoLayoutPadding>
+
+        <BarsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :c-frame="props.controllerFrame"
+            :theme="theme" />
+        <PointsContainer v-if="partVisible" :context="props.context" :shape="props.shape" :axle="axle"
+            :c-frame="props.controllerFrame" :theme="theme" />
+
+        <AutoLayoutSpace v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+            :controllerFrame="controllerFrame"></AutoLayoutSpace>
+        <AutoLayoutPaddingLine v-if="autoLayoutShow && (shape as ArtboradView).autoLayout" :context="props.context"
+            @hoverPaddint="hoverPaddintIndex"></AutoLayoutPaddingLine>
+
+        <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
+            :shape="props.shape" :c-frame="props.controllerFrame" :symbol-type="symbol_type" />
     </svg>
 </template>
 <style lang='scss' scoped>

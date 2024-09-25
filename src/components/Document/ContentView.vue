@@ -8,7 +8,7 @@ import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from './Menu/ContextMenu.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
+import { ArtboradView, Color, ImageScaleMode, Matrix, Page, PageView, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { ClientXY, ClientXYRaw, PageXY } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
@@ -24,7 +24,7 @@ import {
     is_drag,
     root_scale,
     root_trans,
-    selectShapes
+    selectShapes,
 } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import TextSelection from './Selection/TextSelection.vue';
@@ -254,6 +254,20 @@ function contextMenuMount(e: MouseEvent) {
             if (_shapes.length === 1 && _shapes[0].mask) {
                 contextMenuItems.value.delete(MenuItemType.Mask);
                 contextMenuItems.value.add(MenuItemType.UnMask);
+            }
+            if (area !== MountedAreaType.Root) {
+                if (_shapes.length > 1) {
+                    contextMenuItems.value.add(MenuItemType.AutoLayout);
+                } else {
+                    const shape = _shapes[0] as ArtboradView;
+                    if (shape.autoLayout) {
+                        contextMenuItems.value.add(MenuItemType.UnAutoLayout);
+                    } else {
+                        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(shape.type)) {
+                            contextMenuItems.value.add(MenuItemType.AutoLayout);
+                        }
+                    }
+                }
             }
         }
     }
@@ -561,6 +575,7 @@ watch(() => matrix, matrix_watcher, { deep: true });
 onBeforeMount(() => {
     props.context.user.updateUserConfig();
 });
+
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);

@@ -96,7 +96,6 @@ const stopMouseDown = (e: MouseEvent) => {
     //     e.stopPropagation();
     // }
 }
-
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
     init();
