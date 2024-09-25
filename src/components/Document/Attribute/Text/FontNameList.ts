@@ -2,7 +2,7 @@ import { Context } from "@/context";
 
 export const fontNameListZh = [
     'PingFang SC', 'Adobe 仿宋 Std', 'Adobe 宋体 Std', 'Adobe 楷体 Std', 'Adobe 黑体 Std', 'Hei',
-    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI', 'Microsoft YaHei UI',
+    'Kai', 'Microsoft JhengHei', 'Microsoft JhengHei UI', 'Microsoft YaHei UI', '宋体',
     'MingLiU', 'MingLiU_HKSCS', 'PMingLiU', 'STFangsong', 'STHeiti', 'STKaiti', '黑体-简',
     'STSong', '仿宋', '冬青黑体简体中文', '凌慧体-简', '华文中宋', '华文仿宋', '华文新魏',
     '华文楷体', '华文琥珀', '华文行楷', '华文隶书', '娃娃体-简', '圆体-简', '等线',
