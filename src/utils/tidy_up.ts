@@ -151,37 +151,46 @@ export const whetherNeedTidyUp = (context: Context) => {
     if (hiddenTidyUp(selected) || selected.length < 2) return;
     const { width, height } = getSelectedWidthHeight(context, selected);
     if (height > width) {
-        const shape_rows = checkTidyUpShapesOrder(selected, true);
-        const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);
-        const left_equal = shape_rows.every(row => row[0]._p_frame.x === shape_rows[0][0]._p_frame.x);
-        const space = layoutSpacing(shape_rows, true);
-        if (top_equal) {
-            const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
-            if (!verInfo.tidyup) {
-                return verInfo;
-            }
-        }
-        if (left_equal) {
-            const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
-            if (!horInfo.tidyup) {
-                return horInfo;
-            }
-        }
+        const Info1 = checkVerTidyUp(selected, true);
+        if(Info1) return Info1;
+        const Info2 = checkHorTidyUp(selected, false);
+        if(Info2) return Info2;
     } else {
-        const shape_rows2 = checkTidyUpShapesOrder(selected, false);
-        const top_equal = shape_rows2.every(row => row[0]._p_frame.y === shape_rows2[0][0]._p_frame.y);
-        const left_equal = shape_rows2.every(row => row[0]._p_frame.x === shape_rows2[0][0]._p_frame.x);
-        const space2 = layoutSpacing(shape_rows2, false);
-        if (left_equal) {
-            const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
-            if (!horInfo2.tidyup) return horInfo2;
-        }
-        if (top_equal) {
-            const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
-            if (!verInfo2.tidyup) return verInfo2;
-        }
+        const Info1 = checkHorTidyUp(selected, false);
+        if(Info1) return Info1;
+        const Info2 = checkVerTidyUp(selected, true);
+        if(Info2) return Info2;
     }
     return;
+}
+
+const checkHorTidyUp = (selected: ShapeView[], dir: boolean) => {
+    const shape_rows2 = checkTidyUpShapesOrder(selected, dir);
+    const top_equal = shape_rows2.every(row => row[0]._p_frame.y === shape_rows2[0][0]._p_frame.y);
+    const left_equal = shape_rows2.every(row => row[0]._p_frame.x === shape_rows2[0][0]._p_frame.x);
+    const space2 = layoutSpacing(shape_rows2, dir);
+    if (left_equal) {
+        const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
+        if (!horInfo2.tidyup) return horInfo2;
+    }
+    if (top_equal) {
+        const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
+        if (!verInfo2.tidyup) return verInfo2;
+    }
+}
+const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
+    const shape_rows = checkTidyUpShapesOrder(selected, dir);
+    const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);
+    const left_equal = shape_rows.every(row => row[0]._p_frame.x === shape_rows[0][0]._p_frame.x);
+    const space = layoutSpacing(shape_rows, dir);
+    if (top_equal) {
+        const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
+        if (!verInfo.tidyup) return verInfo;
+    }
+    if (left_equal) {
+        const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
+        if (!horInfo.tidyup)  return horInfo;
+    }
 }
 
 export const hiddenTidyUp = (shapes: ShapeView[]) => {
