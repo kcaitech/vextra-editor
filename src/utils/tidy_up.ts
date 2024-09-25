@@ -152,14 +152,14 @@ export const whetherNeedTidyUp = (context: Context) => {
     const { width, height } = getSelectedWidthHeight(context, selected);
     if (height > width) {
         const Info1 = checkVerTidyUp(selected, true);
-        if(Info1) return Info1;
+        if (Info1) return Info1;
         const Info2 = checkHorTidyUp(selected, false);
-        if(Info2) return Info2;
+        if (Info2) return Info2;
     } else {
         const Info1 = checkHorTidyUp(selected, false);
-        if(Info1) return Info1;
+        if (Info1) return Info1;
         const Info2 = checkVerTidyUp(selected, true);
-        if(Info2) return Info2;
+        if (Info2) return Info2;
     }
     return;
 }
@@ -189,7 +189,7 @@ const checkVerTidyUp = (selected: ShapeView[], dir: boolean) => {
     }
     if (left_equal) {
         const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
-        if (!horInfo.tidyup)  return horInfo;
+        if (!horInfo.tidyup) return horInfo;
     }
 }
 
@@ -336,11 +336,21 @@ export function getShapesRowsMapPosition(context: Context, shape_rows: ShapeView
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { width } = shape._p_frame;
-            const grid_point_x = m.transform([
-                ColVector3D.FromXY(startX + width + (Math.max(space.hor, -minWidth) / 2), 0),
-            ]).col0.x;
-            const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
-            row.push(point);
+            if (j !== shape_row.length - 1) {
+                const next_s = shape_row[j + 1]._p_frame;
+                const centerX = (width + Math.max(space.hor, -minWidth) + next_s.width) / 2;
+                const grid_point_x = m.transform([
+                    ColVector3D.FromXY(startX + centerX, 0),
+                ]).col0.x;
+                const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
+                row.push(point);
+            } else {
+                const grid_point_x = m.transform([
+                    ColVector3D.FromXY(startX + width + (Math.max(space.hor, -minWidth) / 2), 0),
+                ]).col0.x;
+                const point = { x: grid_point_x, y: i === shape_rows.length - 1 ? Infinity : grid_point_y }
+                row.push(point);
+            }
             startX += width + Math.max(space.hor, -minWidth);
         }
         startY += maxHeight + Math.max(space.ver, -minHeight);
@@ -376,11 +386,21 @@ export function getShapesColsMapPosition(context: Context, shape_rows: ShapeView
         for (let j = 0; j < shape_row.length; j++) {
             const shape = shape_row[j];
             const { height } = shape._p_frame;
-            const grid_point_y = m.transform([
-                ColVector3D.FromXY(0, startY + height + (Math.max(space.ver, -minHeight) / 2)),
-            ]).col0.y;
-            const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
-            col.push(point);
+            if (j !== shape_row.length - 1) {
+                const next_s = shape_row[j + 1]._p_frame;
+                const centerY = (height + Math.max(space.ver, -minHeight) + next_s.height) / 2;
+                const grid_point_y = m.transform([
+                    ColVector3D.FromXY(0, startY + centerY),
+                ]).col0.y;
+                const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
+                col.push(point);
+            } else {
+                const grid_point_y = m.transform([
+                    ColVector3D.FromXY(0, startY + height + (Math.max(space.ver, -minHeight) / 2)),
+                ]).col0.y;
+                const point = { x: i === shape_rows.length - 1 ? Infinity : grid_point_x, y: grid_point_y }
+                col.push(point);
+            }
             startY += height + Math.max(space.ver, -minHeight);
         }
         shapes_cols_point_map.push(col);

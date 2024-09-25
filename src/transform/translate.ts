@@ -1022,7 +1022,7 @@ export class TranslateHandler extends TransformHandler {
     // 拖动结束后进行一次整理
     _tidyUp() {
         if (this.context.selection.selectedTidyUpShapes.length > 0 && this.asyncApiCaller) {
-            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir);
+            (this.asyncApiCaller as Transporter).tidyUpShapesLayout(this.m_adjusted_shape_rows, this.tidy_up_space.hor, this.tidy_up_space.ver, this.m_dir, this.tidy_up_start);
         }
     }
 
