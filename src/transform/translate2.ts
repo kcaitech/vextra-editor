@@ -31,10 +31,16 @@ interface TranslateBaseItem {
 /**
  * @description 处理图层迁移操作
  */
-class Portal {
-    // private __living_env: ShapeView;
+class EnvManager {
+    private translate: Translate2;
+    private context: Context;
+    // env: ShapeView;
     // private __background_env: ShapeView[];
-    constructor(shapes: ShapeView[]) {
+    constructor(translate: Translate2, context: Context) {
+        this.translate = translate;
+        this.context = context;
+
+        const living = translate.living;
     }
 
     private __return() {
@@ -456,6 +462,9 @@ class SelManager {
  * @description 图层样式管理器
  */
 class StyleManager {
+    static Slide = 'transition-200';
+    static Alpha = 'opacity-for-preview';
+
     private transport: Translate2;
     private context: Context;
 
@@ -464,7 +473,7 @@ class StyleManager {
         this.context = context;
     }
 
-    private __elements_with_slide: Set<Element> = new Set<Element>();
+    private __elements_with_slide: Set<Element> = new Set();
 
     clearSlide() {
         this.__elements_with_slide.forEach(element => element.classList.remove('transition-200'));
@@ -474,10 +483,26 @@ class StyleManager {
     private __slidify_shape(shape: ShapeView) {
         const el = (shape as ShapeDom).el;
         if (!el) return;
-        el.classList.add('transition-200');
+        el.classList.add(StyleManager.Slide);
         this.__elements_with_slide.add(el);
     }
 
+    private __elements_with_opacity: Set<Element> = new Set();
+
+    alphaSel() {
+        const views = this.transport.selManager.shapes;
+        for (const view of views) {
+            const el = (view as ShapeDom).el;
+            if (!el) return;
+            el.classList.add(StyleManager.Alpha);
+            this.__elements_with_opacity.add(el);
+        }
+    }
+
+    disAlphaSel() {
+        this.__elements_with_opacity.forEach(el => el.classList.remove(StyleManager.Alpha));
+        this.__elements_with_opacity.clear();
+    }
 }
 
 /**
@@ -497,6 +522,7 @@ export class TranslateByKeyboard {
 export class Translate2 extends TransformHandler {
     readonly selManager: SelManager;
     readonly selModel: SelModel;
+    readonly style: StyleManager;
 
     mode: TranslateMode;
     living: XY;
@@ -507,6 +533,7 @@ export class Translate2 extends TransformHandler {
 
         this.selManager = new SelManager(this, context, shapes);
         this.selModel = new SelModel(this, context, event);
+        this.style = new StyleManager(this, context);
 
         // 根据选区类型初始化mode，初始化过程中，只可能产生两种mode
         const views = this.selManager.shapes;
@@ -582,6 +609,7 @@ export class Translate2 extends TransformHandler {
     }
 
     private __prev() {
+
     }
 
     private __flex() {
