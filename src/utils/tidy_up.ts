@@ -3,7 +3,6 @@ import { ArtboradView, ColVector3D, makeShapeTransform2By1, Matrix, PageView, Sh
 import { XYsBounding } from "./common";
 import { getShapeFrame } from "./content";
 import { Selection, XY } from "@/context/selection";
-import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 export function tidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
     let shape_rows: ShapeView[][] = [];
@@ -74,6 +73,7 @@ export function tidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
 }
 
 export function layoutSpacing(shape_rows: ShapeView[][], dir: boolean) {
+    if (shape_rows.length === 0) return { hor: 0, ver: 0 }
     let totalHorSpacing = 0; // 用于累计所有水平间距
     let totalVerSpacing = 0; // 用于累计所有垂直间距
     let horSpacingCount = 0; // 记录水平间距的总数
@@ -148,27 +148,40 @@ export const getSelectedWidthHeight = (context: Context, shapes: ShapeView[]) =>
 
 export const whetherNeedTidyUp = (context: Context) => {
     const selected = context.selection.selectedShapes;
-    if (hiddenTidyUp(selected)) return;
+    if (hiddenTidyUp(selected) || selected.length < 2) return;
     const { width, height } = getSelectedWidthHeight(context, selected);
     if (height > width) {
-        const shape_rows = tidyUpShapesOrder(selected, true);
+        const shape_rows = checkTidyUpShapesOrder(selected, true);
+        const top_equal = shape_rows.every(row => row[0]._p_frame.y === shape_rows[0][0]._p_frame.y);
+        const left_equal = shape_rows.every(row => row[0]._p_frame.x === shape_rows[0][0]._p_frame.x);
         const space = layoutSpacing(shape_rows, true);
-        const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
-        if (!verInfo.tidyup) {
-            return verInfo;
+        if (top_equal) {
+            const verInfo = verFindTidyUp(shape_rows, space.hor, space.ver);
+            if (!verInfo.tidyup) {
+                return verInfo;
+            }
         }
-        const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
-        if (!horInfo.tidyup) {
-            return horInfo;
+        if (left_equal) {
+            const horInfo = horFindTidyUp(shape_rows, space.hor, space.ver);
+            if (!horInfo.tidyup) {
+                return horInfo;
+            }
         }
     } else {
-        const shape_rows2 = tidyUpShapesOrder(selected, false);
+        const shape_rows2 = checkTidyUpShapesOrder(selected, false);
+        const top_equal = shape_rows2.every(row => row[0]._p_frame.y === shape_rows2[0][0]._p_frame.y);
+        const left_equal = shape_rows2.every(row => row[0]._p_frame.x === shape_rows2[0][0]._p_frame.x);
         const space2 = layoutSpacing(shape_rows2, false);
-        const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
-        if (!horInfo2.tidyup) return horInfo2;
-        const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
-        if (!verInfo2.tidyup) return verInfo2;
+        if (left_equal) {
+            const horInfo2 = horFindTidyUp(shape_rows2, space2.hor, space2.ver);
+            if (!horInfo2.tidyup) return horInfo2;
+        }
+        if (top_equal) {
+            const verInfo2 = verFindTidyUp(shape_rows2, space2.hor, space2.ver);
+            if (!verInfo2.tidyup) return verInfo2;
+        }
     }
+    return;
 }
 
 export const hiddenTidyUp = (shapes: ShapeView[]) => {
@@ -451,4 +464,73 @@ export function getHorShapeOutlineFrame(context: Context, shape_rows: ShapeView[
         startY += maxHeight + Math.max(space.ver, -minHeight);
         startX = startXY.x;
     }
+}
+
+export function checkTidyUpShapesOrder(shapes: ShapeView[], verBase: boolean) {
+    if (shapes.length < 2) return [];
+    let shape_rows: ShapeView[][] = [];
+    let unassignedShapes: ShapeView[] = [...shapes].filter(shape => shape.isVisible);
+
+    while (unassignedShapes.length > 0) {
+        // 找出 y + height 最小的图形作为基准图形
+        const baseShape = unassignedShapes.reduce((minShape, shape) => {
+            const frame = shape._p_frame;
+            const min_frame = minShape._p_frame;
+            if (verBase) {
+                if (frame.x < min_frame.x) {
+                    return shape;
+                } else if (frame.x === min_frame.x) {
+                    return frame.y <= min_frame.y ? shape : minShape;
+                } else {
+                    return minShape;
+                }
+            } else {
+                return frame.y <= min_frame.y ? shape : minShape;
+            }
+        });
+        let currentRow: ShapeView[] = [];
+        if (verBase) {
+            // 将与基准图形相交的图形放入当前列
+            currentRow = unassignedShapes.filter(shape => {
+                const frame = shape._p_frame;
+                const base_frame = baseShape._p_frame;
+                return Math.abs((base_frame.x + (base_frame.width / 2)) - (frame.x + (frame.width / 2))) < 1;
+            });
+
+            // 将当前行按 x 坐标排序
+            currentRow.sort((a, b) => {
+                const a_frame = a._p_frame;
+                const b_frame = b._p_frame;
+                if (a_frame.y > b_frame.y) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            })
+        } else {
+            // 将与基准图形相交的图形放入当前行
+            currentRow = unassignedShapes.filter(shape => {
+                const frame = shape._p_frame;
+                const base_frame = baseShape._p_frame;
+                return Math.abs((base_frame.y + (base_frame.height / 2)) - (frame.y + (frame.height / 2))) < 1;
+            });
+
+            // 将当前行按 x 坐标排序
+            currentRow.sort((a, b) => {
+                const a_frame = a._p_frame;
+                const b_frame = b._p_frame;
+                if (a_frame.x > b_frame.x) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            })
+        }
+        // 保存当前行的图形
+        shape_rows.push(currentRow);
+
+        // 从未分配图形中移除当前行的图形
+        unassignedShapes = unassignedShapes.filter(shape => !currentRow.includes(shape));
+    }
+    return shape_rows;
 }

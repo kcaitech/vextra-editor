@@ -31,7 +31,7 @@ import { Attribute } from '@/context/atrribute';
 import { flip } from "@/transform/flip";
 import { Tool } from "@/context/tool";
 import { rotate as __rotate } from "@/transform/rotate"
-import { getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
+import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder, whetherNeedTidyUp } from '@/utils/tidy_up';
 import { WorkSpace } from '@/context/workspace';
 
 interface Props {
@@ -47,7 +47,6 @@ interface LayoutOptions {
     s_length: boolean
     s_counts: boolean
     s_inner_angle: boolean
-    s_tidy_up: boolean
 }
 
 interface ModelState {
@@ -79,7 +78,8 @@ const horTidyUp = ref(true);
 const verTidyUp = ref(true);
 const horSpace = ref<number | string>('');
 const verSpace = ref<number | string>('');
-const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false, s_tidy_up: false });
+const s_tidy_up = ref(false);
+const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false, s_counts: false, s_inner_angle: false });
 const model_disable_state: ModelState = reactive({
     x: false,
     y: false,
@@ -92,7 +92,7 @@ const model_disable_state: ModelState = reactive({
     counts: false,
     innerAngle: false
 });
-let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle, s_tidy_up } = layout_options;
+let { s_flip, s_adapt, s_radius, s_length, s_counts, s_inner_angle } = layout_options;
 
 function _calc_attri() {
     const selected = props.context.selection.selectedShapes;
@@ -444,6 +444,8 @@ function updatePosition(movementX: number, movementY: number) {
 }
 
 let orderShapes: ShapeView[][] = [];
+let minHor = 0;
+let minVer = 0;
 async function modifyTelDown(e: MouseEvent) {
     tel.value = true;
     telX.value = e.clientX;
@@ -456,7 +458,9 @@ async function modifyTelDown(e: MouseEvent) {
     }
     const selected = props.context.selection.selectedShapes;
     const d = props.context.selection.isTidyUpDir;
-    orderShapes = tidyUpShapesOrder(selected, d);
+    orderShapes = checkTidyUpShapesOrder(selected, d);
+    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener("pointerlockchange", pointerLockChange, false);
 }
@@ -598,14 +602,14 @@ function draggingTidyup(e: MouseEvent, dir: 'hor' | 'ver') {
     let ver = frame.ver;
     if (dir === 'hor') {
         hor += e.movementX;
-        horSpace.value = hor;
+        horSpace.value = Math.max(hor, -minHor);
     } else {
         ver += e.movementX;
-        verSpace.value = ver;
+        verSpace.value = Math.max(ver, -minVer);
     }
-    
+
     disalbeTidyup(orderShapes, d);
-    lockMouseHandler.executeTidyup(orderShapes, hor, ver, d);
+    lockMouseHandler.executeTidyup(orderShapes, Math.max(hor, -minHor), Math.max(ver, -minVer), d);
 }
 
 function dragend() {
@@ -684,12 +688,13 @@ const changeHorTidyup = (value: string) => {
     if (isNaN(hor)) return;
     const selected = props.context.selection.selectedShapes;
     const dir = props.context.selection.isTidyUpDir;
-    const shapes = tidyUpShapesOrder(selected, dir);
+    const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     disalbeTidyup(shapes, dir);
-    horSpace.value = hor;
-    editor.tidyUpShapesLayout(shapes, hor, typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
+    const minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    horSpace.value = Math.max(hor, -minHor);
+    editor.tidyUpShapesLayout(shapes, Math.max(hor, -minHor), typeof verSpace.value === 'number' ? verSpace.value : 0, dir);
 }
 const changeVerTidyup = (value: string) => {
     value = Number
@@ -700,13 +705,14 @@ const changeVerTidyup = (value: string) => {
     if (isNaN(ver)) return;
     const selected = props.context.selection.selectedShapes;
     const dir = props.context.selection.isTidyUpDir;
-    const shapes = tidyUpShapesOrder(selected, dir);
+    const shapes = checkTidyUpShapesOrder(selected, dir);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const hor = typeof horSpace.value === 'number' ? horSpace.value : 0;
     disalbeTidyup(shapes, dir);
-    verSpace.value = ver;
-    editor.tidyUpShapesLayout(shapes, hor, ver, dir);
+    const minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    verSpace.value = Math.max(ver, -minVer);
+    editor.tidyUpShapesLayout(shapes, hor, Math.max(ver, -minVer), dir);
 }
 
 function selection_change() {
@@ -715,22 +721,24 @@ function selection_change() {
     textBehaviour();
     const selected = props.context.selection.selectedShapes;
     if (selected.length > 1) {
-        s_tidy_up = true;
+        s_tidy_up.value = true;
         whetherTidyUp();
     } else {
-        s_tidy_up = false;
+        s_tidy_up.value = false;
         props.context.selection.whetherTidyUp(true, false);
     }
 }
 
 const _whetherTidyUp = () => {
+    if(props.context.workspace.tidyUpIsTrans) return;
     const selected = props.context.selection.selectedShapes;
+    s_tidy_up.value = false;
     if (selected.length <= 1) return;
+    s_tidy_up.value = true;
     if (props.context.workspace.isTranslating || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
     const Info = whetherNeedTidyUp(props.context);
     if (!Info) {
         props.context.selection.whetherTidyUp(true, false);
-        s_tidy_up = false;
         return;
     }
     const { tidyup, hor, ver, shapes, dir } = Info;

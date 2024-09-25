@@ -30,7 +30,7 @@ import { Tool } from "@/context/tool";
 import { message } from "@/utils/message";
 import { isTarget } from "@/utils/scout";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
-import { getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing, tidyUpShapesOrder } from "@/utils/tidy_up";
+import { checkTidyUpShapesOrder, getHorShapeOutlineFrame, getShapesColsMapPosition, getShapesRowsMapPosition, getVerShapeOutlineFrame, layoutSpacing, tidyUpShapesOrder } from "@/utils/tidy_up";
 import { Point } from "@/components/Document/Selection/SelectionView.vue";
 
 type BaseFrame4Trans = {
@@ -990,7 +990,7 @@ export class TranslateHandler extends TransformHandler {
     }
     // 将选中的图形进行排序规定图形所在的区域位置
     getOrderShapes() {
-        const shape_rows = tidyUpShapesOrder(this.shapes, this.m_dir);
+        const shape_rows = checkTidyUpShapesOrder(this.shapes, this.m_dir);
         this.m_shape_rows = shape_rows;
         const minX = Math.min(...shape_rows[0].map(s => s._p_frame.x));
         const minY = Math.min(...shape_rows[0].map(s => s._p_frame.y));

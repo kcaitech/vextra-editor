@@ -68,6 +68,7 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     private m_should_selection_view_update: boolean = true;
     private m_controller_path: string = '';
     private m_origin_fontList: string[] = [];
+    private m_is_trans_tidy_up: boolean = false;
     private m_root: Root = {
         init: false,
         x: 250,
@@ -355,5 +356,13 @@ export class WorkSpace extends WatchableObject implements IWorkspace {
     }
     get userLocalFontList() {
         return this.m_origin_fontList;
+    }
+
+    setTidyUpIsTrans(v: boolean) {
+        this.m_is_trans_tidy_up = v;
+    }
+
+    get tidyUpIsTrans() {
+        return this.m_is_trans_tidy_up;
     }
 }

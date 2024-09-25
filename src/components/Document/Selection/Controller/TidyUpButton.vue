@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { fixedZero, permIsEdit } from '@/utils/common';
-import { getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder } from '@/utils/tidy_up';
+import { checkTidyUpShapesOrder, getSelectedWidthHeight, layoutSpacing, tidyUpShapesOrder } from '@/utils/tidy_up';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Point } from '../SelectionView.vue';
 import { Selection, XY } from '@/context/selection';
@@ -22,12 +22,15 @@ const isTidyUp = ref(true);
 const dots = ref<{ x: number, y: number, dot: boolean, shape: ShapeView }[]>([]);
 type Box = {
     lt: Point,
-    rt: Point,
-    rb: Point,
-    lb: Point
+    width: number,
+    height: number
 }
 
-interface ControlsLine extends Box {
+interface ControlsLine {
+    lt: Point,
+    rt: Point,
+    rb: Point,
+    lb: Point,
     offset: Point,
     rotate: number,
     index: number,
@@ -91,9 +94,11 @@ const tidyUpLine = () => {
     const selected = props.context.selection.selectedShapes;
     if (selected.length <= 1) return;
     const dir = props.context.selection.isTidyUpDir;
-    const shape_rows = tidyUpShapesOrder(selected, dir);
+    const shape_rows = checkTidyUpShapesOrder(selected, dir);
     tidyUpHorSpacing(shape_rows);
     tidyUpVerSpacing(shape_rows);
+    const end_shape = shape_rows[shape_rows.length - 1][shape_rows[shape_rows.length - 1].length - 1];
+    watchShapes(end_shape);
 }
 const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
     const selected = props.context.selection.selectedShapes;
@@ -122,7 +127,7 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
                     ColVector3D.FromXY(x + width, y + height + clo_space),
                     ColVector3D.FromXY(x, y + height + clo_space)
                 ]);
-                const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
+                const hor: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
                 verSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
@@ -156,9 +161,8 @@ const tidyUpVerSpacing = (shapes: ShapeView[][]) => {
             ]);
             const ver: Box = {
                 lt: { x: box.left, y: verSpace.col0.y },
-                rt: { x: box.right, y: verSpace.col0.y },
-                rb: { x: box.right, y: verSpace.col1.y },
-                lb: { x: box.left, y: verSpace.col1.y }
+                width: box.right - box.left,
+                height: verSpace.col1.y - verSpace.col0.y,
             };
             verSpaceBox.value.push(ver);
             const { col0, col1, col2 } = m.transform([
@@ -209,9 +213,8 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
             ]);
             const hor: Box = {
                 lt: { x: horSpace.col0.x, y: box.top },
-                rt: { x: horSpace.col1.x, y: box.top },
-                rb: { x: horSpace.col1.x, y: box.bottom },
-                lb: { x: horSpace.col0.x, y: box.bottom }
+                width: horSpace.col2.x - horSpace.col1.y,
+                height: box.bottom - box.top,
             };
             horSpaceBox.value.push(hor);
             const { col0, col1, col2 } = m.transform([
@@ -244,7 +247,7 @@ const tidyUpHorSpacing = (shapes: ShapeView[][]) => {
                     ColVector3D.FromXY(x + width + row_space, y + height),
                     ColVector3D.FromXY(x + width, y + height)
                 ]);
-                const hor: Box = { lt: horSpace.col0, rt: horSpace.col1, rb: horSpace.col2, lb: horSpace.col3 };
+                const hor: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
                 horSpaceBox.value.push(hor);
                 const spaceLine = m.transform([
                     ColVector3D.FromXY(x, y),
@@ -274,15 +277,20 @@ const clear = () => {
 }
 
 const update = () => {
+    if (props.context.workspace.tidyUpIsTrans) {
+        const d = props.context.selection.isTidyUpDir;
+        updateHorAndVerBox(tidyUpHorSpace.value, tidyUpVerSpace.value, d);
+        return;
+    };
     clear();
-    if (isTidyUp.value || props.context.workspace.isScaling || props.context.workspace.isRotating) return;
+    if (isTidyUp.value || props.context.workspace.isScaling || props.context.workspace.isRotating || props.context.workspace.isTranslating) return;
     tidyUpDot();
     tidyUpLine();
 }
 
 const tidyUpControl = () => {
     isTidyUp.value = props.context.selection.isTidyUp;
-    update();
+    _update();
 }
 let lockMouseHandler: LockMouse | undefined = undefined;
 let downClientXY: XY = { x: 0, y: 0 };
@@ -291,6 +299,8 @@ let downDir = '';
 let moveIndex = 1;
 let horSpacing = 0;
 let verSpacing = 0;
+let minHor = 0;
+let minVer = 0;
 let shapes_rows: ShapeView[][] = [];
 const mousedown = (e: MouseEvent, dir: 'ver' | 'hor', index: number) => {
     e.stopPropagation();
@@ -301,7 +311,10 @@ const mousedown = (e: MouseEvent, dir: 'ver' | 'hor', index: number) => {
     moveIndex = index;
     const selected = props.context.selection.selectedShapes;
     const d = props.context.selection.isTidyUpDir;
-    shapes_rows = tidyUpShapesOrder(selected, d);
+    shapes_rows = checkTidyUpShapesOrder(selected, d);
+    minVer = Math.min(...selected.map(s => s._p_frame.height - 1));
+    minHor = Math.min(...selected.map(s => s._p_frame.width - 1));
+    props.context.workspace.setTidyUpIsTrans(true);
     lockMouseHandler = new LockMouse(props.context, e);
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
@@ -328,13 +341,15 @@ const mousemove = (e: MouseEvent) => {
         const dir = props.context.selection.isTidyUpDir;
         let hor = horSpacing;
         let ver = verSpacing;
+        const value1 = ((moveXy.x - downXy.x) / scale) * 2;
+        const value2 = ((moveXy.y - downXy.y) / scale) * 2;
         if (downDir === 'hor') {
-            const value = ((moveXy.x - downXy.x) / scale) * 2;
-            hor = Math.floor((value / moveIndex)) + horSpacing;
+            hor = Math.max(Math.floor((value1 / moveIndex)) + horSpacing, -minHor);
         } else {
-            const value = ((moveXy.y - downXy.y) / scale) * 2;
-            ver = Math.floor((value / moveIndex)) + verSpacing;
+            ver = Math.max(Math.floor((value2 / moveIndex)) + verSpacing, -minVer);
         }
+        tidyUpHorSpace.value = hor;
+        tidyUpVerSpace.value = ver;
         props.context.attr.notify(Attribute.TIDY_UP_SPACE_CHANGE, { hor, ver })
         lockMouseHandler.executeTidyup(shapes_rows, hor, ver, dir);
     } else {
@@ -353,10 +368,11 @@ const mouseup = (e: MouseEvent) => {
     clear_status();
 }
 function clear_status() {
-    lockMouseHandler?.fulfil();
-    lockMouseHandler = undefined;
     isDragging.value = false;
     cursor_down.value = false;
+    props.context.workspace.setTidyUpIsTrans(false);
+    lockMouseHandler?.fulfil();
+    lockMouseHandler = undefined;
     downDir = '';
     if (!need_reset_cursor_after_transform.value) {
         props.context.cursor.reset();
@@ -365,6 +381,98 @@ function clear_status() {
     document.removeEventListener('mouseup', mouseup);
 }
 
+
+const updateHorAndVerBox = (hor: number, ver: number, dir: boolean) => {
+    const selected = props.context.selection.selectedShapes;
+    const { box } = getSelectedWidthHeight(props.context, selected);
+    const parent = shapes_rows[0][0].parent;
+    if (!parent) return;
+    const matrix = new Matrix();
+    const matrix2 = new Matrix(props.context.workspace.matrix);
+    matrix.reset(matrix2);
+    const shape_root_m = parent.matrix2Root();
+    const m = makeShapeTransform2By1(shape_root_m).clone();
+    const clientTransform = makeShapeTransform2By1(matrix2);
+    m.addTransform(clientTransform); //root到视图
+    if (dir) {
+        if (downDir === 'hor') {
+            for (let i = 0; i < shapes_rows.length - 1; i++) {
+                const shape_row = shapes_rows[i];
+                const cur_col_w = Math.max(...shape_row.map(s => s._p_frame.x + s._p_frame.width));
+                const maxw_shape = shape_row.find(s => s._p_frame.x + s._p_frame.width === cur_col_w);
+                if (!maxw_shape) continue;
+                const { x, y, width } = maxw_shape._p_frame;
+                const horSpace = m.transform([
+                    ColVector3D.FromXY(x + width, y),
+                    ColVector3D.FromXY(x + width + hor, y),
+                ]);
+                const horBox: Box = {
+                    lt: { x: horSpace.col0.x, y: box.top },
+                    width: horSpace.col2.x - horSpace.col1.y,
+                    height: box.bottom - box.top,
+                };
+                horSpaceBox.value[i] = horBox;
+            }
+        } else {
+            let index = 0;
+            for (let i = 0; i < shapes_rows.length; i++) {
+                const shape_row = shapes_rows[i];
+                for (let j = 0; j < shape_row.length - 1; j++) {
+                    const shape = shape_row[j];
+                    const { x, y, width, height } = shape._p_frame;
+                    const horSpace = m.transform([
+                        ColVector3D.FromXY(x, y + height),
+                        ColVector3D.FromXY(x + width, y + height),
+                        ColVector3D.FromXY(x + width, y + height + ver),
+                        ColVector3D.FromXY(x, y + height + ver)
+                    ]);
+                    const verBox: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                    verSpaceBox.value[index] = verBox;
+                    index++;
+                }
+            }
+        }
+    } else {
+        if (downDir === 'hor') {
+            let index = 0;
+            for (let i = 0; i < shapes_rows.length; i++) {
+                const shape_row = shapes_rows[i];
+                for (let j = 0; j < shape_row.length - 1; j++) {
+                    const shape = shape_row[j];
+                    const { x, y, width, height } = shape._p_frame;
+                    const horSpace = m.transform([
+                        ColVector3D.FromXY(x + width, y),
+                        ColVector3D.FromXY(x + width + hor, y),
+                        ColVector3D.FromXY(x + width + hor, y + height),
+                        ColVector3D.FromXY(x + width, y + height)
+                    ]);
+                    const horBox: Box = { lt: horSpace.col0, width: horSpace.col1.x - horSpace.col0.x, height: horSpace.col2.y - horSpace.col1.y };
+                    horSpaceBox.value[index] = horBox;
+                    index++;
+                }
+            }
+        } else {
+            for (let i = 0; i < shapes_rows.length - 1; i++) {
+                const shape_row = shapes_rows[i];
+                const cur_row_h = Math.max(...shape_row.map(s => s._p_frame.y + s._p_frame.height));
+                const maxh_shape = shape_row.find(s => s._p_frame.y + s._p_frame.height === cur_row_h);
+                if (!maxh_shape) continue;
+                const { x, y, height } = maxh_shape._p_frame;
+                const verSpace = m.transform([
+                    ColVector3D.FromXY(x, y + height),
+                    ColVector3D.FromXY(x, y + height + ver),
+                ]);
+                const verbox: Box = {
+                    lt: { x: box.left, y: verSpace.col0.y },
+                    width: box.right - box.left,
+                    height: verSpace.col1.y - verSpace.col0.y,
+                };
+                verSpaceBox.value[i] = verbox;
+            }
+        }
+    }
+
+}
 
 const mouseenter = (e: MouseEvent, dir: 'ver' | 'hor') => {
     cursor_point.value = props.context.workspace.getContentXY(e);
@@ -440,27 +548,23 @@ const selectedUp = (e: MouseEvent) => {
 const selectedWatcher = (t: string | number) => {
     if (t === Selection.NEED_TIDY_UP) {
         tidyUpControl();
-        watchShapes();
     }
 }
 
 const workspaceWatcher = (t: number | string) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        update();
+        _update();
     } else if (t === WorkSpace.TRANSLATING) {
-        update();
+        _update();
     }
 }
 
 const watchedShapes = new Map();
 
-function watchShapes() { // 监听相关shape的变化
+function watchShapes(shape: ShapeView) { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const selection = props.context.selection.selectedShapes;
-    if (selection) {
-        selection.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
+    if (shape) {
+        needWatchShapes.set(shape.id, shape);
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
@@ -473,7 +577,7 @@ function watchShapes() { // 监听相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-const _update = throttle(update, 2);
+const _update = throttle(update, 4);
 
 function setCursor(dir: 'ver' | 'hor') {
     const cursor = props.context.cursor;
@@ -516,12 +620,12 @@ onUnmounted(() => {
                 stroke="#FFFFFF" stroke-width="1" />
         </g>
         <g v-if="!isTidyUp && downDir">
-            <path v-for="(box, index) in verSpaceBox" :key="index" class="padding-rect" ref="horSpcae"
-                :class="{ spaceFill: downDir === 'ver' }"
-                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
-            <path v-for="(box, index) in horSpaceBox" :key="index" class="padding-rect" ref="horSpcae"
-                :class="{ spaceFill: downDir === 'hor' }"
-                :d="`M ${box.lt.x} ${box.lt.y} L ${box.rt.x} ${box.rt.y} L ${box.rb.x} ${box.rb.y} L ${box.lb.x} ${box.lb.y} Z`" />
+            <rect v-for="(box, index) in verSpaceBox" :key="index" class="padding-rect" ref="horSpcae" :x="box.lt.x"
+                :y="box.height >= 0 ? box.lt.y : box.lt.y + box.height" :width="box.width"
+                :height="Math.abs(box.height)" :class="{ spaceFill: downDir === 'ver' }" />
+            <rect v-for="(box, index) in horSpaceBox" :key="index" class="padding-rect" ref="horSpcae"
+                :x="box.width >= 0 ? box.lt.x : box.lt.x + box.width" :y="box.lt.y" :width="Math.abs(box.width)"
+                :height="box.height" :class="{ spaceFill: downDir === 'hor' }" />
         </g>
         <g v-if="!isTidyUp && isHover && !isDragging">
             <g v-for="(dot, index) in dots" :key="index">
