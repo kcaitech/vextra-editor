@@ -24,6 +24,8 @@ import { Selection, XY } from "@/context/selection";
 import { ShapeDom } from "@/components/Document/Content/vdom/shape";
 import { Tool } from "@/context/tool";
 import { Assist } from "@/context/assist";
+import { isTarget } from "@/utils/scout";
+import { throttle } from "lodash";
 
 enum TranslateMode {
     Linear = 'linear',
@@ -530,25 +532,26 @@ class StyleManager {
     static Alpha = 'opacity-for-preview';
 
     private transport: Translate2;
-    private context: Context;
 
-    constructor(transport: Translate2, context: Context) {
+    constructor(transport: Translate2) {
         this.transport = transport;
-        this.context = context;
     }
 
     private __elements_with_slide: Set<Element> = new Set();
 
-    clearSlide() {
-        this.__elements_with_slide.forEach(element => element.classList.remove('transition-200'));
-        this.__elements_with_slide.clear();
+    slidifyEnv(env: SymbolView | ArtboradView) {
+        const children = env.childs;
+        for (const shape of children) {
+            const el = (shape as ShapeDom).el;
+            if (!el) return;
+            el.classList.add(StyleManager.Slide);
+            this.__elements_with_slide.add(el);
+        }
     }
 
-    private __slidify_shape(shape: ShapeView) {
-        const el = (shape as ShapeDom).el;
-        if (!el) return;
-        el.classList.add(StyleManager.Slide);
-        this.__elements_with_slide.add(el);
+    clearSlide() {
+        this.__elements_with_slide.forEach(element => element.classList.remove(StyleManager.Slide));
+        this.__elements_with_slide.clear();
     }
 
     private __elements_with_opacity: Set<Element> = new Set();
@@ -572,8 +575,109 @@ class StyleManager {
 /**
  * @description 自动布局管理器
  */
-class AutoLayoutRenderer {
+class Jumper {
+    private translate: Translate2;
+    private context: Context;
 
+    private __env: ArtboradView | SymbolView | undefined;
+
+    constructor(translate: Translate2, context: Context) {
+        this.translate = translate;
+        this.context = context;
+    }
+
+    inited: boolean = false;
+
+    init() {
+        const translate = this.translate;
+        this.__env = translate.radar.placement as ArtboradView;
+        translate.style.slidifyEnv(this.__env);
+        this.inited = true;
+    }
+
+    destory() {
+        this.__env = undefined;
+        this.translate.style.clearSlide();
+        this.inited = false;
+    }
+
+    private __rows: Shape[][] | undefined;
+    private __flat: Shape[] | undefined;
+    private __sort: Map<string, number> | undefined;
+
+    set rows(shapes: Shape[][]) {
+        this.__rows = shapes;
+        const flat = shapes.flat();
+        this.__flat = flat;
+        const map = new Map<string, number>();
+        const selected = this.translate.selManager.shapes;
+        for (let i = 0; i < selected.length; i++) {
+            const s = selected[i];
+            const index = flat.findIndex(item => s.id === item.id);
+            if (index !== -1) map.set(s.id, index);
+        }
+        this.__sort = map;
+    }
+
+    private __target_frame(shape: Shape) {
+        let f = shape.frame;
+        const m = shape.transform;
+        if (shape.isNoTransform()) {
+            f.x = f.x + m.translateX;
+            f.y = f.y + m.translateY
+        } else {
+            const corners = [
+                { x: f.x, y: f.y },
+                { x: f.x + f.width, y: f.y },
+                { x: f.x + f.width, y: f.y + f.height },
+                { x: f.x, y: f.y + f.height }]
+                .map((p) => m.computeCoord(p));
+            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
+            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
+            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
+            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
+            f.x = minx;
+            f.y = miny;
+            f.width = maxx - minx;
+            f.height = maxy - miny;
+        }
+        return f;
+    }
+
+    private __layout() {
+        const env = this.__env!;
+        this.rows = layoutShapesOrder(env.childs.map(s => adapt2Shape(s)), !!env.autoLayout?.bordersTakeSpace);
+    }
+
+    private __swap() {
+        const translate = this.translate;
+        const living = translate.living;
+        const api = translate.api!;
+        const shapes = translate.selManager.shapes;
+        const shapeIdsSet = translate.selManager.shapeIdsSet;
+        const env = this.__env!;
+        const children = env.childs;
+        if (!this.__rows) this.__layout();
+
+        const flat = this.__flat!;
+        const sort = this.__sort!;
+        const scout = this.context.selection.scout;
+
+        for (const view of children) {
+            if (shapeIdsSet.has(view.id) || !isTarget(scout, view, living)) continue;
+            const alpha = shapes[0];
+            const cur_index = flat.findIndex(item => item.id === alpha.id);
+            const tar_index = flat.findIndex(item => item.id === view.id);
+            const targetXY = this.__target_frame(adapt2Shape(view));
+            const transX = cur_index > tar_index ? targetXY.x - 1 : targetXY.x + 1;
+            const transY = cur_index > tar_index ? targetXY.y - 1 : targetXY.y + 1;
+            api.swap(env, shapes, transX, transY, sort);
+            this.__layout();
+            break;
+        }
+    }
+
+    swap = throttle(this.__swap, 60);
 }
 
 function tips4keyboard(context: Context) {
@@ -816,6 +920,7 @@ export class Translate2 extends TransformHandler {
     readonly style: StyleManager;
     readonly inserter: Inserter;
     readonly radar: EnvRadar;
+    readonly jumper: Jumper;
 
     mode: TranslateMode;
     living: XY;
@@ -826,9 +931,10 @@ export class Translate2 extends TransformHandler {
 
         this.selManager = new SelManager(this, context, shapes);
         this.selModel = new SelModel(this, context, event);
-        this.style = new StyleManager(this, context);
+        this.style = new StyleManager(this);
         this.inserter = new Inserter(this, context);
         this.radar = new EnvRadar(this, context);
+        this.jumper = new Jumper(this, context);
 
         // 根据选区类型初始化mode，初始化过程中，只可能产生两种mode
         const views = this.selManager.shapes;
@@ -912,7 +1018,10 @@ export class Translate2 extends TransformHandler {
     }
 
     private __flex() {
-
+        const xy = this.workspace.matrix.computeCoord3(this.living);
+        this.context.selection.notify(Selection.LAYOUT_DOTTED_LINE_MOVE, xy);
+        if (!this.jumper.inited) this.jumper.init();
+        this.jumper.swap();
     }
 
     private __execute() {
