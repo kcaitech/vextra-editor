@@ -715,7 +715,10 @@ function tips4keyboard(context: Context) {
  * @description 处理键盘方向键产生的移动
  */
 export class TranslateByKeyboard {
-
+    private context: Context;
+    constructor(context:Context) {
+        this.context = context;
+    }
 }
 
 function boundingBox(shape: Shape, includedBorder: boolean): ShapeFrame {
