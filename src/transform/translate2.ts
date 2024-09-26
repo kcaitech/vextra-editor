@@ -116,7 +116,7 @@ class EnvRadar {
 }
 
 /**
- * @description 数据模型
+ * @description 数据模型，负责修正、提供选区图层数据
  */
 class SelModel {
     private readonly transport: Translate2;
@@ -392,7 +392,7 @@ class SelModel {
 }
 
 /**
- * @description 选区管理
+ * @description 调整选区
  */
 class SelManager {
     readonly bases: Map<string, TranslateBaseItem>;
@@ -670,6 +670,9 @@ interface Row {
     end: number;
 }
 
+/**
+ * @description 帮助图层插入到自动布局
+ */
 class Inserter {
     translate: Translate2;
     context: Context;
