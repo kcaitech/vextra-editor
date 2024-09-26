@@ -6,6 +6,7 @@ import {
     PageView,
     PrototypeEvents,
     PrototypeNavigationType,
+    ScrollBehavior,
     ScrollDirection,
     Shape,
     ShapeType,
@@ -227,10 +228,21 @@ export function getScrollShape(shape: ShapeView | undefined) {
 export function getPreviewMatrix(shape: ShapeView) {
     const m = shape.matrix2Parent();
     let p = shape.parent;
+    let s = shape;
     while (p && p.type !== ShapeType.Page) {
         const offset = (p as ArtboradView).innerTransform;
-        offset && m.multiAtLeft(offset.toMatrix())
+        if (offset) {
+            m.multiAtLeft(offset.toMatrix());
+            if (s.scrollBehavior === ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME) {
+                m.trans(-offset.translateX, -offset.translateY);
+            } else if (s.scrollBehavior === ScrollBehavior.STICKYSCROLLS) {
+                if(s._p_frame.y + offset.translateY < 0) {
+                    m.trans(0, -(s._p_frame.y + offset.translateY));
+                }
+            }
+        }
         m.multiAtLeft(p.matrix2Parent());
+        s = p;
         p = p.parent;
     }
     return m;
