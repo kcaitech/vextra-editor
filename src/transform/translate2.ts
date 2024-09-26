@@ -38,7 +38,6 @@ interface TranslateBaseItem {
     view: ShapeView;
 }
 
-
 interface EnvLeaf {
     view: ShapeView;
     children: EnvLeaf[];
@@ -855,11 +854,9 @@ export class Translate2 extends TransformHandler {
         this.__execute();
     }
 
-    private __linear() {
+    private __trans(align = true) {
         const model = this.selModel;
         const manager = this.selManager;
-
-        model.fix();
 
         const { x, y } = model.originSelBox;
         const { x: tx, y: ty } = model.livingSelBox;
@@ -881,7 +878,7 @@ export class Translate2 extends TransformHandler {
                 .clone()
                 .translate(ColVector3D.FromXY(deltaX, deltaY));
 
-            if (model.alignPixel) {
+            if (model.alignPixel && align) {
                 const decompose = __t.clone().decomposeTranslate();
                 const intX = Math.round(decompose.x);
                 const intY = Math.round(decompose.y);
@@ -904,11 +901,18 @@ export class Translate2 extends TransformHandler {
         });
     }
 
-    private __prev() {
+    private __linear() {
+        this.selModel.fix();
+        this.__trans();
+    }
 
+    private __prev() {
+        this.inserter.pre();
+        this.__trans(false);
     }
 
     private __flex() {
+
     }
 
     private __execute() {
