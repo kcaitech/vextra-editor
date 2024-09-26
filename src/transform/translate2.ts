@@ -677,7 +677,7 @@ class Jumper {
         }
     }
 
-    swap = throttle(this.__swap, 60);
+    swap = throttle(this.__swap, 100);
 }
 
 function tips4keyboard(context: Context) {
